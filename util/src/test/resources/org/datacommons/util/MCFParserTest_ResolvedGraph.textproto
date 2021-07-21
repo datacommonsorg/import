@@ -1,0 +1,70 @@
+type: INSTANCE_MCF
+nodes {
+  key: "dcid:dc/mx44"
+  value {
+    pvs {
+      key: "dcid"
+      value { typedValue { type: TEXT value: "dc/mx44" } }
+    }
+    pvs {
+      key: "area"
+      value { typedValue { type: NUMBER value: "31.788" } }
+    }
+    pvs {
+      key: "containedInPlace"
+      value {
+        typedValue { type: RESOLVED_REF value: "dc/4fef4e" }
+      }
+    }
+    pvs {
+      key: "inCounty"
+      value { typedValue { type: NUMBER value: "true" } }
+    }
+    pvs {
+      key: "name"
+      value { typedValue { type: TEXT value: "Mountain View" } }
+    }
+    pvs {
+      key: "population"
+      value { typedValue { type: NUMBER value: "81438" } }
+    }
+    pvs {
+      key: "typeOf"
+      value { typedValue { type: RESOLVED_REF value: "City" } }
+    }
+  }
+}
+nodes {
+  key: "USACountry"
+  value {
+    pvs {
+      key: "dcid"
+      value { typedValue { type: TEXT value: "dc/2sffw13" } }
+    }
+    pvs {
+      key: "name"
+      value { typedValue { type: TEXT value: "United States Of America" } }
+    }
+    pvs {
+      key: "typeOf"
+      value { typedValue { type: RESOLVED_REF value: "Country" } }
+    }
+  }
+}
+nodes {
+  key: "dcs:HousingUnit"
+  value {
+    pvs {
+      key: "dcid"
+      value { typedValue { type: TEXT value: "HousingUnit" } }
+    }
+    pvs {
+      key: "typeOf"
+      value { typedValue { type: RESOLVED_REF value: "Class" } }
+    }
+    pvs {
+      key: "name"
+      value { typedValue { type: TEXT value: "HousingUnit" } }
+    }
+  }
+}

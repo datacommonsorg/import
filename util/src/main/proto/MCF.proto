@@ -1,0 +1,67 @@
+syntax = "proto2";
+
+package org.datacommons.proto;
+
+// Proto representation of a Data Commons sub-graph which may be made of instance nodes (INSTANCE_MCF)
+// or template nodes (TEMPLATE_MCF).
+message MCFGraph {
+  // Represents a single value.
+  message TypedValue {
+    optional ValueType type = 1;
+    optional string value = 2;
+  }
+
+  // Represents a list of property values.
+  message Values {
+    // A list of typed values.
+    repeated TypedValue typed_value = 1;
+  }
+
+  // Map of a property name to its values.
+  message PropertyValues {
+    map<string, Values> pvs = 1;
+  }
+
+  // Type of the sub-graph.
+  optional MCFType type = 1 [default = INSTANCE_MCF];
+
+  // A map from Local Node ID to its property and values.
+  map<string, PropertyValues> nodes = 2;
+}
+
+// Type of MCF sub-graph.
+enum MCFType {
+  UNKNOWN_MCF_TYPE = 0;
+  // The sub-graph is made of instances.
+  INSTANCE_MCF = 1;
+  // The sub-graph is made of templates.
+  TEMPLATE_MCF = 2;
+}
+
+// Represents the type of property value.
+enum ValueType {
+  UNKNOWN_VALUE_TYPE = 0;
+
+  // Any value that has double quotes around it gets considered a text.
+  TEXT = 1;
+
+  // Any non-text and non-reference value gets interpreted as number (int /
+  // uint / double / float).
+  NUMBER = 2;
+
+  // Represents a reference to a node that has not yet been resolved.  These
+  // types should turn into RESOLVED_REF after entity resolution.
+  // REQUIRES: the value has a reference prefix (aka, "<id-space>:"), typically "l:".
+  UNRESOLVED_REF = 3;
+
+  // Represents a resolved datacommons entity. Stores a DCID value.
+  RESOLVED_REF = 4;
+
+  // Represents a value that represents an entity like Quantity, QuantityRange, LatLng, etc.
+  ENTITY_DEF = 5;
+
+  // Represents a table column for TEMPLATE_MCF.
+  TABLE_COLUMN = 6;
+  // Represents a table entity for TEMPLATE_MCF.
+  TABLE_ENTITY = 7;
+}
