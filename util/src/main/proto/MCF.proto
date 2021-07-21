@@ -4,7 +4,7 @@ package org.datacommons.proto;
 
 // Proto representation of a Data Commons sub-graph which may be made of instance nodes (INSTANCE_MCF)
 // or template nodes (TEMPLATE_MCF).
-message MCFGraph {
+message McfGraph {
   // Represents a single value.
   message TypedValue {
     optional ValueType type = 1;
@@ -14,7 +14,7 @@ message MCFGraph {
   // Represents a list of property values.
   message Values {
     // A list of typed values.
-    repeated TypedValue typed_value = 1;
+    repeated TypedValue typed_values = 1;
   }
 
   // Map of a property name to its values.
@@ -23,14 +23,14 @@ message MCFGraph {
   }
 
   // Type of the sub-graph.
-  optional MCFType type = 1 [default = INSTANCE_MCF];
+  optional McfType type = 1 [default = INSTANCE_MCF];
 
   // A map from Local Node ID to its property and values.
   map<string, PropertyValues> nodes = 2;
 }
 
 // Type of MCF sub-graph.
-enum MCFType {
+enum McfType {
   UNKNOWN_MCF_TYPE = 0;
   // The sub-graph is made of instances.
   INSTANCE_MCF = 1;
@@ -57,8 +57,8 @@ enum ValueType {
   // Represents a resolved datacommons entity. Stores a DCID value.
   RESOLVED_REF = 4;
 
-  // Represents a value that represents an entity like Quantity, QuantityRange, LatLng, etc.
-  ENTITY_DEF = 5;
+  // Represents a complex value corresponding to Quantity, QuantityRange, LatLng, etc.
+  COMPLEX_VALUE = 5;
 
   // Represents a table column for TEMPLATE_MCF.
   TABLE_COLUMN = 6;
