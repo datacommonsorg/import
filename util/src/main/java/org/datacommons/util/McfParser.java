@@ -1,3 +1,17 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package org.datacommons.util;
 
 import org.apache.commons.csv.CSVFormat;
@@ -16,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+// A parser for converting text in Instance or Template MCF format into the McfGraph proto.
 // TODO: Implement COMPLEX_VALUE parsing
 // TODO: Implement TEMPLATE_MCF parsing
 public class McfParser {
@@ -26,6 +41,7 @@ public class McfParser {
   private String prevEntity;
   private boolean finished = false;
 
+  // Create an McfParser instance based on type and a bool indicating whether the MCF is resolved (DCIDs assigned).
   public static McfParser init(Mcf.McfType type, boolean isResolved) {
     McfParser parser = new McfParser();
     parser.graph = McfGraph.newBuilder();
@@ -36,6 +52,7 @@ public class McfParser {
     return parser;
   }
 
+  // Parse a string with nodes in MCF format into the McfGraph proto.
   public static McfGraph parseInstanceMcfString(String mcf_string, boolean isResolved) {
     McfParser parser = McfParser.init(Mcf.McfType.INSTANCE_MCF, isResolved);
     for (String l : mcf_string.split("\n")) {
@@ -44,6 +61,7 @@ public class McfParser {
     return parser.finish();
   }
 
+  // Parse a file with nodes in MCF format into the McfGraph proto.
   public static McfGraph parseInstanceMcfFile(String file_name, boolean isResolved) throws IOException {
     McfParser parser = McfParser.init(Mcf.McfType.INSTANCE_MCF, isResolved);
     Stream<String> lines = Files.lines(FileSystems.getDefault().getPath(file_name), StandardCharsets.UTF_8);
@@ -51,6 +69,7 @@ public class McfParser {
     return parser.finish();
   }
 
+  // Parse a line of MCF file.
   public void parseLine(String line) throws AssertionError {
     assert !finished;
     line = line.trim();
@@ -73,8 +92,10 @@ public class McfParser {
     String lhs = line.substring(0, colon).trim();
     String rhs = line.substring(colon + 1).trim();
     if (lhs.equals(Vocabulary.NODE)) {
-      assert rhs.indexOf(',') == -1 : "Found malformed 'Node' name (" + rhs + ") with comma. Node name must be a unary value.";
-      assert !rhs.startsWith("\"") : "Found malformed 'Node' name (" + rhs + ") that includes quotes. Node name must be a non-quoted value.";
+      assert rhs.indexOf(',') == -1 : "Found malformed 'Node' name (" + rhs +
+              ") with comma. Node name must be a unary value.";
+      assert !rhs.startsWith("\"") : "Found malformed 'Node' name (" + rhs +
+              ") that includes quotes. Node name must be a non-quoted value.";
       // New entity scope begins.
       parseNodeName(rhs);
 
@@ -89,8 +110,11 @@ public class McfParser {
     }
   }
 
+  // Returns true if we are at the boundary of a node after a sequence of parseLine() calls.
   public boolean isNodeBoundary() { return curEntityLineIdx == 0; }
 
+  // Extracts and returns the previous node as a single-node McfGraph proto. This is typically used to
+  // extract single-node graphs, and is called when isNodeBoundary() is true.
   public McfGraph extractPreviousNode() throws IllegalArgumentException {
     if (prevEntity.length() == 0) {
       return null;
@@ -102,6 +126,7 @@ public class McfParser {
     return node.build();
   }
 
+  // To be called after processing all lines of an MCF file (by calling parseLine()).
   public McfGraph finish() throws AssertionError {
     assert !finished;
     finished = true;
@@ -222,7 +247,6 @@ public class McfParser {
     tval.setValue(val);
     tval.setType(Mcf.ValueType.TEXT);
   }
-
 
   // Splits a string using the delimiter character. A field is not split if the delimiter is within a pair of double
   // quotes. If "includeEmpty" is true, then empty field is included.

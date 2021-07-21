@@ -1,3 +1,17 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package org.datacommons.util;
 
 import com.google.protobuf.TextFormat;
@@ -66,7 +80,8 @@ public class McfParserTest {
 
   @Test
   public void funcParseResolvedGraphAsString() throws IOException {
-    String mcf_string = IOUtils.toString(this.getClass().getResourceAsStream("McfParserTest_ResolvedGraph.mcf"), StandardCharsets.UTF_8);
+    String mcf_string = IOUtils.toString(this.getClass().getResourceAsStream("McfParserTest_ResolvedGraph.mcf"),
+            StandardCharsets.UTF_8);
     McfGraph act = McfParser.parseInstanceMcfString(mcf_string, true);
     McfGraph exp = expected("McfParserTest_ResolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
@@ -82,7 +97,8 @@ public class McfParserTest {
 
   @Test
   public void funcParseResolvedGraphAsSingleNodeGraphs() throws IOException {
-    String[] lines = IOUtils.toString(this.getClass().getResourceAsStream("McfParserTest_ResolvedGraph.mcf"), StandardCharsets.UTF_8).split("\n");
+    String[] lines = IOUtils.toString(this.getClass().getResourceAsStream("McfParserTest_ResolvedGraph.mcf"),
+            StandardCharsets.UTF_8).split("\n");
     McfParser parser = McfParser.init(Mcf.McfType.INSTANCE_MCF, true);
     McfGraph.Builder act = McfGraph.newBuilder();
     act.setType(Mcf.McfType.INSTANCE_MCF);
@@ -106,7 +122,8 @@ public class McfParserTest {
   }
 
   private McfGraph actual(String mcf_file, boolean isResolved) throws IOException {
-    String[] lines = IOUtils.toString(this.getClass().getResourceAsStream(mcf_file), StandardCharsets.UTF_8).split("\n");
+    String[] lines = IOUtils.toString(this.getClass().getResourceAsStream(mcf_file),
+            StandardCharsets.UTF_8).split("\n");
     McfParser parser = McfParser.init(Mcf.McfType.INSTANCE_MCF, isResolved);
     for (String l : lines) {
       parser.parseLine(l);

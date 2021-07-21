@@ -15,13 +15,23 @@ joining.
 
 * The tools are built using Apache Maven version 3.8.0.
 
-  ```brew install maven```
+  For MacOS: ```brew install maven```
 
 * The tools use protobuf and require that `protoc` be installed.
 
-  ```brew install protoc```
+  For MacOS: ```brew install protoc```
 
-## Development Process
+## Development
+
+### Build and Test
+
+You can build and test the Java code from a Unix shell.
+
+To build: ```./build.sh```
+
+To run tests: ```./test.sh```
+
+### Making changes
 
 In https://github.com/datacommonsorg/import, click on "Fork" button to fork the
 repo.
