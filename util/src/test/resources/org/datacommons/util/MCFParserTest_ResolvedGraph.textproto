@@ -4,33 +4,33 @@ nodes {
   value {
     pvs {
       key: "dcid"
-      value { typedValue { type: TEXT value: "dc/mx44" } }
+      value { typed_value { type: TEXT value: "dc/mx44" } }
     }
     pvs {
       key: "area"
-      value { typedValue { type: NUMBER value: "31.788" } }
+      value { typed_value { type: NUMBER value: "31.788" } }
     }
     pvs {
       key: "containedInPlace"
       value {
-        typedValue { type: RESOLVED_REF value: "dc/4fef4e" }
+        typed_value { type: RESOLVED_REF value: "dc/4fef4e" }
       }
     }
     pvs {
       key: "inCounty"
-      value { typedValue { type: NUMBER value: "true" } }
+      value { typed_value { type: NUMBER value: "true" } }
     }
     pvs {
       key: "name"
-      value { typedValue { type: TEXT value: "Mountain View" } }
+      value { typed_value { type: TEXT value: "Mountain View" } }
     }
     pvs {
       key: "population"
-      value { typedValue { type: NUMBER value: "81438" } }
+      value { typed_value { type: NUMBER value: "81438" } }
     }
     pvs {
       key: "typeOf"
-      value { typedValue { type: RESOLVED_REF value: "City" } }
+      value { typed_value { type: RESOLVED_REF value: "City" } }
     }
   }
 }
@@ -39,15 +39,15 @@ nodes {
   value {
     pvs {
       key: "dcid"
-      value { typedValue { type: TEXT value: "dc/2sffw13" } }
+      value { typed_value { type: TEXT value: "dc/2sffw13" } }
     }
     pvs {
       key: "name"
-      value { typedValue { type: TEXT value: "United States Of America" } }
+      value { typed_value { type: TEXT value: "United States Of America" } }
     }
     pvs {
       key: "typeOf"
-      value { typedValue { type: RESOLVED_REF value: "Country" } }
+      value { typed_value { type: RESOLVED_REF value: "Country" } }
     }
   }
 }
@@ -56,15 +56,15 @@ nodes {
   value {
     pvs {
       key: "dcid"
-      value { typedValue { type: TEXT value: "HousingUnit" } }
+      value { typed_value { type: TEXT value: "HousingUnit" } }
     }
     pvs {
       key: "typeOf"
-      value { typedValue { type: RESOLVED_REF value: "Class" } }
+      value { typed_value { type: RESOLVED_REF value: "Class" } }
     }
     pvs {
       key: "name"
-      value { typedValue { type: TEXT value: "HousingUnit" } }
+      value { typed_value { type: TEXT value: "HousingUnit" } }
     }
   }
 }
