@@ -1,7 +1,7 @@
-# Data Commons Import
+# Data Commons: Import Tools and Pipelines
 
-This is a repository for data import related code of the [Data
-Commons](https://datacommons.org) project.
+This is a repository for tools and pipelines for importing data into [Data
+Commons](https://datacommons.org).
 
 ## About Data Commons
 
@@ -11,11 +11,27 @@ includes [APIs](https://docs.datacommons.org/api/) and visual tools to easily
 explore and analyze data across different datasets without data cleaning or
 joining.
 
-## License
+## Dependencies
 
-Apache 2.0
+* The tools are built using Apache Maven version 3.8.0.
 
-### GitHub Development Process
+  For MacOS: ```brew install maven```
+
+* The tools use protobuf and require that `protoc` be installed.
+
+  For MacOS: ```brew install protoc```
+
+## Development
+
+### Build and Test
+
+You can build and test the Java code from a Unix shell.
+
+To build: ```./build.sh```
+
+To run tests: ```./test.sh```
+
+### Making changes
 
 In https://github.com/datacommonsorg/import, click on "Fork" button to fork the
 repo.
@@ -46,11 +62,15 @@ steps in [contributing.md](contributing.md).
 
 Wait for approval of the Pull Request and merge the change.
 
+## License
+
+Apache 2.0
+
 ## Support
 
-For general questions or issues about tool development, please open an issue
-on our [issues](https://github.com/datacommonsorg/import/issues) page. For all
-other questions, please send an email to `support@datacommons.org`.
+For general questions or issues, please open an issue on our
+[issues](https://github.com/datacommonsorg/import/issues) page. For all other
+questions, please send an email to `support@datacommons.org`.
 
 **Note** - This is not an officially supported Google product.
 

@@ -1,0 +1,18 @@
+Node: USACountry
+typeOf: schema:Country
+name: "United States Of America"
+dcid: dc/2sffw13
+
+Node: dcid:dc/mx44
+typeOf: dcs:City
+name: "Mountain View"
+# We must not have quoted dc/4fef4e
+containedInPlace: "dc/4fef4e"
+population: 81438
+area: 31.788
+inCounty: true
+
+Node: dcs:HousingUnit
+typeOf: Class
+# We must have quoted HousingUnit.
+name: HousingUnit
