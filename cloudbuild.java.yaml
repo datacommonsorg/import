@@ -1,4 +1,3 @@
-
 # TODO: Include protoc generation, linter.
 - steps:
   - name: maven:3-jdk-8
