@@ -61,7 +61,7 @@ public final class Vocabulary {
   public static final String DISSOLUTION_DATE = "dissolutionDate";
   public static final String GEO_DCID_PREFIX = "latLong";
   public static final String CONTAINED_IN_PLACE = "containedInPlace";
-  public static final String CONTAINED_IN = "containedIn";  // Superseded by "containedInPlace".
+  public static final String CONTAINED_IN = "containedIn"; // Superseded by "containedInPlace".
   public static final String GEO_ID = "geoId";
   public static final String WIKIDATA_ID = "wikidataId";
   public static final String GEO_NAMES_ID = "geoNamesId";
@@ -84,8 +84,8 @@ public final class Vocabulary {
   public static final String OBSERVATION_DATE = "observationDate";
   public static final String OBSERVATION_PERIOD = "observationPeriod";
   public static final String GENERIC_VALUE = "value";
-  public static final String OBSERVED_NODE = "observedNode";   // Deprecated
-  public static final String LOCATION = "location";   // Deprecated
+  public static final String OBSERVED_NODE = "observedNode"; // Deprecated
+  public static final String LOCATION = "location"; // Deprecated
   public static final String POPULATION_GROUP = "populationGroup";
 
   // Values taken by statType.
@@ -139,27 +139,37 @@ public final class Vocabulary {
   public static final String FUNCTIONAL_DEPS = "functionalDeps";
 
   public static boolean isSchemaReferenceProperty(String prop) {
-    return prop.equals(TYPE_OF) || prop.equals(SUB_CLASS_OF) ||
-    prop.equals(SUB_PROPERTY_OF) || prop.equals(RANGE_INCLUDES) ||
-    prop.equals(DOMAIN_INCLUDES) || prop.equals(SPECIALIZATION_OF) ||
-    prop.equals(MEMBER_OF);
+    return prop.equals(TYPE_OF)
+        || prop.equals(SUB_CLASS_OF)
+        || prop.equals(SUB_PROPERTY_OF)
+        || prop.equals(RANGE_INCLUDES)
+        || prop.equals(DOMAIN_INCLUDES)
+        || prop.equals(SPECIALIZATION_OF)
+        || prop.equals(MEMBER_OF);
   }
 
   public static boolean isReferenceProperty(String prop) {
-    return isSchemaReferenceProperty(prop) || prop.equals(LOCATION) ||
-           prop.equals(VARIABLE_MEASURED) || prop.equals(OBSERVATION_ABOUT) ||
-           prop.equals(OBSERVED_NODE) || prop.equals(CONTAINED_IN_PLACE) ||
-           prop.equals(CONTAINED_IN) || prop.equals(POPULATION_TYPE) ||
-           prop.equals(MEASURED_PROP) || prop.equals(POPULATION_GROUP) ||
-           prop.equals(CONSTRAINT_PROPS) || prop.equals(MEASUREMENT_METHOD) ||
-           prop.equals(MEASUREMENT_DENOMINATOR) || prop.equals(MEASUREMENT_QUALIFIER) ||
-           prop.equals(STAT_TYPE);
+    return isSchemaReferenceProperty(prop)
+        || prop.equals(LOCATION)
+        || prop.equals(VARIABLE_MEASURED)
+        || prop.equals(OBSERVATION_ABOUT)
+        || prop.equals(OBSERVED_NODE)
+        || prop.equals(CONTAINED_IN_PLACE)
+        || prop.equals(CONTAINED_IN)
+        || prop.equals(POPULATION_TYPE)
+        || prop.equals(MEASURED_PROP)
+        || prop.equals(POPULATION_GROUP)
+        || prop.equals(CONSTRAINT_PROPS)
+        || prop.equals(MEASUREMENT_METHOD)
+        || prop.equals(MEASUREMENT_DENOMINATOR)
+        || prop.equals(MEASUREMENT_QUALIFIER)
+        || prop.equals(STAT_TYPE);
   }
 
   public static boolean isGlobalReference(String val) {
-    return val.startsWith(DCID_PREFIX) ||
-            val.startsWith(DC_SCHEMA_PREFIX) ||
-            val.startsWith(SCHEMA_ORG_PREFIX);
+    return val.startsWith(DCID_PREFIX)
+        || val.startsWith(DC_SCHEMA_PREFIX)
+        || val.startsWith(SCHEMA_ORG_PREFIX);
   }
 
   public static boolean isInternalReference(String val) {

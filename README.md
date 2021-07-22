@@ -31,7 +31,15 @@ To build: ```./build.sh```
 
 To run tests: ```./test.sh```
 
-### Making changes
+### Coding Guidelines
+
+The code is formatted using
+[`google-java-format`](https://github.com/google/google-java-format). Please
+follow instructions in the
+[README](https://github.com/google/google-java-format/blob/master/README.md)
+to run the tool on command-line or within IntelliJ/Eclipse IDEs.
+
+### Contributing Changes
 
 In https://github.com/datacommonsorg/import, click on "Fork" button to fork the
 repo.
