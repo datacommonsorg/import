@@ -1,3 +1,3 @@
 #!/bin/bash
 
-mvn protobuf:compile compile 
+mvn com.github.os72:protoc-jar-maven-plugin:run compile
