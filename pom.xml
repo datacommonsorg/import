@@ -38,6 +38,8 @@
                     <version>0.6.1</version>
                     <configuration>
                         <protocExecutable>/usr/local/bin/protoc</protocExecutable>
+                        <clearOutputDirectory>false</clearOutputDirectory>
+                        <outputDirectory>${project.basedir}/src/main/java</outputDirectory>
                     </configuration>
                 </plugin>
                 <plugin>
