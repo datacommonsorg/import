@@ -1,0 +1,16 @@
+Node: E:City->E1
+typeOf: Place
+dcid: C:City->Col.row_info.id
+name: C:City->Col.name
+subType: dcs:City
+functionalDeps: dcid
+
+Node: E:City->E2
+typeOf: Provenance
+dcid: C:City->Col.row_info.prov_id
+functionalDeps: dcid
+
+Node: E:Provenance->E1
+typeOf: Provenance
+dcid: C:Provenance->Col.row_info.id
+name: C:Provenance->Col.name

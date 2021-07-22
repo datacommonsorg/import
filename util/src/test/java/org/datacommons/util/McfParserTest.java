@@ -19,14 +19,16 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
-import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
-import static org.datacommons.util.McfParser.SplitAndStripArg;
-import static org.datacommons.util.McfParser.splitAndStripWithQuoteEscape;
+import org.datacommons.proto.Mcf.McfType;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
+import static org.datacommons.util.McfParser.*;
 
 import org.junit.Test;
 
@@ -96,12 +98,29 @@ public class McfParserTest {
   }
 
   @Test
+  public void funcParseTemplateMcfAsString() throws IOException {
+    String mcf_string = IOUtils.toString(this.getClass().getResourceAsStream("McfParserTest_Template.tmcf"),
+            StandardCharsets.UTF_8);
+    McfGraph act = McfParser.parseTemplateMcfString(mcf_string);
+    McfGraph exp = expected("McfParserTest_Template.textproto");
+    assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
+  }
+
+  @Test
+  public void funcParseTemplateMcfAsFile() throws IOException, URISyntaxException {
+    String mcf_file = this.getClass().getResource("McfParserTest_Template.tmcf").toURI().toString();
+    McfGraph act = McfParser.parseTemplateMcfFile(mcf_file.substring(/* skip 'file:' */ 5));
+    McfGraph exp = expected("McfParserTest_Template.textproto");
+    assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
+  }
+
+  @Test
   public void funcParseResolvedGraphAsSingleNodeGraphs() throws IOException {
     String[] lines = IOUtils.toString(this.getClass().getResourceAsStream("McfParserTest_ResolvedGraph.mcf"),
             StandardCharsets.UTF_8).split("\n");
-    McfParser parser = McfParser.init(Mcf.McfType.INSTANCE_MCF, true);
+    McfParser parser = McfParser.init(McfType.INSTANCE_MCF, true);
     McfGraph.Builder act = McfGraph.newBuilder();
-    act.setType(Mcf.McfType.INSTANCE_MCF);
+    act.setType(McfType.INSTANCE_MCF);
     for (String l : lines) {
       parser.parseLine(l);
       if (parser.isNodeBoundary()) {
@@ -121,10 +140,61 @@ public class McfParserTest {
     assertThat(act.build()).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
 
+  @Test
+  public void funcMergeGraphs() {
+    List<McfGraph> graphs = Arrays.asList(
+            parseInstanceMcfString(
+                    "Node: MadCity\n"
+                            + "typeOf: dcs:City\n"
+                            + "dcid: dcid:dc/maa\n"
+                            + "overlapsWith: dcid:dc/456, dcid:dc/134\n"
+                            + "name: \"Madras\"\n",
+                    true),
+            parseInstanceMcfString(
+                    "Node: MadCity\n"
+                            + "typeOf: dcs:Corporation\n"
+                            + "dcid: dcid:dc/maa\n"
+                            + "overlapsWith: dcid:dc/134\n"
+                            + "containedInPlace: dcid:dc/tn\n"
+                            + "name: \"Chennai\"\n",
+                    true),
+            parseInstanceMcfString(
+                    "Node: MadState\n"
+                            + "typeOf: dcs:State\n"
+                            + "dcid: dcid:dc/tn\n"
+                            + "containedInPlace: dcid:country/india\n",
+                    true),
+            parseInstanceMcfString(
+                    "Node: MadState\n"
+                            + "typeOf: dcs:State\n"
+                            + "dcid: dcid:dc/tn\n"
+                            + "capital: dcid:dc/maa\n"
+                            + "containedInPlace: dcid:dc/southindia\n",
+                    true)
+            );
+    // Output should be the second node which is the largest, with other PVs
+    // patched in, and all types included.
+    McfGraph want = parseInstanceMcfString(
+            "Node: MadCity\n"
+                    + "typeOf: dcs:City, dcs:Corporation\n"
+                    + "dcid: dcid:dc/maa\n"
+                    + "containedInPlace: dcid:dc/tn\n"
+                    + "overlapsWith: dcid:dc/134, dcid:dc/456\n"
+                    + "name: \"Chennai\", \"Madras\"\n"
+                    + "\n"
+                    + "Node: MadState\n"
+                    + "typeOf: dcs:State\n"
+                    + "dcid: dcid:dc/tn\n"
+                    + "capital: dcid:dc/maa\n"
+                    + "containedInPlace: dcid:country/india, dcid:dc/southindia\n",
+            true);
+    assertThat(mergeGraphs(graphs)).ignoringRepeatedFieldOrder().isEqualTo(want);
+  }
+
   private McfGraph actual(String mcf_file, boolean isResolved) throws IOException {
     String[] lines = IOUtils.toString(this.getClass().getResourceAsStream(mcf_file),
             StandardCharsets.UTF_8).split("\n");
-    McfParser parser = McfParser.init(Mcf.McfType.INSTANCE_MCF, isResolved);
+    McfParser parser = McfParser.init(McfType.INSTANCE_MCF, isResolved);
     for (String l : lines) {
       parser.parseLine(l);
     }

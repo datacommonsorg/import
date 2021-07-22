@@ -17,22 +17,18 @@ package org.datacommons.util;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.io.IOUtils;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
-import java.nio.file.Path;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 // A parser for converting text in Instance or Template MCF format into the McfGraph proto.
 // TODO: Implement COMPLEX_VALUE parsing
-// TODO: Implement TEMPLATE_MCF parsing
 public class McfParser {
   private McfGraph.Builder graph;
   private boolean isResolved;
@@ -52,21 +48,24 @@ public class McfParser {
     return parser;
   }
 
-  // Parse a string with nodes in MCF format into the McfGraph proto.
+  // Parse a string with instance nodes in MCF format into the McfGraph proto.
   public static McfGraph parseInstanceMcfString(String mcf_string, boolean isResolved) {
-    McfParser parser = McfParser.init(Mcf.McfType.INSTANCE_MCF, isResolved);
-    for (String l : mcf_string.split("\n")) {
-      parser.parseLine(l);
-    }
-    return parser.finish();
+    return parseMcfString(mcf_string, Mcf.McfType.INSTANCE_MCF, isResolved);
   }
 
-  // Parse a file with nodes in MCF format into the McfGraph proto.
+  // Parse a file with instance nodes in MCF format into the McfGraph proto.
   public static McfGraph parseInstanceMcfFile(String file_name, boolean isResolved) throws IOException {
-    McfParser parser = McfParser.init(Mcf.McfType.INSTANCE_MCF, isResolved);
-    Stream<String> lines = Files.lines(FileSystems.getDefault().getPath(file_name), StandardCharsets.UTF_8);
-    lines.forEach(parser::parseLine);
-    return parser.finish();
+    return parseMcfFile(file_name, Mcf.McfType.INSTANCE_MCF, isResolved);
+  }
+
+  // Parse a string with template nodes in MCF format into the McfGraph proto.
+  public static McfGraph parseTemplateMcfString(String mcf_string) {
+    return parseMcfString(mcf_string, Mcf.McfType.TEMPLATE_MCF, false);
+  }
+
+  // Parse a file with template nodes in MCF format into the McfGraph proto.
+  public static McfGraph parseTemplateMcfFile(String file_name) throws IOException {
+    return parseMcfFile(file_name, Mcf.McfType.TEMPLATE_MCF, false);
   }
 
   // Parse a line of MCF file.
@@ -96,9 +95,13 @@ public class McfParser {
               ") with comma. Node name must be a unary value.";
       assert !rhs.startsWith("\"") : "Found malformed 'Node' name (" + rhs +
               ") that includes quotes. Node name must be a non-quoted value.";
-      // New entity scope begins.
-      parseNodeName(rhs);
-
+      if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
+        SchemaTerm term = parseSchemaTerm(rhs);
+        assert term.type == SchemaTerm.Type.ENTITY : "Found malformed entity name that is not an entity prefix " + rhs;
+      } else {
+        // New entity scope begins.
+        parseNodeName(rhs);
+      }
       prevEntity = curEntity;
       curEntity = rhs;
       curEntityLineIdx = 0;
@@ -128,13 +131,28 @@ public class McfParser {
 
   // To be called after processing all lines of an MCF file (by calling parseLine()).
   public McfGraph finish() throws AssertionError {
-    assert !finished;
+    assert !finished : "Called finish() twice!";
     finished = true;
     if (curEntity.length() == 0) {
       return null;
     }
     assert curEntityLineIdx != 0 : "Found a 'Node' (" + curEntity + ") with properties at the end of the file!";
     return graph.build();
+  }
+
+  private static McfGraph parseMcfString(String mcf_string, Mcf.McfType type, boolean isResolved) {
+    McfParser parser = McfParser.init(type, isResolved);
+    for (String l : mcf_string.split("\\r?\\n")) {
+      parser.parseLine(l);
+    }
+    return mergeGraphs(Collections.singletonList(parser.finish()));
+  }
+
+  private static McfGraph parseMcfFile(String file_name, Mcf.McfType type, boolean isResolved) throws IOException {
+    McfParser parser = McfParser.init(type, isResolved);
+    Stream<String> lines = Files.lines(FileSystems.getDefault().getPath(file_name), StandardCharsets.UTF_8);
+    lines.forEach(parser::parseLine);
+    return mergeGraphs(Collections.singletonList(parser.finish()));
   }
 
   private void parseNodeName(String node) {
@@ -152,7 +170,6 @@ public class McfParser {
     }
   }
 
-  // TODO(shanth): Make Map updates less inefficient.
   private void parseValues(String prop, String values) {
     if (prop.isEmpty() || values.isEmpty()) return;
 
@@ -177,7 +194,20 @@ public class McfParser {
   }
 
   private void parseTypedValue(String node, String prop, String val, McfGraph.TypedValue.Builder tval) {
-    assert graph.getType() != Mcf.McfType.TEMPLATE_MCF;
+    if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
+      assert !prop.equals("C") : "Found unsupported column name as property in node " + node;
+      SchemaTerm term = parseSchemaTerm(val);
+      if (term.type == SchemaTerm.Type.ENTITY) {
+        tval.setValue(val);
+        tval.setType(Mcf.ValueType.TABLE_ENTITY);
+        return;
+      } else if (term.type == SchemaTerm.Type.COLUMN) {
+        tval.setValue(val);
+        tval.setType(Mcf.ValueType.TABLE_COLUMN);
+        return;
+      }
+      // Fallthrough...
+    }
 
     boolean expectRef = Vocabulary.isReferenceProperty(prop);
 
@@ -246,6 +276,77 @@ public class McfParser {
     // instead of failing.
     tval.setValue(val);
     tval.setType(Mcf.ValueType.TEXT);
+  }
+
+  // Parses a token into a schema term.  This is relevant for values in a template MCF format.
+  public static final class SchemaTerm {
+    public enum Type { COLUMN, ENTITY, CONSTANT }
+
+    public Type type;
+    // For CONSTANT, this is raw MCF value. For ENTITY and COLUMN it is the entity name (E1, E2) or column name.
+    public String value;
+    // Set only when type != CONSTANT
+    public String table;
+  }
+
+  public SchemaTerm parseSchemaTerm(String value) {
+    SchemaTerm term = new SchemaTerm();
+    boolean isEntity = value.startsWith(Vocabulary.ENTITY_PREFIX);
+    boolean isColumn = value.startsWith(Vocabulary.COLUMN_PREFIX);
+    if (isEntity || isColumn) {
+      term.type = isEntity ? SchemaTerm.Type.ENTITY : SchemaTerm.Type.COLUMN;
+      String strippedValue = value.substring(isEntity ? Vocabulary.ENTITY_PREFIX.length() :
+              Vocabulary.COLUMN_PREFIX.length());
+      int delimiter = strippedValue.indexOf(Vocabulary.TABLE_DELIMITER);
+      assert delimiter != -1 : "Malformed " + (isEntity ? "entity" : "column") + " name in " + value;
+      term.table = strippedValue.substring(0, delimiter);
+      term.value = strippedValue.substring(delimiter);
+    } else {
+      term.type = SchemaTerm.Type.CONSTANT;
+      term.value = value;
+    }
+    return term;
+  }
+
+  // Given a list of MCF graphs, merges common nodes and de-duplicates PVs.
+  public static McfGraph mergeGraphs(List<McfGraph> graphs) {
+    assert !graphs.isEmpty() : "mergeGraphs called with empty graphs!";
+
+    // node-id -> {prop -> vals}
+    HashMap<String, HashMap<String, HashSet<McfGraph.TypedValue>>> dedupMap = new HashMap<>();
+
+    for (McfGraph graph : graphs) {
+      for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
+        for (Map.Entry<String, McfGraph.Values> pv : node.getValue().getPvsMap().entrySet()) {
+          if (!dedupMap.containsKey(node.getKey())) {
+            dedupMap.put(node.getKey(), new HashMap<>());
+          }
+          if (!dedupMap.get(node.getKey()).containsKey(pv.getKey())) {
+            dedupMap.get(node.getKey()).put(pv.getKey(), new HashSet<>());
+          }
+          for (McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
+            dedupMap.get(node.getKey()).get(pv.getKey()).add(tv);
+          }
+        }
+      }
+    }
+
+    McfGraph.Builder result = McfGraph.newBuilder();
+    result.setType(graphs.get(0).getType());
+    for (Map.Entry<String, HashMap<String, HashSet<McfGraph.TypedValue>>> node : dedupMap.entrySet()) {
+      McfGraph.PropertyValues.Builder pvs = result.getNodesOrDefault(node.getKey(),
+              McfGraph.PropertyValues.getDefaultInstance()).toBuilder();
+      for (Map.Entry<String, HashSet<McfGraph.TypedValue>> pv : node.getValue().entrySet()) {
+        McfGraph.Values.Builder tvs = pvs.getPvsOrDefault(pv.getKey(),
+                McfGraph.Values.getDefaultInstance()).toBuilder();
+        for (McfGraph.TypedValue tv : pv.getValue()) {
+          tvs.addTypedValues(tv);
+        }
+        pvs.putPvs(pv.getKey(), tvs.build());
+      }
+      result.putNodes(node.getKey(), pvs.build());
+    }
+    return result.build();
   }
 
   // Splits a string using the delimiter character. A field is not split if the delimiter is within a pair of double
