@@ -37,7 +37,8 @@ public class McfParser {
   private String prevEntity;
   private boolean finished = false;
 
-  // Create an McfParser instance based on type and a bool indicating whether the MCF is resolved (DCIDs assigned).
+  // Create an McfParser instance based on type and a bool indicating whether the MCF is resolved
+  // (DCIDs assigned).
   public static McfParser init(Mcf.McfType type, boolean isResolved) {
     McfParser parser = new McfParser();
     parser.graph = McfGraph.newBuilder();
@@ -54,7 +55,8 @@ public class McfParser {
   }
 
   // Parse a file with instance nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseInstanceMcfFile(String file_name, boolean isResolved) throws IOException {
+  public static McfGraph parseInstanceMcfFile(String file_name, boolean isResolved)
+      throws IOException {
     return parseMcfFile(file_name, Mcf.McfType.INSTANCE_MCF, isResolved);
   }
 
@@ -91,13 +93,18 @@ public class McfParser {
     String lhs = line.substring(0, colon).trim();
     String rhs = line.substring(colon + 1).trim();
     if (lhs.equals(Vocabulary.NODE)) {
-      assert rhs.indexOf(',') == -1 : "Found malformed 'Node' name (" + rhs +
-              ") with comma. Node name must be a unary value.";
-      assert !rhs.startsWith("\"") : "Found malformed 'Node' name (" + rhs +
-              ") that includes quotes. Node name must be a non-quoted value.";
+      assert rhs.indexOf(',') == -1
+          : "Found malformed 'Node' name ("
+              + rhs
+              + ") with comma. Node name must be a unary value.";
+      assert !rhs.startsWith("\"")
+          : "Found malformed 'Node' name ("
+              + rhs
+              + ") that includes quotes. Node name must be a non-quoted value.";
       if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
         SchemaTerm term = parseSchemaTerm(rhs);
-        assert term.type == SchemaTerm.Type.ENTITY : "Found malformed entity name that is not an entity prefix " + rhs;
+        assert term.type == SchemaTerm.Type.ENTITY
+            : "Found malformed entity name that is not an entity prefix " + rhs;
       } else {
         // New entity scope begins.
         parseNodeName(rhs);
@@ -114,9 +121,12 @@ public class McfParser {
   }
 
   // Returns true if we are at the boundary of a node after a sequence of parseLine() calls.
-  public boolean isNodeBoundary() { return curEntityLineIdx == 0; }
+  public boolean isNodeBoundary() {
+    return curEntityLineIdx == 0;
+  }
 
-  // Extracts and returns the previous node as a single-node McfGraph proto. This is typically used to
+  // Extracts and returns the previous node as a single-node McfGraph proto. This is typically used
+  // to
   // extract single-node graphs, and is called when isNodeBoundary() is true.
   public McfGraph extractPreviousNode() throws IllegalArgumentException {
     if (prevEntity.length() == 0) {
@@ -136,7 +146,8 @@ public class McfParser {
     if (curEntity.length() == 0) {
       return null;
     }
-    assert curEntityLineIdx != 0 : "Found a 'Node' (" + curEntity + ") with properties at the end of the file!";
+    assert curEntityLineIdx != 0
+        : "Found a 'Node' (" + curEntity + ") with properties at the end of the file!";
     return graph.build();
   }
 
@@ -148,9 +159,11 @@ public class McfParser {
     return mergeGraphs(Collections.singletonList(parser.finish()));
   }
 
-  private static McfGraph parseMcfFile(String file_name, Mcf.McfType type, boolean isResolved) throws IOException {
+  private static McfGraph parseMcfFile(String file_name, Mcf.McfType type, boolean isResolved)
+      throws IOException {
     McfParser parser = McfParser.init(type, isResolved);
-    Stream<String> lines = Files.lines(FileSystems.getDefault().getPath(file_name), StandardCharsets.UTF_8);
+    Stream<String> lines =
+        Files.lines(FileSystems.getDefault().getPath(file_name), StandardCharsets.UTF_8);
     lines.forEach(parser::parseLine);
     return mergeGraphs(Collections.singletonList(parser.finish()));
   }
@@ -158,10 +171,10 @@ public class McfParser {
   private void parseNodeName(String node) {
     if (Vocabulary.isGlobalReference(node)) {
       String prop = Vocabulary.DCID;
-      McfGraph.PropertyValues.Builder pvs = graph.getNodesOrDefault(node,
-              McfGraph.PropertyValues.getDefaultInstance()).toBuilder();
-      McfGraph.Values.Builder vals = pvs.getPvsOrDefault(prop,
-              McfGraph.Values.getDefaultInstance()).toBuilder();
+      McfGraph.PropertyValues.Builder pvs =
+          graph.getNodesOrDefault(node, McfGraph.PropertyValues.getDefaultInstance()).toBuilder();
+      McfGraph.Values.Builder vals =
+          pvs.getPvsOrDefault(prop, McfGraph.Values.getDefaultInstance()).toBuilder();
       McfGraph.TypedValue.Builder tval = vals.addTypedValuesBuilder();
       tval.setValue(node.substring(node.indexOf(Vocabulary.REFERENCE_DELIMITER) + 1));
       tval.setType(Mcf.ValueType.TEXT);
@@ -173,10 +186,12 @@ public class McfParser {
   private void parseValues(String prop, String values) {
     if (prop.isEmpty() || values.isEmpty()) return;
 
-    McfGraph.PropertyValues.Builder pvs = graph.getNodesOrDefault(curEntity,
-            McfGraph.PropertyValues.getDefaultInstance()).toBuilder();
-    McfGraph.Values.Builder vals = pvs.getPvsOrDefault(prop,
-            McfGraph.Values.getDefaultInstance()).toBuilder();
+    McfGraph.PropertyValues.Builder pvs =
+        graph
+            .getNodesOrDefault(curEntity, McfGraph.PropertyValues.getDefaultInstance())
+            .toBuilder();
+    McfGraph.Values.Builder vals =
+        pvs.getPvsOrDefault(prop, McfGraph.Values.getDefaultInstance()).toBuilder();
     if (prop.equals(Vocabulary.DCID) && Vocabulary.isGlobalReference(curEntity)) {
       vals.clearTypedValues();
     }
@@ -193,7 +208,8 @@ public class McfParser {
     graph.putNodes(curEntity, pvs.build());
   }
 
-  private void parseTypedValue(String node, String prop, String val, McfGraph.TypedValue.Builder tval) {
+  private void parseTypedValue(
+      String node, String prop, String val, McfGraph.TypedValue.Builder tval) {
     if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
       assert !prop.equals("C") : "Found unsupported column name as property in node " + node;
       SchemaTerm term = parseSchemaTerm(val);
@@ -225,8 +241,13 @@ public class McfParser {
     }
 
     if (val.startsWith("[")) {
-      assert val.endsWith("]") : "Found malformed Complex value (" + val +
-              ") without a closing bracket in property " + prop + " of node " + node;
+      assert val.endsWith("]")
+          : "Found malformed Complex value ("
+              + val
+              + ") without a closing bracket in property "
+              + prop
+              + " of node "
+              + node;
       tval.setValue(val);
       tval.setType(Mcf.ValueType.COMPLEX_VALUE);
       return;
@@ -280,10 +301,15 @@ public class McfParser {
 
   // Parses a token into a schema term.  This is relevant for values in a template MCF format.
   public static final class SchemaTerm {
-    public enum Type { COLUMN, ENTITY, CONSTANT }
+    public enum Type {
+      COLUMN,
+      ENTITY,
+      CONSTANT
+    }
 
     public Type type;
-    // For CONSTANT, this is raw MCF value. For ENTITY and COLUMN it is the entity name (E1, E2) or column name.
+    // For CONSTANT, this is raw MCF value. For ENTITY and COLUMN it is the entity name (E1, E2) or
+    // column name.
     public String value;
     // Set only when type != CONSTANT
     public String table;
@@ -295,10 +321,12 @@ public class McfParser {
     boolean isColumn = value.startsWith(Vocabulary.COLUMN_PREFIX);
     if (isEntity || isColumn) {
       term.type = isEntity ? SchemaTerm.Type.ENTITY : SchemaTerm.Type.COLUMN;
-      String strippedValue = value.substring(isEntity ? Vocabulary.ENTITY_PREFIX.length() :
-              Vocabulary.COLUMN_PREFIX.length());
+      String strippedValue =
+          value.substring(
+              isEntity ? Vocabulary.ENTITY_PREFIX.length() : Vocabulary.COLUMN_PREFIX.length());
       int delimiter = strippedValue.indexOf(Vocabulary.TABLE_DELIMITER);
-      assert delimiter != -1 : "Malformed " + (isEntity ? "entity" : "column") + " name in " + value;
+      assert delimiter != -1
+          : "Malformed " + (isEntity ? "entity" : "column") + " name in " + value;
       term.table = strippedValue.substring(0, delimiter);
       term.value = strippedValue.substring(delimiter);
     } else {
@@ -333,12 +361,15 @@ public class McfParser {
 
     McfGraph.Builder result = McfGraph.newBuilder();
     result.setType(graphs.get(0).getType());
-    for (Map.Entry<String, HashMap<String, HashSet<McfGraph.TypedValue>>> node : dedupMap.entrySet()) {
-      McfGraph.PropertyValues.Builder pvs = result.getNodesOrDefault(node.getKey(),
-              McfGraph.PropertyValues.getDefaultInstance()).toBuilder();
+    for (Map.Entry<String, HashMap<String, HashSet<McfGraph.TypedValue>>> node :
+        dedupMap.entrySet()) {
+      McfGraph.PropertyValues.Builder pvs =
+          result
+              .getNodesOrDefault(node.getKey(), McfGraph.PropertyValues.getDefaultInstance())
+              .toBuilder();
       for (Map.Entry<String, HashSet<McfGraph.TypedValue>> pv : node.getValue().entrySet()) {
-        McfGraph.Values.Builder tvs = pvs.getPvsOrDefault(pv.getKey(),
-                McfGraph.Values.getDefaultInstance()).toBuilder();
+        McfGraph.Values.Builder tvs =
+            pvs.getPvsOrDefault(pv.getKey(), McfGraph.Values.getDefaultInstance()).toBuilder();
         for (McfGraph.TypedValue tv : pv.getValue()) {
           tvs.addTypedValues(tv);
         }
@@ -349,7 +380,8 @@ public class McfParser {
     return result.build();
   }
 
-  // Splits a string using the delimiter character. A field is not split if the delimiter is within a pair of double
+  // Splits a string using the delimiter character. A field is not split if the delimiter is within
+  // a pair of double
   // quotes. If "includeEmpty" is true, then empty field is included.
   //
   // For example "1,2,3" will be split into ["1","2","3"] but "'1,234',5" will be
@@ -361,13 +393,16 @@ public class McfParser {
     public boolean stripEnclosingQuotes = true;
   }
   // NOTE: We do not strip enclosing quotes in this function.
-  public static List<String> splitAndStripWithQuoteEscape(String orig, SplitAndStripArg arg) throws AssertionError {
+  public static List<String> splitAndStripWithQuoteEscape(String orig, SplitAndStripArg arg)
+      throws AssertionError {
     List<String> splits = new ArrayList<>();
     try {
       // withIgnoreSurroundingSpaces() is important to treat something like:
       //    `first, "second, with comma"`
       // as two fields: 1. `first`, 2. `second, with comma`
-      CSVParser parser = new CSVParser(new StringReader(orig),
+      CSVParser parser =
+          new CSVParser(
+              new StringReader(orig),
               CSVFormat.DEFAULT.withDelimiter(arg.delimiter).withIgnoreSurroundingSpaces());
       List<CSVRecord> records = parser.getRecords();
       assert records.size() == 1 : orig;
@@ -397,15 +432,18 @@ public class McfParser {
     try {
       long l = Long.parseLong(val);
       return true;
-    } catch (NumberFormatException e) {}
+    } catch (NumberFormatException e) {
+    }
     try {
       long l = Long.parseUnsignedLong(val);
       return true;
-    } catch (NumberFormatException e) {}
+    } catch (NumberFormatException e) {
+    }
     try {
       double d = Double.parseDouble(val);
       return true;
-    } catch (NumberFormatException e) {}
+    } catch (NumberFormatException e) {
+    }
     return false;
   }
 
