@@ -1,0 +1,115 @@
+type: TEMPLATE_MCF
+nodes {
+  key: "E:City->E1"
+  value {
+    pvs {
+      key: "dcid"
+      value {
+        typed_values {
+          type: TABLE_COLUMN
+          value: "C:City->Col.row_info.id"
+        }
+      }
+    }
+    pvs {
+      key: "functionalDeps"
+      value {
+        typed_values {
+          type: TEXT
+          value: "dcid"
+        }
+      }
+    }
+    pvs {
+      key: "name"
+      value {
+        typed_values {
+          type: TABLE_COLUMN
+          value: "C:City->Col.name"
+        }
+      }
+    }
+    pvs {
+      key: "subType"
+      value {
+        typed_values {
+          type: RESOLVED_REF
+          value: "City"
+        }
+      }
+    }
+    pvs {
+      key: "typeOf"
+      value {
+        typed_values {
+          type: RESOLVED_REF
+          value: "Place"
+        }
+      }
+    }
+  }
+}
+nodes {
+  key: "E:City->E2"
+  value {
+    pvs {
+      key: "dcid"
+      value {
+        typed_values {
+          type: TABLE_COLUMN
+          value: "C:City->Col.row_info.prov_id"
+        }
+      }
+    }
+    pvs {
+      key: "functionalDeps"
+      value {
+        typed_values {
+          type: TEXT
+          value: "dcid"
+        }
+      }
+    }
+    pvs {
+      key: "typeOf"
+      value {
+        typed_values {
+          type: RESOLVED_REF
+          value: "Provenance"
+        }
+      }
+    }
+  }
+}
+nodes {
+  key: "E:Provenance->E1"
+  value {
+    pvs {
+      key: "dcid"
+      value {
+        typed_values {
+          type: TABLE_COLUMN
+          value: "C:Provenance->Col.row_info.id"
+        }
+      }
+    }
+    pvs {
+      key: "name"
+      value {
+        typed_values {
+          type: TABLE_COLUMN
+          value: "C:Provenance->Col.name"
+        }
+      }
+    }
+    pvs {
+      key: "typeOf"
+      value {
+        typed_values {
+          type: RESOLVED_REF
+          value: "Provenance"
+        }
+      }
+    }
+  }
+}
