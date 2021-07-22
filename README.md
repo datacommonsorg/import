@@ -37,7 +37,11 @@ The code is formatted using
 [`google-java-format`](https://github.com/google/google-java-format). Please
 follow instructions in the
 [README](https://github.com/google/google-java-format/blob/master/README.md)
-to run the tool on command-line or within IntelliJ/Eclipse IDEs.
+to integrate with IntelliJ/Eclipse IDEs.
+
+The format can be checked as part of pre-submit, and by running `./test.sh`.
+
+To fix the code format, run: ```mvn com.coveo:fmt-maven-plugin:format```
 
 ### Contributing Changes
 
