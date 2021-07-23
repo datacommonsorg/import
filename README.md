@@ -27,9 +27,9 @@ joining.
 
 You can build and test the Java code from a Unix shell.
 
-To build: ```./build.sh```
+To build: ```mvn compile```
 
-To run tests: ```./test.sh```
+To run tests: ```mvn test```
 
 ### Coding Guidelines
 
