@@ -20,20 +20,24 @@ message CounterSet {
     map<string, int64> counters = 1;
 }
 
+//
+// A log of import processing with details on any warnings, errors, etc.
+//
 message Log {
     message Location {
         // Name of the file. Could be a full path or not. Typically, this is
         // an MCF file or CSV.
         optional string file = 1;
-        // Line number in file, starting from 1.  Matches the row number in CSV (since we do
-        // not handle newlines in values).
+        // Line number in file, starting from 1.  Matches the row number in
+        // CSV (since we do not handle newlines in values).
         optional int64 line_number = 2;
         // Column number in line, starting from 1. Can be empty.
         optional int64 column_number = 3;
-        // Set when the input is a CSV.
+        // Column name set when the input is a CSV. Can be empty.
         optional string column_name = 4;
     }
 
+    // Severity level of the message.
     enum Level {
         LEVEL_UNSPECIFIED = 0;
         LEVEL_INFO = 1;
@@ -42,7 +46,8 @@ message Log {
         LEVEL_FATAL = 4;
     }
 
-    // One log entry. This could be a sample of messages for a particular counter.
+    // One log entry. This could be a sample of messages for a particular
+    // counter.
     message Entry {
         optional Level level = 1;
         optional Location location = 2;
