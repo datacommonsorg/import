@@ -1,5 +1,5 @@
-# TODO: Include protoc generation, linter.
+# Generate protoc, build, check-format and run test
 steps:
-- name: "maven:3-jdk-8"
+- name: "maven:3-jdk-11"
   entrypoint: "mvn"
-  args: ["test"]
+  args: ["com.github.os72:protoc-jar-maven-plugin:run", "compile", "com.coveo:fmt-maven-plugin:check", "test"]

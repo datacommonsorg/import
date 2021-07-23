@@ -12,8 +12,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
     <!-- List the sub-dirs so that they all get included in an IntelliJ project -->
@@ -33,14 +33,35 @@
                     <version>3.8.0</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.xolstice.maven.plugins</groupId>
-                    <artifactId>protobuf-maven-plugin</artifactId>
-                    <version>0.6.1</version>
-                    <configuration>
-                        <protocExecutable>/usr/local/bin/protoc</protocExecutable>
-                        <clearOutputDirectory>false</clearOutputDirectory>
-                        <outputDirectory>${project.basedir}/src/main/java</outputDirectory>
-                    </configuration>
+                    <!-- For protobuf generation -->
+                    <groupId>com.github.os72</groupId>
+                    <artifactId>protoc-jar-maven-plugin</artifactId>
+                    <version>3.11.4</version>
+                    <executions>
+                        <execution>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>
+                            <configuration>
+                                <clearOutputDirectory>false</clearOutputDirectory>
+                                <outputDirectory>${project.basedir}/src/main/java</outputDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <!-- For google-java-format check -->
+                    <groupId>com.coveo</groupId>
+                    <artifactId>fmt-maven-plugin</artifactId>
+                    <version>2.11</version>
+                    <executions>
+                      <execution>
+                        <goals>
+                          <goal>check</goal>
+                        </goals>
+                      </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <artifactId>maven-resources-plugin</artifactId>
