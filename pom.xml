@@ -58,16 +58,17 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <!-- For google-java-format check -->
+                    <!-- For google-java-format check. Order this after generate-sources since they are in the same phase. -->
                     <groupId>com.coveo</groupId>
                     <artifactId>fmt-maven-plugin</artifactId>
                     <version>2.11</version>
                     <executions>
-                      <execution>
-                        <goals>
-                          <goal>check</goal>
-                        </goals>
-                      </execution>
+                        <execution>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>format</goal>
+                            </goals>
+                        </execution>
                     </executions>
                 </plugin>
                 <plugin>

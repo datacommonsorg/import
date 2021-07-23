@@ -25,10 +25,13 @@ message Log {
         // Name of the file. Could be a full path or not. Typically, this is
         // an MCF file or CSV.
         optional string file = 1;
-        // Line number in file, starting from 1.
+        // Line number in file, starting from 1.  Matches the row number in CSV (since we do
+        // not handle newlines in values).
         optional int64 line_number = 2;
         // Column number in line, starting from 1. Can be empty.
         optional int64 column_number = 3;
+        // Set when the input is a CSV.
+        optional string column_name = 4;
     }
 
     enum Level {

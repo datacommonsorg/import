@@ -39,9 +39,8 @@ follow instructions in the
 [README](https://github.com/google/google-java-format/blob/master/README.md)
 to integrate with IntelliJ/Eclipse IDEs.
 
-The format can be checked as part of pre-submit, and by running `./test.sh`.
-
-To fix the code format, run: ```mvn com.coveo:fmt-maven-plugin:format```
+The formatting is done as part of the build. It can be checked by running:
+```mvn com.coveo:fmt-maven-plugin:check```
 
 ### Contributing Changes
 

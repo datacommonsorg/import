@@ -157,9 +157,10 @@ public class McfParser {
   private static McfGraph parseMcfFile(String file_name, Mcf.McfType type, boolean isResolved)
       throws IOException {
     McfParser parser = McfParser.init(type, isResolved);
-    Stream<String> lines =
-        Files.lines(FileSystems.getDefault().getPath(file_name), StandardCharsets.UTF_8);
-    lines.forEach(parser::parseLine);
+    try (Stream<String> lines =
+        Files.lines(FileSystems.getDefault().getPath(file_name), StandardCharsets.UTF_8)) {
+      lines.forEachOrdered(parser::parseLine);
+    }
     return mergeGraphs(Collections.singletonList(parser.finish()));
   }
 
