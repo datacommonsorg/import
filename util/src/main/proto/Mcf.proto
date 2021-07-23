@@ -15,6 +15,7 @@
 syntax = "proto2";
 
 package org.datacommons.proto;
+import "Debug.proto";
 
 // Proto representation of a Data Commons sub-graph which may be made of instance nodes (INSTANCE_MCF)
 // or template nodes (TEMPLATE_MCF).
@@ -31,9 +32,14 @@ message McfGraph {
     repeated TypedValue typed_values = 1;
   }
 
-  // Map of a property name to its values.
+  // Information about a node.
   message PropertyValues {
+    // Map of a property name to its values.
     map<string, Values> pvs = 1;
+
+    // Information identifying the location of this node in the source.
+    // There can be multiple if PVs in this node are merged from different files.
+    repeated Log.Location location = 2;
   }
 
   // Type of the sub-graph.

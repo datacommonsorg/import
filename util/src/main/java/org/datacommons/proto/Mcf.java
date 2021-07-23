@@ -755,7 +755,6 @@ public final class Mcf {
        *
        * @return Whether the type field is set.
        */
-      @java.lang.Override
       public boolean hasType() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -764,7 +763,6 @@ public final class Mcf {
        *
        * @return The type.
        */
-      @java.lang.Override
       public org.datacommons.proto.Mcf.ValueType getType() {
         @SuppressWarnings("deprecation")
         org.datacommons.proto.Mcf.ValueType result =
@@ -779,7 +777,6 @@ public final class Mcf {
        *
        * @return Whether the value field is set.
        */
-      @java.lang.Override
       public boolean hasValue() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -788,7 +785,6 @@ public final class Mcf {
        *
        * @return The value.
        */
-      @java.lang.Override
       public java.lang.String getValue() {
         java.lang.Object ref = value_;
         if (ref instanceof java.lang.String) {
@@ -807,7 +803,6 @@ public final class Mcf {
        *
        * @return The bytes for value.
        */
-      @java.lang.Override
       public com.google.protobuf.ByteString getValueBytes() {
         java.lang.Object ref = value_;
         if (ref instanceof java.lang.String) {
@@ -1185,7 +1180,6 @@ public final class Mcf {
          *
          * @return Whether the type field is set.
          */
-        @java.lang.Override
         public boolean hasType() {
           return ((bitField0_ & 0x00000001) != 0);
         }
@@ -1194,7 +1188,6 @@ public final class Mcf {
          *
          * @return The type.
          */
-        @java.lang.Override
         public org.datacommons.proto.Mcf.ValueType getType() {
           @SuppressWarnings("deprecation")
           org.datacommons.proto.Mcf.ValueType result =
@@ -1537,7 +1530,6 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
-      @java.lang.Override
       public java.util.List<org.datacommons.proto.Mcf.McfGraph.TypedValue> getTypedValuesList() {
         return typedValues_;
       }
@@ -1550,7 +1542,6 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
-      @java.lang.Override
       public java.util.List<? extends org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>
           getTypedValuesOrBuilderList() {
         return typedValues_;
@@ -1564,7 +1555,6 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
-      @java.lang.Override
       public int getTypedValuesCount() {
         return typedValues_.size();
       }
@@ -1577,7 +1567,6 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
-      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.TypedValue getTypedValues(int index) {
         return typedValues_.get(index);
       }
@@ -1590,7 +1579,6 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
-      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getTypedValuesOrBuilder(
           int index) {
         return typedValues_.get(index);
@@ -2377,26 +2365,123 @@ public final class Mcf {
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.McfGraph.PropertyValues)
         com.google.protobuf.MessageOrBuilder {
 
-      /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Map of a property name to its values.
+       * </pre>
+       *
+       * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+       */
       int getPvsCount();
-      /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Map of a property name to its values.
+       * </pre>
+       *
+       * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+       */
       boolean containsPvs(java.lang.String key);
       /** Use {@link #getPvsMap()} instead. */
       @java.lang.Deprecated
       java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvs();
-      /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Map of a property name to its values.
+       * </pre>
+       *
+       * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+       */
       java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvsMap();
-      /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Map of a property name to its values.
+       * </pre>
+       *
+       * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+       */
       org.datacommons.proto.Mcf.McfGraph.Values getPvsOrDefault(
           java.lang.String key, org.datacommons.proto.Mcf.McfGraph.Values defaultValue);
-      /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Map of a property name to its values.
+       * </pre>
+       *
+       * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+       */
       org.datacommons.proto.Mcf.McfGraph.Values getPvsOrThrow(java.lang.String key);
+
+      /**
+       *
+       *
+       * <pre>
+       * Information identifying the location of this node in the source.
+       * There can be multiple if PVs in this node are merged from different files.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+       */
+      java.util.List<org.datacommons.proto.Debug.Log.Location> getLocationList();
+      /**
+       *
+       *
+       * <pre>
+       * Information identifying the location of this node in the source.
+       * There can be multiple if PVs in this node are merged from different files.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+       */
+      org.datacommons.proto.Debug.Log.Location getLocation(int index);
+      /**
+       *
+       *
+       * <pre>
+       * Information identifying the location of this node in the source.
+       * There can be multiple if PVs in this node are merged from different files.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+       */
+      int getLocationCount();
+      /**
+       *
+       *
+       * <pre>
+       * Information identifying the location of this node in the source.
+       * There can be multiple if PVs in this node are merged from different files.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+       */
+      java.util.List<? extends org.datacommons.proto.Debug.Log.LocationOrBuilder>
+          getLocationOrBuilderList();
+      /**
+       *
+       *
+       * <pre>
+       * Information identifying the location of this node in the source.
+       * There can be multiple if PVs in this node are merged from different files.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+       */
+      org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationOrBuilder(int index);
     }
     /**
      *
      *
      * <pre>
-     * Map of a property name to its values.
+     * Information about a node.
      * </pre>
      *
      * Protobuf type {@code org.datacommons.proto.McfGraph.PropertyValues}
@@ -2411,7 +2496,9 @@ public final class Mcf {
         super(builder);
       }
 
-      private PropertyValues() {}
+      private PropertyValues() {
+        location_ = java.util.Collections.emptyList();
+      }
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
@@ -2460,6 +2547,17 @@ public final class Mcf {
                   pvs_.getMutableMap().put(pvs__.getKey(), pvs__.getValue());
                   break;
                 }
+              case 18:
+                {
+                  if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                    location_ = new java.util.ArrayList<org.datacommons.proto.Debug.Log.Location>();
+                    mutable_bitField0_ |= 0x00000002;
+                  }
+                  location_.add(
+                      input.readMessage(
+                          org.datacommons.proto.Debug.Log.Location.PARSER, extensionRegistry));
+                  break;
+                }
               default:
                 {
                   if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
@@ -2475,6 +2573,9 @@ public final class Mcf {
           throw new com.google.protobuf.InvalidProtocolBufferException(e)
               .setUnfinishedMessage(this);
         } finally {
+          if (((mutable_bitField0_ & 0x00000002) != 0)) {
+            location_ = java.util.Collections.unmodifiableList(location_);
+          }
           this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
         }
@@ -2539,8 +2640,15 @@ public final class Mcf {
       public int getPvsCount() {
         return internalGetPvs().getMap().size();
       }
-      /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
-      @java.lang.Override
+      /**
+       *
+       *
+       * <pre>
+       * Map of a property name to its values.
+       * </pre>
+       *
+       * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+       */
       public boolean containsPvs(java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -2548,19 +2656,32 @@ public final class Mcf {
         return internalGetPvs().getMap().containsKey(key);
       }
       /** Use {@link #getPvsMap()} instead. */
-      @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvs() {
         return getPvsMap();
       }
-      /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
-      @java.lang.Override
+      /**
+       *
+       *
+       * <pre>
+       * Map of a property name to its values.
+       * </pre>
+       *
+       * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+       */
       public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
           getPvsMap() {
         return internalGetPvs().getMap();
       }
-      /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
-      @java.lang.Override
+      /**
+       *
+       *
+       * <pre>
+       * Map of a property name to its values.
+       * </pre>
+       *
+       * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+       */
       public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrDefault(
           java.lang.String key, org.datacommons.proto.Mcf.McfGraph.Values defaultValue) {
         if (key == null) {
@@ -2570,8 +2691,15 @@ public final class Mcf {
             internalGetPvs().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
-      /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
-      @java.lang.Override
+      /**
+       *
+       *
+       * <pre>
+       * Map of a property name to its values.
+       * </pre>
+       *
+       * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+       */
       public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrThrow(java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -2582,6 +2710,75 @@ public final class Mcf {
           throw new java.lang.IllegalArgumentException();
         }
         return map.get(key);
+      }
+
+      public static final int LOCATION_FIELD_NUMBER = 2;
+      private java.util.List<org.datacommons.proto.Debug.Log.Location> location_;
+      /**
+       *
+       *
+       * <pre>
+       * Information identifying the location of this node in the source.
+       * There can be multiple if PVs in this node are merged from different files.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+       */
+      public java.util.List<org.datacommons.proto.Debug.Log.Location> getLocationList() {
+        return location_;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Information identifying the location of this node in the source.
+       * There can be multiple if PVs in this node are merged from different files.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+       */
+      public java.util.List<? extends org.datacommons.proto.Debug.Log.LocationOrBuilder>
+          getLocationOrBuilderList() {
+        return location_;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Information identifying the location of this node in the source.
+       * There can be multiple if PVs in this node are merged from different files.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+       */
+      public int getLocationCount() {
+        return location_.size();
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Information identifying the location of this node in the source.
+       * There can be multiple if PVs in this node are merged from different files.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+       */
+      public org.datacommons.proto.Debug.Log.Location getLocation(int index) {
+        return location_.get(index);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Information identifying the location of this node in the source.
+       * There can be multiple if PVs in this node are merged from different files.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+       */
+      public org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationOrBuilder(int index) {
+        return location_.get(index);
       }
 
       private byte memoizedIsInitialized = -1;
@@ -2600,6 +2797,9 @@ public final class Mcf {
       public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
         com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
             output, internalGetPvs(), PvsDefaultEntryHolder.defaultEntry, 1);
+        for (int i = 0; i < location_.size(); i++) {
+          output.writeMessage(2, location_.get(i));
+        }
         unknownFields.writeTo(output);
       }
 
@@ -2620,6 +2820,9 @@ public final class Mcf {
                       .build();
           size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, pvs__);
         }
+        for (int i = 0; i < location_.size(); i++) {
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, location_.get(i));
+        }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
         return size;
@@ -2637,6 +2840,7 @@ public final class Mcf {
             (org.datacommons.proto.Mcf.McfGraph.PropertyValues) obj;
 
         if (!internalGetPvs().equals(other.internalGetPvs())) return false;
+        if (!getLocationList().equals(other.getLocationList())) return false;
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -2651,6 +2855,10 @@ public final class Mcf {
         if (!internalGetPvs().getMap().isEmpty()) {
           hash = (37 * hash) + PVS_FIELD_NUMBER;
           hash = (53 * hash) + internalGetPvs().hashCode();
+        }
+        if (getLocationCount() > 0) {
+          hash = (37 * hash) + LOCATION_FIELD_NUMBER;
+          hash = (53 * hash) + getLocationList().hashCode();
         }
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
@@ -2758,7 +2966,7 @@ public final class Mcf {
        *
        *
        * <pre>
-       * Map of a property name to its values.
+       * Information about a node.
        * </pre>
        *
        * Protobuf type {@code org.datacommons.proto.McfGraph.PropertyValues}
@@ -2814,13 +3022,21 @@ public final class Mcf {
         }
 
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+            getLocationFieldBuilder();
+          }
         }
 
         @java.lang.Override
         public Builder clear() {
           super.clear();
           internalGetMutablePvs().clear();
+          if (locationBuilder_ == null) {
+            location_ = java.util.Collections.emptyList();
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            locationBuilder_.clear();
+          }
           return this;
         }
 
@@ -2851,6 +3067,15 @@ public final class Mcf {
           int from_bitField0_ = bitField0_;
           result.pvs_ = internalGetPvs();
           result.pvs_.makeImmutable();
+          if (locationBuilder_ == null) {
+            if (((bitField0_ & 0x00000002) != 0)) {
+              location_ = java.util.Collections.unmodifiableList(location_);
+              bitField0_ = (bitField0_ & ~0x00000002);
+            }
+            result.location_ = location_;
+          } else {
+            result.location_ = locationBuilder_.build();
+          }
           onBuilt();
           return result;
         }
@@ -2904,6 +3129,33 @@ public final class Mcf {
           if (other == org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance())
             return this;
           internalGetMutablePvs().mergeFrom(other.internalGetPvs());
+          if (locationBuilder_ == null) {
+            if (!other.location_.isEmpty()) {
+              if (location_.isEmpty()) {
+                location_ = other.location_;
+                bitField0_ = (bitField0_ & ~0x00000002);
+              } else {
+                ensureLocationIsMutable();
+                location_.addAll(other.location_);
+              }
+              onChanged();
+            }
+          } else {
+            if (!other.location_.isEmpty()) {
+              if (locationBuilder_.isEmpty()) {
+                locationBuilder_.dispose();
+                locationBuilder_ = null;
+                location_ = other.location_;
+                bitField0_ = (bitField0_ & ~0x00000002);
+                locationBuilder_ =
+                    com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                        ? getLocationFieldBuilder()
+                        : null;
+              } else {
+                locationBuilder_.addAllMessages(other.location_);
+              }
+            }
+          }
           this.mergeUnknownFields(other.unknownFields);
           onChanged();
           return this;
@@ -2966,8 +3218,15 @@ public final class Mcf {
         public int getPvsCount() {
           return internalGetPvs().getMap().size();
         }
-        /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
-        @java.lang.Override
+        /**
+         *
+         *
+         * <pre>
+         * Map of a property name to its values.
+         * </pre>
+         *
+         * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+         */
         public boolean containsPvs(java.lang.String key) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -2975,19 +3234,32 @@ public final class Mcf {
           return internalGetPvs().getMap().containsKey(key);
         }
         /** Use {@link #getPvsMap()} instead. */
-        @java.lang.Override
         @java.lang.Deprecated
         public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvs() {
           return getPvsMap();
         }
-        /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
-        @java.lang.Override
+        /**
+         *
+         *
+         * <pre>
+         * Map of a property name to its values.
+         * </pre>
+         *
+         * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+         */
         public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
             getPvsMap() {
           return internalGetPvs().getMap();
         }
-        /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
-        @java.lang.Override
+        /**
+         *
+         *
+         * <pre>
+         * Map of a property name to its values.
+         * </pre>
+         *
+         * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+         */
         public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrDefault(
             java.lang.String key, org.datacommons.proto.Mcf.McfGraph.Values defaultValue) {
           if (key == null) {
@@ -2997,8 +3269,15 @@ public final class Mcf {
               internalGetPvs().getMap();
           return map.containsKey(key) ? map.get(key) : defaultValue;
         }
-        /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
-        @java.lang.Override
+        /**
+         *
+         *
+         * <pre>
+         * Map of a property name to its values.
+         * </pre>
+         *
+         * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+         */
         public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrThrow(java.lang.String key) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -3015,7 +3294,15 @@ public final class Mcf {
           internalGetMutablePvs().getMutableMap().clear();
           return this;
         }
-        /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Map of a property name to its values.
+         * </pre>
+         *
+         * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+         */
         public Builder removePvs(java.lang.String key) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -3029,7 +3316,15 @@ public final class Mcf {
             getMutablePvs() {
           return internalGetMutablePvs().getMutableMap();
         }
-        /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Map of a property name to its values.
+         * </pre>
+         *
+         * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+         */
         public Builder putPvs(
             java.lang.String key, org.datacommons.proto.Mcf.McfGraph.Values value) {
           if (key == null) {
@@ -3041,11 +3336,388 @@ public final class Mcf {
           internalGetMutablePvs().getMutableMap().put(key, value);
           return this;
         }
-        /** <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Map of a property name to its values.
+         * </pre>
+         *
+         * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
+         */
         public Builder putAllPvs(
             java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> values) {
           internalGetMutablePvs().getMutableMap().putAll(values);
           return this;
+        }
+
+        private java.util.List<org.datacommons.proto.Debug.Log.Location> location_ =
+            java.util.Collections.emptyList();
+
+        private void ensureLocationIsMutable() {
+          if (!((bitField0_ & 0x00000002) != 0)) {
+            location_ =
+                new java.util.ArrayList<org.datacommons.proto.Debug.Log.Location>(location_);
+            bitField0_ |= 0x00000002;
+          }
+        }
+
+        private com.google.protobuf.RepeatedFieldBuilderV3<
+                org.datacommons.proto.Debug.Log.Location,
+                org.datacommons.proto.Debug.Log.Location.Builder,
+                org.datacommons.proto.Debug.Log.LocationOrBuilder>
+            locationBuilder_;
+
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public java.util.List<org.datacommons.proto.Debug.Log.Location> getLocationList() {
+          if (locationBuilder_ == null) {
+            return java.util.Collections.unmodifiableList(location_);
+          } else {
+            return locationBuilder_.getMessageList();
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public int getLocationCount() {
+          if (locationBuilder_ == null) {
+            return location_.size();
+          } else {
+            return locationBuilder_.getCount();
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public org.datacommons.proto.Debug.Log.Location getLocation(int index) {
+          if (locationBuilder_ == null) {
+            return location_.get(index);
+          } else {
+            return locationBuilder_.getMessage(index);
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public Builder setLocation(int index, org.datacommons.proto.Debug.Log.Location value) {
+          if (locationBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureLocationIsMutable();
+            location_.set(index, value);
+            onChanged();
+          } else {
+            locationBuilder_.setMessage(index, value);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public Builder setLocation(
+            int index, org.datacommons.proto.Debug.Log.Location.Builder builderForValue) {
+          if (locationBuilder_ == null) {
+            ensureLocationIsMutable();
+            location_.set(index, builderForValue.build());
+            onChanged();
+          } else {
+            locationBuilder_.setMessage(index, builderForValue.build());
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public Builder addLocation(org.datacommons.proto.Debug.Log.Location value) {
+          if (locationBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureLocationIsMutable();
+            location_.add(value);
+            onChanged();
+          } else {
+            locationBuilder_.addMessage(value);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public Builder addLocation(int index, org.datacommons.proto.Debug.Log.Location value) {
+          if (locationBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureLocationIsMutable();
+            location_.add(index, value);
+            onChanged();
+          } else {
+            locationBuilder_.addMessage(index, value);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public Builder addLocation(
+            org.datacommons.proto.Debug.Log.Location.Builder builderForValue) {
+          if (locationBuilder_ == null) {
+            ensureLocationIsMutable();
+            location_.add(builderForValue.build());
+            onChanged();
+          } else {
+            locationBuilder_.addMessage(builderForValue.build());
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public Builder addLocation(
+            int index, org.datacommons.proto.Debug.Log.Location.Builder builderForValue) {
+          if (locationBuilder_ == null) {
+            ensureLocationIsMutable();
+            location_.add(index, builderForValue.build());
+            onChanged();
+          } else {
+            locationBuilder_.addMessage(index, builderForValue.build());
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public Builder addAllLocation(
+            java.lang.Iterable<? extends org.datacommons.proto.Debug.Log.Location> values) {
+          if (locationBuilder_ == null) {
+            ensureLocationIsMutable();
+            com.google.protobuf.AbstractMessageLite.Builder.addAll(values, location_);
+            onChanged();
+          } else {
+            locationBuilder_.addAllMessages(values);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public Builder clearLocation() {
+          if (locationBuilder_ == null) {
+            location_ = java.util.Collections.emptyList();
+            bitField0_ = (bitField0_ & ~0x00000002);
+            onChanged();
+          } else {
+            locationBuilder_.clear();
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public Builder removeLocation(int index) {
+          if (locationBuilder_ == null) {
+            ensureLocationIsMutable();
+            location_.remove(index);
+            onChanged();
+          } else {
+            locationBuilder_.remove(index);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public org.datacommons.proto.Debug.Log.Location.Builder getLocationBuilder(int index) {
+          return getLocationFieldBuilder().getBuilder(index);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationOrBuilder(int index) {
+          if (locationBuilder_ == null) {
+            return location_.get(index);
+          } else {
+            return locationBuilder_.getMessageOrBuilder(index);
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public java.util.List<? extends org.datacommons.proto.Debug.Log.LocationOrBuilder>
+            getLocationOrBuilderList() {
+          if (locationBuilder_ != null) {
+            return locationBuilder_.getMessageOrBuilderList();
+          } else {
+            return java.util.Collections.unmodifiableList(location_);
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public org.datacommons.proto.Debug.Log.Location.Builder addLocationBuilder() {
+          return getLocationFieldBuilder()
+              .addBuilder(org.datacommons.proto.Debug.Log.Location.getDefaultInstance());
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public org.datacommons.proto.Debug.Log.Location.Builder addLocationBuilder(int index) {
+          return getLocationFieldBuilder()
+              .addBuilder(index, org.datacommons.proto.Debug.Log.Location.getDefaultInstance());
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Information identifying the location of this node in the source.
+         * There can be multiple if PVs in this node are merged from different files.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location location = 2;</code>
+         */
+        public java.util.List<org.datacommons.proto.Debug.Log.Location.Builder>
+            getLocationBuilderList() {
+          return getLocationFieldBuilder().getBuilderList();
+        }
+
+        private com.google.protobuf.RepeatedFieldBuilderV3<
+                org.datacommons.proto.Debug.Log.Location,
+                org.datacommons.proto.Debug.Log.Location.Builder,
+                org.datacommons.proto.Debug.Log.LocationOrBuilder>
+            getLocationFieldBuilder() {
+          if (locationBuilder_ == null) {
+            locationBuilder_ =
+                new com.google.protobuf.RepeatedFieldBuilderV3<
+                    org.datacommons.proto.Debug.Log.Location,
+                    org.datacommons.proto.Debug.Log.Location.Builder,
+                    org.datacommons.proto.Debug.Log.LocationOrBuilder>(
+                    location_, ((bitField0_ & 0x00000002) != 0), getParentForChildren(), isClean());
+            location_ = null;
+          }
+          return locationBuilder_;
         }
 
         @java.lang.Override
@@ -3115,7 +3787,6 @@ public final class Mcf {
      *
      * @return Whether the type field is set.
      */
-    @java.lang.Override
     public boolean hasType() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -3130,7 +3801,6 @@ public final class Mcf {
      *
      * @return The type.
      */
-    @java.lang.Override
     public org.datacommons.proto.Mcf.McfType getType() {
       @SuppressWarnings("deprecation")
       org.datacommons.proto.Mcf.McfType result = org.datacommons.proto.Mcf.McfType.valueOf(type_);
@@ -3179,7 +3849,6 @@ public final class Mcf {
      *
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
-    @java.lang.Override
     public boolean containsNodes(java.lang.String key) {
       if (key == null) {
         throw new java.lang.NullPointerException();
@@ -3187,7 +3856,6 @@ public final class Mcf {
       return internalGetNodes().getMap().containsKey(key);
     }
     /** Use {@link #getNodesMap()} instead. */
-    @java.lang.Override
     @java.lang.Deprecated
     public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
         getNodes() {
@@ -3202,7 +3870,6 @@ public final class Mcf {
      *
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
-    @java.lang.Override
     public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
         getNodesMap() {
       return internalGetNodes().getMap();
@@ -3216,7 +3883,6 @@ public final class Mcf {
      *
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
-    @java.lang.Override
     public org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrDefault(
         java.lang.String key, org.datacommons.proto.Mcf.McfGraph.PropertyValues defaultValue) {
       if (key == null) {
@@ -3235,7 +3901,6 @@ public final class Mcf {
      *
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
-    @java.lang.Override
     public org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrThrow(java.lang.String key) {
       if (key == null) {
         throw new java.lang.NullPointerException();
@@ -3631,7 +4296,6 @@ public final class Mcf {
        *
        * @return Whether the type field is set.
        */
-      @java.lang.Override
       public boolean hasType() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -3646,7 +4310,6 @@ public final class Mcf {
        *
        * @return The type.
        */
-      @java.lang.Override
       public org.datacommons.proto.Mcf.McfType getType() {
         @SuppressWarnings("deprecation")
         org.datacommons.proto.Mcf.McfType result = org.datacommons.proto.Mcf.McfType.valueOf(type_);
@@ -3730,7 +4393,6 @@ public final class Mcf {
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
-      @java.lang.Override
       public boolean containsNodes(java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -3738,7 +4400,6 @@ public final class Mcf {
         return internalGetNodes().getMap().containsKey(key);
       }
       /** Use {@link #getNodesMap()} instead. */
-      @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
           getNodes() {
@@ -3753,7 +4414,6 @@ public final class Mcf {
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
-      @java.lang.Override
       public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
           getNodesMap() {
         return internalGetNodes().getMap();
@@ -3767,7 +4427,6 @@ public final class Mcf {
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
-      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrDefault(
           java.lang.String key, org.datacommons.proto.Mcf.McfGraph.PropertyValues defaultValue) {
         if (key == null) {
@@ -3786,7 +4445,6 @@ public final class Mcf {
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
-      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrThrow(
           java.lang.String key) {
         if (key == null) {
@@ -3948,31 +4606,35 @@ public final class Mcf {
 
   static {
     java.lang.String[] descriptorData = {
-      "\n\tMcf.proto\022\025org.datacommons.proto\"\245\004\n\010M"
-          + "cfGraph\022:\n\004type\030\001 \001(\0162\036.org.datacommons."
-          + "proto.McfType:\014INSTANCE_MCF\0229\n\005nodes\030\002 \003"
-          + "(\0132*.org.datacommons.proto.McfGraph.Node"
-          + "sEntry\032K\n\nTypedValue\022.\n\004type\030\001 \001(\0162 .org"
-          + ".datacommons.proto.ValueType\022\r\n\005value\030\002 "
-          + "\001(\t\032J\n\006Values\022@\n\014typed_values\030\001 \003(\0132*.or"
-          + "g.datacommons.proto.McfGraph.TypedValue\032"
-          + "\252\001\n\016PropertyValues\022D\n\003pvs\030\001 \003(\01327.org.da"
-          + "tacommons.proto.McfGraph.PropertyValues."
-          + "PvsEntry\032R\n\010PvsEntry\022\013\n\003key\030\001 \001(\t\0225\n\005val"
-          + "ue\030\002 \001(\0132&.org.datacommons.proto.McfGrap"
-          + "h.Values:\0028\001\032\\\n\nNodesEntry\022\013\n\003key\030\001 \001(\t\022"
-          + "=\n\005value\030\002 \001(\0132..org.datacommons.proto.M"
-          + "cfGraph.PropertyValues:\0028\001*C\n\007McfType\022\024\n"
-          + "\020UNKNOWN_MCF_TYPE\020\000\022\020\n\014INSTANCE_MCF\020\001\022\020\n"
-          + "\014TEMPLATE_MCF\020\002*\226\001\n\tValueType\022\026\n\022UNKNOWN"
-          + "_VALUE_TYPE\020\000\022\010\n\004TEXT\020\001\022\n\n\006NUMBER\020\002\022\022\n\016U"
-          + "NRESOLVED_REF\020\003\022\020\n\014RESOLVED_REF\020\004\022\021\n\rCOM"
-          + "PLEX_VALUE\020\005\022\020\n\014TABLE_COLUMN\020\006\022\020\n\014TABLE_"
-          + "ENTITY\020\007"
+      "\n\tMcf.proto\022\025org.datacommons.proto\032\013Debu"
+          + "g.proto\"\334\004\n\010McfGraph\022:\n\004type\030\001 \001(\0162\036.org"
+          + ".datacommons.proto.McfType:\014INSTANCE_MCF"
+          + "\0229\n\005nodes\030\002 \003(\0132*.org.datacommons.proto."
+          + "McfGraph.NodesEntry\032K\n\nTypedValue\022.\n\004typ"
+          + "e\030\001 \001(\0162 .org.datacommons.proto.ValueTyp"
+          + "e\022\r\n\005value\030\002 \001(\t\032J\n\006Values\022@\n\014typed_valu"
+          + "es\030\001 \003(\0132*.org.datacommons.proto.McfGrap"
+          + "h.TypedValue\032\341\001\n\016PropertyValues\022D\n\003pvs\030\001"
+          + " \003(\01327.org.datacommons.proto.McfGraph.Pr"
+          + "opertyValues.PvsEntry\0225\n\010location\030\002 \003(\0132"
+          + "#.org.datacommons.proto.Log.Location\032R\n\010"
+          + "PvsEntry\022\013\n\003key\030\001 \001(\t\0225\n\005value\030\002 \001(\0132&.o"
+          + "rg.datacommons.proto.McfGraph.Values:\0028\001"
+          + "\032\\\n\nNodesEntry\022\013\n\003key\030\001 \001(\t\022=\n\005value\030\002 \001"
+          + "(\0132..org.datacommons.proto.McfGraph.Prop"
+          + "ertyValues:\0028\001*C\n\007McfType\022\024\n\020UNKNOWN_MCF"
+          + "_TYPE\020\000\022\020\n\014INSTANCE_MCF\020\001\022\020\n\014TEMPLATE_MC"
+          + "F\020\002*\226\001\n\tValueType\022\026\n\022UNKNOWN_VALUE_TYPE\020"
+          + "\000\022\010\n\004TEXT\020\001\022\n\n\006NUMBER\020\002\022\022\n\016UNRESOLVED_RE"
+          + "F\020\003\022\020\n\014RESOLVED_REF\020\004\022\021\n\rCOMPLEX_VALUE\020\005"
+          + "\022\020\n\014TABLE_COLUMN\020\006\022\020\n\014TABLE_ENTITY\020\007"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-            descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
+            descriptorData,
+            new com.google.protobuf.Descriptors.FileDescriptor[] {
+              org.datacommons.proto.Debug.getDescriptor(),
+            });
     internal_static_org_datacommons_proto_McfGraph_descriptor =
         getDescriptor().getMessageTypes().get(0);
     internal_static_org_datacommons_proto_McfGraph_fieldAccessorTable =
@@ -4003,7 +4665,7 @@ public final class Mcf {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor,
             new java.lang.String[] {
-              "Pvs",
+              "Pvs", "Location",
             });
     internal_static_org_datacommons_proto_McfGraph_PropertyValues_PvsEntry_descriptor =
         internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor
@@ -4023,6 +4685,7 @@ public final class Mcf {
             new java.lang.String[] {
               "Key", "Value",
             });
+    org.datacommons.proto.Debug.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)
