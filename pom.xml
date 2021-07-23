@@ -33,6 +33,7 @@
                     <version>3.8.0</version>
                 </plugin>
                 <plugin>
+                    <!-- For protobuf generation -->
                     <groupId>com.github.os72</groupId>
                     <artifactId>protoc-jar-maven-plugin</artifactId>
                     <version>3.11.4</version>
@@ -46,16 +47,16 @@
                                 <inputDirectories>
                                     <include>src/main/proto</include>
                                 </inputDirectories>
-																<outputTargets>
-																		<outputTarget>
-																				<type>java</type>
-																				<outputDirectory>src/main/java</outputDirectory>
-																		</outputTarget>
-																</outputTargets>
+                                <outputTargets>
+                                    <outputTarget>
+                                        <type>java</type>
+                                        <outputDirectory>src/main/java</outputDirectory>
+                                    </outputTarget>
+                                </outputTargets>
                             </configuration>
                         </execution>
                     </executions>
-                    </plugin>
+                </plugin>
                 <plugin>
                     <!-- For google-java-format check -->
                     <groupId>com.coveo</groupId>
