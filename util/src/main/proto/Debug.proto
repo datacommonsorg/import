@@ -16,10 +16,6 @@ syntax = "proto2";
 
 package org.datacommons.proto;
 
-message CounterSet {
-    map<string, int64> counters = 1;
-}
-
 //
 // A log of import processing with details on any warnings, errors, etc.
 //
@@ -44,6 +40,10 @@ message Log {
         LEVEL_WARNING = 2;
         LEVEL_ERROR = 3;
         LEVEL_FATAL = 4;
+    }
+
+    message CounterSet {
+      map<string, int64> counters = 1;
     }
 
     // One log entry. This could be a sample of messages for a particular

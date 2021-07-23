@@ -12,676 +12,6 @@ public final class Debug {
     registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
   }
 
-  public interface CounterSetOrBuilder
-      extends
-      // @@protoc_insertion_point(interface_extends:org.datacommons.proto.CounterSet)
-      com.google.protobuf.MessageOrBuilder {
-
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    int getCountersCount();
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    boolean containsCounters(java.lang.String key);
-    /** Use {@link #getCountersMap()} instead. */
-    @java.lang.Deprecated
-    java.util.Map<java.lang.String, java.lang.Long> getCounters();
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    java.util.Map<java.lang.String, java.lang.Long> getCountersMap();
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    long getCountersOrDefault(java.lang.String key, long defaultValue);
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    long getCountersOrThrow(java.lang.String key);
-  }
-  /** Protobuf type {@code org.datacommons.proto.CounterSet} */
-  public static final class CounterSet extends com.google.protobuf.GeneratedMessageV3
-      implements
-      // @@protoc_insertion_point(message_implements:org.datacommons.proto.CounterSet)
-      CounterSetOrBuilder {
-    private static final long serialVersionUID = 0L;
-    // Use CounterSet.newBuilder() to construct.
-    private CounterSet(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-
-    private CounterSet() {}
-
-    @java.lang.Override
-    @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
-      return new CounterSet();
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
-      return this.unknownFields;
-    }
-
-    private CounterSet(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10:
-              {
-                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                  counters_ =
-                      com.google.protobuf.MapField.newMapField(
-                          CountersDefaultEntryHolder.defaultEntry);
-                  mutable_bitField0_ |= 0x00000001;
-                }
-                com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> counters__ =
-                    input.readMessage(
-                        CountersDefaultEntryHolder.defaultEntry.getParserForType(),
-                        extensionRegistry);
-                counters_.getMutableMap().put(counters__.getKey(), counters__.getValue());
-                break;
-              }
-            default:
-              {
-                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
-              }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-
-    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return org.datacommons.proto.Debug
-          .internal_static_org_datacommons_proto_CounterSet_descriptor;
-    }
-
-    @SuppressWarnings({"rawtypes"})
-    @java.lang.Override
-    protected com.google.protobuf.MapField internalGetMapField(int number) {
-      switch (number) {
-        case 1:
-          return internalGetCounters();
-        default:
-          throw new RuntimeException("Invalid map field number: " + number);
-      }
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Debug
-          .internal_static_org_datacommons_proto_CounterSet_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Debug.CounterSet.class,
-              org.datacommons.proto.Debug.CounterSet.Builder.class);
-    }
-
-    public static final int COUNTERS_FIELD_NUMBER = 1;
-
-    private static final class CountersDefaultEntryHolder {
-      static final com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> defaultEntry =
-          com.google.protobuf.MapEntry.<java.lang.String, java.lang.Long>newDefaultInstance(
-              org.datacommons.proto.Debug
-                  .internal_static_org_datacommons_proto_CounterSet_CountersEntry_descriptor,
-              com.google.protobuf.WireFormat.FieldType.STRING,
-              "",
-              com.google.protobuf.WireFormat.FieldType.INT64,
-              0L);
-    }
-
-    private com.google.protobuf.MapField<java.lang.String, java.lang.Long> counters_;
-
-    private com.google.protobuf.MapField<java.lang.String, java.lang.Long> internalGetCounters() {
-      if (counters_ == null) {
-        return com.google.protobuf.MapField.emptyMapField(CountersDefaultEntryHolder.defaultEntry);
-      }
-      return counters_;
-    }
-
-    public int getCountersCount() {
-      return internalGetCounters().getMap().size();
-    }
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    public boolean containsCounters(java.lang.String key) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
-      return internalGetCounters().getMap().containsKey(key);
-    }
-    /** Use {@link #getCountersMap()} instead. */
-    @java.lang.Deprecated
-    public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
-      return getCountersMap();
-    }
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
-      return internalGetCounters().getMap();
-    }
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    public long getCountersOrDefault(java.lang.String key, long defaultValue) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
-      java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
-      return map.containsKey(key) ? map.get(key) : defaultValue;
-    }
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    public long getCountersOrThrow(java.lang.String key) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
-      java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
-      if (!map.containsKey(key)) {
-        throw new java.lang.IllegalArgumentException();
-      }
-      return map.get(key);
-    }
-
-    private byte memoizedIsInitialized = -1;
-
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-      com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
-          output, internalGetCounters(), CountersDefaultEntryHolder.defaultEntry, 1);
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      for (java.util.Map.Entry<java.lang.String, java.lang.Long> entry :
-          internalGetCounters().getMap().entrySet()) {
-        com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> counters__ =
-            CountersDefaultEntryHolder.defaultEntry
-                .newBuilderForType()
-                .setKey(entry.getKey())
-                .setValue(entry.getValue())
-                .build();
-        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, counters__);
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-        return true;
-      }
-      if (!(obj instanceof org.datacommons.proto.Debug.CounterSet)) {
-        return super.equals(obj);
-      }
-      org.datacommons.proto.Debug.CounterSet other = (org.datacommons.proto.Debug.CounterSet) obj;
-
-      if (!internalGetCounters().equals(other.internalGetCounters())) return false;
-      if (!unknownFields.equals(other.unknownFields)) return false;
-      return true;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (!internalGetCounters().getMap().isEmpty()) {
-        hash = (37 * hash) + COUNTERS_FIELD_NUMBER;
-        hash = (53 * hash) + internalGetCounters().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseDelimitedFrom(
-        java.io.InputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseDelimitedFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-          PARSER, input, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() {
-      return newBuilder();
-    }
-
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-
-    public static Builder newBuilder(org.datacommons.proto.Debug.CounterSet prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /** Protobuf type {@code org.datacommons.proto.CounterSet} */
-    public static final class Builder
-        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-        implements
-        // @@protoc_insertion_point(builder_implements:org.datacommons.proto.CounterSet)
-        org.datacommons.proto.Debug.CounterSetOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Debug
-            .internal_static_org_datacommons_proto_CounterSet_descriptor;
-      }
-
-      @SuppressWarnings({"rawtypes"})
-      protected com.google.protobuf.MapField internalGetMapField(int number) {
-        switch (number) {
-          case 1:
-            return internalGetCounters();
-          default:
-            throw new RuntimeException("Invalid map field number: " + number);
-        }
-      }
-
-      @SuppressWarnings({"rawtypes"})
-      protected com.google.protobuf.MapField internalGetMutableMapField(int number) {
-        switch (number) {
-          case 1:
-            return internalGetMutableCounters();
-          default:
-            throw new RuntimeException("Invalid map field number: " + number);
-        }
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Debug
-            .internal_static_org_datacommons_proto_CounterSet_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Debug.CounterSet.class,
-                org.datacommons.proto.Debug.CounterSet.Builder.class);
-      }
-
-      // Construct using org.datacommons.proto.Debug.CounterSet.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
-      }
-
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        internalGetMutableCounters().clear();
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-        return org.datacommons.proto.Debug
-            .internal_static_org_datacommons_proto_CounterSet_descriptor;
-      }
-
-      @java.lang.Override
-      public org.datacommons.proto.Debug.CounterSet getDefaultInstanceForType() {
-        return org.datacommons.proto.Debug.CounterSet.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public org.datacommons.proto.Debug.CounterSet build() {
-        org.datacommons.proto.Debug.CounterSet result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public org.datacommons.proto.Debug.CounterSet buildPartial() {
-        org.datacommons.proto.Debug.CounterSet result =
-            new org.datacommons.proto.Debug.CounterSet(this);
-        int from_bitField0_ = bitField0_;
-        result.counters_ = internalGetCounters();
-        result.counters_.makeImmutable();
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return super.clone();
-      }
-
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-        return super.setField(field, value);
-      }
-
-      @java.lang.Override
-      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return super.clearField(field);
-      }
-
-      @java.lang.Override
-      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return super.clearOneof(oneof);
-      }
-
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index,
-          java.lang.Object value) {
-        return super.setRepeatedField(field, index, value);
-      }
-
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-        return super.addRepeatedField(field, value);
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.datacommons.proto.Debug.CounterSet) {
-          return mergeFrom((org.datacommons.proto.Debug.CounterSet) other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(org.datacommons.proto.Debug.CounterSet other) {
-        if (other == org.datacommons.proto.Debug.CounterSet.getDefaultInstance()) return this;
-        internalGetMutableCounters().mergeFrom(other.internalGetCounters());
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        org.datacommons.proto.Debug.CounterSet parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.Debug.CounterSet) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-
-      private int bitField0_;
-
-      private com.google.protobuf.MapField<java.lang.String, java.lang.Long> counters_;
-
-      private com.google.protobuf.MapField<java.lang.String, java.lang.Long> internalGetCounters() {
-        if (counters_ == null) {
-          return com.google.protobuf.MapField.emptyMapField(
-              CountersDefaultEntryHolder.defaultEntry);
-        }
-        return counters_;
-      }
-
-      private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
-          internalGetMutableCounters() {
-        onChanged();
-        ;
-        if (counters_ == null) {
-          counters_ =
-              com.google.protobuf.MapField.newMapField(CountersDefaultEntryHolder.defaultEntry);
-        }
-        if (!counters_.isMutable()) {
-          counters_ = counters_.copy();
-        }
-        return counters_;
-      }
-
-      public int getCountersCount() {
-        return internalGetCounters().getMap().size();
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public boolean containsCounters(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        return internalGetCounters().getMap().containsKey(key);
-      }
-      /** Use {@link #getCountersMap()} instead. */
-      @java.lang.Deprecated
-      public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
-        return getCountersMap();
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
-        return internalGetCounters().getMap();
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public long getCountersOrDefault(java.lang.String key, long defaultValue) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
-        return map.containsKey(key) ? map.get(key) : defaultValue;
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public long getCountersOrThrow(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
-        if (!map.containsKey(key)) {
-          throw new java.lang.IllegalArgumentException();
-        }
-        return map.get(key);
-      }
-
-      public Builder clearCounters() {
-        internalGetMutableCounters().getMutableMap().clear();
-        return this;
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public Builder removeCounters(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        internalGetMutableCounters().getMutableMap().remove(key);
-        return this;
-      }
-      /** Use alternate mutation accessors instead. */
-      @java.lang.Deprecated
-      public java.util.Map<java.lang.String, java.lang.Long> getMutableCounters() {
-        return internalGetMutableCounters().getMutableMap();
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public Builder putCounters(java.lang.String key, long value) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-
-        internalGetMutableCounters().getMutableMap().put(key, value);
-        return this;
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public Builder putAllCounters(java.util.Map<java.lang.String, java.lang.Long> values) {
-        internalGetMutableCounters().getMutableMap().putAll(values);
-        return this;
-      }
-
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-      // @@protoc_insertion_point(builder_scope:org.datacommons.proto.CounterSet)
-    }
-
-    // @@protoc_insertion_point(class_scope:org.datacommons.proto.CounterSet)
-    private static final org.datacommons.proto.Debug.CounterSet DEFAULT_INSTANCE;
-
-    static {
-      DEFAULT_INSTANCE = new org.datacommons.proto.Debug.CounterSet();
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated
-    public static final com.google.protobuf.Parser<CounterSet> PARSER =
-        new com.google.protobuf.AbstractParser<CounterSet>() {
-          @java.lang.Override
-          public CounterSet parsePartialFrom(
-              com.google.protobuf.CodedInputStream input,
-              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-              throws com.google.protobuf.InvalidProtocolBufferException {
-            return new CounterSet(input, extensionRegistry);
-          }
-        };
-
-    public static com.google.protobuf.Parser<CounterSet> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<CounterSet> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public org.datacommons.proto.Debug.CounterSet getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-  }
-
   public interface LogOrBuilder
       extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.Log)
@@ -700,21 +30,29 @@ public final class Debug {
     org.datacommons.proto.Debug.Log.EntryOrBuilder getEntriesOrBuilder(int index);
 
     /**
-     * <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code>
+     * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
      *
      * @return Whether the counterSet field is set.
      */
     boolean hasCounterSet();
     /**
-     * <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code>
+     * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
      *
      * @return The counterSet.
      */
-    org.datacommons.proto.Debug.CounterSet getCounterSet();
-    /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-    org.datacommons.proto.Debug.CounterSetOrBuilder getCounterSetOrBuilder();
+    org.datacommons.proto.Debug.Log.CounterSet getCounterSet();
+    /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
+    org.datacommons.proto.Debug.Log.CounterSetOrBuilder getCounterSetOrBuilder();
   }
-  /** Protobuf type {@code org.datacommons.proto.Log} */
+  /**
+   *
+   *
+   * <pre>
+   * A log of import processing with details on any warnings, errors, etc.
+   * </pre>
+   *
+   * Protobuf type {@code org.datacommons.proto.Log}
+   */
   public static final class Log extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.Log)
@@ -772,13 +110,13 @@ public final class Debug {
               }
             case 18:
               {
-                org.datacommons.proto.Debug.CounterSet.Builder subBuilder = null;
+                org.datacommons.proto.Debug.Log.CounterSet.Builder subBuilder = null;
                 if (((bitField0_ & 0x00000001) != 0)) {
                   subBuilder = counterSet_.toBuilder();
                 }
                 counterSet_ =
                     input.readMessage(
-                        org.datacommons.proto.Debug.CounterSet.PARSER, extensionRegistry);
+                        org.datacommons.proto.Debug.Log.CounterSet.PARSER, extensionRegistry);
                 if (subBuilder != null) {
                   subBuilder.mergeFrom(counterSet_);
                   counterSet_ = subBuilder.buildPartial();
@@ -821,7 +159,15 @@ public final class Debug {
               org.datacommons.proto.Debug.Log.class, org.datacommons.proto.Debug.Log.Builder.class);
     }
 
-    /** Protobuf enum {@code org.datacommons.proto.Log.Level} */
+    /**
+     *
+     *
+     * <pre>
+     * Severity level of the message.
+     * </pre>
+     *
+     * Protobuf enum {@code org.datacommons.proto.Log.Level}
+     */
     public enum Level implements com.google.protobuf.ProtocolMessageEnum {
       /** <code>LEVEL_UNSPECIFIED = 0;</code> */
       LEVEL_UNSPECIFIED(0),
@@ -971,8 +317,8 @@ public final class Debug {
        *
        *
        * <pre>
-       * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-       * not handle newlines in values).
+       * Line number in file, starting from 1.  Matches the row number in
+       * CSV (since we do not handle newlines in values).
        * </pre>
        *
        * <code>optional int64 line_number = 2;</code>
@@ -984,8 +330,8 @@ public final class Debug {
        *
        *
        * <pre>
-       * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-       * not handle newlines in values).
+       * Line number in file, starting from 1.  Matches the row number in
+       * CSV (since we do not handle newlines in values).
        * </pre>
        *
        * <code>optional int64 line_number = 2;</code>
@@ -1023,7 +369,7 @@ public final class Debug {
        *
        *
        * <pre>
-       * Set when the input is a CSV.
+       * Column name set when the input is a CSV. Can be empty.
        * </pre>
        *
        * <code>optional string column_name = 4;</code>
@@ -1035,7 +381,7 @@ public final class Debug {
        *
        *
        * <pre>
-       * Set when the input is a CSV.
+       * Column name set when the input is a CSV. Can be empty.
        * </pre>
        *
        * <code>optional string column_name = 4;</code>
@@ -1047,7 +393,7 @@ public final class Debug {
        *
        *
        * <pre>
-       * Set when the input is a CSV.
+       * Column name set when the input is a CSV. Can be empty.
        * </pre>
        *
        * <code>optional string column_name = 4;</code>
@@ -1236,8 +582,8 @@ public final class Debug {
        *
        *
        * <pre>
-       * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-       * not handle newlines in values).
+       * Line number in file, starting from 1.  Matches the row number in
+       * CSV (since we do not handle newlines in values).
        * </pre>
        *
        * <code>optional int64 line_number = 2;</code>
@@ -1251,8 +597,8 @@ public final class Debug {
        *
        *
        * <pre>
-       * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-       * not handle newlines in values).
+       * Line number in file, starting from 1.  Matches the row number in
+       * CSV (since we do not handle newlines in values).
        * </pre>
        *
        * <code>optional int64 line_number = 2;</code>
@@ -1300,7 +646,7 @@ public final class Debug {
        *
        *
        * <pre>
-       * Set when the input is a CSV.
+       * Column name set when the input is a CSV. Can be empty.
        * </pre>
        *
        * <code>optional string column_name = 4;</code>
@@ -1314,7 +660,7 @@ public final class Debug {
        *
        *
        * <pre>
-       * Set when the input is a CSV.
+       * Column name set when the input is a CSV. Can be empty.
        * </pre>
        *
        * <code>optional string column_name = 4;</code>
@@ -1338,7 +684,7 @@ public final class Debug {
        *
        *
        * <pre>
-       * Set when the input is a CSV.
+       * Column name set when the input is a CSV. Can be empty.
        * </pre>
        *
        * <code>optional string column_name = 4;</code>
@@ -1886,8 +1232,8 @@ public final class Debug {
          *
          *
          * <pre>
-         * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-         * not handle newlines in values).
+         * Line number in file, starting from 1.  Matches the row number in
+         * CSV (since we do not handle newlines in values).
          * </pre>
          *
          * <code>optional int64 line_number = 2;</code>
@@ -1901,8 +1247,8 @@ public final class Debug {
          *
          *
          * <pre>
-         * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-         * not handle newlines in values).
+         * Line number in file, starting from 1.  Matches the row number in
+         * CSV (since we do not handle newlines in values).
          * </pre>
          *
          * <code>optional int64 line_number = 2;</code>
@@ -1916,8 +1262,8 @@ public final class Debug {
          *
          *
          * <pre>
-         * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-         * not handle newlines in values).
+         * Line number in file, starting from 1.  Matches the row number in
+         * CSV (since we do not handle newlines in values).
          * </pre>
          *
          * <code>optional int64 line_number = 2;</code>
@@ -1935,8 +1281,8 @@ public final class Debug {
          *
          *
          * <pre>
-         * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-         * not handle newlines in values).
+         * Line number in file, starting from 1.  Matches the row number in
+         * CSV (since we do not handle newlines in values).
          * </pre>
          *
          * <code>optional int64 line_number = 2;</code>
@@ -2020,7 +1366,7 @@ public final class Debug {
          *
          *
          * <pre>
-         * Set when the input is a CSV.
+         * Column name set when the input is a CSV. Can be empty.
          * </pre>
          *
          * <code>optional string column_name = 4;</code>
@@ -2034,7 +1380,7 @@ public final class Debug {
          *
          *
          * <pre>
-         * Set when the input is a CSV.
+         * Column name set when the input is a CSV. Can be empty.
          * </pre>
          *
          * <code>optional string column_name = 4;</code>
@@ -2058,7 +1404,7 @@ public final class Debug {
          *
          *
          * <pre>
-         * Set when the input is a CSV.
+         * Column name set when the input is a CSV. Can be empty.
          * </pre>
          *
          * <code>optional string column_name = 4;</code>
@@ -2080,7 +1426,7 @@ public final class Debug {
          *
          *
          * <pre>
-         * Set when the input is a CSV.
+         * Column name set when the input is a CSV. Can be empty.
          * </pre>
          *
          * <code>optional string column_name = 4;</code>
@@ -2101,7 +1447,7 @@ public final class Debug {
          *
          *
          * <pre>
-         * Set when the input is a CSV.
+         * Column name set when the input is a CSV. Can be empty.
          * </pre>
          *
          * <code>optional string column_name = 4;</code>
@@ -2118,7 +1464,7 @@ public final class Debug {
          *
          *
          * <pre>
-         * Set when the input is a CSV.
+         * Column name set when the input is a CSV. Can be empty.
          * </pre>
          *
          * <code>optional string column_name = 4;</code>
@@ -2185,6 +1531,680 @@ public final class Debug {
 
       @java.lang.Override
       public org.datacommons.proto.Debug.Log.Location getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+    }
+
+    public interface CounterSetOrBuilder
+        extends
+        // @@protoc_insertion_point(interface_extends:org.datacommons.proto.Log.CounterSet)
+        com.google.protobuf.MessageOrBuilder {
+
+      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      int getCountersCount();
+      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      boolean containsCounters(java.lang.String key);
+      /** Use {@link #getCountersMap()} instead. */
+      @java.lang.Deprecated
+      java.util.Map<java.lang.String, java.lang.Long> getCounters();
+      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      java.util.Map<java.lang.String, java.lang.Long> getCountersMap();
+      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      long getCountersOrDefault(java.lang.String key, long defaultValue);
+      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      long getCountersOrThrow(java.lang.String key);
+    }
+    /** Protobuf type {@code org.datacommons.proto.Log.CounterSet} */
+    public static final class CounterSet extends com.google.protobuf.GeneratedMessageV3
+        implements
+        // @@protoc_insertion_point(message_implements:org.datacommons.proto.Log.CounterSet)
+        CounterSetOrBuilder {
+      private static final long serialVersionUID = 0L;
+      // Use CounterSet.newBuilder() to construct.
+      private CounterSet(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+
+      private CounterSet() {}
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+        return new CounterSet();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+        return this.unknownFields;
+      }
+
+      private CounterSet(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10:
+                {
+                  if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                    counters_ =
+                        com.google.protobuf.MapField.newMapField(
+                            CountersDefaultEntryHolder.defaultEntry);
+                    mutable_bitField0_ |= 0x00000001;
+                  }
+                  com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> counters__ =
+                      input.readMessage(
+                          CountersDefaultEntryHolder.defaultEntry.getParserForType(),
+                          extensionRegistry);
+                  counters_.getMutableMap().put(counters__.getKey(), counters__.getValue());
+                  break;
+                }
+              default:
+                {
+                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_Log_CounterSet_descriptor;
+      }
+
+      @SuppressWarnings({"rawtypes"})
+      @java.lang.Override
+      protected com.google.protobuf.MapField internalGetMapField(int number) {
+        switch (number) {
+          case 1:
+            return internalGetCounters();
+          default:
+            throw new RuntimeException("Invalid map field number: " + number);
+        }
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_Log_CounterSet_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.datacommons.proto.Debug.Log.CounterSet.class,
+                org.datacommons.proto.Debug.Log.CounterSet.Builder.class);
+      }
+
+      public static final int COUNTERS_FIELD_NUMBER = 1;
+
+      private static final class CountersDefaultEntryHolder {
+        static final com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> defaultEntry =
+            com.google.protobuf.MapEntry.<java.lang.String, java.lang.Long>newDefaultInstance(
+                org.datacommons.proto.Debug
+                    .internal_static_org_datacommons_proto_Log_CounterSet_CountersEntry_descriptor,
+                com.google.protobuf.WireFormat.FieldType.STRING,
+                "",
+                com.google.protobuf.WireFormat.FieldType.INT64,
+                0L);
+      }
+
+      private com.google.protobuf.MapField<java.lang.String, java.lang.Long> counters_;
+
+      private com.google.protobuf.MapField<java.lang.String, java.lang.Long> internalGetCounters() {
+        if (counters_ == null) {
+          return com.google.protobuf.MapField.emptyMapField(
+              CountersDefaultEntryHolder.defaultEntry);
+        }
+        return counters_;
+      }
+
+      public int getCountersCount() {
+        return internalGetCounters().getMap().size();
+      }
+      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      public boolean containsCounters(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        return internalGetCounters().getMap().containsKey(key);
+      }
+      /** Use {@link #getCountersMap()} instead. */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
+        return getCountersMap();
+      }
+      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
+        return internalGetCounters().getMap();
+      }
+      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      public long getCountersOrDefault(java.lang.String key, long defaultValue) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
+        return map.containsKey(key) ? map.get(key) : defaultValue;
+      }
+      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      public long getCountersOrThrow(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
+        if (!map.containsKey(key)) {
+          throw new java.lang.IllegalArgumentException();
+        }
+        return map.get(key);
+      }
+
+      private byte memoizedIsInitialized = -1;
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+        com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
+            output, internalGetCounters(), CountersDefaultEntryHolder.defaultEntry, 1);
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        for (java.util.Map.Entry<java.lang.String, java.lang.Long> entry :
+            internalGetCounters().getMap().entrySet()) {
+          com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> counters__ =
+              CountersDefaultEntryHolder.defaultEntry
+                  .newBuilderForType()
+                  .setKey(entry.getKey())
+                  .setValue(entry.getValue())
+                  .build();
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, counters__);
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+          return true;
+        }
+        if (!(obj instanceof org.datacommons.proto.Debug.Log.CounterSet)) {
+          return super.equals(obj);
+        }
+        org.datacommons.proto.Debug.Log.CounterSet other =
+            (org.datacommons.proto.Debug.Log.CounterSet) obj;
+
+        if (!internalGetCounters().equals(other.internalGetCounters())) return false;
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (!internalGetCounters().getMap().isEmpty()) {
+          hash = (37 * hash) + COUNTERS_FIELD_NUMBER;
+          hash = (53 * hash) + internalGetCounters().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
+          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
+          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.Log.CounterSet parseDelimitedFrom(
+          java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Debug.Log.CounterSet parseDelimitedFrom(
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
+          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() {
+        return newBuilder();
+      }
+
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+
+      public static Builder newBuilder(org.datacommons.proto.Debug.Log.CounterSet prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /** Protobuf type {@code org.datacommons.proto.Log.CounterSet} */
+      public static final class Builder
+          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+          implements
+          // @@protoc_insertion_point(builder_implements:org.datacommons.proto.Log.CounterSet)
+          org.datacommons.proto.Debug.Log.CounterSetOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+          return org.datacommons.proto.Debug
+              .internal_static_org_datacommons_proto_Log_CounterSet_descriptor;
+        }
+
+        @SuppressWarnings({"rawtypes"})
+        protected com.google.protobuf.MapField internalGetMapField(int number) {
+          switch (number) {
+            case 1:
+              return internalGetCounters();
+            default:
+              throw new RuntimeException("Invalid map field number: " + number);
+          }
+        }
+
+        @SuppressWarnings({"rawtypes"})
+        protected com.google.protobuf.MapField internalGetMutableMapField(int number) {
+          switch (number) {
+            case 1:
+              return internalGetMutableCounters();
+            default:
+              throw new RuntimeException("Invalid map field number: " + number);
+          }
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return org.datacommons.proto.Debug
+              .internal_static_org_datacommons_proto_Log_CounterSet_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  org.datacommons.proto.Debug.Log.CounterSet.class,
+                  org.datacommons.proto.Debug.Log.CounterSet.Builder.class);
+        }
+
+        // Construct using org.datacommons.proto.Debug.Log.CounterSet.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+        }
+
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          internalGetMutableCounters().clear();
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+          return org.datacommons.proto.Debug
+              .internal_static_org_datacommons_proto_Log_CounterSet_descriptor;
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Debug.Log.CounterSet getDefaultInstanceForType() {
+          return org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Debug.Log.CounterSet build() {
+          org.datacommons.proto.Debug.Log.CounterSet result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Debug.Log.CounterSet buildPartial() {
+          org.datacommons.proto.Debug.Log.CounterSet result =
+              new org.datacommons.proto.Debug.Log.CounterSet(this);
+          int from_bitField0_ = bitField0_;
+          result.counters_ = internalGetCounters();
+          result.counters_.makeImmutable();
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          return super.setField(field, value);
+        }
+
+        @java.lang.Override
+        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+
+        @java.lang.Override
+        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index,
+            java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof org.datacommons.proto.Debug.Log.CounterSet) {
+            return mergeFrom((org.datacommons.proto.Debug.Log.CounterSet) other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(org.datacommons.proto.Debug.Log.CounterSet other) {
+          if (other == org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()) return this;
+          internalGetMutableCounters().mergeFrom(other.internalGetCounters());
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          org.datacommons.proto.Debug.Log.CounterSet parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (org.datacommons.proto.Debug.Log.CounterSet) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private int bitField0_;
+
+        private com.google.protobuf.MapField<java.lang.String, java.lang.Long> counters_;
+
+        private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
+            internalGetCounters() {
+          if (counters_ == null) {
+            return com.google.protobuf.MapField.emptyMapField(
+                CountersDefaultEntryHolder.defaultEntry);
+          }
+          return counters_;
+        }
+
+        private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
+            internalGetMutableCounters() {
+          onChanged();
+          ;
+          if (counters_ == null) {
+            counters_ =
+                com.google.protobuf.MapField.newMapField(CountersDefaultEntryHolder.defaultEntry);
+          }
+          if (!counters_.isMutable()) {
+            counters_ = counters_.copy();
+          }
+          return counters_;
+        }
+
+        public int getCountersCount() {
+          return internalGetCounters().getMap().size();
+        }
+        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        public boolean containsCounters(java.lang.String key) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+          return internalGetCounters().getMap().containsKey(key);
+        }
+        /** Use {@link #getCountersMap()} instead. */
+        @java.lang.Deprecated
+        public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
+          return getCountersMap();
+        }
+        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
+          return internalGetCounters().getMap();
+        }
+        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        public long getCountersOrDefault(java.lang.String key, long defaultValue) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+          java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
+          return map.containsKey(key) ? map.get(key) : defaultValue;
+        }
+        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        public long getCountersOrThrow(java.lang.String key) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+          java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
+          if (!map.containsKey(key)) {
+            throw new java.lang.IllegalArgumentException();
+          }
+          return map.get(key);
+        }
+
+        public Builder clearCounters() {
+          internalGetMutableCounters().getMutableMap().clear();
+          return this;
+        }
+        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        public Builder removeCounters(java.lang.String key) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+          internalGetMutableCounters().getMutableMap().remove(key);
+          return this;
+        }
+        /** Use alternate mutation accessors instead. */
+        @java.lang.Deprecated
+        public java.util.Map<java.lang.String, java.lang.Long> getMutableCounters() {
+          return internalGetMutableCounters().getMutableMap();
+        }
+        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        public Builder putCounters(java.lang.String key, long value) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+
+          internalGetMutableCounters().getMutableMap().put(key, value);
+          return this;
+        }
+        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        public Builder putAllCounters(java.util.Map<java.lang.String, java.lang.Long> values) {
+          internalGetMutableCounters().getMutableMap().putAll(values);
+          return this;
+        }
+
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+        // @@protoc_insertion_point(builder_scope:org.datacommons.proto.Log.CounterSet)
+      }
+
+      // @@protoc_insertion_point(class_scope:org.datacommons.proto.Log.CounterSet)
+      private static final org.datacommons.proto.Debug.Log.CounterSet DEFAULT_INSTANCE;
+
+      static {
+        DEFAULT_INSTANCE = new org.datacommons.proto.Debug.Log.CounterSet();
+      }
+
+      public static org.datacommons.proto.Debug.Log.CounterSet getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      @java.lang.Deprecated
+      public static final com.google.protobuf.Parser<CounterSet> PARSER =
+          new com.google.protobuf.AbstractParser<CounterSet>() {
+            @java.lang.Override
+            public CounterSet parsePartialFrom(
+                com.google.protobuf.CodedInputStream input,
+                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+              return new CounterSet(input, extensionRegistry);
+            }
+          };
+
+      public static com.google.protobuf.Parser<CounterSet> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<CounterSet> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.Log.CounterSet getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
     }
@@ -2300,7 +2320,8 @@ public final class Debug {
      *
      *
      * <pre>
-     * One log entry. This could be a sample of messages for a particular counter.
+     * One log entry. This could be a sample of messages for a particular
+     * counter.
      * </pre>
      *
      * Protobuf type {@code org.datacommons.proto.Log.Entry}
@@ -2816,7 +2837,8 @@ public final class Debug {
        *
        *
        * <pre>
-       * One log entry. This could be a sample of messages for a particular counter.
+       * One log entry. This could be a sample of messages for a particular
+       * counter.
        * </pre>
        *
        * Protobuf type {@code org.datacommons.proto.Log.Entry}
@@ -3507,9 +3529,9 @@ public final class Debug {
     }
 
     public static final int COUNTER_SET_FIELD_NUMBER = 2;
-    private org.datacommons.proto.Debug.CounterSet counterSet_;
+    private org.datacommons.proto.Debug.Log.CounterSet counterSet_;
     /**
-     * <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code>
+     * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
      *
      * @return Whether the counterSet field is set.
      */
@@ -3517,19 +3539,19 @@ public final class Debug {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
-     * <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code>
+     * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
      *
      * @return The counterSet.
      */
-    public org.datacommons.proto.Debug.CounterSet getCounterSet() {
+    public org.datacommons.proto.Debug.Log.CounterSet getCounterSet() {
       return counterSet_ == null
-          ? org.datacommons.proto.Debug.CounterSet.getDefaultInstance()
+          ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
           : counterSet_;
     }
-    /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-    public org.datacommons.proto.Debug.CounterSetOrBuilder getCounterSetOrBuilder() {
+    /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
+    public org.datacommons.proto.Debug.Log.CounterSetOrBuilder getCounterSetOrBuilder() {
       return counterSet_ == null
-          ? org.datacommons.proto.Debug.CounterSet.getDefaultInstance()
+          ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
           : counterSet_;
     }
 
@@ -3707,7 +3729,15 @@ public final class Debug {
       Builder builder = new Builder(parent);
       return builder;
     }
-    /** Protobuf type {@code org.datacommons.proto.Log} */
+    /**
+     *
+     *
+     * <pre>
+     * A log of import processing with details on any warnings, errors, etc.
+     * </pre>
+     *
+     * Protobuf type {@code org.datacommons.proto.Log}
+     */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
         implements
@@ -4120,14 +4150,14 @@ public final class Debug {
         return entriesBuilder_;
       }
 
-      private org.datacommons.proto.Debug.CounterSet counterSet_;
+      private org.datacommons.proto.Debug.Log.CounterSet counterSet_;
       private com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Debug.CounterSet,
-              org.datacommons.proto.Debug.CounterSet.Builder,
-              org.datacommons.proto.Debug.CounterSetOrBuilder>
+              org.datacommons.proto.Debug.Log.CounterSet,
+              org.datacommons.proto.Debug.Log.CounterSet.Builder,
+              org.datacommons.proto.Debug.Log.CounterSetOrBuilder>
           counterSetBuilder_;
       /**
-       * <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code>
+       * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
        *
        * @return Whether the counterSet field is set.
        */
@@ -4135,21 +4165,21 @@ public final class Debug {
         return ((bitField0_ & 0x00000002) != 0);
       }
       /**
-       * <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code>
+       * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
        *
        * @return The counterSet.
        */
-      public org.datacommons.proto.Debug.CounterSet getCounterSet() {
+      public org.datacommons.proto.Debug.Log.CounterSet getCounterSet() {
         if (counterSetBuilder_ == null) {
           return counterSet_ == null
-              ? org.datacommons.proto.Debug.CounterSet.getDefaultInstance()
+              ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
               : counterSet_;
         } else {
           return counterSetBuilder_.getMessage();
         }
       }
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-      public Builder setCounterSet(org.datacommons.proto.Debug.CounterSet value) {
+      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
+      public Builder setCounterSet(org.datacommons.proto.Debug.Log.CounterSet value) {
         if (counterSetBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -4162,8 +4192,9 @@ public final class Debug {
         bitField0_ |= 0x00000002;
         return this;
       }
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-      public Builder setCounterSet(org.datacommons.proto.Debug.CounterSet.Builder builderForValue) {
+      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
+      public Builder setCounterSet(
+          org.datacommons.proto.Debug.Log.CounterSet.Builder builderForValue) {
         if (counterSetBuilder_ == null) {
           counterSet_ = builderForValue.build();
           onChanged();
@@ -4173,14 +4204,14 @@ public final class Debug {
         bitField0_ |= 0x00000002;
         return this;
       }
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-      public Builder mergeCounterSet(org.datacommons.proto.Debug.CounterSet value) {
+      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
+      public Builder mergeCounterSet(org.datacommons.proto.Debug.Log.CounterSet value) {
         if (counterSetBuilder_ == null) {
           if (((bitField0_ & 0x00000002) != 0)
               && counterSet_ != null
-              && counterSet_ != org.datacommons.proto.Debug.CounterSet.getDefaultInstance()) {
+              && counterSet_ != org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()) {
             counterSet_ =
-                org.datacommons.proto.Debug.CounterSet.newBuilder(counterSet_)
+                org.datacommons.proto.Debug.Log.CounterSet.newBuilder(counterSet_)
                     .mergeFrom(value)
                     .buildPartial();
           } else {
@@ -4193,7 +4224,7 @@ public final class Debug {
         bitField0_ |= 0x00000002;
         return this;
       }
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
+      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
       public Builder clearCounterSet() {
         if (counterSetBuilder_ == null) {
           counterSet_ = null;
@@ -4204,34 +4235,34 @@ public final class Debug {
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-      public org.datacommons.proto.Debug.CounterSet.Builder getCounterSetBuilder() {
+      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
+      public org.datacommons.proto.Debug.Log.CounterSet.Builder getCounterSetBuilder() {
         bitField0_ |= 0x00000002;
         onChanged();
         return getCounterSetFieldBuilder().getBuilder();
       }
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-      public org.datacommons.proto.Debug.CounterSetOrBuilder getCounterSetOrBuilder() {
+      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
+      public org.datacommons.proto.Debug.Log.CounterSetOrBuilder getCounterSetOrBuilder() {
         if (counterSetBuilder_ != null) {
           return counterSetBuilder_.getMessageOrBuilder();
         } else {
           return counterSet_ == null
-              ? org.datacommons.proto.Debug.CounterSet.getDefaultInstance()
+              ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
               : counterSet_;
         }
       }
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
+      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Debug.CounterSet,
-              org.datacommons.proto.Debug.CounterSet.Builder,
-              org.datacommons.proto.Debug.CounterSetOrBuilder>
+              org.datacommons.proto.Debug.Log.CounterSet,
+              org.datacommons.proto.Debug.Log.CounterSet.Builder,
+              org.datacommons.proto.Debug.Log.CounterSetOrBuilder>
           getCounterSetFieldBuilder() {
         if (counterSetBuilder_ == null) {
           counterSetBuilder_ =
               new com.google.protobuf.SingleFieldBuilderV3<
-                  org.datacommons.proto.Debug.CounterSet,
-                  org.datacommons.proto.Debug.CounterSet.Builder,
-                  org.datacommons.proto.Debug.CounterSetOrBuilder>(
+                  org.datacommons.proto.Debug.Log.CounterSet,
+                  org.datacommons.proto.Debug.Log.CounterSet.Builder,
+                  org.datacommons.proto.Debug.Log.CounterSetOrBuilder>(
                   getCounterSet(), getParentForChildren(), isClean());
           counterSet_ = null;
         }
@@ -4292,14 +4323,6 @@ public final class Debug {
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_CounterSet_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_org_datacommons_proto_CounterSet_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_CounterSet_CountersEntry_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_org_datacommons_proto_CounterSet_CountersEntry_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
       internal_static_org_datacommons_proto_Log_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_Log_fieldAccessorTable;
@@ -4307,6 +4330,14 @@ public final class Debug {
       internal_static_org_datacommons_proto_Log_Location_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_Log_Location_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_org_datacommons_proto_Log_CounterSet_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_Log_CounterSet_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_org_datacommons_proto_Log_CounterSet_CountersEntry_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_Log_CounterSet_CountersEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
       internal_static_org_datacommons_proto_Log_Entry_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -4320,43 +4351,27 @@ public final class Debug {
 
   static {
     java.lang.String[] descriptorData = {
-      "\n\013Debug.proto\022\025org.datacommons.proto\"\200\001\n"
-          + "\nCounterSet\022A\n\010counters\030\001 \003(\0132/.org.data"
-          + "commons.proto.CounterSet.CountersEntry\032/"
-          + "\n\rCountersEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 "
-          + "\001(\003:\0028\001\"\304\003\n\003Log\0221\n\007entries\030\001 \003(\0132 .org.d"
-          + "atacommons.proto.Log.Entry\0226\n\013counter_se"
-          + "t\030\002 \001(\0132!.org.datacommons.proto.CounterS"
-          + "et\032Y\n\010Location\022\014\n\004file\030\001 \001(\t\022\023\n\013line_num"
-          + "ber\030\002 \001(\003\022\025\n\rcolumn_number\030\003 \001(\003\022\023\n\013colu"
-          + "mn_name\030\004 \001(\t\032\221\001\n\005Entry\022/\n\005level\030\001 \001(\0162 "
-          + ".org.datacommons.proto.Log.Level\0225\n\010loca"
-          + "tion\030\002 \001(\0132#.org.datacommons.proto.Log.L"
-          + "ocation\022\017\n\007message\030\003 \001(\t\022\017\n\007counter\030\004 \001("
-          + "\t\"c\n\005Level\022\025\n\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLEV"
-          + "EL_INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LEVEL_ER"
-          + "ROR\020\003\022\017\n\013LEVEL_FATAL\020\004"
+      "\n\013Debug.proto\022\025org.datacommons.proto\"\317\004\n"
+          + "\003Log\0221\n\007entries\030\001 \003(\0132 .org.datacommons."
+          + "proto.Log.Entry\022:\n\013counter_set\030\002 \001(\0132%.o"
+          + "rg.datacommons.proto.Log.CounterSet\032Y\n\010L"
+          + "ocation\022\014\n\004file\030\001 \001(\t\022\023\n\013line_number\030\002 \001"
+          + "(\003\022\025\n\rcolumn_number\030\003 \001(\003\022\023\n\013column_name"
+          + "\030\004 \001(\t\032\204\001\n\nCounterSet\022E\n\010counters\030\001 \003(\0132"
+          + "3.org.datacommons.proto.Log.CounterSet.C"
+          + "ountersEntry\032/\n\rCountersEntry\022\013\n\003key\030\001 \001"
+          + "(\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\221\001\n\005Entry\022/\n\005level"
+          + "\030\001 \001(\0162 .org.datacommons.proto.Log.Level"
+          + "\0225\n\010location\030\002 \001(\0132#.org.datacommons.pro"
+          + "to.Log.Location\022\017\n\007message\030\003 \001(\t\022\017\n\007coun"
+          + "ter\030\004 \001(\t\"c\n\005Level\022\025\n\021LEVEL_UNSPECIFIED\020"
+          + "\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013"
+          + "LEVEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
             descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
-    internal_static_org_datacommons_proto_CounterSet_descriptor =
-        getDescriptor().getMessageTypes().get(0);
-    internal_static_org_datacommons_proto_CounterSet_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_CounterSet_descriptor,
-            new java.lang.String[] {
-              "Counters",
-            });
-    internal_static_org_datacommons_proto_CounterSet_CountersEntry_descriptor =
-        internal_static_org_datacommons_proto_CounterSet_descriptor.getNestedTypes().get(0);
-    internal_static_org_datacommons_proto_CounterSet_CountersEntry_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_CounterSet_CountersEntry_descriptor,
-            new java.lang.String[] {
-              "Key", "Value",
-            });
-    internal_static_org_datacommons_proto_Log_descriptor = getDescriptor().getMessageTypes().get(1);
+    internal_static_org_datacommons_proto_Log_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_org_datacommons_proto_Log_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_descriptor,
@@ -4371,8 +4386,24 @@ public final class Debug {
             new java.lang.String[] {
               "File", "LineNumber", "ColumnNumber", "ColumnName",
             });
-    internal_static_org_datacommons_proto_Log_Entry_descriptor =
+    internal_static_org_datacommons_proto_Log_CounterSet_descriptor =
         internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(1);
+    internal_static_org_datacommons_proto_Log_CounterSet_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_Log_CounterSet_descriptor,
+            new java.lang.String[] {
+              "Counters",
+            });
+    internal_static_org_datacommons_proto_Log_CounterSet_CountersEntry_descriptor =
+        internal_static_org_datacommons_proto_Log_CounterSet_descriptor.getNestedTypes().get(0);
+    internal_static_org_datacommons_proto_Log_CounterSet_CountersEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_Log_CounterSet_CountersEntry_descriptor,
+            new java.lang.String[] {
+              "Key", "Value",
+            });
+    internal_static_org_datacommons_proto_Log_Entry_descriptor =
+        internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(2);
     internal_static_org_datacommons_proto_Log_Entry_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_Entry_descriptor,
