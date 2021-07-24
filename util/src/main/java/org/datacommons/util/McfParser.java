@@ -14,6 +14,12 @@
 
 package org.datacommons.util;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.datacommons.proto.Mcf;
+import org.datacommons.proto.Mcf.McfGraph;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
@@ -21,11 +27,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Stream;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.datacommons.proto.Mcf;
-import org.datacommons.proto.Mcf.McfGraph;
 
 // A parser for converting text in Instance or Template MCF format into the McfGraph proto.
 // TODO: Implement COMPLEX_VALUE parsing
@@ -330,7 +331,7 @@ public class McfParser {
       assert delimiter != -1
           : "Malformed " + (isEntity ? "entity" : "column") + " name in " + value;
       term.table = strippedValue.substring(0, delimiter);
-      term.value = strippedValue.substring(delimiter);
+      term.value = strippedValue.substring(delimiter + Vocabulary.TABLE_DELIMITER.length());
     } else {
       term.type = SchemaTerm.Type.CONSTANT;
       term.value = value;
@@ -408,9 +409,14 @@ public class McfParser {
               CSVFormat.DEFAULT
                   .withDelimiter(arg.delimiter)
                   .withEscape('\\')
+                  .withIgnoreEmptyLines()
                   .withIgnoreSurroundingSpaces());
       List<CSVRecord> records = parser.getRecords();
-      assert records.size() == 1 : orig;
+      if (records.isEmpty()) {
+        System.err.println("CSVParser failed on (" + orig + ")");
+        return splits;
+      }
+      assert records.size() == 1 : "Found more than one record for " + orig;
       for (String s : records.get(0)) {
         String ss = arg.stripEnclosingQuotes ? stripEnclosingQuotePair(s.trim()) : s.trim();
         // After stripping whitespace some terms could become empty.

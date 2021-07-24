@@ -1,36 +1,67 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package org.datacommons.util;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 public class TmcfCsvParser {
+  public static boolean TEST_mode = false;
+
   private Mcf.McfGraph tmcf;
   private char delimiter;
   private CSVParser csvParser;
   private HashMap<String, Long> counters;
   private Debug.Log.Builder logCtx;
+  private HashMap<String, Integer> cleanedColumnMap;
 
   public static TmcfCsvParser init(
-      String tmcf_file, String csv_file, char delimiter, Debug.Log.Builder logCtx)
+      String tmcfFile, String csvFile, char delimiter, Debug.Log.Builder logCtx)
       throws IOException {
     TmcfCsvParser tmcfCsvParser = new TmcfCsvParser();
-    tmcfCsvParser.tmcf = McfParser.parseTemplateMcfFile(tmcf_file);
+    tmcfCsvParser.tmcf = McfParser.parseTemplateMcfFile(tmcfFile);
     tmcfCsvParser.csvParser =
         CSVParser.parse(
-            csv_file,
-            CSVFormat.DEFAULT.withDelimiter(delimiter).withEscape('\\').withSkipHeaderRecord());
+            new FileReader(csvFile),
+            CSVFormat.DEFAULT
+                .withDelimiter(delimiter)
+                .withEscape('\\')
+                .withHeader()
+                .withSkipHeaderRecord()
+                .withIgnoreEmptyLines()
+                .withIgnoreSurroundingSpaces());
     tmcfCsvParser.delimiter = delimiter;
     tmcfCsvParser.logCtx = logCtx;
+
+    // Clean and keep a copy of the header map.
     assert tmcfCsvParser.csvParser.getHeaderMap() != null
-        : "Unable to parse header from file " + csv_file;
+        : "Unable to parse header from file " + csvFile;
+    tmcfCsvParser.cleanedColumnMap = new HashMap<>();
+    for (Map.Entry<String, Integer> e : tmcfCsvParser.csvParser.getHeaderMap().entrySet()) {
+      tmcfCsvParser.cleanedColumnMap.put(e.getKey().strip(), e.getValue());
+    }
     return tmcfCsvParser;
   }
 
@@ -50,7 +81,7 @@ public class TmcfCsvParser {
       entityToDcid = new HashMap<>();
       rowId =
           TEST_mode
-              ? String.valueOf(csvParser.getCurrentLineNumber())
+              ? String.valueOf(csvParser.getCurrentLineNumber() - 1)
               : UUID.randomUUID().toString();
     }
 
@@ -59,7 +90,8 @@ public class TmcfCsvParser {
     }
 
     public void process(CSVRecord dataRow) {
-      if (dataRow.isConsistent()) {
+      System.out.println(dataRow.toString());
+      if (!dataRow.isConsistent()) {
         incrementCounter("NumInconsistentCSVRows", logCtx);
         return;
       }
@@ -121,10 +153,10 @@ public class TmcfCsvParser {
             incrementCounter("NumEmptyPVFailures_" + currentProp, logCtx);
             continue;
           }
-          nodeBuilder.getPvsMap().put(currentProp, values);
+          nodeBuilder.putPvs(currentProp, values);
         }
         // TODO: Add node sanity check
-        instanceMcf.getNodesMap().put(currentNode, nodeBuilder.build());
+        instanceMcf.putNodes(currentNode, nodeBuilder.build());
       }
     }
 
@@ -192,8 +224,8 @@ public class TmcfCsvParser {
       McfParser.SchemaTerm term = McfParser.parseSchemaTerm(columnName);
       // Already validated in template-MCF sanity check.
       assert term.type == McfParser.SchemaTerm.Type.COLUMN : "Unexpected non-column " + columnName;
-      assert csvParser.getHeaderMap().containsKey(term.value) : "Missing column " + term.value;
-      return csvParser.getHeaderMap().get(term.value);
+      assert cleanedColumnMap.containsKey(term.value) : "Missing column " + term.value;
+      return cleanedColumnMap.get(term.value);
     }
   }
 
@@ -215,8 +247,6 @@ public class TmcfCsvParser {
     if (logCtx.getCounterSet().getCountersMap().containsKey(counter)) {
       c = logCtx.getCounterSet().getCountersMap().get(counter) + Long.valueOf(incr);
     }
-    logCtx.getCounterSetBuilder().getCountersMap().put(counter, c);
+    logCtx.getCounterSetBuilder().putCounters(counter, c);
   }
-
-  public boolean TEST_mode = false;
 }
