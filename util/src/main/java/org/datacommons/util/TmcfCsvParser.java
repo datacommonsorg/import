@@ -14,18 +14,17 @@
 
 package org.datacommons.util;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
 
 public class TmcfCsvParser {
   public static boolean TEST_mode = false;
@@ -33,7 +32,6 @@ public class TmcfCsvParser {
   private Mcf.McfGraph tmcf;
   private char delimiter;
   private CSVParser csvParser;
-  private HashMap<String, Long> counters;
   private Debug.Log.Builder logCtx;
   private HashMap<String, Integer> cleanedColumnMap;
 
@@ -76,8 +74,6 @@ public class TmcfCsvParser {
     public RowProcessor() {
       instanceMcf = Mcf.McfGraph.newBuilder();
       instanceMcf.setType(Mcf.McfType.INSTANCE_MCF);
-      currentNode = new String();
-      currentProp = new String();
       entityToDcid = new HashMap<>();
       rowId =
           TEST_mode
@@ -90,7 +86,6 @@ public class TmcfCsvParser {
     }
 
     public void process(CSVRecord dataRow) {
-      System.out.println(dataRow.toString());
       if (!dataRow.isConsistent()) {
         incrementCounter("NumInconsistentCSVRows", logCtx);
         return;
@@ -126,22 +121,22 @@ public class TmcfCsvParser {
         entityToDcid.put(tableEntity.getKey(), dcid);
       }
 
-      Mcf.McfGraph.PropertyValues.Builder nodeBuilder = Mcf.McfGraph.PropertyValues.newBuilder();
       for (Map.Entry<String, Mcf.McfGraph.PropertyValues> tableEntity :
           tmcf.getNodesMap().entrySet()) {
         currentNode = toNodeName(tableEntity.getKey());
-        if (currentNode == Vocabulary.DCID_PREFIX) {
+        if (currentNode.equals(Vocabulary.DCID_PREFIX)) {
           // Case of malformed/empty DCID. SKip this node (counters were updated above).
           continue;
         }
 
         // Go over each property within the template.
+        Mcf.McfGraph.PropertyValues.Builder nodeBuilder = Mcf.McfGraph.PropertyValues.newBuilder();
         for (Map.Entry<String, Mcf.McfGraph.Values> pv :
             tableEntity.getValue().getPvsMap().entrySet()) {
           currentProp = pv.getKey();
 
           // Don't process functionalDeps
-          if (currentProp == Vocabulary.FUNCTIONAL_DEPS) continue;
+          if (currentProp.equals(Vocabulary.FUNCTIONAL_DEPS)) continue;
 
           // Replace column names with values
           Mcf.McfGraph.Values values = parseValues(pv.getValue(), dataRow);
@@ -164,7 +159,7 @@ public class TmcfCsvParser {
       Mcf.McfGraph.Values.Builder instanceValues = Mcf.McfGraph.Values.newBuilder();
       for (Mcf.McfGraph.TypedValue typedValue : templateValues.getTypedValuesList()) {
         if (typedValue.getType() == Mcf.ValueType.TABLE_ENTITY) {
-          assert currentProp != Vocabulary.DCID
+          assert !currentProp.equals(Vocabulary.DCID)
               : "Unexpected value for dcid " + typedValue.getValue();
           String referenceNode = toNodeName(typedValue.getValue());
           Mcf.McfGraph.TypedValue.Builder newTypedValue = Mcf.McfGraph.TypedValue.newBuilder();
@@ -181,6 +176,7 @@ public class TmcfCsvParser {
             newTypedValue.setType(Mcf.ValueType.UNRESOLVED_REF);
             newTypedValue.setValue(Vocabulary.INTERNAL_REF_PREFIX + referenceNode);
           }
+          instanceValues.addTypedValues(newTypedValue.build());
         } else if (typedValue.getType() == Mcf.ValueType.TABLE_COLUMN) {
           // Replace column-name with cell-value
           int columnIndex = toColumnIndex(typedValue.getValue());
@@ -212,7 +208,7 @@ public class TmcfCsvParser {
 
     private String toNodeName(String entityId) {
       if (entityToDcid.containsKey(entityId)) {
-        return entityToDcid.get(entityId);
+        return Vocabulary.DCID_PREFIX + entityToDcid.get(entityId);
       }
       McfParser.SchemaTerm term = McfParser.parseSchemaTerm(entityId);
       // Already validated in template-MCF sanity check.

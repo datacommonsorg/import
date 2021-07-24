@@ -14,12 +14,11 @@
 
 package org.datacommons.util;
 
-import org.datacommons.proto.Mcf;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.datacommons.proto.Mcf;
 
 public class McfUtil {
   public static String serializeMcfGraph(Mcf.McfGraph graph, boolean sort) {

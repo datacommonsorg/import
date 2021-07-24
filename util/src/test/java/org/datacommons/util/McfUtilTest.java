@@ -14,10 +14,10 @@
 
 package org.datacommons.util;
 
+import static org.junit.Assert.assertEquals;
+
 import org.datacommons.proto.Mcf;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class McfUtilTest {
   private static String SERIALIZE_INPUT =
