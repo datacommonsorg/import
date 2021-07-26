@@ -43,6 +43,7 @@ message Log {
     }
 
     message CounterSet {
+      // Key is the name of a counter.
       map<string, int64> counters = 1;
     }
 
