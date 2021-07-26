@@ -52,9 +52,9 @@ message Log {
         optional Level level = 1;
         optional Location location = 2;
         // This must be user understandable.
-        optional string message = 3;
-        // A counter in CounterSet.
-        optional string counter = 4;
+        optional string user_message = 3;
+        // A counter key in CounterSet.
+        optional string counter_key = 4;
     }
 
     repeated Entry entries = 1;

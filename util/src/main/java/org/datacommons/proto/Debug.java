@@ -2249,11 +2249,11 @@ public final class Debug {
        * This must be user understandable.
        * </pre>
        *
-       * <code>optional string message = 3;</code>
+       * <code>optional string user_message = 3;</code>
        *
-       * @return Whether the message field is set.
+       * @return Whether the userMessage field is set.
        */
-      boolean hasMessage();
+      boolean hasUserMessage();
       /**
        *
        *
@@ -2261,11 +2261,11 @@ public final class Debug {
        * This must be user understandable.
        * </pre>
        *
-       * <code>optional string message = 3;</code>
+       * <code>optional string user_message = 3;</code>
        *
-       * @return The message.
+       * @return The userMessage.
        */
-      java.lang.String getMessage();
+      java.lang.String getUserMessage();
       /**
        *
        *
@@ -2273,48 +2273,48 @@ public final class Debug {
        * This must be user understandable.
        * </pre>
        *
-       * <code>optional string message = 3;</code>
+       * <code>optional string user_message = 3;</code>
        *
-       * @return The bytes for message.
+       * @return The bytes for userMessage.
        */
-      com.google.protobuf.ByteString getMessageBytes();
+      com.google.protobuf.ByteString getUserMessageBytes();
 
       /**
        *
        *
        * <pre>
-       * A counter in CounterSet.
+       * A counter key in CounterSet.
        * </pre>
        *
-       * <code>optional string counter = 4;</code>
+       * <code>optional string counter_key = 4;</code>
        *
-       * @return Whether the counter field is set.
+       * @return Whether the counterKey field is set.
        */
-      boolean hasCounter();
+      boolean hasCounterKey();
       /**
        *
        *
        * <pre>
-       * A counter in CounterSet.
+       * A counter key in CounterSet.
        * </pre>
        *
-       * <code>optional string counter = 4;</code>
+       * <code>optional string counter_key = 4;</code>
        *
-       * @return The counter.
+       * @return The counterKey.
        */
-      java.lang.String getCounter();
+      java.lang.String getCounterKey();
       /**
        *
        *
        * <pre>
-       * A counter in CounterSet.
+       * A counter key in CounterSet.
        * </pre>
        *
-       * <code>optional string counter = 4;</code>
+       * <code>optional string counter_key = 4;</code>
        *
-       * @return The bytes for counter.
+       * @return The bytes for counterKey.
        */
-      com.google.protobuf.ByteString getCounterBytes();
+      com.google.protobuf.ByteString getCounterKeyBytes();
     }
     /**
      *
@@ -2338,8 +2338,8 @@ public final class Debug {
 
       private Entry() {
         level_ = 0;
-        message_ = "";
-        counter_ = "";
+        userMessage_ = "";
+        counterKey_ = "";
       }
 
       @java.lang.Override
@@ -2406,14 +2406,14 @@ public final class Debug {
                 {
                   com.google.protobuf.ByteString bs = input.readBytes();
                   bitField0_ |= 0x00000004;
-                  message_ = bs;
+                  userMessage_ = bs;
                   break;
                 }
               case 34:
                 {
                   com.google.protobuf.ByteString bs = input.readBytes();
                   bitField0_ |= 0x00000008;
-                  counter_ = bs;
+                  counterKey_ = bs;
                   break;
                 }
               default:
@@ -2501,8 +2501,8 @@ public final class Debug {
             : location_;
       }
 
-      public static final int MESSAGE_FIELD_NUMBER = 3;
-      private volatile java.lang.Object message_;
+      public static final int USER_MESSAGE_FIELD_NUMBER = 3;
+      private volatile java.lang.Object userMessage_;
       /**
        *
        *
@@ -2510,11 +2510,11 @@ public final class Debug {
        * This must be user understandable.
        * </pre>
        *
-       * <code>optional string message = 3;</code>
+       * <code>optional string user_message = 3;</code>
        *
-       * @return Whether the message field is set.
+       * @return Whether the userMessage field is set.
        */
-      public boolean hasMessage() {
+      public boolean hasUserMessage() {
         return ((bitField0_ & 0x00000004) != 0);
       }
       /**
@@ -2524,19 +2524,19 @@ public final class Debug {
        * This must be user understandable.
        * </pre>
        *
-       * <code>optional string message = 3;</code>
+       * <code>optional string user_message = 3;</code>
        *
-       * @return The message.
+       * @return The userMessage.
        */
-      public java.lang.String getMessage() {
-        java.lang.Object ref = message_;
+      public java.lang.String getUserMessage() {
+        java.lang.Object ref = userMessage_;
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
           com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
-            message_ = s;
+            userMessage_ = s;
           }
           return s;
         }
@@ -2548,58 +2548,58 @@ public final class Debug {
        * This must be user understandable.
        * </pre>
        *
-       * <code>optional string message = 3;</code>
+       * <code>optional string user_message = 3;</code>
        *
-       * @return The bytes for message.
+       * @return The bytes for userMessage.
        */
-      public com.google.protobuf.ByteString getMessageBytes() {
-        java.lang.Object ref = message_;
+      public com.google.protobuf.ByteString getUserMessageBytes() {
+        java.lang.Object ref = userMessage_;
         if (ref instanceof java.lang.String) {
           com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-          message_ = b;
+          userMessage_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
 
-      public static final int COUNTER_FIELD_NUMBER = 4;
-      private volatile java.lang.Object counter_;
+      public static final int COUNTER_KEY_FIELD_NUMBER = 4;
+      private volatile java.lang.Object counterKey_;
       /**
        *
        *
        * <pre>
-       * A counter in CounterSet.
+       * A counter key in CounterSet.
        * </pre>
        *
-       * <code>optional string counter = 4;</code>
+       * <code>optional string counter_key = 4;</code>
        *
-       * @return Whether the counter field is set.
+       * @return Whether the counterKey field is set.
        */
-      public boolean hasCounter() {
+      public boolean hasCounterKey() {
         return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        *
        *
        * <pre>
-       * A counter in CounterSet.
+       * A counter key in CounterSet.
        * </pre>
        *
-       * <code>optional string counter = 4;</code>
+       * <code>optional string counter_key = 4;</code>
        *
-       * @return The counter.
+       * @return The counterKey.
        */
-      public java.lang.String getCounter() {
-        java.lang.Object ref = counter_;
+      public java.lang.String getCounterKey() {
+        java.lang.Object ref = counterKey_;
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
           com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
-            counter_ = s;
+            counterKey_ = s;
           }
           return s;
         }
@@ -2608,19 +2608,19 @@ public final class Debug {
        *
        *
        * <pre>
-       * A counter in CounterSet.
+       * A counter key in CounterSet.
        * </pre>
        *
-       * <code>optional string counter = 4;</code>
+       * <code>optional string counter_key = 4;</code>
        *
-       * @return The bytes for counter.
+       * @return The bytes for counterKey.
        */
-      public com.google.protobuf.ByteString getCounterBytes() {
-        java.lang.Object ref = counter_;
+      public com.google.protobuf.ByteString getCounterKeyBytes() {
+        java.lang.Object ref = counterKey_;
         if (ref instanceof java.lang.String) {
           com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-          counter_ = b;
+          counterKey_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
@@ -2648,10 +2648,10 @@ public final class Debug {
           output.writeMessage(2, getLocation());
         }
         if (((bitField0_ & 0x00000004) != 0)) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 3, message_);
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 3, userMessage_);
         }
         if (((bitField0_ & 0x00000008) != 0)) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 4, counter_);
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 4, counterKey_);
         }
         unknownFields.writeTo(output);
       }
@@ -2669,10 +2669,10 @@ public final class Debug {
           size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getLocation());
         }
         if (((bitField0_ & 0x00000004) != 0)) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, message_);
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, userMessage_);
         }
         if (((bitField0_ & 0x00000008) != 0)) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, counter_);
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, counterKey_);
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -2697,13 +2697,13 @@ public final class Debug {
         if (hasLocation()) {
           if (!getLocation().equals(other.getLocation())) return false;
         }
-        if (hasMessage() != other.hasMessage()) return false;
-        if (hasMessage()) {
-          if (!getMessage().equals(other.getMessage())) return false;
+        if (hasUserMessage() != other.hasUserMessage()) return false;
+        if (hasUserMessage()) {
+          if (!getUserMessage().equals(other.getUserMessage())) return false;
         }
-        if (hasCounter() != other.hasCounter()) return false;
-        if (hasCounter()) {
-          if (!getCounter().equals(other.getCounter())) return false;
+        if (hasCounterKey() != other.hasCounterKey()) return false;
+        if (hasCounterKey()) {
+          if (!getCounterKey().equals(other.getCounterKey())) return false;
         }
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
@@ -2724,13 +2724,13 @@ public final class Debug {
           hash = (37 * hash) + LOCATION_FIELD_NUMBER;
           hash = (53 * hash) + getLocation().hashCode();
         }
-        if (hasMessage()) {
-          hash = (37 * hash) + MESSAGE_FIELD_NUMBER;
-          hash = (53 * hash) + getMessage().hashCode();
+        if (hasUserMessage()) {
+          hash = (37 * hash) + USER_MESSAGE_FIELD_NUMBER;
+          hash = (53 * hash) + getUserMessage().hashCode();
         }
-        if (hasCounter()) {
-          hash = (37 * hash) + COUNTER_FIELD_NUMBER;
-          hash = (53 * hash) + getCounter().hashCode();
+        if (hasCounterKey()) {
+          hash = (37 * hash) + COUNTER_KEY_FIELD_NUMBER;
+          hash = (53 * hash) + getCounterKey().hashCode();
         }
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
@@ -2890,9 +2890,9 @@ public final class Debug {
             locationBuilder_.clear();
           }
           bitField0_ = (bitField0_ & ~0x00000002);
-          message_ = "";
+          userMessage_ = "";
           bitField0_ = (bitField0_ & ~0x00000004);
-          counter_ = "";
+          counterKey_ = "";
           bitField0_ = (bitField0_ & ~0x00000008);
           return this;
         }
@@ -2938,11 +2938,11 @@ public final class Debug {
           if (((from_bitField0_ & 0x00000004) != 0)) {
             to_bitField0_ |= 0x00000004;
           }
-          result.message_ = message_;
+          result.userMessage_ = userMessage_;
           if (((from_bitField0_ & 0x00000008) != 0)) {
             to_bitField0_ |= 0x00000008;
           }
-          result.counter_ = counter_;
+          result.counterKey_ = counterKey_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -3001,14 +3001,14 @@ public final class Debug {
           if (other.hasLocation()) {
             mergeLocation(other.getLocation());
           }
-          if (other.hasMessage()) {
+          if (other.hasUserMessage()) {
             bitField0_ |= 0x00000004;
-            message_ = other.message_;
+            userMessage_ = other.userMessage_;
             onChanged();
           }
-          if (other.hasCounter()) {
+          if (other.hasCounterKey()) {
             bitField0_ |= 0x00000008;
-            counter_ = other.counter_;
+            counterKey_ = other.counterKey_;
             onChanged();
           }
           this.mergeUnknownFields(other.unknownFields);
@@ -3208,7 +3208,7 @@ public final class Debug {
           return locationBuilder_;
         }
 
-        private java.lang.Object message_ = "";
+        private java.lang.Object userMessage_ = "";
         /**
          *
          *
@@ -3216,11 +3216,11 @@ public final class Debug {
          * This must be user understandable.
          * </pre>
          *
-         * <code>optional string message = 3;</code>
+         * <code>optional string user_message = 3;</code>
          *
-         * @return Whether the message field is set.
+         * @return Whether the userMessage field is set.
          */
-        public boolean hasMessage() {
+        public boolean hasUserMessage() {
           return ((bitField0_ & 0x00000004) != 0);
         }
         /**
@@ -3230,17 +3230,17 @@ public final class Debug {
          * This must be user understandable.
          * </pre>
          *
-         * <code>optional string message = 3;</code>
+         * <code>optional string user_message = 3;</code>
          *
-         * @return The message.
+         * @return The userMessage.
          */
-        public java.lang.String getMessage() {
-          java.lang.Object ref = message_;
+        public java.lang.String getUserMessage() {
+          java.lang.Object ref = userMessage_;
           if (!(ref instanceof java.lang.String)) {
             com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
-              message_ = s;
+              userMessage_ = s;
             }
             return s;
           } else {
@@ -3254,16 +3254,16 @@ public final class Debug {
          * This must be user understandable.
          * </pre>
          *
-         * <code>optional string message = 3;</code>
+         * <code>optional string user_message = 3;</code>
          *
-         * @return The bytes for message.
+         * @return The bytes for userMessage.
          */
-        public com.google.protobuf.ByteString getMessageBytes() {
-          java.lang.Object ref = message_;
+        public com.google.protobuf.ByteString getUserMessageBytes() {
+          java.lang.Object ref = userMessage_;
           if (ref instanceof String) {
             com.google.protobuf.ByteString b =
                 com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-            message_ = b;
+            userMessage_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
@@ -3276,17 +3276,17 @@ public final class Debug {
          * This must be user understandable.
          * </pre>
          *
-         * <code>optional string message = 3;</code>
+         * <code>optional string user_message = 3;</code>
          *
-         * @param value The message to set.
+         * @param value The userMessage to set.
          * @return This builder for chaining.
          */
-        public Builder setMessage(java.lang.String value) {
+        public Builder setUserMessage(java.lang.String value) {
           if (value == null) {
             throw new NullPointerException();
           }
           bitField0_ |= 0x00000004;
-          message_ = value;
+          userMessage_ = value;
           onChanged();
           return this;
         }
@@ -3297,13 +3297,13 @@ public final class Debug {
          * This must be user understandable.
          * </pre>
          *
-         * <code>optional string message = 3;</code>
+         * <code>optional string user_message = 3;</code>
          *
          * @return This builder for chaining.
          */
-        public Builder clearMessage() {
+        public Builder clearUserMessage() {
           bitField0_ = (bitField0_ & ~0x00000004);
-          message_ = getDefaultInstance().getMessage();
+          userMessage_ = getDefaultInstance().getUserMessage();
           onChanged();
           return this;
         }
@@ -3314,54 +3314,54 @@ public final class Debug {
          * This must be user understandable.
          * </pre>
          *
-         * <code>optional string message = 3;</code>
+         * <code>optional string user_message = 3;</code>
          *
-         * @param value The bytes for message to set.
+         * @param value The bytes for userMessage to set.
          * @return This builder for chaining.
          */
-        public Builder setMessageBytes(com.google.protobuf.ByteString value) {
+        public Builder setUserMessageBytes(com.google.protobuf.ByteString value) {
           if (value == null) {
             throw new NullPointerException();
           }
           bitField0_ |= 0x00000004;
-          message_ = value;
+          userMessage_ = value;
           onChanged();
           return this;
         }
 
-        private java.lang.Object counter_ = "";
+        private java.lang.Object counterKey_ = "";
         /**
          *
          *
          * <pre>
-         * A counter in CounterSet.
+         * A counter key in CounterSet.
          * </pre>
          *
-         * <code>optional string counter = 4;</code>
+         * <code>optional string counter_key = 4;</code>
          *
-         * @return Whether the counter field is set.
+         * @return Whether the counterKey field is set.
          */
-        public boolean hasCounter() {
+        public boolean hasCounterKey() {
           return ((bitField0_ & 0x00000008) != 0);
         }
         /**
          *
          *
          * <pre>
-         * A counter in CounterSet.
+         * A counter key in CounterSet.
          * </pre>
          *
-         * <code>optional string counter = 4;</code>
+         * <code>optional string counter_key = 4;</code>
          *
-         * @return The counter.
+         * @return The counterKey.
          */
-        public java.lang.String getCounter() {
-          java.lang.Object ref = counter_;
+        public java.lang.String getCounterKey() {
+          java.lang.Object ref = counterKey_;
           if (!(ref instanceof java.lang.String)) {
             com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
-              counter_ = s;
+              counterKey_ = s;
             }
             return s;
           } else {
@@ -3372,19 +3372,19 @@ public final class Debug {
          *
          *
          * <pre>
-         * A counter in CounterSet.
+         * A counter key in CounterSet.
          * </pre>
          *
-         * <code>optional string counter = 4;</code>
+         * <code>optional string counter_key = 4;</code>
          *
-         * @return The bytes for counter.
+         * @return The bytes for counterKey.
          */
-        public com.google.protobuf.ByteString getCounterBytes() {
-          java.lang.Object ref = counter_;
+        public com.google.protobuf.ByteString getCounterKeyBytes() {
+          java.lang.Object ref = counterKey_;
           if (ref instanceof String) {
             com.google.protobuf.ByteString b =
                 com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-            counter_ = b;
+            counterKey_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
@@ -3394,20 +3394,20 @@ public final class Debug {
          *
          *
          * <pre>
-         * A counter in CounterSet.
+         * A counter key in CounterSet.
          * </pre>
          *
-         * <code>optional string counter = 4;</code>
+         * <code>optional string counter_key = 4;</code>
          *
-         * @param value The counter to set.
+         * @param value The counterKey to set.
          * @return This builder for chaining.
          */
-        public Builder setCounter(java.lang.String value) {
+        public Builder setCounterKey(java.lang.String value) {
           if (value == null) {
             throw new NullPointerException();
           }
           bitField0_ |= 0x00000008;
-          counter_ = value;
+          counterKey_ = value;
           onChanged();
           return this;
         }
@@ -3415,16 +3415,16 @@ public final class Debug {
          *
          *
          * <pre>
-         * A counter in CounterSet.
+         * A counter key in CounterSet.
          * </pre>
          *
-         * <code>optional string counter = 4;</code>
+         * <code>optional string counter_key = 4;</code>
          *
          * @return This builder for chaining.
          */
-        public Builder clearCounter() {
+        public Builder clearCounterKey() {
           bitField0_ = (bitField0_ & ~0x00000008);
-          counter_ = getDefaultInstance().getCounter();
+          counterKey_ = getDefaultInstance().getCounterKey();
           onChanged();
           return this;
         }
@@ -3432,20 +3432,20 @@ public final class Debug {
          *
          *
          * <pre>
-         * A counter in CounterSet.
+         * A counter key in CounterSet.
          * </pre>
          *
-         * <code>optional string counter = 4;</code>
+         * <code>optional string counter_key = 4;</code>
          *
-         * @param value The bytes for counter to set.
+         * @param value The bytes for counterKey to set.
          * @return This builder for chaining.
          */
-        public Builder setCounterBytes(com.google.protobuf.ByteString value) {
+        public Builder setCounterKeyBytes(com.google.protobuf.ByteString value) {
           if (value == null) {
             throw new NullPointerException();
           }
           bitField0_ |= 0x00000008;
-          counter_ = value;
+          counterKey_ = value;
           onChanged();
           return this;
         }
@@ -4351,7 +4351,7 @@ public final class Debug {
 
   static {
     java.lang.String[] descriptorData = {
-      "\n\013Debug.proto\022\025org.datacommons.proto\"\317\004\n"
+      "\n\013Debug.proto\022\025org.datacommons.proto\"\330\004\n"
           + "\003Log\0221\n\007entries\030\001 \003(\0132 .org.datacommons."
           + "proto.Log.Entry\022:\n\013counter_set\030\002 \001(\0132%.o"
           + "rg.datacommons.proto.Log.CounterSet\032Y\n\010L"
@@ -4360,13 +4360,13 @@ public final class Debug {
           + "\030\004 \001(\t\032\204\001\n\nCounterSet\022E\n\010counters\030\001 \003(\0132"
           + "3.org.datacommons.proto.Log.CounterSet.C"
           + "ountersEntry\032/\n\rCountersEntry\022\013\n\003key\030\001 \001"
-          + "(\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\221\001\n\005Entry\022/\n\005level"
+          + "(\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\232\001\n\005Entry\022/\n\005level"
           + "\030\001 \001(\0162 .org.datacommons.proto.Log.Level"
           + "\0225\n\010location\030\002 \001(\0132#.org.datacommons.pro"
-          + "to.Log.Location\022\017\n\007message\030\003 \001(\t\022\017\n\007coun"
-          + "ter\030\004 \001(\t\"c\n\005Level\022\025\n\021LEVEL_UNSPECIFIED\020"
-          + "\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013"
-          + "LEVEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004"
+          + "to.Log.Location\022\024\n\014user_message\030\003 \001(\t\022\023\n"
+          + "\013counter_key\030\004 \001(\t\"c\n\005Level\022\025\n\021LEVEL_UNS"
+          + "PECIFIED\020\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WARN"
+          + "ING\020\002\022\017\n\013LEVEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -4408,7 +4408,7 @@ public final class Debug {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_Entry_descriptor,
             new java.lang.String[] {
-              "Level", "Location", "Message", "Counter",
+              "Level", "Location", "UserMessage", "CounterKey",
             });
   }
 
