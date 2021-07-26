@@ -63,6 +63,13 @@ public class McfParserTest {
     arg.includeEmpty = true;
     assertThat(splitAndStripWithQuoteEscape("one,   ,two, \"\" , three", arg))
         .containsExactly("one", "", "two", "", "three");
+
+    // Strings that are escaped normally show up without character.
+    // TODO: make this behavior match prod.
+    arg = new SplitAndStripArg();
+    arg.includeEmpty = false;
+    assertThat(splitAndStripWithQuoteEscape("\"{ \\\"type\\\": \\\"feature\\\" }\"", arg))
+        .containsExactly("{ \"type\": \"feature\" }");
   }
 
   @Test
@@ -130,13 +137,11 @@ public class McfParserTest {
     act.setType(McfType.INSTANCE_MCF);
     for (String l : lines) {
       parser.parseLine(l);
-      if (parser.isNodeBoundary()) {
-        McfGraph node = parser.extractPreviousNode();
-        if (node != null) {
-          Map.Entry<String, McfGraph.PropertyValues> entry =
-              node.getNodesMap().entrySet().iterator().next();
-          act.putNodes(entry.getKey(), entry.getValue());
-        }
+      McfGraph node = parser.extractNode();
+      if (node != null) {
+        Map.Entry<String, McfGraph.PropertyValues> entry =
+            node.getNodesMap().entrySet().iterator().next();
+        act.putNodes(entry.getKey(), entry.getValue());
       }
     }
     McfGraph node = parser.finish();

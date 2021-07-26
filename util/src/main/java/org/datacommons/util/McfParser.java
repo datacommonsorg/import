@@ -120,16 +120,11 @@ public class McfParser {
     }
   }
 
-  // Returns true if we are at the boundary of a node after a sequence of parseLine() calls.
-  public boolean isNodeBoundary() {
-    return curEntityLineIdx == 0;
-  }
-
-  // Extracts and returns the previous node as a single-node McfGraph proto. This is typically used
-  // to
-  // extract single-node graphs, and is called when isNodeBoundary() is true.
-  public McfGraph extractPreviousNode() throws IllegalArgumentException {
-    if (prevEntity.length() == 0) {
+  // Extracts and returns the previous full node, if any, as a single-node McfGraph proto. This is
+  // typically used to extract single-node graphs.
+  public McfGraph extractNode() throws IllegalArgumentException {
+    // If we are at the beginning or not at node boundary, nothing to extract.
+    if (prevEntity.length() == 0 || curEntityLineIdx != 0) {
       return null;
     }
     McfGraph.Builder node = McfGraph.newBuilder();
@@ -162,9 +157,10 @@ public class McfParser {
   private static McfGraph parseMcfFile(String file_name, Mcf.McfType type, boolean isResolved)
       throws IOException {
     McfParser parser = McfParser.init(type, isResolved);
-    Stream<String> lines =
-        Files.lines(FileSystems.getDefault().getPath(file_name), StandardCharsets.UTF_8);
-    lines.forEach(parser::parseLine);
+    try (Stream<String> lines =
+        Files.lines(FileSystems.getDefault().getPath(file_name), StandardCharsets.UTF_8)) {
+      lines.forEachOrdered(parser::parseLine);
+    }
     return mergeGraphs(Collections.singletonList(parser.finish()));
   }
 
@@ -202,15 +198,21 @@ public class McfParser {
     ssArg.stripEnclosingQuotes = false;
     List<String> fields = splitAndStripWithQuoteEscape(values, ssArg);
     for (String field : fields) {
-      parseTypedValue(curEntity, prop, field, vals.addTypedValuesBuilder());
+      parseTypedValue(
+          graph.getType(), isResolved, curEntity, prop, field, vals.addTypedValuesBuilder());
     }
     pvs.putPvs(prop, vals.build());
     graph.putNodes(curEntity, pvs.build());
   }
 
-  private void parseTypedValue(
-      String node, String prop, String val, McfGraph.TypedValue.Builder tval) {
-    if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
+  public static void parseTypedValue(
+      Mcf.McfType mcfType,
+      boolean isResolved,
+      String node,
+      String prop,
+      String val,
+      McfGraph.TypedValue.Builder tval) {
+    if (mcfType == Mcf.McfType.TEMPLATE_MCF) {
       assert !prop.equals("C") : "Found unsupported column name as property in node " + node;
       SchemaTerm term = parseSchemaTerm(val);
       if (term.type == SchemaTerm.Type.ENTITY) {
@@ -315,7 +317,7 @@ public class McfParser {
     public String table;
   }
 
-  public SchemaTerm parseSchemaTerm(String value) {
+  public static SchemaTerm parseSchemaTerm(String value) {
     SchemaTerm term = new SchemaTerm();
     boolean isEntity = value.startsWith(Vocabulary.ENTITY_PREFIX);
     boolean isColumn = value.startsWith(Vocabulary.COLUMN_PREFIX);
@@ -386,7 +388,7 @@ public class McfParser {
   //
   // For example "1,2,3" will be split into ["1","2","3"] but "'1,234',5" will be
   // split into ["1,234", "5"].
-  // TODO: Support strip escapes before quotes for TMCF/CSV flow.
+  // TODO: Support stripEscapesBeforeQuotes control like in internal version.
   public static final class SplitAndStripArg {
     public char delimiter = ',';
     public boolean includeEmpty = false;
@@ -403,7 +405,10 @@ public class McfParser {
       CSVParser parser =
           new CSVParser(
               new StringReader(orig),
-              CSVFormat.DEFAULT.withDelimiter(arg.delimiter).withIgnoreSurroundingSpaces());
+              CSVFormat.DEFAULT
+                  .withDelimiter(arg.delimiter)
+                  .withEscape('\\')
+                  .withIgnoreSurroundingSpaces());
       List<CSVRecord> records = parser.getRecords();
       assert records.size() == 1 : orig;
       for (String s : records.get(0)) {
@@ -428,7 +433,7 @@ public class McfParser {
     return val;
   }
 
-  private boolean isNumber(String val) {
+  private static boolean isNumber(String val) {
     try {
       long l = Long.parseLong(val);
       return true;
@@ -447,7 +452,7 @@ public class McfParser {
     return false;
   }
 
-  private boolean isBool(String val) {
+  private static boolean isBool(String val) {
     String v = val.toLowerCase();
     return v.equals("true") || v.equals("1") || v.equals("false") || v.equals("0");
   }

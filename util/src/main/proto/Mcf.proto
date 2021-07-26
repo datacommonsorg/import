@@ -31,8 +31,9 @@ message McfGraph {
     repeated TypedValue typed_values = 1;
   }
 
-  // Map of a property name to its values.
+  // Information about a node.
   message PropertyValues {
+    // Map of a property name to its values.
     map<string, Values> pvs = 1;
   }
 
