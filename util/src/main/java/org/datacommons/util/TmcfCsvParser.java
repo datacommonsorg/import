@@ -26,6 +26,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
+// Converts a Template MCF file and an associated CSV into instance MCF.
 public class TmcfCsvParser {
   public static boolean TEST_mode = false;
 
@@ -35,6 +36,7 @@ public class TmcfCsvParser {
   private Debug.Log.Builder logCtx;
   private HashMap<String, Integer> cleanedColumnMap;
 
+  // Build a parser given a TMCF file, CSV file, CSV delimiter and a log context.
   public static TmcfCsvParser init(
       String tmcfFile, String csvFile, char delimiter, Debug.Log.Builder logCtx)
       throws IOException {
@@ -61,6 +63,16 @@ public class TmcfCsvParser {
       tmcfCsvParser.cleanedColumnMap.put(e.getKey().strip(), e.getValue());
     }
     return tmcfCsvParser;
+  }
+
+  // Parse the next row from the CSV. Returns null on EOF.
+  public Mcf.McfGraph parseNextRow() {
+    if (!csvParser.iterator().hasNext()) {
+      return null;
+    }
+    RowProcessor processor = new RowProcessor();
+    processor.process(csvParser.iterator().next());
+    return processor.instanceMcf();
   }
 
   class RowProcessor {
@@ -223,15 +235,6 @@ public class TmcfCsvParser {
       assert cleanedColumnMap.containsKey(term.value) : "Missing column " + term.value;
       return cleanedColumnMap.get(term.value);
     }
-  }
-
-  public Mcf.McfGraph parseNextRow() {
-    if (!csvParser.iterator().hasNext()) {
-      return null;
-    }
-    RowProcessor processor = new RowProcessor();
-    processor.process(csvParser.iterator().next());
-    return processor.instanceMcf();
   }
 
   private void incrementCounter(String counter, Debug.Log.Builder logCtx) {
