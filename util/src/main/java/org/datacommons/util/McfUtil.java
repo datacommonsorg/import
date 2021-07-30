@@ -14,12 +14,11 @@
 
 package org.datacommons.util;
 
-import org.datacommons.proto.Mcf;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.datacommons.proto.Mcf;
 
 // A container class of MCF related utilities.
 public class McfUtil {
