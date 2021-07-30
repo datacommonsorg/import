@@ -14,13 +14,16 @@
 
 package org.datacommons.util;
 
+import org.datacommons.proto.Mcf;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import org.datacommons.proto.Mcf;
 
+// A container class of MCF related utilities.
 public class McfUtil {
+  // Serializes an MCFGraph proto into a string.  Sorts output if |sort| is true.
   public static String serializeMcfGraph(Mcf.McfGraph graph, boolean sort) {
     StringBuilder result = new StringBuilder();
     String sentinel = graph.getType() == Mcf.McfType.TEMPLATE_MCF ? "Template" : "Node";
