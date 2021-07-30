@@ -408,7 +408,6 @@ public class McfParser {
               CSVFormat.DEFAULT
                   .withDelimiter(arg.delimiter)
                   .withEscape('\\')
-                  .withIgnoreEmptyLines()
                   .withIgnoreSurroundingSpaces());
       List<CSVRecord> records = parser.getRecords();
       if (records.isEmpty()) {
