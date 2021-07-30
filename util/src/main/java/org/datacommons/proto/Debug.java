@@ -12,39 +12,6 @@ public final class Debug {
     registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
   }
 
-<<<<<<< HEAD
-  public interface CounterSetOrBuilder
-      extends
-      // @@protoc_insertion_point(interface_extends:org.datacommons.proto.CounterSet)
-      com.google.protobuf.MessageOrBuilder {
-
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    int getCountersCount();
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    boolean containsCounters(java.lang.String key);
-    /** Use {@link #getCountersMap()} instead. */
-    @java.lang.Deprecated
-    java.util.Map<java.lang.String, java.lang.Long> getCounters();
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    java.util.Map<java.lang.String, java.lang.Long> getCountersMap();
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    long getCountersOrDefault(java.lang.String key, long defaultValue);
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    long getCountersOrThrow(java.lang.String key);
-  }
-  /** Protobuf type {@code org.datacommons.proto.CounterSet} */
-  public static final class CounterSet extends com.google.protobuf.GeneratedMessageV3
-      implements
-      // @@protoc_insertion_point(message_implements:org.datacommons.proto.CounterSet)
-      CounterSetOrBuilder {
-    private static final long serialVersionUID = 0L;
-    // Use CounterSet.newBuilder() to construct.
-    private CounterSet(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-
-    private CounterSet() {}
-=======
   public interface LogOrBuilder
       extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.Log)
@@ -99,16 +66,11 @@ public final class Debug {
     private Log() {
       entries_ = java.util.Collections.emptyList();
     }
->>>>>>> master
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
     protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
-<<<<<<< HEAD
-      return new CounterSet();
-=======
       return new Log();
->>>>>>> master
     }
 
     @java.lang.Override
@@ -116,11 +78,7 @@ public final class Debug {
       return this.unknownFields;
     }
 
-<<<<<<< HEAD
-    private CounterSet(
-=======
     private Log(
->>>>>>> master
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -142,18 +100,6 @@ public final class Debug {
             case 10:
               {
                 if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-<<<<<<< HEAD
-                  counters_ =
-                      com.google.protobuf.MapField.newMapField(
-                          CountersDefaultEntryHolder.defaultEntry);
-                  mutable_bitField0_ |= 0x00000001;
-                }
-                com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> counters__ =
-                    input.readMessage(
-                        CountersDefaultEntryHolder.defaultEntry.getParserForType(),
-                        extensionRegistry);
-                counters_.getMutableMap().put(counters__.getKey(), counters__.getValue());
-=======
                   entries_ = new java.util.ArrayList<org.datacommons.proto.Debug.Log.Entry>();
                   mutable_bitField0_ |= 0x00000001;
                 }
@@ -176,7 +122,6 @@ public final class Debug {
                   counterSet_ = subBuilder.buildPartial();
                 }
                 bitField0_ |= 0x00000001;
->>>>>>> master
                 break;
               }
             default:
@@ -193,308 +138,22 @@ public final class Debug {
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
-<<<<<<< HEAD
-=======
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           entries_ = java.util.Collections.unmodifiableList(entries_);
         }
->>>>>>> master
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
 
     public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-<<<<<<< HEAD
-      return org.datacommons.proto.Debug
-          .internal_static_org_datacommons_proto_CounterSet_descriptor;
-    }
-
-    @SuppressWarnings({"rawtypes"})
-    @java.lang.Override
-    protected com.google.protobuf.MapField internalGetMapField(int number) {
-      switch (number) {
-        case 1:
-          return internalGetCounters();
-        default:
-          throw new RuntimeException("Invalid map field number: " + number);
-      }
-=======
       return org.datacommons.proto.Debug.internal_static_org_datacommons_proto_Log_descriptor;
->>>>>>> master
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return org.datacommons.proto.Debug
-<<<<<<< HEAD
-          .internal_static_org_datacommons_proto_CounterSet_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Debug.CounterSet.class,
-              org.datacommons.proto.Debug.CounterSet.Builder.class);
-    }
-
-    public static final int COUNTERS_FIELD_NUMBER = 1;
-
-    private static final class CountersDefaultEntryHolder {
-      static final com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> defaultEntry =
-          com.google.protobuf.MapEntry.<java.lang.String, java.lang.Long>newDefaultInstance(
-              org.datacommons.proto.Debug
-                  .internal_static_org_datacommons_proto_CounterSet_CountersEntry_descriptor,
-              com.google.protobuf.WireFormat.FieldType.STRING,
-              "",
-              com.google.protobuf.WireFormat.FieldType.INT64,
-              0L);
-    }
-
-    private com.google.protobuf.MapField<java.lang.String, java.lang.Long> counters_;
-
-    private com.google.protobuf.MapField<java.lang.String, java.lang.Long> internalGetCounters() {
-      if (counters_ == null) {
-        return com.google.protobuf.MapField.emptyMapField(CountersDefaultEntryHolder.defaultEntry);
-      }
-      return counters_;
-    }
-
-    public int getCountersCount() {
-      return internalGetCounters().getMap().size();
-    }
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    public boolean containsCounters(java.lang.String key) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
-      return internalGetCounters().getMap().containsKey(key);
-    }
-    /** Use {@link #getCountersMap()} instead. */
-    @java.lang.Deprecated
-    public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
-      return getCountersMap();
-    }
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
-      return internalGetCounters().getMap();
-    }
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    public long getCountersOrDefault(java.lang.String key, long defaultValue) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
-      java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
-      return map.containsKey(key) ? map.get(key) : defaultValue;
-    }
-    /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-    public long getCountersOrThrow(java.lang.String key) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
-      java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
-      if (!map.containsKey(key)) {
-        throw new java.lang.IllegalArgumentException();
-      }
-      return map.get(key);
-    }
-
-    private byte memoizedIsInitialized = -1;
-
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-      com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
-          output, internalGetCounters(), CountersDefaultEntryHolder.defaultEntry, 1);
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      for (java.util.Map.Entry<java.lang.String, java.lang.Long> entry :
-          internalGetCounters().getMap().entrySet()) {
-        com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> counters__ =
-            CountersDefaultEntryHolder.defaultEntry
-                .newBuilderForType()
-                .setKey(entry.getKey())
-                .setValue(entry.getValue())
-                .build();
-        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, counters__);
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-        return true;
-      }
-      if (!(obj instanceof org.datacommons.proto.Debug.CounterSet)) {
-        return super.equals(obj);
-      }
-      org.datacommons.proto.Debug.CounterSet other = (org.datacommons.proto.Debug.CounterSet) obj;
-
-      if (!internalGetCounters().equals(other.internalGetCounters())) return false;
-      if (!unknownFields.equals(other.unknownFields)) return false;
-      return true;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (!internalGetCounters().getMap().isEmpty()) {
-        hash = (37 * hash) + COUNTERS_FIELD_NUMBER;
-        hash = (53 * hash) + internalGetCounters().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseDelimitedFrom(
-        java.io.InputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseDelimitedFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-          PARSER, input, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() {
-      return newBuilder();
-    }
-
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-
-    public static Builder newBuilder(org.datacommons.proto.Debug.CounterSet prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /** Protobuf type {@code org.datacommons.proto.CounterSet} */
-    public static final class Builder
-        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-        implements
-        // @@protoc_insertion_point(builder_implements:org.datacommons.proto.CounterSet)
-        org.datacommons.proto.Debug.CounterSetOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Debug
-            .internal_static_org_datacommons_proto_CounterSet_descriptor;
-      }
-
-      @SuppressWarnings({"rawtypes"})
-      protected com.google.protobuf.MapField internalGetMapField(int number) {
-        switch (number) {
-          case 1:
-            return internalGetCounters();
-          default:
-            throw new RuntimeException("Invalid map field number: " + number);
-        }
-      }
-
-      @SuppressWarnings({"rawtypes"})
-      protected com.google.protobuf.MapField internalGetMutableMapField(int number) {
-        switch (number) {
-          case 1:
-            return internalGetMutableCounters();
-          default:
-            throw new RuntimeException("Invalid map field number: " + number);
-        }
-      }
-
-=======
           .internal_static_org_datacommons_proto_Log_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               org.datacommons.proto.Debug.Log.class, org.datacommons.proto.Debug.Log.Builder.class);
@@ -840,126 +499,10 @@ public final class Debug {
             .internal_static_org_datacommons_proto_Log_Location_descriptor;
       }
 
->>>>>>> master
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return org.datacommons.proto.Debug
-<<<<<<< HEAD
-            .internal_static_org_datacommons_proto_CounterSet_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Debug.CounterSet.class,
-                org.datacommons.proto.Debug.CounterSet.Builder.class);
-      }
-
-      // Construct using org.datacommons.proto.Debug.CounterSet.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
-      }
-
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        internalGetMutableCounters().clear();
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-        return org.datacommons.proto.Debug
-            .internal_static_org_datacommons_proto_CounterSet_descriptor;
-      }
-
-      @java.lang.Override
-      public org.datacommons.proto.Debug.CounterSet getDefaultInstanceForType() {
-        return org.datacommons.proto.Debug.CounterSet.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public org.datacommons.proto.Debug.CounterSet build() {
-        org.datacommons.proto.Debug.CounterSet result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public org.datacommons.proto.Debug.CounterSet buildPartial() {
-        org.datacommons.proto.Debug.CounterSet result =
-            new org.datacommons.proto.Debug.CounterSet(this);
-        int from_bitField0_ = bitField0_;
-        result.counters_ = internalGetCounters();
-        result.counters_.makeImmutable();
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return super.clone();
-      }
-
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-        return super.setField(field, value);
-      }
-
-      @java.lang.Override
-      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return super.clearField(field);
-      }
-
-      @java.lang.Override
-      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return super.clearOneof(oneof);
-      }
-
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index,
-          java.lang.Object value) {
-        return super.setRepeatedField(field, index, value);
-      }
-
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-        return super.addRepeatedField(field, value);
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.datacommons.proto.Debug.CounterSet) {
-          return mergeFrom((org.datacommons.proto.Debug.CounterSet) other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(org.datacommons.proto.Debug.CounterSet other) {
-        if (other == org.datacommons.proto.Debug.CounterSet.getDefaultInstance()) return this;
-        internalGetMutableCounters().mergeFrom(other.internalGetCounters());
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-=======
             .internal_static_org_datacommons_proto_Log_Location_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 org.datacommons.proto.Debug.Log.Location.class,
@@ -1169,570 +712,10 @@ public final class Debug {
         if (isInitialized == 0) return false;
 
         memoizedIsInitialized = 1;
->>>>>>> master
         return true;
       }
 
       @java.lang.Override
-<<<<<<< HEAD
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        org.datacommons.proto.Debug.CounterSet parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.Debug.CounterSet) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-
-      private int bitField0_;
-
-      private com.google.protobuf.MapField<java.lang.String, java.lang.Long> counters_;
-
-      private com.google.protobuf.MapField<java.lang.String, java.lang.Long> internalGetCounters() {
-        if (counters_ == null) {
-          return com.google.protobuf.MapField.emptyMapField(
-              CountersDefaultEntryHolder.defaultEntry);
-        }
-        return counters_;
-      }
-
-      private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
-          internalGetMutableCounters() {
-        onChanged();
-        ;
-        if (counters_ == null) {
-          counters_ =
-              com.google.protobuf.MapField.newMapField(CountersDefaultEntryHolder.defaultEntry);
-        }
-        if (!counters_.isMutable()) {
-          counters_ = counters_.copy();
-        }
-        return counters_;
-      }
-
-      public int getCountersCount() {
-        return internalGetCounters().getMap().size();
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public boolean containsCounters(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        return internalGetCounters().getMap().containsKey(key);
-      }
-      /** Use {@link #getCountersMap()} instead. */
-      @java.lang.Deprecated
-      public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
-        return getCountersMap();
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
-        return internalGetCounters().getMap();
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public long getCountersOrDefault(java.lang.String key, long defaultValue) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
-        return map.containsKey(key) ? map.get(key) : defaultValue;
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public long getCountersOrThrow(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
-        if (!map.containsKey(key)) {
-          throw new java.lang.IllegalArgumentException();
-        }
-        return map.get(key);
-      }
-
-      public Builder clearCounters() {
-        internalGetMutableCounters().getMutableMap().clear();
-        return this;
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public Builder removeCounters(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        internalGetMutableCounters().getMutableMap().remove(key);
-        return this;
-      }
-      /** Use alternate mutation accessors instead. */
-      @java.lang.Deprecated
-      public java.util.Map<java.lang.String, java.lang.Long> getMutableCounters() {
-        return internalGetMutableCounters().getMutableMap();
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public Builder putCounters(java.lang.String key, long value) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-
-        internalGetMutableCounters().getMutableMap().put(key, value);
-        return this;
-      }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
-      public Builder putAllCounters(java.util.Map<java.lang.String, java.lang.Long> values) {
-        internalGetMutableCounters().getMutableMap().putAll(values);
-        return this;
-      }
-
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-      // @@protoc_insertion_point(builder_scope:org.datacommons.proto.CounterSet)
-    }
-
-    // @@protoc_insertion_point(class_scope:org.datacommons.proto.CounterSet)
-    private static final org.datacommons.proto.Debug.CounterSet DEFAULT_INSTANCE;
-
-    static {
-      DEFAULT_INSTANCE = new org.datacommons.proto.Debug.CounterSet();
-    }
-
-    public static org.datacommons.proto.Debug.CounterSet getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated
-    public static final com.google.protobuf.Parser<CounterSet> PARSER =
-        new com.google.protobuf.AbstractParser<CounterSet>() {
-          @java.lang.Override
-          public CounterSet parsePartialFrom(
-              com.google.protobuf.CodedInputStream input,
-              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-              throws com.google.protobuf.InvalidProtocolBufferException {
-            return new CounterSet(input, extensionRegistry);
-          }
-        };
-
-    public static com.google.protobuf.Parser<CounterSet> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<CounterSet> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public org.datacommons.proto.Debug.CounterSet getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-  }
-
-  public interface LogOrBuilder
-      extends
-      // @@protoc_insertion_point(interface_extends:org.datacommons.proto.Log)
-      com.google.protobuf.MessageOrBuilder {
-
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    java.util.List<org.datacommons.proto.Debug.Log.Entry> getEntriesList();
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    org.datacommons.proto.Debug.Log.Entry getEntries(int index);
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    int getEntriesCount();
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    java.util.List<? extends org.datacommons.proto.Debug.Log.EntryOrBuilder>
-        getEntriesOrBuilderList();
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    org.datacommons.proto.Debug.Log.EntryOrBuilder getEntriesOrBuilder(int index);
-
-    /**
-     * <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code>
-     *
-     * @return Whether the counterSet field is set.
-     */
-    boolean hasCounterSet();
-    /**
-     * <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code>
-     *
-     * @return The counterSet.
-     */
-    org.datacommons.proto.Debug.CounterSet getCounterSet();
-    /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-    org.datacommons.proto.Debug.CounterSetOrBuilder getCounterSetOrBuilder();
-  }
-  /** Protobuf type {@code org.datacommons.proto.Log} */
-  public static final class Log extends com.google.protobuf.GeneratedMessageV3
-      implements
-      // @@protoc_insertion_point(message_implements:org.datacommons.proto.Log)
-      LogOrBuilder {
-    private static final long serialVersionUID = 0L;
-    // Use Log.newBuilder() to construct.
-    private Log(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-
-    private Log() {
-      entries_ = java.util.Collections.emptyList();
-    }
-
-    @java.lang.Override
-    @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
-      return new Log();
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
-      return this.unknownFields;
-    }
-
-    private Log(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10:
-              {
-                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                  entries_ = new java.util.ArrayList<org.datacommons.proto.Debug.Log.Entry>();
-                  mutable_bitField0_ |= 0x00000001;
-                }
-                entries_.add(
-                    input.readMessage(
-                        org.datacommons.proto.Debug.Log.Entry.PARSER, extensionRegistry));
-                break;
-              }
-            case 18:
-              {
-                org.datacommons.proto.Debug.CounterSet.Builder subBuilder = null;
-                if (((bitField0_ & 0x00000001) != 0)) {
-                  subBuilder = counterSet_.toBuilder();
-                }
-                counterSet_ =
-                    input.readMessage(
-                        org.datacommons.proto.Debug.CounterSet.PARSER, extensionRegistry);
-                if (subBuilder != null) {
-                  subBuilder.mergeFrom(counterSet_);
-                  counterSet_ = subBuilder.buildPartial();
-                }
-                bitField0_ |= 0x00000001;
-                break;
-              }
-            default:
-              {
-                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
-              }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
-      } finally {
-        if (((mutable_bitField0_ & 0x00000001) != 0)) {
-          entries_ = java.util.Collections.unmodifiableList(entries_);
-        }
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-
-    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return org.datacommons.proto.Debug.internal_static_org_datacommons_proto_Log_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Debug
-          .internal_static_org_datacommons_proto_Log_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Debug.Log.class, org.datacommons.proto.Debug.Log.Builder.class);
-    }
-
-    /** Protobuf enum {@code org.datacommons.proto.Log.Level} */
-    public enum Level implements com.google.protobuf.ProtocolMessageEnum {
-      /** <code>LEVEL_UNSPECIFIED = 0;</code> */
-      LEVEL_UNSPECIFIED(0),
-      /** <code>LEVEL_INFO = 1;</code> */
-      LEVEL_INFO(1),
-      /** <code>LEVEL_WARNING = 2;</code> */
-      LEVEL_WARNING(2),
-      /** <code>LEVEL_ERROR = 3;</code> */
-      LEVEL_ERROR(3),
-      /** <code>LEVEL_FATAL = 4;</code> */
-      LEVEL_FATAL(4),
-      ;
-
-      /** <code>LEVEL_UNSPECIFIED = 0;</code> */
-      public static final int LEVEL_UNSPECIFIED_VALUE = 0;
-      /** <code>LEVEL_INFO = 1;</code> */
-      public static final int LEVEL_INFO_VALUE = 1;
-      /** <code>LEVEL_WARNING = 2;</code> */
-      public static final int LEVEL_WARNING_VALUE = 2;
-      /** <code>LEVEL_ERROR = 3;</code> */
-      public static final int LEVEL_ERROR_VALUE = 3;
-      /** <code>LEVEL_FATAL = 4;</code> */
-      public static final int LEVEL_FATAL_VALUE = 4;
-
-      public final int getNumber() {
-        return value;
-      }
-
-      /**
-       * @param value The numeric wire value of the corresponding enum entry.
-       * @return The enum associated with the given numeric wire value.
-       * @deprecated Use {@link #forNumber(int)} instead.
-       */
-      @java.lang.Deprecated
-      public static Level valueOf(int value) {
-        return forNumber(value);
-      }
-
-      /**
-       * @param value The numeric wire value of the corresponding enum entry.
-       * @return The enum associated with the given numeric wire value.
-       */
-      public static Level forNumber(int value) {
-        switch (value) {
-          case 0:
-            return LEVEL_UNSPECIFIED;
-          case 1:
-            return LEVEL_INFO;
-          case 2:
-            return LEVEL_WARNING;
-          case 3:
-            return LEVEL_ERROR;
-          case 4:
-            return LEVEL_FATAL;
-          default:
-            return null;
-        }
-      }
-
-      public static com.google.protobuf.Internal.EnumLiteMap<Level> internalGetValueMap() {
-        return internalValueMap;
-      }
-
-      private static final com.google.protobuf.Internal.EnumLiteMap<Level> internalValueMap =
-          new com.google.protobuf.Internal.EnumLiteMap<Level>() {
-            public Level findValueByNumber(int number) {
-              return Level.forNumber(number);
-            }
-          };
-
-      public final com.google.protobuf.Descriptors.EnumValueDescriptor getValueDescriptor() {
-        return getDescriptor().getValues().get(ordinal());
-      }
-
-      public final com.google.protobuf.Descriptors.EnumDescriptor getDescriptorForType() {
-        return getDescriptor();
-      }
-
-      public static final com.google.protobuf.Descriptors.EnumDescriptor getDescriptor() {
-        return org.datacommons.proto.Debug.Log.getDescriptor().getEnumTypes().get(0);
-      }
-
-      private static final Level[] VALUES = values();
-
-      public static Level valueOf(com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
-        if (desc.getType() != getDescriptor()) {
-          throw new java.lang.IllegalArgumentException("EnumValueDescriptor is not for this type.");
-        }
-        return VALUES[desc.getIndex()];
-      }
-
-      private final int value;
-
-      private Level(int value) {
-        this.value = value;
-      }
-
-      // @@protoc_insertion_point(enum_scope:org.datacommons.proto.Log.Level)
-    }
-
-    public interface LocationOrBuilder
-        extends
-        // @@protoc_insertion_point(interface_extends:org.datacommons.proto.Log.Location)
-        com.google.protobuf.MessageOrBuilder {
-
-      /**
-       *
-       *
-       * <pre>
-       * Name of the file. Could be a full path or not. Typically, this is
-       * an MCF file or CSV.
-       * </pre>
-       *
-       * <code>optional string file = 1;</code>
-       *
-       * @return Whether the file field is set.
-       */
-      boolean hasFile();
-      /**
-       *
-       *
-       * <pre>
-       * Name of the file. Could be a full path or not. Typically, this is
-       * an MCF file or CSV.
-       * </pre>
-       *
-       * <code>optional string file = 1;</code>
-       *
-       * @return The file.
-       */
-      java.lang.String getFile();
-      /**
-       *
-       *
-       * <pre>
-       * Name of the file. Could be a full path or not. Typically, this is
-       * an MCF file or CSV.
-       * </pre>
-       *
-       * <code>optional string file = 1;</code>
-       *
-       * @return The bytes for file.
-       */
-      com.google.protobuf.ByteString getFileBytes();
-
-      /**
-       *
-       *
-       * <pre>
-       * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-       * not handle newlines in values).
-       * </pre>
-       *
-       * <code>optional int64 line_number = 2;</code>
-       *
-       * @return Whether the lineNumber field is set.
-       */
-      boolean hasLineNumber();
-      /**
-       *
-       *
-       * <pre>
-       * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-       * not handle newlines in values).
-       * </pre>
-       *
-       * <code>optional int64 line_number = 2;</code>
-       *
-       * @return The lineNumber.
-       */
-      long getLineNumber();
-
-      /**
-       *
-       *
-       * <pre>
-       * Column number in line, starting from 1. Can be empty.
-       * </pre>
-       *
-       * <code>optional int64 column_number = 3;</code>
-       *
-       * @return Whether the columnNumber field is set.
-       */
-      boolean hasColumnNumber();
-      /**
-       *
-       *
-       * <pre>
-       * Column number in line, starting from 1. Can be empty.
-       * </pre>
-       *
-       * <code>optional int64 column_number = 3;</code>
-       *
-       * @return The columnNumber.
-       */
-      long getColumnNumber();
-
-      /**
-       *
-       *
-       * <pre>
-       * Set when the input is a CSV.
-       * </pre>
-       *
-       * <code>optional string column_name = 4;</code>
-       *
-       * @return Whether the columnName field is set.
-       */
-      boolean hasColumnName();
-      /**
-       *
-       *
-       * <pre>
-       * Set when the input is a CSV.
-       * </pre>
-       *
-       * <code>optional string column_name = 4;</code>
-       *
-       * @return The columnName.
-       */
-      java.lang.String getColumnName();
-      /**
-       *
-       *
-       * <pre>
-       * Set when the input is a CSV.
-       * </pre>
-       *
-       * <code>optional string column_name = 4;</code>
-       *
-       * @return The bytes for columnName.
-       */
-      com.google.protobuf.ByteString getColumnNameBytes();
-    }
-    /** Protobuf type {@code org.datacommons.proto.Log.Location} */
-    public static final class Location extends com.google.protobuf.GeneratedMessageV3
-        implements
-        // @@protoc_insertion_point(message_implements:org.datacommons.proto.Log.Location)
-        LocationOrBuilder {
-      private static final long serialVersionUID = 0L;
-      // Use Location.newBuilder() to construct.
-      private Location(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-        super(builder);
-      }
-
-      private Location() {
-        file_ = "";
-        columnName_ = "";
-      }
-=======
       public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
         if (((bitField0_ & 0x00000001) != 0)) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 1, file_);
@@ -2557,18 +1540,58 @@ public final class Debug {
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.Log.CounterSet)
         com.google.protobuf.MessageOrBuilder {
 
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       int getCountersCount();
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       boolean containsCounters(java.lang.String key);
       /** Use {@link #getCountersMap()} instead. */
       @java.lang.Deprecated
       java.util.Map<java.lang.String, java.lang.Long> getCounters();
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       java.util.Map<java.lang.String, java.lang.Long> getCountersMap();
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       long getCountersOrDefault(java.lang.String key, long defaultValue);
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       long getCountersOrThrow(java.lang.String key);
     }
     /** Protobuf type {@code org.datacommons.proto.Log.CounterSet} */
@@ -2583,16 +1606,11 @@ public final class Debug {
       }
 
       private CounterSet() {}
->>>>>>> master
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
       protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
-<<<<<<< HEAD
-        return new Location();
-=======
         return new CounterSet();
->>>>>>> master
       }
 
       @java.lang.Override
@@ -2600,11 +1618,7 @@ public final class Debug {
         return this.unknownFields;
       }
 
-<<<<<<< HEAD
-      private Location(
-=======
       private CounterSet(
->>>>>>> master
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
@@ -2625,30 +1639,6 @@ public final class Debug {
                 break;
               case 10:
                 {
-<<<<<<< HEAD
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000001;
-                  file_ = bs;
-                  break;
-                }
-              case 16:
-                {
-                  bitField0_ |= 0x00000002;
-                  lineNumber_ = input.readInt64();
-                  break;
-                }
-              case 24:
-                {
-                  bitField0_ |= 0x00000004;
-                  columnNumber_ = input.readInt64();
-                  break;
-                }
-              case 34:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000008;
-                  columnName_ = bs;
-=======
                   if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                     counters_ =
                         com.google.protobuf.MapField.newMapField(
@@ -2660,7 +1650,6 @@ public final class Debug {
                           CountersDefaultEntryHolder.defaultEntry.getParserForType(),
                           extensionRegistry);
                   counters_.getMutableMap().put(counters__.getKey(), counters__.getValue());
->>>>>>> master
                   break;
                 }
               default:
@@ -2685,213 +1674,6 @@ public final class Debug {
 
       public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
         return org.datacommons.proto.Debug
-<<<<<<< HEAD
-            .internal_static_org_datacommons_proto_Log_Location_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Debug
-            .internal_static_org_datacommons_proto_Log_Location_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Debug.Log.Location.class,
-                org.datacommons.proto.Debug.Log.Location.Builder.class);
-      }
-
-      private int bitField0_;
-      public static final int FILE_FIELD_NUMBER = 1;
-      private volatile java.lang.Object file_;
-      /**
-       *
-       *
-       * <pre>
-       * Name of the file. Could be a full path or not. Typically, this is
-       * an MCF file or CSV.
-       * </pre>
-       *
-       * <code>optional string file = 1;</code>
-       *
-       * @return Whether the file field is set.
-       */
-      public boolean hasFile() {
-        return ((bitField0_ & 0x00000001) != 0);
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Name of the file. Could be a full path or not. Typically, this is
-       * an MCF file or CSV.
-       * </pre>
-       *
-       * <code>optional string file = 1;</code>
-       *
-       * @return The file.
-       */
-      public java.lang.String getFile() {
-        java.lang.Object ref = file_;
-        if (ref instanceof java.lang.String) {
-          return (java.lang.String) ref;
-        } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            file_ = s;
-          }
-          return s;
-        }
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Name of the file. Could be a full path or not. Typically, this is
-       * an MCF file or CSV.
-       * </pre>
-       *
-       * <code>optional string file = 1;</code>
-       *
-       * @return The bytes for file.
-       */
-      public com.google.protobuf.ByteString getFileBytes() {
-        java.lang.Object ref = file_;
-        if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-          file_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-
-      public static final int LINE_NUMBER_FIELD_NUMBER = 2;
-      private long lineNumber_;
-      /**
-       *
-       *
-       * <pre>
-       * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-       * not handle newlines in values).
-       * </pre>
-       *
-       * <code>optional int64 line_number = 2;</code>
-       *
-       * @return Whether the lineNumber field is set.
-       */
-      public boolean hasLineNumber() {
-        return ((bitField0_ & 0x00000002) != 0);
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-       * not handle newlines in values).
-       * </pre>
-       *
-       * <code>optional int64 line_number = 2;</code>
-       *
-       * @return The lineNumber.
-       */
-      public long getLineNumber() {
-        return lineNumber_;
-      }
-
-      public static final int COLUMN_NUMBER_FIELD_NUMBER = 3;
-      private long columnNumber_;
-      /**
-       *
-       *
-       * <pre>
-       * Column number in line, starting from 1. Can be empty.
-       * </pre>
-       *
-       * <code>optional int64 column_number = 3;</code>
-       *
-       * @return Whether the columnNumber field is set.
-       */
-      public boolean hasColumnNumber() {
-        return ((bitField0_ & 0x00000004) != 0);
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Column number in line, starting from 1. Can be empty.
-       * </pre>
-       *
-       * <code>optional int64 column_number = 3;</code>
-       *
-       * @return The columnNumber.
-       */
-      public long getColumnNumber() {
-        return columnNumber_;
-      }
-
-      public static final int COLUMN_NAME_FIELD_NUMBER = 4;
-      private volatile java.lang.Object columnName_;
-      /**
-       *
-       *
-       * <pre>
-       * Set when the input is a CSV.
-       * </pre>
-       *
-       * <code>optional string column_name = 4;</code>
-       *
-       * @return Whether the columnName field is set.
-       */
-      public boolean hasColumnName() {
-        return ((bitField0_ & 0x00000008) != 0);
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Set when the input is a CSV.
-       * </pre>
-       *
-       * <code>optional string column_name = 4;</code>
-       *
-       * @return The columnName.
-       */
-      public java.lang.String getColumnName() {
-        java.lang.Object ref = columnName_;
-        if (ref instanceof java.lang.String) {
-          return (java.lang.String) ref;
-        } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            columnName_ = s;
-          }
-          return s;
-        }
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Set when the input is a CSV.
-       * </pre>
-       *
-       * <code>optional string column_name = 4;</code>
-       *
-       * @return The bytes for columnName.
-       */
-      public com.google.protobuf.ByteString getColumnNameBytes() {
-        java.lang.Object ref = columnName_;
-        if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-          columnName_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-=======
             .internal_static_org_datacommons_proto_Log_CounterSet_descriptor;
       }
 
@@ -2942,7 +1724,15 @@ public final class Debug {
       public int getCountersCount() {
         return internalGetCounters().getMap().size();
       }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       public boolean containsCounters(java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -2954,11 +1744,27 @@ public final class Debug {
       public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
         return getCountersMap();
       }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
         return internalGetCounters().getMap();
       }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       public long getCountersOrDefault(java.lang.String key, long defaultValue) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -2966,7 +1772,15 @@ public final class Debug {
         java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       public long getCountersOrThrow(java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -2976,7 +1790,6 @@ public final class Debug {
           throw new java.lang.IllegalArgumentException();
         }
         return map.get(key);
->>>>>>> master
       }
 
       private byte memoizedIsInitialized = -1;
@@ -2993,23 +1806,8 @@ public final class Debug {
 
       @java.lang.Override
       public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-<<<<<<< HEAD
-        if (((bitField0_ & 0x00000001) != 0)) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 1, file_);
-        }
-        if (((bitField0_ & 0x00000002) != 0)) {
-          output.writeInt64(2, lineNumber_);
-        }
-        if (((bitField0_ & 0x00000004) != 0)) {
-          output.writeInt64(3, columnNumber_);
-        }
-        if (((bitField0_ & 0x00000008) != 0)) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 4, columnName_);
-        }
-=======
         com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
             output, internalGetCounters(), CountersDefaultEntryHolder.defaultEntry, 1);
->>>>>>> master
         unknownFields.writeTo(output);
       }
 
@@ -3019,19 +1817,6 @@ public final class Debug {
         if (size != -1) return size;
 
         size = 0;
-<<<<<<< HEAD
-        if (((bitField0_ & 0x00000001) != 0)) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, file_);
-        }
-        if (((bitField0_ & 0x00000002) != 0)) {
-          size += com.google.protobuf.CodedOutputStream.computeInt64Size(2, lineNumber_);
-        }
-        if (((bitField0_ & 0x00000004) != 0)) {
-          size += com.google.protobuf.CodedOutputStream.computeInt64Size(3, columnNumber_);
-        }
-        if (((bitField0_ & 0x00000008) != 0)) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, columnName_);
-=======
         for (java.util.Map.Entry<java.lang.String, java.lang.Long> entry :
             internalGetCounters().getMap().entrySet()) {
           com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> counters__ =
@@ -3041,7 +1826,6 @@ public final class Debug {
                   .setValue(entry.getValue())
                   .build();
           size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, counters__);
->>>>>>> master
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -3053,30 +1837,6 @@ public final class Debug {
         if (obj == this) {
           return true;
         }
-<<<<<<< HEAD
-        if (!(obj instanceof org.datacommons.proto.Debug.Log.Location)) {
-          return super.equals(obj);
-        }
-        org.datacommons.proto.Debug.Log.Location other =
-            (org.datacommons.proto.Debug.Log.Location) obj;
-
-        if (hasFile() != other.hasFile()) return false;
-        if (hasFile()) {
-          if (!getFile().equals(other.getFile())) return false;
-        }
-        if (hasLineNumber() != other.hasLineNumber()) return false;
-        if (hasLineNumber()) {
-          if (getLineNumber() != other.getLineNumber()) return false;
-        }
-        if (hasColumnNumber() != other.hasColumnNumber()) return false;
-        if (hasColumnNumber()) {
-          if (getColumnNumber() != other.getColumnNumber()) return false;
-        }
-        if (hasColumnName() != other.hasColumnName()) return false;
-        if (hasColumnName()) {
-          if (!getColumnName().equals(other.getColumnName())) return false;
-        }
-=======
         if (!(obj instanceof org.datacommons.proto.Debug.Log.CounterSet)) {
           return super.equals(obj);
         }
@@ -3084,7 +1844,6 @@ public final class Debug {
             (org.datacommons.proto.Debug.Log.CounterSet) obj;
 
         if (!internalGetCounters().equals(other.internalGetCounters())) return false;
->>>>>>> master
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -3096,146 +1855,80 @@ public final class Debug {
         }
         int hash = 41;
         hash = (19 * hash) + getDescriptor().hashCode();
-<<<<<<< HEAD
-        if (hasFile()) {
-          hash = (37 * hash) + FILE_FIELD_NUMBER;
-          hash = (53 * hash) + getFile().hashCode();
-        }
-        if (hasLineNumber()) {
-          hash = (37 * hash) + LINE_NUMBER_FIELD_NUMBER;
-          hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getLineNumber());
-        }
-        if (hasColumnNumber()) {
-          hash = (37 * hash) + COLUMN_NUMBER_FIELD_NUMBER;
-          hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getColumnNumber());
-        }
-        if (hasColumnName()) {
-          hash = (37 * hash) + COLUMN_NAME_FIELD_NUMBER;
-          hash = (53 * hash) + getColumnName().hashCode();
-=======
         if (!internalGetCounters().getMap().isEmpty()) {
           hash = (37 * hash) + COUNTERS_FIELD_NUMBER;
           hash = (53 * hash) + internalGetCounters().hashCode();
->>>>>>> master
         }
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
         return hash;
       }
 
-<<<<<<< HEAD
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(java.nio.ByteBuffer data)
-=======
       public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(java.nio.ByteBuffer data)
->>>>>>> master
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
 
-<<<<<<< HEAD
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-=======
       public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
->>>>>>> master
           java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
 
-<<<<<<< HEAD
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-=======
       public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
->>>>>>> master
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
 
-<<<<<<< HEAD
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-=======
       public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
->>>>>>> master
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
 
-<<<<<<< HEAD
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(byte[] data)
-=======
       public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(byte[] data)
->>>>>>> master
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
 
-<<<<<<< HEAD
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-=======
       public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
->>>>>>> master
           byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
 
-<<<<<<< HEAD
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(java.io.InputStream input)
-=======
       public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(java.io.InputStream input)
->>>>>>> master
           throws java.io.IOException {
         return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
       }
 
-<<<<<<< HEAD
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-=======
       public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
->>>>>>> master
           java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
             PARSER, input, extensionRegistry);
       }
 
-<<<<<<< HEAD
-      public static org.datacommons.proto.Debug.Log.Location parseDelimitedFrom(
-=======
       public static org.datacommons.proto.Debug.Log.CounterSet parseDelimitedFrom(
->>>>>>> master
           java.io.InputStream input) throws java.io.IOException {
         return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
       }
 
-<<<<<<< HEAD
-      public static org.datacommons.proto.Debug.Log.Location parseDelimitedFrom(
-=======
       public static org.datacommons.proto.Debug.Log.CounterSet parseDelimitedFrom(
->>>>>>> master
           java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
         return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
             PARSER, input, extensionRegistry);
       }
 
-<<<<<<< HEAD
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-=======
       public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
->>>>>>> master
           com.google.protobuf.CodedInputStream input) throws java.io.IOException {
         return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
       }
 
-<<<<<<< HEAD
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-=======
       public static org.datacommons.proto.Debug.Log.CounterSet parseFrom(
->>>>>>> master
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
@@ -3252,11 +1945,7 @@ public final class Debug {
         return DEFAULT_INSTANCE.toBuilder();
       }
 
-<<<<<<< HEAD
-      public static Builder newBuilder(org.datacommons.proto.Debug.Log.Location prototype) {
-=======
       public static Builder newBuilder(org.datacommons.proto.Debug.Log.CounterSet prototype) {
->>>>>>> master
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
 
@@ -3271,17 +1960,6 @@ public final class Debug {
         Builder builder = new Builder(parent);
         return builder;
       }
-<<<<<<< HEAD
-      /** Protobuf type {@code org.datacommons.proto.Log.Location} */
-      public static final class Builder
-          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-          implements
-          // @@protoc_insertion_point(builder_implements:org.datacommons.proto.Log.Location)
-          org.datacommons.proto.Debug.Log.LocationOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-          return org.datacommons.proto.Debug
-              .internal_static_org_datacommons_proto_Log_Location_descriptor;
-=======
       /** Protobuf type {@code org.datacommons.proto.Log.CounterSet} */
       public static final class Builder
           extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -3311,22 +1989,12 @@ public final class Debug {
             default:
               throw new RuntimeException("Invalid map field number: " + number);
           }
->>>>>>> master
         }
 
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
           return org.datacommons.proto.Debug
-<<<<<<< HEAD
-              .internal_static_org_datacommons_proto_Log_Location_fieldAccessorTable
-              .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Debug.Log.Location.class,
-                  org.datacommons.proto.Debug.Log.Location.Builder.class);
-        }
-
-        // Construct using org.datacommons.proto.Debug.Log.Location.newBuilder()
-=======
               .internal_static_org_datacommons_proto_Log_CounterSet_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
                   org.datacommons.proto.Debug.Log.CounterSet.class,
@@ -3334,7 +2002,6 @@ public final class Debug {
         }
 
         // Construct using org.datacommons.proto.Debug.Log.CounterSet.newBuilder()
->>>>>>> master
         private Builder() {
           maybeForceBuilderInitialization();
         }
@@ -3351,66 +2018,13 @@ public final class Debug {
         @java.lang.Override
         public Builder clear() {
           super.clear();
-<<<<<<< HEAD
-          file_ = "";
-          bitField0_ = (bitField0_ & ~0x00000001);
-          lineNumber_ = 0L;
-          bitField0_ = (bitField0_ & ~0x00000002);
-          columnNumber_ = 0L;
-          bitField0_ = (bitField0_ & ~0x00000004);
-          columnName_ = "";
-          bitField0_ = (bitField0_ & ~0x00000008);
-=======
           internalGetMutableCounters().clear();
->>>>>>> master
           return this;
         }
 
         @java.lang.Override
         public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
           return org.datacommons.proto.Debug
-<<<<<<< HEAD
-              .internal_static_org_datacommons_proto_Log_Location_descriptor;
-        }
-
-        @java.lang.Override
-        public org.datacommons.proto.Debug.Log.Location getDefaultInstanceForType() {
-          return org.datacommons.proto.Debug.Log.Location.getDefaultInstance();
-        }
-
-        @java.lang.Override
-        public org.datacommons.proto.Debug.Log.Location build() {
-          org.datacommons.proto.Debug.Log.Location result = buildPartial();
-          if (!result.isInitialized()) {
-            throw newUninitializedMessageException(result);
-          }
-          return result;
-        }
-
-        @java.lang.Override
-        public org.datacommons.proto.Debug.Log.Location buildPartial() {
-          org.datacommons.proto.Debug.Log.Location result =
-              new org.datacommons.proto.Debug.Log.Location(this);
-          int from_bitField0_ = bitField0_;
-          int to_bitField0_ = 0;
-          if (((from_bitField0_ & 0x00000001) != 0)) {
-            to_bitField0_ |= 0x00000001;
-          }
-          result.file_ = file_;
-          if (((from_bitField0_ & 0x00000002) != 0)) {
-            result.lineNumber_ = lineNumber_;
-            to_bitField0_ |= 0x00000002;
-          }
-          if (((from_bitField0_ & 0x00000004) != 0)) {
-            result.columnNumber_ = columnNumber_;
-            to_bitField0_ |= 0x00000004;
-          }
-          if (((from_bitField0_ & 0x00000008) != 0)) {
-            to_bitField0_ |= 0x00000008;
-          }
-          result.columnName_ = columnName_;
-          result.bitField0_ = to_bitField0_;
-=======
               .internal_static_org_datacommons_proto_Log_CounterSet_descriptor;
         }
 
@@ -3435,7 +2049,6 @@ public final class Debug {
           int from_bitField0_ = bitField0_;
           result.counters_ = internalGetCounters();
           result.counters_.makeImmutable();
->>>>>>> master
           onBuilt();
           return result;
         }
@@ -3470,264 +2083,6 @@ public final class Debug {
         }
 
         @java.lang.Override
-<<<<<<< HEAD
-        public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-          return super.addRepeatedField(field, value);
-        }
-
-        @java.lang.Override
-        public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof org.datacommons.proto.Debug.Log.Location) {
-            return mergeFrom((org.datacommons.proto.Debug.Log.Location) other);
-          } else {
-            super.mergeFrom(other);
-            return this;
-          }
-        }
-
-        public Builder mergeFrom(org.datacommons.proto.Debug.Log.Location other) {
-          if (other == org.datacommons.proto.Debug.Log.Location.getDefaultInstance()) return this;
-          if (other.hasFile()) {
-            bitField0_ |= 0x00000001;
-            file_ = other.file_;
-            onChanged();
-          }
-          if (other.hasLineNumber()) {
-            setLineNumber(other.getLineNumber());
-          }
-          if (other.hasColumnNumber()) {
-            setColumnNumber(other.getColumnNumber());
-          }
-          if (other.hasColumnName()) {
-            bitField0_ |= 0x00000008;
-            columnName_ = other.columnName_;
-            onChanged();
-          }
-          this.mergeUnknownFields(other.unknownFields);
-          onChanged();
-          return this;
-        }
-
-        @java.lang.Override
-        public final boolean isInitialized() {
-          return true;
-        }
-
-        @java.lang.Override
-        public Builder mergeFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws java.io.IOException {
-          org.datacommons.proto.Debug.Log.Location parsedMessage = null;
-          try {
-            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (org.datacommons.proto.Debug.Log.Location) e.getUnfinishedMessage();
-            throw e.unwrapIOException();
-          } finally {
-            if (parsedMessage != null) {
-              mergeFrom(parsedMessage);
-            }
-          }
-          return this;
-        }
-
-        private int bitField0_;
-
-        private java.lang.Object file_ = "";
-        /**
-         *
-         *
-         * <pre>
-         * Name of the file. Could be a full path or not. Typically, this is
-         * an MCF file or CSV.
-         * </pre>
-         *
-         * <code>optional string file = 1;</code>
-         *
-         * @return Whether the file field is set.
-         */
-        public boolean hasFile() {
-          return ((bitField0_ & 0x00000001) != 0);
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Name of the file. Could be a full path or not. Typically, this is
-         * an MCF file or CSV.
-         * </pre>
-         *
-         * <code>optional string file = 1;</code>
-         *
-         * @return The file.
-         */
-        public java.lang.String getFile() {
-          java.lang.Object ref = file_;
-          if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-            java.lang.String s = bs.toStringUtf8();
-            if (bs.isValidUtf8()) {
-              file_ = s;
-            }
-            return s;
-          } else {
-            return (java.lang.String) ref;
-          }
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Name of the file. Could be a full path or not. Typically, this is
-         * an MCF file or CSV.
-         * </pre>
-         *
-         * <code>optional string file = 1;</code>
-         *
-         * @return The bytes for file.
-         */
-        public com.google.protobuf.ByteString getFileBytes() {
-          java.lang.Object ref = file_;
-          if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-            file_ = b;
-            return b;
-          } else {
-            return (com.google.protobuf.ByteString) ref;
-          }
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Name of the file. Could be a full path or not. Typically, this is
-         * an MCF file or CSV.
-         * </pre>
-         *
-         * <code>optional string file = 1;</code>
-         *
-         * @param value The file to set.
-         * @return This builder for chaining.
-         */
-        public Builder setFile(java.lang.String value) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000001;
-          file_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Name of the file. Could be a full path or not. Typically, this is
-         * an MCF file or CSV.
-         * </pre>
-         *
-         * <code>optional string file = 1;</code>
-         *
-         * @return This builder for chaining.
-         */
-        public Builder clearFile() {
-          bitField0_ = (bitField0_ & ~0x00000001);
-          file_ = getDefaultInstance().getFile();
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Name of the file. Could be a full path or not. Typically, this is
-         * an MCF file or CSV.
-         * </pre>
-         *
-         * <code>optional string file = 1;</code>
-         *
-         * @param value The bytes for file to set.
-         * @return This builder for chaining.
-         */
-        public Builder setFileBytes(com.google.protobuf.ByteString value) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000001;
-          file_ = value;
-          onChanged();
-          return this;
-        }
-
-        private long lineNumber_;
-        /**
-         *
-         *
-         * <pre>
-         * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-         * not handle newlines in values).
-         * </pre>
-         *
-         * <code>optional int64 line_number = 2;</code>
-         *
-         * @return Whether the lineNumber field is set.
-         */
-        public boolean hasLineNumber() {
-          return ((bitField0_ & 0x00000002) != 0);
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-         * not handle newlines in values).
-         * </pre>
-         *
-         * <code>optional int64 line_number = 2;</code>
-         *
-         * @return The lineNumber.
-         */
-        public long getLineNumber() {
-          return lineNumber_;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-         * not handle newlines in values).
-         * </pre>
-         *
-         * <code>optional int64 line_number = 2;</code>
-         *
-         * @param value The lineNumber to set.
-         * @return This builder for chaining.
-         */
-        public Builder setLineNumber(long value) {
-          bitField0_ |= 0x00000002;
-          lineNumber_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Line number in file, starting from 1.  Matches the row number in CSV (since we do
-         * not handle newlines in values).
-         * </pre>
-         *
-         * <code>optional int64 line_number = 2;</code>
-         *
-         * @return This builder for chaining.
-         */
-        public Builder clearLineNumber() {
-          bitField0_ = (bitField0_ & ~0x00000002);
-          lineNumber_ = 0L;
-=======
         public Builder addRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.addRepeatedField(field, value);
@@ -3747,196 +2102,10 @@ public final class Debug {
           if (other == org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()) return this;
           internalGetMutableCounters().mergeFrom(other.internalGetCounters());
           this.mergeUnknownFields(other.unknownFields);
->>>>>>> master
           onChanged();
           return this;
         }
 
-<<<<<<< HEAD
-        private long columnNumber_;
-        /**
-         *
-         *
-         * <pre>
-         * Column number in line, starting from 1. Can be empty.
-         * </pre>
-         *
-         * <code>optional int64 column_number = 3;</code>
-         *
-         * @return Whether the columnNumber field is set.
-         */
-        public boolean hasColumnNumber() {
-          return ((bitField0_ & 0x00000004) != 0);
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Column number in line, starting from 1. Can be empty.
-         * </pre>
-         *
-         * <code>optional int64 column_number = 3;</code>
-         *
-         * @return The columnNumber.
-         */
-        public long getColumnNumber() {
-          return columnNumber_;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Column number in line, starting from 1. Can be empty.
-         * </pre>
-         *
-         * <code>optional int64 column_number = 3;</code>
-         *
-         * @param value The columnNumber to set.
-         * @return This builder for chaining.
-         */
-        public Builder setColumnNumber(long value) {
-          bitField0_ |= 0x00000004;
-          columnNumber_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Column number in line, starting from 1. Can be empty.
-         * </pre>
-         *
-         * <code>optional int64 column_number = 3;</code>
-         *
-         * @return This builder for chaining.
-         */
-        public Builder clearColumnNumber() {
-          bitField0_ = (bitField0_ & ~0x00000004);
-          columnNumber_ = 0L;
-          onChanged();
-          return this;
-        }
-
-        private java.lang.Object columnName_ = "";
-        /**
-         *
-         *
-         * <pre>
-         * Set when the input is a CSV.
-         * </pre>
-         *
-         * <code>optional string column_name = 4;</code>
-         *
-         * @return Whether the columnName field is set.
-         */
-        public boolean hasColumnName() {
-          return ((bitField0_ & 0x00000008) != 0);
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Set when the input is a CSV.
-         * </pre>
-         *
-         * <code>optional string column_name = 4;</code>
-         *
-         * @return The columnName.
-         */
-        public java.lang.String getColumnName() {
-          java.lang.Object ref = columnName_;
-          if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-            java.lang.String s = bs.toStringUtf8();
-            if (bs.isValidUtf8()) {
-              columnName_ = s;
-            }
-            return s;
-          } else {
-            return (java.lang.String) ref;
-          }
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Set when the input is a CSV.
-         * </pre>
-         *
-         * <code>optional string column_name = 4;</code>
-         *
-         * @return The bytes for columnName.
-         */
-        public com.google.protobuf.ByteString getColumnNameBytes() {
-          java.lang.Object ref = columnName_;
-          if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-            columnName_ = b;
-            return b;
-          } else {
-            return (com.google.protobuf.ByteString) ref;
-          }
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Set when the input is a CSV.
-         * </pre>
-         *
-         * <code>optional string column_name = 4;</code>
-         *
-         * @param value The columnName to set.
-         * @return This builder for chaining.
-         */
-        public Builder setColumnName(java.lang.String value) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000008;
-          columnName_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Set when the input is a CSV.
-         * </pre>
-         *
-         * <code>optional string column_name = 4;</code>
-         *
-         * @return This builder for chaining.
-         */
-        public Builder clearColumnName() {
-          bitField0_ = (bitField0_ & ~0x00000008);
-          columnName_ = getDefaultInstance().getColumnName();
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Set when the input is a CSV.
-         * </pre>
-         *
-         * <code>optional string column_name = 4;</code>
-         *
-         * @param value The bytes for columnName to set.
-         * @return This builder for chaining.
-         */
-        public Builder setColumnNameBytes(com.google.protobuf.ByteString value) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000008;
-          columnName_ = value;
-          onChanged();
-=======
         @java.lang.Override
         public final boolean isInitialized() {
           return true;
@@ -3991,7 +2160,15 @@ public final class Debug {
         public int getCountersCount() {
           return internalGetCounters().getMap().size();
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public boolean containsCounters(java.lang.String key) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -4003,11 +2180,27 @@ public final class Debug {
         public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
           return getCountersMap();
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
           return internalGetCounters().getMap();
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public long getCountersOrDefault(java.lang.String key, long defaultValue) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -4015,7 +2208,15 @@ public final class Debug {
           java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
           return map.containsKey(key) ? map.get(key) : defaultValue;
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public long getCountersOrThrow(java.lang.String key) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -4031,7 +2232,15 @@ public final class Debug {
           internalGetMutableCounters().getMutableMap().clear();
           return this;
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public Builder removeCounters(java.lang.String key) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -4044,7 +2253,15 @@ public final class Debug {
         public java.util.Map<java.lang.String, java.lang.Long> getMutableCounters() {
           return internalGetMutableCounters().getMutableMap();
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public Builder putCounters(java.lang.String key, long value) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -4053,10 +2270,17 @@ public final class Debug {
           internalGetMutableCounters().getMutableMap().put(key, value);
           return this;
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public Builder putAllCounters(java.util.Map<java.lang.String, java.lang.Long> values) {
           internalGetMutableCounters().getMutableMap().putAll(values);
->>>>>>> master
           return this;
         }
 
@@ -4072,19 +2296,6 @@ public final class Debug {
           return super.mergeUnknownFields(unknownFields);
         }
 
-<<<<<<< HEAD
-        // @@protoc_insertion_point(builder_scope:org.datacommons.proto.Log.Location)
-      }
-
-      // @@protoc_insertion_point(class_scope:org.datacommons.proto.Log.Location)
-      private static final org.datacommons.proto.Debug.Log.Location DEFAULT_INSTANCE;
-
-      static {
-        DEFAULT_INSTANCE = new org.datacommons.proto.Debug.Log.Location();
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location getDefaultInstance() {
-=======
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.Log.CounterSet)
       }
 
@@ -4096,25 +2307,10 @@ public final class Debug {
       }
 
       public static org.datacommons.proto.Debug.Log.CounterSet getDefaultInstance() {
->>>>>>> master
         return DEFAULT_INSTANCE;
       }
 
       @java.lang.Deprecated
-<<<<<<< HEAD
-      public static final com.google.protobuf.Parser<Location> PARSER =
-          new com.google.protobuf.AbstractParser<Location>() {
-            @java.lang.Override
-            public Location parsePartialFrom(
-                com.google.protobuf.CodedInputStream input,
-                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                throws com.google.protobuf.InvalidProtocolBufferException {
-              return new Location(input, extensionRegistry);
-            }
-          };
-
-      public static com.google.protobuf.Parser<Location> parser() {
-=======
       public static final com.google.protobuf.Parser<CounterSet> PARSER =
           new com.google.protobuf.AbstractParser<CounterSet>() {
             @java.lang.Override
@@ -4127,25 +2323,16 @@ public final class Debug {
           };
 
       public static com.google.protobuf.Parser<CounterSet> parser() {
->>>>>>> master
         return PARSER;
       }
 
       @java.lang.Override
-<<<<<<< HEAD
-      public com.google.protobuf.Parser<Location> getParserForType() {
-=======
       public com.google.protobuf.Parser<CounterSet> getParserForType() {
->>>>>>> master
         return PARSER;
       }
 
       @java.lang.Override
-<<<<<<< HEAD
-      public org.datacommons.proto.Debug.Log.Location getDefaultInstanceForType() {
-=======
       public org.datacommons.proto.Debug.Log.CounterSet getDefaultInstanceForType() {
->>>>>>> master
         return DEFAULT_INSTANCE;
       }
     }
@@ -4190,19 +2377,11 @@ public final class Debug {
        * This must be user understandable.
        * </pre>
        *
-<<<<<<< HEAD
-       * <code>optional string message = 3;</code>
-       *
-       * @return Whether the message field is set.
-       */
-      boolean hasMessage();
-=======
        * <code>optional string user_message = 3;</code>
        *
        * @return Whether the userMessage field is set.
        */
       boolean hasUserMessage();
->>>>>>> master
       /**
        *
        *
@@ -4210,19 +2389,11 @@ public final class Debug {
        * This must be user understandable.
        * </pre>
        *
-<<<<<<< HEAD
-       * <code>optional string message = 3;</code>
-       *
-       * @return The message.
-       */
-      java.lang.String getMessage();
-=======
        * <code>optional string user_message = 3;</code>
        *
        * @return The userMessage.
        */
       java.lang.String getUserMessage();
->>>>>>> master
       /**
        *
        *
@@ -4230,34 +2401,16 @@ public final class Debug {
        * This must be user understandable.
        * </pre>
        *
-<<<<<<< HEAD
-       * <code>optional string message = 3;</code>
-       *
-       * @return The bytes for message.
-       */
-      com.google.protobuf.ByteString getMessageBytes();
-=======
        * <code>optional string user_message = 3;</code>
        *
        * @return The bytes for userMessage.
        */
       com.google.protobuf.ByteString getUserMessageBytes();
->>>>>>> master
 
       /**
        *
        *
        * <pre>
-<<<<<<< HEAD
-       * A counter in CounterSet.
-       * </pre>
-       *
-       * <code>optional string counter = 4;</code>
-       *
-       * @return Whether the counter field is set.
-       */
-      boolean hasCounter();
-=======
        * A counter key in CounterSet.
        * </pre>
        *
@@ -4266,21 +2419,10 @@ public final class Debug {
        * @return Whether the counterKey field is set.
        */
       boolean hasCounterKey();
->>>>>>> master
       /**
        *
        *
        * <pre>
-<<<<<<< HEAD
-       * A counter in CounterSet.
-       * </pre>
-       *
-       * <code>optional string counter = 4;</code>
-       *
-       * @return The counter.
-       */
-      java.lang.String getCounter();
-=======
        * A counter key in CounterSet.
        * </pre>
        *
@@ -4289,21 +2431,10 @@ public final class Debug {
        * @return The counterKey.
        */
       java.lang.String getCounterKey();
->>>>>>> master
       /**
        *
        *
        * <pre>
-<<<<<<< HEAD
-       * A counter in CounterSet.
-       * </pre>
-       *
-       * <code>optional string counter = 4;</code>
-       *
-       * @return The bytes for counter.
-       */
-      com.google.protobuf.ByteString getCounterBytes();
-=======
        * A counter key in CounterSet.
        * </pre>
        *
@@ -4312,18 +2443,13 @@ public final class Debug {
        * @return The bytes for counterKey.
        */
       com.google.protobuf.ByteString getCounterKeyBytes();
->>>>>>> master
     }
     /**
      *
      *
      * <pre>
-<<<<<<< HEAD
-     * One log entry. This could be a sample of messages for a particular counter.
-=======
      * One log entry. This could be a sample of messages for a particular
      * counter.
->>>>>>> master
      * </pre>
      *
      * Protobuf type {@code org.datacommons.proto.Log.Entry}
@@ -4340,13 +2466,8 @@ public final class Debug {
 
       private Entry() {
         level_ = 0;
-<<<<<<< HEAD
-        message_ = "";
-        counter_ = "";
-=======
         userMessage_ = "";
         counterKey_ = "";
->>>>>>> master
       }
 
       @java.lang.Override
@@ -4413,22 +2534,14 @@ public final class Debug {
                 {
                   com.google.protobuf.ByteString bs = input.readBytes();
                   bitField0_ |= 0x00000004;
-<<<<<<< HEAD
-                  message_ = bs;
-=======
                   userMessage_ = bs;
->>>>>>> master
                   break;
                 }
               case 34:
                 {
                   com.google.protobuf.ByteString bs = input.readBytes();
                   bitField0_ |= 0x00000008;
-<<<<<<< HEAD
-                  counter_ = bs;
-=======
                   counterKey_ = bs;
->>>>>>> master
                   break;
                 }
               default:
@@ -4516,13 +2629,8 @@ public final class Debug {
             : location_;
       }
 
-<<<<<<< HEAD
-      public static final int MESSAGE_FIELD_NUMBER = 3;
-      private volatile java.lang.Object message_;
-=======
       public static final int USER_MESSAGE_FIELD_NUMBER = 3;
       private volatile java.lang.Object userMessage_;
->>>>>>> master
       /**
        *
        *
@@ -4530,19 +2638,11 @@ public final class Debug {
        * This must be user understandable.
        * </pre>
        *
-<<<<<<< HEAD
-       * <code>optional string message = 3;</code>
-       *
-       * @return Whether the message field is set.
-       */
-      public boolean hasMessage() {
-=======
        * <code>optional string user_message = 3;</code>
        *
        * @return Whether the userMessage field is set.
        */
       public boolean hasUserMessage() {
->>>>>>> master
         return ((bitField0_ & 0x00000004) != 0);
       }
       /**
@@ -4552,32 +2652,19 @@ public final class Debug {
        * This must be user understandable.
        * </pre>
        *
-<<<<<<< HEAD
-       * <code>optional string message = 3;</code>
-       *
-       * @return The message.
-       */
-      public java.lang.String getMessage() {
-        java.lang.Object ref = message_;
-=======
        * <code>optional string user_message = 3;</code>
        *
        * @return The userMessage.
        */
       public java.lang.String getUserMessage() {
         java.lang.Object ref = userMessage_;
->>>>>>> master
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
           com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
-<<<<<<< HEAD
-            message_ = s;
-=======
             userMessage_ = s;
->>>>>>> master
           }
           return s;
         }
@@ -4589,18 +2676,6 @@ public final class Debug {
        * This must be user understandable.
        * </pre>
        *
-<<<<<<< HEAD
-       * <code>optional string message = 3;</code>
-       *
-       * @return The bytes for message.
-       */
-      public com.google.protobuf.ByteString getMessageBytes() {
-        java.lang.Object ref = message_;
-        if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-          message_ = b;
-=======
        * <code>optional string user_message = 3;</code>
        *
        * @return The bytes for userMessage.
@@ -4611,34 +2686,18 @@ public final class Debug {
           com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           userMessage_ = b;
->>>>>>> master
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
 
-<<<<<<< HEAD
-      public static final int COUNTER_FIELD_NUMBER = 4;
-      private volatile java.lang.Object counter_;
-=======
       public static final int COUNTER_KEY_FIELD_NUMBER = 4;
       private volatile java.lang.Object counterKey_;
->>>>>>> master
       /**
        *
        *
        * <pre>
-<<<<<<< HEAD
-       * A counter in CounterSet.
-       * </pre>
-       *
-       * <code>optional string counter = 4;</code>
-       *
-       * @return Whether the counter field is set.
-       */
-      public boolean hasCounter() {
-=======
        * A counter key in CounterSet.
        * </pre>
        *
@@ -4647,24 +2706,12 @@ public final class Debug {
        * @return Whether the counterKey field is set.
        */
       public boolean hasCounterKey() {
->>>>>>> master
         return ((bitField0_ & 0x00000008) != 0);
       }
       /**
        *
        *
        * <pre>
-<<<<<<< HEAD
-       * A counter in CounterSet.
-       * </pre>
-       *
-       * <code>optional string counter = 4;</code>
-       *
-       * @return The counter.
-       */
-      public java.lang.String getCounter() {
-        java.lang.Object ref = counter_;
-=======
        * A counter key in CounterSet.
        * </pre>
        *
@@ -4674,18 +2721,13 @@ public final class Debug {
        */
       public java.lang.String getCounterKey() {
         java.lang.Object ref = counterKey_;
->>>>>>> master
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
           com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
-<<<<<<< HEAD
-            counter_ = s;
-=======
             counterKey_ = s;
->>>>>>> master
           }
           return s;
         }
@@ -4694,21 +2736,6 @@ public final class Debug {
        *
        *
        * <pre>
-<<<<<<< HEAD
-       * A counter in CounterSet.
-       * </pre>
-       *
-       * <code>optional string counter = 4;</code>
-       *
-       * @return The bytes for counter.
-       */
-      public com.google.protobuf.ByteString getCounterBytes() {
-        java.lang.Object ref = counter_;
-        if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-          counter_ = b;
-=======
        * A counter key in CounterSet.
        * </pre>
        *
@@ -4722,7 +2749,6 @@ public final class Debug {
           com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           counterKey_ = b;
->>>>>>> master
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
@@ -4750,17 +2776,10 @@ public final class Debug {
           output.writeMessage(2, getLocation());
         }
         if (((bitField0_ & 0x00000004) != 0)) {
-<<<<<<< HEAD
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 3, message_);
-        }
-        if (((bitField0_ & 0x00000008) != 0)) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 4, counter_);
-=======
           com.google.protobuf.GeneratedMessageV3.writeString(output, 3, userMessage_);
         }
         if (((bitField0_ & 0x00000008) != 0)) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 4, counterKey_);
->>>>>>> master
         }
         unknownFields.writeTo(output);
       }
@@ -4778,17 +2797,10 @@ public final class Debug {
           size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getLocation());
         }
         if (((bitField0_ & 0x00000004) != 0)) {
-<<<<<<< HEAD
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, message_);
-        }
-        if (((bitField0_ & 0x00000008) != 0)) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, counter_);
-=======
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, userMessage_);
         }
         if (((bitField0_ & 0x00000008) != 0)) {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, counterKey_);
->>>>>>> master
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -4813,15 +2825,6 @@ public final class Debug {
         if (hasLocation()) {
           if (!getLocation().equals(other.getLocation())) return false;
         }
-<<<<<<< HEAD
-        if (hasMessage() != other.hasMessage()) return false;
-        if (hasMessage()) {
-          if (!getMessage().equals(other.getMessage())) return false;
-        }
-        if (hasCounter() != other.hasCounter()) return false;
-        if (hasCounter()) {
-          if (!getCounter().equals(other.getCounter())) return false;
-=======
         if (hasUserMessage() != other.hasUserMessage()) return false;
         if (hasUserMessage()) {
           if (!getUserMessage().equals(other.getUserMessage())) return false;
@@ -4829,7 +2832,6 @@ public final class Debug {
         if (hasCounterKey() != other.hasCounterKey()) return false;
         if (hasCounterKey()) {
           if (!getCounterKey().equals(other.getCounterKey())) return false;
->>>>>>> master
         }
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
@@ -4850,15 +2852,6 @@ public final class Debug {
           hash = (37 * hash) + LOCATION_FIELD_NUMBER;
           hash = (53 * hash) + getLocation().hashCode();
         }
-<<<<<<< HEAD
-        if (hasMessage()) {
-          hash = (37 * hash) + MESSAGE_FIELD_NUMBER;
-          hash = (53 * hash) + getMessage().hashCode();
-        }
-        if (hasCounter()) {
-          hash = (37 * hash) + COUNTER_FIELD_NUMBER;
-          hash = (53 * hash) + getCounter().hashCode();
-=======
         if (hasUserMessage()) {
           hash = (37 * hash) + USER_MESSAGE_FIELD_NUMBER;
           hash = (53 * hash) + getUserMessage().hashCode();
@@ -4866,7 +2859,6 @@ public final class Debug {
         if (hasCounterKey()) {
           hash = (37 * hash) + COUNTER_KEY_FIELD_NUMBER;
           hash = (53 * hash) + getCounterKey().hashCode();
->>>>>>> master
         }
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
@@ -4973,12 +2965,8 @@ public final class Debug {
        *
        *
        * <pre>
-<<<<<<< HEAD
-       * One log entry. This could be a sample of messages for a particular counter.
-=======
        * One log entry. This could be a sample of messages for a particular
        * counter.
->>>>>>> master
        * </pre>
        *
        * Protobuf type {@code org.datacommons.proto.Log.Entry}
@@ -5030,15 +3018,9 @@ public final class Debug {
             locationBuilder_.clear();
           }
           bitField0_ = (bitField0_ & ~0x00000002);
-<<<<<<< HEAD
-          message_ = "";
-          bitField0_ = (bitField0_ & ~0x00000004);
-          counter_ = "";
-=======
           userMessage_ = "";
           bitField0_ = (bitField0_ & ~0x00000004);
           counterKey_ = "";
->>>>>>> master
           bitField0_ = (bitField0_ & ~0x00000008);
           return this;
         }
@@ -5084,19 +3066,11 @@ public final class Debug {
           if (((from_bitField0_ & 0x00000004) != 0)) {
             to_bitField0_ |= 0x00000004;
           }
-<<<<<<< HEAD
-          result.message_ = message_;
-          if (((from_bitField0_ & 0x00000008) != 0)) {
-            to_bitField0_ |= 0x00000008;
-          }
-          result.counter_ = counter_;
-=======
           result.userMessage_ = userMessage_;
           if (((from_bitField0_ & 0x00000008) != 0)) {
             to_bitField0_ |= 0x00000008;
           }
           result.counterKey_ = counterKey_;
->>>>>>> master
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -5155,16 +3129,6 @@ public final class Debug {
           if (other.hasLocation()) {
             mergeLocation(other.getLocation());
           }
-<<<<<<< HEAD
-          if (other.hasMessage()) {
-            bitField0_ |= 0x00000004;
-            message_ = other.message_;
-            onChanged();
-          }
-          if (other.hasCounter()) {
-            bitField0_ |= 0x00000008;
-            counter_ = other.counter_;
-=======
           if (other.hasUserMessage()) {
             bitField0_ |= 0x00000004;
             userMessage_ = other.userMessage_;
@@ -5173,7 +3137,6 @@ public final class Debug {
           if (other.hasCounterKey()) {
             bitField0_ |= 0x00000008;
             counterKey_ = other.counterKey_;
->>>>>>> master
             onChanged();
           }
           this.mergeUnknownFields(other.unknownFields);
@@ -5373,11 +3336,7 @@ public final class Debug {
           return locationBuilder_;
         }
 
-<<<<<<< HEAD
-        private java.lang.Object message_ = "";
-=======
         private java.lang.Object userMessage_ = "";
->>>>>>> master
         /**
          *
          *
@@ -5385,19 +3344,11 @@ public final class Debug {
          * This must be user understandable.
          * </pre>
          *
-<<<<<<< HEAD
-         * <code>optional string message = 3;</code>
-         *
-         * @return Whether the message field is set.
-         */
-        public boolean hasMessage() {
-=======
          * <code>optional string user_message = 3;</code>
          *
          * @return Whether the userMessage field is set.
          */
         public boolean hasUserMessage() {
->>>>>>> master
           return ((bitField0_ & 0x00000004) != 0);
         }
         /**
@@ -5407,30 +3358,17 @@ public final class Debug {
          * This must be user understandable.
          * </pre>
          *
-<<<<<<< HEAD
-         * <code>optional string message = 3;</code>
-         *
-         * @return The message.
-         */
-        public java.lang.String getMessage() {
-          java.lang.Object ref = message_;
-=======
          * <code>optional string user_message = 3;</code>
          *
          * @return The userMessage.
          */
         public java.lang.String getUserMessage() {
           java.lang.Object ref = userMessage_;
->>>>>>> master
           if (!(ref instanceof java.lang.String)) {
             com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
-<<<<<<< HEAD
-              message_ = s;
-=======
               userMessage_ = s;
->>>>>>> master
             }
             return s;
           } else {
@@ -5444,18 +3382,6 @@ public final class Debug {
          * This must be user understandable.
          * </pre>
          *
-<<<<<<< HEAD
-         * <code>optional string message = 3;</code>
-         *
-         * @return The bytes for message.
-         */
-        public com.google.protobuf.ByteString getMessageBytes() {
-          java.lang.Object ref = message_;
-          if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-            message_ = b;
-=======
          * <code>optional string user_message = 3;</code>
          *
          * @return The bytes for userMessage.
@@ -5466,7 +3392,6 @@ public final class Debug {
             com.google.protobuf.ByteString b =
                 com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
             userMessage_ = b;
->>>>>>> master
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
@@ -5479,30 +3404,17 @@ public final class Debug {
          * This must be user understandable.
          * </pre>
          *
-<<<<<<< HEAD
-         * <code>optional string message = 3;</code>
-         *
-         * @param value The message to set.
-         * @return This builder for chaining.
-         */
-        public Builder setMessage(java.lang.String value) {
-=======
          * <code>optional string user_message = 3;</code>
          *
          * @param value The userMessage to set.
          * @return This builder for chaining.
          */
         public Builder setUserMessage(java.lang.String value) {
->>>>>>> master
           if (value == null) {
             throw new NullPointerException();
           }
           bitField0_ |= 0x00000004;
-<<<<<<< HEAD
-          message_ = value;
-=======
           userMessage_ = value;
->>>>>>> master
           onChanged();
           return this;
         }
@@ -5513,15 +3425,6 @@ public final class Debug {
          * This must be user understandable.
          * </pre>
          *
-<<<<<<< HEAD
-         * <code>optional string message = 3;</code>
-         *
-         * @return This builder for chaining.
-         */
-        public Builder clearMessage() {
-          bitField0_ = (bitField0_ & ~0x00000004);
-          message_ = getDefaultInstance().getMessage();
-=======
          * <code>optional string user_message = 3;</code>
          *
          * @return This builder for chaining.
@@ -5529,7 +3432,6 @@ public final class Debug {
         public Builder clearUserMessage() {
           bitField0_ = (bitField0_ & ~0x00000004);
           userMessage_ = getDefaultInstance().getUserMessage();
->>>>>>> master
           onChanged();
           return this;
         }
@@ -5540,53 +3442,26 @@ public final class Debug {
          * This must be user understandable.
          * </pre>
          *
-<<<<<<< HEAD
-         * <code>optional string message = 3;</code>
-         *
-         * @param value The bytes for message to set.
-         * @return This builder for chaining.
-         */
-        public Builder setMessageBytes(com.google.protobuf.ByteString value) {
-=======
          * <code>optional string user_message = 3;</code>
          *
          * @param value The bytes for userMessage to set.
          * @return This builder for chaining.
          */
         public Builder setUserMessageBytes(com.google.protobuf.ByteString value) {
->>>>>>> master
           if (value == null) {
             throw new NullPointerException();
           }
           bitField0_ |= 0x00000004;
-<<<<<<< HEAD
-          message_ = value;
-=======
           userMessage_ = value;
->>>>>>> master
           onChanged();
           return this;
         }
 
-<<<<<<< HEAD
-        private java.lang.Object counter_ = "";
-=======
         private java.lang.Object counterKey_ = "";
->>>>>>> master
         /**
          *
          *
          * <pre>
-<<<<<<< HEAD
-         * A counter in CounterSet.
-         * </pre>
-         *
-         * <code>optional string counter = 4;</code>
-         *
-         * @return Whether the counter field is set.
-         */
-        public boolean hasCounter() {
-=======
          * A counter key in CounterSet.
          * </pre>
          *
@@ -5595,24 +3470,12 @@ public final class Debug {
          * @return Whether the counterKey field is set.
          */
         public boolean hasCounterKey() {
->>>>>>> master
           return ((bitField0_ & 0x00000008) != 0);
         }
         /**
          *
          *
          * <pre>
-<<<<<<< HEAD
-         * A counter in CounterSet.
-         * </pre>
-         *
-         * <code>optional string counter = 4;</code>
-         *
-         * @return The counter.
-         */
-        public java.lang.String getCounter() {
-          java.lang.Object ref = counter_;
-=======
          * A counter key in CounterSet.
          * </pre>
          *
@@ -5622,16 +3485,11 @@ public final class Debug {
          */
         public java.lang.String getCounterKey() {
           java.lang.Object ref = counterKey_;
->>>>>>> master
           if (!(ref instanceof java.lang.String)) {
             com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
-<<<<<<< HEAD
-              counter_ = s;
-=======
               counterKey_ = s;
->>>>>>> master
             }
             return s;
           } else {
@@ -5642,21 +3500,6 @@ public final class Debug {
          *
          *
          * <pre>
-<<<<<<< HEAD
-         * A counter in CounterSet.
-         * </pre>
-         *
-         * <code>optional string counter = 4;</code>
-         *
-         * @return The bytes for counter.
-         */
-        public com.google.protobuf.ByteString getCounterBytes() {
-          java.lang.Object ref = counter_;
-          if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-            counter_ = b;
-=======
          * A counter key in CounterSet.
          * </pre>
          *
@@ -5670,7 +3513,6 @@ public final class Debug {
             com.google.protobuf.ByteString b =
                 com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
             counterKey_ = b;
->>>>>>> master
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
@@ -5680,17 +3522,6 @@ public final class Debug {
          *
          *
          * <pre>
-<<<<<<< HEAD
-         * A counter in CounterSet.
-         * </pre>
-         *
-         * <code>optional string counter = 4;</code>
-         *
-         * @param value The counter to set.
-         * @return This builder for chaining.
-         */
-        public Builder setCounter(java.lang.String value) {
-=======
          * A counter key in CounterSet.
          * </pre>
          *
@@ -5700,16 +3531,11 @@ public final class Debug {
          * @return This builder for chaining.
          */
         public Builder setCounterKey(java.lang.String value) {
->>>>>>> master
           if (value == null) {
             throw new NullPointerException();
           }
           bitField0_ |= 0x00000008;
-<<<<<<< HEAD
-          counter_ = value;
-=======
           counterKey_ = value;
->>>>>>> master
           onChanged();
           return this;
         }
@@ -5717,18 +3543,6 @@ public final class Debug {
          *
          *
          * <pre>
-<<<<<<< HEAD
-         * A counter in CounterSet.
-         * </pre>
-         *
-         * <code>optional string counter = 4;</code>
-         *
-         * @return This builder for chaining.
-         */
-        public Builder clearCounter() {
-          bitField0_ = (bitField0_ & ~0x00000008);
-          counter_ = getDefaultInstance().getCounter();
-=======
          * A counter key in CounterSet.
          * </pre>
          *
@@ -5739,7 +3553,6 @@ public final class Debug {
         public Builder clearCounterKey() {
           bitField0_ = (bitField0_ & ~0x00000008);
           counterKey_ = getDefaultInstance().getCounterKey();
->>>>>>> master
           onChanged();
           return this;
         }
@@ -5747,17 +3560,6 @@ public final class Debug {
          *
          *
          * <pre>
-<<<<<<< HEAD
-         * A counter in CounterSet.
-         * </pre>
-         *
-         * <code>optional string counter = 4;</code>
-         *
-         * @param value The bytes for counter to set.
-         * @return This builder for chaining.
-         */
-        public Builder setCounterBytes(com.google.protobuf.ByteString value) {
-=======
          * A counter key in CounterSet.
          * </pre>
          *
@@ -5767,16 +3569,11 @@ public final class Debug {
          * @return This builder for chaining.
          */
         public Builder setCounterKeyBytes(com.google.protobuf.ByteString value) {
->>>>>>> master
           if (value == null) {
             throw new NullPointerException();
           }
           bitField0_ |= 0x00000008;
-<<<<<<< HEAD
-          counter_ = value;
-=======
           counterKey_ = value;
->>>>>>> master
           onChanged();
           return this;
         }
@@ -5860,15 +3657,9 @@ public final class Debug {
     }
 
     public static final int COUNTER_SET_FIELD_NUMBER = 2;
-<<<<<<< HEAD
-    private org.datacommons.proto.Debug.CounterSet counterSet_;
-    /**
-     * <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code>
-=======
     private org.datacommons.proto.Debug.Log.CounterSet counterSet_;
     /**
      * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
->>>>>>> master
      *
      * @return Whether the counterSet field is set.
      */
@@ -5876,21 +3667,6 @@ public final class Debug {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
-<<<<<<< HEAD
-     * <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code>
-     *
-     * @return The counterSet.
-     */
-    public org.datacommons.proto.Debug.CounterSet getCounterSet() {
-      return counterSet_ == null
-          ? org.datacommons.proto.Debug.CounterSet.getDefaultInstance()
-          : counterSet_;
-    }
-    /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-    public org.datacommons.proto.Debug.CounterSetOrBuilder getCounterSetOrBuilder() {
-      return counterSet_ == null
-          ? org.datacommons.proto.Debug.CounterSet.getDefaultInstance()
-=======
      * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
      *
      * @return The counterSet.
@@ -5904,7 +3680,6 @@ public final class Debug {
     public org.datacommons.proto.Debug.Log.CounterSetOrBuilder getCounterSetOrBuilder() {
       return counterSet_ == null
           ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
->>>>>>> master
           : counterSet_;
     }
 
@@ -6082,9 +3857,6 @@ public final class Debug {
       Builder builder = new Builder(parent);
       return builder;
     }
-<<<<<<< HEAD
-    /** Protobuf type {@code org.datacommons.proto.Log} */
-=======
     /**
      *
      *
@@ -6094,7 +3866,6 @@ public final class Debug {
      *
      * Protobuf type {@code org.datacommons.proto.Log}
      */
->>>>>>> master
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
         implements
@@ -6507,16 +4278,6 @@ public final class Debug {
         return entriesBuilder_;
       }
 
-<<<<<<< HEAD
-      private org.datacommons.proto.Debug.CounterSet counterSet_;
-      private com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Debug.CounterSet,
-              org.datacommons.proto.Debug.CounterSet.Builder,
-              org.datacommons.proto.Debug.CounterSetOrBuilder>
-          counterSetBuilder_;
-      /**
-       * <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code>
-=======
       private org.datacommons.proto.Debug.Log.CounterSet counterSet_;
       private com.google.protobuf.SingleFieldBuilderV3<
               org.datacommons.proto.Debug.Log.CounterSet,
@@ -6525,7 +4286,6 @@ public final class Debug {
           counterSetBuilder_;
       /**
        * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
->>>>>>> master
        *
        * @return Whether the counterSet field is set.
        */
@@ -6533,16 +4293,6 @@ public final class Debug {
         return ((bitField0_ & 0x00000002) != 0);
       }
       /**
-<<<<<<< HEAD
-       * <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code>
-       *
-       * @return The counterSet.
-       */
-      public org.datacommons.proto.Debug.CounterSet getCounterSet() {
-        if (counterSetBuilder_ == null) {
-          return counterSet_ == null
-              ? org.datacommons.proto.Debug.CounterSet.getDefaultInstance()
-=======
        * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
        *
        * @return The counterSet.
@@ -6551,19 +4301,13 @@ public final class Debug {
         if (counterSetBuilder_ == null) {
           return counterSet_ == null
               ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
->>>>>>> master
               : counterSet_;
         } else {
           return counterSetBuilder_.getMessage();
         }
       }
-<<<<<<< HEAD
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-      public Builder setCounterSet(org.datacommons.proto.Debug.CounterSet value) {
-=======
       /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
       public Builder setCounterSet(org.datacommons.proto.Debug.Log.CounterSet value) {
->>>>>>> master
         if (counterSetBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -6576,14 +4320,9 @@ public final class Debug {
         bitField0_ |= 0x00000002;
         return this;
       }
-<<<<<<< HEAD
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-      public Builder setCounterSet(org.datacommons.proto.Debug.CounterSet.Builder builderForValue) {
-=======
       /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
       public Builder setCounterSet(
           org.datacommons.proto.Debug.Log.CounterSet.Builder builderForValue) {
->>>>>>> master
         if (counterSetBuilder_ == null) {
           counterSet_ = builderForValue.build();
           onChanged();
@@ -6593,16 +4332,6 @@ public final class Debug {
         bitField0_ |= 0x00000002;
         return this;
       }
-<<<<<<< HEAD
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-      public Builder mergeCounterSet(org.datacommons.proto.Debug.CounterSet value) {
-        if (counterSetBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) != 0)
-              && counterSet_ != null
-              && counterSet_ != org.datacommons.proto.Debug.CounterSet.getDefaultInstance()) {
-            counterSet_ =
-                org.datacommons.proto.Debug.CounterSet.newBuilder(counterSet_)
-=======
       /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
       public Builder mergeCounterSet(org.datacommons.proto.Debug.Log.CounterSet value) {
         if (counterSetBuilder_ == null) {
@@ -6611,7 +4340,6 @@ public final class Debug {
               && counterSet_ != org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()) {
             counterSet_ =
                 org.datacommons.proto.Debug.Log.CounterSet.newBuilder(counterSet_)
->>>>>>> master
                     .mergeFrom(value)
                     .buildPartial();
           } else {
@@ -6624,11 +4352,7 @@ public final class Debug {
         bitField0_ |= 0x00000002;
         return this;
       }
-<<<<<<< HEAD
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-=======
       /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
->>>>>>> master
       public Builder clearCounterSet() {
         if (counterSetBuilder_ == null) {
           counterSet_ = null;
@@ -6639,39 +4363,18 @@ public final class Debug {
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
-<<<<<<< HEAD
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-      public org.datacommons.proto.Debug.CounterSet.Builder getCounterSetBuilder() {
-=======
       /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
       public org.datacommons.proto.Debug.Log.CounterSet.Builder getCounterSetBuilder() {
->>>>>>> master
         bitField0_ |= 0x00000002;
         onChanged();
         return getCounterSetFieldBuilder().getBuilder();
       }
-<<<<<<< HEAD
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-      public org.datacommons.proto.Debug.CounterSetOrBuilder getCounterSetOrBuilder() {
-=======
       /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
       public org.datacommons.proto.Debug.Log.CounterSetOrBuilder getCounterSetOrBuilder() {
->>>>>>> master
         if (counterSetBuilder_ != null) {
           return counterSetBuilder_.getMessageOrBuilder();
         } else {
           return counterSet_ == null
-<<<<<<< HEAD
-              ? org.datacommons.proto.Debug.CounterSet.getDefaultInstance()
-              : counterSet_;
-        }
-      }
-      /** <code>optional .org.datacommons.proto.CounterSet counter_set = 2;</code> */
-      private com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Debug.CounterSet,
-              org.datacommons.proto.Debug.CounterSet.Builder,
-              org.datacommons.proto.Debug.CounterSetOrBuilder>
-=======
               ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
               : counterSet_;
         }
@@ -6681,20 +4384,13 @@ public final class Debug {
               org.datacommons.proto.Debug.Log.CounterSet,
               org.datacommons.proto.Debug.Log.CounterSet.Builder,
               org.datacommons.proto.Debug.Log.CounterSetOrBuilder>
->>>>>>> master
           getCounterSetFieldBuilder() {
         if (counterSetBuilder_ == null) {
           counterSetBuilder_ =
               new com.google.protobuf.SingleFieldBuilderV3<
-<<<<<<< HEAD
-                  org.datacommons.proto.Debug.CounterSet,
-                  org.datacommons.proto.Debug.CounterSet.Builder,
-                  org.datacommons.proto.Debug.CounterSetOrBuilder>(
-=======
                   org.datacommons.proto.Debug.Log.CounterSet,
                   org.datacommons.proto.Debug.Log.CounterSet.Builder,
                   org.datacommons.proto.Debug.Log.CounterSetOrBuilder>(
->>>>>>> master
                   getCounterSet(), getParentForChildren(), isClean());
           counterSet_ = null;
         }
@@ -6755,17 +4451,6 @@ public final class Debug {
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-<<<<<<< HEAD
-      internal_static_org_datacommons_proto_CounterSet_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_org_datacommons_proto_CounterSet_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_CounterSet_CountersEntry_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_org_datacommons_proto_CounterSet_CountersEntry_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-=======
->>>>>>> master
       internal_static_org_datacommons_proto_Log_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_Log_fieldAccessorTable;
@@ -6774,8 +4459,6 @@ public final class Debug {
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_Log_Location_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-<<<<<<< HEAD
-=======
       internal_static_org_datacommons_proto_Log_CounterSet_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_Log_CounterSet_fieldAccessorTable;
@@ -6784,7 +4467,6 @@ public final class Debug {
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_Log_CounterSet_CountersEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
->>>>>>> master
       internal_static_org_datacommons_proto_Log_Entry_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_Log_Entry_fieldAccessorTable;
@@ -6797,24 +4479,6 @@ public final class Debug {
 
   static {
     java.lang.String[] descriptorData = {
-<<<<<<< HEAD
-      "\n\013Debug.proto\022\025org.datacommons.proto\"\200\001\n"
-          + "\nCounterSet\022A\n\010counters\030\001 \003(\0132/.org.data"
-          + "commons.proto.CounterSet.CountersEntry\032/"
-          + "\n\rCountersEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 "
-          + "\001(\003:\0028\001\"\304\003\n\003Log\0221\n\007entries\030\001 \003(\0132 .org.d"
-          + "atacommons.proto.Log.Entry\0226\n\013counter_se"
-          + "t\030\002 \001(\0132!.org.datacommons.proto.CounterS"
-          + "et\032Y\n\010Location\022\014\n\004file\030\001 \001(\t\022\023\n\013line_num"
-          + "ber\030\002 \001(\003\022\025\n\rcolumn_number\030\003 \001(\003\022\023\n\013colu"
-          + "mn_name\030\004 \001(\t\032\221\001\n\005Entry\022/\n\005level\030\001 \001(\0162 "
-          + ".org.datacommons.proto.Log.Level\0225\n\010loca"
-          + "tion\030\002 \001(\0132#.org.datacommons.proto.Log.L"
-          + "ocation\022\017\n\007message\030\003 \001(\t\022\017\n\007counter\030\004 \001("
-          + "\t\"c\n\005Level\022\025\n\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLEV"
-          + "EL_INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LEVEL_ER"
-          + "ROR\020\003\022\017\n\013LEVEL_FATAL\020\004"
-=======
       "\n\013Debug.proto\022\025org.datacommons.proto\"\330\004\n"
           + "\003Log\0221\n\007entries\030\001 \003(\0132 .org.datacommons."
           + "proto.Log.Entry\022:\n\013counter_set\030\002 \001(\0132%.o"
@@ -6831,32 +4495,11 @@ public final class Debug {
           + "\013counter_key\030\004 \001(\t\"c\n\005Level\022\025\n\021LEVEL_UNS"
           + "PECIFIED\020\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WARN"
           + "ING\020\002\022\017\n\013LEVEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004"
->>>>>>> master
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
             descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
-<<<<<<< HEAD
-    internal_static_org_datacommons_proto_CounterSet_descriptor =
-        getDescriptor().getMessageTypes().get(0);
-    internal_static_org_datacommons_proto_CounterSet_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_CounterSet_descriptor,
-            new java.lang.String[] {
-              "Counters",
-            });
-    internal_static_org_datacommons_proto_CounterSet_CountersEntry_descriptor =
-        internal_static_org_datacommons_proto_CounterSet_descriptor.getNestedTypes().get(0);
-    internal_static_org_datacommons_proto_CounterSet_CountersEntry_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_CounterSet_CountersEntry_descriptor,
-            new java.lang.String[] {
-              "Key", "Value",
-            });
-    internal_static_org_datacommons_proto_Log_descriptor = getDescriptor().getMessageTypes().get(1);
-=======
     internal_static_org_datacommons_proto_Log_descriptor = getDescriptor().getMessageTypes().get(0);
->>>>>>> master
     internal_static_org_datacommons_proto_Log_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_descriptor,
@@ -6871,10 +4514,6 @@ public final class Debug {
             new java.lang.String[] {
               "File", "LineNumber", "ColumnNumber", "ColumnName",
             });
-<<<<<<< HEAD
-    internal_static_org_datacommons_proto_Log_Entry_descriptor =
-        internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(1);
-=======
     internal_static_org_datacommons_proto_Log_CounterSet_descriptor =
         internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(1);
     internal_static_org_datacommons_proto_Log_CounterSet_fieldAccessorTable =
@@ -6893,16 +4532,11 @@ public final class Debug {
             });
     internal_static_org_datacommons_proto_Log_Entry_descriptor =
         internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(2);
->>>>>>> master
     internal_static_org_datacommons_proto_Log_Entry_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_Entry_descriptor,
             new java.lang.String[] {
-<<<<<<< HEAD
-              "Level", "Location", "Message", "Counter",
-=======
               "Level", "Location", "UserMessage", "CounterKey",
->>>>>>> master
             });
   }
 
