@@ -14,18 +14,17 @@
 
 package org.datacommons.util;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.datacommons.proto.Mcf;
-import org.datacommons.proto.Mcf.McfGraph;
-
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.*;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.datacommons.proto.Mcf;
+import org.datacommons.proto.Mcf.McfGraph;
 
 // A parser for converting text in Instance or Template MCF format into the McfGraph proto.
 // TODO: Implement COMPLEX_VALUE parsing
