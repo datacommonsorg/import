@@ -1540,18 +1540,58 @@ public final class Debug {
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.Log.CounterSet)
         com.google.protobuf.MessageOrBuilder {
 
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       int getCountersCount();
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       boolean containsCounters(java.lang.String key);
       /** Use {@link #getCountersMap()} instead. */
       @java.lang.Deprecated
       java.util.Map<java.lang.String, java.lang.Long> getCounters();
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       java.util.Map<java.lang.String, java.lang.Long> getCountersMap();
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       long getCountersOrDefault(java.lang.String key, long defaultValue);
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       long getCountersOrThrow(java.lang.String key);
     }
     /** Protobuf type {@code org.datacommons.proto.Log.CounterSet} */
@@ -1684,7 +1724,15 @@ public final class Debug {
       public int getCountersCount() {
         return internalGetCounters().getMap().size();
       }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       public boolean containsCounters(java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -1696,11 +1744,27 @@ public final class Debug {
       public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
         return getCountersMap();
       }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
         return internalGetCounters().getMap();
       }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       public long getCountersOrDefault(java.lang.String key, long defaultValue) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -1708,7 +1772,15 @@ public final class Debug {
         java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
-      /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+      /**
+       *
+       *
+       * <pre>
+       * Key is the name of a counter.
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; counters = 1;</code>
+       */
       public long getCountersOrThrow(java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -2088,7 +2160,15 @@ public final class Debug {
         public int getCountersCount() {
           return internalGetCounters().getMap().size();
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public boolean containsCounters(java.lang.String key) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -2100,11 +2180,27 @@ public final class Debug {
         public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
           return getCountersMap();
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
           return internalGetCounters().getMap();
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public long getCountersOrDefault(java.lang.String key, long defaultValue) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -2112,7 +2208,15 @@ public final class Debug {
           java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
           return map.containsKey(key) ? map.get(key) : defaultValue;
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public long getCountersOrThrow(java.lang.String key) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -2128,7 +2232,15 @@ public final class Debug {
           internalGetMutableCounters().getMutableMap().clear();
           return this;
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public Builder removeCounters(java.lang.String key) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -2141,7 +2253,15 @@ public final class Debug {
         public java.util.Map<java.lang.String, java.lang.Long> getMutableCounters() {
           return internalGetMutableCounters().getMutableMap();
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public Builder putCounters(java.lang.String key, long value) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -2150,7 +2270,15 @@ public final class Debug {
           internalGetMutableCounters().getMutableMap().put(key, value);
           return this;
         }
-        /** <code>map&lt;string, int64&gt; counters = 1;</code> */
+        /**
+         *
+         *
+         * <pre>
+         * Key is the name of a counter.
+         * </pre>
+         *
+         * <code>map&lt;string, int64&gt; counters = 1;</code>
+         */
         public Builder putAllCounters(java.util.Map<java.lang.String, java.lang.Long> values) {
           internalGetMutableCounters().getMutableMap().putAll(values);
           return this;

@@ -1,0 +1,32 @@
+Node: FBI_Crime/E0/1
+measurementMethod: dcid:FBI_Crime
+observationAbout: dcid:geoId/0135896
+observationDate: 2019
+typeOf: dcid:StatVarObservation
+value: 114
+variableMeasured: dcid:Count_CriminalActivities_ViolentCrime
+
+Node: FBI_Crime/E0/2
+measurementMethod: dcid:FBI_Crime
+observationAbout: dcid:geoId/0203000
+observationDate: 2019
+typeOf: dcid:StatVarObservation
+value: 3581
+variableMeasured: dcid:Count_CriminalActivities_ViolentCrime
+
+Node: FBI_Crime/E1/1
+measurementMethod: dcid:FBI_Crime
+observationAbout: dcid:geoId/0135896
+observationDate: 2019
+typeOf: dcid:StatVarObservation
+value: 4
+variableMeasured: dcid:Count_CriminalActivities_MurderAndNonNegligentManslaughter
+
+Node: FBI_Crime/E1/2
+measurementMethod: dcid:FBI_Crime
+observationAbout: dcid:geoId/0203000
+observationDate: 2019
+typeOf: dcid:StatVarObservation
+value: 32
+variableMeasured: dcid:Count_CriminalActivities_MurderAndNonNegligentManslaughter
+

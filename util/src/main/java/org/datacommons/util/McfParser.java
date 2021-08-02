@@ -330,7 +330,7 @@ public class McfParser {
       assert delimiter != -1
           : "Malformed " + (isEntity ? "entity" : "column") + " name in " + value;
       term.table = strippedValue.substring(0, delimiter);
-      term.value = strippedValue.substring(delimiter);
+      term.value = strippedValue.substring(delimiter + Vocabulary.TABLE_DELIMITER.length());
     } else {
       term.type = SchemaTerm.Type.CONSTANT;
       term.value = value;
@@ -410,7 +410,11 @@ public class McfParser {
                   .withEscape('\\')
                   .withIgnoreSurroundingSpaces());
       List<CSVRecord> records = parser.getRecords();
-      assert records.size() == 1 : orig;
+      if (records.isEmpty()) {
+        System.err.println("CSVParser failed on (" + orig + ")");
+        return splits;
+      }
+      assert records.size() == 1 : "Found more than one record for " + orig;
       for (String s : records.get(0)) {
         String ss = arg.stripEnclosingQuotes ? stripEnclosingQuotePair(s.trim()) : s.trim();
         // After stripping whitespace some terms could become empty.

@@ -1,0 +1,5 @@
+Node: E:Society->E0
+typeOf: dcs:Person
+name: C:Society->Name
+spouse: C:Society->Spouse
+employment: C:Society->Education
