@@ -73,14 +73,14 @@ public class McfParserTest {
   }
 
   @Test
-  public void funcParseUnresolvedGraph() throws IOException {
+  public void funcParseUnresolvedGraph() throws IOException, URISyntaxException {
     McfGraph act = actual("McfParserTest_UnresolvedGraph.mcf", false);
     McfGraph exp = expected("McfParserTest_UnresolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
 
   @Test
-  public void funcParseResolvedGraph() throws IOException {
+  public void funcParseResolvedGraph() throws IOException, URISyntaxException {
     McfGraph act = actual("McfParserTest_ResolvedGraph.mcf", true);
     McfGraph exp = expected("McfParserTest_ResolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
@@ -99,9 +99,8 @@ public class McfParserTest {
 
   @Test
   public void funcParseResolvedGraphAsFile() throws IOException, URISyntaxException {
-    String mcf_file =
-        this.getClass().getResource("McfParserTest_ResolvedGraph.mcf").toURI().toString();
-    McfGraph act = McfParser.parseInstanceMcfFile(mcf_file.substring(/* skip 'file:' */ 5), true);
+    String mcf_file = this.getClass().getResource("McfParserTest_ResolvedGraph.mcf").getPath();
+    McfGraph act = McfParser.parseInstanceMcfFile(mcf_file, true);
     McfGraph exp = expected("McfParserTest_ResolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
@@ -119,8 +118,8 @@ public class McfParserTest {
 
   @Test
   public void funcParseTemplateMcfAsFile() throws IOException, URISyntaxException {
-    String mcf_file = this.getClass().getResource("McfParserTest_Template.tmcf").toURI().toString();
-    McfGraph act = McfParser.parseTemplateMcfFile(mcf_file.substring(/* skip 'file:' */ 5));
+    String mcf_file = this.getClass().getResource("McfParserTest_Template.tmcf").getPath();
+    McfGraph act = McfParser.parseTemplateMcfFile(mcf_file);
     McfGraph exp = expected("McfParserTest_Template.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
@@ -177,8 +176,9 @@ public class McfParserTest {
     assertThat(mergeGraphs(graphs)).ignoringRepeatedFieldOrder().isEqualTo(want);
   }
 
-  private McfGraph actual(String file_name, boolean isResolved) throws IOException {
-    String mcf_file = this.getClass().getResource(file_name).toURI().toString();
+  private McfGraph actual(String file_name, boolean isResolved)
+      throws IOException, URISyntaxException {
+    String mcf_file = this.getClass().getResource(file_name).getPath();
     McfParser parser = McfParser.init(McfType.INSTANCE_MCF, mcf_file, isResolved);
     McfGraph.Builder act = McfGraph.newBuilder();
     act.setType(McfType.INSTANCE_MCF);
