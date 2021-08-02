@@ -16,6 +16,7 @@ package org.datacommons.util;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
 import org.datacommons.proto.Mcf;
 import org.junit.Test;
 
@@ -36,7 +37,7 @@ public class McfUtilTest {
           + "\n";
 
   @Test
-  public void serializeMcfGraph() {
+  public void serializeMcfGraph() throws IOException {
     String output =
         "Node: USStateFemales[1]\n"
             + "age: [Years 20 -]\n"

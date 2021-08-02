@@ -2,7 +2,6 @@ package org.datacommons.lint;
 
 import java.io.File;
 import java.util.concurrent.Callable;
-import org.datacommons.util.McfParser;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -51,9 +50,7 @@ class Check implements Callable<Integer> {
     if (type == InputType.tmcfCsv) {
     } else {
       // MCF or TMCF
-      for (File file : files) {
-        McfParser parser = McfParser.init(file.toString());
-      }
+      for (File file : files) {}
     }
     return 0;
   }

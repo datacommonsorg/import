@@ -14,19 +14,17 @@
 
 package org.datacommons.util;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.datacommons.proto.Mcf;
-import org.datacommons.proto.Mcf.McfGraph;
-
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.stream.Stream;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.datacommons.proto.Mcf;
+import org.datacommons.proto.Mcf.McfGraph;
 
 // A parser for converting text in Instance or Template MCF format into the McfGraph proto.
 // TODO: Implement COMPLEX_VALUE parsing
@@ -42,15 +40,16 @@ public class McfParser {
   // Create an McfParser instance based on type and a bool indicating whether the MCF is resolved
   // (DCIDs assigned).
   public static McfParser init(Mcf.McfType type, String fileName, boolean isResolved)
-          throws IOException {
+      throws IOException {
     McfParser parser = init(type, isResolved);
-    parser.lines = Files.lines(FileSystems.getDefault().getPath(fileName),
-            StandardCharsets.UTF_8).iterator();
+    parser.lines =
+        Files.lines(FileSystems.getDefault().getPath(fileName), StandardCharsets.UTF_8).iterator();
     return parser;
   }
 
   // Parse a string with instance nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseInstanceMcfString(String mcf_string, boolean isResolved) {
+  public static McfGraph parseInstanceMcfString(String mcf_string, boolean isResolved)
+      throws IOException {
     return parseMcfString(mcf_string, Mcf.McfType.INSTANCE_MCF, isResolved);
   }
 
@@ -61,7 +60,7 @@ public class McfParser {
   }
 
   // Parse a string with template nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseTemplateMcfString(String mcf_string) {
+  public static McfGraph parseTemplateMcfString(String mcf_string) throws IOException {
     return parseMcfString(mcf_string, Mcf.McfType.TEMPLATE_MCF, false);
   }
 
@@ -135,7 +134,7 @@ public class McfParser {
     }
   }
 
-  public static McfParser init(Mcf.McfType type, boolean isResolved) {
+  private static McfParser init(Mcf.McfType type, boolean isResolved) {
     McfParser parser = new McfParser();
     parser.graph = McfGraph.newBuilder();
     parser.graph.setType(type);
@@ -171,24 +170,26 @@ public class McfParser {
     return graph.build();
   }
 
-  private static McfGraph parseMcfString(String mcf_string, Mcf.McfType type, boolean isResolved) {
+  private static McfGraph parseMcfString(String mcf_string, Mcf.McfType type, boolean isResolved)
+      throws IOException {
     McfParser parser = McfParser.init(type, isResolved);
-    parser.lines = mcf_string.split("\\r?\\n");
-    for (String l : mcf_string.split("\\r?\\n")) {
-      parser.parseLine(l);
-    }
-    return mergeGraphs(Collections.singletonList(parser.finish()));
+    parser.lines = Arrays.asList(mcf_string.split("\\r?\\n")).iterator();
+    return parser.parseLines();
   }
 
   private static McfGraph parseMcfFile(String file_name, Mcf.McfType type, boolean isResolved)
       throws IOException {
     McfParser parser = McfParser.init(type, file_name, isResolved);
+    return parser.parseLines();
+  }
+
+  private McfGraph parseLines() throws IOException {
     McfGraph g;
     ArrayList<McfGraph> graphs = new ArrayList<>();
-    while ((g = parser.parseNextNode()) != null) {
+    while ((g = parseNextNode()) != null) {
       graphs.add(g);
     }
-    return mergeGraphs(g);
+    return mergeGraphs(graphs);
   }
 
   private void parseNodeName(String node) {

@@ -73,14 +73,14 @@ public class McfParserTest {
   }
 
   @Test
-  public void funcParseUnresolvedGraphLine() throws IOException {
+  public void funcParseUnresolvedGraph() throws IOException {
     McfGraph act = actual("McfParserTest_UnresolvedGraph.mcf", false);
     McfGraph exp = expected("McfParserTest_UnresolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
 
   @Test
-  public void funcParseResolvedGraphLine() throws IOException {
+  public void funcParseResolvedGraph() throws IOException {
     McfGraph act = actual("McfParserTest_ResolvedGraph.mcf", true);
     McfGraph exp = expected("McfParserTest_ResolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
@@ -126,36 +126,7 @@ public class McfParserTest {
   }
 
   @Test
-  public void funcParseResolvedGraphAsSingleNodeGraphs() throws IOException {
-    String[] lines =
-        IOUtils.toString(
-                this.getClass().getResourceAsStream("McfParserTest_ResolvedGraph.mcf"),
-                StandardCharsets.UTF_8)
-            .split("\n");
-    McfParser parser = McfParser.init(McfType.INSTANCE_MCF, true);
-    McfGraph.Builder act = McfGraph.newBuilder();
-    act.setType(McfType.INSTANCE_MCF);
-    for (String l : lines) {
-      parser.parseLine(l);
-      McfGraph node = parser.extractNode();
-      if (node != null) {
-        Map.Entry<String, McfGraph.PropertyValues> entry =
-            node.getNodesMap().entrySet().iterator().next();
-        act.putNodes(entry.getKey(), entry.getValue());
-      }
-    }
-    McfGraph node = parser.finish();
-    if (node != null) {
-      Map.Entry<String, McfGraph.PropertyValues> entry =
-          node.getNodesMap().entrySet().iterator().next();
-      act.putNodes(entry.getKey(), entry.getValue());
-    }
-    McfGraph exp = expected("McfParserTest_ResolvedGraph.textproto");
-    assertThat(act.build()).ignoringRepeatedFieldOrder().isEqualTo(exp);
-  }
-
-  @Test
-  public void funcMergeGraphs() {
+  public void funcMergeGraphs() throws IOException {
     List<McfGraph> graphs =
         Arrays.asList(
             parseInstanceMcfString(
@@ -206,15 +177,18 @@ public class McfParserTest {
     assertThat(mergeGraphs(graphs)).ignoringRepeatedFieldOrder().isEqualTo(want);
   }
 
-  private McfGraph actual(String mcf_file, boolean isResolved) throws IOException {
-    String[] lines =
-        IOUtils.toString(this.getClass().getResourceAsStream(mcf_file), StandardCharsets.UTF_8)
-            .split("\n");
-    McfParser parser = McfParser.init(McfType.INSTANCE_MCF, isResolved);
-    for (String l : lines) {
-      parser.parseLine(l);
+  private McfGraph actual(String file_name, boolean isResolved) throws IOException {
+    String mcf_file = this.getClass().getResource(file_name).toURI().toString();
+    McfParser parser = McfParser.init(McfType.INSTANCE_MCF, mcf_file, isResolved);
+    McfGraph.Builder act = McfGraph.newBuilder();
+    act.setType(McfType.INSTANCE_MCF);
+    McfGraph n;
+    while ((n = parser.parseNextNode()) != null) {
+      Map.Entry<String, McfGraph.PropertyValues> entry =
+          n.getNodesMap().entrySet().iterator().next();
+      act.putNodes(entry.getKey(), entry.getValue());
     }
-    return parser.finish();
+    return act.build();
   }
 
   private McfGraph expected(String proto_file) throws IOException {
