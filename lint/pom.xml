@@ -10,11 +10,18 @@
       <relativePath>..</relativePath>
     </parent>
 
+    <groupId>org.datacommons</groupId>
     <artifactId>datacommons-import-lint</artifactId>
     <name>Data Commons - Import Lint Tool</name>
     <url>http://www.datacommons.org</url>
+    <packaging>jar</packaging>
 
     <dependencies>
+        <dependency>
+            <groupId>org.datacommons</groupId>
+            <artifactId>datacommons-import-util</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>

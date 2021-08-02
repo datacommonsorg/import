@@ -10,9 +10,11 @@
       <relativePath>..</relativePath>
     </parent>
 
+    <groupId>org.datacommons</groupId>
     <artifactId>datacommons-import-util</artifactId>
     <name>Data Commons - Import Utils</name>
     <url>http://www.datacommons.org</url>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
