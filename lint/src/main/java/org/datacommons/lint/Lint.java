@@ -48,14 +48,14 @@ class Lint implements Callable<Integer> {
 
   enum CommandType {
     chk,
-    genmcf
+    genMcf
   };
 
   @CommandLine.Option(
       names = {"-c", "--cmd"},
       description =
           "The command to run: ${COMPLETION-CANDIDATES}.  'chk' runs "
-              + "syntax checks on the input files.  'genmcf' produces instance MCF output, "
+              + "syntax checks on the input files.  'genMcf' produces instance MCF output, "
               + "and only makes sense when --format is 'tmcfCsv'. Default: 'chk'",
       defaultValue = "chk",
       required = true)
@@ -100,9 +100,9 @@ class Lint implements Callable<Integer> {
       }
       return HandleTableFormat();
     } else {
-      if (cmdType == CommandType.genmcf) {
+      if (cmdType == CommandType.genMcf) {
         throw new CommandLine.ParameterException(
-            spec.commandLine(), "Command 'genmcf' is only applicable with --format 'tmcfCsv'");
+            spec.commandLine(), "Command 'genMcf' is only applicable with --format 'tmcfCsv'");
       }
       return HandleNodeFormat();
     }
@@ -128,7 +128,7 @@ class Lint implements Callable<Integer> {
   private Integer HandleTableFormat() throws IOException {
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
     BufferedWriter writer = null;
-    if (cmdType == CommandType.genmcf) {
+    if (cmdType == CommandType.genMcf) {
       Path outfile = Paths.get(outputDir.getPath(), "generated.mcf");
       logger.info("Writing to file {}", outfile.toString());
       writer = new BufferedWriter(new FileWriter(outfile.toString()));
