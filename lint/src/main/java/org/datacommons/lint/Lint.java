@@ -85,23 +85,24 @@ class Lint implements Callable<Integer> {
               + "'mcf'. Default: false")
   private boolean isResolved;
 
+  @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
+
   public static void main(String... args) {
-    int exitCode = new CommandLine(new Lint()).execute(args);
-    System.exit(exitCode);
+    System.exit(new CommandLine(new Lint()).execute(args));
   }
 
   @Override
   public Integer call() throws IOException {
     if (formatType == FormatType.tmcfCsv) {
       if (files.length < 2) {
-        System.err.println("At least two input files required with option 'tmcfCsv'.");
-        return -1;
+        throw new CommandLine.ParameterException(
+            spec.commandLine(), "At least two input files required with option 'tmcfCsv'");
       }
       return HandleTableFormat();
     } else {
       if (cmdType == CommandType.genmcf) {
-        System.err.println("Command 'genmcf' is only applicable with --format 'tmcfCsv'");
-        return -1;
+        throw new CommandLine.ParameterException(
+            spec.commandLine(), "Command 'genmcf' is only applicable with --format 'tmcfCsv'");
       }
       return HandleNodeFormat();
     }
@@ -113,7 +114,7 @@ class Lint implements Callable<Integer> {
     boolean resolved = (formatType == FormatType.mcf ? isResolved : false);
     for (File file : files) {
       int numNodesProcessed = 0;
-      logger.info("Processing {}", file.getPath());
+      logger.debug("Processing {}", file.getPath());
       McfParser parser = McfParser.init(mcf_type, file.getPath(), resolved);
       Mcf.McfGraph n;
       while ((n = parser.parseNextNode()) != null) {
@@ -132,9 +133,9 @@ class Lint implements Callable<Integer> {
       logger.info("Writing to file {}", outfile.toString());
       writer = new BufferedWriter(new FileWriter(outfile.toString()));
     }
-    logger.info("TMCF " + files[0].getPath());
+    logger.debug("TMCF " + files[0].getPath());
     for (int i = 1; i < files.length; i++) {
-      logger.info("Processing CSV " + files[i].getPath());
+      logger.debug("Processing CSV " + files[i].getPath());
       TmcfCsvParser parser =
           TmcfCsvParser.init(files[0].getPath(), files[i].getPath(), delimiter, logCtx);
       Mcf.McfGraph g;
