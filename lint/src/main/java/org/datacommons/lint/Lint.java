@@ -14,15 +14,16 @@ import picocli.CommandLine;
 @CommandLine.Command(
     name = "DCLint",
     mixinStandardHelpOptions = true,
-    version = "Lint 0.1",
+    version = "DCLint 0.1",
     description = "Tool for use in developing datasets for Data Commons.",
-    subcommands = {CommandLine.HelpCommand.class, Check.class})
+    subcommands = {Check.class})
 class Lint {
   @CommandLine.Option(
       names = {"-o", "--outputDir"},
+      description = "Directory to write output files. Default: /tmp",
       defaultValue = "/tmp",
       scope = CommandLine.ScopeType.INHERIT)
-  private File outputDirectory;
+  private File outputDir;
 
   public static void main(String... args) {
     int exitCode = new CommandLine(new Lint()).execute(args);
@@ -30,16 +31,21 @@ class Lint {
   }
 }
 
-@CommandLine.Command(name = "check", description = "Check syntax of input files.")
+@CommandLine.Command(
+    name = "check",
+    mixinStandardHelpOptions = true,
+    description = "Check syntax of input files")
 class Check implements Callable<Integer> {
   private static final Logger logger = LoggerFactory.getLogger(Check.class);
 
   @CommandLine.Parameters(
       arity = "1..*",
       description =
-          "List of input files. The validity "
-              + "depends on the --type option. For tmcfCsv, the first file should be the TMCF, followed"
-              + " by a CSV, and there must exactly be two.")
+          ("List of input files. This depends on --type option. "
+              + "For 'tmcf', the files are expected to be "
+              + "Template MCF files. For 'mcf', the files are expected to be Instance MCF "
+              + "files. For tmcfCsv, the first file should be a Template MCF file, followed "
+              + "by one or more CSVs compatible with the provided TMCF file."))
   private File[] files;
 
   enum InputType {
@@ -50,20 +56,23 @@ class Check implements Callable<Integer> {
 
   @CommandLine.Option(
       names = {"-t", "--type"},
-      description = "Types: ${COMPLETION-CANDIDATES}",
+      description = "Type of input files: ${COMPLETION-CANDIDATES}",
       required = true)
   private InputType type;
 
   @CommandLine.Option(
       names = {"-r", "--isResolved"},
       defaultValue = "false",
-      description = "Whether the input MCF file is resolved. Relevant only when --type=mcf")
+      description =
+          "Indicates whether the input file is resolved. Relevant only when " + "--type is 'mcf'")
   private boolean isResolved;
 
   @CommandLine.Option(
       names = {"-d", "--delimiter"},
       defaultValue = ",",
-      description = "Delimiter of the CSV file. Relevant only when --type=tmcfcsv")
+      description =
+          "Delimiter of the input CSV file. Relevant only when --type is 'tmcfCsv'. "
+              + "Defaults to ',' (comma)")
   private char delimiter;
 
   @Override
