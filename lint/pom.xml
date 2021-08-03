@@ -4,10 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-      <groupId>org.datacommons</groupId>
-      <artifactId>datacommons-import</artifactId>
-      <version>1.0-SNAPSHOT</version>
-      <relativePath>..</relativePath>
+        <groupId>org.datacommons</groupId>
+        <artifactId>datacommons-import</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>..</relativePath>
     </parent>
 
     <groupId>org.datacommons</groupId>
@@ -62,14 +62,14 @@
             </plugin>
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
-					      <configuration>
-						        <archive>
-							          <manifest>
-								            <addClasspath>true</addClasspath>
-								            <mainClass>org.datacommons.lint.Lint</mainClass>
-							          </manifest>
-						        </archive>
-					      </configuration>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>org.datacommons.lint.Lint</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -85,12 +85,12 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-						        <archive>
-							          <manifest>
-								            <addClasspath>true</addClasspath>
-								            <mainClass>org.datacommons.lint.Lint</mainClass>
-							          </manifest>
-						        </archive>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>org.datacommons.lint.Lint</mainClass>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
         </plugins>
