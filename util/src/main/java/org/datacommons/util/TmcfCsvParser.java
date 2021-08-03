@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiConsumer;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -33,7 +35,7 @@ public class TmcfCsvParser {
   private Mcf.McfGraph tmcf;
   private char delimiter;
   private CSVParser csvParser;
-  private Debug.Log.Builder logCtx;
+  private LogWrapper logWrapper;
   private HashMap<String, Integer> cleanedColumnMap;
 
   // Build a parser given a TMCF file, CSV file, CSV delimiter and a log context.
@@ -41,7 +43,8 @@ public class TmcfCsvParser {
       String tmcfFile, String csvFile, char delimiter, Debug.Log.Builder logCtx)
       throws IOException {
     TmcfCsvParser tmcfCsvParser = new TmcfCsvParser();
-    tmcfCsvParser.tmcf = McfParser.parseTemplateMcfFile(tmcfFile);
+    tmcfCsvParser.tmcf = McfParser.parseTemplateMcfFile(tmcfFile, logCtx);
+    tmcfCsvParser.logWrapper = new LogWrapper(logCtx, csvFile);
     tmcfCsvParser.csvParser =
         CSVParser.parse(
             new FileReader(csvFile),
@@ -53,11 +56,13 @@ public class TmcfCsvParser {
                 .withIgnoreEmptyLines()
                 .withIgnoreSurroundingSpaces());
     tmcfCsvParser.delimiter = delimiter;
-    tmcfCsvParser.logCtx = logCtx;
 
     // Clean and keep a copy of the header map.
-    assert tmcfCsvParser.csvParser.getHeaderMap() != null
-        : "Unable to parse header from file " + csvFile;
+    if (tmcfCsvParser.csvParser.getHeaderMap() == null) {
+      tmcfCsvParser.logWrapper.AddLog(Debug.Log.Level.LEVEL_FATAL, "CSV_HeaderFailure",
+        "Unable to parse header from file " + csvFile, 0);
+      return null;
+    }
     tmcfCsvParser.cleanedColumnMap = new HashMap<>();
     for (Map.Entry<String, Integer> e : tmcfCsvParser.csvParser.getHeaderMap().entrySet()) {
       tmcfCsvParser.cleanedColumnMap.put(e.getKey().strip(), e.getValue());
@@ -199,8 +204,12 @@ public class TmcfCsvParser {
           ssArg.includeEmpty = false;
           ssArg.stripEnclosingQuotes = false;
           // TODO: set stripEscapesBeforeQuotes
+          BiConsumer<String, String> errCb = (counter, message) -> {
+            logWrapper.AddLog(Debug.Log.Level.LEVEL_ERROR, counter, message,
+                    csvParser.getCurrentLineNumber(), typedValue.getValue());
+          };
           List<String> values =
-              McfParser.splitAndStripWithQuoteEscape(dataRow.get(columnIndex), ssArg);
+              McfParser.splitAndStripWithQuoteEscape(dataRow.get(columnIndex), ssArg, null);
           for (String value : values) {
             McfParser.parseTypedValue(
                 Mcf.McfType.INSTANCE_MCF,
@@ -208,7 +217,8 @@ public class TmcfCsvParser {
                 currentNode,
                 currentProp,
                 value,
-                instanceValues.addTypedValuesBuilder());
+                instanceValues.addTypedValuesBuilder(),
+                null);
           }
         } else {
           // Pass through constant value.

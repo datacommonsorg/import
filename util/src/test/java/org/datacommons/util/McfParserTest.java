@@ -14,11 +14,12 @@
 
 package org.datacommons.util;
 
-import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
-import static org.datacommons.util.McfParser.*;
-
 import com.google.protobuf.TextFormat;
+import org.apache.commons.io.IOUtils;
+import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.McfType;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URISyntaxException;
@@ -26,49 +27,50 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.io.IOUtils;
-import org.datacommons.proto.Mcf.McfGraph;
-import org.datacommons.proto.Mcf.McfType;
-import org.junit.Test;
+
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
+import static org.datacommons.util.McfParser.*;
 
 public class McfParserTest {
   @Test
   public void funcSplitAndStripWithQuoteEscape() {
     SplitAndStripArg arg = new SplitAndStripArg();
-    assertThat(splitAndStripWithQuoteEscape("one,two,three", arg))
+    assertThat(splitAndStripWithQuoteEscape("one,two,three", arg, null))
         .containsExactly("one", "two", "three");
 
     // Single quote (unterminated or otherwise) should be preserved.
-    assertThat(splitAndStripWithQuoteEscape("\"O'Brien\", 20", arg))
+    assertThat(splitAndStripWithQuoteEscape("\"O'Brien\", 20", arg, null))
         .containsExactly("O'Brien", "20");
 
     // Whitespace surrounding ',' is excluded, but within is included.
-    assertThat(splitAndStripWithQuoteEscape(" o ne, two ,th ree", arg))
+    assertThat(splitAndStripWithQuoteEscape(" o ne, two ,th ree", arg, null))
         .containsExactly("o ne", "two", "th ree");
 
     // One pair of double quotes are removed.
-    assertThat(splitAndStripWithQuoteEscape(" '\"one\"',two,\"three\"", arg))
+    assertThat(splitAndStripWithQuoteEscape(" '\"one\"',two,\"three\"", arg, null))
         .containsExactly("'\"one\"'", "two", "three");
 
     // Comma within double quotes are not split.
-    assertThat(splitAndStripWithQuoteEscape("'one, two', three, \"four, five\"", arg))
+    assertThat(splitAndStripWithQuoteEscape("'one, two', three, \"four, five\"", arg, null))
         .containsExactly("'one", "two'", "three", "four, five");
 
     // Empty strings are by default removed.
-    assertThat(splitAndStripWithQuoteEscape("one,   ,two, \"\" , three", arg))
+    assertThat(splitAndStripWithQuoteEscape("one,   ,two, \"\" , three", arg, null))
         .containsExactly("one", "two", "three");
 
     // Empty strings are kept when specifically requested.
     arg = new SplitAndStripArg();
     arg.includeEmpty = true;
-    assertThat(splitAndStripWithQuoteEscape("one,   ,two, \"\" , three", arg))
+    assertThat(splitAndStripWithQuoteEscape("one,   ,two, \"\" , three", arg, null))
         .containsExactly("one", "", "two", "", "three");
 
     // Strings that are escaped normally show up without character.
     // TODO: make this behavior match prod.
     arg = new SplitAndStripArg();
     arg.includeEmpty = false;
-    assertThat(splitAndStripWithQuoteEscape("\"{ \\\"type\\\": \\\"feature\\\" }\"", arg))
+    assertThat(splitAndStripWithQuoteEscape("\"{ \\\"type\\\": \\\"feature\\\" }\"", arg,
+            null))
         .containsExactly("{ \"type\": \"feature\" }");
   }
 
@@ -179,7 +181,7 @@ public class McfParserTest {
   private McfGraph actual(String file_name, boolean isResolved)
       throws IOException, URISyntaxException {
     String mcf_file = this.getClass().getResource(file_name).getPath();
-    McfParser parser = McfParser.init(McfType.INSTANCE_MCF, mcf_file, isResolved);
+    McfParser parser = McfParser.init(McfType.INSTANCE_MCF, mcf_file, isResolved, null);
     McfGraph.Builder act = McfGraph.newBuilder();
     act.setType(McfType.INSTANCE_MCF);
     McfGraph n;
