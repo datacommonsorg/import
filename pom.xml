@@ -18,7 +18,7 @@
 
     <!-- List the sub-dirs so that they all get included in an IntelliJ project -->
     <modules>
-      <module>lint</module>
+      <module>tool</module>
       <module>util</module>
     </modules>
 
