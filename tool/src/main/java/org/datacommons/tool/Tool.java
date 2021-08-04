@@ -1,5 +1,14 @@
 package org.datacommons.tool;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
+import org.datacommons.util.McfParser;
+import org.datacommons.util.McfUtil;
+import org.datacommons.util.TmcfCsvParser;
+import picocli.CommandLine;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -9,14 +18,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
-import org.datacommons.util.McfParser;
-import org.datacommons.util.McfUtil;
-import org.datacommons.util.TmcfCsvParser;
-import picocli.CommandLine;
 
 @CommandLine.Command(
     name = "dc-import",
@@ -139,7 +140,7 @@ class Lint implements Callable<Integer> {
     }
     if (!csvFiles.isEmpty() && tmcfFiles.size() != 1) {
       throw new CommandLine.ParameterException(
-          spec.commandLine(), "Please provide exactly one .tmcf file with CSV/TSV files");
+          spec.commandLine(), "Please provide one .tmcf file with CSV/TSV files");
     }
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
     for (File f : mcfFiles) {
