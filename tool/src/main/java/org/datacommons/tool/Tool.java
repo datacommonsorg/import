@@ -1,14 +1,5 @@
 package org.datacommons.tool;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
@@ -18,6 +9,17 @@ import org.datacommons.util.McfUtil;
 import org.datacommons.util.TmcfCsvParser;
 import picocli.CommandLine;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+// TODO: Add e2e tests once Debug.Log is fully plumbed in.
 @CommandLine.Command(
     name = "dc-import",
     mixinStandardHelpOptions = true,
