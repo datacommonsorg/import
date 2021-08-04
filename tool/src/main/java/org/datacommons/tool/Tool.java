@@ -23,21 +23,13 @@ import picocli.CommandLine;
     mixinStandardHelpOptions = true,
     version = "dc-import 0.1",
     description = "Tool for use in developing datasets for Data Commons.",
-    subcommands = Lint.class)
+    subcommands = {Lint.class, GenMcf.class})
 class Tool {
   @CommandLine.Option(
-      names = {"-d", "--delimiter"},
-      description =
-          "Delimiter of the input CSV files. Default is ',' for .csv files and '\\t' for "
-              + ".tsv files.",
-      scope = CommandLine.ScopeType.INHERIT)
-  private Character delimiter;
-
-  @CommandLine.Option(
       names = {"-o", "--outputDir"},
-      description = "Directory to write output files. Default is current working directory",
+      description = "Directory to write output files. Default is current working directory.",
       scope = CommandLine.ScopeType.INHERIT)
-  private File outputDir;
+  public File outputDir;
 
   public static void main(String... args) {
     System.exit(new CommandLine(new Tool()).execute(args));
@@ -64,7 +56,7 @@ class Tool {
       Debug.Log.Builder logCtx,
       Logger logger)
       throws IOException {
-    logger.info("TMCF " + tmcfFile.getName());
+    logger.debug("TMCF " + tmcfFile.getName());
     for (File csvFile : csvFiles) {
       logger.debug("Checking CSV " + csvFile.getPath());
       TmcfCsvParser parser =
@@ -87,7 +79,7 @@ class Tool {
   }
 }
 
-@CommandLine.Command(name = "lint", description = "Run various checks on input")
+@CommandLine.Command(name = "lint", description = "Run various checks on input MCF/TMCF/CSV files")
 class Lint implements Callable<Integer> {
   private static final Logger logger = LogManager.getLogger(Lint.class);
 
@@ -100,9 +92,13 @@ class Lint implements Callable<Integer> {
               + "for tab-delimited tabular files."))
   private File[] files;
 
-  @CommandLine.ParentCommand private Character delimiter;
-
-  @CommandLine.ParentCommand private File outputDir;
+  @CommandLine.Option(
+      names = {"-d", "--delimiter"},
+      description =
+          "Delimiter of the input CSV files. Default is ',' for .csv files and '\\t' for "
+              + ".tsv files.",
+      scope = CommandLine.ScopeType.INHERIT)
+  private Character delimiter;
 
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
 
@@ -173,9 +169,15 @@ class GenMcf implements Callable<Integer> {
               + "for tab-delimited tabular files. Note that .mcf is not a valid input."))
   private File[] files;
 
-  @CommandLine.ParentCommand private Character delimiter;
+  @CommandLine.Option(
+      names = {"-d", "--delimiter"},
+      description =
+          "Delimiter of the input CSV files. Default is ',' for .csv files and '\\t' for "
+              + ".tsv files.",
+      scope = CommandLine.ScopeType.INHERIT)
+  private Character delimiter;
 
-  @CommandLine.ParentCommand private File outputDir;
+  @CommandLine.ParentCommand private Tool parent;
 
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
 
@@ -216,7 +218,8 @@ class GenMcf implements Callable<Integer> {
       delimiter = nTsv > 0 ? '\t' : ',';
     }
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
-    Path outFile = Paths.get(outputDir == null ? "." : outputDir.getPath(), "generated.mcf");
+    Path outFile =
+        Paths.get(parent.outputDir == null ? "." : parent.outputDir.getPath(), "generated.mcf");
     logger.info("Writing to {}", outFile.toString());
     BufferedWriter writer = new BufferedWriter(new FileWriter(outFile.toString()));
     Tool.HandleTableFormat(tmcfFiles.get(0), csvFiles, delimiter, writer, logCtx, logger);
