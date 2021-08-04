@@ -28,7 +28,7 @@ import java.util.concurrent.Callable;
     subcommands = {Lint.class, GenMcf.class})
 class Tool {
   @CommandLine.Option(
-      names = {"-o", "--outputDir"},
+      names = {"-o", "--output-dir"},
       description = "Directory to write output files. Default is current working directory.",
       scope = CommandLine.ScopeType.INHERIT)
   public File outputDir;
