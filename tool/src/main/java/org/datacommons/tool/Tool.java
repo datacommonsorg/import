@@ -34,7 +34,7 @@ class Lint implements Callable<Integer> {
       description =
           ("List of input files. The file extensions are used to infer the format. "
               + "Valid extensions include .mcf for Instance MCF, .tmcf for Template MCF, "
-              + ".csv for a tabular text file by default separated by comma and .tsv "
+              + ".csv for a tabular text file delimited by comma (overridden with -d), and .tsv "
               + "for tab-delimited tabular file."))
   private File[] files;
 
@@ -78,7 +78,7 @@ class Lint implements Callable<Integer> {
       }
     }
     logger.info(
-        "Input includes {} MCF files, {} TMCF files, {} CSV files",
+        "Input includes {} MCF file(s), {} TMCF file(s), {} CSV file(s)",
         mcfFiles.size(),
         tmcfFiles.size(),
         csvFiles.size());
