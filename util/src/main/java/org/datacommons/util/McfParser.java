@@ -48,25 +48,25 @@ public class McfParser {
   }
 
   // Parse a string with instance nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseInstanceMcfString(String mcf_string, boolean isResolved)
+  public static McfGraph parseInstanceMcfString(String mcfString, boolean isResolved)
       throws IOException {
-    return parseMcfString(mcf_string, Mcf.McfType.INSTANCE_MCF, isResolved);
+    return parseMcfString(mcfString, Mcf.McfType.INSTANCE_MCF, isResolved);
   }
 
   // Parse a file with instance nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseInstanceMcfFile(String file_name, boolean isResolved)
+  public static McfGraph parseInstanceMcfFile(String fileName, boolean isResolved)
       throws IOException {
-    return parseMcfFile(file_name, Mcf.McfType.INSTANCE_MCF, isResolved);
+    return parseMcfFile(fileName, Mcf.McfType.INSTANCE_MCF, isResolved);
   }
 
   // Parse a string with template nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseTemplateMcfString(String mcf_string) throws IOException {
-    return parseMcfString(mcf_string, Mcf.McfType.TEMPLATE_MCF, false);
+  public static McfGraph parseTemplateMcfString(String mcfString) throws IOException {
+    return parseMcfString(mcfString, Mcf.McfType.TEMPLATE_MCF, false);
   }
 
   // Parse a file with template nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseTemplateMcfFile(String file_name) throws IOException {
-    return parseMcfFile(file_name, Mcf.McfType.TEMPLATE_MCF, false);
+  public static McfGraph parseTemplateMcfFile(String fileName) throws IOException {
+    return parseMcfFile(fileName, Mcf.McfType.TEMPLATE_MCF, false);
   }
 
   public McfGraph parseNextNode() throws IOException {
@@ -170,16 +170,16 @@ public class McfParser {
     return graph.build();
   }
 
-  private static McfGraph parseMcfString(String mcf_string, Mcf.McfType type, boolean isResolved)
+  private static McfGraph parseMcfString(String mcfString, Mcf.McfType type, boolean isResolved)
       throws IOException {
     McfParser parser = McfParser.init(type, isResolved);
-    parser.lines = Arrays.asList(mcf_string.split("\\r?\\n")).iterator();
+    parser.lines = Arrays.asList(mcfString.split("\\r?\\n")).iterator();
     return parser.parseLines();
   }
 
-  private static McfGraph parseMcfFile(String file_name, Mcf.McfType type, boolean isResolved)
+  private static McfGraph parseMcfFile(String fileName, Mcf.McfType type, boolean isResolved)
       throws IOException {
-    McfParser parser = McfParser.init(type, file_name, isResolved);
+    McfParser parser = McfParser.init(type, fileName, isResolved);
     return parser.parseLines();
   }
 
