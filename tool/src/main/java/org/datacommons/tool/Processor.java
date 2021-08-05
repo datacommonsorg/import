@@ -50,7 +50,6 @@ public class Processor {
       Debug.Log.Builder logCtx)
       throws IOException, DCTooManyFailuresException {
     logger.debug("TMCF " + tmcfFile.getName());
-    boolean hasError = false;
     for (File csvFile : csvFiles) {
       logger.debug("Checking CSV " + csvFile.getPath());
       TmcfCsvParser parser =
