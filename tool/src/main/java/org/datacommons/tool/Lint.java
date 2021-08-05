@@ -81,13 +81,13 @@ class Lint implements Callable<Integer> {
     Integer retVal = 0;
     try {
       for (File f : mcfFiles) {
-        Processor.processNodes(Mcf.McfType.INSTANCE_MCF, f, logCtx, logger);
+        Processor.processNodes(Mcf.McfType.INSTANCE_MCF, f, logCtx);
       }
       if (!csvFiles.isEmpty()) {
-        Processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, null, logCtx, logger);
+        Processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, null, logCtx);
       } else {
         for (File f : tmcfFiles) {
-          Processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f, logCtx, logger);
+          Processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f, logCtx);
         }
       }
     } catch (TooManyFailuresException ex) {
@@ -95,8 +95,9 @@ class Lint implements Callable<Integer> {
       retVal = -1;
     }
 
+    logger.error(logCtx.toString());
     String directory = parent.outputDir == null ? "." : parent.outputDir.getPath();
-    Processor.writeLog(logCtx, Paths.get(directory, "report.json"), logger);
+    Processor.writeLog(logCtx, Paths.get(directory, "report.json"));
     return retVal;
   }
 }

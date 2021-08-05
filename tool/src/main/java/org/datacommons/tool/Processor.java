@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
@@ -25,10 +26,11 @@ class TooManyFailuresException extends Exception {
 }
 
 public class Processor {
+  private static final Logger logger = LogManager.getLogger(Processor.class);
+
   private static final int MAX_ERROR_LIMIT = 10;
 
-  public static void processNodes(
-      Mcf.McfType type, File file, Debug.Log.Builder logCtx, Logger logger)
+  public static void processNodes(Mcf.McfType type, File file, Debug.Log.Builder logCtx)
       throws IOException, TooManyFailuresException {
     int numNodesProcessed = 0;
     logger.debug("Checking {}", file.getName());
@@ -50,8 +52,7 @@ public class Processor {
       List<File> csvFiles,
       char delimiter,
       BufferedWriter writer,
-      Debug.Log.Builder logCtx,
-      Logger logger)
+      Debug.Log.Builder logCtx)
       throws IOException, TooManyFailuresException {
     logger.debug("TMCF " + tmcfFile.getName());
     boolean hasError = false;
@@ -79,7 +80,7 @@ public class Processor {
     }
   }
 
-  public static void writeLog(Debug.Log.Builder logCtx, Path logPath, Logger logger)
+  public static void writeLog(Debug.Log.Builder logCtx, Path logPath)
       throws InvalidProtocolBufferException, IOException {
     logger.info("Writing log to {}", logPath.toString());
     File logFile = new File(logPath.toString());

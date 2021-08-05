@@ -84,14 +84,14 @@ class GenMcf implements Callable<Integer> {
     BufferedWriter writer = new BufferedWriter(new FileWriter(outPath.toString()));
     Integer retVal = 0;
     try {
-      Processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, writer, logCtx, logger);
+      Processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, writer, logCtx);
     } catch (TooManyFailuresException ex) {
       // Regardless of the failures, we will dump the logCtx and exit.
       retVal = -1;
     }
     writer.close();
 
-    Processor.writeLog(logCtx, Paths.get(directory, "report.json"), logger);
+    Processor.writeLog(logCtx, Paths.get(directory, "report.json"));
     return retVal;
   }
 }

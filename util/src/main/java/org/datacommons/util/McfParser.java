@@ -24,6 +24,8 @@ import java.util.function.BiConsumer;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
@@ -31,6 +33,8 @@ import org.datacommons.proto.Mcf.McfGraph;
 // A parser for converting text in Instance or Template MCF format into the McfGraph proto.
 // TODO: Implement COMPLEX_VALUE parsing
 public class McfParser {
+  private static final Logger logger = LogManager.getLogger(McfParser.class);
+
   private McfGraph.Builder graph;
   private LogWrapper logWrapper;
   private boolean isResolved;

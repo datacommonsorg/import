@@ -1,14 +1,18 @@
 package org.datacommons.util;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 
 class LogWrapper {
+  private static final Logger logger = LogManager.getLogger(McfParser.class);
+
   private Debug.Log.Builder logCtx;
   private String fileName;
 
   public LogWrapper(Debug.Log.Builder logCtx, String fileName) {
-    logCtx = logCtx;
-    fileName = fileName;
+    this.logCtx = logCtx;
+    this.fileName = fileName;
   }
 
   public void addLog(Debug.Log.Level level, String counter, String message, long lno) {
@@ -26,6 +30,9 @@ class LogWrapper {
 
   private void addLog(
       Debug.Log.Level level, String counter, String message, long lno, long cno, String cname) {
+    if (level == Debug.Log.Level.LEVEL_ERROR || level == Debug.Log.Level.LEVEL_FATAL) {
+      logger.error("{} - @{}:{} - {} - {}", level.name(), fileName, lno, counter, message);
+    }
     Debug.Log.Entry.Builder e = logCtx.addEntriesBuilder();
     e.setLevel(level);
     e.setUserMessage(message);
@@ -40,11 +47,10 @@ class LogWrapper {
       e.setCounterKey(counter);
       logCtx
           .getCounterSetBuilder()
-          .getCountersMap()
-          .put(counter, logCtx.getCounterSet().getCountersOrDefault(counter, 0) + 1);
+          .putCounters(counter, logCtx.getCounterSet().getCountersOrDefault(counter, 0) + 1);
     }
 
     // Update level summary.
-    logCtx.getLevelSummaryMap().put(level.name(), logCtx.getLevelSummaryOrDefault(level.name(), 0));
+    logCtx.putLevelSummary(level.name(), logCtx.getLevelSummaryOrDefault(level.name(), 0));
   }
 }
