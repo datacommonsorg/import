@@ -2,14 +2,14 @@ package org.datacommons.util;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 
 public class LogWrapper {
   private static final Logger logger = LogManager.getLogger(McfParser.class);
@@ -45,8 +45,7 @@ public class LogWrapper {
     }
     logger.info("Failures: {}.  Writing details to {}", logSummary(logCtx), logPath.toString());
     File logFile = new File(logPath.toString());
-    FileUtils.writeStringToFile(
-        logFile, JsonFormat.printer().print(logCtx), StandardCharsets.UTF_8);
+    FileUtils.writeStringToFile(logFile, JsonFormat.printer().print(logCtx));
   }
 
   public static String logSummary(Debug.Log.Builder logCtx) {
@@ -80,7 +79,7 @@ public class LogWrapper {
     logCtx.getCounterSetBuilder().putCounters(counterName, counterValue + 1);
     logCtx.putLevelSummary(level.name(), logCtx.getLevelSummaryOrDefault(level.name(), 0) + 1);
 
-    if (counterValue > MAX_MESSAGES_PER_COUNTER) {
+    if (counterValue <= MAX_MESSAGES_PER_COUNTER) {
       // Log only up to certain full messages per counter. This can spam the log for WARNING msgs.
       Debug.Log.Entry.Builder e = logCtx.addEntriesBuilder();
       e.setLevel(level);
