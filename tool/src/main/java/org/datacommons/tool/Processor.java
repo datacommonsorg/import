@@ -17,7 +17,7 @@ public class Processor {
     int numNodesProcessed = 0;
     logger.debug("Checking {}", file.getName());
     // TODO: isResolved is more allowing, be stricter.
-    McfParser parser = McfParser.init(type, file.getPath(), false);
+    McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
     Mcf.McfGraph n;
     while ((n = parser.parseNextNode()) != null) {
       numNodesProcessed++;

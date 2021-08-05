@@ -58,7 +58,7 @@ public class TmcfCsvParserTest {
 
   private String mcf(String file_name) throws URISyntaxException, IOException {
     return McfUtil.serializeMcfGraph(
-        McfParser.parseInstanceMcfFile(resourceToFile(file_name), false), true);
+        McfParser.parseInstanceMcfFile(resourceToFile(file_name), false, null), true);
   }
 
   private String run(String mcf_file, String csv_file) throws IOException, URISyntaxException {
