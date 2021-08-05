@@ -82,10 +82,23 @@ public class Processor {
 
   public static void writeLog(Debug.Log.Builder logCtx, Path logPath)
       throws InvalidProtocolBufferException, IOException {
-    logger.info("Writing log to {}", logPath.toString());
+    if (logCtx.getLevelSummaryMap().isEmpty()) {
+      logger.info("Found no warnings or errors!");
+      return;
+    }
+    logger.info("Failures: {}.  Writing details to {}", logSummary(logCtx), logPath.toString());
     File logFile = new File(logPath.toString());
     FileUtils.writeStringToFile(
         logFile, JsonFormat.printer().print(logCtx), StandardCharsets.UTF_8);
+  }
+
+  private static String logSummary(Debug.Log.Builder logCtx) {
+    return logCtx.getLevelSummaryMap().getOrDefault("LEVEL_FATAL", 0L)
+        + " fatal, "
+        + logCtx.getLevelSummaryMap().getOrDefault("LEVEL_ERROR", 0L)
+        + " error(s), "
+        + logCtx.getLevelSummaryMap().getOrDefault("LEVEL_WARNING", 0L)
+        + " warning(s)";
   }
 
   private static boolean shouldBail(Debug.Log.Builder logCtx, Logger logger) {

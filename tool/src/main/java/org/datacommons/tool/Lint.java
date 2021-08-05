@@ -95,7 +95,6 @@ class Lint implements Callable<Integer> {
       retVal = -1;
     }
 
-    logger.error(logCtx.toString());
     String directory = parent.outputDir == null ? "." : parent.outputDir.getPath();
     Processor.writeLog(logCtx, Paths.get(directory, "report.json"));
     return retVal;
