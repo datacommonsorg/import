@@ -60,4 +60,6 @@ message Log {
 
     repeated Entry entries = 1;
     optional CounterSet counter_set = 2;
+    // Key: Level.name()
+    map<string, int64> level_summary = 3;
 }

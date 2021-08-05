@@ -1,7 +1,9 @@
 package org.datacommons.tool;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -32,10 +34,12 @@ class Lint implements Callable<Integer> {
       scope = CommandLine.ScopeType.INHERIT)
   private Character delimiter;
 
+  @CommandLine.ParentCommand private Main parent;
+
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
 
   @Override
-  public Integer call() throws IOException {
+  public Integer call() throws IOException, InvalidProtocolBufferException {
     List<File> mcfFiles = new ArrayList<>();
     List<File> tmcfFiles = new ArrayList<>();
     List<File> csvFiles = new ArrayList<>();
@@ -74,16 +78,25 @@ class Lint implements Callable<Integer> {
           spec.commandLine(), "Please provide one .tmcf file with CSV/TSV files");
     }
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
-    for (File f : mcfFiles) {
-      Processor.processNodes(Mcf.McfType.INSTANCE_MCF, f, logCtx, logger);
-    }
-    if (!csvFiles.isEmpty()) {
-      Processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, null, logCtx, logger);
-    } else {
-      for (File f : tmcfFiles) {
-        Processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f, logCtx, logger);
+    Integer retVal = 0;
+    try {
+      for (File f : mcfFiles) {
+        Processor.processNodes(Mcf.McfType.INSTANCE_MCF, f, logCtx, logger);
       }
+      if (!csvFiles.isEmpty()) {
+        Processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, null, logCtx, logger);
+      } else {
+        for (File f : tmcfFiles) {
+          Processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f, logCtx, logger);
+        }
+      }
+    } catch (TooManyFailuresException ex) {
+      // Regardless of the failures, we will dump the logCtx and exit.
+      retVal = -1;
     }
-    return 0;
+
+    String directory = parent.outputDir == null ? "." : parent.outputDir.getPath();
+    Processor.writeLog(logCtx, Paths.get(directory, "report.json"), logger);
+    return retVal;
   }
 }

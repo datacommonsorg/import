@@ -1,5 +1,6 @@
 package org.datacommons.tool;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -40,7 +41,7 @@ class GenMcf implements Callable<Integer> {
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
 
   @Override
-  public Integer call() throws IOException {
+  public Integer call() throws IOException, InvalidProtocolBufferException {
     List<File> tmcfFiles = new ArrayList<>();
     List<File> csvFiles = new ArrayList<>();
     int nTsv = 0;
@@ -75,13 +76,22 @@ class GenMcf implements Callable<Integer> {
     if (delimiter == null) {
       delimiter = nTsv > 0 ? '\t' : ',';
     }
+
+    String directory = parent.outputDir == null ? "." : parent.outputDir.getPath();
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
-    Path outFile =
-        Paths.get(parent.outputDir == null ? "." : parent.outputDir.getPath(), "generated.mcf");
-    logger.info("Writing to {}", outFile.toString());
-    BufferedWriter writer = new BufferedWriter(new FileWriter(outFile.toString()));
-    Processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, writer, logCtx, logger);
+    Path outPath = Paths.get(directory, "generated.mcf");
+    logger.info("Writing to {}", outPath.toString());
+    BufferedWriter writer = new BufferedWriter(new FileWriter(outPath.toString()));
+    Integer retVal = 0;
+    try {
+      Processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, writer, logCtx, logger);
+    } catch (TooManyFailuresException ex) {
+      // Regardless of the failures, we will dump the logCtx and exit.
+      retVal = -1;
+    }
     writer.close();
-    return 0;
+
+    Processor.writeLog(logCtx, Paths.get(directory, "report.json"), logger);
+    return retVal;
   }
 }
