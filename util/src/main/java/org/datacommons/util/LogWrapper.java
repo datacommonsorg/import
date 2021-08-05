@@ -44,7 +44,10 @@ public class LogWrapper {
       logger.info("Found no warnings or errors!");
       return;
     }
-    logger.info("Failures: {}.  Writing details to {}", logSummary(logCtx), logPath.toString());
+    logger.info(
+        "Failures: {}.  Writing details to {}",
+        logSummary(logCtx),
+        logPath.toAbsolutePath().toString());
     File logFile = new File(logPath.toString());
     // Without the unescaping something like 'Node' shows up as \u0027Node\u0027
     String jsonStr = StringEscapeUtils.unescapeJson(JsonFormat.printer().print(logCtx.build()));

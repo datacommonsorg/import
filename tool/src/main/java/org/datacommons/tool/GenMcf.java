@@ -81,7 +81,7 @@ class GenMcf implements Callable<Integer> {
     String directory = parent.outputDir == null ? "." : parent.outputDir.getPath();
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
     Path outPath = Paths.get(directory, "generated.mcf");
-    logger.info("Writing to {}", outPath.toString());
+    logger.info("Writing to {}", outPath.toAbsolutePath().toString());
     BufferedWriter writer = new BufferedWriter(new FileWriter(outPath.toString()));
     Integer retVal = 0;
     try {
