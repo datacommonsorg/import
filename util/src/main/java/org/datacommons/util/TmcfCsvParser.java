@@ -195,10 +195,11 @@ public class TmcfCsvParser {
       // Used for parseSchemaTerm() and splitAndStripWithQuoteEscape()
       BiConsumer<String, String> errCb =
           (counter, message) -> {
-            addLog(
-                Debug.Log.Level.LEVEL_ERROR,
-                counter,
-                "Failed to parse TMCF column/entity: " + message);
+            addLog(Debug.Log.Level.LEVEL_ERROR, counter, "Parsing TMCF entity : " + message);
+          };
+      BiConsumer<String, String> warnCb =
+          (counter, message) -> {
+            addLog(Debug.Log.Level.LEVEL_WARNING, counter, "Parsing CSV column value : " + message);
           };
 
       for (Mcf.McfGraph.TypedValue typedValue : templateValues.getTypedValuesList()) {
@@ -275,7 +276,7 @@ public class TmcfCsvParser {
           ssArg.stripEnclosingQuotes = false;
           // TODO: set stripEscapesBeforeQuotes
           List<String> values =
-              McfParser.splitAndStripWithQuoteEscape(dataRow.get(columnIndex), ssArg, errCb);
+              McfParser.splitAndStripWithQuoteEscape(dataRow.get(columnIndex), ssArg, warnCb);
           for (String value : values) {
             McfParser.parseTypedValue(
                 Mcf.McfType.INSTANCE_MCF,

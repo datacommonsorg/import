@@ -31,7 +31,7 @@ class LogWrapper {
   private void addLog(
       Debug.Log.Level level, String counter, String message, long lno, long cno, String cname) {
     if (level == Debug.Log.Level.LEVEL_ERROR || level == Debug.Log.Level.LEVEL_FATAL) {
-      logger.error("{} - @{}:{} - {} - {}", level.name(), fileName, lno, counter, message);
+      logger.error("{}:{} - {} - {}", level.name(), fileName, lno, counter, message);
     }
     Debug.Log.Entry.Builder e = logCtx.addEntriesBuilder();
     e.setLevel(level);

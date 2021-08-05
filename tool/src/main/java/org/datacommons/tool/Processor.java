@@ -17,10 +17,10 @@ import org.datacommons.util.McfParser;
 import org.datacommons.util.McfUtil;
 import org.datacommons.util.TmcfCsvParser;
 
-class TooManyFailuresException extends Exception {
-  public TooManyFailuresException() {}
+class DCTooManyFailuresException extends Exception {
+  public DCTooManyFailuresException() {}
 
-  public TooManyFailuresException(String message) {
+  public DCTooManyFailuresException(String message) {
     super(message);
   }
 }
@@ -28,10 +28,10 @@ class TooManyFailuresException extends Exception {
 public class Processor {
   private static final Logger logger = LogManager.getLogger(Processor.class);
 
-  private static final int MAX_ERROR_LIMIT = 10;
+  private static final int MAX_ERROR_LIMIT = 50;
 
   public static void processNodes(Mcf.McfType type, File file, Debug.Log.Builder logCtx)
-      throws IOException, TooManyFailuresException {
+      throws IOException, DCTooManyFailuresException {
     int numNodesProcessed = 0;
     logger.debug("Checking {}", file.getName());
     // TODO: isResolved is more allowing, be stricter.
@@ -41,7 +41,7 @@ public class Processor {
     while ((n = parser.parseNextNode()) != null) {
       numNodesProcessed++;
       if (shouldBail(logCtx, logger)) {
-        throw new TooManyFailuresException("processNodes encountered too many failures");
+        throw new DCTooManyFailuresException("processNodes encountered too many failures");
       }
     }
     logger.info("Checked {} with {} nodes", file.getName(), numNodesProcessed);
@@ -53,7 +53,7 @@ public class Processor {
       char delimiter,
       BufferedWriter writer,
       Debug.Log.Builder logCtx)
-      throws IOException, TooManyFailuresException {
+      throws IOException, DCTooManyFailuresException {
     logger.debug("TMCF " + tmcfFile.getName());
     boolean hasError = false;
     for (File csvFile : csvFiles) {
@@ -69,7 +69,7 @@ public class Processor {
           writer.write(McfUtil.serializeMcfGraph(g, false));
         }
         if (shouldBail(logCtx, logger)) {
-          throw new TooManyFailuresException("processTables encountered too many failures");
+          throw new DCTooManyFailuresException("processTables encountered too many failures");
         }
       }
       logger.info(
@@ -103,11 +103,11 @@ public class Processor {
 
   private static boolean shouldBail(Debug.Log.Builder logCtx, Logger logger) {
     if (logCtx.getLevelSummaryOrDefault("LEVEL_FATAL", 0) > 0) {
-      logger.error("Found a fatal log error");
+      logger.error("Found a fatal failure. Quitting!");
       return true;
     }
     if (logCtx.getLevelSummaryOrDefault("LEVEL_ERROR", 0) > MAX_ERROR_LIMIT) {
-      logger.error("Exceeded over {} errors!", MAX_ERROR_LIMIT);
+      logger.error("Found too many failures. Quitting!");
       return true;
     }
     return false;

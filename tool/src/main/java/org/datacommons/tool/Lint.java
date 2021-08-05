@@ -90,7 +90,7 @@ class Lint implements Callable<Integer> {
           Processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f, logCtx);
         }
       }
-    } catch (TooManyFailuresException ex) {
+    } catch (DCTooManyFailuresException ex) {
       // Regardless of the failures, we will dump the logCtx and exit.
       retVal = -1;
     }
