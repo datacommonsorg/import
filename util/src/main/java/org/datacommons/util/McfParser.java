@@ -20,7 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.stream.Stream;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -36,42 +35,56 @@ public class McfParser {
   private int curEntityLineIdx = 0;
   private String prevEntity;
   private boolean finished = false;
+  private Iterator<String> lines;
 
   // Create an McfParser instance based on type and a bool indicating whether the MCF is resolved
   // (DCIDs assigned).
-  public static McfParser init(Mcf.McfType type, boolean isResolved) {
-    McfParser parser = new McfParser();
-    parser.graph = McfGraph.newBuilder();
-    parser.graph.setType(type);
-    parser.isResolved = isResolved;
-    parser.curEntity = "";
-    parser.prevEntity = "";
+  public static McfParser init(Mcf.McfType type, String fileName, boolean isResolved)
+      throws IOException {
+    McfParser parser = init(type, isResolved);
+    parser.lines =
+        Files.lines(FileSystems.getDefault().getPath(fileName), StandardCharsets.UTF_8).iterator();
     return parser;
   }
 
   // Parse a string with instance nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseInstanceMcfString(String mcf_string, boolean isResolved) {
-    return parseMcfString(mcf_string, Mcf.McfType.INSTANCE_MCF, isResolved);
+  public static McfGraph parseInstanceMcfString(String mcfString, boolean isResolved)
+      throws IOException {
+    return parseMcfString(mcfString, Mcf.McfType.INSTANCE_MCF, isResolved);
   }
 
   // Parse a file with instance nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseInstanceMcfFile(String file_name, boolean isResolved)
+  public static McfGraph parseInstanceMcfFile(String fileName, boolean isResolved)
       throws IOException {
-    return parseMcfFile(file_name, Mcf.McfType.INSTANCE_MCF, isResolved);
+    return parseMcfFile(fileName, Mcf.McfType.INSTANCE_MCF, isResolved);
   }
 
   // Parse a string with template nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseTemplateMcfString(String mcf_string) {
-    return parseMcfString(mcf_string, Mcf.McfType.TEMPLATE_MCF, false);
+  public static McfGraph parseTemplateMcfString(String mcfString) throws IOException {
+    return parseMcfString(mcfString, Mcf.McfType.TEMPLATE_MCF, false);
   }
 
   // Parse a file with template nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseTemplateMcfFile(String file_name) throws IOException {
-    return parseMcfFile(file_name, Mcf.McfType.TEMPLATE_MCF, false);
+  public static McfGraph parseTemplateMcfFile(String fileName) throws IOException {
+    return parseMcfFile(fileName, Mcf.McfType.TEMPLATE_MCF, false);
+  }
+
+  public McfGraph parseNextNode() throws IOException {
+    if (finished) return null;
+    while (lines.hasNext()) {
+      String line = lines.next();
+      parseLine(line);
+      McfGraph g = extractNode();
+      if (g != null) {
+        return g;
+      }
+    }
+    // End of file.
+    return finish();
   }
 
   // Parse a line of MCF file.
-  public void parseLine(String line) throws AssertionError {
+  private void parseLine(String line) throws AssertionError {
     assert !finished;
     line = line.trim();
 
@@ -120,9 +133,19 @@ public class McfParser {
     }
   }
 
+  private static McfParser init(Mcf.McfType type, boolean isResolved) {
+    McfParser parser = new McfParser();
+    parser.graph = McfGraph.newBuilder();
+    parser.graph.setType(type);
+    parser.isResolved = isResolved;
+    parser.curEntity = "";
+    parser.prevEntity = "";
+    return parser;
+  }
+
   // Extracts and returns the previous full node, if any, as a single-node McfGraph proto. This is
   // typically used to extract single-node graphs.
-  public McfGraph extractNode() throws IllegalArgumentException {
+  private McfGraph extractNode() throws IllegalArgumentException {
     // If we are at the beginning or not at node boundary, nothing to extract.
     if (prevEntity.length() == 0 || curEntityLineIdx != 0) {
       return null;
@@ -131,11 +154,12 @@ public class McfParser {
     node.setType(graph.getType());
     node.putNodes(prevEntity, graph.getNodesOrThrow(prevEntity));
     graph.removeNodes(prevEntity);
+    prevEntity = "";
     return node.build();
   }
 
   // To be called after processing all lines of an MCF file (by calling parseLine()).
-  public McfGraph finish() throws AssertionError {
+  private McfGraph finish() throws AssertionError {
     assert !finished : "Called finish() twice!";
     finished = true;
     if (curEntity.length() == 0) {
@@ -146,22 +170,26 @@ public class McfParser {
     return graph.build();
   }
 
-  private static McfGraph parseMcfString(String mcf_string, Mcf.McfType type, boolean isResolved) {
-    McfParser parser = McfParser.init(type, isResolved);
-    for (String l : mcf_string.split("\\r?\\n")) {
-      parser.parseLine(l);
-    }
-    return mergeGraphs(Collections.singletonList(parser.finish()));
-  }
-
-  private static McfGraph parseMcfFile(String file_name, Mcf.McfType type, boolean isResolved)
+  private static McfGraph parseMcfString(String mcfString, Mcf.McfType type, boolean isResolved)
       throws IOException {
     McfParser parser = McfParser.init(type, isResolved);
-    try (Stream<String> lines =
-        Files.lines(FileSystems.getDefault().getPath(file_name), StandardCharsets.UTF_8)) {
-      lines.forEachOrdered(parser::parseLine);
+    parser.lines = Arrays.asList(mcfString.split("\\r?\\n")).iterator();
+    return parser.parseLines();
+  }
+
+  private static McfGraph parseMcfFile(String fileName, Mcf.McfType type, boolean isResolved)
+      throws IOException {
+    McfParser parser = McfParser.init(type, fileName, isResolved);
+    return parser.parseLines();
+  }
+
+  private McfGraph parseLines() throws IOException {
+    McfGraph g;
+    ArrayList<McfGraph> graphs = new ArrayList<>();
+    while ((g = parseNextNode()) != null) {
+      graphs.add(g);
     }
-    return mergeGraphs(Collections.singletonList(parser.finish()));
+    return mergeGraphs(graphs);
   }
 
   private void parseNodeName(String node) {
