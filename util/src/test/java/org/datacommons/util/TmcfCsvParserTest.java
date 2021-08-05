@@ -70,7 +70,6 @@ public class TmcfCsvParserTest {
     while ((graph = parser.parseNextRow()) != null) {
       result.add(graph);
     }
-    System.out.println("CounterSet: " + logCtx.toString());
     return McfUtil.serializeMcfGraph(McfParser.mergeGraphs(result), true);
   }
 

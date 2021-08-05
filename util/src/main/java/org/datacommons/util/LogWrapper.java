@@ -2,14 +2,15 @@ package org.datacommons.util;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
 
 public class LogWrapper {
   private static final Logger logger = LogManager.getLogger(McfParser.class);
@@ -45,7 +46,9 @@ public class LogWrapper {
     }
     logger.info("Failures: {}.  Writing details to {}", logSummary(logCtx), logPath.toString());
     File logFile = new File(logPath.toString());
-    FileUtils.writeStringToFile(logFile, JsonFormat.printer().print(logCtx));
+    // Without the unescaping something like 'Node' shows up as \u0027Node\u0027
+    String jsonStr = StringEscapeUtils.unescapeJson(JsonFormat.printer().print(logCtx.build()));
+    FileUtils.writeStringToFile(logFile, jsonStr, StandardCharsets.UTF_8);
   }
 
   public static String logSummary(Debug.Log.Builder logCtx) {
@@ -72,7 +75,8 @@ public class LogWrapper {
   private void addLog(
       Debug.Log.Level level, String counter, String message, long lno, long cno, String cname) {
     if (level == Debug.Log.Level.LEVEL_ERROR || level == Debug.Log.Level.LEVEL_FATAL) {
-      logger.error("{}:{} - {} - {}", level.name(), fileName, lno, counter, message);
+      String displayLevel = level.name().replace("LEVEL_", "");
+      logger.error("{} {}:{} - {}: {}", displayLevel, fileName, lno, counter, message);
     }
     String counterName = counter == null || counter.isEmpty() ? "MissingCounterName" : counter;
     long counterValue = logCtx.getCounterSet().getCountersOrDefault(counterName, 0);
