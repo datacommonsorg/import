@@ -51,6 +51,6 @@ class LogWrapper {
     }
 
     // Update level summary.
-    logCtx.putLevelSummary(level.name(), logCtx.getLevelSummaryOrDefault(level.name(), 0));
+    logCtx.putLevelSummary(level.name(), logCtx.getLevelSummaryOrDefault(level.name(), 0) + 1);
   }
 }
