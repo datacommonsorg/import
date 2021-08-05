@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
+import org.datacommons.util.LogWrapper;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "lint", description = "Run various checks on input MCF/TMCF/CSV files")
@@ -96,7 +97,7 @@ class Lint implements Callable<Integer> {
     }
 
     String directory = parent.outputDir == null ? "." : parent.outputDir.getPath();
-    Processor.writeLog(logCtx, Paths.get(directory, "report.json"));
+    LogWrapper.writeLog(logCtx, Paths.get(directory, "report.json"));
     return retVal;
   }
 }

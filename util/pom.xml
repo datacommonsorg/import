@@ -68,6 +68,12 @@
             <version>2.14.1</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>3.7.1</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>

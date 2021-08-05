@@ -513,6 +513,7 @@ public class McfParser {
     public char delimiter = ',';
     public boolean includeEmpty = false;
     public boolean stripEnclosingQuotes = true;
+    public String context;
   }
   // NOTE: We do not strip enclosing quotes in this function.
   public static List<String> splitAndStripWithQuoteEscape(
@@ -532,13 +533,17 @@ public class McfParser {
       List<CSVRecord> records = parser.getRecords();
       if (records.isEmpty()) {
         if (errCb != null) {
-          errCb.accept("StrSplit_EmptyToken", "Empty token while parsing " + orig);
+          errCb.accept(
+              "StrSplit_EmptyToken",
+              "Empty token while parsing '" + orig + "' (" + arg.context + ")");
         }
         return splits;
       }
       if (records.size() != 1) {
         if (errCb != null) {
-          errCb.accept("StrSplit_MultiToken", "Found more than one record for " + orig);
+          errCb.accept(
+              "StrSplit_MultiToken",
+              "Found more than one record for '" + orig + "' (" + arg.context + ")");
         }
         return splits;
       }
@@ -550,7 +555,8 @@ public class McfParser {
         }
       }
     } catch (IOException e) {
-      errCb.accept("StrSplit_ParserFailure", "Parsing failed on (" + orig);
+      errCb.accept(
+          "StrSplit_ParserFailure", "Parsing failed on '" + orig + "' (" + arg.context + ")");
     }
     return splits;
   }

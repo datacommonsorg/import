@@ -195,11 +195,11 @@ public class TmcfCsvParser {
       // Used for parseSchemaTerm() and splitAndStripWithQuoteEscape()
       BiConsumer<String, String> errCb =
           (counter, message) -> {
-            addLog(Debug.Log.Level.LEVEL_ERROR, counter, "Parsing TMCF entity : " + message);
+            addLog(Debug.Log.Level.LEVEL_ERROR, counter, message);
           };
       BiConsumer<String, String> warnCb =
           (counter, message) -> {
-            addLog(Debug.Log.Level.LEVEL_WARNING, counter, "Parsing CSV column value : " + message);
+            addLog(Debug.Log.Level.LEVEL_WARNING, counter, message);
           };
 
       for (Mcf.McfGraph.TypedValue typedValue : templateValues.getTypedValuesList()) {
@@ -274,6 +274,7 @@ public class TmcfCsvParser {
           ssArg.delimiter = delimiter;
           ssArg.includeEmpty = false;
           ssArg.stripEnclosingQuotes = false;
+          ssArg.context = "CSV column " + term.value;
           // TODO: set stripEscapesBeforeQuotes
           List<String> values =
               McfParser.splitAndStripWithQuoteEscape(dataRow.get(columnIndex), ssArg, warnCb);
