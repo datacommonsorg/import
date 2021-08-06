@@ -220,7 +220,7 @@ public class TmcfCsvParser {
                   "CSV_EmptyDcidReferences",
                   "Empty dcid reference in property "
                       + currentProp
-                      + " in TMCF entity "
+                      + " of TMCF entity "
                       + templateEntity);
               continue;
             }
@@ -242,11 +242,11 @@ public class TmcfCsvParser {
             addLog(
                 Debug.Log.Level.LEVEL_ERROR,
                 "CSV_UnexpectedNonColumn",
-                "Unexpected non-column "
+                "Unable to parse TMCF column "
                     + typedValue.getValue()
-                    + " for property "
+                    + " in property "
                     + currentProp
-                    + " in TMCF entity "
+                    + " of TMCF entity "
                     + templateEntity);
             continue;
           }
@@ -254,7 +254,7 @@ public class TmcfCsvParser {
             addLog(
                 Debug.Log.Level.LEVEL_ERROR,
                 "CSV_MissingTmcfColumn",
-                "Missing column " + term.value);
+                "Column " + term.value + " referred in TMCF is missing from CSV header");
             continue;
           }
           int columnIndex = cleanedColumnMap.get(term.value);
@@ -262,10 +262,7 @@ public class TmcfCsvParser {
             addLog(
                 Debug.Log.Level.LEVEL_WARNING,
                 "CSV_UnexpectedRow",
-                "Unexpected short row '"
-                    + dataRow.toString()
-                    + "' under column index "
-                    + columnIndex);
+                "Fewer columns than expected in the row: '" + dataRow.toString() + "'");
             continue;
           }
 
