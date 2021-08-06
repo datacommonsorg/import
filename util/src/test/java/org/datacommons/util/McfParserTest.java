@@ -35,40 +35,40 @@ public class McfParserTest {
   @Test
   public void funcSplitAndStripWithQuoteEscape() {
     SplitAndStripArg arg = new SplitAndStripArg();
-    assertThat(splitAndStripWithQuoteEscape("one,two,three", arg))
+    assertThat(splitAndStripWithQuoteEscape("one,two,three", arg, null))
         .containsExactly("one", "two", "three");
 
     // Single quote (unterminated or otherwise) should be preserved.
-    assertThat(splitAndStripWithQuoteEscape("\"O'Brien\", 20", arg))
+    assertThat(splitAndStripWithQuoteEscape("\"O'Brien\", 20", arg, null))
         .containsExactly("O'Brien", "20");
 
     // Whitespace surrounding ',' is excluded, but within is included.
-    assertThat(splitAndStripWithQuoteEscape(" o ne, two ,th ree", arg))
+    assertThat(splitAndStripWithQuoteEscape(" o ne, two ,th ree", arg, null))
         .containsExactly("o ne", "two", "th ree");
 
     // One pair of double quotes are removed.
-    assertThat(splitAndStripWithQuoteEscape(" '\"one\"',two,\"three\"", arg))
+    assertThat(splitAndStripWithQuoteEscape(" '\"one\"',two,\"three\"", arg, null))
         .containsExactly("'\"one\"'", "two", "three");
 
     // Comma within double quotes are not split.
-    assertThat(splitAndStripWithQuoteEscape("'one, two', three, \"four, five\"", arg))
+    assertThat(splitAndStripWithQuoteEscape("'one, two', three, \"four, five\"", arg, null))
         .containsExactly("'one", "two'", "three", "four, five");
 
     // Empty strings are by default removed.
-    assertThat(splitAndStripWithQuoteEscape("one,   ,two, \"\" , three", arg))
+    assertThat(splitAndStripWithQuoteEscape("one,   ,two, \"\" , three", arg, null))
         .containsExactly("one", "two", "three");
 
     // Empty strings are kept when specifically requested.
     arg = new SplitAndStripArg();
     arg.includeEmpty = true;
-    assertThat(splitAndStripWithQuoteEscape("one,   ,two, \"\" , three", arg))
+    assertThat(splitAndStripWithQuoteEscape("one,   ,two, \"\" , three", arg, null))
         .containsExactly("one", "", "two", "", "three");
 
     // Strings that are escaped normally show up without character.
     // TODO: make this behavior match prod.
     arg = new SplitAndStripArg();
     arg.includeEmpty = false;
-    assertThat(splitAndStripWithQuoteEscape("\"{ \\\"type\\\": \\\"feature\\\" }\"", arg))
+    assertThat(splitAndStripWithQuoteEscape("\"{ \\\"type\\\": \\\"feature\\\" }\"", arg, null))
         .containsExactly("{ \"type\": \"feature\" }");
   }
 
@@ -88,38 +88,38 @@ public class McfParserTest {
 
   @Test
   public void funcParseResolvedGraphAsString() throws IOException {
-    String mcf_string =
+    String mcfString =
         IOUtils.toString(
             this.getClass().getResourceAsStream("McfParserTest_ResolvedGraph.mcf"),
             StandardCharsets.UTF_8);
-    McfGraph act = McfParser.parseInstanceMcfString(mcf_string, true);
+    McfGraph act = McfParser.parseInstanceMcfString(mcfString, true, null);
     McfGraph exp = expected("McfParserTest_ResolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
 
   @Test
   public void funcParseResolvedGraphAsFile() throws IOException, URISyntaxException {
-    String mcf_file = this.getClass().getResource("McfParserTest_ResolvedGraph.mcf").getPath();
-    McfGraph act = McfParser.parseInstanceMcfFile(mcf_file, true);
+    String mcfFile = this.getClass().getResource("McfParserTest_ResolvedGraph.mcf").getPath();
+    McfGraph act = McfParser.parseInstanceMcfFile(mcfFile, true, null);
     McfGraph exp = expected("McfParserTest_ResolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
 
   @Test
   public void funcParseTemplateMcfAsString() throws IOException {
-    String mcf_string =
+    String mcfString =
         IOUtils.toString(
             this.getClass().getResourceAsStream("McfParserTest_Template.tmcf"),
             StandardCharsets.UTF_8);
-    McfGraph act = McfParser.parseTemplateMcfString(mcf_string);
+    McfGraph act = McfParser.parseTemplateMcfString(mcfString, null);
     McfGraph exp = expected("McfParserTest_Template.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
 
   @Test
   public void funcParseTemplateMcfAsFile() throws IOException, URISyntaxException {
-    String mcf_file = this.getClass().getResource("McfParserTest_Template.tmcf").getPath();
-    McfGraph act = McfParser.parseTemplateMcfFile(mcf_file);
+    String mcfFile = this.getClass().getResource("McfParserTest_Template.tmcf").getPath();
+    McfGraph act = McfParser.parseTemplateMcfFile(mcfFile, null);
     McfGraph exp = expected("McfParserTest_Template.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
@@ -134,7 +134,8 @@ public class McfParserTest {
                     + "dcid: dcid:dc/maa\n"
                     + "overlapsWith: dcid:dc/456, dcid:dc/134\n"
                     + "name: \"Madras\"\n",
-                true),
+                true,
+                null),
             parseInstanceMcfString(
                 "Node: MadCity\n"
                     + "typeOf: dcs:Corporation\n"
@@ -142,20 +143,23 @@ public class McfParserTest {
                     + "overlapsWith: dcid:dc/134\n"
                     + "containedInPlace: dcid:dc/tn\n"
                     + "name: \"Chennai\"\n",
-                true),
+                true,
+                null),
             parseInstanceMcfString(
                 "Node: MadState\n"
                     + "typeOf: dcs:State\n"
                     + "dcid: dcid:dc/tn\n"
                     + "containedInPlace: dcid:country/india\n",
-                true),
+                true,
+                null),
             parseInstanceMcfString(
                 "Node: MadState\n"
                     + "typeOf: dcs:State\n"
                     + "dcid: dcid:dc/tn\n"
                     + "capital: dcid:dc/maa\n"
                     + "containedInPlace: dcid:dc/southindia\n",
-                true));
+                true,
+                null));
     // Output should be the second node which is the largest, with other PVs
     // patched in, and all types included.
     McfGraph want =
@@ -172,14 +176,15 @@ public class McfParserTest {
                 + "dcid: dcid:dc/tn\n"
                 + "capital: dcid:dc/maa\n"
                 + "containedInPlace: dcid:country/india, dcid:dc/southindia\n",
-            true);
+            true,
+            null);
     assertThat(mergeGraphs(graphs)).ignoringRepeatedFieldOrder().isEqualTo(want);
   }
 
   private McfGraph actual(String file_name, boolean isResolved)
       throws IOException, URISyntaxException {
-    String mcf_file = this.getClass().getResource(file_name).getPath();
-    McfParser parser = McfParser.init(McfType.INSTANCE_MCF, mcf_file, isResolved);
+    String mcfFile = this.getClass().getResource(file_name).getPath();
+    McfParser parser = McfParser.init(McfType.INSTANCE_MCF, mcfFile, isResolved, null);
     McfGraph.Builder act = McfGraph.newBuilder();
     act.setType(McfType.INSTANCE_MCF);
     McfGraph n;
@@ -191,10 +196,10 @@ public class McfParserTest {
     return act.build();
   }
 
-  private McfGraph expected(String proto_file) throws IOException {
+  private McfGraph expected(String protoFile) throws IOException {
     McfGraph.Builder expected = McfGraph.newBuilder();
     String proto =
-        IOUtils.toString(this.getClass().getResourceAsStream(proto_file), StandardCharsets.UTF_8);
+        IOUtils.toString(this.getClass().getResourceAsStream(protoFile), StandardCharsets.UTF_8);
     TextFormat.getParser().merge(new StringReader(proto), expected);
     return expected.build();
   }

@@ -43,6 +43,60 @@ public final class Debug {
     org.datacommons.proto.Debug.Log.CounterSet getCounterSet();
     /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
     org.datacommons.proto.Debug.Log.CounterSetOrBuilder getCounterSetOrBuilder();
+
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+     */
+    int getLevelSummaryCount();
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+     */
+    boolean containsLevelSummary(java.lang.String key);
+    /** Use {@link #getLevelSummaryMap()} instead. */
+    @java.lang.Deprecated
+    java.util.Map<java.lang.String, java.lang.Long> getLevelSummary();
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+     */
+    java.util.Map<java.lang.String, java.lang.Long> getLevelSummaryMap();
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+     */
+    long getLevelSummaryOrDefault(java.lang.String key, long defaultValue);
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+     */
+    long getLevelSummaryOrThrow(java.lang.String key);
   }
   /**
    *
@@ -124,6 +178,23 @@ public final class Debug {
                 bitField0_ |= 0x00000001;
                 break;
               }
+            case 26:
+              {
+                if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+                  levelSummary_ =
+                      com.google.protobuf.MapField.newMapField(
+                          LevelSummaryDefaultEntryHolder.defaultEntry);
+                  mutable_bitField0_ |= 0x00000004;
+                }
+                com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> levelSummary__ =
+                    input.readMessage(
+                        LevelSummaryDefaultEntryHolder.defaultEntry.getParserForType(),
+                        extensionRegistry);
+                levelSummary_
+                    .getMutableMap()
+                    .put(levelSummary__.getKey(), levelSummary__.getValue());
+                break;
+              }
             default:
               {
                 if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
@@ -148,6 +219,17 @@ public final class Debug {
 
     public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
       return org.datacommons.proto.Debug.internal_static_org_datacommons_proto_Log_descriptor;
+    }
+
+    @SuppressWarnings({"rawtypes"})
+    @java.lang.Override
+    protected com.google.protobuf.MapField internalGetMapField(int number) {
+      switch (number) {
+        case 3:
+          return internalGetLevelSummary();
+        default:
+          throw new RuntimeException("Invalid map field number: " + number);
+      }
     }
 
     @java.lang.Override
@@ -3683,6 +3765,101 @@ public final class Debug {
           : counterSet_;
     }
 
+    public static final int LEVEL_SUMMARY_FIELD_NUMBER = 3;
+
+    private static final class LevelSummaryDefaultEntryHolder {
+      static final com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> defaultEntry =
+          com.google.protobuf.MapEntry.<java.lang.String, java.lang.Long>newDefaultInstance(
+              org.datacommons.proto.Debug
+                  .internal_static_org_datacommons_proto_Log_LevelSummaryEntry_descriptor,
+              com.google.protobuf.WireFormat.FieldType.STRING,
+              "",
+              com.google.protobuf.WireFormat.FieldType.INT64,
+              0L);
+    }
+
+    private com.google.protobuf.MapField<java.lang.String, java.lang.Long> levelSummary_;
+
+    private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
+        internalGetLevelSummary() {
+      if (levelSummary_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(
+            LevelSummaryDefaultEntryHolder.defaultEntry);
+      }
+      return levelSummary_;
+    }
+
+    public int getLevelSummaryCount() {
+      return internalGetLevelSummary().getMap().size();
+    }
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+     */
+    public boolean containsLevelSummary(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      return internalGetLevelSummary().getMap().containsKey(key);
+    }
+    /** Use {@link #getLevelSummaryMap()} instead. */
+    @java.lang.Deprecated
+    public java.util.Map<java.lang.String, java.lang.Long> getLevelSummary() {
+      return getLevelSummaryMap();
+    }
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+     */
+    public java.util.Map<java.lang.String, java.lang.Long> getLevelSummaryMap() {
+      return internalGetLevelSummary().getMap();
+    }
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+     */
+    public long getLevelSummaryOrDefault(java.lang.String key, long defaultValue) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      java.util.Map<java.lang.String, java.lang.Long> map = internalGetLevelSummary().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+     */
+    public long getLevelSummaryOrThrow(java.lang.String key) {
+      if (key == null) {
+        throw new java.lang.NullPointerException();
+      }
+      java.util.Map<java.lang.String, java.lang.Long> map = internalGetLevelSummary().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
+      }
+      return map.get(key);
+    }
+
     private byte memoizedIsInitialized = -1;
 
     @java.lang.Override
@@ -3703,6 +3880,8 @@ public final class Debug {
       if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(2, getCounterSet());
       }
+      com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
+          output, internalGetLevelSummary(), LevelSummaryDefaultEntryHolder.defaultEntry, 3);
       unknownFields.writeTo(output);
     }
 
@@ -3717,6 +3896,16 @@ public final class Debug {
       }
       if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getCounterSet());
+      }
+      for (java.util.Map.Entry<java.lang.String, java.lang.Long> entry :
+          internalGetLevelSummary().getMap().entrySet()) {
+        com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> levelSummary__ =
+            LevelSummaryDefaultEntryHolder.defaultEntry
+                .newBuilderForType()
+                .setKey(entry.getKey())
+                .setValue(entry.getValue())
+                .build();
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, levelSummary__);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -3738,6 +3927,7 @@ public final class Debug {
       if (hasCounterSet()) {
         if (!getCounterSet().equals(other.getCounterSet())) return false;
       }
+      if (!internalGetLevelSummary().equals(other.internalGetLevelSummary())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -3756,6 +3946,10 @@ public final class Debug {
       if (hasCounterSet()) {
         hash = (37 * hash) + COUNTER_SET_FIELD_NUMBER;
         hash = (53 * hash) + getCounterSet().hashCode();
+      }
+      if (!internalGetLevelSummary().getMap().isEmpty()) {
+        hash = (37 * hash) + LEVEL_SUMMARY_FIELD_NUMBER;
+        hash = (53 * hash) + internalGetLevelSummary().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -3875,6 +4069,26 @@ public final class Debug {
         return org.datacommons.proto.Debug.internal_static_org_datacommons_proto_Log_descriptor;
       }
 
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMapField(int number) {
+        switch (number) {
+          case 3:
+            return internalGetLevelSummary();
+          default:
+            throw new RuntimeException("Invalid map field number: " + number);
+        }
+      }
+
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMutableMapField(int number) {
+        switch (number) {
+          case 3:
+            return internalGetMutableLevelSummary();
+          default:
+            throw new RuntimeException("Invalid map field number: " + number);
+        }
+      }
+
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
@@ -3917,6 +4131,7 @@ public final class Debug {
           counterSetBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
+        internalGetMutableLevelSummary().clear();
         return this;
       }
 
@@ -3961,6 +4176,8 @@ public final class Debug {
           }
           to_bitField0_ |= 0x00000001;
         }
+        result.levelSummary_ = internalGetLevelSummary();
+        result.levelSummary_.makeImmutable();
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -4043,6 +4260,7 @@ public final class Debug {
         if (other.hasCounterSet()) {
           mergeCounterSet(other.getCounterSet());
         }
+        internalGetMutableLevelSummary().mergeFrom(other.internalGetLevelSummary());
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -4397,6 +4615,158 @@ public final class Debug {
         return counterSetBuilder_;
       }
 
+      private com.google.protobuf.MapField<java.lang.String, java.lang.Long> levelSummary_;
+
+      private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
+          internalGetLevelSummary() {
+        if (levelSummary_ == null) {
+          return com.google.protobuf.MapField.emptyMapField(
+              LevelSummaryDefaultEntryHolder.defaultEntry);
+        }
+        return levelSummary_;
+      }
+
+      private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
+          internalGetMutableLevelSummary() {
+        onChanged();
+        ;
+        if (levelSummary_ == null) {
+          levelSummary_ =
+              com.google.protobuf.MapField.newMapField(LevelSummaryDefaultEntryHolder.defaultEntry);
+        }
+        if (!levelSummary_.isMutable()) {
+          levelSummary_ = levelSummary_.copy();
+        }
+        return levelSummary_;
+      }
+
+      public int getLevelSummaryCount() {
+        return internalGetLevelSummary().getMap().size();
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+       */
+      public boolean containsLevelSummary(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        return internalGetLevelSummary().getMap().containsKey(key);
+      }
+      /** Use {@link #getLevelSummaryMap()} instead. */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.Long> getLevelSummary() {
+        return getLevelSummaryMap();
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+       */
+      public java.util.Map<java.lang.String, java.lang.Long> getLevelSummaryMap() {
+        return internalGetLevelSummary().getMap();
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+       */
+      public long getLevelSummaryOrDefault(java.lang.String key, long defaultValue) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        java.util.Map<java.lang.String, java.lang.Long> map = internalGetLevelSummary().getMap();
+        return map.containsKey(key) ? map.get(key) : defaultValue;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+       */
+      public long getLevelSummaryOrThrow(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        java.util.Map<java.lang.String, java.lang.Long> map = internalGetLevelSummary().getMap();
+        if (!map.containsKey(key)) {
+          throw new java.lang.IllegalArgumentException();
+        }
+        return map.get(key);
+      }
+
+      public Builder clearLevelSummary() {
+        internalGetMutableLevelSummary().getMutableMap().clear();
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+       */
+      public Builder removeLevelSummary(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        internalGetMutableLevelSummary().getMutableMap().remove(key);
+        return this;
+      }
+      /** Use alternate mutation accessors instead. */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.Long> getMutableLevelSummary() {
+        return internalGetMutableLevelSummary().getMutableMap();
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+       */
+      public Builder putLevelSummary(java.lang.String key, long value) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+
+        internalGetMutableLevelSummary().getMutableMap().put(key, value);
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+       */
+      public Builder putAllLevelSummary(java.util.Map<java.lang.String, java.lang.Long> values) {
+        internalGetMutableLevelSummary().getMutableMap().putAll(values);
+        return this;
+      }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -4470,6 +4840,10 @@ public final class Debug {
       internal_static_org_datacommons_proto_Log_Entry_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_Log_Entry_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_org_datacommons_proto_Log_LevelSummaryEntry_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_Log_LevelSummaryEntry_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -4479,22 +4853,26 @@ public final class Debug {
 
   static {
     java.lang.String[] descriptorData = {
-      "\n\013Debug.proto\022\025org.datacommons.proto\"\330\004\n"
+      "\n\013Debug.proto\022\025org.datacommons.proto\"\322\005\n"
           + "\003Log\0221\n\007entries\030\001 \003(\0132 .org.datacommons."
           + "proto.Log.Entry\022:\n\013counter_set\030\002 \001(\0132%.o"
-          + "rg.datacommons.proto.Log.CounterSet\032Y\n\010L"
-          + "ocation\022\014\n\004file\030\001 \001(\t\022\023\n\013line_number\030\002 \001"
-          + "(\003\022\025\n\rcolumn_number\030\003 \001(\003\022\023\n\013column_name"
-          + "\030\004 \001(\t\032\204\001\n\nCounterSet\022E\n\010counters\030\001 \003(\0132"
-          + "3.org.datacommons.proto.Log.CounterSet.C"
-          + "ountersEntry\032/\n\rCountersEntry\022\013\n\003key\030\001 \001"
-          + "(\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\232\001\n\005Entry\022/\n\005level"
-          + "\030\001 \001(\0162 .org.datacommons.proto.Log.Level"
-          + "\0225\n\010location\030\002 \001(\0132#.org.datacommons.pro"
-          + "to.Log.Location\022\024\n\014user_message\030\003 \001(\t\022\023\n"
-          + "\013counter_key\030\004 \001(\t\"c\n\005Level\022\025\n\021LEVEL_UNS"
-          + "PECIFIED\020\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WARN"
-          + "ING\020\002\022\017\n\013LEVEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004"
+          + "rg.datacommons.proto.Log.CounterSet\022C\n\rl"
+          + "evel_summary\030\003 \003(\0132,.org.datacommons.pro"
+          + "to.Log.LevelSummaryEntry\032Y\n\010Location\022\014\n\004"
+          + "file\030\001 \001(\t\022\023\n\013line_number\030\002 \001(\003\022\025\n\rcolum"
+          + "n_number\030\003 \001(\003\022\023\n\013column_name\030\004 \001(\t\032\204\001\n\n"
+          + "CounterSet\022E\n\010counters\030\001 \003(\01323.org.datac"
+          + "ommons.proto.Log.CounterSet.CountersEntr"
+          + "y\032/\n\rCountersEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value"
+          + "\030\002 \001(\003:\0028\001\032\232\001\n\005Entry\022/\n\005level\030\001 \001(\0162 .or"
+          + "g.datacommons.proto.Log.Level\0225\n\010locatio"
+          + "n\030\002 \001(\0132#.org.datacommons.proto.Log.Loca"
+          + "tion\022\024\n\014user_message\030\003 \001(\t\022\023\n\013counter_ke"
+          + "y\030\004 \001(\t\0323\n\021LevelSummaryEntry\022\013\n\003key\030\001 \001("
+          + "\t\022\r\n\005value\030\002 \001(\003:\0028\001\"c\n\005Level\022\025\n\021LEVEL_U"
+          + "NSPECIFIED\020\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WA"
+          + "RNING\020\002\022\017\n\013LEVEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020"
+          + "\004"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -4504,7 +4882,7 @@ public final class Debug {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_descriptor,
             new java.lang.String[] {
-              "Entries", "CounterSet",
+              "Entries", "CounterSet", "LevelSummary",
             });
     internal_static_org_datacommons_proto_Log_Location_descriptor =
         internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(0);
@@ -4537,6 +4915,14 @@ public final class Debug {
             internal_static_org_datacommons_proto_Log_Entry_descriptor,
             new java.lang.String[] {
               "Level", "Location", "UserMessage", "CounterKey",
+            });
+    internal_static_org_datacommons_proto_Log_LevelSummaryEntry_descriptor =
+        internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(3);
+    internal_static_org_datacommons_proto_Log_LevelSummaryEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_Log_LevelSummaryEntry_descriptor,
+            new java.lang.String[] {
+              "Key", "Value",
             });
   }
 

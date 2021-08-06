@@ -1,5 +1,6 @@
 package org.datacommons.tool;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -12,6 +13,7 @@ import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
+import org.datacommons.util.LogWrapper;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "genmcf", description = "Generate Instance MCF from TMCF/CSV files")
@@ -40,7 +42,7 @@ class GenMcf implements Callable<Integer> {
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
 
   @Override
-  public Integer call() throws IOException {
+  public Integer call() throws IOException, InvalidProtocolBufferException {
     List<File> tmcfFiles = new ArrayList<>();
     List<File> csvFiles = new ArrayList<>();
     int nTsv = 0;
@@ -75,13 +77,22 @@ class GenMcf implements Callable<Integer> {
     if (delimiter == null) {
       delimiter = nTsv > 0 ? '\t' : ',';
     }
-    Debug.Log.Builder logCtx = Debug.Log.newBuilder();
-    Path outFile =
-        Paths.get(parent.outputDir == null ? "." : parent.outputDir.getPath(), "generated.mcf");
-    logger.info("Writing to {}", outFile.toString());
-    BufferedWriter writer = new BufferedWriter(new FileWriter(outFile.toString()));
-    Processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, writer, logCtx, logger);
+
+    Path outPath = Paths.get(parent.outputDir.getPath(), "generated.mcf");
+    logger.info("Writing generated MCF to {}", outPath.toAbsolutePath().normalize().toString());
+    BufferedWriter writer = new BufferedWriter(new FileWriter(outPath.toString()));
+
+    LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
+    Processor processor = new Processor(logCtx);
+    Integer retVal = 0;
+    try {
+      processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, writer);
+    } catch (DCTooManyFailuresException ex) {
+      // Regardless of the failures, we will dump the logCtx and exit.
+      retVal = -1;
+    }
     writer.close();
-    return 0;
+    logCtx.persistLog(false);
+    return retVal;
   }
 }

@@ -52,7 +52,7 @@ public class McfUtilTest {
             + "name: \"California\"\n"
             + "typeOf: dcid:State\n"
             + "\n";
-    Mcf.McfGraph graph = McfParser.parseInstanceMcfString(SERIALIZE_INPUT, false);
+    Mcf.McfGraph graph = McfParser.parseInstanceMcfString(SERIALIZE_INPUT, false, null);
     assertEquals(McfUtil.serializeMcfGraph(graph, true), output);
   }
 }

@@ -1,5 +1,6 @@
 package org.datacommons.tool;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
+import org.datacommons.util.LogWrapper;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "lint", description = "Run various checks on input MCF/TMCF/CSV files")
@@ -32,10 +34,12 @@ class Lint implements Callable<Integer> {
       scope = CommandLine.ScopeType.INHERIT)
   private Character delimiter;
 
+  @CommandLine.ParentCommand private Main parent;
+
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
 
   @Override
-  public Integer call() throws IOException {
+  public Integer call() throws IOException, InvalidProtocolBufferException {
     List<File> mcfFiles = new ArrayList<>();
     List<File> tmcfFiles = new ArrayList<>();
     List<File> csvFiles = new ArrayList<>();
@@ -73,17 +77,25 @@ class Lint implements Callable<Integer> {
       throw new CommandLine.ParameterException(
           spec.commandLine(), "Please provide one .tmcf file with CSV/TSV files");
     }
-    Debug.Log.Builder logCtx = Debug.Log.newBuilder();
-    for (File f : mcfFiles) {
-      Processor.processNodes(Mcf.McfType.INSTANCE_MCF, f, logCtx, logger);
-    }
-    if (!csvFiles.isEmpty()) {
-      Processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, null, logCtx, logger);
-    } else {
-      for (File f : tmcfFiles) {
-        Processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f, logCtx, logger);
+    LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
+    Processor processor = new Processor(logCtx);
+    Integer retVal = 0;
+    try {
+      for (File f : mcfFiles) {
+        processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
       }
+      if (!csvFiles.isEmpty()) {
+        processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, null);
+      } else {
+        for (File f : tmcfFiles) {
+          processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f);
+        }
+      }
+    } catch (DCTooManyFailuresException ex) {
+      // Regardless of the failures, we will dump the logCtx and exit.
+      retVal = -1;
     }
-    return 0;
+    logCtx.persistLog(false);
+    return retVal;
   }
 }
