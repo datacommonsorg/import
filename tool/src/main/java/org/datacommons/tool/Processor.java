@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.util.LogWrapper;
 import org.datacommons.util.McfParser;
@@ -24,34 +23,31 @@ class DCTooManyFailuresException extends Exception {
 public class Processor {
   private static final Logger logger = LogManager.getLogger(Processor.class);
 
-  public static void processNodes(Mcf.McfType type, File file, Debug.Log.Builder logCtx)
+  public static void processNodes(Mcf.McfType type, File file, LogWrapper logCtx)
       throws IOException, DCTooManyFailuresException {
     long numNodesProcessed = 0;
     logger.debug("Checking {}", file.getName());
     // TODO: isResolved is more allowing, be stricter.
+    logCtx.updateLocationFile(file.getName());
     McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
     Mcf.McfGraph n;
-    boolean hasError = false;
     while ((n = parser.parseNextNode()) != null) {
       numNodesProcessed++;
-      if (LogWrapper.loggedTooManyFailures(logCtx)) {
+      if (logCtx.loggedTooManyFailures()) {
         throw new DCTooManyFailuresException("processNodes encountered too many failures");
       }
-      maybePrintStatus(numNodesProcessed, "nodes", file.getName(), logCtx);
+      logCtx.provideStatus(numNodesProcessed, "nodes");
     }
     logger.info("Checked {} with {} nodes", file.getName(), numNodesProcessed);
   }
 
   public static void processTables(
-      File tmcfFile,
-      List<File> csvFiles,
-      char delimiter,
-      BufferedWriter writer,
-      Debug.Log.Builder logCtx)
+      File tmcfFile, List<File> csvFiles, char delimiter, BufferedWriter writer, LogWrapper logCtx)
       throws IOException, DCTooManyFailuresException {
     logger.debug("TMCF " + tmcfFile.getName());
     for (File csvFile : csvFiles) {
       logger.debug("Checking CSV " + csvFile.getPath());
+      logCtx.updateLocationFile(csvFile.getName());
       TmcfCsvParser parser =
           TmcfCsvParser.init(tmcfFile.getPath(), csvFile.getPath(), delimiter, logCtx);
       Mcf.McfGraph g;
@@ -62,24 +58,16 @@ public class Processor {
         if (writer != null) {
           writer.write(McfUtil.serializeMcfGraph(g, false));
         }
-        if (LogWrapper.loggedTooManyFailures(logCtx)) {
+        if (logCtx.loggedTooManyFailures()) {
           throw new DCTooManyFailuresException("processTables encountered too many failures");
         }
-        maybePrintStatus(numRowsProcessed, "rows", csvFile.getName(), logCtx);
+        logCtx.provideStatus(numRowsProcessed, "rows");
       }
       logger.info(
           "Checked CSV {} ({} rows, {} nodes)",
           csvFile.getName(),
           numRowsProcessed,
           numNodesProcessed);
-    }
-  }
-
-  private static void maybePrintStatus(
-      long count, String thing, String fileName, Debug.Log.Builder logCtx) {
-    if (count > 0 && count % 100000 == 0) {
-      logger.info(
-          "Processed {} {} of {}.  {}.", count, thing, fileName, LogWrapper.logSummary(logCtx));
     }
   }
 }

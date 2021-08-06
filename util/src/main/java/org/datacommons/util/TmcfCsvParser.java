@@ -34,16 +34,15 @@ public class TmcfCsvParser {
   private Mcf.McfGraph tmcf;
   private char delimiter;
   private CSVParser csvParser;
-  private LogWrapper logWrapper;
+  private LogWrapper logCtx;
   private HashMap<String, Integer> cleanedColumnMap;
 
   // Build a parser given a TMCF file, CSV file, CSV delimiter and a log context.
   public static TmcfCsvParser init(
-      String tmcfFile, String csvFile, char delimiter, Debug.Log.Builder logCtx)
-      throws IOException {
+      String tmcfFile, String csvFile, char delimiter, LogWrapper logCtx) throws IOException {
     TmcfCsvParser tmcfCsvParser = new TmcfCsvParser();
     tmcfCsvParser.tmcf = McfParser.parseTemplateMcfFile(tmcfFile, logCtx);
-    tmcfCsvParser.logWrapper = new LogWrapper(logCtx, csvFile);
+    tmcfCsvParser.logCtx = logCtx;
     tmcfCsvParser.csvParser =
         CSVParser.parse(
             new FileReader(csvFile),
@@ -58,7 +57,7 @@ public class TmcfCsvParser {
 
     // Clean and keep a copy of the header map.
     if (tmcfCsvParser.csvParser.getHeaderMap() == null) {
-      tmcfCsvParser.logWrapper.addLog(
+      tmcfCsvParser.logCtx.addLog(
           Debug.Log.Level.LEVEL_FATAL,
           "CSV_HeaderFailure",
           "Unable to parse header from file " + csvFile,
@@ -151,7 +150,7 @@ public class TmcfCsvParser {
                   + tableEntity.getKey()
                   + ": "
                   + tv.getValue());
-          logWrapper.incrementCounterBy("CSV_MalformedDCIDPVFailures", pvs.size());
+          logCtx.incrementCounterBy("CSV_MalformedDCIDPVFailures", pvs.size());
         }
       }
 
@@ -314,6 +313,6 @@ public class TmcfCsvParser {
   }
 
   private void addLog(Debug.Log.Level level, String counter, String message) {
-    logWrapper.addLog(level, counter, message, csvParser.getCurrentLineNumber());
+    logCtx.addLog(level, counter, message, csvParser.getCurrentLineNumber());
   }
 }

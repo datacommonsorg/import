@@ -36,7 +36,7 @@ public class McfParser {
   private static final Logger logger = LogManager.getLogger(McfParser.class);
 
   private McfGraph.Builder graph;
-  private LogWrapper logWrapper;
+  private LogWrapper logCtx;
   private boolean isResolved;
   private String curEntity;
   private long lineNum = 0;
@@ -48,10 +48,9 @@ public class McfParser {
   // Create an McfParser instance based on type and a bool indicating whether the MCF is resolved
   // (DCIDs assigned).
   public static McfParser init(
-      Mcf.McfType type, String fileName, boolean isResolved, Debug.Log.Builder logCtx)
-      throws IOException {
+      Mcf.McfType type, String fileName, boolean isResolved, LogWrapper logCtx) throws IOException {
     McfParser parser = init(type, isResolved);
-    parser.logWrapper = new LogWrapper(logCtx, fileName);
+    parser.logCtx = logCtx;
     parser.lines =
         Files.lines(FileSystems.getDefault().getPath(fileName), StandardCharsets.UTF_8).iterator();
     return parser;
@@ -59,24 +58,24 @@ public class McfParser {
 
   // Parse a string with instance nodes in MCF format into the McfGraph proto.
   public static McfGraph parseInstanceMcfString(
-      String mcfString, boolean isResolved, Debug.Log.Builder logCtx) throws IOException {
+      String mcfString, boolean isResolved, LogWrapper logCtx) throws IOException {
     return parseMcfString(mcfString, Mcf.McfType.INSTANCE_MCF, isResolved, logCtx);
   }
 
   // Parse a file with instance nodes in MCF format into the McfGraph proto.
   public static McfGraph parseInstanceMcfFile(
-      String fileName, boolean isResolved, Debug.Log.Builder logCtx) throws IOException {
+      String fileName, boolean isResolved, LogWrapper logCtx) throws IOException {
     return parseMcfFile(fileName, Mcf.McfType.INSTANCE_MCF, isResolved, logCtx);
   }
 
   // Parse a string with template nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseTemplateMcfString(String mcfString, Debug.Log.Builder logCtx)
+  public static McfGraph parseTemplateMcfString(String mcfString, LogWrapper logCtx)
       throws IOException {
     return parseMcfString(mcfString, Mcf.McfType.TEMPLATE_MCF, false, logCtx);
   }
 
   // Parse a file with template nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseTemplateMcfFile(String fileName, Debug.Log.Builder logCtx)
+  public static McfGraph parseTemplateMcfFile(String fileName, LogWrapper logCtx)
       throws IOException {
     return parseMcfFile(fileName, Mcf.McfType.TEMPLATE_MCF, false, logCtx);
   }
@@ -117,7 +116,7 @@ public class McfParser {
     }
     int colon = line.substring(prefixLen).indexOf(Vocabulary.REFERENCE_DELIMITER);
     if (colon < 1) {
-      logWrapper.addLog(
+      logCtx.addLog(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedColonLessLine",
           "Malformed line " + "without a colon delimiter (" + line + ")",
@@ -129,7 +128,7 @@ public class McfParser {
     String rhs = line.substring(colon + 1).trim();
     if (lhs.equals(Vocabulary.NODE)) {
       if (rhs.indexOf(',') != -1) {
-        logWrapper.addLog(
+        logCtx.addLog(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_MalformedNodeName",
             "Found malformed 'Node' name ("
@@ -139,7 +138,7 @@ public class McfParser {
         return;
       }
       if (rhs.startsWith("\"")) {
-        logWrapper.addLog(
+        logCtx.addLog(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_MalformedNodeName",
             "Found malformed 'Node' name ("
@@ -151,7 +150,7 @@ public class McfParser {
       if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
         SchemaTerm term = parseSchemaTerm(rhs, getErrCb());
         if (term.type != SchemaTerm.Type.ENTITY) {
-          logWrapper.addLog(
+          logCtx.addLog(
               Debug.Log.Level.LEVEL_ERROR,
               "TMCF_MalformedEntity",
               "Found malformed entity name that is not an entity prefix " + rhs,
@@ -167,7 +166,7 @@ public class McfParser {
       curEntityLineIdx = 0;
     } else {
       if (curEntity.isEmpty()) {
-        logWrapper.addLog(
+        logCtx.addLog(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_UnexpectedProperty",
             " Property found without a 'Node' term: " + line,
@@ -215,7 +214,7 @@ public class McfParser {
       return null;
     }
     if (curEntityLineIdx == 0) {
-      logWrapper.addLog(
+      logCtx.addLog(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedNode",
           "Found a 'Node' (" + curEntity + ") with properties at the end of the file",
@@ -225,17 +224,16 @@ public class McfParser {
   }
 
   private static McfGraph parseMcfString(
-      String mcfString, Mcf.McfType type, boolean isResolved, Debug.Log.Builder logCtx)
+      String mcfString, Mcf.McfType type, boolean isResolved, LogWrapper logCtx)
       throws IOException {
     McfParser parser = McfParser.init(type, isResolved);
-    parser.logWrapper = new LogWrapper(logCtx, "String");
+    parser.logCtx = logCtx;
     parser.lines = Arrays.asList(mcfString.split("\\r?\\n")).iterator();
     return parser.parseLines();
   }
 
   private static McfGraph parseMcfFile(
-      String fileName, Mcf.McfType type, boolean isResolved, Debug.Log.Builder logCtx)
-      throws IOException {
+      String fileName, Mcf.McfType type, boolean isResolved, LogWrapper logCtx) throws IOException {
     McfParser parser = McfParser.init(type, fileName, isResolved, logCtx);
     return parser.parseLines();
   }
@@ -299,7 +297,7 @@ public class McfParser {
   private BiConsumer<String, String> getErrCb() {
     BiConsumer<String, String> errCb =
         (counter, message) -> {
-          logWrapper.addLog(Debug.Log.Level.LEVEL_ERROR, counter, message, lineNum);
+          logCtx.addLog(Debug.Log.Level.LEVEL_ERROR, counter, message, lineNum);
         };
     return errCb;
   }

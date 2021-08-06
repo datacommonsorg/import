@@ -78,11 +78,11 @@ class GenMcf implements Callable<Integer> {
       delimiter = nTsv > 0 ? '\t' : ',';
     }
 
-    String directory = parent.outputDir == null ? "." : parent.outputDir.getPath();
-    Debug.Log.Builder logCtx = Debug.Log.newBuilder();
-    Path outPath = Paths.get(directory, "generated.mcf");
-    logger.info("Writing to {}", outPath.toAbsolutePath().toString());
+    Path outPath = Paths.get(parent.outputDir.getPath(), "generated.mcf");
+    logger.info("Writing to {}", outPath.toAbsolutePath().normalize().toString());
     BufferedWriter writer = new BufferedWriter(new FileWriter(outPath.toString()));
+
+    LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
     Integer retVal = 0;
     try {
       Processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, writer, logCtx);
@@ -91,8 +91,7 @@ class GenMcf implements Callable<Integer> {
       retVal = -1;
     }
     writer.close();
-
-    LogWrapper.writeLog(logCtx, Paths.get(directory, "report.json"));
+    logCtx.writeLog(false);
     return retVal;
   }
 }

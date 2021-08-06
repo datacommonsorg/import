@@ -14,6 +14,7 @@ class Main {
   @CommandLine.Option(
       names = {"-o", "--output-dir"},
       description = "Directory to write output files. Default is current working directory.",
+      defaultValue = ".",
       scope = CommandLine.ScopeType.INHERIT)
   public File outputDir;
 

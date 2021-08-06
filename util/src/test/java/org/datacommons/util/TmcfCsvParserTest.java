@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -62,7 +63,7 @@ public class TmcfCsvParserTest {
   }
 
   private String run(String mcf_file, String csv_file) throws IOException, URISyntaxException {
-    Debug.Log.Builder logCtx = Debug.Log.newBuilder();
+    LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), Paths.get("."));
     TmcfCsvParser parser =
         TmcfCsvParser.init(resourceToFile(mcf_file), resourceToFile(csv_file), ',', logCtx);
     List<McfGraph> result = new ArrayList<>();

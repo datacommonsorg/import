@@ -3,7 +3,6 @@ package org.datacommons.tool;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -78,7 +77,7 @@ class Lint implements Callable<Integer> {
       throw new CommandLine.ParameterException(
           spec.commandLine(), "Please provide one .tmcf file with CSV/TSV files");
     }
-    Debug.Log.Builder logCtx = Debug.Log.newBuilder();
+    LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
     Integer retVal = 0;
     try {
       for (File f : mcfFiles) {
@@ -95,9 +94,7 @@ class Lint implements Callable<Integer> {
       // Regardless of the failures, we will dump the logCtx and exit.
       retVal = -1;
     }
-
-    String directory = parent.outputDir == null ? "." : parent.outputDir.getPath();
-    LogWrapper.writeLog(logCtx, Paths.get(directory, "report.json"));
+    logCtx.writeLog(false);
     return retVal;
   }
 }
