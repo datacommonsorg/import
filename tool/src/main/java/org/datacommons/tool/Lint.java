@@ -94,7 +94,7 @@ class Lint implements Callable<Integer> {
       // Regardless of the failures, we will dump the logCtx and exit.
       retVal = -1;
     }
-    logCtx.writeLog(false);
+    logCtx.persistLog(false);
     return retVal;
   }
 }

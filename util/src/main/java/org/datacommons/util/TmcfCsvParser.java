@@ -57,7 +57,7 @@ public class TmcfCsvParser {
 
     // Clean and keep a copy of the header map.
     if (tmcfCsvParser.csvParser.getHeaderMap() == null) {
-      tmcfCsvParser.logCtx.addLog(
+      tmcfCsvParser.logCtx.addEntry(
           Debug.Log.Level.LEVEL_FATAL,
           "CSV_HeaderFailure",
           "Unable to parse header from file " + csvFile,
@@ -313,6 +313,6 @@ public class TmcfCsvParser {
   }
 
   private void addLog(Debug.Log.Level level, String counter, String message) {
-    logCtx.addLog(level, counter, message, csvParser.getCurrentLineNumber());
+    logCtx.addEntry(level, counter, message, csvParser.getCurrentLineNumber());
   }
 }

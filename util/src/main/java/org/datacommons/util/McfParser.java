@@ -116,7 +116,7 @@ public class McfParser {
     }
     int colon = line.substring(prefixLen).indexOf(Vocabulary.REFERENCE_DELIMITER);
     if (colon < 1) {
-      logCtx.addLog(
+      logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedColonLessLine",
           "Malformed line " + "without a colon delimiter (" + line + ")",
@@ -128,7 +128,7 @@ public class McfParser {
     String rhs = line.substring(colon + 1).trim();
     if (lhs.equals(Vocabulary.NODE)) {
       if (rhs.indexOf(',') != -1) {
-        logCtx.addLog(
+        logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_MalformedNodeName",
             "Found malformed 'Node' name ("
@@ -138,7 +138,7 @@ public class McfParser {
         return;
       }
       if (rhs.startsWith("\"")) {
-        logCtx.addLog(
+        logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_MalformedNodeName",
             "Found malformed 'Node' name ("
@@ -150,7 +150,7 @@ public class McfParser {
       if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
         SchemaTerm term = parseSchemaTerm(rhs, getErrCb());
         if (term.type != SchemaTerm.Type.ENTITY) {
-          logCtx.addLog(
+          logCtx.addEntry(
               Debug.Log.Level.LEVEL_ERROR,
               "TMCF_MalformedEntity",
               "Found malformed entity name that is not an entity prefix " + rhs,
@@ -166,7 +166,7 @@ public class McfParser {
       curEntityLineIdx = 0;
     } else {
       if (curEntity.isEmpty()) {
-        logCtx.addLog(
+        logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_UnexpectedProperty",
             " Property found without a 'Node' term: " + line,
@@ -214,7 +214,7 @@ public class McfParser {
       return null;
     }
     if (curEntityLineIdx == 0) {
-      logCtx.addLog(
+      logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedNode",
           "Found a 'Node' (" + curEntity + ") with properties at the end of the file",
@@ -297,7 +297,7 @@ public class McfParser {
   private BiConsumer<String, String> getErrCb() {
     BiConsumer<String, String> errCb =
         (counter, message) -> {
-          logCtx.addLog(Debug.Log.Level.LEVEL_ERROR, counter, message, lineNum);
+          logCtx.addEntry(Debug.Log.Level.LEVEL_ERROR, counter, message, lineNum);
         };
     return errCb;
   }

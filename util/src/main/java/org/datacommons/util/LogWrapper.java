@@ -31,7 +31,8 @@ public class LogWrapper {
 
   public LogWrapper(Debug.Log.Builder log, Path outputDir) {
     this.log = log;
-    this.logPath = Paths.get(outputDir.toString(), REPORT_JSON);
+    logPath = Paths.get(outputDir.toString(), REPORT_JSON);
+    logger.info("Writing log to {}", logPath.toAbsolutePath().normalize().toString());
     lastStatusAt = Instant.now();
     locationFile = "FileNotSet.idk";
   }
@@ -40,9 +41,9 @@ public class LogWrapper {
     this.locationFile = locationFile;
   }
 
-  public void addLog(Debug.Log.Level level, String counter, String message, long lno) {
+  public void addEntry(Debug.Log.Level level, String counter, String message, long lno) {
     if (log == null) return;
-    addLog(level, counter, message, lno, -1, null);
+    addEntry(level, counter, message, lno, -1, null);
   }
 
   public void incrementCounterBy(String counter, int incr) {
@@ -58,26 +59,26 @@ public class LogWrapper {
     Instant now = Instant.now();
     if (Duration.between(lastStatusAt, now).getSeconds() >= SECONDS_BETWEEN_STATUS) {
       logger.info("Processed {} {} of {};  {}.", count, thing, locationFile, summaryString());
-      writeLog(true);
+      persistLog(true);
       lastStatusAt = now;
     }
   }
 
-  public void writeLog(boolean silent) throws InvalidProtocolBufferException, IOException {
+  public void persistLog(boolean silent) throws InvalidProtocolBufferException, IOException {
     if (log.getLevelSummaryMap().isEmpty()) {
       if (!silent) logger.info("Found no warnings or errors!");
       return;
-    }
-    if (!silent) {
-      logger.info(
-          "Failures: {}.  Writing details to {}",
-          summaryString(),
-          logPath.toAbsolutePath().normalize().toString());
     }
     File logFile = new File(logPath.toString());
     // Without the unescaping something like 'Node' shows up as \u0027Node\u0027
     String jsonStr = StringEscapeUtils.unescapeJson(JsonFormat.printer().print(log.build()));
     FileUtils.writeStringToFile(logFile, jsonStr, StandardCharsets.UTF_8);
+    if (!silent) {
+      logger.info(
+          "Failures: {}.  Wrote details to {}",
+          summaryString(),
+          logPath.toAbsolutePath().normalize().toString());
+    }
   }
 
   public boolean loggedTooManyFailures() {
@@ -101,7 +102,7 @@ public class LogWrapper {
         + " warning(s)";
   }
 
-  private void addLog(
+  private void addEntry(
       Debug.Log.Level level, String counter, String message, long lno, long cno, String cname) {
     if (level == Debug.Log.Level.LEVEL_ERROR || level == Debug.Log.Level.LEVEL_FATAL) {
       String displayLevel = level.name().replace("LEVEL_", "");
