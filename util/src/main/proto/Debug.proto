@@ -27,10 +27,8 @@ message Log {
         // Line number in file, starting from 1.  Matches the row number in
         // CSV (since we do not handle newlines in values).
         optional int64 line_number = 2;
-        // Column number in line, starting from 1. Can be empty.
-        optional int64 column_number = 3;
-        // Column name set when the input is a CSV. Can be empty.
-        optional string column_name = 4;
+        // Column names set when the input is a CSV. Can be empty.
+        repeated string column_names = 3;
     }
 
     // Severity level of the message.

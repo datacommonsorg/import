@@ -16,15 +16,14 @@ package org.datacommons.util;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
-import static org.datacommons.util.McfParser.*;
+import static org.datacommons.util.McfParser.SplitAndStripArg;
+import static org.datacommons.util.McfParser.splitAndStripWithQuoteEscape;
 
 import com.google.protobuf.TextFormat;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.datacommons.proto.Mcf.McfGraph;
@@ -122,63 +121,6 @@ public class McfParserTest {
     McfGraph act = McfParser.parseTemplateMcfFile(mcfFile, null);
     McfGraph exp = expected("McfParserTest_Template.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
-  }
-
-  @Test
-  public void funcMergeGraphs() throws IOException {
-    List<McfGraph> graphs =
-        Arrays.asList(
-            parseInstanceMcfString(
-                "Node: MadCity\n"
-                    + "typeOf: dcs:City\n"
-                    + "dcid: dcid:dc/maa\n"
-                    + "overlapsWith: dcid:dc/456, dcid:dc/134\n"
-                    + "name: \"Madras\"\n",
-                true,
-                null),
-            parseInstanceMcfString(
-                "Node: MadCity\n"
-                    + "typeOf: dcs:Corporation\n"
-                    + "dcid: dcid:dc/maa\n"
-                    + "overlapsWith: dcid:dc/134\n"
-                    + "containedInPlace: dcid:dc/tn\n"
-                    + "name: \"Chennai\"\n",
-                true,
-                null),
-            parseInstanceMcfString(
-                "Node: MadState\n"
-                    + "typeOf: dcs:State\n"
-                    + "dcid: dcid:dc/tn\n"
-                    + "containedInPlace: dcid:country/india\n",
-                true,
-                null),
-            parseInstanceMcfString(
-                "Node: MadState\n"
-                    + "typeOf: dcs:State\n"
-                    + "dcid: dcid:dc/tn\n"
-                    + "capital: dcid:dc/maa\n"
-                    + "containedInPlace: dcid:dc/southindia\n",
-                true,
-                null));
-    // Output should be the second node which is the largest, with other PVs
-    // patched in, and all types included.
-    McfGraph want =
-        parseInstanceMcfString(
-            "Node: MadCity\n"
-                + "typeOf: dcs:City, dcs:Corporation\n"
-                + "dcid: dcid:dc/maa\n"
-                + "containedInPlace: dcid:dc/tn\n"
-                + "overlapsWith: dcid:dc/134, dcid:dc/456\n"
-                + "name: \"Chennai\", \"Madras\"\n"
-                + "\n"
-                + "Node: MadState\n"
-                + "typeOf: dcs:State\n"
-                + "dcid: dcid:dc/tn\n"
-                + "capital: dcid:dc/maa\n"
-                + "containedInPlace: dcid:country/india, dcid:dc/southindia\n",
-            true,
-            null);
-    assertThat(mergeGraphs(graphs)).ignoringRepeatedFieldOrder().isEqualTo(want);
   }
 
   private McfGraph actual(String file_name, boolean isResolved)

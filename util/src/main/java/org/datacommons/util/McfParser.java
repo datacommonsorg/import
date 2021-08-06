@@ -14,13 +14,6 @@
 
 package org.datacommons.util;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.util.*;
-import java.util.function.BiConsumer;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -30,8 +23,18 @@ import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.function.BiConsumer;
+
 // A parser for converting text in Instance or Template MCF format into the McfGraph proto.
-// TODO: Implement COMPLEX_VALUE parsing
 public class McfParser {
   private static final Logger logger = LogManager.getLogger(McfParser.class);
 
@@ -244,7 +247,7 @@ public class McfParser {
     while ((g = parseNextNode()) != null) {
       graphs.add(g);
     }
-    return mergeGraphs(graphs);
+    return McfUtil.mergeGraphs(graphs);
   }
 
   private void parseNodeName(String node) {
@@ -454,50 +457,40 @@ public class McfParser {
     return term;
   }
 
-  // Given a list of MCF graphs, merges common nodes and de-duplicates PVs.
-  public static McfGraph mergeGraphs(List<McfGraph> graphs) throws AssertionError {
-    if (graphs.isEmpty()) {
-      throw new AssertionError("mergeGraphs called with empty graphs!");
+  public static String parseComplexValue(
+      String mainNodeId,
+      McfGraph.PropertyValues mainNode,
+      String prop,
+      String complexValue,
+      McfGraph.PropertyValues.Builder complexNode,
+      LogWrapper logCtx) {
+    if (!complexValue.startsWith("[") || !complexValue.endsWith("]")) {
+      logCtx.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_UnenclosedComplexValue",
+              "Bad complex value '" + complexValue + "' not enclosed in brackets in " +
+                      "property " + prop + " in node " + mainNodeId, mainNode.getLocationsList());
+      return null;
     }
 
-    // node-id -> {prop -> vals}
-    HashMap<String, HashMap<String, HashSet<McfGraph.TypedValue>>> dedupMap = new HashMap<>();
-
-    for (McfGraph graph : graphs) {
-      for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
-        for (Map.Entry<String, McfGraph.Values> pv : node.getValue().getPvsMap().entrySet()) {
-          if (!dedupMap.containsKey(node.getKey())) {
-            dedupMap.put(node.getKey(), new HashMap<>());
-          }
-          if (!dedupMap.get(node.getKey()).containsKey(pv.getKey())) {
-            dedupMap.get(node.getKey()).put(pv.getKey(), new HashSet<>());
-          }
-          for (McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
-            dedupMap.get(node.getKey()).get(pv.getKey()).add(tv);
-          }
-        }
-      }
+    SplitAndStripArg arg;
+    arg.delimiter = ' ';
+    arg.includeEmpty = false;
+    arg.stripEnclosingQuotes = false;
+    // TODO: Passthru errCb
+    List<String> fields = splitAndStripWithQuoteEscape(complexValue, arg, null);
+    if (fields.isEmpty()) {
+      logCtx.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_MalformedComplexValueString",
+              "Found malformed complex value '" + complexValue + "' in property "
+                      + prop + " in " + "node " + mainNodeId, mainNode.getLocationsList());
+      return null;
     }
-
-    McfGraph.Builder result = McfGraph.newBuilder();
-    result.setType(graphs.get(0).getType());
-    for (Map.Entry<String, HashMap<String, HashSet<McfGraph.TypedValue>>> node :
-        dedupMap.entrySet()) {
-      McfGraph.PropertyValues.Builder pvs =
-          result
-              .getNodesOrDefault(node.getKey(), McfGraph.PropertyValues.getDefaultInstance())
-              .toBuilder();
-      for (Map.Entry<String, HashSet<McfGraph.TypedValue>> pv : node.getValue().entrySet()) {
-        McfGraph.Values.Builder tvs =
-            pvs.getPvsOrDefault(pv.getKey(), McfGraph.Values.getDefaultInstance()).toBuilder();
-        for (McfGraph.TypedValue tv : pv.getValue()) {
-          tvs.addTypedValues(tv);
-        }
-        pvs.putPvs(pv.getKey(), tvs.build());
-      }
-      result.putNodes(node.getKey(), pvs.build());
+    if (fields.size() != 2 && fields.size() != 3) {
+      logCtx.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_MalformedComplexValueParts",
+              "Complex value must have 2 or 3 components but '" + complexValue +
+                      "' in property " + prop + " in " + "node " + mainNodeId + " has " +
+                      fields.size(), mainNode.getLocationsList());
+      return null;
     }
-    return result.build();
+    boolean isRange = fields.size() == 3;
   }
 
   // Splits a string using the delimiter character. A field is not split if the delimiter is within
@@ -553,8 +546,10 @@ public class McfParser {
         }
       }
     } catch (IOException e) {
-      errCb.accept(
-          "StrSplit_ParserFailure", "Parsing failed on '" + orig + "' (" + arg.context + ")");
+      if (errCb != null) {
+        errCb.accept(
+            "StrSplit_ParserFailure", "Parsing failed on '" + orig + "' (" + arg.context + ")");
+      }
     }
     return splits;
   }

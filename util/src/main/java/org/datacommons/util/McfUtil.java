@@ -14,11 +14,9 @@
 
 package org.datacommons.util;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import org.datacommons.proto.Mcf;
+
+import java.util.*;
 
 // A container class of MCF related utilities.
 public class McfUtil {
@@ -47,6 +45,90 @@ public class McfUtil {
       result.append("\n");
     }
     return result.toString();
+  }
+
+  public static String getPropVal(Mcf.McfGraph.PropertyValues node, String property) {
+    String val = null;
+    try {
+      Mcf.McfGraph.Values vals = node.getPvsOrThrow(property);
+      if (vals.getTypedValuesCount() > 0) {
+        val = stripNamespace(vals.getTypedValues(0).getValue());
+      }
+    } catch (IllegalArgumentException ex) {
+      // Not having a value is not an error.
+    }
+    return val;
+  }
+
+  public static List<String> getPropVals(Mcf.McfGraph.PropertyValues node, String property) {
+    List<String> result = null;
+    try {
+      Mcf.McfGraph.Values vals = node.getPvsOrThrow(property);
+      if (vals.getTypedValuesCount() > 0) {
+        result = new ArrayList<>();
+        for (Mcf.McfGraph.TypedValue tv : vals.getTypedValuesList()) {
+          result.add(stripNamespace(tv.getValue()));
+        }
+      }
+    } catch (IllegalArgumentException ex) {
+      // Not having a value is not an error.
+    }
+    return result;
+  }
+
+  // Given a list of MCF graphs, merges common nodes and de-duplicates PVs.
+  public static Mcf.McfGraph mergeGraphs(List<Mcf.McfGraph> graphs) throws AssertionError {
+    if (graphs.isEmpty()) {
+      throw new AssertionError("mergeGraphs called with empty graphs!");
+    }
+
+    // node-id -> {prop -> vals}
+    HashMap<String, HashMap<String, HashSet<Mcf.McfGraph.TypedValue>>> dedupMap = new HashMap<>();
+
+    for (Mcf.McfGraph graph : graphs) {
+      for (Map.Entry<String, Mcf.McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
+        for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getValue().getPvsMap().entrySet()) {
+          if (!dedupMap.containsKey(node.getKey())) {
+            dedupMap.put(node.getKey(), new HashMap<>());
+          }
+          if (!dedupMap.get(node.getKey()).containsKey(pv.getKey())) {
+            dedupMap.get(node.getKey()).put(pv.getKey(), new HashSet<>());
+          }
+          for (Mcf.McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
+            dedupMap.get(node.getKey()).get(pv.getKey()).add(tv);
+          }
+        }
+      }
+    }
+
+    Mcf.McfGraph.Builder result = Mcf.McfGraph.newBuilder();
+    result.setType(graphs.get(0).getType());
+    for (Map.Entry<String, HashMap<String, HashSet<Mcf.McfGraph.TypedValue>>> node :
+        dedupMap.entrySet()) {
+      Mcf.McfGraph.PropertyValues.Builder pvs =
+          result
+              .getNodesOrDefault(node.getKey(), Mcf.McfGraph.PropertyValues.getDefaultInstance())
+              .toBuilder();
+      for (Map.Entry<String, HashSet<Mcf.McfGraph.TypedValue>> pv : node.getValue().entrySet()) {
+        Mcf.McfGraph.Values.Builder tvs =
+            pvs.getPvsOrDefault(pv.getKey(), Mcf.McfGraph.Values.getDefaultInstance()).toBuilder();
+        for (Mcf.McfGraph.TypedValue tv : pv.getValue()) {
+          tvs.addTypedValues(tv);
+        }
+        pvs.putPvs(pv.getKey(), tvs.build());
+      }
+      result.putNodes(node.getKey(), pvs.build());
+    }
+    return result.build();
+  }
+
+  private static String stripNamespace(String val) {
+    if (val.startsWith(Vocabulary.DCID_PREFIX)
+        || val.startsWith(Vocabulary.SCHEMA_ORG_PREFIX)
+        || val.startsWith(Vocabulary.DC_SCHEMA_PREFIX)) {
+      return val.substring(val.indexOf(Vocabulary.REFERENCE_DELIMITER) + 1);
+    }
+    return val;
   }
 
   private static String getValue(Mcf.McfGraph.TypedValue typedValue) {

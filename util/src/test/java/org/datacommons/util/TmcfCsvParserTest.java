@@ -71,7 +71,7 @@ public class TmcfCsvParserTest {
     while ((graph = parser.parseNextRow()) != null) {
       result.add(graph);
     }
-    return McfUtil.serializeMcfGraph(McfParser.mergeGraphs(result), true);
+    return McfUtil.serializeMcfGraph(McfUtil.mergeGraphs(result), true);
   }
 
   private String resourceToFile(String resource) throws URISyntaxException {

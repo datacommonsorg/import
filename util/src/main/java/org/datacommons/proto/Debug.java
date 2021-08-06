@@ -426,63 +426,52 @@ public final class Debug {
        *
        *
        * <pre>
-       * Column number in line, starting from 1. Can be empty.
+       * Column names set when the input is a CSV. Can be empty.
        * </pre>
        *
-       * <code>optional int64 column_number = 3;</code>
+       * <code>repeated string column_names = 3;</code>
        *
-       * @return Whether the columnNumber field is set.
+       * @return A list containing the columnNames.
        */
-      boolean hasColumnNumber();
+      java.util.List<java.lang.String> getColumnNamesList();
       /**
        *
        *
        * <pre>
-       * Column number in line, starting from 1. Can be empty.
+       * Column names set when the input is a CSV. Can be empty.
        * </pre>
        *
-       * <code>optional int64 column_number = 3;</code>
+       * <code>repeated string column_names = 3;</code>
        *
-       * @return The columnNumber.
+       * @return The count of columnNames.
        */
-      long getColumnNumber();
-
+      int getColumnNamesCount();
       /**
        *
        *
        * <pre>
-       * Column name set when the input is a CSV. Can be empty.
+       * Column names set when the input is a CSV. Can be empty.
        * </pre>
        *
-       * <code>optional string column_name = 4;</code>
+       * <code>repeated string column_names = 3;</code>
        *
-       * @return Whether the columnName field is set.
+       * @param index The index of the element to return.
+       * @return The columnNames at the given index.
        */
-      boolean hasColumnName();
+      java.lang.String getColumnNames(int index);
       /**
        *
        *
        * <pre>
-       * Column name set when the input is a CSV. Can be empty.
+       * Column names set when the input is a CSV. Can be empty.
        * </pre>
        *
-       * <code>optional string column_name = 4;</code>
+       * <code>repeated string column_names = 3;</code>
        *
-       * @return The columnName.
+       * @param index The index of the value to return.
+       * @return The bytes of the columnNames at the given index.
        */
-      java.lang.String getColumnName();
-      /**
-       *
-       *
-       * <pre>
-       * Column name set when the input is a CSV. Can be empty.
-       * </pre>
-       *
-       * <code>optional string column_name = 4;</code>
-       *
-       * @return The bytes for columnName.
-       */
-      com.google.protobuf.ByteString getColumnNameBytes();
+      com.google.protobuf.ByteString getColumnNamesBytes(int index);
     }
     /** Protobuf type {@code org.datacommons.proto.Log.Location} */
     public static final class Location extends com.google.protobuf.GeneratedMessageV3
@@ -497,7 +486,7 @@ public final class Debug {
 
       private Location() {
         file_ = "";
-        columnName_ = "";
+        columnNames_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       }
 
       @java.lang.Override
@@ -543,17 +532,14 @@ public final class Debug {
                   lineNumber_ = input.readInt64();
                   break;
                 }
-              case 24:
-                {
-                  bitField0_ |= 0x00000004;
-                  columnNumber_ = input.readInt64();
-                  break;
-                }
-              case 34:
+              case 26:
                 {
                   com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000008;
-                  columnName_ = bs;
+                  if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+                    columnNames_ = new com.google.protobuf.LazyStringArrayList();
+                    mutable_bitField0_ |= 0x00000004;
+                  }
+                  columnNames_.add(bs);
                   break;
                 }
               default:
@@ -571,6 +557,9 @@ public final class Debug {
           throw new com.google.protobuf.InvalidProtocolBufferException(e)
               .setUnfinishedMessage(this);
         } finally {
+          if (((mutable_bitField0_ & 0x00000004) != 0)) {
+            columnNames_ = columnNames_.getUnmodifiableView();
+          }
           this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
         }
@@ -691,98 +680,65 @@ public final class Debug {
         return lineNumber_;
       }
 
-      public static final int COLUMN_NUMBER_FIELD_NUMBER = 3;
-      private long columnNumber_;
+      public static final int COLUMN_NAMES_FIELD_NUMBER = 3;
+      private com.google.protobuf.LazyStringList columnNames_;
       /**
        *
        *
        * <pre>
-       * Column number in line, starting from 1. Can be empty.
+       * Column names set when the input is a CSV. Can be empty.
        * </pre>
        *
-       * <code>optional int64 column_number = 3;</code>
+       * <code>repeated string column_names = 3;</code>
        *
-       * @return Whether the columnNumber field is set.
+       * @return A list containing the columnNames.
        */
-      public boolean hasColumnNumber() {
-        return ((bitField0_ & 0x00000004) != 0);
+      public com.google.protobuf.ProtocolStringList getColumnNamesList() {
+        return columnNames_;
       }
       /**
        *
        *
        * <pre>
-       * Column number in line, starting from 1. Can be empty.
+       * Column names set when the input is a CSV. Can be empty.
        * </pre>
        *
-       * <code>optional int64 column_number = 3;</code>
+       * <code>repeated string column_names = 3;</code>
        *
-       * @return The columnNumber.
+       * @return The count of columnNames.
        */
-      public long getColumnNumber() {
-        return columnNumber_;
-      }
-
-      public static final int COLUMN_NAME_FIELD_NUMBER = 4;
-      private volatile java.lang.Object columnName_;
-      /**
-       *
-       *
-       * <pre>
-       * Column name set when the input is a CSV. Can be empty.
-       * </pre>
-       *
-       * <code>optional string column_name = 4;</code>
-       *
-       * @return Whether the columnName field is set.
-       */
-      public boolean hasColumnName() {
-        return ((bitField0_ & 0x00000008) != 0);
+      public int getColumnNamesCount() {
+        return columnNames_.size();
       }
       /**
        *
        *
        * <pre>
-       * Column name set when the input is a CSV. Can be empty.
+       * Column names set when the input is a CSV. Can be empty.
        * </pre>
        *
-       * <code>optional string column_name = 4;</code>
+       * <code>repeated string column_names = 3;</code>
        *
-       * @return The columnName.
+       * @param index The index of the element to return.
+       * @return The columnNames at the given index.
        */
-      public java.lang.String getColumnName() {
-        java.lang.Object ref = columnName_;
-        if (ref instanceof java.lang.String) {
-          return (java.lang.String) ref;
-        } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            columnName_ = s;
-          }
-          return s;
-        }
+      public java.lang.String getColumnNames(int index) {
+        return columnNames_.get(index);
       }
       /**
        *
        *
        * <pre>
-       * Column name set when the input is a CSV. Can be empty.
+       * Column names set when the input is a CSV. Can be empty.
        * </pre>
        *
-       * <code>optional string column_name = 4;</code>
+       * <code>repeated string column_names = 3;</code>
        *
-       * @return The bytes for columnName.
+       * @param index The index of the value to return.
+       * @return The bytes of the columnNames at the given index.
        */
-      public com.google.protobuf.ByteString getColumnNameBytes() {
-        java.lang.Object ref = columnName_;
-        if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-          columnName_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
+      public com.google.protobuf.ByteString getColumnNamesBytes(int index) {
+        return columnNames_.getByteString(index);
       }
 
       private byte memoizedIsInitialized = -1;
@@ -805,11 +761,8 @@ public final class Debug {
         if (((bitField0_ & 0x00000002) != 0)) {
           output.writeInt64(2, lineNumber_);
         }
-        if (((bitField0_ & 0x00000004) != 0)) {
-          output.writeInt64(3, columnNumber_);
-        }
-        if (((bitField0_ & 0x00000008) != 0)) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 4, columnName_);
+        for (int i = 0; i < columnNames_.size(); i++) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 3, columnNames_.getRaw(i));
         }
         unknownFields.writeTo(output);
       }
@@ -826,11 +779,13 @@ public final class Debug {
         if (((bitField0_ & 0x00000002) != 0)) {
           size += com.google.protobuf.CodedOutputStream.computeInt64Size(2, lineNumber_);
         }
-        if (((bitField0_ & 0x00000004) != 0)) {
-          size += com.google.protobuf.CodedOutputStream.computeInt64Size(3, columnNumber_);
-        }
-        if (((bitField0_ & 0x00000008) != 0)) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, columnName_);
+        {
+          int dataSize = 0;
+          for (int i = 0; i < columnNames_.size(); i++) {
+            dataSize += computeStringSizeNoTag(columnNames_.getRaw(i));
+          }
+          size += dataSize;
+          size += 1 * getColumnNamesList().size();
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -856,14 +811,7 @@ public final class Debug {
         if (hasLineNumber()) {
           if (getLineNumber() != other.getLineNumber()) return false;
         }
-        if (hasColumnNumber() != other.hasColumnNumber()) return false;
-        if (hasColumnNumber()) {
-          if (getColumnNumber() != other.getColumnNumber()) return false;
-        }
-        if (hasColumnName() != other.hasColumnName()) return false;
-        if (hasColumnName()) {
-          if (!getColumnName().equals(other.getColumnName())) return false;
-        }
+        if (!getColumnNamesList().equals(other.getColumnNamesList())) return false;
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -883,13 +831,9 @@ public final class Debug {
           hash = (37 * hash) + LINE_NUMBER_FIELD_NUMBER;
           hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getLineNumber());
         }
-        if (hasColumnNumber()) {
-          hash = (37 * hash) + COLUMN_NUMBER_FIELD_NUMBER;
-          hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getColumnNumber());
-        }
-        if (hasColumnName()) {
-          hash = (37 * hash) + COLUMN_NAME_FIELD_NUMBER;
-          hash = (53 * hash) + getColumnName().hashCode();
+        if (getColumnNamesCount() > 0) {
+          hash = (37 * hash) + COLUMN_NAMES_FIELD_NUMBER;
+          hash = (53 * hash) + getColumnNamesList().hashCode();
         }
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
@@ -1034,10 +978,8 @@ public final class Debug {
           bitField0_ = (bitField0_ & ~0x00000001);
           lineNumber_ = 0L;
           bitField0_ = (bitField0_ & ~0x00000002);
-          columnNumber_ = 0L;
+          columnNames_ = com.google.protobuf.LazyStringArrayList.EMPTY;
           bitField0_ = (bitField0_ & ~0x00000004);
-          columnName_ = "";
-          bitField0_ = (bitField0_ & ~0x00000008);
           return this;
         }
 
@@ -1075,14 +1017,11 @@ public final class Debug {
             result.lineNumber_ = lineNumber_;
             to_bitField0_ |= 0x00000002;
           }
-          if (((from_bitField0_ & 0x00000004) != 0)) {
-            result.columnNumber_ = columnNumber_;
-            to_bitField0_ |= 0x00000004;
+          if (((bitField0_ & 0x00000004) != 0)) {
+            columnNames_ = columnNames_.getUnmodifiableView();
+            bitField0_ = (bitField0_ & ~0x00000004);
           }
-          if (((from_bitField0_ & 0x00000008) != 0)) {
-            to_bitField0_ |= 0x00000008;
-          }
-          result.columnName_ = columnName_;
+          result.columnNames_ = columnNames_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -1143,12 +1082,14 @@ public final class Debug {
           if (other.hasLineNumber()) {
             setLineNumber(other.getLineNumber());
           }
-          if (other.hasColumnNumber()) {
-            setColumnNumber(other.getColumnNumber());
-          }
-          if (other.hasColumnName()) {
-            bitField0_ |= 0x00000008;
-            columnName_ = other.columnName_;
+          if (!other.columnNames_.isEmpty()) {
+            if (columnNames_.isEmpty()) {
+              columnNames_ = other.columnNames_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureColumnNamesIsMutable();
+              columnNames_.addAll(other.columnNames_);
+            }
             onChanged();
           }
           this.mergeUnknownFields(other.unknownFields);
@@ -1378,150 +1319,92 @@ public final class Debug {
           return this;
         }
 
-        private long columnNumber_;
-        /**
-         *
-         *
-         * <pre>
-         * Column number in line, starting from 1. Can be empty.
-         * </pre>
-         *
-         * <code>optional int64 column_number = 3;</code>
-         *
-         * @return Whether the columnNumber field is set.
-         */
-        public boolean hasColumnNumber() {
-          return ((bitField0_ & 0x00000004) != 0);
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Column number in line, starting from 1. Can be empty.
-         * </pre>
-         *
-         * <code>optional int64 column_number = 3;</code>
-         *
-         * @return The columnNumber.
-         */
-        public long getColumnNumber() {
-          return columnNumber_;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Column number in line, starting from 1. Can be empty.
-         * </pre>
-         *
-         * <code>optional int64 column_number = 3;</code>
-         *
-         * @param value The columnNumber to set.
-         * @return This builder for chaining.
-         */
-        public Builder setColumnNumber(long value) {
-          bitField0_ |= 0x00000004;
-          columnNumber_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Column number in line, starting from 1. Can be empty.
-         * </pre>
-         *
-         * <code>optional int64 column_number = 3;</code>
-         *
-         * @return This builder for chaining.
-         */
-        public Builder clearColumnNumber() {
-          bitField0_ = (bitField0_ & ~0x00000004);
-          columnNumber_ = 0L;
-          onChanged();
-          return this;
-        }
+        private com.google.protobuf.LazyStringList columnNames_ =
+            com.google.protobuf.LazyStringArrayList.EMPTY;
 
-        private java.lang.Object columnName_ = "";
-        /**
-         *
-         *
-         * <pre>
-         * Column name set when the input is a CSV. Can be empty.
-         * </pre>
-         *
-         * <code>optional string column_name = 4;</code>
-         *
-         * @return Whether the columnName field is set.
-         */
-        public boolean hasColumnName() {
-          return ((bitField0_ & 0x00000008) != 0);
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Column name set when the input is a CSV. Can be empty.
-         * </pre>
-         *
-         * <code>optional string column_name = 4;</code>
-         *
-         * @return The columnName.
-         */
-        public java.lang.String getColumnName() {
-          java.lang.Object ref = columnName_;
-          if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-            java.lang.String s = bs.toStringUtf8();
-            if (bs.isValidUtf8()) {
-              columnName_ = s;
-            }
-            return s;
-          } else {
-            return (java.lang.String) ref;
+        private void ensureColumnNamesIsMutable() {
+          if (!((bitField0_ & 0x00000004) != 0)) {
+            columnNames_ = new com.google.protobuf.LazyStringArrayList(columnNames_);
+            bitField0_ |= 0x00000004;
           }
         }
         /**
          *
          *
          * <pre>
-         * Column name set when the input is a CSV. Can be empty.
+         * Column names set when the input is a CSV. Can be empty.
          * </pre>
          *
-         * <code>optional string column_name = 4;</code>
+         * <code>repeated string column_names = 3;</code>
          *
-         * @return The bytes for columnName.
+         * @return A list containing the columnNames.
          */
-        public com.google.protobuf.ByteString getColumnNameBytes() {
-          java.lang.Object ref = columnName_;
-          if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-            columnName_ = b;
-            return b;
-          } else {
-            return (com.google.protobuf.ByteString) ref;
-          }
+        public com.google.protobuf.ProtocolStringList getColumnNamesList() {
+          return columnNames_.getUnmodifiableView();
         }
         /**
          *
          *
          * <pre>
-         * Column name set when the input is a CSV. Can be empty.
+         * Column names set when the input is a CSV. Can be empty.
          * </pre>
          *
-         * <code>optional string column_name = 4;</code>
+         * <code>repeated string column_names = 3;</code>
          *
-         * @param value The columnName to set.
+         * @return The count of columnNames.
+         */
+        public int getColumnNamesCount() {
+          return columnNames_.size();
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Column names set when the input is a CSV. Can be empty.
+         * </pre>
+         *
+         * <code>repeated string column_names = 3;</code>
+         *
+         * @param index The index of the element to return.
+         * @return The columnNames at the given index.
+         */
+        public java.lang.String getColumnNames(int index) {
+          return columnNames_.get(index);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Column names set when the input is a CSV. Can be empty.
+         * </pre>
+         *
+         * <code>repeated string column_names = 3;</code>
+         *
+         * @param index The index of the value to return.
+         * @return The bytes of the columnNames at the given index.
+         */
+        public com.google.protobuf.ByteString getColumnNamesBytes(int index) {
+          return columnNames_.getByteString(index);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Column names set when the input is a CSV. Can be empty.
+         * </pre>
+         *
+         * <code>repeated string column_names = 3;</code>
+         *
+         * @param index The index to set the value at.
+         * @param value The columnNames to set.
          * @return This builder for chaining.
          */
-        public Builder setColumnName(java.lang.String value) {
+        public Builder setColumnNames(int index, java.lang.String value) {
           if (value == null) {
             throw new NullPointerException();
           }
-          bitField0_ |= 0x00000008;
-          columnName_ = value;
+          ensureColumnNamesIsMutable();
+          columnNames_.set(index, value);
           onChanged();
           return this;
         }
@@ -1529,16 +1412,20 @@ public final class Debug {
          *
          *
          * <pre>
-         * Column name set when the input is a CSV. Can be empty.
+         * Column names set when the input is a CSV. Can be empty.
          * </pre>
          *
-         * <code>optional string column_name = 4;</code>
+         * <code>repeated string column_names = 3;</code>
          *
+         * @param value The columnNames to add.
          * @return This builder for chaining.
          */
-        public Builder clearColumnName() {
-          bitField0_ = (bitField0_ & ~0x00000008);
-          columnName_ = getDefaultInstance().getColumnName();
+        public Builder addColumnNames(java.lang.String value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureColumnNamesIsMutable();
+          columnNames_.add(value);
           onChanged();
           return this;
         }
@@ -1546,20 +1433,55 @@ public final class Debug {
          *
          *
          * <pre>
-         * Column name set when the input is a CSV. Can be empty.
+         * Column names set when the input is a CSV. Can be empty.
          * </pre>
          *
-         * <code>optional string column_name = 4;</code>
+         * <code>repeated string column_names = 3;</code>
          *
-         * @param value The bytes for columnName to set.
+         * @param values The columnNames to add.
          * @return This builder for chaining.
          */
-        public Builder setColumnNameBytes(com.google.protobuf.ByteString value) {
+        public Builder addAllColumnNames(java.lang.Iterable<java.lang.String> values) {
+          ensureColumnNamesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, columnNames_);
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Column names set when the input is a CSV. Can be empty.
+         * </pre>
+         *
+         * <code>repeated string column_names = 3;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearColumnNames() {
+          columnNames_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Column names set when the input is a CSV. Can be empty.
+         * </pre>
+         *
+         * <code>repeated string column_names = 3;</code>
+         *
+         * @param value The bytes of the columnNames to add.
+         * @return This builder for chaining.
+         */
+        public Builder addColumnNamesBytes(com.google.protobuf.ByteString value) {
           if (value == null) {
             throw new NullPointerException();
           }
-          bitField0_ |= 0x00000008;
-          columnName_ = value;
+          ensureColumnNamesIsMutable();
+          columnNames_.add(value);
           onChanged();
           return this;
         }
@@ -4853,26 +4775,25 @@ public final class Debug {
 
   static {
     java.lang.String[] descriptorData = {
-      "\n\013Debug.proto\022\025org.datacommons.proto\"\322\005\n"
+      "\n\013Debug.proto\022\025org.datacommons.proto\"\274\005\n"
           + "\003Log\0221\n\007entries\030\001 \003(\0132 .org.datacommons."
           + "proto.Log.Entry\022:\n\013counter_set\030\002 \001(\0132%.o"
           + "rg.datacommons.proto.Log.CounterSet\022C\n\rl"
           + "evel_summary\030\003 \003(\0132,.org.datacommons.pro"
-          + "to.Log.LevelSummaryEntry\032Y\n\010Location\022\014\n\004"
-          + "file\030\001 \001(\t\022\023\n\013line_number\030\002 \001(\003\022\025\n\rcolum"
-          + "n_number\030\003 \001(\003\022\023\n\013column_name\030\004 \001(\t\032\204\001\n\n"
-          + "CounterSet\022E\n\010counters\030\001 \003(\01323.org.datac"
-          + "ommons.proto.Log.CounterSet.CountersEntr"
-          + "y\032/\n\rCountersEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value"
-          + "\030\002 \001(\003:\0028\001\032\232\001\n\005Entry\022/\n\005level\030\001 \001(\0162 .or"
-          + "g.datacommons.proto.Log.Level\0225\n\010locatio"
-          + "n\030\002 \001(\0132#.org.datacommons.proto.Log.Loca"
-          + "tion\022\024\n\014user_message\030\003 \001(\t\022\023\n\013counter_ke"
-          + "y\030\004 \001(\t\0323\n\021LevelSummaryEntry\022\013\n\003key\030\001 \001("
-          + "\t\022\r\n\005value\030\002 \001(\003:\0028\001\"c\n\005Level\022\025\n\021LEVEL_U"
-          + "NSPECIFIED\020\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WA"
-          + "RNING\020\002\022\017\n\013LEVEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020"
-          + "\004"
+          + "to.Log.LevelSummaryEntry\032C\n\010Location\022\014\n\004"
+          + "file\030\001 \001(\t\022\023\n\013line_number\030\002 \001(\003\022\024\n\014colum"
+          + "n_names\030\003 \003(\t\032\204\001\n\nCounterSet\022E\n\010counters"
+          + "\030\001 \003(\01323.org.datacommons.proto.Log.Count"
+          + "erSet.CountersEntry\032/\n\rCountersEntry\022\013\n\003"
+          + "key\030\001 \001(\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\232\001\n\005Entry\022/"
+          + "\n\005level\030\001 \001(\0162 .org.datacommons.proto.Lo"
+          + "g.Level\0225\n\010location\030\002 \001(\0132#.org.datacomm"
+          + "ons.proto.Log.Location\022\024\n\014user_message\030\003"
+          + " \001(\t\022\023\n\013counter_key\030\004 \001(\t\0323\n\021LevelSummar"
+          + "yEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\003:\0028\001\"c"
+          + "\n\005Level\022\025\n\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLEVEL_"
+          + "INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LEVEL_ERROR"
+          + "\020\003\022\017\n\013LEVEL_FATAL\020\004"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -4890,7 +4811,7 @@ public final class Debug {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_Location_descriptor,
             new java.lang.String[] {
-              "File", "LineNumber", "ColumnNumber", "ColumnName",
+              "File", "LineNumber", "ColumnNames",
             });
     internal_static_org_datacommons_proto_Log_CounterSet_descriptor =
         internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(1);

@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
@@ -46,7 +47,19 @@ public class LogWrapper {
 
   public void addEntry(Debug.Log.Level level, String counter, String message, long lno) {
     if (log == null) return;
-    addEntry(level, counter, message, lno, -1, null);
+    addEntry(level, counter, message, locationFile, lno, null);
+  }
+
+  public void addEntry(
+      Debug.Log.Level level, String counter, String message, List<Debug.Log.Location> locations) {
+    if (log == null) return;
+    if (!locations.isEmpty()) {
+      Debug.Log.Location loc = locations.get(0);
+      addEntry(
+          level, counter, message, loc.getFile(), loc.getLineNumber(), loc.getColumnNamesList());
+    } else {
+      addEntry(level, counter, message, "FileNotSet.idk", -1, null);
+    }
   }
 
   public void incrementCounterBy(String counter, int incr) {
@@ -112,10 +125,15 @@ public class LogWrapper {
   }
 
   private void addEntry(
-      Debug.Log.Level level, String counter, String message, long lno, long cno, String cname) {
+      Debug.Log.Level level,
+      String counter,
+      String message,
+      String file,
+      long lno,
+      List<String> cnames) {
     if (level == Debug.Log.Level.LEVEL_ERROR || level == Debug.Log.Level.LEVEL_FATAL) {
       String displayLevel = level.name().replace("LEVEL_", "");
-      logger.error("{} {}:{} - {}: {}", displayLevel, locationFile, lno, counter, message);
+      logger.error("{} {}:{} - {}: {}", displayLevel, file, lno, counter, message);
     }
     String counterName = counter == null || counter.isEmpty() ? "MissingCounterName" : counter;
     long counterValue = log.getCounterSet().getCountersOrDefault(counterName, 0);
@@ -130,10 +148,11 @@ public class LogWrapper {
       e.setCounterKey(counterName);
 
       Debug.Log.Location.Builder l = e.getLocationBuilder();
-      l.setFile(locationFile);
+      l.setFile(file);
       l.setLineNumber(lno);
-      if (cno > 0) l.setColumnNumber(cno);
-      if (cname != null && !cname.isEmpty()) l.setColumnName(cname);
+      if (cnames != null && !cnames.isEmpty()) {
+        l.addAllColumnNames(cnames);
+      }
     }
   }
 }

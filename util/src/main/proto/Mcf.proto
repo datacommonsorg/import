@@ -39,7 +39,7 @@ message McfGraph {
 
     // Information identifying the location of this node in the source.
     // There can be multiple if PVs in this node are merged from different files.
-    repeated Log.Location location = 2;
+    repeated Log.Location locations = 2;
   }
 
   // Type of the sub-graph.
