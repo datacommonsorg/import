@@ -218,7 +218,7 @@ public class TmcfCsvParser {
               addLog(
                   Debug.Log.Level.LEVEL_WARNING,
                   "CSV_EmptyDcidReferences",
-                  "Empty dcid reference in property "
+                  "In dcid:{entity} reference, found {entity} to be empty for property "
                       + currentProp
                       + " of TMCF entity "
                       + templateEntity);

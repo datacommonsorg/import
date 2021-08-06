@@ -22,8 +22,13 @@ class DCTooManyFailuresException extends Exception {
 
 public class Processor {
   private static final Logger logger = LogManager.getLogger(Processor.class);
+  private LogWrapper logCtx;
 
-  public static void processNodes(Mcf.McfType type, File file, LogWrapper logCtx)
+  public Processor(LogWrapper logCtx) {
+    this.logCtx = logCtx;
+  }
+
+  public void processNodes(Mcf.McfType type, File file)
       throws IOException, DCTooManyFailuresException {
     long numNodesProcessed = 0;
     logger.debug("Checking {}", file.getName());
@@ -41,8 +46,8 @@ public class Processor {
     logger.info("Checked {} with {} nodes", file.getName(), numNodesProcessed);
   }
 
-  public static void processTables(
-      File tmcfFile, List<File> csvFiles, char delimiter, BufferedWriter writer, LogWrapper logCtx)
+  public void processTables(
+      File tmcfFile, List<File> csvFiles, char delimiter, BufferedWriter writer)
       throws IOException, DCTooManyFailuresException {
     logger.debug("TMCF " + tmcfFile.getName());
     for (File csvFile : csvFiles) {

@@ -78,16 +78,17 @@ class Lint implements Callable<Integer> {
           spec.commandLine(), "Please provide one .tmcf file with CSV/TSV files");
     }
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
+    Processor processor = new Processor(logCtx);
     Integer retVal = 0;
     try {
       for (File f : mcfFiles) {
-        Processor.processNodes(Mcf.McfType.INSTANCE_MCF, f, logCtx);
+        processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
       }
       if (!csvFiles.isEmpty()) {
-        Processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, null, logCtx);
+        processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, null);
       } else {
         for (File f : tmcfFiles) {
-          Processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f, logCtx);
+          processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f);
         }
       }
     } catch (DCTooManyFailuresException ex) {

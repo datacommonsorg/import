@@ -83,9 +83,10 @@ class GenMcf implements Callable<Integer> {
     BufferedWriter writer = new BufferedWriter(new FileWriter(outPath.toString()));
 
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
+    Processor processor = new Processor(logCtx);
     Integer retVal = 0;
     try {
-      Processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, writer, logCtx);
+      processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, writer);
     } catch (DCTooManyFailuresException ex) {
       // Regardless of the failures, we will dump the logCtx and exit.
       retVal = -1;
