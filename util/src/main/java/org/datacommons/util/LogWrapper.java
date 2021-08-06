@@ -28,14 +28,16 @@ public class LogWrapper {
   private Path logPath;
   private String locationFile;
   private Instant lastStatusAt;
+  private long countAtLastStatus;
 
   public LogWrapper(Debug.Log.Builder log, Path outputDir) {
     this.log = log;
     logPath = Paths.get(outputDir.toString(), REPORT_JSON);
     logger.info(
         "Report written periodically to {}", logPath.toAbsolutePath().normalize().toString());
-    lastStatusAt = Instant.now();
     locationFile = "FileNotSet.idk";
+    lastStatusAt = Instant.now();
+    countAtLastStatus = 0;
   }
 
   public void updateLocationFile(String locationFile) {
@@ -59,7 +61,12 @@ public class LogWrapper {
       throws InvalidProtocolBufferException, IOException {
     Instant now = Instant.now();
     if (Duration.between(lastStatusAt, now).getSeconds() >= SECONDS_BETWEEN_STATUS) {
-      logger.info("Processed {} {} of {};  {}.", count, thing, locationFile, summaryString());
+      logger.info(
+          "Processed {} {} of {};  {}.",
+          count - countAtLastStatus,
+          thing,
+          locationFile,
+          summaryString());
       persistLog(true);
       lastStatusAt = now;
     }
