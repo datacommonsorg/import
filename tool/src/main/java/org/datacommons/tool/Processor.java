@@ -1,16 +1,14 @@
 package org.datacommons.tool;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Mcf;
+import org.datacommons.util.*;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Mcf;
-import org.datacommons.util.LogWrapper;
-import org.datacommons.util.McfParser;
-import org.datacommons.util.McfUtil;
-import org.datacommons.util.TmcfCsvParser;
 
 class DCTooManyFailuresException extends Exception {
   public DCTooManyFailuresException() {}
@@ -37,11 +35,14 @@ public class Processor {
     McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
     Mcf.McfGraph n;
     while ((n = parser.parseNextNode()) != null) {
+      McfMutator mutator = new McfMutator(n, logCtx);
+      mutator.apply();
+
       numNodesProcessed++;
+      logCtx.provideStatus(numNodesProcessed, "nodes");
       if (logCtx.loggedTooManyFailures()) {
         throw new DCTooManyFailuresException("processNodes encountered too many failures");
       }
-      logCtx.provideStatus(numNodesProcessed, "nodes");
     }
     logger.info("Checked {} with {} nodes", file.getName(), numNodesProcessed);
   }
@@ -58,15 +59,18 @@ public class Processor {
       Mcf.McfGraph g;
       long numNodesProcessed = 0, numRowsProcessed = 0;
       while ((g = parser.parseNextRow()) != null) {
-        numNodesProcessed += g.getNodesCount();
-        numRowsProcessed++;
+        McfMutator mutator = new McfMutator(g, logCtx);
+        mutator.apply();
         if (writer != null) {
           writer.write(McfUtil.serializeMcfGraph(g, false));
         }
+
+        numNodesProcessed += g.getNodesCount();
+        numRowsProcessed++;
+        logCtx.provideStatus(numRowsProcessed, "rows");
         if (logCtx.loggedTooManyFailures()) {
           throw new DCTooManyFailuresException("processTables encountered too many failures");
         }
-        logCtx.provideStatus(numRowsProcessed, "rows");
       }
       logger.info(
           "Checked CSV {} ({} rows, {} nodes)",

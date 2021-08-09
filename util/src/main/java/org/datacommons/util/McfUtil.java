@@ -76,6 +76,15 @@ public class McfUtil {
     return result;
   }
 
+  public static Mcf.McfGraph.Values newValues(Mcf.ValueType type,
+                                              String value) {
+    Mcf.McfGraph.Values.Builder vals = Mcf.McfGraph.Values.newBuilder();
+    Mcf.McfGraph.TypedValue.Builder tv = vals.addTypedValuesBuilder();
+    tv.setType(type);
+    tv.setValue(value);
+    return vals.build();
+  }
+
   // Given a list of MCF graphs, merges common nodes and de-duplicates PVs.
   public static Mcf.McfGraph mergeGraphs(List<Mcf.McfGraph> graphs) throws AssertionError {
     if (graphs.isEmpty()) {

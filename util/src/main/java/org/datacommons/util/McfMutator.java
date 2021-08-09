@@ -19,15 +19,15 @@ public class McfMutator {
     this.logCtx = logCtx;
   }
 
-  public void applyTransformations() {
+  public void apply() {
     for (String nodeId : graph.getNodesMap().keySet()) {
       Mcf.McfGraph.PropertyValues node = graph.toBuilder().getNodesOrThrow(nodeId);
-      applyNodeTransformations(nodeId, node);
+      applyOnNode(nodeId, node);
       graph.toBuilder().putNodes(nodeId, node);
     }
   }
 
-  private boolean applyNodeTransformations(String nodeId, Mcf.McfGraph.PropertyValues node) {
+  private void applyOnNode(String nodeId, Mcf.McfGraph.PropertyValues node) {
     List<String> types = getPropVals(node, Vocabulary.TYPE_OF);
     if (types == null) {
       logCtx.addEntry(
@@ -35,7 +35,7 @@ public class McfMutator {
           "Schema_MissingTypeOf",
           "Missing typeOf value for node " + nodeId,
           node.getLocationsList());
-      return false;
+      return;
     }
     String statTypeVal = getPropVal(node, Vocabulary.STAT_TYPE);
     boolean isObs = false;
@@ -58,7 +58,7 @@ public class McfMutator {
                 "Schema_InvalidObsValue",
                 "Wrong inferred type " + tv.getType() + " for property " + prop + " in " + nodeId,
                 node.getLocationsList());
-            return false;
+            return;
           }
           tv.toBuilder().setValue(prepForDoubleConversion(tv.getValue()));
         }
@@ -66,18 +66,16 @@ public class McfMutator {
         if (tv.getType() == Mcf.ValueType.COMPLEX_VALUE) {
           Mcf.McfGraph.PropertyValues.Builder complexNode =
               Mcf.McfGraph.PropertyValues.newBuilder();
-          String dcid =
-              McfParser.parseComplexValue(nodeId, node, prop,
-                      tv.getValue(), complexNode, logCtx);
-          if (dcid != null) {
-            tv.toBuilder().setValue(dcid);
+          ComplexValueParser cvParser = new ComplexValueParser(nodeId, node, prop, tv.getValue(),
+                  complexNode, logCtx);
+          if (cvParser.parse()) {
+            tv.toBuilder().setValue(cvParser.getDcid());
             tv.toBuilder().setType(Mcf.ValueType.RESOLVED_REF);
-            graph.toBuilder().putNodes(dcid, complexNode.build());
+            graph.toBuilder().putNodes(cvParser.getDcid(), complexNode.build());
           }
         }
       }
     }
-    return true;
   }
 
   private static String prepForDoubleConversion(String v) {

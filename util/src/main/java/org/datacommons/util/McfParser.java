@@ -34,6 +34,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import static org.datacommons.proto.Mcf.ValueType.*;
+
 // A parser for converting text in Instance or Template MCF format into the McfGraph proto.
 public class McfParser {
   private static final Logger logger = LogManager.getLogger(McfParser.class);
@@ -372,7 +374,7 @@ public class McfParser {
       if (Vocabulary.isGlobalReference(val)) {
         // Strip the prefix and set the value.
         tval.setValue(val.substring(colon + 1));
-        tval.setType(Mcf.ValueType.RESOLVED_REF);
+        tval.setType(RESOLVED_REF);
         return;
       } else if (Vocabulary.isInternalReference(val)) {
         if (isResolved) {
@@ -396,7 +398,7 @@ public class McfParser {
       // prefix ("l:"), but we err on the side of user being careful about adding
       // local refs and accept the MCF without failing.
       tval.setValue(val);
-      tval.setType(Mcf.ValueType.RESOLVED_REF);
+      tval.setType(RESOLVED_REF);
       return;
     }
 
@@ -455,42 +457,6 @@ public class McfParser {
       term.value = value;
     }
     return term;
-  }
-
-  public static String parseComplexValue(
-      String mainNodeId,
-      McfGraph.PropertyValues mainNode,
-      String prop,
-      String complexValue,
-      McfGraph.PropertyValues.Builder complexNode,
-      LogWrapper logCtx) {
-    if (!complexValue.startsWith("[") || !complexValue.endsWith("]")) {
-      logCtx.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_UnenclosedComplexValue",
-              "Bad complex value '" + complexValue + "' not enclosed in brackets in " +
-                      "property " + prop + " in node " + mainNodeId, mainNode.getLocationsList());
-      return null;
-    }
-
-    SplitAndStripArg arg;
-    arg.delimiter = ' ';
-    arg.includeEmpty = false;
-    arg.stripEnclosingQuotes = false;
-    // TODO: Passthru errCb
-    List<String> fields = splitAndStripWithQuoteEscape(complexValue, arg, null);
-    if (fields.isEmpty()) {
-      logCtx.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_MalformedComplexValueString",
-              "Found malformed complex value '" + complexValue + "' in property "
-                      + prop + " in " + "node " + mainNodeId, mainNode.getLocationsList());
-      return null;
-    }
-    if (fields.size() != 2 && fields.size() != 3) {
-      logCtx.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_MalformedComplexValueParts",
-              "Complex value must have 2 or 3 components but '" + complexValue +
-                      "' in property " + prop + " in " + "node " + mainNodeId + " has " +
-                      fields.size(), mainNode.getLocationsList());
-      return null;
-    }
-    boolean isRange = fields.size() == 3;
   }
 
   // Splits a string using the delimiter character. A field is not split if the delimiter is within
@@ -563,7 +529,7 @@ public class McfParser {
     return val;
   }
 
-  private static boolean isNumber(String val) {
+  public static boolean isNumber(String val) {
     try {
       long l = Long.parseLong(val);
       return true;
