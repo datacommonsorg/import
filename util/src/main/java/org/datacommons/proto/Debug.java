@@ -2128,6 +2128,7 @@ public final class Debug {
        * <pre>
        * Column names set when the error corresponds to a column in the CSV.
        * The row info is in "location".
+       * TODO: Set this by plumbing it into McfParser.parseTypedValue().
        * </pre>
        *
        * <code>repeated string column_name = 5;</code>
@@ -2141,6 +2142,7 @@ public final class Debug {
        * <pre>
        * Column names set when the error corresponds to a column in the CSV.
        * The row info is in "location".
+       * TODO: Set this by plumbing it into McfParser.parseTypedValue().
        * </pre>
        *
        * <code>repeated string column_name = 5;</code>
@@ -2154,6 +2156,7 @@ public final class Debug {
        * <pre>
        * Column names set when the error corresponds to a column in the CSV.
        * The row info is in "location".
+       * TODO: Set this by plumbing it into McfParser.parseTypedValue().
        * </pre>
        *
        * <code>repeated string column_name = 5;</code>
@@ -2168,6 +2171,7 @@ public final class Debug {
        * <pre>
        * Column names set when the error corresponds to a column in the CSV.
        * The row info is in "location".
+       * TODO: Set this by plumbing it into McfParser.parseTypedValue().
        * </pre>
        *
        * <code>repeated string column_name = 5;</code>
@@ -2510,6 +2514,7 @@ public final class Debug {
        * <pre>
        * Column names set when the error corresponds to a column in the CSV.
        * The row info is in "location".
+       * TODO: Set this by plumbing it into McfParser.parseTypedValue().
        * </pre>
        *
        * <code>repeated string column_name = 5;</code>
@@ -2525,6 +2530,7 @@ public final class Debug {
        * <pre>
        * Column names set when the error corresponds to a column in the CSV.
        * The row info is in "location".
+       * TODO: Set this by plumbing it into McfParser.parseTypedValue().
        * </pre>
        *
        * <code>repeated string column_name = 5;</code>
@@ -2540,6 +2546,7 @@ public final class Debug {
        * <pre>
        * Column names set when the error corresponds to a column in the CSV.
        * The row info is in "location".
+       * TODO: Set this by plumbing it into McfParser.parseTypedValue().
        * </pre>
        *
        * <code>repeated string column_name = 5;</code>
@@ -2556,6 +2563,7 @@ public final class Debug {
        * <pre>
        * Column names set when the error corresponds to a column in the CSV.
        * The row info is in "location".
+       * TODO: Set this by plumbing it into McfParser.parseTypedValue().
        * </pre>
        *
        * <code>repeated string column_name = 5;</code>
@@ -3438,6 +3446,7 @@ public final class Debug {
          * <pre>
          * Column names set when the error corresponds to a column in the CSV.
          * The row info is in "location".
+         * TODO: Set this by plumbing it into McfParser.parseTypedValue().
          * </pre>
          *
          * <code>repeated string column_name = 5;</code>
@@ -3453,6 +3462,7 @@ public final class Debug {
          * <pre>
          * Column names set when the error corresponds to a column in the CSV.
          * The row info is in "location".
+         * TODO: Set this by plumbing it into McfParser.parseTypedValue().
          * </pre>
          *
          * <code>repeated string column_name = 5;</code>
@@ -3468,6 +3478,7 @@ public final class Debug {
          * <pre>
          * Column names set when the error corresponds to a column in the CSV.
          * The row info is in "location".
+         * TODO: Set this by plumbing it into McfParser.parseTypedValue().
          * </pre>
          *
          * <code>repeated string column_name = 5;</code>
@@ -3484,6 +3495,7 @@ public final class Debug {
          * <pre>
          * Column names set when the error corresponds to a column in the CSV.
          * The row info is in "location".
+         * TODO: Set this by plumbing it into McfParser.parseTypedValue().
          * </pre>
          *
          * <code>repeated string column_name = 5;</code>
@@ -3500,6 +3512,7 @@ public final class Debug {
          * <pre>
          * Column names set when the error corresponds to a column in the CSV.
          * The row info is in "location".
+         * TODO: Set this by plumbing it into McfParser.parseTypedValue().
          * </pre>
          *
          * <code>repeated string column_name = 5;</code>
@@ -3523,6 +3536,7 @@ public final class Debug {
          * <pre>
          * Column names set when the error corresponds to a column in the CSV.
          * The row info is in "location".
+         * TODO: Set this by plumbing it into McfParser.parseTypedValue().
          * </pre>
          *
          * <code>repeated string column_name = 5;</code>
@@ -3545,6 +3559,7 @@ public final class Debug {
          * <pre>
          * Column names set when the error corresponds to a column in the CSV.
          * The row info is in "location".
+         * TODO: Set this by plumbing it into McfParser.parseTypedValue().
          * </pre>
          *
          * <code>repeated string column_name = 5;</code>
@@ -3564,6 +3579,7 @@ public final class Debug {
          * <pre>
          * Column names set when the error corresponds to a column in the CSV.
          * The row info is in "location".
+         * TODO: Set this by plumbing it into McfParser.parseTypedValue().
          * </pre>
          *
          * <code>repeated string column_name = 5;</code>
@@ -3582,6 +3598,7 @@ public final class Debug {
          * <pre>
          * Column names set when the error corresponds to a column in the CSV.
          * The row info is in "location".
+         * TODO: Set this by plumbing it into McfParser.parseTypedValue().
          * </pre>
          *
          * <code>repeated string column_name = 5;</code>

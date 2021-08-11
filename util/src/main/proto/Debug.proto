@@ -55,6 +55,7 @@ message Log {
 
         // Column names set when the error corresponds to a column in the CSV.
         // The row info is in "location".
+        // TODO: Set this by plumbing it into McfParser.parseTypedValue().
         repeated string column_name = 5;
     }
 
