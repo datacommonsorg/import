@@ -19,15 +19,11 @@ import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static org.datacommons.util.McfParser.SplitAndStripArg;
 import static org.datacommons.util.McfParser.splitAndStripWithQuoteEscape;
 
-import com.google.protobuf.TextFormat;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
-import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfType;
 import org.junit.Test;
@@ -93,7 +89,9 @@ public class McfParserTest {
         IOUtils.toString(
             this.getClass().getResourceAsStream("McfParserTest_ResolvedGraph.mcf"),
             StandardCharsets.UTF_8);
-    McfGraph act = McfParser.parseInstanceMcfString(mcfString, true, newLogCtx("InMemory"));
+    McfGraph act =
+        McfParser.parseInstanceMcfString(
+            mcfString, true, TestUtil.newLogCtx("McfParserTest_ResolvedGraph.mcf"));
     McfGraph exp = expected("McfParserTest_ResolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
@@ -101,7 +99,7 @@ public class McfParserTest {
   @Test
   public void funcParseResolvedGraphAsFile() throws IOException, URISyntaxException {
     String mcfFile = this.getClass().getResource("McfParserTest_ResolvedGraph.mcf").getPath();
-    McfGraph act = McfParser.parseInstanceMcfFile(mcfFile, true, newLogCtx(mcfFile));
+    McfGraph act = McfParser.parseInstanceMcfFile(mcfFile, true, TestUtil.newLogCtx(mcfFile));
     McfGraph exp = expected("McfParserTest_ResolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
@@ -112,7 +110,9 @@ public class McfParserTest {
         IOUtils.toString(
             this.getClass().getResourceAsStream("McfParserTest_Template.tmcf"),
             StandardCharsets.UTF_8);
-    McfGraph act = McfParser.parseTemplateMcfString(mcfString, newLogCtx("InMemory"));
+    McfGraph act =
+        McfParser.parseTemplateMcfString(
+            mcfString, TestUtil.newLogCtx("McfParserTest_Template.tmcf"));
     McfGraph exp = expected("McfParserTest_Template.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
@@ -120,23 +120,16 @@ public class McfParserTest {
   @Test
   public void funcParseTemplateMcfAsFile() throws IOException, URISyntaxException {
     String mcfFile = this.getClass().getResource("McfParserTest_Template.tmcf").getPath();
-    McfGraph act = McfParser.parseTemplateMcfFile(mcfFile, newLogCtx(mcfFile));
+    McfGraph act = McfParser.parseTemplateMcfFile(mcfFile, TestUtil.newLogCtx(mcfFile));
     McfGraph exp = expected("McfParserTest_Template.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
-  }
-
-  private LogWrapper newLogCtx(String mcfFile) {
-    Debug.Log.Builder log = Debug.Log.newBuilder();
-    LogWrapper logCtx = new LogWrapper(log, Path.of("/tmp/report.html"));
-    logCtx.setLocationFile(mcfFile);
-    return logCtx;
   }
 
   private McfGraph actual(String file_name, boolean isResolved)
       throws IOException, URISyntaxException {
     String mcfFile = this.getClass().getResource(file_name).getPath();
     McfParser parser =
-        McfParser.init(McfType.INSTANCE_MCF, mcfFile, isResolved, newLogCtx(mcfFile));
+        McfParser.init(McfType.INSTANCE_MCF, mcfFile, isResolved, TestUtil.newLogCtx(mcfFile));
     McfGraph.Builder act = McfGraph.newBuilder();
     act.setType(McfType.INSTANCE_MCF);
     McfGraph n;
@@ -149,10 +142,7 @@ public class McfParserTest {
   }
 
   private McfGraph expected(String protoFile) throws IOException {
-    McfGraph.Builder expected = McfGraph.newBuilder();
-    String proto =
-        IOUtils.toString(this.getClass().getResourceAsStream(protoFile), StandardCharsets.UTF_8);
-    TextFormat.getParser().merge(new StringReader(proto), expected);
-    return expected.build();
+    return TestUtil.graph(
+        IOUtils.toString(this.getClass().getResourceAsStream(protoFile), StandardCharsets.UTF_8));
   }
 }

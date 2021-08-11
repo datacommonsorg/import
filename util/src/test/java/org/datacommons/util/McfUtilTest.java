@@ -20,8 +20,10 @@ import static org.datacommons.util.McfUtil.*;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 import org.datacommons.proto.Mcf;
 import org.junit.Test;
 
@@ -57,7 +59,8 @@ public class McfUtilTest {
             + "name: \"California\"\n"
             + "typeOf: dcid:State\n"
             + "\n";
-    Mcf.McfGraph graph = McfParser.parseInstanceMcfString(SERIALIZE_INPUT, false, null);
+    Mcf.McfGraph graph =
+        McfParser.parseInstanceMcfString(SERIALIZE_INPUT, false, TestUtil.newLogCtx("InMemory"));
     assertEquals(McfUtil.serializeMcfGraph(graph, true), output);
   }
 
@@ -72,7 +75,7 @@ public class McfUtilTest {
                     + "overlapsWith: dcid:dc/456, dcid:dc/134\n"
                     + "name: \"Madras\"\n",
                 true,
-                null),
+                TestUtil.newLogCtx("f1.mcf")),
             parseInstanceMcfString(
                 "Node: MadCity\n"
                     + "typeOf: dcs:Corporation\n"
@@ -81,14 +84,14 @@ public class McfUtilTest {
                     + "containedInPlace: dcid:dc/tn\n"
                     + "name: \"Chennai\"\n",
                 true,
-                null),
+                TestUtil.newLogCtx("f2.mcf")),
             parseInstanceMcfString(
                 "Node: MadState\n"
                     + "typeOf: dcs:State\n"
                     + "dcid: dcid:dc/tn\n"
                     + "containedInPlace: dcid:country/india\n",
                 true,
-                null),
+                TestUtil.newLogCtx("f3.mcf")),
             parseInstanceMcfString(
                 "Node: MadState\n"
                     + "typeOf: dcs:State\n"
@@ -96,7 +99,7 @@ public class McfUtilTest {
                     + "capital: dcid:dc/maa\n"
                     + "containedInPlace: dcid:dc/southindia\n",
                 true,
-                null));
+                TestUtil.newLogCtx("f4.mcf")));
     // Output should be the second node which is the largest, with other PVs
     // patched in, and all types included.
     Mcf.McfGraph want =
@@ -114,8 +117,19 @@ public class McfUtilTest {
                 + "capital: dcid:dc/maa\n"
                 + "containedInPlace: dcid:country/india, dcid:dc/southindia\n",
             true,
-            null);
-    assertThat(mergeGraphs(graphs)).ignoringRepeatedFieldOrder().isEqualTo(want);
+            TestUtil.newLogCtx("f5.mcf"));
+    Mcf.McfGraph act = mergeGraphs(graphs);
+    assertThat(TestUtil.trimLocations(act))
+        .ignoringRepeatedFieldOrder()
+        .isEqualTo(TestUtil.trimLocations(want));
+
+    // Match locations.
+    Mcf.McfGraph expLoc =
+        TestUtil.graph(
+            IOUtils.toString(
+                this.getClass().getResourceAsStream("McfUtilTest_MergedLocations.textproto"),
+                StandardCharsets.UTF_8));
+    assertThat(TestUtil.getLocations(act)).ignoringRepeatedFieldOrder().isEqualTo(expLoc);
   }
 
   @Test

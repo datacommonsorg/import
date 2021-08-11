@@ -17,6 +17,7 @@ package org.datacommons.util;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
 // A container class of MCF related utilities.
@@ -93,6 +94,8 @@ public class McfUtil {
 
     // node-id -> {prop -> vals}
     HashMap<String, HashMap<String, HashSet<Mcf.McfGraph.TypedValue>>> dedupMap = new HashMap<>();
+    // node-id -> locations
+    HashMap<String, List<Debug.Log.Location>> locationMap = new HashMap<>();
 
     for (Mcf.McfGraph graph : graphs) {
       for (Map.Entry<String, Mcf.McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
@@ -106,6 +109,12 @@ public class McfUtil {
           for (Mcf.McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
             dedupMap.get(node.getKey()).get(pv.getKey()).add(tv);
           }
+        }
+        for (Debug.Log.Location loc : node.getValue().getLocationsList()) {
+          if (!locationMap.containsKey(node.getKey())) {
+            locationMap.put(node.getKey(), new ArrayList<Debug.Log.Location>());
+          }
+          locationMap.get(node.getKey()).add(loc);
         }
       }
     }
@@ -125,6 +134,9 @@ public class McfUtil {
           tvs.addTypedValues(tv);
         }
         pvs.putPvs(pv.getKey(), tvs.build());
+      }
+      if (locationMap.containsKey(node.getKey())) {
+        pvs.addAllLocations(locationMap.get(node.getKey()));
       }
       result.putNodes(node.getKey(), pvs.build());
     }

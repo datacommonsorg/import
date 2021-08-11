@@ -32,6 +32,10 @@ nodes {
       key: "typeOf"
       value { typed_values { type: RESOLVED_REF value: "City" } }
     }
+    locations {
+      file: "McfParserTest_ResolvedGraph.mcf"
+      line_number: 6
+    }
   }
 }
 nodes {
@@ -49,6 +53,10 @@ nodes {
       key: "typeOf"
       value { typed_values { type: RESOLVED_REF value: "Country" } }
     }
+    locations {
+      file: "McfParserTest_ResolvedGraph.mcf"
+      line_number: 1
+    }
   }
 }
 nodes {
@@ -65,6 +73,10 @@ nodes {
     pvs {
       key: "name"
       value { typed_values { type: TEXT value: "HousingUnit" } }
+    }
+    locations {
+      file: "McfParserTest_ResolvedGraph.mcf"
+      line_number: 15
     }
   }
 }
