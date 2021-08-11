@@ -7,6 +7,8 @@ import java.util.List;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
+// Parse strings like [Years 20 30] and [LatLong 80S 100W] into new nodes for QuantityRange and
+// GeoCoordinates respectively.
 public class ComplexValueParser {
   public String mainNodeId;
   public Mcf.McfGraph.PropertyValues mainNode;
@@ -160,25 +162,34 @@ public class ComplexValueParser {
     }
 
     if (complexNode != null) {
-      Mcf.McfGraph.PropertyValues.Builder pv = Mcf.McfGraph.PropertyValues.newBuilder();
-      pv.putPvs(Vocabulary.DCID, McfUtil.newValues(RESOLVED_REF, dcid));
-      pv.putPvs(Vocabulary.NAME, McfUtil.newValues(TEXT, name));
+      complexNode.putPvs(Vocabulary.DCID, McfUtil.newValues(TEXT, dcid));
+      complexNode.putPvs(Vocabulary.NAME, McfUtil.newValues(TEXT, name));
       if (isLatLng) {
-        pv.putPvs(
+        complexNode.putPvs(
             Vocabulary.TYPE_OF, McfUtil.newValues(RESOLVED_REF, Vocabulary.GEO_COORDINATES_TYPE));
-        pv.putPvs(Vocabulary.LATITUDE, McfUtil.newValues(TEXT, fields.get(startIdx)));
-        pv.putPvs(Vocabulary.LONGITUDE, McfUtil.newValues(TEXT, fields.get(endIdx)));
+        complexNode.putPvs(Vocabulary.LATITUDE, McfUtil.newValues(TEXT, fields.get(startIdx)));
+        complexNode.putPvs(Vocabulary.LONGITUDE, McfUtil.newValues(TEXT, fields.get(endIdx)));
       } else {
         if (fields.size() == 2) {
-          pv.putPvs(Vocabulary.TYPE_OF, McfUtil.newValues(RESOLVED_REF, Vocabulary.QUANTITY_TYPE));
-          pv.putPvs(Vocabulary.VALUE, McfUtil.newValues(NUMBER, fields.get(valueIdx)));
+          complexNode.putPvs(
+              Vocabulary.TYPE_OF, McfUtil.newValues(RESOLVED_REF, Vocabulary.QUANTITY_TYPE));
+          complexNode.putPvs(Vocabulary.VALUE, McfUtil.newValues(NUMBER, fields.get(valueIdx)));
         } else {
-          pv.putPvs(
+          complexNode.putPvs(
               Vocabulary.TYPE_OF, McfUtil.newValues(RESOLVED_REF, Vocabulary.QUANTITY_RANGE_TYPE));
-          pv.putPvs(Vocabulary.START_VALUE, McfUtil.newValues(NUMBER, fields.get(startIdx)));
-          pv.putPvs(Vocabulary.END_VALUE, McfUtil.newValues(NUMBER, fields.get(endIdx)));
+          complexNode.putPvs(
+              Vocabulary.START_VALUE,
+              McfUtil.newValues(
+                  fields.get(startIdx).equals("-") ? TEXT : NUMBER, fields.get(startIdx)));
+          complexNode.putPvs(
+              Vocabulary.END_VALUE,
+              McfUtil.newValues(
+                  fields.get(endIdx).equals("-") ? TEXT : NUMBER, fields.get(endIdx)));
         }
-        pv.putPvs(Vocabulary.UNIT, McfUtil.newValues(RESOLVED_REF, unit));
+        complexNode.putPvs(Vocabulary.UNIT, McfUtil.newValues(RESOLVED_REF, unit));
+      }
+      if (mainNode.getLocationsCount() > 0) {
+        complexNode.addAllLocations(mainNode.getLocationsList());
       }
     }
     return true;

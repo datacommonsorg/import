@@ -17,6 +17,7 @@ package org.datacommons.util;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.regex.Pattern;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
@@ -46,6 +47,13 @@ public class McfUtil {
       result.append("\n");
     }
     return result.toString();
+  }
+
+  public static String serializeMcfNode(
+      String nodeId, Mcf.McfGraph.PropertyValues node, boolean sort) {
+    Mcf.McfGraph.Builder g = Mcf.McfGraph.newBuilder();
+    g.putNodes(nodeId, node);
+    return serializeMcfGraph(g.build(), sort);
   }
 
   public static String getPropVal(Mcf.McfGraph.PropertyValues node, String property) {
@@ -162,7 +170,7 @@ public class McfUtil {
   }
 
   // From https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatterBuilder.html
-  private static final List<String> DATE_FORMATS =
+  private static final List<String> DATE_PATTERNS =
       List.of(
           "yyyy",
           "yyyy-MM",
@@ -175,14 +183,22 @@ public class McfUtil {
           "yyyy-MM-dd'T'HH:mm:ss",
           "yyyy-MM-dd'T'HH:mm:ss.SSS",
           "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+  // The Java API does not match 20071, 2007101, so add these for compatibility with CPP
+  // implementation.
+  private static final List<String> EXTRA_DATE_PATTERNS = List.of("^\\d{5}$", "^\\d{7}$");
 
   public static boolean isValidISO8601Date(String dateValue) {
-    for (String pattern : DATE_FORMATS) {
+    for (String pattern : DATE_PATTERNS) {
       try {
         DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH).parse(dateValue);
         return true;
       } catch (DateTimeParseException ex) {
         // Pass through
+      }
+    }
+    for (String pattern : EXTRA_DATE_PATTERNS) {
+      if (Pattern.matches(pattern, dateValue)) {
+        return true;
       }
     }
     return false;

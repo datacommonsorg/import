@@ -9,18 +9,62 @@ import org.junit.Test;
 
 public class ComplexValueParserTest {
   @Test
-  public void testQuantitySuccess() {
-    assertEquals("Years10To20", toComplexValueSuccess("[dcs:Years 10 20]"));
-    assertEquals("Years10To20", toComplexValueSuccess("[10 20 Years]"));
+  public void testQuantityDcid() {
+    assertEquals("Years10To20", toComplexValueDcid("[dcs:Years 10 20]"));
+    assertEquals("Years10To20", toComplexValueDcid("[10 20 Years]"));
 
-    assertEquals("Years10Onwards", toComplexValueSuccess("[dcs:Years 10 -]"));
-    assertEquals("Years10Onwards", toComplexValueSuccess("[10 - dcs:Years]"));
+    assertEquals("Years10Onwards", toComplexValueDcid("[dcs:Years 10 -]"));
+    assertEquals("Years10Onwards", toComplexValueDcid("[10 - dcs:Years]"));
 
-    assertEquals("YearsUpto20", toComplexValueSuccess("[Years - 20]"));
-    assertEquals("YearsUpto20", toComplexValueSuccess("[- 20 dcs:Years]"));
+    assertEquals("YearsUpto20", toComplexValueDcid("[Years - 20]"));
+    assertEquals("YearsUpto20", toComplexValueDcid("[- 20 dcs:Years]"));
 
-    assertEquals("Years10", toComplexValueSuccess("[dcs:Years 10]"));
-    assertEquals("Years10", toComplexValueSuccess("[10 Years]"));
+    assertEquals("Years10", toComplexValueDcid("[dcs:Years 10]"));
+    assertEquals("Years10", toComplexValueDcid("[10 Years]"));
+  }
+
+  @Test
+  public void testQuantityNode() {
+    String exp =
+        "Node: Years10To20\n"
+            + "dcid: \"Years10To20\"\n"
+            + "endValue: 20\n"
+            + "name: \"Years 10 To 20\"\n"
+            + "startValue: 10\n"
+            + "typeOf: dcid:QuantityRange\n"
+            + "unit: dcid:Years\n\n";
+    assertEquals(toComplexValueMcf("[10 20 Years]"), exp);
+
+    exp =
+        "Node: Years10Onwards\n"
+            + "dcid: \"Years10Onwards\"\n"
+            + "endValue: \"-\"\n"
+            + "name: \"Years 10 Onwards\"\n"
+            + "startValue: 10\n"
+            + "typeOf: dcid:QuantityRange\n"
+            + "unit: dcid:Years\n\n";
+    assertEquals(toComplexValueMcf("[10 - dcs:Years]"), exp);
+
+    exp =
+        "Node: Years10\n"
+            + "dcid: \"Years10\"\n"
+            + "name: \"Years 10\"\n"
+            + "typeOf: dcid:Quantity\n"
+            + "unit: dcid:Years\n"
+            + "value: 10\n\n";
+    assertEquals(toComplexValueMcf("[10 Years]"), exp);
+  }
+
+  @Test
+  public void testLatLongNode() {
+    String exp =
+        "Node: latLong/3738848_-12208344\n"
+            + "dcid: \"latLong/3738848_-12208344\"\n"
+            + "latitude: \"37.3884812\"\n"
+            + "longitude: \"-122.0834373\"\n"
+            + "name: \"37.38848,-122.08344\"\n"
+            + "typeOf: dcid:GeoCoordinates\n\n";
+    assertEquals(toComplexValueMcf("[LatLong 37.3884812 -122.0834373]"), exp);
   }
 
   @Test
@@ -55,19 +99,19 @@ public class ComplexValueParserTest {
   }
 
   @Test
-  public void testLatLngSuccess() {
+  public void testLatLngDcid() {
     assertEquals(
-        "latLong/3738848_-12208344", toComplexValueSuccess("[LatLong 37.3884812 -122.0834373]"));
+        "latLong/3738848_-12208344", toComplexValueDcid("[LatLong 37.3884812 -122.0834373]"));
     assertEquals(
-        "latLong/3738848_-12208344", toComplexValueSuccess("[37.3884812 -122.0834373 latlong]"));
+        "latLong/3738848_-12208344", toComplexValueDcid("[37.3884812 -122.0834373 latlong]"));
 
     assertEquals(
-        "latLong/3738848_-12208344", toComplexValueSuccess("[LatLong 37.3884812N 122.0834373W]"));
+        "latLong/3738848_-12208344", toComplexValueDcid("[LatLong 37.3884812N 122.0834373W]"));
     assertEquals(
-        "latLong/-3738848_12208344", toComplexValueSuccess("[LatLong 37.3884812s 122.0834373e]"));
+        "latLong/-3738848_12208344", toComplexValueDcid("[LatLong 37.3884812s 122.0834373e]"));
 
     // Clarify that 12.21 and 122.1 values packed in DCID are different.
-    assertEquals("latLong/1221000_12210000", toComplexValueSuccess("[LatLong 12.21 122.1]"));
+    assertEquals("latLong/1221000_12210000", toComplexValueDcid("[LatLong 12.21 122.1]"));
   }
 
   @Test
@@ -93,12 +137,22 @@ public class ComplexValueParserTest {
     assertTrue(log.getEntries(0).getUserMessage().contains("Invalid longitude value"));
   }
 
-  private static String toComplexValueSuccess(String value) {
+  private static String toComplexValueDcid(String value) {
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), Path.of("/tmp"));
     Mcf.McfGraph.PropertyValues dummyNode = Mcf.McfGraph.PropertyValues.newBuilder().build();
     ComplexValueParser parser = new ComplexValueParser("n1", dummyNode, "p1", value, null, logCtx);
     assertTrue(parser.parse());
     return parser.getDcid();
+  }
+
+  private static String toComplexValueMcf(String value) {
+    LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), Path.of("/tmp"));
+    Mcf.McfGraph.PropertyValues dummyNode = Mcf.McfGraph.PropertyValues.newBuilder().build();
+    Mcf.McfGraph.PropertyValues.Builder newNode = Mcf.McfGraph.PropertyValues.newBuilder();
+    ComplexValueParser parser =
+        new ComplexValueParser("n1", dummyNode, "p1", value, newNode, logCtx);
+    assertTrue(parser.parse());
+    return McfUtil.serializeMcfNode(parser.getDcid(), newNode.build(), true);
   }
 
   private static Debug.Log toComplexValueFailure(String value) {

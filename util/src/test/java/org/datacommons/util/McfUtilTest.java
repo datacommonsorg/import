@@ -142,12 +142,14 @@ public class McfUtilTest {
     assertTrue(isValidISO8601Date("2017-01"));
     assertTrue(isValidISO8601Date("2017-1"));
     assertTrue(isValidISO8601Date("201701"));
+    assertTrue(isValidISO8601Date("20171"));
     assertFalse(isValidISO8601Date("2017-Jan"));
 
     // Year + Month + Day.
     assertTrue(isValidISO8601Date("2017-1-1"));
     assertTrue(isValidISO8601Date("2017-11-09"));
     assertTrue(isValidISO8601Date("20171109"));
+    assertTrue(isValidISO8601Date("2017119"));
     assertFalse(isValidISO8601Date("2017-Nov-09"));
 
     // Year + Month + Day + Time.
