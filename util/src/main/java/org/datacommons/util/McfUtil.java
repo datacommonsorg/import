@@ -34,13 +34,12 @@ public class McfUtil {
       List<String> lines = new ArrayList<>();
       for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getPvsMap().entrySet()) {
         if (pv.getValue().getTypedValuesCount() == 0) continue;
-        StringBuilder propStr = new StringBuilder();
-        propStr.append(pv.getKey() + ": " + getValue(pv.getValue().getTypedValues(0)));
-        for (int i = 1; i < pv.getValue().getTypedValuesCount(); i++) {
-          propStr.append(", " + getValue(pv.getValue().getTypedValues(i)));
+        List<String> vals = new ArrayList<>();
+        for (Mcf.McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
+          vals.add(getValue(tv));
         }
-        propStr.append("\n");
-        lines.add(propStr.toString());
+        if (sort) Collections.sort(vals);
+        lines.add(pv.getKey() + ": " + String.join(", ", vals) + "\n");
       }
       if (sort) Collections.sort(lines);
       result.append(String.join("", lines));

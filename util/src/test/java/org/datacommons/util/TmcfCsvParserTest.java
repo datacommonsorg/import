@@ -38,47 +38,40 @@ public class TmcfCsvParserTest {
 
   @Test
   public void statVarObs() throws IOException, URISyntaxException {
-    String want = mcf("TmcfCsvParser_SVO.mcf");
+    String want = TestUtil.mcf(resourceFile("TmcfCsvParser_SVO.mcf"));
     String got = run("TmcfCsvParser_SVO.tmcf", "TmcfCsvParser_SVO.csv");
     assertEquals(want, got);
   }
 
   @Test
   public void popObs() throws IOException, URISyntaxException {
-    String want = mcf("TmcfCsvParser_PopObs.mcf");
+    String want = TestUtil.mcf(resourceFile("TmcfCsvParser_PopObs.mcf"));
     String got = run("TmcfCsvParser_PopObs.tmcf", "TmcfCsvParser_PopObs.csv");
     assertEquals(want, got);
   }
 
   @Test
   public void multiValue() throws IOException, URISyntaxException {
-    String want = mcf("TmcfCsvParser_MultiValue.mcf");
+    String want = TestUtil.mcf(resourceFile("TmcfCsvParser_MultiValue.mcf"));
     String got = run("TmcfCsvParser_MultiValue.tmcf", "TmcfCsvParser_MultiValue.csv");
     assertEquals(want, got);
-  }
-
-  private String mcf(String fileName) throws URISyntaxException, IOException {
-    LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), Paths.get("."));
-    logCtx.setLocationFile(fileName);
-    return McfUtil.serializeMcfGraph(
-        McfParser.parseInstanceMcfFile(resourceToFile(fileName), false, logCtx), true);
   }
 
   private String run(String mcfFile, String csvFile) throws IOException, URISyntaxException {
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), Paths.get("."));
     logCtx.setLocationFile(csvFile);
     TmcfCsvParser parser =
-        TmcfCsvParser.init(resourceToFile(mcfFile), resourceToFile(csvFile), ',', logCtx);
+        TmcfCsvParser.init(resourceFile(mcfFile), resourceFile(csvFile), ',', logCtx);
     List<McfGraph> result = new ArrayList<>();
     McfGraph graph;
     while ((graph = parser.parseNextRow()) != null) {
       result.add(graph);
     }
-    return McfUtil.serializeMcfGraph(McfUtil.mergeGraphs(result), true);
+    graph = McfUtil.mergeGraphs(result);
+    return McfUtil.serializeMcfGraph(graph, true);
   }
 
-  private String resourceToFile(String resource) throws URISyntaxException {
-    String mcfFile = this.getClass().getResource(resource).toURI().toString();
-    return mcfFile.substring(/* skip 'file:' */ 5);
+  private String resourceFile(String resource) {
+    return this.getClass().getResource(resource).getPath();
   }
 }

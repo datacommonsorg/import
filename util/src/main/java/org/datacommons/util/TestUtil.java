@@ -23,6 +23,12 @@ public class TestUtil {
     return expected.build();
   }
 
+  public static String mcf(String filePath) throws IOException {
+    Mcf.McfGraph graph =
+        McfParser.parseInstanceMcfFile(filePath, false, TestUtil.newLogCtx(filePath));
+    return McfUtil.serializeMcfGraph(graph, true);
+  }
+
   public static Mcf.McfGraph getLocations(Mcf.McfGraph graph) {
     Mcf.McfGraph.Builder newGraph = Mcf.McfGraph.newBuilder();
     newGraph.setType(graph.getType());
