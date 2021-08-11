@@ -7,8 +7,19 @@ import java.util.List;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
-// Parse strings like [Years 20 30] and [LatLong 80S 100W] into new nodes for QuantityRange and
-// GeoCoordinates respectively.
+// Parse complex value strings into nodes.
+//
+// 1. a Quantity/QuantityRange value, coded as one of:
+//  [<unit> <val>]
+//  [<unit> <startval> <endval>]
+//  [<unit> - <endval>]
+//  [<unit> <startval> -]
+//
+// 2. a GeoCoordinates type, coded as one of:
+//  [LatLong <lat_value> <long_value>]
+//  [<lat_value> <long_value> LatLong]
+//
+// Computes the dcid and (optionally) populates the PVs for the complex node.
 public class ComplexValueParser {
   public String mainNodeId;
   public Mcf.McfGraph.PropertyValues mainNode;
