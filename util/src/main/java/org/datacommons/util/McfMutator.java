@@ -1,15 +1,14 @@
 package org.datacommons.util;
 
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
+import static org.datacommons.util.McfUtil.getPropVals;
 
 import java.util.List;
 import java.util.Map;
-
-import static org.datacommons.util.McfUtil.getPropVal;
-import static org.datacommons.util.McfUtil.getPropVals;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
 
 // Does additional transformations on parsed MCF nodes, like expanding ComplexValues into nodes.
+// TODO: Pass in a separate SV nodes so we can validate SVObs better.
 public class McfMutator {
   private Mcf.McfGraph graph;
   private LogWrapper logCtx;
@@ -37,21 +36,17 @@ public class McfMutator {
           node.getLocationsList());
       return;
     }
-    String statTypeVal = getPropVal(node, Vocabulary.STAT_TYPE);
-    boolean isObs = false;
-    boolean isStatVarObs = false;
+    boolean isLegacyObs = false;
     for (String type : types) {
-      if (Vocabulary.isObservation(type)) {
-        isStatVarObs = Vocabulary.isStatVarObs(type);
-        isObs = true;
+      if (Vocabulary.isLegacyObservation(type)) {
+        isLegacyObs = true;
         break;
       }
     }
     for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getPvsMap().entrySet()) {
       String prop = pv.getKey();
       for (Mcf.McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
-        if ((isStatVarObs && statTypeVal != null && Vocabulary.isStatValueProperty(statTypeVal))
-            || (isObs && Vocabulary.isStatValueProperty(prop))) {
+        if (isLegacyObs && Vocabulary.isStatValueProperty(prop)) {
           if (tv.getType() != Mcf.ValueType.NUMBER && tv.getType() != Mcf.ValueType.TEXT) {
             logCtx.addEntry(
                 Debug.Log.Level.LEVEL_ERROR,
@@ -66,8 +61,8 @@ public class McfMutator {
         if (tv.getType() == Mcf.ValueType.COMPLEX_VALUE) {
           Mcf.McfGraph.PropertyValues.Builder complexNode =
               Mcf.McfGraph.PropertyValues.newBuilder();
-          ComplexValueParser cvParser = new ComplexValueParser(nodeId, node, prop, tv.getValue(),
-                  complexNode, logCtx);
+          ComplexValueParser cvParser =
+              new ComplexValueParser(nodeId, node, prop, tv.getValue(), complexNode, logCtx);
           if (cvParser.parse()) {
             tv.toBuilder().setValue(cvParser.getDcid());
             tv.toBuilder().setType(Mcf.ValueType.RESOLVED_REF);

@@ -1,14 +1,13 @@
 package org.datacommons.tool;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Mcf;
-import org.datacommons.util.*;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Mcf;
+import org.datacommons.util.*;
 
 class DCTooManyFailuresException extends Exception {
   public DCTooManyFailuresException() {}
@@ -38,6 +37,9 @@ public class Processor {
       McfMutator mutator = new McfMutator(n, logCtx);
       mutator.apply();
 
+      McfChecker checker = new McfChecker(n, logCtx);
+      checker.check();
+
       numNodesProcessed++;
       logCtx.provideStatus(numNodesProcessed, "nodes");
       if (logCtx.loggedTooManyFailures()) {
@@ -61,6 +63,10 @@ public class Processor {
       while ((g = parser.parseNextRow()) != null) {
         McfMutator mutator = new McfMutator(g, logCtx);
         mutator.apply();
+
+        McfChecker checker = new McfChecker(g, logCtx);
+        checker.check();
+
         if (writer != null) {
           writer.write(McfUtil.serializeMcfGraph(g, false));
         }

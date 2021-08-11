@@ -14,10 +14,10 @@
 
 package org.datacommons.util;
 
+import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static org.datacommons.util.McfParser.parseInstanceMcfString;
 import static org.datacommons.util.McfUtil.mergeGraphs;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.util.Arrays;

@@ -14,9 +14,10 @@
 
 package org.datacommons.util;
 
-import org.datacommons.proto.Mcf;
-
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import org.datacommons.proto.Mcf;
 
 // A container class of MCF related utilities.
 public class McfUtil {
@@ -76,8 +77,7 @@ public class McfUtil {
     return result;
   }
 
-  public static Mcf.McfGraph.Values newValues(Mcf.ValueType type,
-                                              String value) {
+  public static Mcf.McfGraph.Values newValues(Mcf.ValueType type, String value) {
     Mcf.McfGraph.Values.Builder vals = Mcf.McfGraph.Values.newBuilder();
     Mcf.McfGraph.TypedValue.Builder tv = vals.addTypedValuesBuilder();
     tv.setType(type);
@@ -148,5 +148,31 @@ public class McfUtil {
     } else {
       return typedValue.getValue();
     }
+  }
+
+  // From https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html
+  private static final List<String> DATE_FORMATS =
+      List.of(
+          "yyyy",
+          "yyyy-MM",
+          "yyyyMM",
+          "yyyy-MM-dd",
+          "yyyyMMdd",
+          "yyyy-MM-dd'T'HH:mm",
+          "yyyy-MM-dd'T'HH:mm:ss",
+          "yyyy-MM-dd'T'HH:mm:ss.SSS",
+          "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+
+  public static boolean isValidIS8601Date(String dateValue) {
+    for (String format : DATE_FORMATS) {
+      SimpleDateFormat parser = new SimpleDateFormat(format, Locale.ENGLISH);
+      try {
+        parser.parse(dateValue);
+        return true;
+      } catch (ParseException e) {
+        // Try the next format.
+      }
+    }
+    return false;
   }
 }

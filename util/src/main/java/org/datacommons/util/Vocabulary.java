@@ -201,8 +201,8 @@ public final class Vocabulary {
     return type.equals(STAT_VAR_GROUP_TYPE);
   }
 
-  public static boolean isObservation(String type) {
-    return type.endsWith(LEGACY_OBSERVATION_TYPE_SUFFIX) || type.equals(STAT_VAR_OBSERVATION_TYPE);
+  public static boolean isLegacyObservation(String type) {
+    return type.endsWith(LEGACY_OBSERVATION_TYPE_SUFFIX) && !type.equals(STAT_VAR_OBSERVATION_TYPE);
   }
 
   public static boolean isPopulation(String type) {
