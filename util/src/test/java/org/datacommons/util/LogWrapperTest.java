@@ -20,10 +20,10 @@ public class LogWrapperTest {
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
     // First use LogWrapper to update logCtx
     LogWrapper lw = new LogWrapper(logCtx, testFolder.getRoot().toPath());
-    lw.updateLocationFile("TestInput.mcf");
+    lw.setLocationFile("TestInput.mcf");
     lw.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_NoColonFound", "Missing Colon", 10);
     lw.addEntry(Debug.Log.Level.LEVEL_WARNING, "MCF_EmptyValue", "Empty value", 20);
-    lw.updateLocationFile("TestInput.csv");
+    lw.setLocationFile("TestInput.csv");
     lw.incrementCounterBy("CSV_GeneralStats", 42);
     lw.addEntry(Debug.Log.Level.LEVEL_FATAL, "CSV_FoundABomb", "Found a Time Bomb", 30);
 

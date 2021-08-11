@@ -636,6 +636,46 @@ public final class Mcf {
        * @return The bytes for value.
        */
       com.google.protobuf.ByteString getValueBytes();
+
+      /**
+       *
+       *
+       * <pre>
+       * Debug info.  If this value came from a CSV, then the corresponding column name.
+       * The row number is within locations in PropertyValues.
+       * </pre>
+       *
+       * <code>optional string column = 3;</code>
+       *
+       * @return Whether the column field is set.
+       */
+      boolean hasColumn();
+      /**
+       *
+       *
+       * <pre>
+       * Debug info.  If this value came from a CSV, then the corresponding column name.
+       * The row number is within locations in PropertyValues.
+       * </pre>
+       *
+       * <code>optional string column = 3;</code>
+       *
+       * @return The column.
+       */
+      java.lang.String getColumn();
+      /**
+       *
+       *
+       * <pre>
+       * Debug info.  If this value came from a CSV, then the corresponding column name.
+       * The row number is within locations in PropertyValues.
+       * </pre>
+       *
+       * <code>optional string column = 3;</code>
+       *
+       * @return The bytes for column.
+       */
+      com.google.protobuf.ByteString getColumnBytes();
     }
     /**
      *
@@ -659,6 +699,7 @@ public final class Mcf {
       private TypedValue() {
         type_ = 0;
         value_ = "";
+        column_ = "";
       }
 
       @java.lang.Override
@@ -710,6 +751,13 @@ public final class Mcf {
                   com.google.protobuf.ByteString bs = input.readBytes();
                   bitField0_ |= 0x00000002;
                   value_ = bs;
+                  break;
+                }
+              case 26:
+                {
+                  com.google.protobuf.ByteString bs = input.readBytes();
+                  bitField0_ |= 0x00000004;
+                  column_ = bs;
                   break;
                 }
               default:
@@ -815,6 +863,72 @@ public final class Mcf {
         }
       }
 
+      public static final int COLUMN_FIELD_NUMBER = 3;
+      private volatile java.lang.Object column_;
+      /**
+       *
+       *
+       * <pre>
+       * Debug info.  If this value came from a CSV, then the corresponding column name.
+       * The row number is within locations in PropertyValues.
+       * </pre>
+       *
+       * <code>optional string column = 3;</code>
+       *
+       * @return Whether the column field is set.
+       */
+      public boolean hasColumn() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Debug info.  If this value came from a CSV, then the corresponding column name.
+       * The row number is within locations in PropertyValues.
+       * </pre>
+       *
+       * <code>optional string column = 3;</code>
+       *
+       * @return The column.
+       */
+      public java.lang.String getColumn() {
+        java.lang.Object ref = column_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            column_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Debug info.  If this value came from a CSV, then the corresponding column name.
+       * The row number is within locations in PropertyValues.
+       * </pre>
+       *
+       * <code>optional string column = 3;</code>
+       *
+       * @return The bytes for column.
+       */
+      public com.google.protobuf.ByteString getColumnBytes() {
+        java.lang.Object ref = column_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          column_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
       private byte memoizedIsInitialized = -1;
 
       @java.lang.Override
@@ -835,6 +949,9 @@ public final class Mcf {
         if (((bitField0_ & 0x00000002) != 0)) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 2, value_);
         }
+        if (((bitField0_ & 0x00000004) != 0)) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 3, column_);
+        }
         unknownFields.writeTo(output);
       }
 
@@ -849,6 +966,9 @@ public final class Mcf {
         }
         if (((bitField0_ & 0x00000002) != 0)) {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, value_);
+        }
+        if (((bitField0_ & 0x00000004) != 0)) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, column_);
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -874,6 +994,10 @@ public final class Mcf {
         if (hasValue()) {
           if (!getValue().equals(other.getValue())) return false;
         }
+        if (hasColumn() != other.hasColumn()) return false;
+        if (hasColumn()) {
+          if (!getColumn().equals(other.getColumn())) return false;
+        }
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -892,6 +1016,10 @@ public final class Mcf {
         if (hasValue()) {
           hash = (37 * hash) + VALUE_FIELD_NUMBER;
           hash = (53 * hash) + getValue().hashCode();
+        }
+        if (hasColumn()) {
+          hash = (37 * hash) + COLUMN_FIELD_NUMBER;
+          hash = (53 * hash) + getColumn().hashCode();
         }
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
@@ -1044,6 +1172,8 @@ public final class Mcf {
           bitField0_ = (bitField0_ & ~0x00000001);
           value_ = "";
           bitField0_ = (bitField0_ & ~0x00000002);
+          column_ = "";
+          bitField0_ = (bitField0_ & ~0x00000004);
           return this;
         }
 
@@ -1081,6 +1211,10 @@ public final class Mcf {
             to_bitField0_ |= 0x00000002;
           }
           result.value_ = value_;
+          if (((from_bitField0_ & 0x00000004) != 0)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.column_ = column_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -1140,6 +1274,11 @@ public final class Mcf {
           if (other.hasValue()) {
             bitField0_ |= 0x00000002;
             value_ = other.value_;
+            onChanged();
+          }
+          if (other.hasColumn()) {
+            bitField0_ |= 0x00000004;
+            column_ = other.column_;
             onChanged();
           }
           this.mergeUnknownFields(other.unknownFields);
@@ -1302,6 +1441,133 @@ public final class Mcf {
           }
           bitField0_ |= 0x00000002;
           value_ = value;
+          onChanged();
+          return this;
+        }
+
+        private java.lang.Object column_ = "";
+        /**
+         *
+         *
+         * <pre>
+         * Debug info.  If this value came from a CSV, then the corresponding column name.
+         * The row number is within locations in PropertyValues.
+         * </pre>
+         *
+         * <code>optional string column = 3;</code>
+         *
+         * @return Whether the column field is set.
+         */
+        public boolean hasColumn() {
+          return ((bitField0_ & 0x00000004) != 0);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info.  If this value came from a CSV, then the corresponding column name.
+         * The row number is within locations in PropertyValues.
+         * </pre>
+         *
+         * <code>optional string column = 3;</code>
+         *
+         * @return The column.
+         */
+        public java.lang.String getColumn() {
+          java.lang.Object ref = column_;
+          if (!(ref instanceof java.lang.String)) {
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              column_ = s;
+            }
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info.  If this value came from a CSV, then the corresponding column name.
+         * The row number is within locations in PropertyValues.
+         * </pre>
+         *
+         * <code>optional string column = 3;</code>
+         *
+         * @return The bytes for column.
+         */
+        public com.google.protobuf.ByteString getColumnBytes() {
+          java.lang.Object ref = column_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            column_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info.  If this value came from a CSV, then the corresponding column name.
+         * The row number is within locations in PropertyValues.
+         * </pre>
+         *
+         * <code>optional string column = 3;</code>
+         *
+         * @param value The column to set.
+         * @return This builder for chaining.
+         */
+        public Builder setColumn(java.lang.String value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          bitField0_ |= 0x00000004;
+          column_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info.  If this value came from a CSV, then the corresponding column name.
+         * The row number is within locations in PropertyValues.
+         * </pre>
+         *
+         * <code>optional string column = 3;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearColumn() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          column_ = getDefaultInstance().getColumn();
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info.  If this value came from a CSV, then the corresponding column name.
+         * The row number is within locations in PropertyValues.
+         * </pre>
+         *
+         * <code>optional string column = 3;</code>
+         *
+         * @param value The bytes for column to set.
+         * @return This builder for chaining.
+         */
+        public Builder setColumnBytes(com.google.protobuf.ByteString value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          bitField0_ |= 0x00000004;
+          column_ = value;
           onChanged();
           return this;
         }
@@ -4611,27 +4877,28 @@ public final class Mcf {
   static {
     java.lang.String[] descriptorData = {
       "\n\tMcf.proto\022\025org.datacommons.proto\032\013Debu"
-          + "g.proto\"\335\004\n\010McfGraph\022:\n\004type\030\001 \001(\0162\036.org"
+          + "g.proto\"\355\004\n\010McfGraph\022:\n\004type\030\001 \001(\0162\036.org"
           + ".datacommons.proto.McfType:\014INSTANCE_MCF"
           + "\0229\n\005nodes\030\002 \003(\0132*.org.datacommons.proto."
-          + "McfGraph.NodesEntry\032K\n\nTypedValue\022.\n\004typ"
+          + "McfGraph.NodesEntry\032[\n\nTypedValue\022.\n\004typ"
           + "e\030\001 \001(\0162 .org.datacommons.proto.ValueTyp"
-          + "e\022\r\n\005value\030\002 \001(\t\032J\n\006Values\022@\n\014typed_valu"
-          + "es\030\001 \003(\0132*.org.datacommons.proto.McfGrap"
-          + "h.TypedValue\032\342\001\n\016PropertyValues\022D\n\003pvs\030\001"
-          + " \003(\01327.org.datacommons.proto.McfGraph.Pr"
-          + "opertyValues.PvsEntry\0226\n\tlocations\030\002 \003(\013"
-          + "2#.org.datacommons.proto.Log.Location\032R\n"
-          + "\010PvsEntry\022\013\n\003key\030\001 \001(\t\0225\n\005value\030\002 \001(\0132&."
-          + "org.datacommons.proto.McfGraph.Values:\0028"
-          + "\001\032\\\n\nNodesEntry\022\013\n\003key\030\001 \001(\t\022=\n\005value\030\002 "
-          + "\001(\0132..org.datacommons.proto.McfGraph.Pro"
-          + "pertyValues:\0028\001*C\n\007McfType\022\024\n\020UNKNOWN_MC"
-          + "F_TYPE\020\000\022\020\n\014INSTANCE_MCF\020\001\022\020\n\014TEMPLATE_M"
-          + "CF\020\002*\226\001\n\tValueType\022\026\n\022UNKNOWN_VALUE_TYPE"
-          + "\020\000\022\010\n\004TEXT\020\001\022\n\n\006NUMBER\020\002\022\022\n\016UNRESOLVED_R"
-          + "EF\020\003\022\020\n\014RESOLVED_REF\020\004\022\021\n\rCOMPLEX_VALUE\020"
-          + "\005\022\020\n\014TABLE_COLUMN\020\006\022\020\n\014TABLE_ENTITY\020\007"
+          + "e\022\r\n\005value\030\002 \001(\t\022\016\n\006column\030\003 \001(\t\032J\n\006Valu"
+          + "es\022@\n\014typed_values\030\001 \003(\0132*.org.datacommo"
+          + "ns.proto.McfGraph.TypedValue\032\342\001\n\016Propert"
+          + "yValues\022D\n\003pvs\030\001 \003(\01327.org.datacommons.p"
+          + "roto.McfGraph.PropertyValues.PvsEntry\0226\n"
+          + "\tlocations\030\002 \003(\0132#.org.datacommons.proto"
+          + ".Log.Location\032R\n\010PvsEntry\022\013\n\003key\030\001 \001(\t\0225"
+          + "\n\005value\030\002 \001(\0132&.org.datacommons.proto.Mc"
+          + "fGraph.Values:\0028\001\032\\\n\nNodesEntry\022\013\n\003key\030\001"
+          + " \001(\t\022=\n\005value\030\002 \001(\0132..org.datacommons.pr"
+          + "oto.McfGraph.PropertyValues:\0028\001*C\n\007McfTy"
+          + "pe\022\024\n\020UNKNOWN_MCF_TYPE\020\000\022\020\n\014INSTANCE_MCF"
+          + "\020\001\022\020\n\014TEMPLATE_MCF\020\002*\226\001\n\tValueType\022\026\n\022UN"
+          + "KNOWN_VALUE_TYPE\020\000\022\010\n\004TEXT\020\001\022\n\n\006NUMBER\020\002"
+          + "\022\022\n\016UNRESOLVED_REF\020\003\022\020\n\014RESOLVED_REF\020\004\022\021"
+          + "\n\rCOMPLEX_VALUE\020\005\022\020\n\014TABLE_COLUMN\020\006\022\020\n\014T"
+          + "ABLE_ENTITY\020\007"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -4653,7 +4920,7 @@ public final class Mcf {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_McfGraph_TypedValue_descriptor,
             new java.lang.String[] {
-              "Type", "Value",
+              "Type", "Value", "Column",
             });
     internal_static_org_datacommons_proto_McfGraph_Values_descriptor =
         internal_static_org_datacommons_proto_McfGraph_descriptor.getNestedTypes().get(1);

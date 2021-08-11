@@ -14,8 +14,8 @@
 
 package org.datacommons.util;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import org.datacommons.proto.Mcf;
 
@@ -150,29 +150,54 @@ public class McfUtil {
     }
   }
 
-  // From https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html
+  // From https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatterBuilder.html
   private static final List<String> DATE_FORMATS =
       List.of(
           "yyyy",
           "yyyy-MM",
           "yyyyMM",
+          "yyyy-M",
           "yyyy-MM-dd",
           "yyyyMMdd",
+          "yyyy-M-d",
           "yyyy-MM-dd'T'HH:mm",
           "yyyy-MM-dd'T'HH:mm:ss",
           "yyyy-MM-dd'T'HH:mm:ss.SSS",
           "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
-  public static boolean isValidIS8601Date(String dateValue) {
-    for (String format : DATE_FORMATS) {
-      SimpleDateFormat parser = new SimpleDateFormat(format, Locale.ENGLISH);
+  public static boolean isValidISO8601Date(String dateValue) {
+    for (String pattern : DATE_FORMATS) {
       try {
-        parser.parse(dateValue);
+        DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH).parse(dateValue);
         return true;
-      } catch (ParseException e) {
-        // Try the next format.
+      } catch (DateTimeParseException ex) {
+        // Pass through
       }
     }
     return false;
+  }
+
+  public static boolean isNumber(String val) {
+    try {
+      long l = Long.parseLong(val);
+      return true;
+    } catch (NumberFormatException e) {
+    }
+    try {
+      long l = Long.parseUnsignedLong(val);
+      return true;
+    } catch (NumberFormatException e) {
+    }
+    try {
+      double d = Double.parseDouble(val);
+      return true;
+    } catch (NumberFormatException e) {
+    }
+    return false;
+  }
+
+  public static boolean isBool(String val) {
+    String v = val.toLowerCase();
+    return v.equals("true") || v.equals("1") || v.equals("false") || v.equals("0");
   }
 }

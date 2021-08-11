@@ -168,6 +168,7 @@ public class McfParser {
       prevEntity = curEntity;
       curEntity = rhs;
       curEntityLineIdx = 0;
+      addNodeLocation();
     } else {
       if (curEntity.isEmpty()) {
         logCtx.addEntry(
@@ -181,6 +182,20 @@ public class McfParser {
 
       curEntityLineIdx++;
     }
+  }
+
+  private void addNodeLocation() {
+    assert !curEntity.isEmpty();
+    assert curEntityLineIdx == 0;
+
+    McfGraph.PropertyValues.Builder pvs =
+        graph
+            .getNodesOrDefault(curEntity, McfGraph.PropertyValues.getDefaultInstance())
+            .toBuilder();
+    Debug.Log.Location.Builder location = pvs.addLocationsBuilder();
+    location.setFile(logCtx.getLocationFile());
+    location.setLineNumber(lineNum);
+    graph.putNodes(curEntity, pvs.build());
   }
 
   private static McfParser init(Mcf.McfType type, boolean isResolved) {
@@ -401,7 +416,7 @@ public class McfParser {
       return;
     }
 
-    if (isNumber(val) || isBool(val)) {
+    if (McfUtil.isNumber(val) || McfUtil.isBool(val)) {
       // This parses to a number or bool.
       tval.setValue(val);
       tval.setType(Mcf.ValueType.NUMBER);
@@ -465,6 +480,7 @@ public class McfParser {
   // For example "1,2,3" will be split into ["1","2","3"] but "'1,234',5" will be
   // split into ["1,234", "5"].
   // TODO: Support stripEscapesBeforeQuotes control like in internal version.
+  // TODO: Move this to its own file.
   public static final class SplitAndStripArg {
     public char delimiter = ',';
     public boolean includeEmpty = false;
@@ -526,29 +542,5 @@ public class McfParser {
       }
     }
     return val;
-  }
-
-  public static boolean isNumber(String val) {
-    try {
-      long l = Long.parseLong(val);
-      return true;
-    } catch (NumberFormatException e) {
-    }
-    try {
-      long l = Long.parseUnsignedLong(val);
-      return true;
-    } catch (NumberFormatException e) {
-    }
-    try {
-      double d = Double.parseDouble(val);
-      return true;
-    } catch (NumberFormatException e) {
-    }
-    return false;
-  }
-
-  private static boolean isBool(String val) {
-    String v = val.toLowerCase();
-    return v.equals("true") || v.equals("1") || v.equals("false") || v.equals("0");
   }
 }

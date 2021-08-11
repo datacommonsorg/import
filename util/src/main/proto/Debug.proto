@@ -27,8 +27,6 @@ message Log {
         // Line number in file, starting from 1.  Matches the row number in
         // CSV (since we do not handle newlines in values).
         optional int64 line_number = 2;
-        // Column names set when the input is a CSV. Can be empty.
-        repeated string column_names = 3;
     }
 
     // Severity level of the message.
@@ -54,6 +52,10 @@ message Log {
         optional string user_message = 3;
         // A counter key in CounterSet.
         optional string counter_key = 4;
+
+        // Column names set when the error corresponds to a column in the CSV.
+        // The row info is in "location".
+        repeated string column_name = 5;
     }
 
     repeated Entry entries = 1;

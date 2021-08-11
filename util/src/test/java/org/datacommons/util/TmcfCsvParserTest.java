@@ -14,7 +14,10 @@
 
 package org.datacommons.util;
 
-import static org.junit.Assert.assertEquals;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf.McfGraph;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -22,10 +25,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf.McfGraph;
-import org.junit.Before;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 // TODO: Add test once sanity-check is implemented.
 public class TmcfCsvParserTest {
@@ -57,15 +58,18 @@ public class TmcfCsvParserTest {
     assertEquals(want, got);
   }
 
-  private String mcf(String file_name) throws URISyntaxException, IOException {
+  private String mcf(String fileName) throws URISyntaxException, IOException {
+    LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), Paths.get("."));
+    logCtx.setLocationFile(fileName);
     return McfUtil.serializeMcfGraph(
-        McfParser.parseInstanceMcfFile(resourceToFile(file_name), false, null), true);
+        McfParser.parseInstanceMcfFile(resourceToFile(fileName), false, logCtx), true);
   }
 
-  private String run(String mcf_file, String csv_file) throws IOException, URISyntaxException {
+  private String run(String mcfFile, String csvFile) throws IOException, URISyntaxException {
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), Paths.get("."));
+    logCtx.setLocationFile(csvFile);
     TmcfCsvParser parser =
-        TmcfCsvParser.init(resourceToFile(mcf_file), resourceToFile(csv_file), ',', logCtx);
+        TmcfCsvParser.init(resourceToFile(mcfFile), resourceToFile(csvFile), ',', logCtx);
     List<McfGraph> result = new ArrayList<>();
     McfGraph graph;
     while ((graph = parser.parseNextRow()) != null) {
@@ -75,7 +79,7 @@ public class TmcfCsvParserTest {
   }
 
   private String resourceToFile(String resource) throws URISyntaxException {
-    String mcf_file = this.getClass().getResource(resource).toURI().toString();
-    return mcf_file.substring(/* skip 'file:' */ 5);
+    String mcfFile = this.getClass().getResource(resource).toURI().toString();
+    return mcfFile.substring(/* skip 'file:' */ 5);
   }
 }

@@ -24,6 +24,10 @@ message McfGraph {
   message TypedValue {
     optional ValueType type = 1;
     optional string value = 2;
+
+    // Debug info.  If this value came from a CSV, then the corresponding column name.
+    // The row number is within locations in PropertyValues.
+    optional string column = 3;
   }
 
   // Represents a list of property values.

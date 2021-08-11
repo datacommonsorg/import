@@ -16,8 +16,8 @@ package org.datacommons.util;
 
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static org.datacommons.util.McfParser.parseInstanceMcfString;
-import static org.datacommons.util.McfUtil.mergeGraphs;
-import static org.junit.Assert.assertEquals;
+import static org.datacommons.util.McfUtil.*;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -116,5 +116,54 @@ public class McfUtilTest {
             true,
             null);
     assertThat(mergeGraphs(graphs)).ignoringRepeatedFieldOrder().isEqualTo(want);
+  }
+
+  @Test
+  public void funcISO8601Date() {
+    // Year.
+    assertTrue(isValidISO8601Date("2017"));
+    assertFalse(isValidISO8601Date("201"));
+
+    // Year + Month.
+    assertTrue(isValidISO8601Date("2017-01"));
+    assertTrue(isValidISO8601Date("2017-1"));
+    assertTrue(isValidISO8601Date("201701"));
+    assertFalse(isValidISO8601Date("2017-Jan"));
+
+    // Year + Month + Day.
+    assertTrue(isValidISO8601Date("2017-1-1"));
+    assertTrue(isValidISO8601Date("2017-11-09"));
+    assertTrue(isValidISO8601Date("20171109"));
+    assertFalse(isValidISO8601Date("2017-Nov-09"));
+
+    // Year + Month + Day + Time.
+    assertTrue(isValidISO8601Date("2017-11-09T22:00"));
+    assertFalse(isValidISO8601Date("2017-11-09D22:00"));
+
+    // Year + Month + Day + Time.
+    assertTrue(isValidISO8601Date("2017-11-09T22:00:01"));
+  }
+
+  @Test
+  public void funcIsNumber() {
+    assertTrue(isNumber("1e10"));
+    assertTrue(isNumber("1.95996"));
+    assertTrue(isNumber("10"));
+    assertTrue(isNumber("-10"));
+    assertTrue(isNumber("-.0010"));
+    assertFalse(isNumber("-.0010x"));
+    assertFalse(isNumber("0xdeadbeef"));
+    assertFalse(isNumber("dc/234"));
+  }
+
+  @Test
+  public void funcIsBool() {
+    assertTrue(isBool("true"));
+    assertTrue(isBool("FALSE"));
+    assertTrue(isBool("1"));
+    assertTrue(isBool("0"));
+    assertFalse(isBool("110"));
+    assertFalse(isBool("yes"));
+    assertFalse(isBool("10"));
   }
 }

@@ -2,6 +2,12 @@ package org.datacommons.util;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.text.StringEscapeUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Debug;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -10,11 +16,6 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.text.StringEscapeUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
 
 // The class that provides logging functionality.
 public class LogWrapper {
@@ -41,13 +42,17 @@ public class LogWrapper {
     countAtLastStatus = 0;
   }
 
-  public void updateLocationFile(String locationFile) {
-    this.locationFile = locationFile;
+  public void setLocationFile(String locationFile) {
+    this.locationFile = Path.of(locationFile).getFileName().toString();
+  }
+
+  public String getLocationFile() {
+    return locationFile;
   }
 
   public void addEntry(Debug.Log.Level level, String counter, String message, long lno) {
     if (log == null) return;
-    addEntry(level, counter, message, locationFile, lno, null);
+    addEntry(level, counter, message, locationFile, lno);
   }
 
   public void addEntry(
@@ -55,10 +60,9 @@ public class LogWrapper {
     if (log == null) return;
     if (!locations.isEmpty()) {
       Debug.Log.Location loc = locations.get(0);
-      addEntry(
-          level, counter, message, loc.getFile(), loc.getLineNumber(), loc.getColumnNamesList());
+      addEntry(level, counter, message, loc.getFile(), loc.getLineNumber());
     } else {
-      addEntry(level, counter, message, "FileNotSet.idk", -1, null);
+      addEntry(level, counter, message, "FileNotSet.idk", -1);
     }
   }
 
@@ -125,12 +129,7 @@ public class LogWrapper {
   }
 
   private void addEntry(
-      Debug.Log.Level level,
-      String counter,
-      String message,
-      String file,
-      long lno,
-      List<String> cnames) {
+      Debug.Log.Level level, String counter, String message, String file, long lno) {
     if (level == Debug.Log.Level.LEVEL_ERROR || level == Debug.Log.Level.LEVEL_FATAL) {
       String displayLevel = level.name().replace("LEVEL_", "");
       logger.error("{} {}:{} - {}: {}", displayLevel, file, lno, counter, message);
@@ -150,9 +149,6 @@ public class LogWrapper {
       Debug.Log.Location.Builder l = e.getLocationBuilder();
       l.setFile(file);
       l.setLineNumber(lno);
-      if (cnames != null && !cnames.isEmpty()) {
-        l.addAllColumnNames(cnames);
-      }
     }
   }
 }

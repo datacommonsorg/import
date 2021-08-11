@@ -54,12 +54,13 @@ public class ComplexValueParser {
       return false;
     }
 
+    String trimmedComplexValue = complexValue.substring(1, complexValue.length() - 1);
     McfParser.SplitAndStripArg arg = new McfParser.SplitAndStripArg();
     arg.delimiter = ' ';
     arg.includeEmpty = false;
     arg.stripEnclosingQuotes = false;
     // TODO: Passthru errCb
-    List<String> fields = splitAndStripWithQuoteEscape(complexValue, arg, null);
+    List<String> fields = splitAndStripWithQuoteEscape(trimmedComplexValue, arg, null);
     if (fields.isEmpty()) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
@@ -128,17 +129,17 @@ public class ComplexValueParser {
     // Compute DCID.
     boolean isLatLng = false;
     if (fields.size() == 2) {
-      if (!McfParser.isNumber(fields.get(valueIdx))) {
+      if (!McfUtil.isNumber(fields.get(valueIdx))) {
         logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
-            "MCF_ComplexValueHasNoNumber",
-            "Complex value '"
+            "MCF_QuantityMalformedValue",
+            "Quantity value '"
                 + complexValue
                 + "' in property "
                 + prop
                 + " in node "
                 + mainNodeId
-                + " must have a number",
+                + " must be a number",
             mainNode.getLocationsList());
         return false;
       }
@@ -251,10 +252,10 @@ public class ComplexValueParser {
   }
 
   private boolean parseQuantityRange(String startVal, String endVal, String unit) {
-    if (!(McfParser.isNumber(startVal) || startVal.equals("-"))) {
+    if (!(McfUtil.isNumber(startVal) || startVal.equals("-"))) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
-          "MCF_QuantityRangeInvalidStartValue",
+          "MCF_QuantityRangeMalformedValues",
           "Malformed start component in QuantityRange value ("
               + startVal
               + ") "
@@ -266,12 +267,12 @@ public class ComplexValueParser {
           mainNode.getLocationsList());
       return false;
     }
-    if (!(McfParser.isNumber(endVal) || endVal.equals("-"))) {
+    if (!(McfUtil.isNumber(endVal) || endVal.equals("-"))) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
-          "MCF_QuantityRangeInvalidEndValue",
+          "MCF_QuantityRangeMalformedValues",
           "Malformed end component in QuantityRange value ("
-              + startVal
+              + endVal
               + ") "
               + " in property "
               + prop
@@ -284,7 +285,7 @@ public class ComplexValueParser {
     if (startVal.equals("-") && endVal.equals("-")) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
-          "MCF_QuantityRangeValues",
+          "MCF_QuantityRangeMalformedValues",
           "Malformed start+end components in QuantityRange value ("
               + startVal
               + ", "
