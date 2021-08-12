@@ -57,7 +57,7 @@ public class McfUtil {
   }
 
   public static String getPropVal(Mcf.McfGraph.PropertyValues node, String property) {
-    String val = null;
+    String val = "";
     try {
       Mcf.McfGraph.Values vals = node.getPvsOrThrow(property);
       if (vals.getTypedValuesCount() > 0) {
@@ -70,11 +70,10 @@ public class McfUtil {
   }
 
   public static List<String> getPropVals(Mcf.McfGraph.PropertyValues node, String property) {
-    List<String> result = null;
+    List<String> result = new ArrayList<>();
     try {
       Mcf.McfGraph.Values vals = node.getPvsOrThrow(property);
       if (vals.getTypedValuesCount() > 0) {
-        result = new ArrayList<>();
         for (Mcf.McfGraph.TypedValue tv : vals.getTypedValuesList()) {
           result.add(stripNamespace(tv.getValue()));
         }
@@ -83,6 +82,16 @@ public class McfUtil {
       // Not having a value is not an error.
     }
     return result;
+  }
+
+  public static List<Mcf.McfGraph.TypedValue> getPropTvs(
+      Mcf.McfGraph.PropertyValues node, String property) {
+    try {
+      return node.getPvsOrThrow(property).getTypedValuesList();
+    } catch (IllegalArgumentException ex) {
+      // Not having a value is not an error.
+    }
+    return null;
   }
 
   public static Mcf.McfGraph.Values newValues(Mcf.ValueType type, String value) {
@@ -150,7 +159,7 @@ public class McfUtil {
     return result.build();
   }
 
-  private static String stripNamespace(String val) {
+  public static String stripNamespace(String val) {
     if (val.startsWith(Vocabulary.DCID_PREFIX)
         || val.startsWith(Vocabulary.SCHEMA_ORG_PREFIX)
         || val.startsWith(Vocabulary.DC_SCHEMA_PREFIX)) {

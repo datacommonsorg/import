@@ -16,6 +16,7 @@ package org.datacommons.util;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,9 @@ import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
 // Converts a Template MCF file and an associated CSV into instance MCF.
+//
+// NOTE: Sets the location file in LogWrapper (at different times to point to TMCF and CSV).
+// TODO: Add more column info in generated MCF, even when values are missing.
 public class TmcfCsvParser {
   public static boolean TEST_mode = false;
 
@@ -41,6 +45,7 @@ public class TmcfCsvParser {
   public static TmcfCsvParser init(
       String tmcfFile, String csvFile, char delimiter, LogWrapper logCtx) throws IOException {
     TmcfCsvParser tmcfCsvParser = new TmcfCsvParser();
+    logCtx.setLocationFile(tmcfFile);
     tmcfCsvParser.tmcf = McfParser.parseTemplateMcfFile(tmcfFile, logCtx);
     tmcfCsvParser.logCtx = logCtx;
     tmcfCsvParser.csvParser =
@@ -55,6 +60,7 @@ public class TmcfCsvParser {
                 .withIgnoreSurroundingSpaces());
     tmcfCsvParser.delimiter = delimiter;
 
+    logCtx.setLocationFile(csvFile);
     // Clean and keep a copy of the header map.
     if (tmcfCsvParser.csvParser.getHeaderMap() == null) {
       tmcfCsvParser.logCtx.addEntry(
@@ -64,6 +70,20 @@ public class TmcfCsvParser {
           0);
       return null;
     }
+    // Check TMCF.
+    boolean success =
+        McfChecker.check(
+            tmcfCsvParser.tmcf, tmcfCsvParser.csvParser.getHeaderMap().keySet(), logCtx);
+    if (!success) {
+      tmcfCsvParser.logCtx.addEntry(
+          Debug.Log.Level.LEVEL_FATAL,
+          "CSV_TmcfCheckFailure",
+          "Found sanity error in TMCF. Check Sanity_ counter messages in "
+              + Path.of(tmcfFile).getFileName().toString(),
+          0);
+      return null;
+    }
+
     tmcfCsvParser.cleanedColumnMap = new HashMap<>();
     for (Map.Entry<String, Integer> e : tmcfCsvParser.csvParser.getHeaderMap().entrySet()) {
       tmcfCsvParser.cleanedColumnMap.put(e.getKey().strip(), e.getValue());
@@ -180,12 +200,17 @@ public class TmcfCsvParser {
           }
           nodeBuilder.putPvs(currentProp, values);
         }
+        nodeBuilder.setTemplateNode(tableEntity.getKey());
         Debug.Log.Location.Builder loc = nodeBuilder.addLocationsBuilder();
         loc.setFile(logCtx.getLocationFile());
         loc.setLineNumber(csvParser.getCurrentLineNumber());
 
         Mcf.McfGraph.PropertyValues newNode = nodeBuilder.build();
-        instanceMcf.putNodes(currentNodeId, newNode);
+        boolean success =
+            McfChecker.check(Mcf.McfType.INSTANCE_MCF, currentNodeId, newNode, logCtx);
+        if (success) {
+          instanceMcf.putNodes(currentNodeId, newNode);
+        }
       }
     }
 
@@ -251,7 +276,7 @@ public class TmcfCsvParser {
           if (term.type != McfParser.SchemaTerm.Type.COLUMN) {
             addLog(
                 Debug.Log.Level.LEVEL_ERROR,
-                "CSV_UnexpectedNonColumn",
+                "CSV_TmcfUnexpectedNonColumn",
                 "Unable to parse TMCF column "
                     + typedValue.getValue()
                     + " in property "
@@ -264,7 +289,7 @@ public class TmcfCsvParser {
           if (!cleanedColumnMap.containsKey(column)) {
             addLog(
                 Debug.Log.Level.LEVEL_ERROR,
-                "CSV_MissingTmcfColumn",
+                "CSV_TmcfMissingColumn",
                 "Column " + column + " referred in TMCF is missing from CSV header");
             continue;
           }
@@ -281,7 +306,8 @@ public class TmcfCsvParser {
           ssArg.delimiter = delimiter;
           ssArg.includeEmpty = false;
           ssArg.stripEnclosingQuotes = false;
-          ssArg.context = "CSV column " + column;
+          ssArg.context =
+              "column " + column + ", property " + currentProp + ", entity " + templateEntity;
           // TODO: set stripEscapesBeforeQuotes
           List<String> values =
               McfParser.splitAndStripWithQuoteEscape(dataRow.get(columnIndex), ssArg, warnCb);

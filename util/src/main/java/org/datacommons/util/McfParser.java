@@ -36,6 +36,8 @@ import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
 
 // A parser for converting text in Instance or Template MCF format into the McfGraph proto.
+//
+// NOTE: Expects caller to set location file in LogWrapper.
 public class McfParser {
   private static final Logger logger = LogManager.getLogger(McfParser.class);
 
@@ -505,9 +507,7 @@ public class McfParser {
       List<CSVRecord> records = parser.getRecords();
       if (records.isEmpty()) {
         if (errCb != null) {
-          errCb.accept(
-              "StrSplit_EmptyToken",
-              "Empty token while parsing '" + orig + "' (" + arg.context + ")");
+          errCb.accept("StrSplit_EmptyToken", "Empty value found (" + arg.context + ")");
         }
         return splits;
       }
@@ -515,7 +515,7 @@ public class McfParser {
         if (errCb != null) {
           errCb.accept(
               "StrSplit_MultiToken",
-              "Found more than one record for '" + orig + "' (" + arg.context + ")");
+              "Found more than one line for '" + orig + "' (" + arg.context + ")");
         }
         return splits;
       }

@@ -142,7 +142,7 @@ public class McfParserTest {
   }
 
   private McfGraph expected(String protoFile) throws IOException {
-    return TestUtil.graph(
+    return TestUtil.graphFromProto(
         IOUtils.toString(this.getClass().getResourceAsStream(protoFile), StandardCharsets.UTF_8));
   }
 }

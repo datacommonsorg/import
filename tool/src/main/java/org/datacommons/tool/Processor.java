@@ -7,10 +7,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Mcf;
-import org.datacommons.util.LogWrapper;
-import org.datacommons.util.McfParser;
-import org.datacommons.util.McfUtil;
-import org.datacommons.util.TmcfCsvParser;
+import org.datacommons.util.*;
 
 class DCTooManyFailuresException extends Exception {
   public DCTooManyFailuresException() {}
@@ -37,6 +34,11 @@ public class Processor {
     McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
     Mcf.McfGraph n;
     while ((n = parser.parseNextNode()) != null) {
+      n = McfMutator.mutate(n.toBuilder(), logCtx);
+
+      // This will set counters/messages in logCtx.
+      McfChecker.check(n, logCtx);
+
       numNodesProcessed++;
       logCtx.provideStatus(numNodesProcessed, "nodes");
       if (logCtx.loggedTooManyFailures()) {
@@ -52,12 +54,16 @@ public class Processor {
     logger.debug("TMCF " + tmcfFile.getName());
     for (File csvFile : csvFiles) {
       logger.debug("Checking CSV " + csvFile.getPath());
-      logCtx.setLocationFile(csvFile.getName());
       TmcfCsvParser parser =
           TmcfCsvParser.init(tmcfFile.getPath(), csvFile.getPath(), delimiter, logCtx);
       Mcf.McfGraph g;
       long numNodesProcessed = 0, numRowsProcessed = 0;
       while ((g = parser.parseNextRow()) != null) {
+        g = McfMutator.mutate(g.toBuilder(), logCtx);
+
+        // This will set counters/messages in logCtx.
+        McfChecker.check(g, logCtx);
+
         if (writer != null) {
           writer.write(McfUtil.serializeMcfGraph(g, false));
         }

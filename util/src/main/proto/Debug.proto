@@ -59,8 +59,8 @@ message Log {
         repeated string column_name = 5;
     }
 
-    repeated Entry entries = 1;
-    optional CounterSet counter_set = 2;
     // Key: Level.name()
-    map<string, int64> level_summary = 3;
+    map<string, int64> level_summary = 1;
+    optional CounterSet counter_set = 2;
+    repeated Entry entries = 3;
 }

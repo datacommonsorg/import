@@ -20,7 +20,7 @@ import org.datacommons.proto.Debug;
 public class LogWrapper {
   private static final Logger logger = LogManager.getLogger(McfParser.class);
 
-  private static final long SECONDS_BETWEEN_STATUS = 60;
+  private static final long SECONDS_BETWEEN_STATUS = 30;
   public static final String REPORT_JSON = "report.json";
   public static final int MAX_ERROR_LIMIT = 50;
   public static final int MAX_MESSAGES_PER_COUNTER = 10;
@@ -35,7 +35,9 @@ public class LogWrapper {
     this.log = log;
     logPath = Paths.get(outputDir.toString(), REPORT_JSON);
     logger.info(
-        "Report written periodically to {}", logPath.toAbsolutePath().normalize().toString());
+        "Report written every {}s to {}",
+        SECONDS_BETWEEN_STATUS,
+        logPath.toAbsolutePath().normalize().toString());
     locationFile = "FileNotSet.idk";
     lastStatusAt = Instant.now();
     countAtLastStatus = 0;
