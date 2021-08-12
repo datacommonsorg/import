@@ -14,9 +14,8 @@
 
 package org.datacommons.tool;
 
-import picocli.CommandLine;
-
 import java.io.File;
+import picocli.CommandLine;
 
 // TODO: Add e2e tests once Debug.Log is fully plumbed in.
 @CommandLine.Command(
