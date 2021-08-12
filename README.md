@@ -11,29 +11,31 @@ includes [APIs](https://docs.datacommons.org/api/) and visual tools to easily
 explore and analyze data across different datasets without data cleaning or
 joining.
 
-## Dependencies
+## Using the tool
 
-* The tools are built using Apache Maven version 3.8.0.
-
-  For MacOS: ```brew install maven```
-
-* The tools use protobuf and require that `protoc` be installed.
-
-  For MacOS: ```brew install protoc```
+- Make sure Java 11 is installed (you can install it from [here](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk))
+- [Download the tool](https://github.com/datacommonsorg/import/releases) and run it with:
+```
+java -jar <path-to-datacommons-import-tool-jar-with-dependencies.jar>
+```
 
 ## Development
+
+### Prerequisites
+1. The tools are built using Apache Maven version 3.8.0.
+    - For MacOS: ```brew install maven```
+2. The tools use protobuf and require that `protoc` be installed.
+    - For MacOS: ```brew install protoc```
+3. Make sure Java 11 is installed (you can install it from [here](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk))
+4. Check what version of Java Maven is using: ```mvn --version```
+5. If Maven is using Java 16:
+    - Open ```~/.bash_profile```
+    - Add ```export JAVA_HOME=<Path to your downloaded Java 11>```
+    - Save your change and run ```source ~/.bash_profile```
 
 ### Build and Test
 
 You can build and test the Java code from a Unix shell.
-
-Prerequisites:
-1. Download Java version 11 from [here](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk)
-2. Check what version of Java Maven is using: ```mvn --version```
-3. If Maven is using Java version 16:
-   - Open ```~/.bash_profile```
-   - Add ```export JAVA_HOME=<Path to your downloaded Java 11>```
-   - Save your change and run ```source ~/.bash_profile```
 
 To build: ```mvn compile```
 
@@ -43,7 +45,7 @@ To build binary: ```mvn package```
 - which will produce  ```tool/target/datacommons-import-tool-1.0-SNAPSHOT-jar-with-dependencies.jar```
 
 To use the tool: ```java -jar <path-to-datacommons-import-tool-1.0-SNAPSHOT-jar-with-dependencies.jar>``` 
-- Its useful to create an alias like ```alias dc-import='java -jar <path-to-datacommons-import-tool-1.0-SNAPSHOT-jar-with-dependencies.jar>'```, so you can invoke the tool as ```dc-import```
+- It's useful to create an alias like ```alias dc-import='java -jar <path-to-datacommons-import-tool-1.0-SNAPSHOT-jar-with-dependencies.jar>'```, so you can invoke the tool as ```dc-import```
 
 ### Coding Guidelines
 
