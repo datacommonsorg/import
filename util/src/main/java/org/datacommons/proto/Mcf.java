@@ -2742,6 +2742,43 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
        */
       org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationsOrBuilder(int index);
+
+      /**
+       *
+       *
+       * <pre>
+       * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
+       * </pre>
+       *
+       * <code>optional string template_node = 3;</code>
+       *
+       * @return Whether the templateNode field is set.
+       */
+      boolean hasTemplateNode();
+      /**
+       *
+       *
+       * <pre>
+       * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
+       * </pre>
+       *
+       * <code>optional string template_node = 3;</code>
+       *
+       * @return The templateNode.
+       */
+      java.lang.String getTemplateNode();
+      /**
+       *
+       *
+       * <pre>
+       * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
+       * </pre>
+       *
+       * <code>optional string template_node = 3;</code>
+       *
+       * @return The bytes for templateNode.
+       */
+      com.google.protobuf.ByteString getTemplateNodeBytes();
     }
     /**
      *
@@ -2764,6 +2801,7 @@ public final class Mcf {
 
       private PropertyValues() {
         locations_ = java.util.Collections.emptyList();
+        templateNode_ = "";
       }
 
       @java.lang.Override
@@ -2825,6 +2863,13 @@ public final class Mcf {
                           org.datacommons.proto.Debug.Log.Location.PARSER, extensionRegistry));
                   break;
                 }
+              case 26:
+                {
+                  com.google.protobuf.ByteString bs = input.readBytes();
+                  bitField0_ |= 0x00000001;
+                  templateNode_ = bs;
+                  break;
+                }
               default:
                 {
                   if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
@@ -2874,6 +2919,7 @@ public final class Mcf {
                 org.datacommons.proto.Mcf.McfGraph.PropertyValues.Builder.class);
       }
 
+      private int bitField0_;
       public static final int PVS_FIELD_NUMBER = 1;
 
       private static final class PvsDefaultEntryHolder {
@@ -3048,6 +3094,69 @@ public final class Mcf {
         return locations_.get(index);
       }
 
+      public static final int TEMPLATE_NODE_FIELD_NUMBER = 3;
+      private volatile java.lang.Object templateNode_;
+      /**
+       *
+       *
+       * <pre>
+       * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
+       * </pre>
+       *
+       * <code>optional string template_node = 3;</code>
+       *
+       * @return Whether the templateNode field is set.
+       */
+      public boolean hasTemplateNode() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
+       * </pre>
+       *
+       * <code>optional string template_node = 3;</code>
+       *
+       * @return The templateNode.
+       */
+      public java.lang.String getTemplateNode() {
+        java.lang.Object ref = templateNode_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            templateNode_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
+       * </pre>
+       *
+       * <code>optional string template_node = 3;</code>
+       *
+       * @return The bytes for templateNode.
+       */
+      public com.google.protobuf.ByteString getTemplateNodeBytes() {
+        java.lang.Object ref = templateNode_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          templateNode_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
       private byte memoizedIsInitialized = -1;
 
       @java.lang.Override
@@ -3066,6 +3175,9 @@ public final class Mcf {
             output, internalGetPvs(), PvsDefaultEntryHolder.defaultEntry, 1);
         for (int i = 0; i < locations_.size(); i++) {
           output.writeMessage(2, locations_.get(i));
+        }
+        if (((bitField0_ & 0x00000001) != 0)) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 3, templateNode_);
         }
         unknownFields.writeTo(output);
       }
@@ -3090,6 +3202,9 @@ public final class Mcf {
         for (int i = 0; i < locations_.size(); i++) {
           size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, locations_.get(i));
         }
+        if (((bitField0_ & 0x00000001) != 0)) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, templateNode_);
+        }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
         return size;
@@ -3108,6 +3223,10 @@ public final class Mcf {
 
         if (!internalGetPvs().equals(other.internalGetPvs())) return false;
         if (!getLocationsList().equals(other.getLocationsList())) return false;
+        if (hasTemplateNode() != other.hasTemplateNode()) return false;
+        if (hasTemplateNode()) {
+          if (!getTemplateNode().equals(other.getTemplateNode())) return false;
+        }
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -3126,6 +3245,10 @@ public final class Mcf {
         if (getLocationsCount() > 0) {
           hash = (37 * hash) + LOCATIONS_FIELD_NUMBER;
           hash = (53 * hash) + getLocationsList().hashCode();
+        }
+        if (hasTemplateNode()) {
+          hash = (37 * hash) + TEMPLATE_NODE_FIELD_NUMBER;
+          hash = (53 * hash) + getTemplateNode().hashCode();
         }
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
@@ -3304,6 +3427,8 @@ public final class Mcf {
           } else {
             locationsBuilder_.clear();
           }
+          templateNode_ = "";
+          bitField0_ = (bitField0_ & ~0x00000004);
           return this;
         }
 
@@ -3332,6 +3457,7 @@ public final class Mcf {
           org.datacommons.proto.Mcf.McfGraph.PropertyValues result =
               new org.datacommons.proto.Mcf.McfGraph.PropertyValues(this);
           int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
           result.pvs_ = internalGetPvs();
           result.pvs_.makeImmutable();
           if (locationsBuilder_ == null) {
@@ -3343,6 +3469,11 @@ public final class Mcf {
           } else {
             result.locations_ = locationsBuilder_.build();
           }
+          if (((from_bitField0_ & 0x00000004) != 0)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.templateNode_ = templateNode_;
+          result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
         }
@@ -3422,6 +3553,11 @@ public final class Mcf {
                 locationsBuilder_.addAllMessages(other.locations_);
               }
             }
+          }
+          if (other.hasTemplateNode()) {
+            bitField0_ |= 0x00000004;
+            templateNode_ = other.templateNode_;
+            onChanged();
           }
           this.mergeUnknownFields(other.unknownFields);
           onChanged();
@@ -3988,6 +4124,127 @@ public final class Mcf {
             locations_ = null;
           }
           return locationsBuilder_;
+        }
+
+        private java.lang.Object templateNode_ = "";
+        /**
+         *
+         *
+         * <pre>
+         * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
+         * </pre>
+         *
+         * <code>optional string template_node = 3;</code>
+         *
+         * @return Whether the templateNode field is set.
+         */
+        public boolean hasTemplateNode() {
+          return ((bitField0_ & 0x00000004) != 0);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
+         * </pre>
+         *
+         * <code>optional string template_node = 3;</code>
+         *
+         * @return The templateNode.
+         */
+        public java.lang.String getTemplateNode() {
+          java.lang.Object ref = templateNode_;
+          if (!(ref instanceof java.lang.String)) {
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              templateNode_ = s;
+            }
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
+         * </pre>
+         *
+         * <code>optional string template_node = 3;</code>
+         *
+         * @return The bytes for templateNode.
+         */
+        public com.google.protobuf.ByteString getTemplateNodeBytes() {
+          java.lang.Object ref = templateNode_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            templateNode_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
+         * </pre>
+         *
+         * <code>optional string template_node = 3;</code>
+         *
+         * @param value The templateNode to set.
+         * @return This builder for chaining.
+         */
+        public Builder setTemplateNode(java.lang.String value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          bitField0_ |= 0x00000004;
+          templateNode_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
+         * </pre>
+         *
+         * <code>optional string template_node = 3;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearTemplateNode() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          templateNode_ = getDefaultInstance().getTemplateNode();
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
+         * </pre>
+         *
+         * <code>optional string template_node = 3;</code>
+         *
+         * @param value The bytes for templateNode to set.
+         * @return This builder for chaining.
+         */
+        public Builder setTemplateNodeBytes(com.google.protobuf.ByteString value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          bitField0_ |= 0x00000004;
+          templateNode_ = value;
+          onChanged();
+          return this;
         }
 
         @java.lang.Override
@@ -4877,28 +5134,28 @@ public final class Mcf {
   static {
     java.lang.String[] descriptorData = {
       "\n\tMcf.proto\022\025org.datacommons.proto\032\013Debu"
-          + "g.proto\"\355\004\n\010McfGraph\022:\n\004type\030\001 \001(\0162\036.org"
+          + "g.proto\"\204\005\n\010McfGraph\022:\n\004type\030\001 \001(\0162\036.org"
           + ".datacommons.proto.McfType:\014INSTANCE_MCF"
           + "\0229\n\005nodes\030\002 \003(\0132*.org.datacommons.proto."
           + "McfGraph.NodesEntry\032[\n\nTypedValue\022.\n\004typ"
           + "e\030\001 \001(\0162 .org.datacommons.proto.ValueTyp"
           + "e\022\r\n\005value\030\002 \001(\t\022\016\n\006column\030\003 \001(\t\032J\n\006Valu"
           + "es\022@\n\014typed_values\030\001 \003(\0132*.org.datacommo"
-          + "ns.proto.McfGraph.TypedValue\032\342\001\n\016Propert"
+          + "ns.proto.McfGraph.TypedValue\032\371\001\n\016Propert"
           + "yValues\022D\n\003pvs\030\001 \003(\01327.org.datacommons.p"
           + "roto.McfGraph.PropertyValues.PvsEntry\0226\n"
           + "\tlocations\030\002 \003(\0132#.org.datacommons.proto"
-          + ".Log.Location\032R\n\010PvsEntry\022\013\n\003key\030\001 \001(\t\0225"
-          + "\n\005value\030\002 \001(\0132&.org.datacommons.proto.Mc"
-          + "fGraph.Values:\0028\001\032\\\n\nNodesEntry\022\013\n\003key\030\001"
-          + " \001(\t\022=\n\005value\030\002 \001(\0132..org.datacommons.pr"
-          + "oto.McfGraph.PropertyValues:\0028\001*C\n\007McfTy"
-          + "pe\022\024\n\020UNKNOWN_MCF_TYPE\020\000\022\020\n\014INSTANCE_MCF"
-          + "\020\001\022\020\n\014TEMPLATE_MCF\020\002*\226\001\n\tValueType\022\026\n\022UN"
-          + "KNOWN_VALUE_TYPE\020\000\022\010\n\004TEXT\020\001\022\n\n\006NUMBER\020\002"
-          + "\022\022\n\016UNRESOLVED_REF\020\003\022\020\n\014RESOLVED_REF\020\004\022\021"
-          + "\n\rCOMPLEX_VALUE\020\005\022\020\n\014TABLE_COLUMN\020\006\022\020\n\014T"
-          + "ABLE_ENTITY\020\007"
+          + ".Log.Location\022\025\n\rtemplate_node\030\003 \001(\t\032R\n\010"
+          + "PvsEntry\022\013\n\003key\030\001 \001(\t\0225\n\005value\030\002 \001(\0132&.o"
+          + "rg.datacommons.proto.McfGraph.Values:\0028\001"
+          + "\032\\\n\nNodesEntry\022\013\n\003key\030\001 \001(\t\022=\n\005value\030\002 \001"
+          + "(\0132..org.datacommons.proto.McfGraph.Prop"
+          + "ertyValues:\0028\001*C\n\007McfType\022\024\n\020UNKNOWN_MCF"
+          + "_TYPE\020\000\022\020\n\014INSTANCE_MCF\020\001\022\020\n\014TEMPLATE_MC"
+          + "F\020\002*\226\001\n\tValueType\022\026\n\022UNKNOWN_VALUE_TYPE\020"
+          + "\000\022\010\n\004TEXT\020\001\022\n\n\006NUMBER\020\002\022\022\n\016UNRESOLVED_RE"
+          + "F\020\003\022\020\n\014RESOLVED_REF\020\004\022\021\n\rCOMPLEX_VALUE\020\005"
+          + "\022\020\n\014TABLE_COLUMN\020\006\022\020\n\014TABLE_ENTITY\020\007"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -4936,7 +5193,7 @@ public final class Mcf {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor,
             new java.lang.String[] {
-              "Pvs", "Locations",
+              "Pvs", "Locations", "TemplateNode",
             });
     internal_static_org_datacommons_proto_McfGraph_PropertyValues_PvsEntry_descriptor =
         internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor

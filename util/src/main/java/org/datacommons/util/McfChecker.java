@@ -64,6 +64,10 @@ public class McfChecker {
   }
 
   private void checkNode(String nodeId, Mcf.McfGraph.PropertyValues node) {
+    if (node.hasTemplateNode()) {
+      // The TMCF node ref is more user-friendly.
+      nodeId = node.getTemplateNode();
+    }
     checkCommon(nodeId, node);
     for (String typeOf : McfUtil.getPropVals(node, Vocabulary.TYPE_OF)) {
       if (Vocabulary.isStatVarObs(typeOf)) {

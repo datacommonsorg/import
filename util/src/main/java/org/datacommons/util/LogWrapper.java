@@ -35,7 +35,9 @@ public class LogWrapper {
     this.log = log;
     logPath = Paths.get(outputDir.toString(), REPORT_JSON);
     logger.info(
-        "Report written periodically to {}", logPath.toAbsolutePath().normalize().toString());
+        "Report written every {}s to {}",
+        SECONDS_BETWEEN_STATUS,
+        logPath.toAbsolutePath().normalize().toString());
     locationFile = "FileNotSet.idk";
     lastStatusAt = Instant.now();
     countAtLastStatus = 0;

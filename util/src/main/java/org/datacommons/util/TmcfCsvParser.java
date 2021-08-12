@@ -199,6 +199,7 @@ public class TmcfCsvParser {
           }
           nodeBuilder.putPvs(currentProp, values);
         }
+        nodeBuilder.setTemplateNode(tableEntity.getKey());
         Debug.Log.Location.Builder loc = nodeBuilder.addLocationsBuilder();
         loc.setFile(logCtx.getLocationFile());
         loc.setLineNumber(csvParser.getCurrentLineNumber());

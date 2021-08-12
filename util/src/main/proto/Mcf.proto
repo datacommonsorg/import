@@ -44,6 +44,9 @@ message McfGraph {
     // Information identifying the location of this node in the source.
     // There can be multiple if PVs in this node are merged from different files.
     repeated Log.Location locations = 2;
+
+    // Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
+    optional string template_node = 3;
   }
 
   // Type of the sub-graph.

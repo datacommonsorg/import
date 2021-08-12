@@ -44,7 +44,7 @@ public class TmcfCsvParserTest {
     String got = run("TmcfCsvParser_SVO.tmcf", "TmcfCsvParser_SVO.csv");
     assertEquals(want, got);
     // The third line has empty values.
-    assertTrue(TestUtil.checkLog(log.build(), "Sanity_MissingOrEmpty_value", "FBI_Crime/E1/3"));
+    assertTrue(TestUtil.checkLog(log.build(), "Sanity_MissingOrEmpty_value", "E:FBI_Crime->E1"));
   }
 
   @Test
