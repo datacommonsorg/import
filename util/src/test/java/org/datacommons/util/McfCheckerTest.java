@@ -99,7 +99,7 @@ public class McfCheckerTest {
             + "observationDate: \"2017\"\n"
             + "observationPeriod: \"P1M\"\n"
             + "unit: \"AnnualUSDollars\"\n";
-    assertTrue(failure(mcf, "Sanity_NonDoubleObsValue", "value of type double"));
+    assertTrue(failure(mcf, "Sanity_NonDoubleObsValue", "double value"));
 
     // No date.
     mcf =
@@ -119,7 +119,7 @@ public class McfCheckerTest {
             + "observedNode: l:USStateFemales\n"
             + "observationDate: \"2017-07\"\n"
             + "medianValue: nan\n";
-    assertTrue(failure(mcf, "Sanity_NonDoubleObsValue", "value of type double"));
+    assertTrue(failure(mcf, "Sanity_NonDoubleObsValue", "double value"));
 
     // Measured property name should start with lower case.
     mcf =

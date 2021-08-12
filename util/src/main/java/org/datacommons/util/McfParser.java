@@ -507,9 +507,7 @@ public class McfParser {
       List<CSVRecord> records = parser.getRecords();
       if (records.isEmpty()) {
         if (errCb != null) {
-          errCb.accept(
-              "StrSplit_EmptyToken",
-              "Empty token while parsing '" + orig + "' (" + arg.context + ")");
+          errCb.accept("StrSplit_EmptyToken", "Empty value found (" + arg.context + ")");
         }
         return splits;
       }
@@ -517,7 +515,7 @@ public class McfParser {
         if (errCb != null) {
           errCb.accept(
               "StrSplit_MultiToken",
-              "Found more than one record for '" + orig + "' (" + arg.context + ")");
+              "Found more than one line for '" + orig + "' (" + arg.context + ")");
         }
         return splits;
       }

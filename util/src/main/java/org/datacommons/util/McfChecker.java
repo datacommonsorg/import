@@ -8,6 +8,8 @@ import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
 // Checks common types of nodes on naming and schema requirements.
+//
+// TODO: Add more column information
 // TODO: Pass in associated SV nodes to validate SVObs better.
 public class McfChecker {
   private final int MAX_DCID_LENGTH = 256;
@@ -223,7 +225,9 @@ public class McfChecker {
           if (!McfUtil.isNumber(val)) {
             addLog(
                 "Sanity_NonDoubleObsValue",
-                "Expected value of type double for Observation property "
+                "Expected double value but got '"
+                    + val
+                    + "' for Observation property "
                     + prop
                     + " in node "
                     + nodeId,
@@ -239,7 +243,7 @@ public class McfChecker {
         addLog(
             Debug.Log.Level.LEVEL_WARNING,
             "Sanity_ObsMissingValueProp",
-            "Missing any value " + "property in node " + nodeId,
+            "Missing any value property in Observation node " + nodeId,
             node);
       } else {
         checkRequiredSingleValueProp(
@@ -365,9 +369,9 @@ public class McfChecker {
         if (!Charsets.US_ASCII.newEncoder().canEncode(val)) {
           addLog(
               "Sanity_NonAsciiValueInSchema",
-              "Value ("
+              "Value '"
                   + val
-                  + ") in property "
+                  + "' in property "
                   + prop
                   + " of node "
                   + nodeId
@@ -401,8 +405,8 @@ public class McfChecker {
       Mcf.McfGraph.PropertyValues node,
       String typeOf,
       String prop) {
-    List<String> vals = McfUtil.getPropVals(node, prop);
-    if (vals.isEmpty()) {
+    List<Mcf.McfGraph.TypedValue> tvs = McfUtil.getPropTvs(node, prop);
+    if (tvs == null || tvs.isEmpty()) {
       addLog(
           level,
           "Sanity_MissingOrEmpty_" + prop,
@@ -415,15 +419,17 @@ public class McfChecker {
           node);
       return "";
     }
-    if (vals.size() != 1) {
+    if (tvs.size() != 1) {
+      String optColumn =
+          tvs.get(0).hasColumn() ? " from column '" + tvs.get(0).getColumn() + "'" : "";
       addLog(
           level,
           "Sanity_MultipleVals_" + prop,
-          "Found multiple values for " + prop + " in node " + nodeId,
+          "Found multiple values for property '" + prop + "'" + optColumn + " in node " + nodeId,
           node);
       return "";
     }
-    return vals.get(0);
+    return McfUtil.stripNamespace(tvs.get(0).getValue());
   }
 
   private void checkRequiredValueProp(

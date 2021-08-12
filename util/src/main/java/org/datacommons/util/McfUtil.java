@@ -84,6 +84,16 @@ public class McfUtil {
     return result;
   }
 
+  public static List<Mcf.McfGraph.TypedValue> getPropTvs(
+      Mcf.McfGraph.PropertyValues node, String property) {
+    try {
+      return node.getPvsOrThrow(property).getTypedValuesList();
+    } catch (IllegalArgumentException ex) {
+      // Not having a value is not an error.
+    }
+    return null;
+  }
+
   public static Mcf.McfGraph.Values newValues(Mcf.ValueType type, String value) {
     Mcf.McfGraph.Values.Builder vals = Mcf.McfGraph.Values.newBuilder();
     Mcf.McfGraph.TypedValue.Builder tv = vals.addTypedValuesBuilder();
@@ -149,7 +159,7 @@ public class McfUtil {
     return result.build();
   }
 
-  private static String stripNamespace(String val) {
+  public static String stripNamespace(String val) {
     if (val.startsWith(Vocabulary.DCID_PREFIX)
         || val.startsWith(Vocabulary.SCHEMA_ORG_PREFIX)
         || val.startsWith(Vocabulary.DC_SCHEMA_PREFIX)) {

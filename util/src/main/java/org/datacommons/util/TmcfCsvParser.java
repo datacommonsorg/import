@@ -31,6 +31,7 @@ import org.datacommons.proto.Mcf;
 // Converts a Template MCF file and an associated CSV into instance MCF.
 //
 // NOTE: Sets the location file in LogWrapper (at different times to point to TMCF and CSV).
+// TODO: Add more column info in generated MCF, even when values are missing.
 public class TmcfCsvParser {
   public static boolean TEST_mode = false;
 
@@ -303,7 +304,8 @@ public class TmcfCsvParser {
           ssArg.delimiter = delimiter;
           ssArg.includeEmpty = false;
           ssArg.stripEnclosingQuotes = false;
-          ssArg.context = "CSV column " + column;
+          ssArg.context =
+              "column " + column + ", property " + currentProp + ", entity " + templateEntity;
           // TODO: set stripEscapesBeforeQuotes
           List<String> values =
               McfParser.splitAndStripWithQuoteEscape(dataRow.get(columnIndex), ssArg, warnCb);
