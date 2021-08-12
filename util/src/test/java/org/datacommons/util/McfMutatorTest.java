@@ -3,6 +3,7 @@ package org.datacommons.util;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import org.datacommons.proto.Mcf;
 import org.junit.Test;
 
 public class McfMutatorTest {
@@ -17,8 +18,8 @@ public class McfMutatorTest {
             + "age: [dcs:Year 18]\n"
             + "income: [dcs:USDollar 1000 2000]\n"
             + "bogusProp: [LatLong 37.3884812 -122.0834373]";
-    McfMutator mutator =
-        new McfMutator(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx("InMemory"));
+    Mcf.McfGraph got =
+        McfMutator.apply(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx("InMemory"));
 
     String want =
         "Node: USDollar1000To2000\n"
@@ -52,7 +53,7 @@ public class McfMutatorTest {
             + "longitude: \"-122.0834373\"\n"
             + "name: \"37.38848,-122.08344\"\n"
             + "typeOf: dcid:GeoCoordinates\n\n";
-    assertEquals(McfUtil.serializeMcfGraph(mutator.apply(), true), want);
+    assertEquals(McfUtil.serializeMcfGraph(got, true), want);
   }
 
   @Test
@@ -63,8 +64,8 @@ public class McfMutatorTest {
             + "observedNode: dcid:country/USA\n"
             + "measuredValue: \"1000,0000.0%\"\n"
             + "observationDate: \"2009\"\n";
-    McfMutator mutator =
-        new McfMutator(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx("InMemory"));
+    Mcf.McfGraph got =
+        McfMutator.apply(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx("InMemory"));
     String want =
         "Node: LegacyObs\n"
             + "measuredValue: \"10000000.0\"\n"
@@ -72,7 +73,7 @@ public class McfMutatorTest {
             + "observedNode: dcid:country/USA\n"
             + "typeOf: dcid:Observation\n"
             + "\n";
-    assertEquals(McfUtil.serializeMcfGraph(mutator.apply(), true), want);
+    assertEquals(McfUtil.serializeMcfGraph(got, true), want);
   }
 
   @Test
@@ -85,8 +86,8 @@ public class McfMutatorTest {
             + "value: \"10000000.0%\"\n"
             + "variableMeasured: dcid:Count_Male_18Years_1000To2000USD\n"
             + "\n";
-    McfMutator mutator =
-        new McfMutator(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx("InMemory"));
-    assertEquals(McfUtil.serializeMcfGraph(mutator.apply(), true), mcf);
+    Mcf.McfGraph got =
+        McfMutator.apply(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx("InMemory"));
+    assertEquals(McfUtil.serializeMcfGraph(got, true), mcf);
   }
 }

@@ -407,8 +407,7 @@ public class McfCheckerTest {
     } else {
       graph = McfParser.parseInstanceMcfString(mcfString, false, lw);
     }
-    McfChecker checker = new McfChecker(graph, columns, lw);
-    if (checker.check()) {
+    if (McfChecker.check(graph, columns, lw)) {
       System.err.println("Check unexpectedly passed for " + mcfString);
       return false;
     }
@@ -429,8 +428,7 @@ public class McfCheckerTest {
     } else {
       graph = McfParser.parseInstanceMcfString(mcfString, false, lw);
     }
-    McfChecker checker = new McfChecker(graph, columns, lw);
-    if (!checker.check()) {
+    if (!McfChecker.check(graph, columns, lw)) {
       System.err.println("Check unexpectedly failed for \n" + mcfString + "\n :: \n" + log);
       return false;
     }

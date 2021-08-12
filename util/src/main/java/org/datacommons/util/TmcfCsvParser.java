@@ -71,9 +71,10 @@ public class TmcfCsvParser {
       return null;
     }
     // Check TMCF.
-    McfChecker checker =
-        new McfChecker(tmcfCsvParser.tmcf, tmcfCsvParser.csvParser.getHeaderMap().keySet(), logCtx);
-    if (!checker.check()) {
+    boolean success =
+        McfChecker.check(
+            tmcfCsvParser.tmcf, tmcfCsvParser.csvParser.getHeaderMap().keySet(), logCtx);
+    if (!success) {
       tmcfCsvParser.logCtx.addEntry(
           Debug.Log.Level.LEVEL_FATAL,
           "CSV_TmcfCheckFailure",
@@ -205,9 +206,9 @@ public class TmcfCsvParser {
         loc.setLineNumber(csvParser.getCurrentLineNumber());
 
         Mcf.McfGraph.PropertyValues newNode = nodeBuilder.build();
-        McfChecker checker =
-            new McfChecker(Mcf.McfType.INSTANCE_MCF, currentNodeId, newNode, logCtx);
-        if (checker.check()) {
+        boolean success =
+            McfChecker.check(Mcf.McfType.INSTANCE_MCF, currentNodeId, newNode, logCtx);
+        if (success) {
           instanceMcf.putNodes(currentNodeId, newNode);
         }
       }

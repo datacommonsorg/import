@@ -16,16 +16,14 @@ public class McfMutator {
   private Mcf.McfGraph.Builder graph;
   private LogWrapper logCtx;
 
-  public McfMutator(Mcf.McfGraph.Builder graph, LogWrapper logCtx) {
-    this.graph = graph;
-    this.logCtx = logCtx;
-  }
-
-  public Mcf.McfGraph apply() {
+  public static Mcf.McfGraph apply(Mcf.McfGraph.Builder graph, LogWrapper logCtx) {
+    McfMutator m = new McfMutator();
+    m.graph = graph;
+    m.logCtx = logCtx;
     for (String nodeId : graph.getNodesMap().keySet()) {
-      graph.putNodes(nodeId, applyOnNode(nodeId, graph.getNodesOrThrow(nodeId).toBuilder()));
+      m.graph.putNodes(nodeId, m.applyOnNode(nodeId, m.graph.getNodesOrThrow(nodeId).toBuilder()));
     }
-    return graph.build();
+    return m.graph.build();
   }
 
   private Mcf.McfGraph.PropertyValues applyOnNode(

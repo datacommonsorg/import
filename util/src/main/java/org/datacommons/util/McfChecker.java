@@ -28,30 +28,32 @@ public class McfChecker {
   boolean foundFailure = false;
 
   // Argument |graph| may be Instance or Template MCF.
-  public McfChecker(Mcf.McfGraph graph, LogWrapper logCtx) {
-    this.graph = graph;
-    this.logCtx = logCtx;
+  public static boolean check(Mcf.McfGraph graph, LogWrapper logCtx) {
+    return new McfChecker(graph, null, logCtx).check();
+  }
+
+  // Used to check a single node.
+  public static boolean check(
+      Mcf.McfType mcfType, String nodeId, Mcf.McfGraph.PropertyValues node, LogWrapper logCtx) {
+    Mcf.McfGraph.Builder nodeGraph = Mcf.McfGraph.newBuilder();
+    nodeGraph.setType(mcfType);
+    nodeGraph.putNodes(nodeId, node);
+    return new McfChecker(nodeGraph.build(), null, logCtx).check();
   }
 
   // Used with Template MCF when there are columns from CSV header.
-  public McfChecker(Mcf.McfGraph graph, Set<String> columns, LogWrapper logCtx) {
+  public static boolean check(Mcf.McfGraph graph, Set<String> columns, LogWrapper logCtx) {
+    return new McfChecker(graph, columns, logCtx).check();
+  }
+
+  private McfChecker(Mcf.McfGraph graph, Set<String> columns, LogWrapper logCtx) {
     this.graph = graph;
     this.columns = columns;
     this.logCtx = logCtx;
   }
 
-  // Used to check a single node.
-  public McfChecker(
-      Mcf.McfType mcfType, String nodeId, Mcf.McfGraph.PropertyValues node, LogWrapper logCtx) {
-    Mcf.McfGraph.Builder nodeGraph = Mcf.McfGraph.newBuilder();
-    nodeGraph.setType(mcfType);
-    nodeGraph.putNodes(nodeId, node);
-    this.graph = nodeGraph.build();
-    this.logCtx = logCtx;
-  }
-
   // Returns true if there was an sanity error found.
-  public boolean check() {
+  private boolean check() {
     foundFailure = false;
     for (String nodeId : graph.getNodesMap().keySet()) {
       Mcf.McfGraph.PropertyValues node = graph.toBuilder().getNodesOrThrow(nodeId);
