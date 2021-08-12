@@ -19,7 +19,7 @@ public class McfMutatorTest {
             + "income: [dcs:USDollar 1000 2000]\n"
             + "bogusProp: [LatLong 37.3884812 -122.0834373]";
     Mcf.McfGraph got =
-        McfMutator.apply(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx("InMemory"));
+        McfMutator.mutate(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx("InMemory"));
 
     String want =
         "Node: USDollar1000To2000\n"
@@ -65,7 +65,7 @@ public class McfMutatorTest {
             + "measuredValue: \"1000,0000.0%\"\n"
             + "observationDate: \"2009\"\n";
     Mcf.McfGraph got =
-        McfMutator.apply(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx("InMemory"));
+        McfMutator.mutate(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx("InMemory"));
     String want =
         "Node: LegacyObs\n"
             + "measuredValue: \"10000000.0\"\n"
@@ -87,7 +87,7 @@ public class McfMutatorTest {
             + "variableMeasured: dcid:Count_Male_18Years_1000To2000USD\n"
             + "\n";
     Mcf.McfGraph got =
-        McfMutator.apply(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx("InMemory"));
+        McfMutator.mutate(TestUtil.graphFromMcf(mcf).toBuilder(), TestUtil.newLogCtx("InMemory"));
     assertEquals(McfUtil.serializeMcfGraph(got, true), mcf);
   }
 }

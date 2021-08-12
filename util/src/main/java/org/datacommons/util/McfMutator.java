@@ -9,24 +9,24 @@ import org.datacommons.proto.Mcf;
 
 // Does additional transformations on parsed MCF nodes, like expanding ComplexValues into nodes.
 //
-// TODO: Implement constraintProperties computation for SV (CPP Partiy).
-// TODO: Attach provenance maybe (CPP Partiy).
+// TODO: Implement constraintProperties computation for SV (CPP Parity).
+// TODO: Attach provenance maybe (CPP Parity).
 // TODO: Pass in a separate SV nodes to clean SVObs double values.
 public class McfMutator {
   private Mcf.McfGraph.Builder graph;
   private LogWrapper logCtx;
 
-  public static Mcf.McfGraph apply(Mcf.McfGraph.Builder graph, LogWrapper logCtx) {
+  public static Mcf.McfGraph mutate(Mcf.McfGraph.Builder graph, LogWrapper logCtx) {
     McfMutator m = new McfMutator();
     m.graph = graph;
     m.logCtx = logCtx;
     for (String nodeId : graph.getNodesMap().keySet()) {
-      m.graph.putNodes(nodeId, m.applyOnNode(nodeId, m.graph.getNodesOrThrow(nodeId).toBuilder()));
+      m.graph.putNodes(nodeId, m.mutateNode(nodeId, m.graph.getNodesOrThrow(nodeId).toBuilder()));
     }
     return m.graph.build();
   }
 
-  private Mcf.McfGraph.PropertyValues applyOnNode(
+  private Mcf.McfGraph.PropertyValues mutateNode(
       String nodeId, Mcf.McfGraph.PropertyValues.Builder node) {
     List<String> types = getPropVals(node.build(), Vocabulary.TYPE_OF);
     if (types == null) {
