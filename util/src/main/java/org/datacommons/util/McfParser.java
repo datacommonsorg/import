@@ -36,6 +36,8 @@ import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
 
 // A parser for converting text in Instance or Template MCF format into the McfGraph proto.
+//
+// NOTE: Expects caller to set location file in LogWrapper.
 public class McfParser {
   private static final Logger logger = LogManager.getLogger(McfParser.class);
 

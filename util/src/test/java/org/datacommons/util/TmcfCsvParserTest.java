@@ -61,6 +61,21 @@ public class TmcfCsvParserTest {
     assertEquals(want, got);
   }
 
+  @Test
+  public void tmcfFailure() throws IOException, URISyntaxException {
+    LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
+    TmcfCsvParser parser =
+        TmcfCsvParser.init(
+            resourceFile("TmcfCsvParser_SVO_Failure.tmcf"),
+            resourceFile("TmcfCsvParser_SVO.csv"),
+            ',',
+            logCtx);
+    assertEquals(null, parser);
+    assertTrue(
+        TestUtil.checkLog(
+            log.build(), "Sanity_TmcfMissingColumn", "Count_CriminalActivities_Missing"));
+  }
+
   private String run(String mcfFile, String csvFile) throws IOException, URISyntaxException {
     LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
     logCtx.setLocationFile(csvFile);

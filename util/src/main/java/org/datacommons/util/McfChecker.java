@@ -25,17 +25,20 @@ public class McfChecker {
   private Set<String> columns; // Relevant only when graph.type() == TEMPLATE_MCF
   boolean foundFailure = false;
 
+  // Argument |graph| may be Instance or Template MCF.
   public McfChecker(Mcf.McfGraph graph, LogWrapper logCtx) {
     this.graph = graph;
     this.logCtx = logCtx;
   }
 
+  // Used with Template MCF when there are columns from CSV header.
   public McfChecker(Mcf.McfGraph graph, Set<String> columns, LogWrapper logCtx) {
     this.graph = graph;
     this.columns = columns;
     this.logCtx = logCtx;
   }
 
+  // Used to check a single node.
   public McfChecker(
       Mcf.McfType mcfType, String nodeId, Mcf.McfGraph.PropertyValues node, LogWrapper logCtx) {
     Mcf.McfGraph.Builder nodeGraph = Mcf.McfGraph.newBuilder();
@@ -45,6 +48,7 @@ public class McfChecker {
     this.logCtx = logCtx;
   }
 
+  // Returns true if there was an sanity error found.
   public boolean check() {
     foundFailure = false;
     for (String nodeId : graph.getNodesMap().keySet()) {

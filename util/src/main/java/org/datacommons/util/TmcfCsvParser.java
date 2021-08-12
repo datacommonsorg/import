@@ -16,6 +16,7 @@ package org.datacommons.util;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,8 @@ import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
 // Converts a Template MCF file and an associated CSV into instance MCF.
+//
+// NOTE: Sets the location file in LogWrapper (at different times to point to TMCF and CSV).
 public class TmcfCsvParser {
   public static boolean TEST_mode = false;
 
@@ -41,6 +44,7 @@ public class TmcfCsvParser {
   public static TmcfCsvParser init(
       String tmcfFile, String csvFile, char delimiter, LogWrapper logCtx) throws IOException {
     TmcfCsvParser tmcfCsvParser = new TmcfCsvParser();
+    logCtx.setLocationFile(tmcfFile);
     tmcfCsvParser.tmcf = McfParser.parseTemplateMcfFile(tmcfFile, logCtx);
     tmcfCsvParser.logCtx = logCtx;
     tmcfCsvParser.csvParser =
@@ -55,6 +59,7 @@ public class TmcfCsvParser {
                 .withIgnoreSurroundingSpaces());
     tmcfCsvParser.delimiter = delimiter;
 
+    logCtx.setLocationFile(csvFile);
     // Clean and keep a copy of the header map.
     if (tmcfCsvParser.csvParser.getHeaderMap() == null) {
       tmcfCsvParser.logCtx.addEntry(
@@ -64,6 +69,19 @@ public class TmcfCsvParser {
           0);
       return null;
     }
+    // Check TMCF.
+    McfChecker checker =
+        new McfChecker(tmcfCsvParser.tmcf, tmcfCsvParser.csvParser.getHeaderMap().keySet(), logCtx);
+    if (!checker.check()) {
+      tmcfCsvParser.logCtx.addEntry(
+          Debug.Log.Level.LEVEL_FATAL,
+          "CSV_TmcfCheckFailure",
+          "Found sanity error in TMCF. Check Sanity_ counter messages in "
+              + Path.of(tmcfFile).getFileName().toString(),
+          0);
+      return null;
+    }
+
     tmcfCsvParser.cleanedColumnMap = new HashMap<>();
     for (Map.Entry<String, Integer> e : tmcfCsvParser.csvParser.getHeaderMap().entrySet()) {
       tmcfCsvParser.cleanedColumnMap.put(e.getKey().strip(), e.getValue());
