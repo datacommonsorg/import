@@ -27,6 +27,14 @@ joining.
 
 You can build and test the Java code from a Unix shell.
 
+Prerequisites:
+1. Download Java version 11
+2. Check what version of Java Maven is using: ```mvn --version```
+3. If Maven is using Java version 16:
+   - Open ```~/.bash_profile```
+   - Add ```export JAVA_HOME=<Path to your downloaded Java 11>```
+   - Save your change and run ```source ~/.bash_profile```
+
 To build: ```mvn compile```
 
 To run tests: ```mvn test```
