@@ -38,23 +38,20 @@ public class TestUtil {
       System.err.println("Missing counter " + counter + " stat :: " + log.getCounterSet());
       return false;
     }
+    boolean foundCounter = false;
     for (Debug.Log.Entry ent : log.getEntriesList()) {
       if (ent.getCounterKey().equals(counter)) {
+        foundCounter = true;
         if (ent.getUserMessage().contains(subMessage)) {
           return true;
-        } else {
-          System.err.println(
-              "Missing message fragment '"
-                  + subMessage
-                  + "'. Instead found '"
-                  + ent.getUserMessage()
-                  + "' :: "
-                  + ent);
-          return false;
         }
       }
     }
-    System.err.println("Missing counter " + counter + " in entries :: " + log.getCounterSet());
+    if (foundCounter) {
+      System.err.println("Missing message fragment '" + subMessage + "' :: " + log);
+    } else {
+      System.err.println("Missing counter " + counter + " in entries :: " + log.getCounterSet());
+    }
     return false;
   }
 

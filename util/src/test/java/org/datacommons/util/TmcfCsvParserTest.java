@@ -15,6 +15,7 @@
 package org.datacommons.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -30,6 +31,7 @@ import org.junit.Test;
 // TODO: Add test once sanity-check is implemented.
 public class TmcfCsvParserTest {
   private static final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+  private Debug.Log.Builder log = Debug.Log.newBuilder();
 
   @Before
   public void setUp() {
@@ -41,6 +43,8 @@ public class TmcfCsvParserTest {
     String want = TestUtil.mcfFromFile(resourceFile("TmcfCsvParser_SVO.mcf"));
     String got = run("TmcfCsvParser_SVO.tmcf", "TmcfCsvParser_SVO.csv");
     assertEquals(want, got);
+    // The third line has empty values.
+    assertTrue(TestUtil.checkLog(log.build(), "Sanity_MissingOrEmpty_value", "FBI_Crime/E1/3"));
   }
 
   @Test
@@ -58,7 +62,7 @@ public class TmcfCsvParserTest {
   }
 
   private String run(String mcfFile, String csvFile) throws IOException, URISyntaxException {
-    LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), Paths.get("."));
+    LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
     logCtx.setLocationFile(csvFile);
     TmcfCsvParser parser =
         TmcfCsvParser.init(resourceFile(mcfFile), resourceFile(csvFile), ',', logCtx);

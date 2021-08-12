@@ -185,7 +185,11 @@ public class TmcfCsvParser {
         loc.setLineNumber(csvParser.getCurrentLineNumber());
 
         Mcf.McfGraph.PropertyValues newNode = nodeBuilder.build();
-        instanceMcf.putNodes(currentNodeId, newNode);
+        McfChecker checker =
+            new McfChecker(Mcf.McfType.INSTANCE_MCF, currentNodeId, newNode, logCtx);
+        if (checker.check()) {
+          instanceMcf.putNodes(currentNodeId, newNode);
+        }
       }
     }
 
