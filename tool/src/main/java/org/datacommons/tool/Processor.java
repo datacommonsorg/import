@@ -33,15 +33,15 @@ public class Processor {
     long numNodesProcessed = 0;
     logger.debug("Checking {}", file.getName());
     // TODO: isResolved is more allowing, be stricter.
-    logCtx.updateLocationFile(file.getName());
+    logCtx.setLocationFile(file.getName());
     McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
     Mcf.McfGraph n;
     while ((n = parser.parseNextNode()) != null) {
       numNodesProcessed++;
+      logCtx.provideStatus(numNodesProcessed, "nodes");
       if (logCtx.loggedTooManyFailures()) {
         throw new DCTooManyFailuresException("processNodes encountered too many failures");
       }
-      logCtx.provideStatus(numNodesProcessed, "nodes");
     }
     logger.info("Checked {} with {} nodes", file.getName(), numNodesProcessed);
   }
@@ -52,21 +52,22 @@ public class Processor {
     logger.debug("TMCF " + tmcfFile.getName());
     for (File csvFile : csvFiles) {
       logger.debug("Checking CSV " + csvFile.getPath());
-      logCtx.updateLocationFile(csvFile.getName());
+      logCtx.setLocationFile(csvFile.getName());
       TmcfCsvParser parser =
           TmcfCsvParser.init(tmcfFile.getPath(), csvFile.getPath(), delimiter, logCtx);
       Mcf.McfGraph g;
       long numNodesProcessed = 0, numRowsProcessed = 0;
       while ((g = parser.parseNextRow()) != null) {
-        numNodesProcessed += g.getNodesCount();
-        numRowsProcessed++;
         if (writer != null) {
           writer.write(McfUtil.serializeMcfGraph(g, false));
         }
+
+        numNodesProcessed += g.getNodesCount();
+        numRowsProcessed++;
+        logCtx.provideStatus(numRowsProcessed, "rows");
         if (logCtx.loggedTooManyFailures()) {
           throw new DCTooManyFailuresException("processTables encountered too many failures");
         }
-        logCtx.provideStatus(numRowsProcessed, "rows");
       }
       logger.info(
           "Checked CSV {} ({} rows, {} nodes)",

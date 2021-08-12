@@ -84,8 +84,8 @@ public class TmcfCsvParser {
   class RowProcessor {
     private Mcf.McfGraph.Builder instanceMcf;
     // If there is a dcid prop, then this is a map from the entity name (Table->E1) to the dcid.
-    private HashMap<String, String> entityToDcid;
-    private String currentNode;
+    private HashMap<String, Mcf.McfGraph.TypedValue> entityToDcid;
+    private String currentNodeId;
     private String currentProp;
     private String rowId;
 
@@ -127,10 +127,11 @@ public class TmcfCsvParser {
         if (!pvs.containsKey(Vocabulary.DCID)) continue;
 
         // Register the fact that the user has mapped dcid, in case we continue below.
-        entityToDcid.put(tableEntity.getKey(), "");
+        // TODO: Maybe this should move to after currentNodeId setting below.
+        entityToDcid.put(tableEntity.getKey(), Mcf.McfGraph.TypedValue.newBuilder().build());
 
-        currentNode = toNodeName(tableEntity.getKey(), errCb);
-        if (currentNode == null) continue;
+        currentNodeId = toNodeName(tableEntity.getKey(), errCb);
+        if (currentNodeId == null) continue;
 
         currentProp = Vocabulary.DCID;
         Mcf.McfGraph.Values dcidValues =
@@ -141,7 +142,7 @@ public class TmcfCsvParser {
         }
         Mcf.McfGraph.TypedValue tv = dcidValues.getTypedValues(0);
         if (tv.getType() == Mcf.ValueType.TEXT || tv.getType() == Mcf.ValueType.RESOLVED_REF) {
-          entityToDcid.put(tableEntity.getKey(), tv.getValue());
+          entityToDcid.put(tableEntity.getKey(), tv);
         } else {
           addLog(
               Debug.Log.Level.LEVEL_WARNING,
@@ -156,10 +157,10 @@ public class TmcfCsvParser {
 
       for (Map.Entry<String, Mcf.McfGraph.PropertyValues> tableEntity :
           tmcf.getNodesMap().entrySet()) {
-        currentNode = toNodeName(tableEntity.getKey(), errCb);
-        if (currentNode == null) continue;
+        currentNodeId = toNodeName(tableEntity.getKey(), errCb);
+        if (currentNodeId == null) continue;
         // Case of malformed/empty DCID. SKip this node (counters were updated above).
-        if (currentNode.equals(Vocabulary.DCID_PREFIX)) continue;
+        if (currentNodeId.equals(Vocabulary.DCID_PREFIX)) continue;
 
         // Go over each property within the template.
         Mcf.McfGraph.PropertyValues.Builder nodeBuilder = Mcf.McfGraph.PropertyValues.newBuilder();
@@ -179,8 +180,12 @@ public class TmcfCsvParser {
           }
           nodeBuilder.putPvs(currentProp, values);
         }
-        // TODO: Add node sanity check
-        instanceMcf.putNodes(currentNode, nodeBuilder.build());
+        Debug.Log.Location.Builder loc = nodeBuilder.addLocationsBuilder();
+        loc.setFile(logCtx.getLocationFile());
+        loc.setLineNumber(csvParser.getCurrentLineNumber());
+
+        Mcf.McfGraph.PropertyValues newNode = nodeBuilder.build();
+        instanceMcf.putNodes(currentNodeId, newNode);
       }
     }
 
@@ -213,8 +218,10 @@ public class TmcfCsvParser {
           String referenceNode = toNodeName(typedValue.getValue(), errCb);
           Mcf.McfGraph.TypedValue.Builder newTypedValue = Mcf.McfGraph.TypedValue.newBuilder();
           if (referenceNode.startsWith(Vocabulary.DCID_PREFIX)) {
-            String dcid = referenceNode.substring(Vocabulary.DCID_PREFIX.length());
-            if (dcid.isEmpty()) {
+            Mcf.McfGraph.TypedValue dcidTypedVal =
+                entityToDcid.getOrDefault(
+                    typedValue.getValue(), Mcf.McfGraph.TypedValue.getDefaultInstance());
+            if (dcidTypedVal.getValue().isEmpty()) {
               addLog(
                   Debug.Log.Level.LEVEL_WARNING,
                   "CSV_EmptyDcidReferences",
@@ -225,7 +232,10 @@ public class TmcfCsvParser {
               continue;
             }
             newTypedValue.setType(Mcf.ValueType.RESOLVED_REF);
-            newTypedValue.setValue(dcid);
+            newTypedValue.setValue(dcidTypedVal.getValue());
+            if (dcidTypedVal.hasColumn()) {
+              newTypedValue.setColumn(dcidTypedVal.getColumn());
+            }
           } else {
             // This is an internal reference, so prefix "l:"
             newTypedValue.setType(Mcf.ValueType.UNRESOLVED_REF);
@@ -250,14 +260,15 @@ public class TmcfCsvParser {
                     + templateEntity);
             continue;
           }
-          if (!cleanedColumnMap.containsKey(term.value)) {
+          String column = term.value;
+          if (!cleanedColumnMap.containsKey(column)) {
             addLog(
                 Debug.Log.Level.LEVEL_ERROR,
                 "CSV_MissingTmcfColumn",
-                "Column " + term.value + " referred in TMCF is missing from CSV header");
+                "Column " + column + " referred in TMCF is missing from CSV header");
             continue;
           }
-          int columnIndex = cleanedColumnMap.get(term.value);
+          int columnIndex = cleanedColumnMap.get(column);
           if (columnIndex >= dataRow.size()) {
             addLog(
                 Debug.Log.Level.LEVEL_WARNING,
@@ -270,19 +281,21 @@ public class TmcfCsvParser {
           ssArg.delimiter = delimiter;
           ssArg.includeEmpty = false;
           ssArg.stripEnclosingQuotes = false;
-          ssArg.context = "CSV column " + term.value;
+          ssArg.context = "CSV column " + column;
           // TODO: set stripEscapesBeforeQuotes
           List<String> values =
               McfParser.splitAndStripWithQuoteEscape(dataRow.get(columnIndex), ssArg, warnCb);
           for (String value : values) {
+            Mcf.McfGraph.TypedValue.Builder newTypedValue = instanceValues.addTypedValuesBuilder();
             McfParser.parseTypedValue(
                 Mcf.McfType.INSTANCE_MCF,
                 false,
-                currentNode,
+                currentNodeId,
                 currentProp,
                 value,
-                instanceValues.addTypedValuesBuilder(),
+                newTypedValue,
                 errCb);
+            newTypedValue.setColumn(column);
           }
         } else {
           // Pass through constant value.
@@ -294,7 +307,7 @@ public class TmcfCsvParser {
 
     private String toNodeName(String entityId, BiConsumer<String, String> errCb) {
       if (entityToDcid.containsKey(entityId)) {
-        return Vocabulary.DCID_PREFIX + entityToDcid.get(entityId);
+        return Vocabulary.DCID_PREFIX + entityToDcid.get(entityId).getValue();
       }
 
       McfParser.SchemaTerm term = McfParser.parseSchemaTerm(entityId, errCb);

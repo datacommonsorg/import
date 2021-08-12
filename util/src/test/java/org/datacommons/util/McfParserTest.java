@@ -16,15 +16,12 @@ package org.datacommons.util;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
-import static org.datacommons.util.McfParser.*;
+import static org.datacommons.util.McfParser.SplitAndStripArg;
+import static org.datacommons.util.McfParser.splitAndStripWithQuoteEscape;
 
-import com.google.protobuf.TextFormat;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.datacommons.proto.Mcf.McfGraph;
@@ -92,7 +89,9 @@ public class McfParserTest {
         IOUtils.toString(
             this.getClass().getResourceAsStream("McfParserTest_ResolvedGraph.mcf"),
             StandardCharsets.UTF_8);
-    McfGraph act = McfParser.parseInstanceMcfString(mcfString, true, null);
+    McfGraph act =
+        McfParser.parseInstanceMcfString(
+            mcfString, true, TestUtil.newLogCtx("McfParserTest_ResolvedGraph.mcf"));
     McfGraph exp = expected("McfParserTest_ResolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
@@ -100,7 +99,7 @@ public class McfParserTest {
   @Test
   public void funcParseResolvedGraphAsFile() throws IOException, URISyntaxException {
     String mcfFile = this.getClass().getResource("McfParserTest_ResolvedGraph.mcf").getPath();
-    McfGraph act = McfParser.parseInstanceMcfFile(mcfFile, true, null);
+    McfGraph act = McfParser.parseInstanceMcfFile(mcfFile, true, TestUtil.newLogCtx(mcfFile));
     McfGraph exp = expected("McfParserTest_ResolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
@@ -111,7 +110,9 @@ public class McfParserTest {
         IOUtils.toString(
             this.getClass().getResourceAsStream("McfParserTest_Template.tmcf"),
             StandardCharsets.UTF_8);
-    McfGraph act = McfParser.parseTemplateMcfString(mcfString, null);
+    McfGraph act =
+        McfParser.parseTemplateMcfString(
+            mcfString, TestUtil.newLogCtx("McfParserTest_Template.tmcf"));
     McfGraph exp = expected("McfParserTest_Template.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
@@ -119,72 +120,16 @@ public class McfParserTest {
   @Test
   public void funcParseTemplateMcfAsFile() throws IOException, URISyntaxException {
     String mcfFile = this.getClass().getResource("McfParserTest_Template.tmcf").getPath();
-    McfGraph act = McfParser.parseTemplateMcfFile(mcfFile, null);
+    McfGraph act = McfParser.parseTemplateMcfFile(mcfFile, TestUtil.newLogCtx(mcfFile));
     McfGraph exp = expected("McfParserTest_Template.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
-  }
-
-  @Test
-  public void funcMergeGraphs() throws IOException {
-    List<McfGraph> graphs =
-        Arrays.asList(
-            parseInstanceMcfString(
-                "Node: MadCity\n"
-                    + "typeOf: dcs:City\n"
-                    + "dcid: dcid:dc/maa\n"
-                    + "overlapsWith: dcid:dc/456, dcid:dc/134\n"
-                    + "name: \"Madras\"\n",
-                true,
-                null),
-            parseInstanceMcfString(
-                "Node: MadCity\n"
-                    + "typeOf: dcs:Corporation\n"
-                    + "dcid: dcid:dc/maa\n"
-                    + "overlapsWith: dcid:dc/134\n"
-                    + "containedInPlace: dcid:dc/tn\n"
-                    + "name: \"Chennai\"\n",
-                true,
-                null),
-            parseInstanceMcfString(
-                "Node: MadState\n"
-                    + "typeOf: dcs:State\n"
-                    + "dcid: dcid:dc/tn\n"
-                    + "containedInPlace: dcid:country/india\n",
-                true,
-                null),
-            parseInstanceMcfString(
-                "Node: MadState\n"
-                    + "typeOf: dcs:State\n"
-                    + "dcid: dcid:dc/tn\n"
-                    + "capital: dcid:dc/maa\n"
-                    + "containedInPlace: dcid:dc/southindia\n",
-                true,
-                null));
-    // Output should be the second node which is the largest, with other PVs
-    // patched in, and all types included.
-    McfGraph want =
-        parseInstanceMcfString(
-            "Node: MadCity\n"
-                + "typeOf: dcs:City, dcs:Corporation\n"
-                + "dcid: dcid:dc/maa\n"
-                + "containedInPlace: dcid:dc/tn\n"
-                + "overlapsWith: dcid:dc/134, dcid:dc/456\n"
-                + "name: \"Chennai\", \"Madras\"\n"
-                + "\n"
-                + "Node: MadState\n"
-                + "typeOf: dcs:State\n"
-                + "dcid: dcid:dc/tn\n"
-                + "capital: dcid:dc/maa\n"
-                + "containedInPlace: dcid:country/india, dcid:dc/southindia\n",
-            true,
-            null);
-    assertThat(mergeGraphs(graphs)).ignoringRepeatedFieldOrder().isEqualTo(want);
   }
 
   private McfGraph actual(String file_name, boolean isResolved)
       throws IOException, URISyntaxException {
     String mcfFile = this.getClass().getResource(file_name).getPath();
-    McfParser parser = McfParser.init(McfType.INSTANCE_MCF, mcfFile, isResolved, null);
+    McfParser parser =
+        McfParser.init(McfType.INSTANCE_MCF, mcfFile, isResolved, TestUtil.newLogCtx(mcfFile));
     McfGraph.Builder act = McfGraph.newBuilder();
     act.setType(McfType.INSTANCE_MCF);
     McfGraph n;
@@ -197,10 +142,7 @@ public class McfParserTest {
   }
 
   private McfGraph expected(String protoFile) throws IOException {
-    McfGraph.Builder expected = McfGraph.newBuilder();
-    String proto =
-        IOUtils.toString(this.getClass().getResourceAsStream(protoFile), StandardCharsets.UTF_8);
-    TextFormat.getParser().merge(new StringReader(proto), expected);
-    return expected.build();
+    return TestUtil.graph(
+        IOUtils.toString(this.getClass().getResourceAsStream(protoFile), StandardCharsets.UTF_8));
   }
 }

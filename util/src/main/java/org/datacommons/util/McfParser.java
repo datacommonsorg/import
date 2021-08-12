@@ -14,12 +14,17 @@
 
 package org.datacommons.util;
 
+import static org.datacommons.proto.Mcf.ValueType.RESOLVED_REF;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.function.BiConsumer;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -31,7 +36,6 @@ import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
 
 // A parser for converting text in Instance or Template MCF format into the McfGraph proto.
-// TODO: Implement COMPLEX_VALUE parsing
 public class McfParser {
   private static final Logger logger = LogManager.getLogger(McfParser.class);
 
@@ -164,6 +168,7 @@ public class McfParser {
       prevEntity = curEntity;
       curEntity = rhs;
       curEntityLineIdx = 0;
+      addNodeLocation();
     } else {
       if (curEntity.isEmpty()) {
         logCtx.addEntry(
@@ -177,6 +182,20 @@ public class McfParser {
 
       curEntityLineIdx++;
     }
+  }
+
+  private void addNodeLocation() {
+    assert !curEntity.isEmpty();
+    assert curEntityLineIdx == 0;
+
+    McfGraph.PropertyValues.Builder pvs =
+        graph
+            .getNodesOrDefault(curEntity, McfGraph.PropertyValues.getDefaultInstance())
+            .toBuilder();
+    Debug.Log.Location.Builder location = pvs.addLocationsBuilder();
+    location.setFile(logCtx.getLocationFile());
+    location.setLineNumber(lineNum);
+    graph.putNodes(curEntity, pvs.build());
   }
 
   private static McfParser init(Mcf.McfType type, boolean isResolved) {
@@ -244,7 +263,7 @@ public class McfParser {
     while ((g = parseNextNode()) != null) {
       graphs.add(g);
     }
-    return mergeGraphs(graphs);
+    return McfUtil.mergeGraphs(graphs);
   }
 
   private void parseNodeName(String node) {
@@ -369,7 +388,7 @@ public class McfParser {
       if (Vocabulary.isGlobalReference(val)) {
         // Strip the prefix and set the value.
         tval.setValue(val.substring(colon + 1));
-        tval.setType(Mcf.ValueType.RESOLVED_REF);
+        tval.setType(RESOLVED_REF);
         return;
       } else if (Vocabulary.isInternalReference(val)) {
         if (isResolved) {
@@ -393,11 +412,11 @@ public class McfParser {
       // prefix ("l:"), but we err on the side of user being careful about adding
       // local refs and accept the MCF without failing.
       tval.setValue(val);
-      tval.setType(Mcf.ValueType.RESOLVED_REF);
+      tval.setType(RESOLVED_REF);
       return;
     }
 
-    if (isNumber(val) || isBool(val)) {
+    if (McfUtil.isNumber(val) || McfUtil.isBool(val)) {
       // This parses to a number or bool.
       tval.setValue(val);
       tval.setType(Mcf.ValueType.NUMBER);
@@ -454,52 +473,6 @@ public class McfParser {
     return term;
   }
 
-  // Given a list of MCF graphs, merges common nodes and de-duplicates PVs.
-  public static McfGraph mergeGraphs(List<McfGraph> graphs) throws AssertionError {
-    if (graphs.isEmpty()) {
-      throw new AssertionError("mergeGraphs called with empty graphs!");
-    }
-
-    // node-id -> {prop -> vals}
-    HashMap<String, HashMap<String, HashSet<McfGraph.TypedValue>>> dedupMap = new HashMap<>();
-
-    for (McfGraph graph : graphs) {
-      for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
-        for (Map.Entry<String, McfGraph.Values> pv : node.getValue().getPvsMap().entrySet()) {
-          if (!dedupMap.containsKey(node.getKey())) {
-            dedupMap.put(node.getKey(), new HashMap<>());
-          }
-          if (!dedupMap.get(node.getKey()).containsKey(pv.getKey())) {
-            dedupMap.get(node.getKey()).put(pv.getKey(), new HashSet<>());
-          }
-          for (McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
-            dedupMap.get(node.getKey()).get(pv.getKey()).add(tv);
-          }
-        }
-      }
-    }
-
-    McfGraph.Builder result = McfGraph.newBuilder();
-    result.setType(graphs.get(0).getType());
-    for (Map.Entry<String, HashMap<String, HashSet<McfGraph.TypedValue>>> node :
-        dedupMap.entrySet()) {
-      McfGraph.PropertyValues.Builder pvs =
-          result
-              .getNodesOrDefault(node.getKey(), McfGraph.PropertyValues.getDefaultInstance())
-              .toBuilder();
-      for (Map.Entry<String, HashSet<McfGraph.TypedValue>> pv : node.getValue().entrySet()) {
-        McfGraph.Values.Builder tvs =
-            pvs.getPvsOrDefault(pv.getKey(), McfGraph.Values.getDefaultInstance()).toBuilder();
-        for (McfGraph.TypedValue tv : pv.getValue()) {
-          tvs.addTypedValues(tv);
-        }
-        pvs.putPvs(pv.getKey(), tvs.build());
-      }
-      result.putNodes(node.getKey(), pvs.build());
-    }
-    return result.build();
-  }
-
   // Splits a string using the delimiter character. A field is not split if the delimiter is within
   // a pair of double
   // quotes. If "includeEmpty" is true, then empty field is included.
@@ -507,6 +480,7 @@ public class McfParser {
   // For example "1,2,3" will be split into ["1","2","3"] but "'1,234',5" will be
   // split into ["1,234", "5"].
   // TODO: Support stripEscapesBeforeQuotes control like in internal version.
+  // TODO: Move this to its own file.
   public static final class SplitAndStripArg {
     public char delimiter = ',';
     public boolean includeEmpty = false;
@@ -553,8 +527,10 @@ public class McfParser {
         }
       }
     } catch (IOException e) {
-      errCb.accept(
-          "StrSplit_ParserFailure", "Parsing failed on '" + orig + "' (" + arg.context + ")");
+      if (errCb != null) {
+        errCb.accept(
+            "StrSplit_ParserFailure", "Parsing failed on '" + orig + "' (" + arg.context + ")");
+      }
     }
     return splits;
   }
@@ -566,29 +542,5 @@ public class McfParser {
       }
     }
     return val;
-  }
-
-  private static boolean isNumber(String val) {
-    try {
-      long l = Long.parseLong(val);
-      return true;
-    } catch (NumberFormatException e) {
-    }
-    try {
-      long l = Long.parseUnsignedLong(val);
-      return true;
-    } catch (NumberFormatException e) {
-    }
-    try {
-      double d = Double.parseDouble(val);
-      return true;
-    } catch (NumberFormatException e) {
-    }
-    return false;
-  }
-
-  private static boolean isBool(String val) {
-    String v = val.toLowerCase();
-    return v.equals("true") || v.equals("1") || v.equals("false") || v.equals("0");
   }
 }

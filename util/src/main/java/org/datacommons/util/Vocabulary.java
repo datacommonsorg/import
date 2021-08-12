@@ -26,6 +26,8 @@ public final class Vocabulary {
   public static final String SOURCE_TYPE = "Source";
   public static final String STAT_VAR_TYPE = "StatisticalVariable";
   public static final String STAT_VAR_OBSERVATION_TYPE = "StatVarObservation";
+  public static final String LEGACY_OBSERVATION_TYPE_SUFFIX = "Observation";
+  public static final String LEGACY_POPULATION_TYPE_SUFFIX = "Population";
   public static final String STAT_VAR_GROUP_TYPE = "StatVarGroup";
   public static final String PLACE_TYPE = "Place";
   public static final String ADMIN_AREA_TYPE = "AdministrativeArea";
@@ -174,5 +176,36 @@ public final class Vocabulary {
 
   public static boolean isInternalReference(String val) {
     return val.startsWith(INTERNAL_REF_PREFIX);
+  }
+
+  public static boolean isStatValueProperty(String val) {
+    String lcVal = val.toLowerCase();
+    return lcVal.endsWith("value")
+        || lcVal.endsWith("estimate")
+        || lcVal.endsWith("percentile")
+        || lcVal.equals("marginoferror")
+        || lcVal.endsWith("stderror")
+        || lcVal.endsWith("samplesize")
+        || lcVal.endsWith("growthrate");
+  }
+
+  public static boolean isStatVar(String type) {
+    return type.equals(STAT_VAR_TYPE);
+  }
+
+  public static boolean isStatVarObs(String type) {
+    return type.equals(STAT_VAR_OBSERVATION_TYPE);
+  }
+
+  public static boolean isStatVarGroup(String type) {
+    return type.equals(STAT_VAR_GROUP_TYPE);
+  }
+
+  public static boolean isLegacyObservation(String type) {
+    return type.endsWith(LEGACY_OBSERVATION_TYPE_SUFFIX) && !type.equals(STAT_VAR_OBSERVATION_TYPE);
+  }
+
+  public static boolean isPopulation(String type) {
+    return type.endsWith(LEGACY_POPULATION_TYPE_SUFFIX);
   }
 }
