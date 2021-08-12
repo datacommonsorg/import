@@ -251,7 +251,7 @@ public class TmcfCsvParser {
           if (term.type != McfParser.SchemaTerm.Type.COLUMN) {
             addLog(
                 Debug.Log.Level.LEVEL_ERROR,
-                "CSV_UnexpectedNonColumn",
+                "CSV_TmcfUnexpectedNonColumn",
                 "Unable to parse TMCF column "
                     + typedValue.getValue()
                     + " in property "
@@ -264,7 +264,7 @@ public class TmcfCsvParser {
           if (!cleanedColumnMap.containsKey(column)) {
             addLog(
                 Debug.Log.Level.LEVEL_ERROR,
-                "CSV_MissingTmcfColumn",
+                "CSV_TmcfMissingColumn",
                 "Column " + column + " referred in TMCF is missing from CSV header");
             continue;
           }

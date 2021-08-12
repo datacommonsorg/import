@@ -20,7 +20,7 @@ import org.datacommons.proto.Debug;
 public class LogWrapper {
   private static final Logger logger = LogManager.getLogger(McfParser.class);
 
-  private static final long SECONDS_BETWEEN_STATUS = 60;
+  private static final long SECONDS_BETWEEN_STATUS = 30;
   public static final String REPORT_JSON = "report.json";
   public static final int MAX_ERROR_LIMIT = 50;
   public static final int MAX_MESSAGES_PER_COUNTER = 10;

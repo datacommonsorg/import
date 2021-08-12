@@ -17,16 +17,45 @@ public class TestUtil {
     return logCtx;
   }
 
-  public static Mcf.McfGraph graph(String protoString) throws IOException {
+  public static Mcf.McfGraph graphFromProto(String protoString) throws IOException {
     Mcf.McfGraph.Builder expected = Mcf.McfGraph.newBuilder();
     TextFormat.getParser().merge(new StringReader(protoString), expected);
     return expected.build();
   }
 
-  public static String mcf(String filePath) throws IOException {
+  public static Mcf.McfGraph graphFromMcf(String mcfString) throws IOException {
+    return McfParser.parseInstanceMcfString(mcfString, false, TestUtil.newLogCtx("InMemory"));
+  }
+
+  public static String mcfFromFile(String filePath) throws IOException {
     Mcf.McfGraph graph =
         McfParser.parseInstanceMcfFile(filePath, false, TestUtil.newLogCtx(filePath));
     return McfUtil.serializeMcfGraph(graph, true);
+  }
+
+  public static boolean checkLog(Debug.Log log, String counter, String subMessage) {
+    if (!log.getCounterSet().getCountersMap().containsKey(counter)) {
+      System.err.println("Missing counter " + counter + " stat :: " + log.getCounterSet());
+      return false;
+    }
+    for (Debug.Log.Entry ent : log.getEntriesList()) {
+      if (ent.getCounterKey().equals(counter)) {
+        if (ent.getUserMessage().contains(subMessage)) {
+          return true;
+        } else {
+          System.err.println(
+              "Missing message fragment '"
+                  + subMessage
+                  + "'. Instead found '"
+                  + ent.getUserMessage()
+                  + "' :: "
+                  + ent);
+          return false;
+        }
+      }
+    }
+    System.err.println("Missing counter " + counter + " in entries :: " + log.getCounterSet());
+    return false;
   }
 
   public static Mcf.McfGraph getLocations(Mcf.McfGraph graph) {

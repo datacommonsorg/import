@@ -17,17 +17,59 @@ public final class Debug {
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.Log)
       com.google.protobuf.MessageOrBuilder {
 
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    java.util.List<org.datacommons.proto.Debug.Log.Entry> getEntriesList();
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    org.datacommons.proto.Debug.Log.Entry getEntries(int index);
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    int getEntriesCount();
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    java.util.List<? extends org.datacommons.proto.Debug.Log.EntryOrBuilder>
-        getEntriesOrBuilderList();
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    org.datacommons.proto.Debug.Log.EntryOrBuilder getEntriesOrBuilder(int index);
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     */
+    int getLevelSummaryCount();
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     */
+    boolean containsLevelSummary(java.lang.String key);
+    /** Use {@link #getLevelSummaryMap()} instead. */
+    @java.lang.Deprecated
+    java.util.Map<java.lang.String, java.lang.Long> getLevelSummary();
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     */
+    java.util.Map<java.lang.String, java.lang.Long> getLevelSummaryMap();
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     */
+    long getLevelSummaryOrDefault(java.lang.String key, long defaultValue);
+    /**
+     *
+     *
+     * <pre>
+     * Key: Level.name()
+     * </pre>
+     *
+     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     */
+    long getLevelSummaryOrThrow(java.lang.String key);
 
     /**
      * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
@@ -44,59 +86,17 @@ public final class Debug {
     /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
     org.datacommons.proto.Debug.Log.CounterSetOrBuilder getCounterSetOrBuilder();
 
-    /**
-     *
-     *
-     * <pre>
-     * Key: Level.name()
-     * </pre>
-     *
-     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
-     */
-    int getLevelSummaryCount();
-    /**
-     *
-     *
-     * <pre>
-     * Key: Level.name()
-     * </pre>
-     *
-     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
-     */
-    boolean containsLevelSummary(java.lang.String key);
-    /** Use {@link #getLevelSummaryMap()} instead. */
-    @java.lang.Deprecated
-    java.util.Map<java.lang.String, java.lang.Long> getLevelSummary();
-    /**
-     *
-     *
-     * <pre>
-     * Key: Level.name()
-     * </pre>
-     *
-     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
-     */
-    java.util.Map<java.lang.String, java.lang.Long> getLevelSummaryMap();
-    /**
-     *
-     *
-     * <pre>
-     * Key: Level.name()
-     * </pre>
-     *
-     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
-     */
-    long getLevelSummaryOrDefault(java.lang.String key, long defaultValue);
-    /**
-     *
-     *
-     * <pre>
-     * Key: Level.name()
-     * </pre>
-     *
-     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
-     */
-    long getLevelSummaryOrThrow(java.lang.String key);
+    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    java.util.List<org.datacommons.proto.Debug.Log.Entry> getEntriesList();
+    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    org.datacommons.proto.Debug.Log.Entry getEntries(int index);
+    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    int getEntriesCount();
+    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    java.util.List<? extends org.datacommons.proto.Debug.Log.EntryOrBuilder>
+        getEntriesOrBuilderList();
+    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    org.datacommons.proto.Debug.Log.EntryOrBuilder getEntriesOrBuilder(int index);
   }
   /**
    *
@@ -154,12 +154,18 @@ public final class Debug {
             case 10:
               {
                 if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                  entries_ = new java.util.ArrayList<org.datacommons.proto.Debug.Log.Entry>();
+                  levelSummary_ =
+                      com.google.protobuf.MapField.newMapField(
+                          LevelSummaryDefaultEntryHolder.defaultEntry);
                   mutable_bitField0_ |= 0x00000001;
                 }
-                entries_.add(
+                com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> levelSummary__ =
                     input.readMessage(
-                        org.datacommons.proto.Debug.Log.Entry.PARSER, extensionRegistry));
+                        LevelSummaryDefaultEntryHolder.defaultEntry.getParserForType(),
+                        extensionRegistry);
+                levelSummary_
+                    .getMutableMap()
+                    .put(levelSummary__.getKey(), levelSummary__.getValue());
                 break;
               }
             case 18:
@@ -181,18 +187,12 @@ public final class Debug {
             case 26:
               {
                 if (!((mutable_bitField0_ & 0x00000004) != 0)) {
-                  levelSummary_ =
-                      com.google.protobuf.MapField.newMapField(
-                          LevelSummaryDefaultEntryHolder.defaultEntry);
+                  entries_ = new java.util.ArrayList<org.datacommons.proto.Debug.Log.Entry>();
                   mutable_bitField0_ |= 0x00000004;
                 }
-                com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> levelSummary__ =
+                entries_.add(
                     input.readMessage(
-                        LevelSummaryDefaultEntryHolder.defaultEntry.getParserForType(),
-                        extensionRegistry);
-                levelSummary_
-                    .getMutableMap()
-                    .put(levelSummary__.getKey(), levelSummary__.getValue());
+                        org.datacommons.proto.Debug.Log.Entry.PARSER, extensionRegistry));
                 break;
               }
             default:
@@ -209,7 +209,7 @@ public final class Debug {
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+        if (((mutable_bitField0_ & 0x00000004) != 0)) {
           entries_ = java.util.Collections.unmodifiableList(entries_);
         }
         this.unknownFields = unknownFields.build();
@@ -225,7 +225,7 @@ public final class Debug {
     @java.lang.Override
     protected com.google.protobuf.MapField internalGetMapField(int number) {
       switch (number) {
-        case 3:
+        case 1:
           return internalGetLevelSummary();
         default:
           throw new RuntimeException("Invalid map field number: " + number);
@@ -3670,58 +3670,7 @@ public final class Debug {
     }
 
     private int bitField0_;
-    public static final int ENTRIES_FIELD_NUMBER = 1;
-    private java.util.List<org.datacommons.proto.Debug.Log.Entry> entries_;
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    public java.util.List<org.datacommons.proto.Debug.Log.Entry> getEntriesList() {
-      return entries_;
-    }
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    public java.util.List<? extends org.datacommons.proto.Debug.Log.EntryOrBuilder>
-        getEntriesOrBuilderList() {
-      return entries_;
-    }
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    public int getEntriesCount() {
-      return entries_.size();
-    }
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    public org.datacommons.proto.Debug.Log.Entry getEntries(int index) {
-      return entries_.get(index);
-    }
-    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-    public org.datacommons.proto.Debug.Log.EntryOrBuilder getEntriesOrBuilder(int index) {
-      return entries_.get(index);
-    }
-
-    public static final int COUNTER_SET_FIELD_NUMBER = 2;
-    private org.datacommons.proto.Debug.Log.CounterSet counterSet_;
-    /**
-     * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
-     *
-     * @return Whether the counterSet field is set.
-     */
-    public boolean hasCounterSet() {
-      return ((bitField0_ & 0x00000001) != 0);
-    }
-    /**
-     * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
-     *
-     * @return The counterSet.
-     */
-    public org.datacommons.proto.Debug.Log.CounterSet getCounterSet() {
-      return counterSet_ == null
-          ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
-          : counterSet_;
-    }
-    /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
-    public org.datacommons.proto.Debug.Log.CounterSetOrBuilder getCounterSetOrBuilder() {
-      return counterSet_ == null
-          ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
-          : counterSet_;
-    }
-
-    public static final int LEVEL_SUMMARY_FIELD_NUMBER = 3;
+    public static final int LEVEL_SUMMARY_FIELD_NUMBER = 1;
 
     private static final class LevelSummaryDefaultEntryHolder {
       static final com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> defaultEntry =
@@ -3755,7 +3704,7 @@ public final class Debug {
      * Key: Level.name()
      * </pre>
      *
-     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
      */
     public boolean containsLevelSummary(java.lang.String key) {
       if (key == null) {
@@ -3775,7 +3724,7 @@ public final class Debug {
      * Key: Level.name()
      * </pre>
      *
-     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
      */
     public java.util.Map<java.lang.String, java.lang.Long> getLevelSummaryMap() {
       return internalGetLevelSummary().getMap();
@@ -3787,7 +3736,7 @@ public final class Debug {
      * Key: Level.name()
      * </pre>
      *
-     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
      */
     public long getLevelSummaryOrDefault(java.lang.String key, long defaultValue) {
       if (key == null) {
@@ -3803,7 +3752,7 @@ public final class Debug {
      * Key: Level.name()
      * </pre>
      *
-     * <code>map&lt;string, int64&gt; level_summary = 3;</code>
+     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
      */
     public long getLevelSummaryOrThrow(java.lang.String key) {
       if (key == null) {
@@ -3814,6 +3763,57 @@ public final class Debug {
         throw new java.lang.IllegalArgumentException();
       }
       return map.get(key);
+    }
+
+    public static final int COUNTER_SET_FIELD_NUMBER = 2;
+    private org.datacommons.proto.Debug.Log.CounterSet counterSet_;
+    /**
+     * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
+     *
+     * @return Whether the counterSet field is set.
+     */
+    public boolean hasCounterSet() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
+     *
+     * @return The counterSet.
+     */
+    public org.datacommons.proto.Debug.Log.CounterSet getCounterSet() {
+      return counterSet_ == null
+          ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
+          : counterSet_;
+    }
+    /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
+    public org.datacommons.proto.Debug.Log.CounterSetOrBuilder getCounterSetOrBuilder() {
+      return counterSet_ == null
+          ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
+          : counterSet_;
+    }
+
+    public static final int ENTRIES_FIELD_NUMBER = 3;
+    private java.util.List<org.datacommons.proto.Debug.Log.Entry> entries_;
+    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    public java.util.List<org.datacommons.proto.Debug.Log.Entry> getEntriesList() {
+      return entries_;
+    }
+    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    public java.util.List<? extends org.datacommons.proto.Debug.Log.EntryOrBuilder>
+        getEntriesOrBuilderList() {
+      return entries_;
+    }
+    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    public int getEntriesCount() {
+      return entries_.size();
+    }
+    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    public org.datacommons.proto.Debug.Log.Entry getEntries(int index) {
+      return entries_.get(index);
+    }
+    /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    public org.datacommons.proto.Debug.Log.EntryOrBuilder getEntriesOrBuilder(int index) {
+      return entries_.get(index);
     }
 
     private byte memoizedIsInitialized = -1;
@@ -3830,14 +3830,14 @@ public final class Debug {
 
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-      for (int i = 0; i < entries_.size(); i++) {
-        output.writeMessage(1, entries_.get(i));
-      }
+      com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
+          output, internalGetLevelSummary(), LevelSummaryDefaultEntryHolder.defaultEntry, 1);
       if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(2, getCounterSet());
       }
-      com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
-          output, internalGetLevelSummary(), LevelSummaryDefaultEntryHolder.defaultEntry, 3);
+      for (int i = 0; i < entries_.size(); i++) {
+        output.writeMessage(3, entries_.get(i));
+      }
       unknownFields.writeTo(output);
     }
 
@@ -3847,12 +3847,6 @@ public final class Debug {
       if (size != -1) return size;
 
       size = 0;
-      for (int i = 0; i < entries_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, entries_.get(i));
-      }
-      if (((bitField0_ & 0x00000001) != 0)) {
-        size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getCounterSet());
-      }
       for (java.util.Map.Entry<java.lang.String, java.lang.Long> entry :
           internalGetLevelSummary().getMap().entrySet()) {
         com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> levelSummary__ =
@@ -3861,7 +3855,13 @@ public final class Debug {
                 .setKey(entry.getKey())
                 .setValue(entry.getValue())
                 .build();
-        size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, levelSummary__);
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, levelSummary__);
+      }
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getCounterSet());
+      }
+      for (int i = 0; i < entries_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, entries_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -3878,12 +3878,12 @@ public final class Debug {
       }
       org.datacommons.proto.Debug.Log other = (org.datacommons.proto.Debug.Log) obj;
 
-      if (!getEntriesList().equals(other.getEntriesList())) return false;
+      if (!internalGetLevelSummary().equals(other.internalGetLevelSummary())) return false;
       if (hasCounterSet() != other.hasCounterSet()) return false;
       if (hasCounterSet()) {
         if (!getCounterSet().equals(other.getCounterSet())) return false;
       }
-      if (!internalGetLevelSummary().equals(other.internalGetLevelSummary())) return false;
+      if (!getEntriesList().equals(other.getEntriesList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -3895,17 +3895,17 @@ public final class Debug {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (getEntriesCount() > 0) {
-        hash = (37 * hash) + ENTRIES_FIELD_NUMBER;
-        hash = (53 * hash) + getEntriesList().hashCode();
+      if (!internalGetLevelSummary().getMap().isEmpty()) {
+        hash = (37 * hash) + LEVEL_SUMMARY_FIELD_NUMBER;
+        hash = (53 * hash) + internalGetLevelSummary().hashCode();
       }
       if (hasCounterSet()) {
         hash = (37 * hash) + COUNTER_SET_FIELD_NUMBER;
         hash = (53 * hash) + getCounterSet().hashCode();
       }
-      if (!internalGetLevelSummary().getMap().isEmpty()) {
-        hash = (37 * hash) + LEVEL_SUMMARY_FIELD_NUMBER;
-        hash = (53 * hash) + internalGetLevelSummary().hashCode();
+      if (getEntriesCount() > 0) {
+        hash = (37 * hash) + ENTRIES_FIELD_NUMBER;
+        hash = (53 * hash) + getEntriesList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -4028,7 +4028,7 @@ public final class Debug {
       @SuppressWarnings({"rawtypes"})
       protected com.google.protobuf.MapField internalGetMapField(int number) {
         switch (number) {
-          case 3:
+          case 1:
             return internalGetLevelSummary();
           default:
             throw new RuntimeException("Invalid map field number: " + number);
@@ -4038,7 +4038,7 @@ public final class Debug {
       @SuppressWarnings({"rawtypes"})
       protected com.google.protobuf.MapField internalGetMutableMapField(int number) {
         switch (number) {
-          case 3:
+          case 1:
             return internalGetMutableLevelSummary();
           default:
             throw new RuntimeException("Invalid map field number: " + number);
@@ -4067,27 +4067,27 @@ public final class Debug {
 
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
-          getEntriesFieldBuilder();
           getCounterSetFieldBuilder();
+          getEntriesFieldBuilder();
         }
       }
 
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        if (entriesBuilder_ == null) {
-          entries_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
-        } else {
-          entriesBuilder_.clear();
-        }
+        internalGetMutableLevelSummary().clear();
         if (counterSetBuilder_ == null) {
           counterSet_ = null;
         } else {
           counterSetBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
-        internalGetMutableLevelSummary().clear();
+        if (entriesBuilder_ == null) {
+          entries_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          entriesBuilder_.clear();
+        }
         return this;
       }
 
@@ -4115,15 +4115,8 @@ public final class Debug {
         org.datacommons.proto.Debug.Log result = new org.datacommons.proto.Debug.Log(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (entriesBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) != 0)) {
-            entries_ = java.util.Collections.unmodifiableList(entries_);
-            bitField0_ = (bitField0_ & ~0x00000001);
-          }
-          result.entries_ = entries_;
-        } else {
-          result.entries_ = entriesBuilder_.build();
-        }
+        result.levelSummary_ = internalGetLevelSummary();
+        result.levelSummary_.makeImmutable();
         if (((from_bitField0_ & 0x00000002) != 0)) {
           if (counterSetBuilder_ == null) {
             result.counterSet_ = counterSet_;
@@ -4132,8 +4125,15 @@ public final class Debug {
           }
           to_bitField0_ |= 0x00000001;
         }
-        result.levelSummary_ = internalGetLevelSummary();
-        result.levelSummary_.makeImmutable();
+        if (entriesBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) != 0)) {
+            entries_ = java.util.Collections.unmodifiableList(entries_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.entries_ = entries_;
+        } else {
+          result.entries_ = entriesBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -4186,11 +4186,15 @@ public final class Debug {
 
       public Builder mergeFrom(org.datacommons.proto.Debug.Log other) {
         if (other == org.datacommons.proto.Debug.Log.getDefaultInstance()) return this;
+        internalGetMutableLevelSummary().mergeFrom(other.internalGetLevelSummary());
+        if (other.hasCounterSet()) {
+          mergeCounterSet(other.getCounterSet());
+        }
         if (entriesBuilder_ == null) {
           if (!other.entries_.isEmpty()) {
             if (entries_.isEmpty()) {
               entries_ = other.entries_;
-              bitField0_ = (bitField0_ & ~0x00000001);
+              bitField0_ = (bitField0_ & ~0x00000004);
             } else {
               ensureEntriesIsMutable();
               entries_.addAll(other.entries_);
@@ -4203,7 +4207,7 @@ public final class Debug {
               entriesBuilder_.dispose();
               entriesBuilder_ = null;
               entries_ = other.entries_;
-              bitField0_ = (bitField0_ & ~0x00000001);
+              bitField0_ = (bitField0_ & ~0x00000004);
               entriesBuilder_ =
                   com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
                       ? getEntriesFieldBuilder()
@@ -4213,10 +4217,6 @@ public final class Debug {
             }
           }
         }
-        if (other.hasCounterSet()) {
-          mergeCounterSet(other.getCounterSet());
-        }
-        internalGetMutableLevelSummary().mergeFrom(other.internalGetLevelSummary());
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -4248,208 +4248,156 @@ public final class Debug {
 
       private int bitField0_;
 
-      private java.util.List<org.datacommons.proto.Debug.Log.Entry> entries_ =
-          java.util.Collections.emptyList();
+      private com.google.protobuf.MapField<java.lang.String, java.lang.Long> levelSummary_;
 
-      private void ensureEntriesIsMutable() {
-        if (!((bitField0_ & 0x00000001) != 0)) {
-          entries_ = new java.util.ArrayList<org.datacommons.proto.Debug.Log.Entry>(entries_);
-          bitField0_ |= 0x00000001;
+      private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
+          internalGetLevelSummary() {
+        if (levelSummary_ == null) {
+          return com.google.protobuf.MapField.emptyMapField(
+              LevelSummaryDefaultEntryHolder.defaultEntry);
         }
-      }
-
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Debug.Log.Entry,
-              org.datacommons.proto.Debug.Log.Entry.Builder,
-              org.datacommons.proto.Debug.Log.EntryOrBuilder>
-          entriesBuilder_;
-
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public java.util.List<org.datacommons.proto.Debug.Log.Entry> getEntriesList() {
-        if (entriesBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(entries_);
-        } else {
-          return entriesBuilder_.getMessageList();
-        }
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public int getEntriesCount() {
-        if (entriesBuilder_ == null) {
-          return entries_.size();
-        } else {
-          return entriesBuilder_.getCount();
-        }
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public org.datacommons.proto.Debug.Log.Entry getEntries(int index) {
-        if (entriesBuilder_ == null) {
-          return entries_.get(index);
-        } else {
-          return entriesBuilder_.getMessage(index);
-        }
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public Builder setEntries(int index, org.datacommons.proto.Debug.Log.Entry value) {
-        if (entriesBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureEntriesIsMutable();
-          entries_.set(index, value);
-          onChanged();
-        } else {
-          entriesBuilder_.setMessage(index, value);
-        }
-        return this;
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public Builder setEntries(
-          int index, org.datacommons.proto.Debug.Log.Entry.Builder builderForValue) {
-        if (entriesBuilder_ == null) {
-          ensureEntriesIsMutable();
-          entries_.set(index, builderForValue.build());
-          onChanged();
-        } else {
-          entriesBuilder_.setMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public Builder addEntries(org.datacommons.proto.Debug.Log.Entry value) {
-        if (entriesBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureEntriesIsMutable();
-          entries_.add(value);
-          onChanged();
-        } else {
-          entriesBuilder_.addMessage(value);
-        }
-        return this;
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public Builder addEntries(int index, org.datacommons.proto.Debug.Log.Entry value) {
-        if (entriesBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureEntriesIsMutable();
-          entries_.add(index, value);
-          onChanged();
-        } else {
-          entriesBuilder_.addMessage(index, value);
-        }
-        return this;
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public Builder addEntries(org.datacommons.proto.Debug.Log.Entry.Builder builderForValue) {
-        if (entriesBuilder_ == null) {
-          ensureEntriesIsMutable();
-          entries_.add(builderForValue.build());
-          onChanged();
-        } else {
-          entriesBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public Builder addEntries(
-          int index, org.datacommons.proto.Debug.Log.Entry.Builder builderForValue) {
-        if (entriesBuilder_ == null) {
-          ensureEntriesIsMutable();
-          entries_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          entriesBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public Builder addAllEntries(
-          java.lang.Iterable<? extends org.datacommons.proto.Debug.Log.Entry> values) {
-        if (entriesBuilder_ == null) {
-          ensureEntriesIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, entries_);
-          onChanged();
-        } else {
-          entriesBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public Builder clearEntries() {
-        if (entriesBuilder_ == null) {
-          entries_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
-          onChanged();
-        } else {
-          entriesBuilder_.clear();
-        }
-        return this;
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public Builder removeEntries(int index) {
-        if (entriesBuilder_ == null) {
-          ensureEntriesIsMutable();
-          entries_.remove(index);
-          onChanged();
-        } else {
-          entriesBuilder_.remove(index);
-        }
-        return this;
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public org.datacommons.proto.Debug.Log.Entry.Builder getEntriesBuilder(int index) {
-        return getEntriesFieldBuilder().getBuilder(index);
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public org.datacommons.proto.Debug.Log.EntryOrBuilder getEntriesOrBuilder(int index) {
-        if (entriesBuilder_ == null) {
-          return entries_.get(index);
-        } else {
-          return entriesBuilder_.getMessageOrBuilder(index);
-        }
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public java.util.List<? extends org.datacommons.proto.Debug.Log.EntryOrBuilder>
-          getEntriesOrBuilderList() {
-        if (entriesBuilder_ != null) {
-          return entriesBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(entries_);
-        }
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public org.datacommons.proto.Debug.Log.Entry.Builder addEntriesBuilder() {
-        return getEntriesFieldBuilder()
-            .addBuilder(org.datacommons.proto.Debug.Log.Entry.getDefaultInstance());
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public org.datacommons.proto.Debug.Log.Entry.Builder addEntriesBuilder(int index) {
-        return getEntriesFieldBuilder()
-            .addBuilder(index, org.datacommons.proto.Debug.Log.Entry.getDefaultInstance());
-      }
-      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 1;</code> */
-      public java.util.List<org.datacommons.proto.Debug.Log.Entry.Builder> getEntriesBuilderList() {
-        return getEntriesFieldBuilder().getBuilderList();
+        return levelSummary_;
       }
 
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Debug.Log.Entry,
-              org.datacommons.proto.Debug.Log.Entry.Builder,
-              org.datacommons.proto.Debug.Log.EntryOrBuilder>
-          getEntriesFieldBuilder() {
-        if (entriesBuilder_ == null) {
-          entriesBuilder_ =
-              new com.google.protobuf.RepeatedFieldBuilderV3<
-                  org.datacommons.proto.Debug.Log.Entry,
-                  org.datacommons.proto.Debug.Log.Entry.Builder,
-                  org.datacommons.proto.Debug.Log.EntryOrBuilder>(
-                  entries_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
-          entries_ = null;
+      private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
+          internalGetMutableLevelSummary() {
+        onChanged();
+        ;
+        if (levelSummary_ == null) {
+          levelSummary_ =
+              com.google.protobuf.MapField.newMapField(LevelSummaryDefaultEntryHolder.defaultEntry);
         }
-        return entriesBuilder_;
+        if (!levelSummary_.isMutable()) {
+          levelSummary_ = levelSummary_.copy();
+        }
+        return levelSummary_;
+      }
+
+      public int getLevelSummaryCount() {
+        return internalGetLevelSummary().getMap().size();
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       */
+      public boolean containsLevelSummary(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        return internalGetLevelSummary().getMap().containsKey(key);
+      }
+      /** Use {@link #getLevelSummaryMap()} instead. */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.Long> getLevelSummary() {
+        return getLevelSummaryMap();
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       */
+      public java.util.Map<java.lang.String, java.lang.Long> getLevelSummaryMap() {
+        return internalGetLevelSummary().getMap();
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       */
+      public long getLevelSummaryOrDefault(java.lang.String key, long defaultValue) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        java.util.Map<java.lang.String, java.lang.Long> map = internalGetLevelSummary().getMap();
+        return map.containsKey(key) ? map.get(key) : defaultValue;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       */
+      public long getLevelSummaryOrThrow(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        java.util.Map<java.lang.String, java.lang.Long> map = internalGetLevelSummary().getMap();
+        if (!map.containsKey(key)) {
+          throw new java.lang.IllegalArgumentException();
+        }
+        return map.get(key);
+      }
+
+      public Builder clearLevelSummary() {
+        internalGetMutableLevelSummary().getMutableMap().clear();
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       */
+      public Builder removeLevelSummary(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        internalGetMutableLevelSummary().getMutableMap().remove(key);
+        return this;
+      }
+      /** Use alternate mutation accessors instead. */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, java.lang.Long> getMutableLevelSummary() {
+        return internalGetMutableLevelSummary().getMutableMap();
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       */
+      public Builder putLevelSummary(java.lang.String key, long value) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+
+        internalGetMutableLevelSummary().getMutableMap().put(key, value);
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key: Level.name()
+       * </pre>
+       *
+       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       */
+      public Builder putAllLevelSummary(java.util.Map<java.lang.String, java.lang.Long> values) {
+        internalGetMutableLevelSummary().getMutableMap().putAll(values);
+        return this;
       }
 
       private org.datacommons.proto.Debug.Log.CounterSet counterSet_;
@@ -4571,156 +4519,208 @@ public final class Debug {
         return counterSetBuilder_;
       }
 
-      private com.google.protobuf.MapField<java.lang.String, java.lang.Long> levelSummary_;
+      private java.util.List<org.datacommons.proto.Debug.Log.Entry> entries_ =
+          java.util.Collections.emptyList();
 
-      private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
-          internalGetLevelSummary() {
-        if (levelSummary_ == null) {
-          return com.google.protobuf.MapField.emptyMapField(
-              LevelSummaryDefaultEntryHolder.defaultEntry);
+      private void ensureEntriesIsMutable() {
+        if (!((bitField0_ & 0x00000004) != 0)) {
+          entries_ = new java.util.ArrayList<org.datacommons.proto.Debug.Log.Entry>(entries_);
+          bitField0_ |= 0x00000004;
         }
-        return levelSummary_;
-      }
-
-      private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
-          internalGetMutableLevelSummary() {
-        onChanged();
-        ;
-        if (levelSummary_ == null) {
-          levelSummary_ =
-              com.google.protobuf.MapField.newMapField(LevelSummaryDefaultEntryHolder.defaultEntry);
-        }
-        if (!levelSummary_.isMutable()) {
-          levelSummary_ = levelSummary_.copy();
-        }
-        return levelSummary_;
       }
 
-      public int getLevelSummaryCount() {
-        return internalGetLevelSummary().getMap().size();
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Key: Level.name()
-       * </pre>
-       *
-       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
-       */
-      public boolean containsLevelSummary(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        return internalGetLevelSummary().getMap().containsKey(key);
-      }
-      /** Use {@link #getLevelSummaryMap()} instead. */
-      @java.lang.Deprecated
-      public java.util.Map<java.lang.String, java.lang.Long> getLevelSummary() {
-        return getLevelSummaryMap();
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Key: Level.name()
-       * </pre>
-       *
-       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
-       */
-      public java.util.Map<java.lang.String, java.lang.Long> getLevelSummaryMap() {
-        return internalGetLevelSummary().getMap();
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Key: Level.name()
-       * </pre>
-       *
-       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
-       */
-      public long getLevelSummaryOrDefault(java.lang.String key, long defaultValue) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        java.util.Map<java.lang.String, java.lang.Long> map = internalGetLevelSummary().getMap();
-        return map.containsKey(key) ? map.get(key) : defaultValue;
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Key: Level.name()
-       * </pre>
-       *
-       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
-       */
-      public long getLevelSummaryOrThrow(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        java.util.Map<java.lang.String, java.lang.Long> map = internalGetLevelSummary().getMap();
-        if (!map.containsKey(key)) {
-          throw new java.lang.IllegalArgumentException();
-        }
-        return map.get(key);
-      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Debug.Log.Entry,
+              org.datacommons.proto.Debug.Log.Entry.Builder,
+              org.datacommons.proto.Debug.Log.EntryOrBuilder>
+          entriesBuilder_;
 
-      public Builder clearLevelSummary() {
-        internalGetMutableLevelSummary().getMutableMap().clear();
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public java.util.List<org.datacommons.proto.Debug.Log.Entry> getEntriesList() {
+        if (entriesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(entries_);
+        } else {
+          return entriesBuilder_.getMessageList();
+        }
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public int getEntriesCount() {
+        if (entriesBuilder_ == null) {
+          return entries_.size();
+        } else {
+          return entriesBuilder_.getCount();
+        }
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public org.datacommons.proto.Debug.Log.Entry getEntries(int index) {
+        if (entriesBuilder_ == null) {
+          return entries_.get(index);
+        } else {
+          return entriesBuilder_.getMessage(index);
+        }
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public Builder setEntries(int index, org.datacommons.proto.Debug.Log.Entry value) {
+        if (entriesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureEntriesIsMutable();
+          entries_.set(index, value);
+          onChanged();
+        } else {
+          entriesBuilder_.setMessage(index, value);
+        }
         return this;
       }
-      /**
-       *
-       *
-       * <pre>
-       * Key: Level.name()
-       * </pre>
-       *
-       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
-       */
-      public Builder removeLevelSummary(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public Builder setEntries(
+          int index, org.datacommons.proto.Debug.Log.Entry.Builder builderForValue) {
+        if (entriesBuilder_ == null) {
+          ensureEntriesIsMutable();
+          entries_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          entriesBuilder_.setMessage(index, builderForValue.build());
         }
-        internalGetMutableLevelSummary().getMutableMap().remove(key);
         return this;
       }
-      /** Use alternate mutation accessors instead. */
-      @java.lang.Deprecated
-      public java.util.Map<java.lang.String, java.lang.Long> getMutableLevelSummary() {
-        return internalGetMutableLevelSummary().getMutableMap();
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Key: Level.name()
-       * </pre>
-       *
-       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
-       */
-      public Builder putLevelSummary(java.lang.String key, long value) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public Builder addEntries(org.datacommons.proto.Debug.Log.Entry value) {
+        if (entriesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureEntriesIsMutable();
+          entries_.add(value);
+          onChanged();
+        } else {
+          entriesBuilder_.addMessage(value);
         }
+        return this;
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public Builder addEntries(int index, org.datacommons.proto.Debug.Log.Entry value) {
+        if (entriesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureEntriesIsMutable();
+          entries_.add(index, value);
+          onChanged();
+        } else {
+          entriesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public Builder addEntries(org.datacommons.proto.Debug.Log.Entry.Builder builderForValue) {
+        if (entriesBuilder_ == null) {
+          ensureEntriesIsMutable();
+          entries_.add(builderForValue.build());
+          onChanged();
+        } else {
+          entriesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public Builder addEntries(
+          int index, org.datacommons.proto.Debug.Log.Entry.Builder builderForValue) {
+        if (entriesBuilder_ == null) {
+          ensureEntriesIsMutable();
+          entries_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          entriesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public Builder addAllEntries(
+          java.lang.Iterable<? extends org.datacommons.proto.Debug.Log.Entry> values) {
+        if (entriesBuilder_ == null) {
+          ensureEntriesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, entries_);
+          onChanged();
+        } else {
+          entriesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public Builder clearEntries() {
+        if (entriesBuilder_ == null) {
+          entries_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          entriesBuilder_.clear();
+        }
+        return this;
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public Builder removeEntries(int index) {
+        if (entriesBuilder_ == null) {
+          ensureEntriesIsMutable();
+          entries_.remove(index);
+          onChanged();
+        } else {
+          entriesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public org.datacommons.proto.Debug.Log.Entry.Builder getEntriesBuilder(int index) {
+        return getEntriesFieldBuilder().getBuilder(index);
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public org.datacommons.proto.Debug.Log.EntryOrBuilder getEntriesOrBuilder(int index) {
+        if (entriesBuilder_ == null) {
+          return entries_.get(index);
+        } else {
+          return entriesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public java.util.List<? extends org.datacommons.proto.Debug.Log.EntryOrBuilder>
+          getEntriesOrBuilderList() {
+        if (entriesBuilder_ != null) {
+          return entriesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(entries_);
+        }
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public org.datacommons.proto.Debug.Log.Entry.Builder addEntriesBuilder() {
+        return getEntriesFieldBuilder()
+            .addBuilder(org.datacommons.proto.Debug.Log.Entry.getDefaultInstance());
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public org.datacommons.proto.Debug.Log.Entry.Builder addEntriesBuilder(int index) {
+        return getEntriesFieldBuilder()
+            .addBuilder(index, org.datacommons.proto.Debug.Log.Entry.getDefaultInstance());
+      }
+      /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+      public java.util.List<org.datacommons.proto.Debug.Log.Entry.Builder> getEntriesBuilderList() {
+        return getEntriesFieldBuilder().getBuilderList();
+      }
 
-        internalGetMutableLevelSummary().getMutableMap().put(key, value);
-        return this;
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Key: Level.name()
-       * </pre>
-       *
-       * <code>map&lt;string, int64&gt; level_summary = 3;</code>
-       */
-      public Builder putAllLevelSummary(java.util.Map<java.lang.String, java.lang.Long> values) {
-        internalGetMutableLevelSummary().getMutableMap().putAll(values);
-        return this;
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Debug.Log.Entry,
+              org.datacommons.proto.Debug.Log.Entry.Builder,
+              org.datacommons.proto.Debug.Log.EntryOrBuilder>
+          getEntriesFieldBuilder() {
+        if (entriesBuilder_ == null) {
+          entriesBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.Debug.Log.Entry,
+                  org.datacommons.proto.Debug.Log.Entry.Builder,
+                  org.datacommons.proto.Debug.Log.EntryOrBuilder>(
+                  entries_, ((bitField0_ & 0x00000004) != 0), getParentForChildren(), isClean());
+          entries_ = null;
+        }
+        return entriesBuilder_;
       }
 
       @java.lang.Override
@@ -4810,11 +4810,11 @@ public final class Debug {
   static {
     java.lang.String[] descriptorData = {
       "\n\013Debug.proto\022\025org.datacommons.proto\"\273\005\n"
-          + "\003Log\0221\n\007entries\030\001 \003(\0132 .org.datacommons."
-          + "proto.Log.Entry\022:\n\013counter_set\030\002 \001(\0132%.o"
-          + "rg.datacommons.proto.Log.CounterSet\022C\n\rl"
-          + "evel_summary\030\003 \003(\0132,.org.datacommons.pro"
-          + "to.Log.LevelSummaryEntry\032-\n\010Location\022\014\n\004"
+          + "\003Log\022C\n\rlevel_summary\030\001 \003(\0132,.org.dataco"
+          + "mmons.proto.Log.LevelSummaryEntry\022:\n\013cou"
+          + "nter_set\030\002 \001(\0132%.org.datacommons.proto.L"
+          + "og.CounterSet\0221\n\007entries\030\003 \003(\0132 .org.dat"
+          + "acommons.proto.Log.Entry\032-\n\010Location\022\014\n\004"
           + "file\030\001 \001(\t\022\023\n\013line_number\030\002 \001(\003\032\204\001\n\nCoun"
           + "terSet\022E\n\010counters\030\001 \003(\01323.org.datacommo"
           + "ns.proto.Log.CounterSet.CountersEntry\032/\n"
@@ -4837,7 +4837,7 @@ public final class Debug {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_descriptor,
             new java.lang.String[] {
-              "Entries", "CounterSet", "LevelSummary",
+              "LevelSummary", "CounterSet", "Entries",
             });
     internal_static_org_datacommons_proto_Log_Location_descriptor =
         internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(0);

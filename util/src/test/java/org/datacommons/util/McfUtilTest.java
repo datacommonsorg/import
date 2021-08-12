@@ -124,7 +124,7 @@ public class McfUtilTest {
 
     // Match locations.
     Mcf.McfGraph expLoc =
-        TestUtil.graph(
+        TestUtil.graphFromProto(
             IOUtils.toString(
                 this.getClass().getResourceAsStream("McfUtilTest_MergedLocations.textproto"),
                 StandardCharsets.UTF_8));
