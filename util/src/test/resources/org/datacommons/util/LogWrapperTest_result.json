@@ -1,4 +1,17 @@
 {
+  "levelSummary": {
+    "LEVEL_ERROR": "1",
+    "LEVEL_WARNING": "1",
+    "LEVEL_FATAL": "1"
+  },
+  "counterSet": {
+    "counters": {
+      "MCF_NoColonFound": "1",
+      "MCF_EmptyValue": "1",
+      "CSV_GeneralStats": "42",
+      "CSV_FoundABomb": "1"
+    }
+  },
   "entries": [{
     "level": "LEVEL_ERROR",
     "location": {
@@ -23,18 +36,5 @@
     },
     "userMessage": "Found a Time Bomb",
     "counterKey": "CSV_FoundABomb"
-  }],
-  "counterSet": {
-    "counters": {
-      "MCF_NoColonFound": "1",
-      "MCF_EmptyValue": "1",
-      "CSV_GeneralStats": "42",
-      "CSV_FoundABomb": "1"
-    }
-  },
-  "levelSummary": {
-    "LEVEL_ERROR": "1",
-    "LEVEL_WARNING": "1",
-    "LEVEL_FATAL": "1"
-  }
+  }]
 }
