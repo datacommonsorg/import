@@ -12,6 +12,8 @@ public class ComplexValueParserTest {
   public void testQuantityDcid() {
     assertEquals("Years10To20", toComplexValueDcid("[dcs:Years 10 20]"));
     assertEquals("Years10To20", toComplexValueDcid("[10 20 Years]"));
+    // Spaces within [] are okay
+    assertEquals("Years10To20", toComplexValueDcid("[ Years 10 20 ]"));
 
     assertEquals("Years10Onwards", toComplexValueDcid("[dcs:Years 10 -]"));
     assertEquals("Years10Onwards", toComplexValueDcid("[10 - dcs:Years]"));
@@ -83,7 +85,7 @@ public class ComplexValueParserTest {
 
     log = toComplexValueFailure("[Years 1 2 3]");
     assertTrue(log.getCounterSet().containsCounters("MCF_MalformedComplexValueParts"));
-    assertTrue(log.getEntries(0).getUserMessage().contains("2 or 3"));
+    assertTrue(log.getEntries(0).getUserMessage().contains("value must have 2"));
 
     log = toComplexValueFailure("[dcs:Years -]");
     assertTrue(log.getCounterSet().containsCounters("MCF_QuantityMalformedValue"));

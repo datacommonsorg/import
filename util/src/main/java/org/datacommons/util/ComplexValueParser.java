@@ -1,7 +1,6 @@
 package org.datacommons.util;
 
 import static org.datacommons.proto.Mcf.ValueType.*;
-import static org.datacommons.util.McfParser.splitAndStripWithQuoteEscape;
 
 import java.util.List;
 import org.datacommons.proto.Debug;
@@ -30,6 +29,8 @@ public class ComplexValueParser {
   private String dcid;
   private String name;
 
+  // NOTE: complexValue is assumed to be trimmed. Since it comes from already parsed TypedValue
+  // .value
   public ComplexValueParser(
       String mainNodeId,
       Mcf.McfGraph.PropertyValues mainNode,
@@ -73,7 +74,7 @@ public class ComplexValueParser {
     arg.includeEmpty = false;
     arg.stripEnclosingQuotes = false;
     // TODO: Passthru errCb
-    List<String> fields = splitAndStripWithQuoteEscape(trimmedComplexValue, arg, null);
+    List<String> fields = McfParser.splitAndStripWithQuoteEscape(trimmedComplexValue, arg, null);
     if (fields.isEmpty()) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
@@ -92,7 +93,8 @@ public class ComplexValueParser {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedComplexValueParts",
-          "Complex value must have 2 or 3 components but '"
+          "Complex value must have 2 (e.g., [Years 10]) or 3 (e.g., [Years 10 20]) "
+              + "components but '"
               + complexValue
               + "' in property "
               + prop
@@ -163,10 +165,12 @@ public class ComplexValueParser {
       if (unit.toLowerCase().equals(Vocabulary.LAT_AND_LONG.toLowerCase())) {
         isLatLng = true;
         if (!parseLatLng(fields.get(startIdx), fields.get(endIdx))) {
+          // On error parseLatLng would have updated logCtx
           return false;
         }
       } else {
         if (!parseQuantityRange(fields.get(startIdx), fields.get(endIdx), unit)) {
+          // On error parseQuantityRange would have updated logCtx
           return false;
         }
       }

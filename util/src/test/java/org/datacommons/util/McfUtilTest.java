@@ -15,7 +15,6 @@
 package org.datacommons.util;
 
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
-import static org.datacommons.util.McfParser.parseInstanceMcfString;
 import static org.datacommons.util.McfUtil.*;
 import static org.junit.Assert.*;
 
@@ -68,7 +67,7 @@ public class McfUtilTest {
   public void funcMergeGraphs() throws IOException, AssertionError {
     List<Mcf.McfGraph> graphs =
         Arrays.asList(
-            parseInstanceMcfString(
+            McfParser.parseInstanceMcfString(
                 "Node: MadCity\n"
                     + "typeOf: dcs:City\n"
                     + "dcid: dcid:dc/maa\n"
@@ -76,7 +75,7 @@ public class McfUtilTest {
                     + "name: \"Madras\"\n",
                 true,
                 TestUtil.newLogCtx("f1.mcf")),
-            parseInstanceMcfString(
+            McfParser.parseInstanceMcfString(
                 "Node: MadCity\n"
                     + "typeOf: dcs:Corporation\n"
                     + "dcid: dcid:dc/maa\n"
@@ -85,14 +84,14 @@ public class McfUtilTest {
                     + "name: \"Chennai\"\n",
                 true,
                 TestUtil.newLogCtx("f2.mcf")),
-            parseInstanceMcfString(
+            McfParser.parseInstanceMcfString(
                 "Node: MadState\n"
                     + "typeOf: dcs:State\n"
                     + "dcid: dcid:dc/tn\n"
                     + "containedInPlace: dcid:country/india\n",
                 true,
                 TestUtil.newLogCtx("f3.mcf")),
-            parseInstanceMcfString(
+            McfParser.parseInstanceMcfString(
                 "Node: MadState\n"
                     + "typeOf: dcs:State\n"
                     + "dcid: dcid:dc/tn\n"
@@ -103,7 +102,7 @@ public class McfUtilTest {
     // Output should be the second node which is the largest, with other PVs
     // patched in, and all types included.
     Mcf.McfGraph want =
-        parseInstanceMcfString(
+        McfParser.parseInstanceMcfString(
             "Node: MadCity\n"
                 + "typeOf: dcs:City, dcs:Corporation\n"
                 + "dcid: dcid:dc/maa\n"
