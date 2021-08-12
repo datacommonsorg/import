@@ -13,8 +13,9 @@ public class McfCheckerTest {
 
   @Test
   public void checkBasic() throws IOException {
+    // Missing typeOf.
     String mcf = "Node: USState\n" + "name: \"California\"";
-    assertTrue(failure(mcf, "Sanity_MissingOrEmpty_typeOf", "property typeOf in node USState"));
+    assertTrue(failure(mcf, "Sanity_MissingOrEmpty_typeOf", "property 'typeOf' in node USState"));
 
     // Good node.
     mcf = "Node: USState\n" + "typeOf: schema:State\n" + "name: \"California\"";

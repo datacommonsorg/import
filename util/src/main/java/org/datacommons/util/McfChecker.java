@@ -442,9 +442,9 @@ public class McfChecker {
     if (vals.isEmpty()) {
       addLog(
           "Sanity_MissingOrEmpty_" + prop,
-          "Missing or empty value for property "
+          "Missing or empty value for property '"
               + prop
-              + " in node "
+              + "' in node "
               + nodeId
               + " of type "
               + typeOf,
