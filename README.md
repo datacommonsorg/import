@@ -23,8 +23,7 @@ joining.
   ```
 
   - It's useful to create an alias like ```alias dc-import='java -jar
-    <path-to-datacommons-import-tool-jar-with-dependencies.jar>'```, so you
-    can invoke the tool as ```dc-import lint```
+    <path-to-jar>'```, so you can invoke the tool as ```dc-import lint```
 
 - If there are warnings or errors, the tool will produce a JSON report with a
   table of exemplar errors.
