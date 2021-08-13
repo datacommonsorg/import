@@ -11,19 +11,27 @@ includes [APIs](https://docs.datacommons.org/api/) and visual tools to easily
 explore and analyze data across different datasets without data cleaning or
 joining.
 
-## Using the import tool
+## Using Import Tool
 
-- Make sure Java 11+ is installed 
-    - you can install it from [here](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk)
-- [Download the tool](https://github.com/datacommonsorg/import/releases) and run it with:
-```
-java -jar <path-to-datacommons-import-tool-jar-with-dependencies.jar>
-```
-- It's useful to create an alias like ```alias dc-import='java -jar <path-to-datacommons-import-tool-jar-with-dependencies.jar>'```, so you can invoke the tool as ```dc-import```
+- Make sure Java 11+ is installed ([download link](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk)).
+- Download [import tool](https://github.com/datacommonsorg/import/releases) and run it with:
+
+    ```bash
+    java -jar <path-to-datacommons-import-tool-jar-with-dependencies.jar>
+    ```
+
+- It's useful to create an alias like
+
+    ```bash
+    alias dc-import='java -jar <path-to-datacommons-import-tool-jar-with-dependencies.jar>'
+    ```
+
+    so you can invoke the tool as `dc-import`
 
 ## Development
 
 ### Prerequisites
+
 1. The tools are built using Apache Maven version 3.8.0.
     - For MacOS: ```brew install maven```
 2. The tools use protobuf and require that `protoc` be installed.
@@ -45,7 +53,8 @@ To build: ```mvn compile```
 To run tests: ```mvn test```
 
 To build binary: ```mvn package```
-- which will produce  ```tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar```
+
+- which will produce  `tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar`
 - and you can run it with ```java -jar <path-to-datacommons-import-tool-jar-with-dependencies.jar>```
 
 ### Coding Guidelines
@@ -61,7 +70,7 @@ The formatting is done as part of the build. It can be checked by running:
 
 ### Contributing Changes
 
-In https://github.com/datacommonsorg/import, click on "Fork" button to fork the
+From the [repo page](https://github.com/datacommonsorg/import), click on "Fork" button to fork the
 repo.
 
 Clone your forked repo to your desktop.
@@ -101,4 +110,3 @@ For general questions or issues, please open an issue on our
 questions, please send an email to `support@datacommons.org`.
 
 **Note** - This is not an officially supported Google product.
-
