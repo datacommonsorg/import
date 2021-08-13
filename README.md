@@ -29,7 +29,7 @@ joining.
 - If there are warnings or errors, the tool will produce a JSON report with a
   table of exemplar errors.
 
-  - It's useful install an extension like
+  - It's useful to install an extension like
     [Json-As-Table](https://chrome.google.com/webstore/detail/json-as-table-viewer/khclkgjdjddedohnomokbhinlmpclick?hl=en-US)
     to view the json report (but be sure to allow the extension access to
     file URLs like
