@@ -13,7 +13,7 @@ joining.
 
 ## Using the import tool
 
-- Make sure Java 11+ (but not Java 16) is installed 
+- Make sure Java 11+ is installed 
     - you can install it from [here](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk)
 - [Download the tool](https://github.com/datacommonsorg/import/releases) and run it with:
 ```
