@@ -31,11 +31,11 @@ joining.
 
   - It's useful to install an extension like
     [Json-As-Table](https://chrome.google.com/webstore/detail/json-as-table-viewer/khclkgjdjddedohnomokbhinlmpclick?hl=en-US)
-    to view the json report (but be sure to allow the extension access to
+    to view the JSON report (but be sure to allow the extension access to
     file URLs like
     [this](https://user-images.githubusercontent.com/4375037/129290496-ed8eb0a3-b5e2-4de6-bdf2-449814df8fcf.png)).
 
-    Another option is to copy/paste the json content in https://jsongrid.com.
+    Another option is to copy/paste the JSON content in https://jsongrid.com.
 
 ## Development
 
