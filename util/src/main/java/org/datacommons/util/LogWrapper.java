@@ -32,7 +32,7 @@ import org.datacommons.proto.Debug;
 
 // The class that provides logging functionality.
 public class LogWrapper {
-  private static final Logger logger = LogManager.getLogger(McfParser.class);
+  private static final Logger logger = LogManager.getLogger(LogWrapper.class);
 
   private static final long SECONDS_BETWEEN_STATUS = 30;
   public static final String REPORT_JSON = "report.json";
