@@ -2,6 +2,7 @@ Node: USACountry
 typeOf: schema:Country
 name: "United States Of America"
 dcid: dc/2sffw13
+typeOf: schema:Country
 
 Node: dcid:dc/mx44
 typeOf: dcs:City

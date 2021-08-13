@@ -21,10 +21,7 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.function.BiConsumer;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -94,11 +91,11 @@ public class McfParser {
       parseLine(line);
       McfGraph g = extractNode();
       if (g != null) {
-        return g;
+        return McfUtil.mergeGraphs(Collections.singletonList(g));
       }
     }
     // End of file.
-    return finish();
+    return McfUtil.mergeGraphs(Collections.singletonList(finish()));
   }
 
   // Parse a line of MCF file.
