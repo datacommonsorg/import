@@ -308,7 +308,6 @@ public class McfParser {
           vals.addTypedValuesBuilder(),
           getErrCb());
     }
-    System.err.print(prop + " :: " + vals.build());
     pvs.putPvs(prop, vals.build());
     graph.putNodes(curEntity, pvs.build());
   }

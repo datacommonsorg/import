@@ -34,7 +34,7 @@ nodes {
     }
     locations {
       file: "McfParserTest_ResolvedGraph.mcf"
-      line_number: 6
+      line_number: 7
     }
   }
 }
@@ -76,7 +76,7 @@ nodes {
     }
     locations {
       file: "McfParserTest_ResolvedGraph.mcf"
-      line_number: 15
+      line_number: 16
     }
   }
 }
