@@ -484,12 +484,36 @@ public class McfParser {
     public char delimiter = ',';
     public boolean includeEmpty = false;
     public boolean stripEnclosingQuotes = true;
-    public String context;
+    public SplitAndStripArgContext context;
   }
+
+  public static final class SplitAndStripArgContext {
+    private final String column;
+    private final String prop;
+    private final String templateEntity;
+
+    public SplitAndStripArgContext(String column, String prop, String templateEntity) {
+      this.column = column;
+      this.prop = prop;
+      this.templateEntity = templateEntity;
+    }
+  }
+
   // NOTE: We do not strip enclosing quotes in this function.
   public static List<String> splitAndStripWithQuoteEscape(
       String orig, SplitAndStripArg arg, BiConsumer<String, String> errCb) throws AssertionError {
     List<String> splits = new ArrayList<>();
+    SplitAndStripArgContext argContext = arg.context;
+    String argContextString = "";
+    if (argContext != null) {
+      argContextString =
+          "column "
+              + argContext.column
+              + ", property "
+              + argContext.prop
+              + ", entity "
+              + argContext.templateEntity;
+    }
     try {
       // withIgnoreSurroundingSpaces() is important to treat something like:
       //    `first, "second, with comma"`
@@ -504,7 +528,12 @@ public class McfParser {
       List<CSVRecord> records = parser.getRecords();
       if (records.isEmpty()) {
         if (errCb != null) {
-          errCb.accept("StrSplit_EmptyToken", "Empty value found (" + arg.context + ")");
+          String prop_suffix = "";
+          if (argContext != null) {
+            prop_suffix = "_" + argContext.prop;
+          }
+          errCb.accept(
+              "StrSplit_EmptyToken" + prop_suffix, "Empty value found (" + argContextString + ")");
         }
         return splits;
       }
@@ -512,7 +541,7 @@ public class McfParser {
         if (errCb != null) {
           errCb.accept(
               "StrSplit_MultiToken",
-              "Found more than one line for '" + orig + "' (" + arg.context + ")");
+              "Found more than one line for '" + orig + "' (" + argContextString + ")");
         }
         return splits;
       }
@@ -526,7 +555,8 @@ public class McfParser {
     } catch (IOException e) {
       if (errCb != null) {
         errCb.accept(
-            "StrSplit_ParserFailure", "Parsing failed on '" + orig + "' (" + arg.context + ")");
+            "StrSplit_ParserFailure",
+            "Parsing failed on '" + orig + "' (" + argContextString + ")");
       }
     }
     return splits;

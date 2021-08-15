@@ -27,6 +27,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
+import org.datacommons.util.McfParser.SplitAndStripArgContext;
 
 // Converts a Template MCF file and an associated CSV into instance MCF.
 //
@@ -306,8 +307,7 @@ public class TmcfCsvParser {
           ssArg.delimiter = delimiter;
           ssArg.includeEmpty = false;
           ssArg.stripEnclosingQuotes = false;
-          ssArg.context =
-              "column " + column + ", property " + currentProp + ", entity " + templateEntity;
+          ssArg.context = new SplitAndStripArgContext(column, currentProp, templateEntity);
           // TODO: set stripEscapesBeforeQuotes
           List<String> values =
               McfParser.splitAndStripWithQuoteEscape(dataRow.get(columnIndex), ssArg, warnCb);
