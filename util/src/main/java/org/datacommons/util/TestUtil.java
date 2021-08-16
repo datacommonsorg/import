@@ -69,6 +69,25 @@ public class TestUtil {
     return false;
   }
 
+  public static boolean checkCounter(Debug.Log log, String counter, long expectedCount) {
+    if (!log.getCounterSet().getCountersMap().containsKey(counter)) {
+      System.err.println("Missing counter " + counter + " stat :: " + log.getCounterSet());
+      return false;
+    }
+    long actualCount = log.getCounterSet().getCountersOrDefault(counter, -1);
+    if (actualCount == expectedCount) {
+      return true;
+    }
+    System.err.println(
+        "Actual count:"
+            + actualCount
+            + " does not equal expected count:"
+            + expectedCount
+            + " for counter "
+            + counter);
+    return false;
+  }
+
   public static Mcf.McfGraph getLocations(Mcf.McfGraph graph) {
     Mcf.McfGraph.Builder newGraph = Mcf.McfGraph.newBuilder();
     newGraph.setType(graph.getType());

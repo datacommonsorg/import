@@ -44,15 +44,18 @@ public class TmcfCsvParserTest {
     String got = run("TmcfCsvParser_SVO.tmcf", "TmcfCsvParser_SVO.csv");
     assertEquals(want, got);
     // The third line has empty values.
-    assertTrue(TestUtil.checkLog(log.build(), "Sanity_MissingOrEmpty_value", "E:FBI_Crime->E1"));
+    Debug.Log debugLog = log.build();
+    assertTrue(TestUtil.checkLog(debugLog, "Sanity_MissingOrEmpty_value", "E:FBI_Crime->E1"));
     assertTrue(
         TestUtil.checkLog(
-            log.build(), "StrSplit_EmptyToken_value", "property value, entity E:FBI_Crime->E1"));
+            debugLog, "StrSplit_EmptyToken_value", "property value, entity E:FBI_Crime->E1"));
     assertTrue(
         TestUtil.checkLog(
-            log.build(),
+            debugLog,
             "StrSplit_MultiToken_observationAbout",
             "property observationAbout, entity E:FBI_Crime->E1"));
+    assertTrue(TestUtil.checkCounter(debugLog, "NumPVSuccesses", 24));
+    assertTrue(TestUtil.checkCounter(debugLog, "NumNodeSuccesses", 4));
   }
 
   @Test

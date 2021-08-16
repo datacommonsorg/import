@@ -76,7 +76,10 @@ public class Processor {
         g = McfMutator.mutate(g.toBuilder(), logCtx);
 
         // This will set counters/messages in logCtx.
-        McfChecker.check(g, logCtx);
+        boolean success = McfChecker.check(g, logCtx);
+        if (success) {
+          logCtx.incrementCounterBy("NumRowSuccesses", 1);
+        }
 
         if (writer != null) {
           writer.write(McfUtil.serializeMcfGraph(g, false));

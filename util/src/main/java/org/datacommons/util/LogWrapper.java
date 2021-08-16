@@ -106,10 +106,6 @@ public class LogWrapper {
   }
 
   public void persistLog(boolean silent) throws InvalidProtocolBufferException, IOException {
-    if (log.getLevelSummaryMap().isEmpty()) {
-      if (!silent) logger.info("Found no warnings or errors!");
-      return;
-    }
     File logFile = new File(logPath.toString());
     // Without the unescaping something like 'Node' shows up as \u0027Node\u0027
     String jsonStr = StringEscapeUtils.unescapeJson(JsonFormat.printer().print(log.build()));

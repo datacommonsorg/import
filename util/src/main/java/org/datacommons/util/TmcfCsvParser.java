@@ -210,6 +210,8 @@ public class TmcfCsvParser {
         boolean success =
             McfChecker.check(Mcf.McfType.INSTANCE_MCF, currentNodeId, newNode, logCtx);
         if (success) {
+          logCtx.incrementCounterBy("NumNodeSuccesses", 1);
+          logCtx.incrementCounterBy("NumPVSuccesses", newNode.getPvsCount());
           instanceMcf.putNodes(currentNodeId, newNode);
         }
       }
