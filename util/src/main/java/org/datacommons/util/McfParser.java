@@ -514,6 +514,10 @@ public class McfParser {
               + ", entity "
               + argContext.templateEntity;
     }
+    String prop_suffix = "";
+    if (argContext != null) {
+      prop_suffix = "_" + argContext.prop;
+    }
     try {
       // withIgnoreSurroundingSpaces() is important to treat something like:
       //    `first, "second, with comma"`
@@ -528,10 +532,6 @@ public class McfParser {
       List<CSVRecord> records = parser.getRecords();
       if (records.isEmpty()) {
         if (errCb != null) {
-          String prop_suffix = "";
-          if (argContext != null) {
-            prop_suffix = "_" + argContext.prop;
-          }
           errCb.accept(
               "StrSplit_EmptyToken" + prop_suffix, "Empty value found (" + argContextString + ")");
         }
@@ -540,7 +540,7 @@ public class McfParser {
       if (records.size() != 1) {
         if (errCb != null) {
           errCb.accept(
-              "StrSplit_MultiToken",
+              "StrSplit_MultiToken" + prop_suffix,
               "Found more than one line for '" + orig + "' (" + argContextString + ")");
         }
         return splits;
@@ -555,7 +555,7 @@ public class McfParser {
     } catch (IOException e) {
       if (errCb != null) {
         errCb.accept(
-            "StrSplit_ParserFailure",
+            "StrSplit_ParserFailure" + prop_suffix,
             "Parsing failed on '" + orig + "' (" + argContextString + ")");
       }
     }

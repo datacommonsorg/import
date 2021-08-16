@@ -45,6 +45,14 @@ public class TmcfCsvParserTest {
     assertEquals(want, got);
     // The third line has empty values.
     assertTrue(TestUtil.checkLog(log.build(), "Sanity_MissingOrEmpty_value", "E:FBI_Crime->E1"));
+    assertTrue(
+        TestUtil.checkLog(
+            log.build(), "StrSplit_EmptyToken_value", "property value, entity E:FBI_Crime->E1"));
+    assertTrue(
+        TestUtil.checkLog(
+            log.build(),
+            "StrSplit_MultiToken_observationAbout",
+            "property observationAbout, entity E:FBI_Crime->E1"));
   }
 
   @Test
