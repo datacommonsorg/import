@@ -14,12 +14,27 @@ joining.
 ## Using the import tool
 
 - Make sure Java 11+ is installed 
-    - you can install it from [here](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk)
+  - You can install it from [here](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk)
+
 - [Download the tool](https://github.com/datacommonsorg/import/releases) and run it with:
-```
-java -jar <path-to-datacommons-import-tool-jar-with-dependencies.jar>
-```
-- It's useful to create an alias like ```alias dc-import='java -jar <path-to-datacommons-import-tool-jar-with-dependencies.jar>'```, so you can invoke the tool as ```dc-import```
+
+  ```
+  java -jar <path-to-jar> lint <list of mcf/tmcf/csv files>
+  ```
+
+  - It's useful to create an alias like ```alias dc-import='java -jar
+    <path-to-jar>'```, so you can invoke the tool as ```dc-import lint```
+
+- If there are warnings or errors, the tool will produce a JSON report with a
+  table of exemplar errors.
+
+  - It's useful to install an extension like
+    [Json-As-Table](https://chrome.google.com/webstore/detail/json-as-table-viewer/khclkgjdjddedohnomokbhinlmpclick?hl=en-US)
+    to view the JSON report (but be sure to allow the extension access to
+    file URLs like
+    [this](https://user-images.githubusercontent.com/4375037/129290496-ed8eb0a3-b5e2-4de6-bdf2-449814df8fcf.png)).
+
+    Another option is to copy/paste the JSON content in https://jsongrid.com.
 
 ## Development
 
