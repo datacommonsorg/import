@@ -71,6 +71,8 @@ To build binary: ```mvn package```
 
 ### Run Server
 
+The repo also hosts an experimental server for private DC.
+
 Start the server:
 
 ```bash
