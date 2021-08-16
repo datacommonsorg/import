@@ -38,7 +38,7 @@ joining.
     file URLs like
     [this](https://user-images.githubusercontent.com/4375037/129290496-ed8eb0a3-b5e2-4de6-bdf2-449814df8fcf.png)).
 
-    Another option is to copy/paste the JSON content in https://jsongrid.com.
+    Another option is to copy/paste the JSON content in [jsongrid](https://jsongrid.com).
 
 ## Development
 
@@ -56,7 +56,7 @@ joining.
     - Add ```export JAVA_HOME=<Path to your downloaded Java 11>```
     - Save your change and run ```source ~/.bash_profile```
 
-### Build and Test
+### Build and Test Import Tool
 
 You can build and test the Java code from a Unix shell.
 
@@ -68,6 +68,22 @@ To build binary: ```mvn package```
 
 - which will produce  `tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar`
 - and you can run it with ```java -jar <path-to-datacommons-import-tool-jar-with-dependencies.jar>```
+
+### Run Server
+
+The repo also hosts an experimental server for private DC.
+
+Start the server:
+
+```bash
+cd server && mvn spring-boot:run
+```
+
+Send a request:
+
+```bash
+curl http://localhost:8080/hello
+```
 
 ### Coding Guidelines
 
