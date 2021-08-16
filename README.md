@@ -38,7 +38,7 @@ joining.
     file URLs like
     [this](https://user-images.githubusercontent.com/4375037/129290496-ed8eb0a3-b5e2-4de6-bdf2-449814df8fcf.png)).
 
-    Another option is to copy/paste the JSON content in https://jsongrid.com.
+    Another option is to copy/paste the JSON content in [jsongrid](https://jsongrid.com).
 
 ## Development
 
