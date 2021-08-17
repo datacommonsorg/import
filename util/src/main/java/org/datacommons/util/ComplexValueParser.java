@@ -71,13 +71,12 @@ public class ComplexValueParser {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_UnenclosedComplexValue",
-          "Bad complex value '"
+          "Complex value not enclosed in [] brackets :: value: '"
               + complexValue
-              + "' not enclosed in brackets in "
-              + "property "
+              + "', property: '"
               + prop
-              + " in node "
-              + mainNodeId,
+              + "', node: '"
+              + mainNodeId + "'",
           mainNode.getLocationsList());
       return false;
     }
@@ -87,19 +86,17 @@ public class ComplexValueParser {
     arg.delimiter = ' ';
     arg.includeEmpty = false;
     arg.stripEnclosingQuotes = false;
-    // TODO: Passthru errCb
+    // TODO: Passthru errCb with "complexValue" in upcoming ErrCbArg's "value"
     List<String> fields = McfParser.splitAndStripWithQuoteEscape(trimmedComplexValue, arg, null);
     if (fields.isEmpty()) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedComplexValueString",
-          "Found malformed complex value '"
-              + complexValue
-              + "' in property "
+          "Found malformed complex value :: value: '" + complexValue
+              + "', property: '"
               + prop
-              + " in "
-              + "node "
-              + mainNodeId,
+              + "', node: '"
+              + mainNodeId + "'",
           mainNode.getLocationsList());
       return false;
     }
@@ -108,15 +105,13 @@ public class ComplexValueParser {
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedComplexValueParts",
           "Complex value must have 2 (e.g., [Years 10]) or 3 (e.g., [Years 10 20]) "
-              + "components but '"
+              + "components :: value: '"
               + complexValue
-              + "' in property "
+              + "', components: " + fields.size() + ", property: '"
               + prop
-              + " in "
-              + "node "
+              + "', node: '"
               + mainNodeId
-              + " has "
-              + fields.size(),
+              + "'",
           mainNode.getLocationsList());
       return false;
     }
@@ -162,13 +157,13 @@ public class ComplexValueParser {
         logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_QuantityMalformedValue",
-            "Quantity value '"
+            "Quantity value must be a number :: value: '"
                 + complexValue
-                + "' in property "
+                + "', property: '"
                 + prop
-                + " in node "
+                + "', node: '"
                 + mainNodeId
-                + " must be a number",
+                + "'",
             mainNode.getLocationsList());
         return false;
       }
@@ -241,14 +236,13 @@ public class ComplexValueParser {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_InvalidLatitude",
-          "Invalid latitude value ("
+          "Invalid latitude value; must be decimal degrees with an optional N/S suffix :: value: '"
               + latStr
-              + ") in property "
+              + "', property: '"
               + prop
-              + " of node "
+              + "', node: '"
               + mainNodeId
-              + ". The expected format is decimal degrees, with an optional "
-              + "N/S suffix.",
+              + "'",
           mainNode.getLocationsList());
       return false;
     }
@@ -267,14 +261,13 @@ public class ComplexValueParser {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_InvalidLongitude",
-          "Invalid longitude value ("
+          "Invalid longitude value; must be decimal degrees with an optional E/W suffix :: value: '"
               + lngStr
-              + ") in property "
+              + "', property: '"
               + prop
-              + " of node "
+              + "', node: '"
               + mainNodeId
-              + ". The expected format is decimal degrees, with an optional "
-              + "N/S suffix.",
+              + "'",
           mainNode.getLocationsList());
       return false;
     }
@@ -296,14 +289,13 @@ public class ComplexValueParser {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_QuantityRangeMalformedValues",
-          "Malformed start component in QuantityRange value ("
+          "Malformed start component in QuantityRange value; must be a number of '-' :: value: '"
               + startVal
-              + ") "
-              + " in property "
+              + "', property: '"
               + prop
-              + " in node "
+              + "', node: '"
               + mainNodeId
-              + ". The start component must be a number or '-'",
+              + "'",
           mainNode.getLocationsList());
       return false;
     }
@@ -311,14 +303,13 @@ public class ComplexValueParser {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_QuantityRangeMalformedValues",
-          "Malformed end component in QuantityRange value ("
+          "Malformed end component in QuantityRange value; must be a number of '-' :: value: '"
               + endVal
-              + ") "
-              + " in property "
+              + "', property: '"
               + prop
-              + " in node "
+              + "', node: '"
               + mainNodeId
-              + ". The end component must be a number or '-'",
+              + "'",
           mainNode.getLocationsList());
       return false;
     }
@@ -326,15 +317,9 @@ public class ComplexValueParser {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_QuantityRangeMalformedValues",
-          "Malformed start+end components in QuantityRange value ("
-              + startVal
-              + ", "
-              + endVal
-              + ") in property "
-              + prop
-              + " in node "
-              + mainNodeId
-              + ". Both start and end cannot be '-', one of them must be a number",
+          "Malformed start+end components in QuantityRange value; one of them must be a number "
+              + " :: startValue: '"  + startVal
+              + "', endValue: '" + endVal + "', property: '" + prop + "', node: '" + mainNodeId + "'",
           mainNode.getLocationsList());
       return false;
     }

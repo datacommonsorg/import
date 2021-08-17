@@ -14,15 +14,6 @@
 
 package org.datacommons.util;
 
-import static org.datacommons.proto.Mcf.ValueType.RESOLVED_REF;
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.util.*;
-import java.util.function.BiConsumer;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -31,6 +22,16 @@ import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.util.*;
+import java.util.function.BiConsumer;
+
+import static org.datacommons.proto.Mcf.ValueType.RESOLVED_REF;
 
 // A parser for converting text in Instance or Template MCF format into the McfGraph proto.
 //
@@ -122,7 +123,7 @@ public class McfParser {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedColonLessLine",
-          "Malformed line " + "without a colon delimiter (" + line + ")",
+          "Malformed line without a colon delimiter :: line: '" + line + "'",
           lineNum);
       return;
     }
@@ -134,9 +135,8 @@ public class McfParser {
         logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_MalformedNodeName",
-            "Found malformed 'Node' name ("
-                + rhs
-                + ") with comma. Node name must be a unary value.",
+            "Found malformed Node value with a comma; must be a unary value :: node: '"
+                + rhs + "'",
             lineNum);
         return;
       }
@@ -144,9 +144,8 @@ public class McfParser {
         logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_MalformedNodeName",
-            "Found malformed 'Node' name ("
-                + rhs
-                + ") that includes quotes. Node name must be a non-quoted value.",
+            "Found malformed Node value with quotes; must be a non-quoted value :: node: '"
+                + rhs + "'",
             lineNum);
         return;
       }
@@ -156,8 +155,8 @@ public class McfParser {
           logCtx.addEntry(
               Debug.Log.Level.LEVEL_ERROR,
               "TMCF_MalformedEntity",
-              "Found malformed entity name that is not an entity prefix " + rhs,
-              lineNum);
+              "Found malformed entity name that is not an entity prefix (E:) :: name: '"
+                      + rhs + "'", lineNum);
           return;
         }
       } else {
@@ -173,7 +172,7 @@ public class McfParser {
         logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_UnexpectedProperty",
-            " Property found without a 'Node' term: " + line,
+            "Property found without a preceding line with 'Node' :: line: '" + line + "'",
             lineNum);
         return;
       }
@@ -225,17 +224,18 @@ public class McfParser {
   // To be called after processing all lines of an MCF file (by calling parseLine()).
   private McfGraph finish() throws AssertionError {
     if (finished) {
-      throw new AssertionError("Called finish() twice!");
+      throw new AssertionError("Called finish() more than once!");
     }
     finished = true;
     if (curEntity.length() == 0) {
       return null;
     }
     if (curEntityLineIdx == 0) {
+      // TODO: This should happen on seeing a new node too.
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedNode",
-          "Found a 'Node' (" + curEntity + ") with properties at the end of the file",
+          "Found a 'Node' without properties :: node: '" + curEntity + "'",
           lineNum);
     }
     return graph.build();
@@ -332,7 +332,7 @@ public class McfParser {
       if (prop.equals("C")) {
         errCb.accept(
             "TMCF_UnsupportedColumnNameInProperty",
-            "Found unsupported column name as property  in node " + node);
+            "TMCF properties cannot refer to CSV columns yet :: property: '" + node + "'");
         return;
       }
       SchemaTerm term = parseSchemaTerm(val, errCb);
@@ -367,12 +367,9 @@ public class McfParser {
       if (!val.endsWith("]")) {
         errCb.accept(
             "MCF_MalformedComplexValue",
-            "Found malformed Complex value ("
+            "Found malformed Complex value without a closing ] bracket :: value: '"
                 + val
-                + ") without a closing bracket in property "
-                + prop
-                + " of node "
-                + node);
+                + "', property: '" + prop + "', node: '" + node + "'");
         return;
       }
       tval.setValue(val);
@@ -393,7 +390,8 @@ public class McfParser {
         if (isResolved) {
           errCb.accept(
               "MCF_LocalReferenceInResolvedFile",
-              "Found an internal reference " + val + " in resolved entity " + node);
+              "Found an internal 'l:' reference in resolved entity :: reference: '" + val + "', " +
+                      "node: '" + node + "'");
           return;
         }
         tval.setValue(val);
@@ -460,7 +458,8 @@ public class McfParser {
       if (delimiter == -1) {
         errCb.accept(
             "TMCF_MalformedSchemaTerm",
-            "Malformed " + (isEntity ? "entity" : "column") + " name in " + value);
+            "Malformed " + (isEntity ? "entity" : "column") + " value; must have a ':' delimiter" +
+                    " :: value: '" + value + "'");
         return null;
       }
       term.table = strippedValue.substring(0, delimiter);
@@ -501,62 +500,56 @@ public class McfParser {
 
   // NOTE: We do not strip enclosing quotes in this function.
   public static List<String> splitAndStripWithQuoteEscape(
-      String orig, SplitAndStripArg arg, BiConsumer<String, String> errCb) throws AssertionError {
+      String orig, SplitAndStripArg arg, BiConsumer<String, String> errCb) throws AssertionError,
+          IOException {
     List<String> splits = new ArrayList<>();
     SplitAndStripArgContext argContext = arg.context;
     String argContextString = "";
     if (argContext != null) {
       argContextString =
-          "column "
+          "column: '"
               + argContext.column
-              + ", property "
+              + "', property: '"
               + argContext.prop
-              + ", entity "
+              + "', entity '"
               + argContext.templateEntity;
     }
     String prop_suffix = "";
     if (argContext != null) {
       prop_suffix = "_" + argContext.prop;
     }
-    try {
-      // withIgnoreSurroundingSpaces() is important to treat something like:
-      //    `first, "second, with comma"`
-      // as two fields: 1. `first`, 2. `second, with comma`
-      CSVParser parser =
-          new CSVParser(
-              new StringReader(orig),
-              CSVFormat.DEFAULT
-                  .withDelimiter(arg.delimiter)
-                  .withEscape('\\')
-                  .withIgnoreSurroundingSpaces());
-      List<CSVRecord> records = parser.getRecords();
-      if (records.isEmpty()) {
-        if (errCb != null) {
-          errCb.accept(
-              "StrSplit_EmptyToken" + prop_suffix, "Empty value found (" + argContextString + ")");
-        }
-        return splits;
-      }
-      if (records.size() != 1) {
-        if (errCb != null) {
-          errCb.accept(
-              "StrSplit_MultiToken" + prop_suffix,
-              "Found more than one line for '" + orig + "' (" + argContextString + ")");
-        }
-        return splits;
-      }
-      for (String s : records.get(0)) {
-        String ss = arg.stripEnclosingQuotes ? stripEnclosingQuotePair(s.trim()) : s.trim();
-        // After stripping whitespace some terms could become empty.
-        if (arg.includeEmpty || !ss.isEmpty()) {
-          splits.add(ss);
-        }
-      }
-    } catch (IOException e) {
+    // withIgnoreSurroundingSpaces() is important to treat something like:
+    //    `first, "second, with comma"`
+    // as two fields: 1. `first`, 2. `second, with comma`
+    CSVParser parser =
+            new CSVParser(
+                    new StringReader(orig),
+                    CSVFormat.DEFAULT
+                            .withDelimiter(arg.delimiter)
+                            .withEscape('\\')
+                            .withIgnoreSurroundingSpaces());
+    List<CSVRecord> records = parser.getRecords();
+    if (records.isEmpty()) {
       if (errCb != null) {
         errCb.accept(
-            "StrSplit_ParserFailure" + prop_suffix,
-            "Parsing failed on '" + orig + "' (" + argContextString + ")");
+                "StrSplit_EmptyToken" + prop_suffix,
+                "Empty value found :: " + argContextString);
+      }
+      return splits;
+    }
+    if (records.size() != 1) {
+      if (errCb != null) {
+        errCb.accept(
+                "StrSplit_MultiToken" + prop_suffix,
+                "Found a new-line in value :: value: '" + orig + "', " + argContextString);
+      }
+      return splits;
+    }
+    for (String s : records.get(0)) {
+      String ss = arg.stripEnclosingQuotes ? stripEnclosingQuotePair(s.trim()) : s.trim();
+      // After stripping whitespace some terms could become empty.
+      if (arg.includeEmpty || !ss.isEmpty()) {
+        splits.add(ss);
       }
     }
     return splits;

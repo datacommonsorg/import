@@ -67,7 +67,7 @@ public class TmcfCsvParser {
       tmcfCsvParser.logCtx.addEntry(
           Debug.Log.Level.LEVEL_FATAL,
           "CSV_HeaderFailure",
-          "Unable to parse header from file " + csvFile,
+          "Unable to parse header from CSV file :: file: '" + csvFile + "'",
           0);
       return null;
     }
@@ -79,7 +79,7 @@ public class TmcfCsvParser {
       tmcfCsvParser.logCtx.addEntry(
           Debug.Log.Level.LEVEL_FATAL,
           "CSV_TmcfCheckFailure",
-          "Found sanity error in TMCF. Check Sanity_ counter messages in "
+          "Found fatal sanity error in TMCF; check Sanity_ counter messages :: TMCF-file: "
               + Path.of(tmcfFile).getFileName().toString(),
           0);
       return null;
@@ -129,16 +129,13 @@ public class TmcfCsvParser {
         addLog(
             Debug.Log.Level.LEVEL_ERROR,
             "CSV_InconsistentRows",
-            "Found inconsistent row with different number of columns");
+            "Found CSV row with different number of columns");
         return;
       }
 
       BiConsumer<String, String> errCb =
           (counter, message) -> {
-            addLog(
-                Debug.Log.Level.LEVEL_ERROR,
-                counter,
-                "Failed to parse TMCF entity term: " + message);
+            addLog(Debug.Log.Level.LEVEL_ERROR, counter, message);
           };
       // Process DCIDs from all the nodes first and add to entityToDcid map, which will be consulted
       // to resolve entity references in processValues() function.
@@ -168,10 +165,8 @@ public class TmcfCsvParser {
           addLog(
               Debug.Log.Level.LEVEL_WARNING,
               "CSV_MalformedDCIDFailures",
-              "Malformed CSV value malformed for entity "
-                  + tableEntity.getKey()
-                  + ": "
-                  + tv.getValue());
+              "Malformed CSV value for dcid property; must be a text or reference :: value: '" +
+                      tv.getValue() + "', node: '" + tableEntity.getKey() + "'");
           logCtx.incrementCounterBy("CSV_MalformedDCIDPVFailures", pvs.size());
         }
       }
@@ -235,10 +230,12 @@ public class TmcfCsvParser {
       for (Mcf.McfGraph.TypedValue typedValue : templateValues.getTypedValuesList()) {
         if (typedValue.getType() == Mcf.ValueType.TABLE_ENTITY) {
           if (currentProp.equals(Vocabulary.DCID)) {
+            // TODO: Add this check to checkTemplateNode(), and assert here
             addLog(
                 Debug.Log.Level.LEVEL_ERROR,
-                "CSV_TmcfEntityAsDcid",
-                "dcid property in TMCF entity " + templateEntity + " must not be an entity");
+                "TMCF_TmcfEntityAsDcid",
+                "Value of dcid property is an 'E:' entity; must be a 'C:' column or " +
+                        "a constant :: value: '" + templateEntity + "'");
             continue;
           }
           String referenceNode = toNodeName(typedValue.getValue(), errCb);
@@ -251,10 +248,10 @@ public class TmcfCsvParser {
               addLog(
                   Debug.Log.Level.LEVEL_WARNING,
                   "CSV_EmptyDcidReferences",
-                  "In dcid:{entity} reference, found {entity} to be empty for property "
+                  "In dcid:{entity} reference, found {entity} to be empty :: property: '"
                       + currentProp
-                      + " of TMCF entity "
-                      + templateEntity);
+                      + "', node: '"
+                      + templateEntity + "'");
               continue;
             }
             newTypedValue.setType(Mcf.ValueType.RESOLVED_REF);
@@ -277,13 +274,13 @@ public class TmcfCsvParser {
           if (term.type != McfParser.SchemaTerm.Type.COLUMN) {
             addLog(
                 Debug.Log.Level.LEVEL_ERROR,
-                "CSV_TmcfUnexpectedNonColumn",
-                "Unable to parse TMCF column "
+                "TMCF_UnexpectedNonColumn",
+                "Expected value to be a TMCF column that starts with 'C:' :: value: '"
                     + typedValue.getValue()
-                    + " in property "
+                    + "', property: '"
                     + currentProp
-                    + " of TMCF entity "
-                    + templateEntity);
+                    + "', node: '"
+                    + templateEntity + "'");
             continue;
           }
           String column = term.value;
@@ -291,7 +288,8 @@ public class TmcfCsvParser {
             addLog(
                 Debug.Log.Level.LEVEL_ERROR,
                 "CSV_TmcfMissingColumn",
-                "Column " + column + " referred in TMCF is missing from CSV header");
+                "Column referred to in TMCF is missing from CSV header :: column: '"
+                        + column + "'");
             continue;
           }
           int columnIndex = cleanedColumnMap.get(column);
@@ -299,7 +297,8 @@ public class TmcfCsvParser {
             addLog(
                 Debug.Log.Level.LEVEL_WARNING,
                 "CSV_UnexpectedRow",
-                "Fewer columns than expected in the row: '" + dataRow.toString() + "'");
+                "Found row with fewer columns than expected :: row: '" + dataRow.toString() +
+                        "'");
             continue;
           }
 
@@ -339,8 +338,11 @@ public class TmcfCsvParser {
       McfParser.SchemaTerm term = McfParser.parseSchemaTerm(entityId, errCb);
       if (term == null) return null;
       if (term.type != McfParser.SchemaTerm.Type.ENTITY) {
+        // TODO: Consider making this an assertion failure
         errCb.accept(
-            "CSV_UnexpectedNonEntity", "Unexpected parsing error in TMCF entity " + entityId);
+            "CSV_UnexpectedNonEntity",
+             "Expected value to be a TMCF entity that starts with 'E:' :: value: '" + entityId +
+                     "'");
         return null;
       }
 
