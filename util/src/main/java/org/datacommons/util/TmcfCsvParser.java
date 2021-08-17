@@ -165,8 +165,11 @@ public class TmcfCsvParser {
           addLog(
               Debug.Log.Level.LEVEL_WARNING,
               "CSV_MalformedDCIDFailures",
-              "Malformed CSV value for dcid property; must be a text or reference :: value: '" +
-                      tv.getValue() + "', node: '" + tableEntity.getKey() + "'");
+              "Malformed CSV value for dcid property; must be a text or reference :: value: '"
+                  + tv.getValue()
+                  + "', node: '"
+                  + tableEntity.getKey()
+                  + "'");
           logCtx.incrementCounterBy("CSV_MalformedDCIDPVFailures", pvs.size());
         }
       }
@@ -234,8 +237,10 @@ public class TmcfCsvParser {
             addLog(
                 Debug.Log.Level.LEVEL_ERROR,
                 "TMCF_TmcfEntityAsDcid",
-                "Value of dcid property is an 'E:' entity; must be a 'C:' column or " +
-                        "a constant :: value: '" + templateEntity + "'");
+                "Value of dcid property is an 'E:' entity; must be a 'C:' column or "
+                    + "a constant :: value: '"
+                    + templateEntity
+                    + "'");
             continue;
           }
           String referenceNode = toNodeName(typedValue.getValue(), errCb);
@@ -251,7 +256,8 @@ public class TmcfCsvParser {
                   "In dcid:{entity} reference, found {entity} to be empty :: property: '"
                       + currentProp
                       + "', node: '"
-                      + templateEntity + "'");
+                      + templateEntity
+                      + "'");
               continue;
             }
             newTypedValue.setType(Mcf.ValueType.RESOLVED_REF);
@@ -280,7 +286,8 @@ public class TmcfCsvParser {
                     + "', property: '"
                     + currentProp
                     + "', node: '"
-                    + templateEntity + "'");
+                    + templateEntity
+                    + "'");
             continue;
           }
           String column = term.value;
@@ -289,7 +296,8 @@ public class TmcfCsvParser {
                 Debug.Log.Level.LEVEL_ERROR,
                 "CSV_TmcfMissingColumn",
                 "Column referred to in TMCF is missing from CSV header :: column: '"
-                        + column + "'");
+                    + column
+                    + "'");
             continue;
           }
           int columnIndex = cleanedColumnMap.get(column);
@@ -297,8 +305,7 @@ public class TmcfCsvParser {
             addLog(
                 Debug.Log.Level.LEVEL_WARNING,
                 "CSV_UnexpectedRow",
-                "Found row with fewer columns than expected :: row: '" + dataRow.toString() +
-                        "'");
+                "Found row with fewer columns than expected :: row: '" + dataRow.toString() + "'");
             continue;
           }
 
@@ -341,8 +348,9 @@ public class TmcfCsvParser {
         // TODO: Consider making this an assertion failure
         errCb.accept(
             "CSV_UnexpectedNonEntity",
-             "Expected value to be a TMCF entity that starts with 'E:' :: value: '" + entityId +
-                     "'");
+            "Expected value to be a TMCF entity that starts with 'E:' :: value: '"
+                + entityId
+                + "'");
         return null;
       }
 

@@ -14,13 +14,12 @@
 
 package org.datacommons.util;
 
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
+import static org.datacommons.util.McfUtil.getPropVals;
 
 import java.util.List;
 import java.util.Map;
-
-import static org.datacommons.util.McfUtil.getPropVals;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
 
 // Does additional transformations on parsed MCF nodes, like expanding ComplexValues into nodes.
 //
@@ -70,7 +69,12 @@ public class McfMutator {
                 Debug.Log.Level.LEVEL_ERROR,
                 "Mutator_InvalidObsValue",
                 "Unexpected type for Observation value; must be number or text :: type: '"
-                        + tv.getType().name() + "', property: '" + prop + "', node: '" + nodeId + "'",
+                    + tv.getType().name()
+                    + "', property: '"
+                    + prop
+                    + "', node: '"
+                    + nodeId
+                    + "'",
                 node.getLocationsList());
             return node.build();
           }

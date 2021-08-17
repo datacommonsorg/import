@@ -76,7 +76,8 @@ public class ComplexValueParser {
               + "', property: '"
               + prop
               + "', node: '"
-              + mainNodeId + "'",
+              + mainNodeId
+              + "'",
           mainNode.getLocationsList());
       return false;
     }
@@ -92,11 +93,13 @@ public class ComplexValueParser {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedComplexValueString",
-          "Found malformed complex value :: value: '" + complexValue
+          "Found malformed complex value :: value: '"
+              + complexValue
               + "', property: '"
               + prop
               + "', node: '"
-              + mainNodeId + "'",
+              + mainNodeId
+              + "'",
           mainNode.getLocationsList());
       return false;
     }
@@ -107,7 +110,9 @@ public class ComplexValueParser {
           "Complex value must have 2 (e.g., [Years 10]) or 3 (e.g., [Years 10 20]) "
               + "components :: value: '"
               + complexValue
-              + "', components: " + fields.size() + ", property: '"
+              + "', components: "
+              + fields.size()
+              + ", property: '"
               + prop
               + "', node: '"
               + mainNodeId
@@ -318,8 +323,15 @@ public class ComplexValueParser {
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_QuantityRangeMalformedValues",
           "Malformed start+end components in QuantityRange value; one of them must be a number "
-              + " :: startValue: '"  + startVal
-              + "', endValue: '" + endVal + "', property: '" + prop + "', node: '" + mainNodeId + "'",
+              + " :: startValue: '"
+              + startVal
+              + "', endValue: '"
+              + endVal
+              + "', property: '"
+              + prop
+              + "', node: '"
+              + mainNodeId
+              + "'",
           mainNode.getLocationsList());
       return false;
     }
