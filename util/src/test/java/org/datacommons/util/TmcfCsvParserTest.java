@@ -47,12 +47,14 @@ public class TmcfCsvParserTest {
     assertTrue(TestUtil.checkLog(log.build(), "Sanity_MissingOrEmpty_value", "E:FBI_Crime->E1"));
     assertTrue(
         TestUtil.checkLog(
-            log.build(), "StrSplit_EmptyToken_value", "property value, entity E:FBI_Crime->E1"));
+            log.build(),
+            "StrSplit_EmptyToken_value",
+            "property: 'value', node: 'E:FBI_Crime->E1'"));
     assertTrue(
         TestUtil.checkLog(
             log.build(),
             "StrSplit_MultiToken_observationAbout",
-            "property observationAbout, entity E:FBI_Crime->E1"));
+            "property: 'observationAbout', node: 'E:FBI_Crime->E1'"));
   }
 
   @Test

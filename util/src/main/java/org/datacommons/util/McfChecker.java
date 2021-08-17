@@ -459,7 +459,7 @@ public class McfChecker {
               + prop
               + "', node: '"
               + nodeId
-              + ", type: '"
+              + "', type: '"
               + typeOf
               + "'",
           node);

@@ -523,8 +523,9 @@ public class McfParser {
               + argContext.column
               + "', property: '"
               + argContext.prop
-              + "', entity '"
-              + argContext.templateEntity;
+              + "', node: '"
+              + argContext.templateEntity
+              + "'";
     }
     String prop_suffix = "";
     if (argContext != null) {
