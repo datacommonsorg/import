@@ -294,7 +294,7 @@ public class ComplexValueParser {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_QuantityRangeMalformedValues",
-          "Malformed start component in QuantityRange value; must be a number of '-' :: value: '"
+          "Malformed start component in QuantityRange value; must be a number or '-' :: value: '"
               + startVal
               + "', property: '"
               + prop
@@ -308,7 +308,7 @@ public class ComplexValueParser {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_QuantityRangeMalformedValues",
-          "Malformed end component in QuantityRange value; must be a number of '-' :: value: '"
+          "Malformed end component in QuantityRange value; must be a number or '-' :: value: '"
               + endVal
               + "', property: '"
               + prop
