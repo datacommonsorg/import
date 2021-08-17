@@ -67,23 +67,36 @@ To run tests: ```mvn test```
 To build binary: ```mvn package```
 
 - which will produce  `tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar`
-- and you can run it with ```java -jar <path-to-datacommons-import-tool-jar-with-dependencies.jar>```
+- and you can run it with
+
+  ```bash
+  java -jar tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar
+  ```
 
 ### Run Server
 
 The repo also hosts an experimental server for private DC.
 
-Start the server:
+To build: ```mvn compile```
 
-```bash
-cd server && mvn spring-boot:run
-```
+To run tests: ```mvn test```
+
+To build binary: ```mvn package```
+
+- which will produce  `server/target/datacommons-server-0.1-alpha.1.jar`
+- and you can run it with
+
+  ```bash
+  java -jar server/target/datacommons-server-0.1-alpha.1.jar
+  ```
 
 Send a request:
 
 ```bash
 curl http://localhost:8080/hello
 ```
+
+Then should see "Hello World!" in the console output.
 
 ### Coding Guidelines
 
