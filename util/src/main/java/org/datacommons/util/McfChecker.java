@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
+import org.datacommons.util.McfUtil.ErrCb;
 
 // Checks common types of nodes on naming and schema requirements.
 //
@@ -120,8 +121,13 @@ public class McfChecker {
         } else if (tv.getType() == Mcf.ValueType.TABLE_COLUMN) {
           // NOTE: If the MCF had parsed, the schema terms should be valid, thus
           // the ValueOrDie().
-          // TODO: Add node info to ErrCbArg to log location.
-          McfParser.SchemaTerm term = McfParser.parseSchemaTerm(tv.getValue(), null);
+          long lineNum = -1;
+          if (!node.getLocationsList().isEmpty()) {
+            lineNum = node.getLocationsList().get(0).getLineNumber();
+          }
+          ErrCb errCb = new ErrCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNum);
+          errCb.setDetails(Map.of(ErrCb.VALUE_KEY, tv.getValue(), ErrCb.NODE_KEY, nodeId));
+          McfParser.SchemaTerm term = McfParser.parseSchemaTerm(tv.getValue(), errCb);
           if (term.type != McfParser.SchemaTerm.Type.COLUMN) {
             addLog(
                 "Sanity_UnexpectedNonColumn",

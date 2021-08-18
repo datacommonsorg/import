@@ -20,13 +20,21 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Mcf;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class McfUtilTest {
+  @Rule
+  public TemporaryFolder testFolder = new TemporaryFolder();
+
   private static String SERIALIZE_INPUT =
       "Node: USState[1]\n"
           + "dcid: dcid:dc/abcd\n"
@@ -180,5 +188,36 @@ public class McfUtilTest {
     assertFalse(isBool("110"));
     assertFalse(isBool("yes"));
     assertFalse(isBool("10"));
+  }
+
+  @Test
+  public void logErrorWithErrCb() {
+    Debug.Log.Builder logCtx = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(logCtx, testFolder.getRoot().toPath());
+    ErrCb errCb = new ErrCb(lw, Debug.Log.Level.LEVEL_ERROR, 0);
+    List<String> detailsToInclude = new ArrayList<>();
+    String testCounter = "test_counter";
+    String testMessage = "test_message";
+
+    errCb.logError(testCounter, testMessage, detailsToInclude);
+    assertTrue(TestUtil.checkLog(logCtx.build(), "test_counter", "test_message"));
+
+    errCb.setDetail(ErrCb.VALUE_KEY, "test_value");
+    detailsToInclude.add(ErrCb.VALUE_KEY);
+    errCb.logError(testCounter, testMessage, detailsToInclude);
+    assertTrue(TestUtil.checkLog(logCtx.build(), "test_counter", "value: 'test_value'"));
+
+    detailsToInclude.add(ErrCb.COLUMN_KEY);
+    errCb.logError(testCounter, testMessage, detailsToInclude);
+    assertFalse(TestUtil.checkLog(logCtx.build(), "test_counter", "column: '"));
+
+    errCb.counter_prefix = "MCF_";
+    errCb.logError(testCounter, testMessage, detailsToInclude);
+    assertTrue(TestUtil.checkLog(logCtx.build(), "MCF_test_counter", "test_message"));
+
+    errCb.counter_prefix = "";
+    errCb.counter_suffix = "_Prop";
+    errCb.logError(testCounter, testMessage, detailsToInclude);
+    assertTrue(TestUtil.checkLog(logCtx.build(), "test_counter_Prop", "test_message"));
   }
 }

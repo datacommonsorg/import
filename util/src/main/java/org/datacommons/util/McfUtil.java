@@ -236,4 +236,47 @@ public class McfUtil {
     String v = val.toLowerCase();
     return v.equals("true") || v.equals("1") || v.equals("false") || v.equals("0");
   }
+
+  public static class ErrCb {
+    public static final String VALUE_KEY = "value";
+    public static final String COLUMN_KEY = "column";
+    public static final String PROP_KEY = "property";
+    public static final String NODE_KEY = "node";
+
+    private final LogWrapper logCtx;
+    private final Debug.Log.Level logLevel;
+    private final long lineNum;
+    private Map<String, String> messageDetails = new HashMap<>();
+    public String counter_prefix = "";
+    public String counter_suffix = "";
+
+    public ErrCb(LogWrapper logCtx, Debug.Log.Level logLevel, long lineNum) {
+      this.logCtx = logCtx;
+      this.logLevel = logLevel;
+      this.lineNum = lineNum;
+    }
+
+    public void setDetail(String key, String val) {
+      this.messageDetails.put(key, val);
+    }
+
+    public void setDetails(Map<String, String> details) {
+      this.messageDetails = details;
+    }
+
+    public void logError(String counter, String problemMessage, List<String> detailsToInclude) {
+      counter = counter_prefix + counter + counter_suffix;
+      String message = problemMessage + " ::";
+      for (int i = 0; i < detailsToInclude.size(); i++) {
+        String key = detailsToInclude.get(i);
+        if (messageDetails.containsKey(key)) {
+          message += " " + key + ": '" + messageDetails.get(key) + "'";
+        }
+        if (i < detailsToInclude.size() - 1) {
+          message += ",";
+        }
+      }
+      this.logCtx.addEntry(this.logLevel, counter, message, this.lineNum);
+    }
+  }
 }
