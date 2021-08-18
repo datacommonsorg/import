@@ -16,6 +16,12 @@ package org.datacommons.util;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.text.StringEscapeUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Debug;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,11 +32,6 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.text.StringEscapeUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
 
 // The class that provides logging functionality.
 public class LogWrapper {
@@ -154,10 +155,6 @@ public class LogWrapper {
     log.putLevelSummary(level.name(), log.getLevelSummaryOrDefault(level.name(), 0) + 1);
 
     if (counterValue <= MAX_MESSAGES_PER_COUNTER) {
-      if (level == Debug.Log.Level.LEVEL_ERROR || level == Debug.Log.Level.LEVEL_FATAL) {
-        String displayLevel = level.name().replace("LEVEL_", "");
-        logger.error("{} {}:{} - {}: {}", displayLevel, file, lno, counter, message);
-      }
       // Log only up to certain full messages per counter. This can spam the log for WARNING msgs.
       Debug.Log.Entry.Builder e = log.addEntriesBuilder();
       e.setLevel(level);
