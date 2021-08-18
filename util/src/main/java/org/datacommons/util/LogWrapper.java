@@ -23,7 +23,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
@@ -36,7 +38,7 @@ public class LogWrapper {
 
   private static final long SECONDS_BETWEEN_STATUS = 30;
   public static final String REPORT_JSON = "report.json";
-  public static final int MAX_ERROR_LIMIT = 50;
+  public static final int MAX_ERROR_COUNTERS_LIMIT = 50;
   public static final int MAX_MESSAGES_PER_COUNTER = 10;
 
   private Debug.Log.Builder log;
@@ -44,9 +46,11 @@ public class LogWrapper {
   private String locationFile;
   private Instant lastStatusAt;
   private long countAtLastStatus;
+  private Set<String> countersWithErrors;
 
   public LogWrapper(Debug.Log.Builder log, Path outputDir) {
     this.log = log;
+    this.countersWithErrors = new HashSet<>();
     logPath = Paths.get(outputDir.toString(), REPORT_JSON);
     logger.info(
         "Report written every {}s to {}",
@@ -123,8 +127,8 @@ public class LogWrapper {
       logger.error("Found a fatal failure. Quitting!");
       return true;
     }
-    if (log.getLevelSummaryOrDefault("LEVEL_ERROR", 0) > MAX_ERROR_LIMIT) {
-      logger.error("Found too many failures. Quitting!");
+    if (countersWithErrors.size() > MAX_ERROR_COUNTERS_LIMIT) {
+      logger.error("Found too failure types. Quitting!");
       return true;
     }
     return false;
@@ -144,6 +148,7 @@ public class LogWrapper {
     if (level == Debug.Log.Level.LEVEL_ERROR || level == Debug.Log.Level.LEVEL_FATAL) {
       String displayLevel = level.name().replace("LEVEL_", "");
       logger.error("{} {}:{} - {}: {}", displayLevel, file, lno, counter, message);
+      countersWithErrors.add(counter);
     }
     String counterName = counter == null || counter.isEmpty() ? "MissingCounterName" : counter;
     long counterValue = log.getCounterSet().getCountersOrDefault(counterName, 0);
