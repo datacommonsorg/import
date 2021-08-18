@@ -146,8 +146,6 @@ public class LogWrapper {
   private void addEntry(
       Debug.Log.Level level, String counter, String message, String file, long lno) {
     if (level == Debug.Log.Level.LEVEL_ERROR || level == Debug.Log.Level.LEVEL_FATAL) {
-      String displayLevel = level.name().replace("LEVEL_", "");
-      logger.error("{} {}:{} - {}: {}", displayLevel, file, lno, counter, message);
       countersWithErrors.add(counter);
     }
     String counterName = counter == null || counter.isEmpty() ? "MissingCounterName" : counter;
@@ -156,6 +154,10 @@ public class LogWrapper {
     log.putLevelSummary(level.name(), log.getLevelSummaryOrDefault(level.name(), 0) + 1);
 
     if (counterValue <= MAX_MESSAGES_PER_COUNTER) {
+      if (level == Debug.Log.Level.LEVEL_ERROR || level == Debug.Log.Level.LEVEL_FATAL) {
+        String displayLevel = level.name().replace("LEVEL_", "");
+        logger.error("{} {}:{} - {}: {}", displayLevel, file, lno, counter, message);
+      }
       // Log only up to certain full messages per counter. This can spam the log for WARNING msgs.
       Debug.Log.Entry.Builder e = log.addEntriesBuilder();
       e.setLevel(level);
