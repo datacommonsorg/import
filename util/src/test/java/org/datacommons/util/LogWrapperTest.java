@@ -14,7 +14,7 @@
 
 package org.datacommons.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,5 +50,24 @@ public class LogWrapperTest {
     assertEquals(
         FileUtils.readFileToString(gotFile, StandardCharsets.UTF_8),
         FileUtils.readFileToString(wantFile, StandardCharsets.UTF_8));
+  }
+
+  @Test
+  public void tooManyErrors() throws IOException {
+    Debug.Log.Builder logCtx = Debug.Log.newBuilder();
+    // First use LogWrapper to update logCtx
+    LogWrapper lw = new LogWrapper(logCtx, testFolder.getRoot().toPath());
+    lw.setLocationFile("TestInput.mcf");
+    for (int i = 1; i <= 50; i++) {
+      lw.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_ErrorCounter" + i, "Foo Error", i);
+      assertFalse(lw.loggedTooManyFailures());
+    }
+    // One more with the same counter is fine.
+    lw.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_ErrorCounter1", "Foo Error", 1);
+    assertFalse(lw.loggedTooManyFailures());
+
+    // One more with a new counter is not.
+    lw.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_ErrorCounter51", "Foo Error", 51);
+    assertTrue(lw.loggedTooManyFailures());
   }
 }
