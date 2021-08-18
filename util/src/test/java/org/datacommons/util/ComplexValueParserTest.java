@@ -91,11 +91,11 @@ public class ComplexValueParserTest {
 
     log = toComplexValueFailure("dcs:Years 10]");
     assertTrue(log.getCounterSet().containsCounters("MCF_UnenclosedComplexValue"));
-    assertTrue(log.getEntries(0).getUserMessage().contains("not enclosed in brackets"));
+    assertTrue(log.getEntries(0).getUserMessage().contains("not enclosed in [] brackets"));
 
     log = toComplexValueFailure("[Years 10");
     assertTrue(log.getCounterSet().containsCounters("MCF_UnenclosedComplexValue"));
-    assertTrue(log.getEntries(0).getUserMessage().contains("not enclosed in brackets"));
+    assertTrue(log.getEntries(0).getUserMessage().contains("not enclosed in [] brackets"));
 
     log = toComplexValueFailure("[Years 1 2 3]");
     assertTrue(log.getCounterSet().containsCounters("MCF_MalformedComplexValueParts"));

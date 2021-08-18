@@ -122,7 +122,7 @@ public class McfParser {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedColonLessLine",
-          "Malformed line " + "without a colon delimiter (" + line + ")",
+          "Malformed line without a colon delimiter :: line: '" + line + "'",
           lineNum);
       return;
     }
@@ -134,9 +134,7 @@ public class McfParser {
         logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_MalformedNodeName",
-            "Found malformed 'Node' name ("
-                + rhs
-                + ") with comma. Node name must be a unary value.",
+            "Found malformed Node value with a comma; must be a unary value :: node: '" + rhs + "'",
             lineNum);
         return;
       }
@@ -144,9 +142,9 @@ public class McfParser {
         logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_MalformedNodeName",
-            "Found malformed 'Node' name ("
+            "Found malformed Node value with quotes; must be a non-quoted value :: node: '"
                 + rhs
-                + ") that includes quotes. Node name must be a non-quoted value.",
+                + "'",
             lineNum);
         return;
       }
@@ -156,7 +154,9 @@ public class McfParser {
           logCtx.addEntry(
               Debug.Log.Level.LEVEL_ERROR,
               "TMCF_MalformedEntity",
-              "Found malformed entity name that is not an entity prefix " + rhs,
+              "Found malformed entity name that is not an entity prefix (E:) :: name: '"
+                  + rhs
+                  + "'",
               lineNum);
           return;
         }
@@ -173,7 +173,7 @@ public class McfParser {
         logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_UnexpectedProperty",
-            " Property found without a 'Node' term: " + line,
+            "Property found without a preceding line with 'Node' :: line: '" + line + "'",
             lineNum);
         return;
       }
@@ -225,17 +225,18 @@ public class McfParser {
   // To be called after processing all lines of an MCF file (by calling parseLine()).
   private McfGraph finish() throws AssertionError {
     if (finished) {
-      throw new AssertionError("Called finish() twice!");
+      throw new AssertionError("Called finish() more than once!");
     }
     finished = true;
     if (curEntity.length() == 0) {
       return null;
     }
     if (curEntityLineIdx == 0) {
+      // TODO: This should happen on seeing a new node too.
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedNode",
-          "Found a 'Node' (" + curEntity + ") with properties at the end of the file",
+          "Found a 'Node' without properties :: node: '" + curEntity + "'",
           lineNum);
     }
     return graph.build();
@@ -332,7 +333,7 @@ public class McfParser {
       if (prop.equals("C")) {
         errCb.accept(
             "TMCF_UnsupportedColumnNameInProperty",
-            "Found unsupported column name as property  in node " + node);
+            "TMCF properties cannot refer to CSV columns yet :: property: '" + node + "'");
         return;
       }
       SchemaTerm term = parseSchemaTerm(val, errCb);
@@ -367,12 +368,13 @@ public class McfParser {
       if (!val.endsWith("]")) {
         errCb.accept(
             "MCF_MalformedComplexValue",
-            "Found malformed Complex value ("
+            "Found malformed Complex value without a closing ] bracket :: value: '"
                 + val
-                + ") without a closing bracket in property "
+                + "', property: '"
                 + prop
-                + " of node "
-                + node);
+                + "', node: '"
+                + node
+                + "'");
         return;
       }
       tval.setValue(val);
@@ -393,7 +395,12 @@ public class McfParser {
         if (isResolved) {
           errCb.accept(
               "MCF_LocalReferenceInResolvedFile",
-              "Found an internal reference " + val + " in resolved entity " + node);
+              "Found an internal 'l:' reference in resolved entity :: reference: '"
+                  + val
+                  + "', "
+                  + "node: '"
+                  + node
+                  + "'");
           return;
         }
         tval.setValue(val);
@@ -460,7 +467,12 @@ public class McfParser {
       if (delimiter == -1) {
         errCb.accept(
             "TMCF_MalformedSchemaTerm",
-            "Malformed " + (isEntity ? "entity" : "column") + " name in " + value);
+            "Malformed "
+                + (isEntity ? "entity" : "column")
+                + " value; must have a ':' delimiter"
+                + " :: value: '"
+                + value
+                + "'");
         return null;
       }
       term.table = strippedValue.substring(0, delimiter);
@@ -507,12 +519,13 @@ public class McfParser {
     String argContextString = "";
     if (argContext != null) {
       argContextString =
-          "column "
+          "column: '"
               + argContext.column
-              + ", property "
+              + "', property: '"
               + argContext.prop
-              + ", entity "
-              + argContext.templateEntity;
+              + "', node: '"
+              + argContext.templateEntity
+              + "'";
     }
     String prop_suffix = "";
     if (argContext != null) {
@@ -533,7 +546,7 @@ public class McfParser {
       if (records.isEmpty()) {
         if (errCb != null) {
           errCb.accept(
-              "StrSplit_EmptyToken" + prop_suffix, "Empty value found (" + argContextString + ")");
+              "StrSplit_EmptyToken" + prop_suffix, "Empty value found :: " + argContextString);
         }
         return splits;
       }
@@ -541,7 +554,7 @@ public class McfParser {
         if (errCb != null) {
           errCb.accept(
               "StrSplit_MultiToken" + prop_suffix,
-              "Found more than one line for '" + orig + "' (" + argContextString + ")");
+              "Found a new-line in value :: value: '" + orig + "', " + argContextString);
         }
         return splits;
       }
@@ -552,12 +565,8 @@ public class McfParser {
           splits.add(ss);
         }
       }
-    } catch (IOException e) {
-      if (errCb != null) {
-        errCb.accept(
-            "StrSplit_ParserFailure" + prop_suffix,
-            "Parsing failed on '" + orig + "' (" + argContextString + ")");
-      }
+    } catch (IOException ex) {
+      throw new AssertionError("Unexpected CSVParser error while parsing " + orig);
     }
     return splits;
   }

@@ -29,7 +29,7 @@ public class McfCheckerTest {
   public void checkBasic() throws IOException {
     // Missing typeOf.
     String mcf = "Node: USState\n" + "name: \"California\"";
-    assertTrue(failure(mcf, "Sanity_MissingOrEmpty_typeOf", "property 'typeOf' in node USState"));
+    assertTrue(failure(mcf, "Sanity_MissingOrEmpty_typeOf", "'typeOf', node: 'USState'"));
 
     // Good node.
     mcf = "Node: USState\n" + "typeOf: schema:State\n" + "name: \"California\"";
@@ -60,7 +60,7 @@ public class McfCheckerTest {
   public void checkDcid() throws IOException {
     // DCID must have exactly one value.
     String mcf = "Node: USState\n" + "typeOf: schema:State\n" + "dcid: geoId/06, geoId/07\n";
-    assertTrue(failure(mcf, "Sanity_MultipleDcidValues", "dcid must have exactly one"));
+    assertTrue(failure(mcf, "Sanity_MultipleDcidValues", "dcid with more than one value"));
 
     // DCID must not be too long.
     mcf =
@@ -102,7 +102,7 @@ public class McfCheckerTest {
             + "observationDate: \"2010\"\n"
             + "observationPeriod: \"P1M\"\n"
             + "unit: \"AnnualUSDollars\"\n";
-    assertTrue(failure(mcf, "Sanity_ObsMissingValueProp", "Missing any value property"));
+    assertTrue(failure(mcf, "Sanity_ObsMissingValueProp", "missing value property"));
 
     // Non-double measured value.
     mcf =
@@ -114,7 +114,7 @@ public class McfCheckerTest {
             + "observationDate: \"2017\"\n"
             + "observationPeriod: \"P1M\"\n"
             + "unit: \"AnnualUSDollars\"\n";
-    assertTrue(failure(mcf, "Sanity_NonDoubleObsValue", "double value"));
+    assertTrue(failure(mcf, "Sanity_NonDoubleObsValue", "non-double Observation value"));
 
     // No date.
     mcf =
@@ -134,7 +134,7 @@ public class McfCheckerTest {
             + "observedNode: l:USStateFemales\n"
             + "observationDate: \"2017-07\"\n"
             + "medianValue: nan\n";
-    assertTrue(failure(mcf, "Sanity_NonDoubleObsValue", "double value"));
+    assertTrue(failure(mcf, "Sanity_NonDoubleObsValue", "non-double Observation value"));
 
     // Measured property name should start with lower case.
     mcf =
@@ -163,7 +163,11 @@ public class McfCheckerTest {
             + "typeOf: schema:StatisticalVariable\n"
             + "measuredProperty: dcs:count\n"
             + "statType: dcs:measuredValue";
-    assertTrue(failure(mcf, "Sanity_MissingOrEmpty_populationType", "populationType in node SV"));
+    assertTrue(
+        failure(
+            mcf,
+            "Sanity_MissingOrEmpty_populationType",
+            "property: 'populationType', " + "node: 'SV'"));
 
     // Non-class popType
     mcf =
@@ -181,7 +185,7 @@ public class McfCheckerTest {
             + "populationType: schema:Person\n"
             + "statType: dcs:measuredValue";
     assertTrue(
-        failure(mcf, "Sanity_MissingOrEmpty_measuredProperty", "measuredProperty in node SV"));
+        failure(mcf, "Sanity_MissingOrEmpty_measuredProperty", "'measuredProperty', node: 'SV'"));
 
     // Non-prop mprop
     mcf =
@@ -231,7 +235,11 @@ public class McfCheckerTest {
             + "variableMeasured: dcid:WomenIncome\n"
             + "observationAbout: dcid:geoId/SF\n"
             + "observationDate: \"2020\"\n";
-    assertTrue(failure(mcf, "Sanity_MissingOrEmpty_value", "value in node SFWomenIncome2020"));
+    assertTrue(
+        failure(
+            mcf,
+            "Sanity_MissingOrEmpty_value",
+            "property: 'value', node: '" + "SFWomenIncome2020'"));
 
     // A bad StatVarObs node with no variableMeasured.
     mcf =
@@ -244,7 +252,7 @@ public class McfCheckerTest {
         failure(
             mcf,
             "Sanity_MissingOrEmpty_variableMeasured",
-            "variableMeasured in node SFWomenIncome2020"));
+            "'variableMeasured', node: 'SFWomenIncome2020'"));
 
     // A bad StatVarObs node with no observationAbout.
     mcf =
@@ -257,7 +265,7 @@ public class McfCheckerTest {
         failure(
             mcf,
             "Sanity_MissingOrEmpty_observationAbout",
-            "observationAbout in node SFWomenIncome2020"));
+            "'observationAbout', node: 'SFWomenIncome2020'"));
 
     // A bad StatVarObs node with no date.
     mcf =
@@ -270,7 +278,7 @@ public class McfCheckerTest {
         failure(
             mcf,
             "Sanity_MissingOrEmpty_observationDate",
-            "observationDate in node SFWomenIncome2020"));
+            "'observationDate', node: 'SFWomenIncome2020'"));
 
     // A bad StatVarObs node with bogus date.
     mcf =
@@ -280,7 +288,7 @@ public class McfCheckerTest {
             + "observationDate: \"January, 2020\"\n"
             + "variableMeasured: dcid:WomenIncome\n"
             + "observationAbout: dcid:geoId/SF\n";
-    assertTrue(failure(mcf, "Sanity_InvalidObsDate", "non-ISO8601 compliant value"));
+    assertTrue(failure(mcf, "Sanity_InvalidObsDate", "non-ISO8601 compliant"));
   }
 
   @Test
@@ -291,8 +299,7 @@ public class McfCheckerTest {
             + "typeOf: schema:Class\n"
             + "Name: \"Place\"\n"
             + "description: \"Physical location.\"\n";
-    assertTrue(
-        failure(mcf, "Sanity_NotInitLowerPropName", "'Name' does not start with a lower-case"));
+    assertTrue(failure(mcf, "Sanity_NotInitLowerPropName", "does not start with a lower-case"));
 
     // Class types must have upper-case names/IDs.
     mcf =
@@ -376,7 +383,7 @@ public class McfCheckerTest {
         failure(
             mcf,
             "Sanity_TmcfMissingColumn",
-            "'StateNam' referred",
+            "column: 'StateNam', node: 'E:CityStats->E1'",
             Set.of("StateId", "StateName")));
 
     mcf =

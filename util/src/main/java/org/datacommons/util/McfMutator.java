@@ -47,7 +47,7 @@ public class McfMutator {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "Mutator_MissingTypeOf",
-          "Missing typeOf value for node " + nodeId,
+          "Missing typeOf value for node :: node: '" + nodeId + "'",
           node.getLocationsList());
       return node.build();
     }
@@ -68,7 +68,13 @@ public class McfMutator {
             logCtx.addEntry(
                 Debug.Log.Level.LEVEL_ERROR,
                 "Mutator_InvalidObsValue",
-                "Wrong inferred type " + tv.getType() + " for property " + prop + " in " + nodeId,
+                "Unexpected type for Observation value; must be number or text :: type: '"
+                    + tv.getType().name()
+                    + "', property: '"
+                    + prop
+                    + "', node: '"
+                    + nodeId
+                    + "'",
                 node.getLocationsList());
             return node.build();
           }

@@ -107,39 +107,42 @@ public class McfChecker {
           if (!graph.getNodesMap().containsKey(tv.getValue())) {
             addLog(
                 "Sanity_TmcfMissingEntityDef",
-                "Missing entity '"
+                "No definition found for a referenced 'E:' value :: reference: '"
                     + tv.getValue()
-                    + "' referred to in property "
+                    + "', property: '"
                     + pv.getKey()
-                    + " of TMCF entity "
-                    + nodeId,
+                    + "' node: '"
+                    + nodeId
+                    + "'",
                 node);
             continue;
           }
         } else if (tv.getType() == Mcf.ValueType.TABLE_COLUMN) {
           // NOTE: If the MCF had parsed, the schema terms should be valid, thus
           // the ValueOrDie().
+          // TODO: Add node info to ErrCbArg to log location.
           McfParser.SchemaTerm term = McfParser.parseSchemaTerm(tv.getValue(), null);
           if (term.type != McfParser.SchemaTerm.Type.COLUMN) {
             addLog(
-                "Sanity_TmcfUnexpectedNonColumn",
-                "Unable to parse TMCF column '"
+                "Sanity_UnexpectedNonColumn",
+                "Expected value to be a TMCF column that starts with 'C:' :: value: '"
                     + tv.getValue()
-                    + "' in property "
+                    + "', property: '"
                     + pv.getKey()
-                    + " of TMCF entity "
-                    + nodeId,
+                    + "', node: '"
+                    + nodeId
+                    + "'",
                 node);
             continue;
           }
           if (columns != null && !columns.contains(term.value)) {
             addLog(
                 "Sanity_TmcfMissingColumn",
-                "Column '"
+                "Column referred to in TMCF is missing from CSV header :: column: '"
                     + term.value
-                    + "' referred in TMCF node "
+                    + "', node: '"
                     + nodeId
-                    + " is missing from the CSV header",
+                    + "'",
                 node);
             continue;
           }
@@ -165,7 +168,7 @@ public class McfChecker {
         && !statType.equals(Vocabulary.MEASUREMENT_RESULT)) {
       addLog(
           "Sanity_UnknownStatType",
-          "Found an unknown statType value '" + statType + "' in node " + nodeId,
+          "Found an unknown statType value :: value: '" + statType + "', node: '" + nodeId + "'",
           node);
     }
   }
@@ -183,12 +186,13 @@ public class McfChecker {
         && !McfUtil.isValidISO8601Date(obsDate)) {
       addLog(
           "Sanity_InvalidObsDate",
-          "Found a non-ISO8601 compliant value '"
+          "Found a non-ISO8601 compliant date value :: value: '"
               + obsDate
-              + "' for property "
+              + "', property: '"
               + Vocabulary.OBSERVATION_DATE
-              + " in node "
-              + nodeId,
+              + "', node: '"
+              + nodeId
+              + "'",
           node);
     }
     checkRequiredSingleValueProp(
@@ -225,12 +229,13 @@ public class McfChecker {
         && !McfUtil.isValidISO8601Date(obsDate)) {
       addLog(
           "Sanity_InvalidObsDate",
-          "Found a non-ISO8601 compliant value '"
+          "Found a non-ISO8601 compliant date value :: value: '"
               + obsDate
-              + "' for property "
+              + "', property: '"
               + Vocabulary.OBSERVATION_DATE
-              + " in node "
-              + nodeId,
+              + "', node: '"
+              + nodeId
+              + "'",
           node);
     }
 
@@ -245,12 +250,13 @@ public class McfChecker {
           if (!McfUtil.isNumber(val)) {
             addLog(
                 "Sanity_NonDoubleObsValue",
-                "Expected double value but got '"
+                "Found a non-double Observation value :: value: '"
                     + val
-                    + "' for Observation property "
+                    + "', property: '"
                     + prop
-                    + " in node "
-                    + nodeId,
+                    + "', node: '"
+                    + nodeId
+                    + "'",
                 node);
           }
         }
@@ -263,7 +269,7 @@ public class McfChecker {
         addLog(
             Debug.Log.Level.LEVEL_WARNING,
             "Sanity_ObsMissingValueProp",
-            "Missing any value property in Observation node " + nodeId,
+            "Observation node missing value property :: node: '" + nodeId + "'",
             node);
       } else {
         checkRequiredSingleValueProp(
@@ -277,14 +283,18 @@ public class McfChecker {
     for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getPvsMap().entrySet()) {
       String prop = pv.getKey();
       if (prop.isEmpty()) {
-        addLog("Sanity_EmptyProperty", "Found an empty property in node " + nodeId, node);
+        addLog("Sanity_EmptyProperty", "Found an empty property :: node: '" + nodeId + "'", node);
         continue;
       }
 
       if (!Character.isLowerCase(prop.charAt(0))) {
         addLog(
             "Sanity_NotInitLowerPropName",
-            "Property name '" + prop + "' does not start with a " + "lower-case in node " + nodeId,
+            "Found property name that does not start with a lower-case :: property: '"
+                + prop
+                + "', node: '"
+                + nodeId
+                + "'",
             node);
         continue;
       }
@@ -294,10 +304,11 @@ public class McfChecker {
         if (vals.getTypedValuesCount() != 1) {
           addLog(
               "Sanity_MultipleDcidValues",
-              "Property dcid must have exactly one value, but found "
+              "Found dcid with more than one value :: count: "
                   + vals.getTypedValuesCount()
-                  + " in node "
-                  + nodeId,
+                  + ", node: '"
+                  + nodeId
+                  + "'",
               node);
           continue;
         }
@@ -305,17 +316,22 @@ public class McfChecker {
         if (vals.getTypedValues(0).getType() == Mcf.ValueType.TABLE_ENTITY) {
           addLog(
               "Sanity_DcidTableEntity",
-              "Value of property dcid must not be an entity reference ("
+              "Value of dcid property must not be an 'E:' reference :: value: '"
                   + dcid
-                  + ") in node "
-                  + nodeId,
+                  + "', node: '"
+                  + nodeId
+                  + "'",
               node);
           continue;
         }
         if (dcid.length() > MAX_DCID_LENGTH) {
           addLog(
               "Sanity_VeryLongDcid",
-              "Found a very long dcid value (> " + MAX_DCID_LENGTH + ") for node " + nodeId,
+              "Found a very long dcid value; must be less than "
+                  + MAX_DCID_LENGTH
+                  + " :: node: '"
+                  + nodeId
+                  + "'",
               node);
           continue;
         }
@@ -323,7 +339,7 @@ public class McfChecker {
         if (!dcid.startsWith("bio/") && dcid.contains(" ")) {
           addLog(
               "Sanity_SpaceInDcid",
-              "Found a whitespace in dcid value (" + dcid + ") in node " + nodeId,
+              "Found a whitespace in dcid value :: value: '" + dcid + "', node: '" + nodeId + "'",
               node);
           continue;
         }
@@ -335,29 +351,29 @@ public class McfChecker {
           // Non-text values must be ascii.
           addLog(
               "Sanity_NonAsciiValueInNonText",
-              "Value '"
+              "Found non-ascii characters in a value that is not text :: "
+                  + "value: '"
                   + tv.getValue()
-                  + "' for property "
+                  + "', type: '"
+                  + tv.getType().name()
+                  + "', property: '"
                   + prop
-                  + " in "
-                  + "node "
+                  + "', node: '"
                   + nodeId
-                  + " is a non-text value which contains non-ascii "
-                  + "characters.",
+                  + "'",
               node);
         }
         if (Vocabulary.isReferenceProperty(prop)
             && (tv.getType() == Mcf.ValueType.TEXT || tv.getType() == Mcf.ValueType.NUMBER)) {
           addLog(
               "Sanity_RefPropHasNonRefValue",
-              "Value '"
+              "Found text/numeric value in a reference property :: value: '"
                   + tv.getValue()
-                  + "' for reference property "
+                  + "', property: '"
                   + prop
-                  + " in "
-                  + "node "
+                  + "', node: '"
                   + nodeId
-                  + " is not a reference.",
+                  + "'",
               node);
         }
       }
@@ -371,7 +387,14 @@ public class McfChecker {
       if (!McfUtil.getPropVal(node, prop).isEmpty()) {
         addLog(
             "Sanity_UnexpectedPropIn" + typeOf,
-            typeOf + " node " + nodeId + " must not include property " + prop,
+            "Unexpected property in "
+                + typeOf
+                + " node :: property: '"
+                + prop
+                + "', "
+                + "node: '"
+                + nodeId
+                + "'",
             node);
       }
     }
@@ -382,20 +405,22 @@ public class McfChecker {
         if (val.isEmpty()) {
           addLog(
               "Sanity_EmptySchemaValue",
-              "Found empty value for property " + prop + " in node " + nodeId,
+              "Found empty property value :: property: '" + prop + "', node '" + nodeId + "'",
               node);
           continue;
         }
+        // TODO: perhaps make an exception for description
         if (!Charsets.US_ASCII.newEncoder().canEncode(val)) {
           addLog(
               "Sanity_NonAsciiValueInSchema",
-              "Value '"
+              "Schema node has property values with non-ascii characters :: "
+                  + "value: '"
                   + val
-                  + "' in property "
+                  + "', property: '"
                   + prop
-                  + " of node "
+                  + "', node: '"
                   + nodeId
-                  + " contains non-ascii characters",
+                  + "'",
               node);
           continue;
         }
@@ -430,22 +455,28 @@ public class McfChecker {
       addLog(
           level,
           "Sanity_MissingOrEmpty_" + prop,
-          "Missing or empty value for property "
+          "Found a missing or empty property value :: property: '"
               + prop
-              + " in node "
+              + "', node: '"
               + nodeId
-              + " of type "
-              + typeOf,
+              + "', type: '"
+              + typeOf
+              + "'",
           node);
       return "";
     }
     if (tvs.size() != 1) {
-      String optColumn =
-          tvs.get(0).hasColumn() ? " from column '" + tvs.get(0).getColumn() + "'" : "";
+      String optColumn = tvs.get(0).hasColumn() ? ", column: '" + tvs.get(0).getColumn() + "'" : "";
       addLog(
           level,
           "Sanity_MultipleVals_" + prop,
-          "Found multiple values for property '" + prop + "'" + optColumn + " in node " + nodeId,
+          "Found multiple values for single-value property :: property: '"
+              + prop
+              + "'"
+              + optColumn
+              + ", node: '"
+              + nodeId
+              + "'",
           node);
       return "";
     }
@@ -458,12 +489,13 @@ public class McfChecker {
     if (vals.isEmpty()) {
       addLog(
           "Sanity_MissingOrEmpty_" + prop,
-          "Missing or empty value for property '"
+          "Found a missing or empty property value :: property: '"
               + prop
-              + "' in node "
+              + "', node: '"
               + nodeId
-              + " of type "
-              + typeOf,
+              + "', type: '"
+              + typeOf
+              + "'",
           node);
     }
   }
@@ -480,24 +512,24 @@ public class McfChecker {
     if (expectInitUpper && !Character.isUpperCase(value.charAt(0))) {
       addLog(
           "Sanity_NotInitUpper_" + prop + optType,
-          "Found a class ref '"
+          "Found a class reference that does not start with an upper-case :: reference: '"
               + value
-              + "' in property "
+              + "', property: '"
               + prop
-              + " in node "
+              + ", node: '"
               + nodeId
-              + " which does not start with an upper case",
+              + "'",
           node);
     } else if (!expectInitUpper && !Character.isLowerCase(value.charAt(0))) {
       addLog(
           "Sanity_NotInitLower_" + prop + optType,
-          "Found a property ref '"
+          "Found a property reference that does not start with a lower-case :: reference: '"
               + value
-              + "' in property "
+              + "', property: '"
               + prop
-              + " in node "
+              + ", node: '"
               + nodeId
-              + " which does not start with a lower case",
+              + "'",
           node);
     }
   }
