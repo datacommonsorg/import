@@ -18,6 +18,12 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.datacommons</groupId>
+			<artifactId>datacommons-import-util</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 			<version>2.5.1</version>
