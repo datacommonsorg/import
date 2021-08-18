@@ -25,15 +25,13 @@ import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.datacommons.proto.Debug;
-import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Mcf;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class McfUtilTest {
-  @Rule
-  public TemporaryFolder testFolder = new TemporaryFolder();
+  @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
   private static String SERIALIZE_INPUT =
       "Node: USState[1]\n"
