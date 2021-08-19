@@ -17,10 +17,9 @@ package org.datacommons.util;
 import static org.datacommons.proto.Mcf.ValueType.*;
 
 import java.util.List;
-import java.util.Map;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
-import org.datacommons.util.McfUtil.ErrCb;
+import org.datacommons.util.McfUtil.LogCb;
 
 // Parse complex value strings into nodes.
 //
@@ -93,11 +92,13 @@ public class ComplexValueParser {
     if (!mainNode.getLocationsList().isEmpty()) {
       lineNumber = mainNode.getLocationsList().get(0).getLineNumber();
     }
-    ErrCb errCb = new ErrCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNumber);
-    errCb.setDetails(
-        Map.of(ErrCb.VALUE_KEY, complexValue, ErrCb.PROP_KEY, prop, ErrCb.NODE_KEY, mainNodeId));
-    errCb.counter_suffix = "_" + prop;
-    List<String> fields = McfParser.splitAndStripWithQuoteEscape(trimmedComplexValue, arg, errCb);
+    LogCb logCb =
+        new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNumber)
+            .setDetail(LogCb.VALUE_KEY, complexValue)
+            .setDetail(LogCb.PROP_KEY, prop)
+            .setDetail(LogCb.NODE_KEY, mainNodeId);
+    logCb.setCounterSuffix(prop);
+    List<String> fields = McfParser.splitAndStripWithQuoteEscape(trimmedComplexValue, arg, logCb);
     if (fields.size() != 2 && fields.size() != 3) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,

@@ -30,7 +30,7 @@ import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
-import org.datacommons.util.McfUtil.ErrCb;
+import org.datacommons.util.McfUtil.LogCb;
 
 // A parser for converting text in Instance or Template MCF format into the McfGraph proto.
 //
@@ -149,9 +149,9 @@ public class McfParser {
         return;
       }
       if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
-        ErrCb errCb = getErrCb();
-        errCb.setDetail(ErrCb.VALUE_KEY, rhs);
-        SchemaTerm term = parseSchemaTerm(rhs, errCb);
+        LogCb logCb = getLogCb();
+        logCb.setDetail(LogCb.VALUE_KEY, rhs);
+        SchemaTerm term = parseSchemaTerm(rhs, logCb);
         if (term.type != SchemaTerm.Type.ENTITY) {
           logCtx.addEntry(
               Debug.Log.Level.LEVEL_ERROR,
@@ -300,24 +300,24 @@ public class McfParser {
     ssArg.delimiter = Vocabulary.VALUE_SEPARATOR;
     ssArg.includeEmpty = false;
     ssArg.stripEnclosingQuotes = false;
-    ErrCb errCb = getErrCb();
-    errCb.setDetail(ErrCb.PROP_KEY, prop);
-    errCb.setDetail(ErrCb.VALUE_KEY, values);
-    errCb.setDetail(ErrCb.NODE_KEY, curEntity);
-    errCb.counter_suffix = "-" + prop;
-    List<String> fields = splitAndStripWithQuoteEscape(values, ssArg, errCb);
-    errCb.counter_suffix = "";
+    LogCb logCb = getLogCb();
+    logCb.setDetail(LogCb.PROP_KEY, prop);
+    logCb.setDetail(LogCb.VALUE_KEY, values);
+    logCb.setDetail(LogCb.NODE_KEY, curEntity);
+    logCb.setCounterSuffix(prop);
+    List<String> fields = splitAndStripWithQuoteEscape(values, ssArg, logCb);
+    logCb.setCounterSuffix("");
     for (String field : fields) {
-      errCb.setDetail("value", field);
+      logCb.setDetail(LogCb.VALUE_KEY, field);
       parseTypedValue(
-          graph.getType(), isResolved, curEntity, prop, field, vals.addTypedValuesBuilder(), errCb);
+          graph.getType(), isResolved, curEntity, prop, field, vals.addTypedValuesBuilder(), logCb);
     }
     pvs.putPvs(prop, vals.build());
     graph.putNodes(curEntity, pvs.build());
   }
 
-  private ErrCb getErrCb() {
-    return new ErrCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNum);
+  private LogCb getLogCb() {
+    return new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNum);
   }
 
   public static void parseTypedValue(
@@ -327,17 +327,15 @@ public class McfParser {
       String prop,
       String val,
       McfGraph.TypedValue.Builder tval,
-      ErrCb errCb) {
+      LogCb logCb) {
     if (mcfType == Mcf.McfType.TEMPLATE_MCF) {
       if (prop.equals("C")) {
-        List<String> detailsToInclude = Arrays.asList(ErrCb.PROP_KEY, ErrCb.NODE_KEY);
-        errCb.logError(
+        logCb.logError(
             "TMCF_UnsupportedColumnNameInProperty",
-            "TMCF properties cannot refer to CSV columns yet",
-            detailsToInclude);
+            "TMCF properties cannot refer to CSV columns yet");
         return;
       }
-      SchemaTerm term = parseSchemaTerm(val, errCb);
+      SchemaTerm term = parseSchemaTerm(val, logCb);
       if (term.type == SchemaTerm.Type.ENTITY) {
         tval.setValue(val);
         tval.setType(Mcf.ValueType.TABLE_ENTITY);
@@ -367,12 +365,9 @@ public class McfParser {
 
     if (val.startsWith("[")) {
       if (!val.endsWith("]")) {
-        List<String> detailsToInclude =
-            Arrays.asList(ErrCb.VALUE_KEY, ErrCb.PROP_KEY, ErrCb.NODE_KEY);
-        errCb.logError(
+        logCb.logError(
             "MCF_MalformedComplexValue",
-            "Found malformed Complex value without a closing ] bracket",
-            detailsToInclude);
+            "Found malformed Complex value without a closing ] bracket");
         return;
       }
       tval.setValue(val);
@@ -391,11 +386,9 @@ public class McfParser {
         return;
       } else if (Vocabulary.isInternalReference(val)) {
         if (isResolved) {
-          List<String> detailsToInclude = Arrays.asList(ErrCb.VALUE_KEY, ErrCb.NODE_KEY);
-          errCb.logError(
+          logCb.logError(
               "MCF_LocalReferenceInResolvedFile",
-              "Found an internal 'l:' reference in resolved entity value",
-              detailsToInclude);
+              "Found an internal 'l:' reference in resolved entity value");
           return;
         }
         tval.setValue(val);
@@ -449,7 +442,7 @@ public class McfParser {
     public String table;
   }
 
-  public static SchemaTerm parseSchemaTerm(String value, ErrCb errCb) {
+  public static SchemaTerm parseSchemaTerm(String value, LogCb logCb) {
     SchemaTerm term = new SchemaTerm();
     boolean isEntity = value.startsWith(Vocabulary.ENTITY_PREFIX);
     boolean isColumn = value.startsWith(Vocabulary.COLUMN_PREFIX);
@@ -459,12 +452,10 @@ public class McfParser {
           value.substring(
               isEntity ? Vocabulary.ENTITY_PREFIX.length() : Vocabulary.COLUMN_PREFIX.length());
       int delimiter = strippedValue.indexOf(Vocabulary.TABLE_DELIMITER);
-      List<String> detailsToInclude = Arrays.asList(ErrCb.VALUE_KEY, ErrCb.NODE_KEY);
       if (delimiter == -1) {
-        errCb.logError(
+        logCb.logError(
             "TMCF_MalformedSchemaTerm",
-            "Malformed " + (isEntity ? "entity" : "column") + " value; must have a ':' delimiter",
-            detailsToInclude);
+            "Malformed " + (isEntity ? "entity" : "column") + " value; must have a ':' delimiter");
         return null;
       }
       term.table = strippedValue.substring(0, delimiter);
@@ -492,10 +483,8 @@ public class McfParser {
 
   // NOTE: We do not strip enclosing quotes in this function.
   public static List<String> splitAndStripWithQuoteEscape(
-      String orig, SplitAndStripArg arg, ErrCb errCb) throws AssertionError {
+      String orig, SplitAndStripArg arg, LogCb logCb) throws AssertionError {
     List<String> splits = new ArrayList<>();
-    List<String> detailsToInclude =
-        Arrays.asList(ErrCb.VALUE_KEY, ErrCb.NODE_KEY, ErrCb.PROP_KEY, ErrCb.NODE_KEY);
     try {
       // withIgnoreSurroundingSpaces() is important to treat something like:
       //    `first, "second, with comma"`
@@ -509,14 +498,14 @@ public class McfParser {
                   .withIgnoreSurroundingSpaces());
       List<CSVRecord> records = parser.getRecords();
       if (records.isEmpty()) {
-        if (errCb != null) {
-          errCb.logError("StrSplit_EmptyToken", "Empty value found", detailsToInclude);
+        if (logCb != null) {
+          logCb.logError("StrSplit_EmptyToken", "Empty value found");
         }
         return splits;
       }
       if (records.size() != 1) {
-        if (errCb != null) {
-          errCb.logError("StrSplit_MultiToken", "Found a new-line in value", detailsToInclude);
+        if (logCb != null) {
+          logCb.logError("StrSplit_MultiToken", "Found a new-line in value");
         }
         return splits;
       }

@@ -237,43 +237,54 @@ public class McfUtil {
     return v.equals("true") || v.equals("1") || v.equals("false") || v.equals("0");
   }
 
-  public static class ErrCb {
+  // A class to hold information for logging errors or warnings
+  public static class LogCb {
     public static final String VALUE_KEY = "value";
     public static final String COLUMN_KEY = "column";
     public static final String PROP_KEY = "property";
     public static final String NODE_KEY = "node";
-
+    private static final List<String> messageDetailsKeys =
+        Arrays.asList(VALUE_KEY, COLUMN_KEY, PROP_KEY, NODE_KEY);
     private final LogWrapper logCtx;
     private final Debug.Log.Level logLevel;
     private final long lineNum;
     private Map<String, String> messageDetails = new HashMap<>();
-    public String counter_prefix = "";
-    public String counter_suffix = "";
+    private String counter_prefix = "";
+    private String counter_suffix = "";
 
-    public ErrCb(LogWrapper logCtx, Debug.Log.Level logLevel, long lineNum) {
+    public LogCb(LogWrapper logCtx, Debug.Log.Level logLevel, long lineNum) {
       this.logCtx = logCtx;
       this.logLevel = logLevel;
       this.lineNum = lineNum;
     }
 
-    public void setDetail(String key, String val) {
+    public LogCb setDetail(String key, String val) {
       this.messageDetails.put(key, val);
+      return this;
     }
 
-    public void setDetails(Map<String, String> details) {
-      this.messageDetails = details;
+    public void setCounterPrefix(String prefix) {
+      this.counter_prefix = prefix;
     }
 
-    public void logError(String counter, String problemMessage, List<String> detailsToInclude) {
-      counter = counter_prefix + counter + counter_suffix;
-      String message = problemMessage + " ::";
-      for (int i = 0; i < detailsToInclude.size(); i++) {
-        String key = detailsToInclude.get(i);
-        if (messageDetails.containsKey(key)) {
-          message += " " + key + ": '" + messageDetails.get(key) + "'";
-        }
-        if (i < detailsToInclude.size() - 1) {
-          message += ",";
+    public void setCounterSuffix(String suffix) {
+      this.counter_suffix = suffix;
+    }
+
+    public void logError(String counter, String problemMessage) {
+      if (!counter_prefix.isEmpty()) {
+        counter = counter_prefix + "_" + counter;
+      }
+      if (!counter_suffix.isEmpty()) {
+        counter = counter + "_" + counter_suffix;
+      }
+      String message = problemMessage + " :: ";
+      boolean isFirstDetail = true;
+      for (String detailKey : messageDetailsKeys) {
+        if (messageDetails.containsKey(detailKey)) {
+          message +=
+              (isFirstDetail ? "" : ", ") + detailKey + ": '" + messageDetails.get(detailKey) + "'";
+          isFirstDetail = false;
         }
       }
       this.logCtx.addEntry(this.logLevel, counter, message, this.lineNum);

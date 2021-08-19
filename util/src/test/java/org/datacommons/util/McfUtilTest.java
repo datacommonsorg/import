@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
@@ -192,30 +191,24 @@ public class McfUtilTest {
   public void logErrorWithErrCb() {
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(logCtx, testFolder.getRoot().toPath());
-    ErrCb errCb = new ErrCb(lw, Debug.Log.Level.LEVEL_ERROR, 0);
-    List<String> detailsToInclude = new ArrayList<>();
+    LogCb logCb = new LogCb(lw, Debug.Log.Level.LEVEL_ERROR, 0);
     String testCounter = "test_counter";
     String testMessage = "test_message";
 
-    errCb.logError(testCounter, testMessage, detailsToInclude);
+    logCb.logError(testCounter, testMessage);
     assertTrue(TestUtil.checkLog(logCtx.build(), "test_counter", "test_message"));
 
-    errCb.setDetail(ErrCb.VALUE_KEY, "test_value");
-    detailsToInclude.add(ErrCb.VALUE_KEY);
-    errCb.logError(testCounter, testMessage, detailsToInclude);
+    logCb.setDetail(LogCb.VALUE_KEY, "test_value");
+    logCb.logError(testCounter, testMessage);
     assertTrue(TestUtil.checkLog(logCtx.build(), "test_counter", "value: 'test_value'"));
 
-    detailsToInclude.add(ErrCb.COLUMN_KEY);
-    errCb.logError(testCounter, testMessage, detailsToInclude);
-    assertFalse(TestUtil.checkLog(logCtx.build(), "test_counter", "column: '"));
-
-    errCb.counter_prefix = "MCF_";
-    errCb.logError(testCounter, testMessage, detailsToInclude);
+    logCb.setCounterPrefix("MCF");
+    logCb.logError(testCounter, testMessage);
     assertTrue(TestUtil.checkLog(logCtx.build(), "MCF_test_counter", "test_message"));
 
-    errCb.counter_prefix = "";
-    errCb.counter_suffix = "_Prop";
-    errCb.logError(testCounter, testMessage, detailsToInclude);
+    logCb.setCounterPrefix("");
+    logCb.setCounterSuffix("Prop");
+    logCb.logError(testCounter, testMessage);
     assertTrue(TestUtil.checkLog(logCtx.build(), "test_counter_Prop", "test_message"));
   }
 }
