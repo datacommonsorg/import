@@ -149,8 +149,7 @@ public class McfParser {
         return;
       }
       if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
-        LogCb logCb = getLogCb();
-        logCb.setDetail(LogCb.VALUE_KEY, rhs);
+        LogCb logCb = getLogCb().setDetail(LogCb.VALUE_KEY, rhs);
         SchemaTerm term = parseSchemaTerm(rhs, logCb);
         if (term.type != SchemaTerm.Type.ENTITY) {
           logCtx.addEntry(
@@ -300,11 +299,12 @@ public class McfParser {
     ssArg.delimiter = Vocabulary.VALUE_SEPARATOR;
     ssArg.includeEmpty = false;
     ssArg.stripEnclosingQuotes = false;
-    LogCb logCb = getLogCb();
-    logCb.setDetail(LogCb.PROP_KEY, prop);
-    logCb.setDetail(LogCb.VALUE_KEY, values);
-    logCb.setDetail(LogCb.NODE_KEY, curEntity);
-    logCb.setCounterSuffix(prop);
+    LogCb logCb =
+        getLogCb()
+            .setDetail(LogCb.PROP_KEY, prop)
+            .setDetail(LogCb.VALUE_KEY, values)
+            .setDetail(LogCb.NODE_KEY, curEntity)
+            .setCounterSuffix(prop);
     List<String> fields = splitAndStripWithQuoteEscape(values, ssArg, logCb);
     logCb.setCounterSuffix("");
     for (String field : fields) {

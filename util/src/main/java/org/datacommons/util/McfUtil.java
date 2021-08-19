@@ -263,12 +263,14 @@ public class McfUtil {
       return this;
     }
 
-    public void setCounterPrefix(String prefix) {
+    public LogCb setCounterPrefix(String prefix) {
       this.counter_prefix = prefix;
+      return this;
     }
 
-    public void setCounterSuffix(String suffix) {
+    public LogCb setCounterSuffix(String suffix) {
       this.counter_suffix = suffix;
+      return this;
     }
 
     public void logError(String counter, String problemMessage) {

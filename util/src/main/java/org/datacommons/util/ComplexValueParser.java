@@ -96,8 +96,8 @@ public class ComplexValueParser {
         new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNumber)
             .setDetail(LogCb.VALUE_KEY, complexValue)
             .setDetail(LogCb.PROP_KEY, prop)
-            .setDetail(LogCb.NODE_KEY, mainNodeId);
-    logCb.setCounterSuffix(prop);
+            .setDetail(LogCb.NODE_KEY, mainNodeId)
+            .setCounterSuffix(prop);
     List<String> fields = McfParser.splitAndStripWithQuoteEscape(trimmedComplexValue, arg, logCb);
     if (fields.size() != 2 && fields.size() != 3) {
       logCtx.addEntry(
