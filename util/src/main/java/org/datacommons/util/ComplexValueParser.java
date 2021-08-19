@@ -19,6 +19,7 @@ import static org.datacommons.proto.Mcf.ValueType.*;
 import java.util.List;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
+import org.datacommons.util.McfUtil.LogCb;
 
 // Parse complex value strings into nodes.
 //
@@ -87,22 +88,17 @@ public class ComplexValueParser {
     arg.delimiter = ' ';
     arg.includeEmpty = false;
     arg.stripEnclosingQuotes = false;
-    // TODO: Passthru errCb with "complexValue" in upcoming ErrCbArg's "value"
-    List<String> fields = McfParser.splitAndStripWithQuoteEscape(trimmedComplexValue, arg, null);
-    if (fields.isEmpty()) {
-      logCtx.addEntry(
-          Debug.Log.Level.LEVEL_ERROR,
-          "MCF_MalformedComplexValueString",
-          "Found malformed complex value :: value: '"
-              + complexValue
-              + "', property: '"
-              + prop
-              + "', node: '"
-              + mainNodeId
-              + "'",
-          mainNode.getLocationsList());
-      return false;
+    long lineNumber = -1;
+    if (!mainNode.getLocationsList().isEmpty()) {
+      lineNumber = mainNode.getLocationsList().get(0).getLineNumber();
     }
+    LogCb logCb =
+        new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNumber)
+            .setDetail(LogCb.VALUE_KEY, complexValue)
+            .setDetail(LogCb.PROP_KEY, prop)
+            .setDetail(LogCb.NODE_KEY, mainNodeId)
+            .setCounterSuffix(prop);
+    List<String> fields = McfParser.splitAndStripWithQuoteEscape(trimmedComplexValue, arg, logCb);
     if (fields.size() != 2 && fields.size() != 3) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,

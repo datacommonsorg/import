@@ -21,13 +21,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
-import org.datacommons.util.McfParser.SplitAndStripArgContext;
+import org.datacommons.util.McfUtil.LogCb;
 
 // Converts a Template MCF file and an associated CSV into instance MCF.
 //
@@ -133,10 +132,9 @@ public class TmcfCsvParser {
         return;
       }
 
-      BiConsumer<String, String> errCb =
-          (counter, message) -> {
-            addLog(Debug.Log.Level.LEVEL_ERROR, counter, message);
-          };
+      LogCb logCb =
+          new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, csvParser.getCurrentLineNumber());
+
       // Process DCIDs from all the nodes first and add to entityToDcid map, which will be consulted
       // to resolve entity references in processValues() function.
       for (Map.Entry<String, Mcf.McfGraph.PropertyValues> tableEntity :
@@ -147,8 +145,8 @@ public class TmcfCsvParser {
         // Register the fact that the user has mapped dcid, in case we continue below.
         // TODO: Maybe this should move to after currentNodeId setting below.
         entityToDcid.put(tableEntity.getKey(), Mcf.McfGraph.TypedValue.newBuilder().build());
-
-        currentNodeId = toNodeName(tableEntity.getKey(), errCb);
+        logCb.setDetail(LogCb.VALUE_KEY, tableEntity.getKey());
+        currentNodeId = toNodeName(tableEntity.getKey(), logCb);
         if (currentNodeId == null) continue;
 
         currentProp = Vocabulary.DCID;
@@ -176,7 +174,8 @@ public class TmcfCsvParser {
 
       for (Map.Entry<String, Mcf.McfGraph.PropertyValues> tableEntity :
           tmcf.getNodesMap().entrySet()) {
-        currentNodeId = toNodeName(tableEntity.getKey(), errCb);
+        logCb.setDetail(LogCb.VALUE_KEY, tableEntity.getKey());
+        currentNodeId = toNodeName(tableEntity.getKey(), logCb);
         if (currentNodeId == null) continue;
         // Case of malformed/empty DCID. SKip this node (counters were updated above).
         if (currentNodeId.equals(Vocabulary.DCID_PREFIX)) continue;
@@ -223,14 +222,14 @@ public class TmcfCsvParser {
       Mcf.McfGraph.Values.Builder instanceValues = Mcf.McfGraph.Values.newBuilder();
 
       // Used for parseSchemaTerm() and splitAndStripWithQuoteEscape()
-      BiConsumer<String, String> errCb =
-          (counter, message) -> {
-            addLog(Debug.Log.Level.LEVEL_ERROR, counter, message);
-          };
-      BiConsumer<String, String> warnCb =
-          (counter, message) -> {
-            addLog(Debug.Log.Level.LEVEL_WARNING, counter, message);
-          };
+      LogCb errCb =
+          new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, csvParser.getCurrentLineNumber())
+              .setDetail(LogCb.PROP_KEY, currentProp)
+              .setDetail(LogCb.NODE_KEY, templateEntity);
+      LogCb warnCb =
+          new LogCb(logCtx, Debug.Log.Level.LEVEL_WARNING, csvParser.getCurrentLineNumber())
+              .setDetail(LogCb.PROP_KEY, currentProp)
+              .setDetail(LogCb.NODE_KEY, templateEntity);
 
       for (Mcf.McfGraph.TypedValue typedValue : templateValues.getTypedValuesList()) {
         if (typedValue.getType() == Mcf.ValueType.TABLE_ENTITY) {
@@ -245,6 +244,7 @@ public class TmcfCsvParser {
                     + "'");
             continue;
           }
+          errCb.setDetail(LogCb.VALUE_KEY, typedValue.getValue());
           String referenceNode = toNodeName(typedValue.getValue(), errCb);
           Mcf.McfGraph.TypedValue.Builder newTypedValue = Mcf.McfGraph.TypedValue.newBuilder();
           if (referenceNode.startsWith(Vocabulary.DCID_PREFIX)) {
@@ -275,6 +275,7 @@ public class TmcfCsvParser {
           instanceValues.addTypedValues(newTypedValue.build());
         } else if (typedValue.getType() == Mcf.ValueType.TABLE_COLUMN) {
           // Replace column-name with cell-value
+          errCb.setDetail(LogCb.VALUE_KEY, typedValue.getValue());
           McfParser.SchemaTerm term = McfParser.parseSchemaTerm(typedValue.getValue(), errCb);
           if (term == null) {
             continue;
@@ -315,12 +316,15 @@ public class TmcfCsvParser {
           ssArg.delimiter = delimiter;
           ssArg.includeEmpty = false;
           ssArg.stripEnclosingQuotes = false;
-          ssArg.context = new SplitAndStripArgContext(column, currentProp, templateEntity);
           // TODO: set stripEscapesBeforeQuotes
-          List<String> values =
-              McfParser.splitAndStripWithQuoteEscape(dataRow.get(columnIndex), ssArg, warnCb);
+          String origValue = dataRow.get(columnIndex);
+          warnCb.setDetail(LogCb.VALUE_KEY, origValue);
+          warnCb.setDetail(LogCb.COLUMN_KEY, column);
+          warnCb.setCounterSuffix(currentProp);
+          List<String> values = McfParser.splitAndStripWithQuoteEscape(origValue, ssArg, warnCb);
           for (String value : values) {
             Mcf.McfGraph.TypedValue.Builder newTypedValue = instanceValues.addTypedValuesBuilder();
+            errCb.setDetail(LogCb.VALUE_KEY, value);
             McfParser.parseTypedValue(
                 Mcf.McfType.INSTANCE_MCF,
                 false,
@@ -339,20 +343,17 @@ public class TmcfCsvParser {
       return instanceValues.build();
     }
 
-    private String toNodeName(String entityId, BiConsumer<String, String> errCb) {
+    private String toNodeName(String entityId, LogCb logCb) {
       if (entityToDcid.containsKey(entityId)) {
         return Vocabulary.DCID_PREFIX + entityToDcid.get(entityId).getValue();
       }
 
-      McfParser.SchemaTerm term = McfParser.parseSchemaTerm(entityId, errCb);
+      McfParser.SchemaTerm term = McfParser.parseSchemaTerm(entityId, logCb);
       if (term == null) return null;
       if (term.type != McfParser.SchemaTerm.Type.ENTITY) {
         // TODO: Consider making this an assertion failure
-        errCb.accept(
-            "CSV_UnexpectedNonEntity",
-            "Expected value to be a TMCF entity that starts with 'E:' :: value: '"
-                + entityId
-                + "'");
+        logCb.logError(
+            "CSV_UnexpectedNonEntity", "Expected value to be a TMCF entity that starts with 'E:'");
         return null;
       }
 

@@ -86,8 +86,10 @@ public class ComplexValueParserTest {
   @Test
   public void testQuantityFailure() {
     Debug.Log log = toComplexValueFailure("[]");
-    assertTrue(log.getCounterSet().containsCounters("MCF_MalformedComplexValueString"));
-    assertTrue(log.getEntries(0).getUserMessage().contains("malformed"));
+    assertTrue(log.getCounterSet().containsCounters("StrSplit_EmptyToken_p1"));
+    assertTrue(log.getEntries(0).getUserMessage().contains("Empty value found"));
+    assertTrue(log.getCounterSet().containsCounters("MCF_MalformedComplexValueParts"));
+    assertTrue(log.getEntries(1).getUserMessage().contains("value must have 2"));
 
     log = toComplexValueFailure("dcs:Years 10]");
     assertTrue(log.getCounterSet().containsCounters("MCF_UnenclosedComplexValue"));
