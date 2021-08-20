@@ -14,16 +14,17 @@
 
 package org.datacommons.tool;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Mcf;
+import org.datacommons.util.*;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Mcf;
-import org.datacommons.util.*;
 
 class DCTooManyFailuresException extends Exception {
   public DCTooManyFailuresException() {}
@@ -40,9 +41,9 @@ public class Processor {
   private List<Mcf.McfGraph> nodesForExistenceCheck;
 
   // NOTE: If doExistenceChecks is true, then it is important that the caller perform a
-  // checkAllNodes() call *after* all instance MCF files are process (via processNodes). This is
+  // checkAllNodes() call *after* all instance MCF files are processed (via processNodes). This is
   // so that the newly added schema, StatVar, etc. are fully known to the Existence Checker first,
-  // and then the check is performed.
+  // before existene checks are performed.
   public Processor(boolean doExistenceChecks, LogWrapper logCtx) {
     this.logCtx = logCtx;
     if (doExistenceChecks) {
