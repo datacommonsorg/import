@@ -186,7 +186,7 @@ public class McfChecker {
     if (existenceChecker != null
         && !existenceChecker.checkTriple(mProp, Vocabulary.DOMAIN_INCLUDES, popType)) {
       addLog(
-          "Sanity_DomainCheckFailed_measuredProperty",
+          "Existence_MissingPropertyDomain",
           "Class not in the domain of Property :: property: '"
               + mProp
               + "', class: '"
@@ -216,8 +216,8 @@ public class McfChecker {
     // For SVObs, the only ref check we do is the existence of StatVar, and its an error if missing.
     if (existenceChecker != null && !existenceChecker.checkNode(statVar)) {
       addLog(
-          "Sanity_RefCheckFailed_variableMeasured",
-          "Missing StatisticalVariable reference :: reference: '"
+          "Existence_MissingRef_variableMeasured",
+          "Failed StatVar existence check :: reference: '"
               + statVar
               + "', property: '"
               + Vocabulary.VARIABLE_MEASURED
@@ -448,8 +448,8 @@ public class McfChecker {
           // Mark reference check misses as warnings to flag the user to add schema.
           addLog(
               Debug.Log.Level.LEVEL_WARNING,
-              "Sanity_RefCheckFailed_" + prop,
-              "Failed node reference check :: reference: '"
+              "Existence_MissingRef_" + prop,
+              "Failed reference existence check :: reference: '"
                   + tv.getValue()
                   + "', property: '"
                   + prop
