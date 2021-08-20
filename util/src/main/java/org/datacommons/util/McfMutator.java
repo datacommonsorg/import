@@ -35,6 +35,8 @@ public class McfMutator {
     McfMutator m = new McfMutator();
     m.graph = graph;
     m.logCtx = logCtx;
+    // Make a list of node names because we don't want to be iterating over the map while mutating
+    // it.
     List<String> nodeIdList = new ArrayList<>();
     graph.getNodesMap().forEach((k, v) -> nodeIdList.add(k));
     for (String nodeId : nodeIdList) {
