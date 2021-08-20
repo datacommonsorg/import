@@ -43,7 +43,8 @@ public class TmcfCsvParser {
 
   // Build a parser given a TMCF file, CSV file, CSV delimiter and a log context.
   public static TmcfCsvParser init(
-      String tmcfFile, String csvFile, char delimiter, LogWrapper logCtx) throws IOException {
+      String tmcfFile, String csvFile, char delimiter, LogWrapper logCtx)
+      throws IOException, InterruptedException {
     TmcfCsvParser tmcfCsvParser = new TmcfCsvParser();
     logCtx.setLocationFile(tmcfFile);
     tmcfCsvParser.tmcf = McfParser.parseTemplateMcfFile(tmcfFile, logCtx);
@@ -94,7 +95,7 @@ public class TmcfCsvParser {
   }
 
   // Parse the next row from the CSV. Returns null on EOF.
-  public Mcf.McfGraph parseNextRow() {
+  public Mcf.McfGraph parseNextRow() throws IOException, InterruptedException {
     if (!csvParser.iterator().hasNext()) {
       return null;
     }
@@ -125,7 +126,7 @@ public class TmcfCsvParser {
       return instanceMcf.build();
     }
 
-    public void process(CSVRecord dataRow) {
+    public void process(CSVRecord dataRow) throws IOException, InterruptedException {
       if (!dataRow.isConsistent()) {
         addLog(
             Debug.Log.Level.LEVEL_ERROR,

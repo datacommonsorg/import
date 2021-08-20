@@ -15,6 +15,7 @@
 package org.datacommons.util;
 
 import com.google.common.base.Charsets;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,34 +42,44 @@ public class McfChecker {
   private LogWrapper logCtx;
   private Set<String> columns; // Relevant only when graph.type() == TEMPLATE_MCF
   boolean foundFailure = false;
+  private ExistenceChecker existenceChecker;
 
   // Argument |graph| may be Instance or Template MCF.
-  public static boolean check(Mcf.McfGraph graph, LogWrapper logCtx) {
-    return new McfChecker(graph, null, logCtx).check();
+  public static boolean check(
+      Mcf.McfGraph graph, ExistenceChecker existenceChecker, LogWrapper logCtx)
+      throws IOException, InterruptedException {
+    return new McfChecker(graph, null, existenceChecker, logCtx).check();
   }
 
-  // Used to check a single node.
+  // Used to check a single node from TMcfCsvParser.
   public static boolean check(
-      Mcf.McfType mcfType, String nodeId, Mcf.McfGraph.PropertyValues node, LogWrapper logCtx) {
+      Mcf.McfType mcfType, String nodeId, Mcf.McfGraph.PropertyValues node, LogWrapper logCtx)
+      throws IOException, InterruptedException {
     Mcf.McfGraph.Builder nodeGraph = Mcf.McfGraph.newBuilder();
     nodeGraph.setType(mcfType);
     nodeGraph.putNodes(nodeId, node);
-    return new McfChecker(nodeGraph.build(), null, logCtx).check();
+    return new McfChecker(nodeGraph.build(), null, null, logCtx).check();
   }
 
   // Used with Template MCF when there are columns from CSV header.
-  public static boolean check(Mcf.McfGraph graph, Set<String> columns, LogWrapper logCtx) {
-    return new McfChecker(graph, columns, logCtx).check();
+  public static boolean check(Mcf.McfGraph graph, Set<String> columns, LogWrapper logCtx)
+      throws IOException, InterruptedException {
+    return new McfChecker(graph, columns, null, logCtx).check();
   }
 
-  private McfChecker(Mcf.McfGraph graph, Set<String> columns, LogWrapper logCtx) {
+  private McfChecker(
+      Mcf.McfGraph graph,
+      Set<String> columns,
+      ExistenceChecker existenceChecker,
+      LogWrapper logCtx) {
     this.graph = graph;
     this.columns = columns;
     this.logCtx = logCtx;
+    this.existenceChecker = existenceChecker;
   }
 
   // Returns true if there was an sanity error found.
-  private boolean check() {
+  private boolean check() throws IOException, InterruptedException {
     foundFailure = false;
     for (String nodeId : graph.getNodesMap().keySet()) {
       Mcf.McfGraph.PropertyValues node = graph.toBuilder().getNodesOrThrow(nodeId);
@@ -80,13 +91,14 @@ public class McfChecker {
     return !foundFailure;
   }
 
-  private void checkNode(String nodeId, Mcf.McfGraph.PropertyValues node) {
+  private void checkNode(String nodeId, Mcf.McfGraph.PropertyValues node)
+      throws IOException, InterruptedException {
     if (node.hasTemplateNode()) {
       // The TMCF node ref is more user-friendly.
       nodeId = node.getTemplateNode();
     }
-    checkCommon(nodeId, node);
-    for (String typeOf : McfUtil.getPropVals(node, Vocabulary.TYPE_OF)) {
+    var types = checkCommon(nodeId, node);
+    for (String typeOf : types) {
       if (Vocabulary.isStatVarObs(typeOf)) {
         checkSVObs(nodeId, node);
       } else if (typeOf.equals(Vocabulary.CLASS_TYPE) || typeOf.equals(Vocabulary.PROPERTY_TYPE)) {
@@ -159,7 +171,8 @@ public class McfChecker {
     }
   }
 
-  private void checkStatVar(String nodeId, Mcf.McfGraph.PropertyValues node) {
+  private void checkStatVar(String nodeId, Mcf.McfGraph.PropertyValues node)
+      throws IOException, InterruptedException {
     String popType =
         checkRequiredSingleValueProp(
             nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.POPULATION_TYPE);
@@ -169,6 +182,20 @@ public class McfChecker {
         checkRequiredSingleValueProp(
             nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.MEASURED_PROP);
     checkInitCasing(nodeId, node, Vocabulary.MEASURED_PROP, mProp, "", false);
+    // TODO: Do this check for all constraint properties too.
+    if (existenceChecker != null
+        && !existenceChecker.checkTriple(mProp, Vocabulary.DOMAIN_INCLUDES, popType)) {
+      addLog(
+          "Sanity_DomainCheckFailed_measuredProperty",
+          "Class not in the domain of Property :: property: '"
+              + mProp
+              + "', class: '"
+              + popType
+              + "', node: '"
+              + nodeId
+              + "'",
+          node);
+    }
 
     String statType =
         checkRequiredSingleValueProp(nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.STAT_TYPE);
@@ -181,9 +208,24 @@ public class McfChecker {
     }
   }
 
-  private void checkSVObs(String nodeId, Mcf.McfGraph.PropertyValues node) {
-    checkRequiredSingleValueProp(
-        nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.VARIABLE_MEASURED);
+  private void checkSVObs(String nodeId, Mcf.McfGraph.PropertyValues node)
+      throws IOException, InterruptedException {
+    var statVar =
+        checkRequiredSingleValueProp(
+            nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.VARIABLE_MEASURED);
+    // For SVObs, the only ref check we do is the existence of StatVar, and its an error if missing.
+    if (existenceChecker != null && !existenceChecker.checkNode(statVar)) {
+      addLog(
+          "Sanity_RefCheckFailed_variableMeasured",
+          "Missing StatisticalVariable reference :: reference: '"
+              + statVar
+              + "', property: '"
+              + Vocabulary.VARIABLE_MEASURED
+              + "', node: '"
+              + nodeId
+              + "'",
+          node);
+    }
     checkRequiredSingleValueProp(
         nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.OBSERVATION_ABOUT);
     String obsDate =
@@ -286,8 +328,24 @@ public class McfChecker {
     }
   }
 
-  private void checkCommon(String nodeId, Mcf.McfGraph.PropertyValues node) {
-    checkRequiredValueProp(nodeId, node, "Thing", Vocabulary.TYPE_OF);
+  private boolean performExistenceChecks(List<String> types) {
+    // For types that aren't SVObs, legacy StatPop and legacy Observation we perform existence
+    // check.
+    if (existenceChecker == null) return false;
+    for (String t : types) {
+      if (Vocabulary.isStatVarObs(t)
+          || Vocabulary.isPopulation(t)
+          || Vocabulary.isLegacyObservation(t)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private List<String> checkCommon(String nodeId, Mcf.McfGraph.PropertyValues node)
+      throws IOException, InterruptedException {
+    var types = checkRequiredValueProp(nodeId, node, "Thing", Vocabulary.TYPE_OF);
+    boolean doExistence = performExistenceChecks(types);
     for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getPvsMap().entrySet()) {
       String prop = pv.getKey();
       if (prop.isEmpty()) {
@@ -384,8 +442,25 @@ public class McfChecker {
                   + "'",
               node);
         }
+        if (doExistence
+            && tv.getType() == Mcf.ValueType.RESOLVED_REF
+            && !existenceChecker.checkNode(tv.getValue())) {
+          // Mark reference check misses as warnings to flag the user to add schema.
+          addLog(
+              Debug.Log.Level.LEVEL_WARNING,
+              "Sanity_RefCheckFailed_" + prop,
+              "Failed node reference check :: reference: '"
+                  + tv.getValue()
+                  + "', property: '"
+                  + prop
+                  + "', node: '"
+                  + nodeId
+                  + "'",
+              node);
+        }
       }
     }
+    return types;
   }
 
   private void checkClassOrProp(String typeOf, String nodeId, Mcf.McfGraph.PropertyValues node) {
@@ -491,7 +566,7 @@ public class McfChecker {
     return McfUtil.stripNamespace(tvs.get(0).getValue());
   }
 
-  private void checkRequiredValueProp(
+  private List<String> checkRequiredValueProp(
       String nodeId, Mcf.McfGraph.PropertyValues node, String typeOf, String prop) {
     List<String> vals = McfUtil.getPropVals(node, prop);
     if (vals.isEmpty()) {
@@ -506,6 +581,7 @@ public class McfChecker {
               + "'",
           node);
     }
+    return vals;
   }
 
   private void checkInitCasing(

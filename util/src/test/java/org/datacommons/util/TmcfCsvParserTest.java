@@ -39,7 +39,7 @@ public class TmcfCsvParserTest {
   }
 
   @Test
-  public void statVarObs() throws IOException, URISyntaxException {
+  public void statVarObs() throws IOException, URISyntaxException, InterruptedException {
     String want = TestUtil.mcfFromFile(resourceFile("TmcfCsvParser_SVO.mcf"));
     String got = run("TmcfCsvParser_SVO.tmcf", "TmcfCsvParser_SVO.csv");
     assertEquals(want, got);
@@ -61,21 +61,21 @@ public class TmcfCsvParserTest {
   }
 
   @Test
-  public void popObs() throws IOException, URISyntaxException {
+  public void popObs() throws IOException, URISyntaxException, InterruptedException {
     String want = TestUtil.mcfFromFile(resourceFile("TmcfCsvParser_PopObs.mcf"));
     String got = run("TmcfCsvParser_PopObs.tmcf", "TmcfCsvParser_PopObs.csv");
     assertEquals(want, got);
   }
 
   @Test
-  public void multiValue() throws IOException, URISyntaxException {
+  public void multiValue() throws IOException, URISyntaxException, InterruptedException {
     String want = TestUtil.mcfFromFile(resourceFile("TmcfCsvParser_MultiValue.mcf"));
     String got = run("TmcfCsvParser_MultiValue.tmcf", "TmcfCsvParser_MultiValue.csv");
     assertEquals(want, got);
   }
 
   @Test
-  public void tmcfFailure() throws IOException, URISyntaxException {
+  public void tmcfFailure() throws IOException, URISyntaxException, InterruptedException {
     LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
     TmcfCsvParser parser =
         TmcfCsvParser.init(
@@ -89,7 +89,8 @@ public class TmcfCsvParserTest {
             log.build(), "Sanity_TmcfMissingColumn", "Count_CriminalActivities_Missing"));
   }
 
-  private String run(String mcfFile, String csvFile) throws IOException, URISyntaxException {
+  private String run(String mcfFile, String csvFile)
+      throws IOException, URISyntaxException, InterruptedException {
     LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
     logCtx.setLocationFile(csvFile);
     TmcfCsvParser parser =

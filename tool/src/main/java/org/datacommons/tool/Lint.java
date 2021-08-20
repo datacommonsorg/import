@@ -48,6 +48,14 @@ class Lint implements Callable<Integer> {
       scope = CommandLine.ScopeType.INHERIT)
   private Character delimiter;
 
+  @CommandLine.Option(
+      names = {"-r", "--do_reference_checks"},
+      defaultValue = "false",
+      description =
+          "Check DCID references against the KG and locally. If set, then calls "
+              + "will be made to the KG and instance MCFs are fully loaded into memory.")
+  private boolean doRefChecks;
+
   @CommandLine.ParentCommand private Main parent;
 
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
@@ -92,9 +100,10 @@ class Lint implements Callable<Integer> {
           spec.commandLine(), "Please provide one .tmcf file with CSV/TSV files");
     }
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
-    Processor processor = new Processor(logCtx);
+    Processor processor = new Processor(doRefChecks, logCtx);
     Integer retVal = 0;
     try {
+      // Process all the instance MCF first, so that we can add the nodes for Existence Check.
       for (File f : mcfFiles) {
         processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
       }
@@ -105,7 +114,7 @@ class Lint implements Callable<Integer> {
           processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f);
         }
       }
-    } catch (DCTooManyFailuresException ex) {
+    } catch (DCTooManyFailuresException | InterruptedException ex) {
       // Regardless of the failures, we will dump the logCtx and exit.
       retVal = -1;
     }
