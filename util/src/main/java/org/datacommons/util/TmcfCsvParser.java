@@ -74,7 +74,7 @@ public class TmcfCsvParser {
     // Check TMCF.
     boolean success =
         McfChecker.check(
-            tmcfCsvParser.tmcf, tmcfCsvParser.csvParser.getHeaderMap().keySet(), logCtx);
+            tmcfCsvParser.tmcf, tmcfCsvParser.csvParser.getHeaderMap().keySet(), null, logCtx);
     if (!success) {
       // Set location file to make sure log entry refers to the tmcf file.
       tmcfCsvParser.logCtx.setLocationFile(tmcfFile);

@@ -94,26 +94,39 @@ public class ExistenceChecker {
     var dataJson = callDc(sub, pred);
     logCtx.incrementCounterBy("Existence_NumDcCalls", 1);
     if (dataJson == null) {
-      throw new IOException("Calls to the Staging DC API endpoint are failing!");
+      // If the DCID is malformed Mixer can return failure.
+      return false;
     }
-
-    var nodeJson = dataJson.getAsJsonObject(sub);
-    if (nodeJson.has("out")) {
-      if (obj.isEmpty()) {
-        // Node existence check case.
-        if (nodeJson.getAsJsonArray("out").size() > 0) {
-          existingNodesOrTriples.add(key);
-          return true;
-        }
-      } else {
-        // Triple existence check case.
-        for (var objVal : nodeJson.getAsJsonArray("out")) {
-          if (objVal.getAsJsonObject().getAsJsonPrimitive("dcid").getAsString().equals(obj)) {
+    if (dataJson.entrySet().size() != 1) {
+      throw new IOException(
+          "Invalid payload content from Staging DC API endpoint for: '"
+              + sub
+              + "',"
+              + " '"
+              + pred
+              + "': "
+              + dataJson);
+    }
+    for (var entry : dataJson.entrySet()) {
+      var nodeJson = entry.getValue().getAsJsonObject();
+      if (nodeJson.has("out")) {
+        if (obj.isEmpty()) {
+          // Node existence check case.
+          if (nodeJson.getAsJsonArray("out").size() > 0) {
             existingNodesOrTriples.add(key);
             return true;
           }
+        } else {
+          // Triple existence check case.
+          for (var objVal : nodeJson.getAsJsonArray("out")) {
+            if (objVal.getAsJsonObject().getAsJsonPrimitive("dcid").getAsString().equals(obj)) {
+              existingNodesOrTriples.add(key);
+              return true;
+            }
+          }
         }
       }
+      break;
     }
     missingNodesOrTriples.add(key);
     return false;
@@ -122,16 +135,21 @@ public class ExistenceChecker {
   private JsonObject callDc(String node, String property) throws IOException, InterruptedException {
     List<String> args =
         List.of(
-            "dcids=" + URLEncoder.encode(node, StandardCharsets.UTF_8),
-            "property=" + URLEncoder.encode(property, StandardCharsets.UTF_8),
+            "dcids=" + spaceHandlingUrlEncoder(node),
+            "property=" + spaceHandlingUrlEncoder(property),
             "direction=out");
     var url = API_ROOT + "?" + String.join("&", args);
     var request =
         HttpRequest.newBuilder(URI.create(url)).header("accept", "application/json").build();
     var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     var payloadJson = new JsonParser().parse(response.body()).getAsJsonObject();
-    if (payloadJson == null) return null;
+    if (payloadJson == null || !payloadJson.has("payload")) return null;
     return new JsonParser().parse(payloadJson.get("payload").getAsString()).getAsJsonObject();
+  }
+
+  // See https://stackoverflow.com/a/4737967.  Mixer does not treat '+' in param value as space.
+  private String spaceHandlingUrlEncoder(String part) {
+    return URLEncoder.encode(part, StandardCharsets.UTF_8).replace("+", "%20");
   }
 
   private static String makeKey(String s, String p, String o) {

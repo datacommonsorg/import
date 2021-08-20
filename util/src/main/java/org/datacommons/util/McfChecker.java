@@ -62,9 +62,10 @@ public class McfChecker {
   }
 
   // Used with Template MCF when there are columns from CSV header.
-  public static boolean check(Mcf.McfGraph graph, Set<String> columns, LogWrapper logCtx)
+  public static boolean check(
+      Mcf.McfGraph graph, Set<String> columns, ExistenceChecker existenceChecker, LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return new McfChecker(graph, columns, null, logCtx).check();
+    return new McfChecker(graph, columns, existenceChecker, logCtx).check();
   }
 
   private McfChecker(
@@ -186,8 +187,8 @@ public class McfChecker {
     if (existenceChecker != null
         && !existenceChecker.checkTriple(mProp, Vocabulary.DOMAIN_INCLUDES, popType)) {
       addLog(
-          "Existence_MissingPropertyDomain",
-          "Class not in the domain of Property :: property: '"
+          "Existence_MissingPropertyDomainDefinition",
+          "Class not in the domain of Property used in StatVar :: property: '"
               + mProp
               + "', class: '"
               + popType
@@ -216,7 +217,7 @@ public class McfChecker {
     // For SVObs, the only ref check we do is the existence of StatVar, and its an error if missing.
     if (existenceChecker != null && !existenceChecker.checkNode(statVar)) {
       addLog(
-          "Existence_MissingRef_variableMeasured",
+          "Existence_MissingValueRef_variableMeasured",
           "Failed StatVar existence check :: reference: '"
               + statVar
               + "', property: '"
@@ -411,6 +412,15 @@ public class McfChecker {
         }
       }
 
+      if (doExistence && !existenceChecker.checkNode(prop)) {
+        // Mark reference check misses as warnings to flag the user to add schema.
+        addLog(
+            Debug.Log.Level.LEVEL_WARNING,
+            "Existence_MissingPropertyRef",
+            "Failed existence check :: property: '" + prop + "', node: '" + nodeId + "'",
+            node);
+      }
+
       for (Mcf.McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
         if (tv.getType() != Mcf.ValueType.TEXT
             && !Charsets.US_ASCII.newEncoder().canEncode(tv.getValue())) {
@@ -448,8 +458,8 @@ public class McfChecker {
           // Mark reference check misses as warnings to flag the user to add schema.
           addLog(
               Debug.Log.Level.LEVEL_WARNING,
-              "Existence_MissingRef_" + prop,
-              "Failed reference existence check :: reference: '"
+              "Existence_MissingValueRef_" + prop,
+              "Failed existence check :: reference: '"
                   + tv.getValue()
                   + "', property: '"
                   + prop

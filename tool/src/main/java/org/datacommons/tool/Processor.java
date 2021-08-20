@@ -39,6 +39,10 @@ public class Processor {
   private ExistenceChecker existenceChecker;
   private List<Mcf.McfGraph> nodesForExistenceCheck;
 
+  // NOTE: If doExistenceChecks is true, then it is important that the caller perform a
+  // checkAllNodes() call *after* all instance MCF files are process (via processNodes). This is
+  // so that the newly added schema, StatVar, etc. are fully known to the Existence Checker first,
+  // and then the check is performed.
   public Processor(boolean doExistenceChecks, LogWrapper logCtx) {
     this.logCtx = logCtx;
     if (doExistenceChecks) {
@@ -59,12 +63,11 @@ public class Processor {
       n = McfMutator.mutate(n.toBuilder(), logCtx);
 
       if (existenceChecker != null && type == Mcf.McfType.INSTANCE_MCF) {
-        // Add instance MCF nodes to ExistenceChecker.  The idea is to load all StatVar and schema
-        // nodes which tend to be instance MCF, and then check them.
+        // Add instance MCF nodes to ExistenceChecker.  We load all the nodes up first
+        // before we check them later in checkAllNodes().
         existenceChecker.addLocalGraph(n);
         nodesForExistenceCheck.add(n);
       } else {
-        // Otherwise, check immediately.
         McfChecker.check(n, existenceChecker, logCtx);
       }
 
