@@ -46,8 +46,6 @@ public class GenMcfTest {
         new File(Paths.get(testFolder.getRoot().getPath(), "generated.mcf").toString());
     File wantReportFile =
         new File(this.getClass().getResource("GenMcfTest_FatalTmcfReport.json").getPath());
-    System.out.println(FileUtils.readFileToString(wantReportFile, StandardCharsets.UTF_8));
-    System.out.println(FileUtils.readFileToString(gotReportFile, StandardCharsets.UTF_8));
     assertEquals(
         FileUtils.readFileToString(wantReportFile, StandardCharsets.UTF_8),
         FileUtils.readFileToString(gotReportFile, StandardCharsets.UTF_8));
