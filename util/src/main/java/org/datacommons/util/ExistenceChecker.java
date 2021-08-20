@@ -2,16 +2,19 @@ package org.datacommons.util;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.datacommons.proto.Mcf;
+
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.datacommons.proto.Mcf;
 
 // This class checks the existence of typically schema-related, nodes or (select types of)
 // triples in the KG or local graph.
@@ -91,6 +94,9 @@ public class ExistenceChecker {
 
     var dataJson = callDc(sub, pred);
     logCtx.incrementCounterBy("Existence_NumDcCalls", 1);
+    if (dataJson == null) {
+      throw new IOException("Calls to the Staging DC API endpoint are failing!");
+    }
 
     var nodeJson = dataJson.getAsJsonObject(sub);
     if (nodeJson.has("out")) {
@@ -115,13 +121,17 @@ public class ExistenceChecker {
   }
 
   private JsonObject callDc(String node, String property) throws IOException, InterruptedException {
-    List<String> args = List.of("dcids=" + node, "property=" + property, "direction=out");
+    List<String> args =
+        List.of(
+            "dcids=" + URLEncoder.encode(node, StandardCharsets.UTF_8),
+            "property=" + URLEncoder.encode(property, StandardCharsets.UTF_8),
+            "direction=out");
     var url = API_ROOT + "?" + String.join("&", args);
-
     var request =
         HttpRequest.newBuilder(URI.create(url)).header("accept", "application/json").build();
     var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     var payloadJson = new JsonParser().parse(response.body()).getAsJsonObject();
+    if (payloadJson == null) return null;
     return new JsonParser().parse(payloadJson.get("payload").getAsString()).getAsJsonObject();
   }
 

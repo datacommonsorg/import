@@ -49,12 +49,13 @@ class Lint implements Callable<Integer> {
   private Character delimiter;
 
   @CommandLine.Option(
-      names = {"-r", "--do_reference_checks"},
+      names = {"-e", "--existence_checks"},
       defaultValue = "false",
       description =
-          "Check DCID references against the KG and locally. If set, then calls "
-              + "will be made to the KG and instance MCFs are fully loaded into memory.")
-  private boolean doRefChecks;
+          "Check DCID references to schema nodes against the KG and locally. If set, then "
+              + "calls will be made to the Staging API server, and instance MCFs get fully "
+              + "loaded into memory.")
+  private boolean doExistenceChecks;
 
   @CommandLine.ParentCommand private Main parent;
 
@@ -100,12 +101,15 @@ class Lint implements Callable<Integer> {
           spec.commandLine(), "Please provide one .tmcf file with CSV/TSV files");
     }
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
-    Processor processor = new Processor(doRefChecks, logCtx);
+    Processor processor = new Processor(doExistenceChecks, logCtx);
     Integer retVal = 0;
     try {
       // Process all the instance MCF first, so that we can add the nodes for Existence Check.
       for (File f : mcfFiles) {
         processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
+      }
+      if (doExistenceChecks) {
+        processor.checkAllNodes();
       }
       if (!csvFiles.isEmpty()) {
         processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, null);
