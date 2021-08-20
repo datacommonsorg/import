@@ -14,26 +14,73 @@
 
 package org.datacommons.server;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Logger;
+
 import org.datacommons.proto.Mcf;
 import org.datacommons.util.*;
 
 public class Processor {
-  public Processor() {}
+
+  private static final Logger LOGGER = Logger.getLogger(Processor.class.getName());
+
+  private LogWrapper logCtx;
+
+  public Processor(LogWrapper logCtx) {
+    this.logCtx = logCtx;
+  }
 
   public void processTables(
-      File tmcfFile, List<File> csvFiles, char delimiter, BufferedWriter writer)
+      File tmcfFile, List<File> csvFiles, char delimiter, ObservationRepository obsRepo)
       throws IOException {
+    LOGGER.info("=======  process tables");
     for (File csvFile : csvFiles) {
+      LOGGER.info("0");
       TmcfCsvParser parser =
-          TmcfCsvParser.init(tmcfFile.getPath(), csvFile.getPath(), delimiter, null);
+          TmcfCsvParser.init(tmcfFile.getPath(), csvFile.getPath(), delimiter, logCtx);
       Mcf.McfGraph g;
+      long numNodesProcessed = 0;
+        LOGGER.info("1");
       while ((g = parser.parseNextRow()) != null) {
-        g = McfMutator.mutate(g.toBuilder(), null);
+        LOGGER.info("2");
+        g = McfMutator.mutate(g.toBuilder(), logCtx);
+
+        // This will set counters/messages in logCtx.
+        boolean success = McfChecker.check(g, logCtx);
+        if (success) {
+          logCtx.incrementCounterBy("NumRowSuccesses", 1);
+        }
+
+        LOGGER.info(g.toString());
+        numNodesProcessed++;
+        LOGGER.info("3");
+        for (String nodeId : g.getNodesMap().keySet()) {
+          LOGGER.info(nodeId);
+          Mcf.McfGraph.PropertyValues node = g.toBuilder().getNodesOrThrow(nodeId);
+          Observation o = new Observation();
+          for (String typeOf : McfUtil.getPropVals(node, Vocabulary.TYPE_OF)) {
+            LOGGER.info(typeOf);
+            if (Vocabulary.isStatVarObs(typeOf)) {
+              List<Mcf.McfGraph.TypedValue> tvs = McfUtil.getPropTvs(node, Vocabulary.OBSERVATION_ABOUT);
+              o.setObservationAbout(tvs.get(0).getValue());
+              tvs = McfUtil.getPropTvs(node, Vocabulary.OBSERVATION_DATE);
+              o.setObservationDate(tvs.get(0).getValue());
+              tvs = McfUtil.getPropTvs(node, Vocabulary.VALUE);
+              o.setValue(tvs.get(0).getValue());
+              obsRepo.save(o);
+              LOGGER.info("add o");
+              break;
+            }
+          }
+        }
+        if (numNodesProcessed == 1000) {
+          LOGGER.info(g.toString());
+          break;
+        }
       }
+      LOGGER.info("======= exit while loop");
     }
   }
 }
