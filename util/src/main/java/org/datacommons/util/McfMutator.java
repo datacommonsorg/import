@@ -34,6 +34,7 @@ public class McfMutator {
     McfMutator m = new McfMutator();
     m.graph = Mcf.McfGraph.newBuilder();
     m.logCtx = logCtx;
+    Map test = graph.getNodesMap();
     for (String nodeId : graph.getNodesMap().keySet()) {
       m.graph.putNodes(nodeId, m.mutateNode(nodeId, graph.getNodesOrThrow(nodeId).toBuilder()));
     }

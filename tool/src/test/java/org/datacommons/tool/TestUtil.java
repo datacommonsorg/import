@@ -21,23 +21,32 @@ import com.google.gson.Gson;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import org.apache.commons.io.FileUtils;
 import org.datacommons.proto.Debug;
+import org.junit.rules.TemporaryFolder;
 
 // Common set of utils used in e2e tests.
 public class TestUtil {
-  public static void assertReportFilesAreSimilar(File expected, File actual) throws IOException {
-    Debug.Log expectedLog =
-        new Gson()
-            .fromJson(
-                FileUtils.readFileToString(expected, StandardCharsets.UTF_8), Debug.Log.class);
-    Debug.Log actualLog =
-        new Gson()
-            .fromJson(
-                FileUtils.readFileToString(actual, StandardCharsets.UTF_8), Debug.Log.class);
+  public static void assertReportFilesAreSimilar(String expected, String actual)
+      throws IOException {
+    Debug.Log expectedLog = new Gson().fromJson(expected, Debug.Log.class);
+    Debug.Log actualLog = new Gson().fromJson(actual, Debug.Log.class);
     assertEquals(expectedLog.getCounterSet(), actualLog.getCounterSet());
     assertEquals(expectedLog.getLevelSummaryMap(), actualLog.getLevelSummaryMap());
     assertTrue(actualLog.getEntriesList().containsAll(expectedLog.getEntriesList()));
     assertTrue(expectedLog.getEntriesList().containsAll(actualLog.getEntriesList()));
+  }
+
+  public static String getStringFromTestFile(TemporaryFolder testFolder, String fileName)
+      throws IOException {
+    File file = new File(Paths.get(testFolder.getRoot().getPath(), fileName).toString());
+    return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+  }
+
+  public static String getStringFromResource(Class resourceClass, String fileName)
+      throws IOException {
+    File file = new File(resourceClass.getResource(fileName).getPath());
+    return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
   }
 }
