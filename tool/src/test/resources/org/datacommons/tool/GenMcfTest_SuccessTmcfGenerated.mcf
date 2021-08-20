@@ -1,0 +1,113 @@
+Node: SVTest/E0/04a64232-2423-4949-adba-503331f4001e
+observationDate: 2019
+observationAbout: dcid:CA-BC
+variableMeasured: dcid:SV1
+measurementMethod: dcid:SVTest
+value: 1
+typeOf: dcid:StatVarObservation
+
+Node: SVTest/E1/04a64232-2423-4949-adba-503331f4001e
+observationDate: 2019
+observationAbout: dcid:CA-BC
+variableMeasured: dcid:SV2
+measurementMethod: dcid:SVTest
+value: 2
+typeOf: dcid:StatVarObservation
+
+Node: SVTest/E0/b3f3bbf0-caab-413c-9796-bfc35b76a48a
+observationDate: 2019
+observationAbout: dcid:CA-AB
+variableMeasured: dcid:SV1
+measurementMethod: dcid:SVTest
+value: 1
+typeOf: dcid:StatVarObservation
+
+Node: SVTest/E1/b3f3bbf0-caab-413c-9796-bfc35b76a48a
+observationDate: 2019
+observationAbout: dcid:CA-AB
+variableMeasured: dcid:SV2
+measurementMethod: dcid:SVTest
+value: 2
+typeOf: dcid:StatVarObservation
+
+Node: SVTest/E0/af2bbc95-8880-45a1-b31d-9bfcc9397a68
+observationDate: 2019
+observationAbout: dcid:US-SF
+variableMeasured: dcid:SV1
+measurementMethod: dcid:SVTest
+value: 1
+typeOf: dcid:StatVarObservation
+
+Node: SVTest/E1/af2bbc95-8880-45a1-b31d-9bfcc9397a68
+observationDate: 2019
+observationAbout: dcid:US-SF
+variableMeasured: dcid:SV2
+measurementMethod: dcid:SVTest
+value: 2
+typeOf: dcid:StatVarObservation
+
+Node: dcid:CA-VN
+dcid: "CA-VN"
+name: "Vancouver"
+location: []
+typeOf: dcid:City
+
+Node: dcid:CH-SH
+dcid: "CH-SH"
+name: "Shanghai"
+location:
+typeOf: dcid:City
+
+Node: SVTest/E0/59cb14d4-02a1-458c-ac1c-92289df189da
+observationDate: 2019
+observationAbout: dcid:CH-SH
+variableMeasured: dcid:SV1
+measurementMethod: dcid:SVTest
+value: 1
+typeOf: dcid:StatVarObservation
+
+Node: SVTest/E1/59cb14d4-02a1-458c-ac1c-92289df189da
+observationDate: 2019
+observationAbout: dcid:CH-SH
+variableMeasured: dcid:SV2
+measurementMethod: dcid:SVTest
+value: 2
+typeOf: dcid:StatVarObservation
+
+Node: SVTest/E0/f49ca47f-902d-469f-a345-cc6ef310416d
+observationDate: 2019
+observationAbout: dcid:veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcid
+variableMeasured: dcid:SV1
+measurementMethod: dcid:SVTest
+value: 1
+typeOf: dcid:StatVarObservation
+
+Node: SVTest/E1/f49ca47f-902d-469f-a345-cc6ef310416d
+observationDate: 2019
+observationAbout: dcid:veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcid
+variableMeasured: dcid:SV2
+measurementMethod: dcid:SVTest
+value: 2
+typeOf: dcid:StatVarObservation
+
+Node: dcid:CA-MN
+dcid: "CA-MN"
+name: "Manitoba"
+location: [Lat Long]
+typeOf: dcid:Province
+
+Node: SVTest/E0/1495a9f5-1f3a-4acc-bc82-022e5195d2dd
+observationDate: 2019
+observationAbout: dcid:CA-MN
+variableMeasured: dcid:SV1
+measurementMethod: dcid:SVTest
+value: 1
+typeOf: dcid:StatVarObservation
+
+Node: SVTest/E1/1495a9f5-1f3a-4acc-bc82-022e5195d2dd
+observationDate: 2019
+observationAbout: dcid:CA-MN
+variableMeasured: dcid:SV2
+measurementMethod: dcid:SVTest
+value: 2
+typeOf: dcid:StatVarObservation

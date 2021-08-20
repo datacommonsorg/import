@@ -95,7 +95,9 @@ public class McfParser {
       }
     }
     // End of file.
-    return McfUtil.mergeGraphs(Collections.singletonList(finish()));
+    McfGraph g = finish();
+    if (g == null) return null;
+    return McfUtil.mergeGraphs(Collections.singletonList(g));
   }
 
   // Parse a line of MCF file.
@@ -336,6 +338,7 @@ public class McfParser {
         return;
       }
       SchemaTerm term = parseSchemaTerm(val, logCb);
+      if (term == null) return;
       if (term.type == SchemaTerm.Type.ENTITY) {
         tval.setValue(val);
         tval.setType(Mcf.ValueType.TABLE_ENTITY);
@@ -455,7 +458,7 @@ public class McfParser {
       if (delimiter == -1) {
         logCb.logError(
             "TMCF_MalformedSchemaTerm",
-            "Malformed " + (isEntity ? "entity" : "column") + " value; must have a ':' delimiter");
+            "Malformed " + (isEntity ? "entity" : "column") + " value; must have a '->' delimiter");
         return null;
       }
       term.table = strippedValue.substring(0, delimiter);

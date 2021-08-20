@@ -1,0 +1,476 @@
+{
+  "levelSummary": {
+    "LEVEL_ERROR": "48",
+    "LEVEL_WARNING": "6"
+  },
+  "counterSet": {
+    "counters": {
+      "MCF_UnexpectedProperty": "1",
+      "MCF_MalformedColonLessLine": "1",
+      "Mutator_MissingTypeOf": "1",
+      "Sanity_MissingOrEmpty_typeOf": "2",
+      "Sanity_InvalidObsDate": "3",
+      "Sanity_NonDoubleObsValue": "1",
+      "Sanity_ObsMissingValueProp": "1",
+      "MCF_MalformedNodeName": "2",
+      "Sanity_SpaceInDcid": "2",
+      "Sanity_NonAsciiValueInNonText": "2",
+      "MCF_InvalidLatitude": "1",
+      "Sanity_MultipleDcidValues": "2",
+      "MCF_InvalidLongitude": "1",
+      "MCF_MalformedComplexValue": "2",
+      "Sanity_MissingOrEmpty_populationType": "2",
+      "Sanity_MissingOrEmpty_measuredProperty": "1",
+      "Sanity_MissingOrEmpty_statType": "1",
+      "Sanity_UnknownStatType": "1",
+      "MCF_MalformedComplexValueParts": "2",
+      "MCF_QuantityMalformedValue": "2",
+      "MCF_QuantityRangeMalformedValues": "3",
+      "Sanity_NotInitLowerPropName": "1",
+      "Sanity_UnexpectedPropInProperty": "1",
+      "Sanity_NonAsciiValueInSchema": "1",
+      "Sanity_NotInitLower_labelInProperty": "1",
+      "Sanity_UnexpectedPropInClass": "1",
+      "Sanity_NotInitUpper_nameInClass": "1",
+      "Sanity_MissingOrEmpty_subClassOf": "1",
+      "NumRowSuccesses": "11",
+      "NumNodeSuccesses": "15",
+      "NumPVSuccesses": "84",
+      "StrSplit_MultiToken_name": "1",
+      "StrSplit_EmptyToken_typeOf": "1",
+      "CSV_InconsistentRows": "2",
+      "Sanity_MultipleVals_observationDate": "2",
+      "StrSplit_EmptyToken_location": "1",
+      "CSV_MalformedDCIDFailures": "1",
+      "CSV_MalformedDCIDPVFailures": "4",
+      "CSV_EmptyDcidReferences": "2",
+      "Sanity_MissingOrEmpty_observationAbout": "2",
+      "Sanity_VeryLongDcid": "1"
+    }
+  },
+  "entries": [{
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "1"
+    },
+    "userMessage": "Property found without a preceding line with 'Node' :: line: 'typeOf: State'",
+    "counterKey": "MCF_UnexpectedProperty"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "8"
+    },
+    "userMessage": "Malformed line without a colon delimiter :: line: ': State'",
+    "counterKey": "MCF_MalformedColonLessLine"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "7"
+    },
+    "userMessage": "Missing typeOf value for node :: node: 'dcid:geoId/CA'",
+    "counterKey": "Mutator_MissingTypeOf"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "7"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'typeOf', node: 'dcid:geoId/CA', type: 'Thing'",
+    "counterKey": "Sanity_MissingOrEmpty_typeOf"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "23"
+    },
+    "userMessage": "Found a non-ISO8601 compliant date value :: value: '7', property: 'observationDate', node: 'CityStats/E4/2'",
+    "counterKey": "Sanity_InvalidObsDate"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "32"
+    },
+    "userMessage": "Found a non-double Observation value :: value: 'onethousand', property: 'measuredValue', node: 'CityStats/E4/3'",
+    "counterKey": "Sanity_NonDoubleObsValue"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "41"
+    },
+    "userMessage": "Observation node missing value property :: node: 'CityStats/E4/4'",
+    "counterKey": "Sanity_ObsMissingValueProp"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "54"
+    },
+    "userMessage": "Found malformed Node value with a comma; must be a unary value :: node: 'USA,Country'",
+    "counterKey": "MCF_MalformedNodeName"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "49"
+    },
+    "userMessage": "Found a whitespace in dcid value :: value: 'dc/ 2sffw13', node: 'CityStats/E5/2'",
+    "counterKey": "Sanity_SpaceInDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "49"
+    },
+    "userMessage": "Found non-ascii characters in a value that is not text :: value: 'geoId–SFCounty', type: 'RESOLVED_REF', property: 'location', node: 'CityStats/E5/2'",
+    "counterKey": "Sanity_NonAsciiValueInNonText"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "67"
+    },
+    "userMessage": "Found malformed Node value with quotes; must be a non-quoted value :: node: '\"CANCountry\"'",
+    "counterKey": "MCF_MalformedNodeName"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "59"
+    },
+    "userMessage": "Invalid latitude value; must be decimal degrees with an optional N/S suffix :: value: '-100', property: 'location', node: 'dcid:dc/mx44'",
+    "counterKey": "MCF_InvalidLatitude"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "59"
+    },
+    "userMessage": "Found dcid with more than one value :: count: 2, node: 'dcid:dc/mx44'",
+    "counterKey": "Sanity_MultipleDcidValues"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "73"
+    },
+    "userMessage": "Invalid longitude value; must be decimal degrees with an optional E/W suffix :: value: '181', property: 'location', node: 'dcid:geoId/sf'",
+    "counterKey": "MCF_InvalidLongitude"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "79"
+    },
+    "userMessage": "Found malformed Complex value without a closing ] bracket :: value: '[10 12', property: 'age', node: 'dcid:Count_Death_10To12'",
+    "counterKey": "MCF_MalformedComplexValue"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "77"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'populationType', node: 'dcid:Count_Death_10To12', type: 'StatisticalVariable'",
+    "counterKey": "Sanity_MissingOrEmpty_populationType"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "77"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'measuredProperty', node: 'dcid:Count_Death_10To12', type: 'StatisticalVariable'",
+    "counterKey": "Sanity_MissingOrEmpty_measuredProperty"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "77"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'statType', node: 'dcid:Count_Death_10To12', type: 'StatisticalVariable'",
+    "counterKey": "Sanity_MissingOrEmpty_statType"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "77"
+    },
+    "userMessage": "Found an unknown statType value :: value: '', node: 'dcid:Count_Death_10To12'",
+    "counterKey": "Sanity_UnknownStatType"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "81"
+    },
+    "userMessage": "Complex value must have 2 (e.g., [Years 10]) or 3 (e.g., [Years 10 20]) components :: value: '[10]', components: 1, property: 'age', node: 'dcid:Count_Death_10YearsPlus'",
+    "counterKey": "MCF_MalformedComplexValueParts"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "88"
+    },
+    "userMessage": "Quantity value must be a number :: value: '[5Years 10Years]', property: 'age', node: 'dcid:Count_Death_5To10'",
+    "counterKey": "MCF_QuantityMalformedValue"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "95"
+    },
+    "userMessage": "Malformed start component in QuantityRange value; must be a number or '-' :: value: 'less', property: 'age', node: 'dcid:Count_Death_YearsLessThan5'",
+    "counterKey": "MCF_QuantityRangeMalformedValues"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "102"
+    },
+    "userMessage": "Malformed end component in QuantityRange value; must be a number or '-' :: value: 'years', property: 'age', node: 'dcid:Count_Death_5YearsPlus'",
+    "counterKey": "MCF_QuantityRangeMalformedValues"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "109"
+    },
+    "userMessage": "Malformed start+end components in QuantityRange value; one of them must be a number  :: startValue: '-', endValue: '-', property: 'age', node: 'dcid:Count_Death_15YearsPlus'",
+    "counterKey": "MCF_QuantityRangeMalformedValues"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "109"
+    },
+    "userMessage": "Found property name that does not start with a lower-case :: property: 'PopulationType', node: 'dcid:Count_Death_15YearsPlus'",
+    "counterKey": "Sanity_NotInitLowerPropName"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "109"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'populationType', node: 'dcid:Count_Death_15YearsPlus', type: 'StatisticalVariable'",
+    "counterKey": "Sanity_MissingOrEmpty_populationType"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "116"
+    },
+    "userMessage": "Unexpected property in Property node :: property: 'subClassOf', node: 'dcid:beverageType'",
+    "counterKey": "Sanity_UnexpectedPropInProperty"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "116"
+    },
+    "userMessage": "Schema node has property values with non-ascii characters :: value: 'Beverage–type', property: 'name', node: 'dcid:beverageType'",
+    "counterKey": "Sanity_NonAsciiValueInSchema"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "116"
+    },
+    "userMessage": "Found a property reference that does not start with a lower-case :: reference: 'BeverageType', property: 'label, node: 'dcid:beverageType'",
+    "counterKey": "Sanity_NotInitLower_labelInProperty"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "123"
+    },
+    "userMessage": "Unexpected property in Class node :: property: 'domainIncludes', node: 'dcid:Pop'",
+    "counterKey": "Sanity_UnexpectedPropInClass"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "123"
+    },
+    "userMessage": "Found a class reference that does not start with an upper-case :: reference: 'pop', property: 'name, node: 'dcid:Pop'",
+    "counterKey": "Sanity_NotInitUpper_nameInClass"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LintTest.mcf",
+      "lineNumber": "123"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'subClassOf', node: 'dcid:Pop', type: 'Class'",
+    "counterKey": "Sanity_MissingOrEmpty_subClassOf"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "2"
+    },
+    "userMessage": "Found a whitespace in dcid value :: value: 'US- CA', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_SpaceInDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "2"
+    },
+    "userMessage": "Found a non-ISO8601 compliant date value :: value: '19', property: 'observationDate', node: 'E:SVTest->E0'",
+    "counterKey": "Sanity_InvalidObsDate"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "2"
+    },
+    "userMessage": "Found a non-ISO8601 compliant date value :: value: '19', property: 'observationDate', node: 'E:SVTest->E1'",
+    "counterKey": "Sanity_InvalidObsDate"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "3"
+    },
+    "userMessage": "Found dcid with more than one value :: count: 2, node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_MultipleDcidValues"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "4"
+    },
+    "userMessage": "Found non-ascii characters in a value that is not text :: value: 'Administrative–Area1', type: 'RESOLVED_REF', property: 'typeOf', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_NonAsciiValueInNonText"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "5"
+    },
+    "userMessage": "Empty value found :: value: '', column: 'Place_Type', property: 'typeOf', node: 'E:SVTest->E3'",
+    "counterKey": "StrSplit_EmptyToken_typeOf"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "5"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'typeOf', node: 'E:SVTest->E3', type: 'Thing'",
+    "counterKey": "Sanity_MissingOrEmpty_typeOf"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "6"
+    },
+    "userMessage": "Found CSV row with different number of columns",
+    "counterKey": "CSV_InconsistentRows"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "7"
+    },
+    "userMessage": "Found multiple values for single-value property :: property: 'observationDate', column: 'Year', node: 'E:SVTest->E0'",
+    "counterKey": "Sanity_MultipleVals_observationDate"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "7"
+    },
+    "userMessage": "Found multiple values for single-value property :: property: 'observationDate', column: 'Year', node: 'E:SVTest->E1'",
+    "counterKey": "Sanity_MultipleVals_observationDate"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "7"
+    },
+    "userMessage": "Empty value found :: value: '[]', property: 'location', node: 'dcid:CA-VN'",
+    "counterKey": "StrSplit_EmptyToken_location"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "7"
+    },
+    "userMessage": "Complex value must have 2 (e.g., [Years 10]) or 3 (e.g., [Years 10 20]) components :: value: '[]', components: 0, property: 'location', node: 'dcid:CA-VN'",
+    "counterKey": "MCF_MalformedComplexValueParts"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "8"
+    },
+    "userMessage": "Found CSV row with different number of columns",
+    "counterKey": "CSV_InconsistentRows"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "9"
+    },
+    "userMessage": "Found malformed Complex value without a closing ] bracket :: value: '[', property: 'location', node: 'E:SVTest->E3'",
+    "counterKey": "MCF_MalformedComplexValue"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "10"
+    },
+    "userMessage": "Malformed CSV value for dcid property; must be a text or reference :: value: '123', node: 'E:SVTest->E3'",
+    "counterKey": "CSV_MalformedDCIDFailures"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "10"
+    },
+    "userMessage": "In dcid:{entity} reference, found {entity} to be empty :: property: 'observationAbout', node: 'E:SVTest->E0'",
+    "counterKey": "CSV_EmptyDcidReferences"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "10"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'observationAbout', node: 'E:SVTest->E0', type: 'StatVarObservation'",
+    "counterKey": "Sanity_MissingOrEmpty_observationAbout"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "10"
+    },
+    "userMessage": "In dcid:{entity} reference, found {entity} to be empty :: property: 'observationAbout', node: 'E:SVTest->E1'",
+    "counterKey": "CSV_EmptyDcidReferences"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "10"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'observationAbout', node: 'E:SVTest->E1', type: 'StatVarObservation'",
+    "counterKey": "Sanity_MissingOrEmpty_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "11"
+    },
+    "userMessage": "Found a very long dcid value; must be less than 256 :: node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_VeryLongDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "Csv1.csv",
+      "lineNumber": "11"
+    },
+    "userMessage": "Quantity value must be a number :: value: '[Lat Long]', property: 'location', node: 'dcid:CA-MN'",
+    "counterKey": "MCF_QuantityMalformedValue"
+  }]
+}

@@ -16,6 +16,7 @@ package org.datacommons.util;
 
 import static org.datacommons.util.McfUtil.getPropVals;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.datacommons.proto.Debug;
@@ -34,7 +35,11 @@ public class McfMutator {
     McfMutator m = new McfMutator();
     m.graph = graph;
     m.logCtx = logCtx;
-    for (String nodeId : graph.getNodesMap().keySet()) {
+    // Make a list of node names because we don't want to be iterating over the map while mutating
+    // it.
+    List<String> nodeIdList = new ArrayList<>();
+    graph.getNodesMap().forEach((k, v) -> nodeIdList.add(k));
+    for (String nodeId : nodeIdList) {
       m.graph.putNodes(nodeId, m.mutateNode(nodeId, m.graph.getNodesOrThrow(nodeId).toBuilder()));
     }
     return m.graph.build();
@@ -43,7 +48,7 @@ public class McfMutator {
   private Mcf.McfGraph.PropertyValues mutateNode(
       String nodeId, Mcf.McfGraph.PropertyValues.Builder node) {
     List<String> types = getPropVals(node.build(), Vocabulary.TYPE_OF);
-    if (types == null) {
+    if (types == null || types.isEmpty()) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "Mutator_MissingTypeOf",
