@@ -69,7 +69,7 @@ class Lint implements Callable<Integer> {
       if (!fg.GetCsv().isEmpty()) {
         processor.processTables(fg.GetTmcf(), fg.GetCsv(), delimiter, null);
       } else {
-          processor.processNodes(Mcf.McfType.TEMPLATE_MCF, fg.GetTmcf());
+        processor.processNodes(Mcf.McfType.TEMPLATE_MCF, fg.GetTmcf());
       }
     } catch (DCTooManyFailuresException ex) {
       // Regardless of the failures, we will dump the logCtx and exit.
