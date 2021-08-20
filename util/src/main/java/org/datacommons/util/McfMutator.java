@@ -16,6 +16,7 @@ package org.datacommons.util;
 
 import static org.datacommons.util.McfUtil.getPropVals;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.datacommons.proto.Debug;
@@ -32,11 +33,12 @@ public class McfMutator {
 
   public static Mcf.McfGraph mutate(Mcf.McfGraph.Builder graph, LogWrapper logCtx) {
     McfMutator m = new McfMutator();
-    m.graph = Mcf.McfGraph.newBuilder();
+    m.graph = graph;
     m.logCtx = logCtx;
-    Map test = graph.getNodesMap();
-    for (String nodeId : graph.getNodesMap().keySet()) {
-      m.graph.putNodes(nodeId, m.mutateNode(nodeId, graph.getNodesOrThrow(nodeId).toBuilder()));
+    List<String> nodeIdList = new ArrayList<>();
+    graph.getNodesMap().forEach((k, v) -> nodeIdList.add(k));
+    for (String nodeId : nodeIdList) {
+      m.graph.putNodes(nodeId, m.mutateNode(nodeId, m.graph.getNodesOrThrow(nodeId).toBuilder()));
     }
     return m.graph.build();
   }
