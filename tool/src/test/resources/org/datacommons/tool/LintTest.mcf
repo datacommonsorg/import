@@ -64,7 +64,7 @@ population: 81438
 area: 31.788
 inCounty: true
 
-Node: "CANCountry"
+Node: \"CANCountry\"
 typeOf: schema:Country
 name: "Canada"
 dcid: dc/2312ca,Canada

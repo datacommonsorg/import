@@ -8,7 +8,7 @@ observationAbout: E:SVTest->E3
 observationDate: C:SVTest->Year
 value: C:SVTest->SV1
 
-Node: "E:SVTest->E1"
+Node: \"E:SVTest->E1\"
 typeOf: dcs:StatVarObservation
 variableMeasured: dcs:SV2
 measurementMethod: dcs:SVTest

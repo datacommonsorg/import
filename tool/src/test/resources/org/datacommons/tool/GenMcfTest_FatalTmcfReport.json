@@ -46,7 +46,7 @@
       "file": "TmcfWithErrors.tmcf",
       "lineNumber": "11"
     },
-    "userMessage": "Found malformed Node value with quotes; must be a non-quoted value :: node: '"E:SVTest->E1"'",
+    "userMessage": "Found malformed Node value with quotes; must be a non-quoted value :: node: '\"E:SVTest->E1\"'",
     "counterKey": "MCF_MalformedNodeName"
   }, {
     "level": "LEVEL_ERROR",

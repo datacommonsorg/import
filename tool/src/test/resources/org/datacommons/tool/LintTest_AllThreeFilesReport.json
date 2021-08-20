@@ -134,7 +134,7 @@
       "file": "LintTest.mcf",
       "lineNumber": "67"
     },
-    "userMessage": "Found malformed Node value with quotes; must be a non-quoted value :: node: '"CANCountry"'",
+    "userMessage": "Found malformed Node value with quotes; must be a non-quoted value :: node: '\"CANCountry\"'",
     "counterKey": "MCF_MalformedNodeName"
   }, {
     "level": "LEVEL_ERROR",
@@ -344,15 +344,6 @@
     },
     "userMessage": "Found non-ascii characters in a value that is not text :: value: 'Administrative–Area1', type: 'RESOLVED_REF', property: 'typeOf', node: 'E:SVTest->E3'",
     "counterKey": "Sanity_NonAsciiValueInNonText"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "Csv1.csv",
-      "lineNumber": "5"
-    },
-    "userMessage": "Found a new-line in value :: value: 'San
-Francisco', column: 'Place_Name', property: 'name', node: 'E:SVTest->E3'",
-    "counterKey": "StrSplit_MultiToken_name"
   }, {
     "level": "LEVEL_WARNING",
     "location": {

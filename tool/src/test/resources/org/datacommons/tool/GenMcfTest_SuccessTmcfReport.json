@@ -74,15 +74,6 @@
       "file": "Csv1.csv",
       "lineNumber": "5"
     },
-    "userMessage": "Found a new-line in value :: value: 'San
-Francisco', column: 'Place_Name', property: 'name', node: 'E:SVTest->E3'",
-    "counterKey": "StrSplit_MultiToken_name"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "Csv1.csv",
-      "lineNumber": "5"
-    },
     "userMessage": "Empty value found :: value: '', column: 'Place_Type', property: 'typeOf', node: 'E:SVTest->E3'",
     "counterKey": "StrSplit_EmptyToken_typeOf"
   }, {

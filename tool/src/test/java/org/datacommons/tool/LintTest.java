@@ -1,12 +1,9 @@
 package org.datacommons.tool;
 
-import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -22,13 +19,11 @@ public class LintTest {
     String mcf = resourceFile("LintTest.mcf");
     CommandLine cmd = new CommandLine(app);
     cmd.execute("lint", mcf, tmcf, "--output-dir=" + testFolder.getRoot().getPath());
-    File gotReportFile =
+    File actualReportFile =
         new File(Paths.get(testFolder.getRoot().getPath(), "report.json").toString());
-    File wantReportFile =
+    File expectedReportFile =
         new File(this.getClass().getResource("LintTest_McfAndTmcfReport.json").getPath());
-    assertEquals(
-        FileUtils.readFileToString(wantReportFile, StandardCharsets.UTF_8),
-        FileUtils.readFileToString(gotReportFile, StandardCharsets.UTF_8));
+    TestUtil.assertReportFilesAreSimilar(expectedReportFile, actualReportFile);
   }
 
   @Test
@@ -39,13 +34,11 @@ public class LintTest {
     String csv = resourceFile("Csv1.csv");
     CommandLine cmd = new CommandLine(app);
     cmd.execute("lint", mcf, tmcf, csv, "--output-dir=" + testFolder.getRoot().getPath());
-    File gotReportFile =
+    File actualReportFile =
         new File(Paths.get(testFolder.getRoot().getPath(), "report.json").toString());
-    File wantReportFile =
+    File expectedReportFile =
         new File(this.getClass().getResource("LintTest_AllThreeFilesReport.json").getPath());
-    assertEquals(
-        FileUtils.readFileToString(wantReportFile, StandardCharsets.UTF_8),
-        FileUtils.readFileToString(gotReportFile, StandardCharsets.UTF_8));
+    TestUtil.assertReportFilesAreSimilar(expectedReportFile, actualReportFile);
   }
 
   private String resourceFile(String resource) {

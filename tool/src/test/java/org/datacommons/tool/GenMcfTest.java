@@ -14,7 +14,7 @@
 
 package org.datacommons.tool;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +30,6 @@ import org.junit.rules.TemporaryFolder;
 import picocli.CommandLine;
 
 public class GenMcfTest {
-
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
   @Test
@@ -40,16 +39,14 @@ public class GenMcfTest {
     String csv = resourceFile("Csv1.csv");
     CommandLine cmd = new CommandLine(app);
     cmd.execute("genmcf", tmcf, csv, "--output-dir=" + testFolder.getRoot().getPath());
-    File gotReportFile =
+    File actualReportFile =
         new File(Paths.get(testFolder.getRoot().getPath(), "report.json").toString());
-    File gotGeneratedMcfFile =
-        new File(Paths.get(testFolder.getRoot().getPath(), "generated.mcf").toString());
-    File wantReportFile =
+    File expectedReportFile =
         new File(this.getClass().getResource("GenMcfTest_FatalTmcfReport.json").getPath());
-    assertEquals(
-        FileUtils.readFileToString(wantReportFile, StandardCharsets.UTF_8),
-        FileUtils.readFileToString(gotReportFile, StandardCharsets.UTF_8));
-    assertTrue(FileUtils.readFileToString(gotGeneratedMcfFile, StandardCharsets.UTF_8).isEmpty());
+    File actualGeneratedMcfFile =
+        new File(Paths.get(testFolder.getRoot().getPath(), "generated.mcf").toString());
+    TestUtil.assertReportFilesAreSimilar(expectedReportFile, actualReportFile);
+    assertTrue(FileUtils.readFileToString(actualGeneratedMcfFile, StandardCharsets.UTF_8).isEmpty());
   }
 
   @Test
@@ -59,17 +56,15 @@ public class GenMcfTest {
     String csv = resourceFile("Csv1.csv");
     CommandLine cmd = new CommandLine(app);
     cmd.execute("genmcf", tmcf, csv, "--output-dir=" + testFolder.getRoot().getPath());
-    File gotReportFile =
+    File actualReportFile =
         new File(Paths.get(testFolder.getRoot().getPath(), "report.json").toString());
-    File wantReportFile =
+    File expectedReportFile =
         new File(this.getClass().getResource("GenMcfTest_SuccessTmcfReport.json").getPath());
     Path actualGeneratedFilePath = Paths.get(testFolder.getRoot().getPath(), "generated.mcf");
     Path expectedGeneratedFilePath =
         Paths.get(this.getClass().getResource("GenMcfTest_SuccessTmcfGenerated.mcf").getPath());
+    TestUtil.assertReportFilesAreSimilar(expectedReportFile, actualReportFile);
     assertTrue(areSimilarGeneratedMcf(expectedGeneratedFilePath, actualGeneratedFilePath));
-    assertEquals(
-        FileUtils.readFileToString(wantReportFile, StandardCharsets.UTF_8),
-        FileUtils.readFileToString(gotReportFile, StandardCharsets.UTF_8));
   }
 
   private String resourceFile(String resource) {
