@@ -27,7 +27,6 @@ import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.util.LogWrapper;
 import org.datacommons.util.FileGroup;
-import org.datacommons.util.TmcfCsvReader;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "genmcf", description = "Generate Instance MCF from TMCF/CSV files")
@@ -58,7 +57,7 @@ class GenMcf implements Callable<Integer> {
   @Override
   public Integer call() throws IOException, InvalidProtocolBufferException {
 
-    FileGroup fg = TmcfCsvReader.read(files, spec, logger);
+    FileGroup fg = FileGroup.Build(files, spec, logger);
 
     if (delimiter == null) {
       delimiter = fg.GetNumTsv() > 0 ? '\t' : ',';

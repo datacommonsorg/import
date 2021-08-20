@@ -23,7 +23,6 @@ import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.util.FileGroup;
-import org.datacommons.util.TmcfCsvReader;
 import org.datacommons.util.LogWrapper;
 import picocli.CommandLine;
 
@@ -55,7 +54,7 @@ class Lint implements Callable<Integer> {
   @Override
   public Integer call() throws IOException, InvalidProtocolBufferException {
 
-    FileGroup fg = TmcfCsvReader.read(files, spec, logger);
+    FileGroup fg = FileGroup.Build(files, spec, logger);
 
     if (delimiter == null) {
       delimiter = fg.GetNumTsv() > 0 ? '\t' : ',';

@@ -15,7 +15,10 @@
 package org.datacommons.util;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import org.apache.logging.log4j.Logger;
+import picocli.CommandLine;
 
 public class FileGroup {
   private File tmcfFile;
@@ -44,5 +47,43 @@ public class FileGroup {
 
   public int GetNumTsv() {
     return this.nTsv;
+  }
+
+  public static FileGroup Build(File[] files, CommandLine.Model.CommandSpec spec, Logger logger) {
+    List<File> tmcfFiles = new ArrayList<>();
+    List<File> csvFiles = new ArrayList<>();
+    List<File> mcfFiles = new ArrayList<>();
+    int nTsv = 0;
+    for (File file : files) {
+      String lowerPath = file.getPath().toLowerCase();
+      if (lowerPath.endsWith(".mcf")) {
+        mcfFiles.add(file);
+      } else if (lowerPath.endsWith(".tmcf")) {
+        tmcfFiles.add(file);
+      } else if (lowerPath.endsWith(".csv")) {
+        csvFiles.add(file);
+      } else if (lowerPath.endsWith(".tsv")) {
+        nTsv++;
+        csvFiles.add(file);
+      } else {
+        throw new CommandLine.ParameterException(
+            spec.commandLine(), "Found an unsupported file type: " + file.getPath());
+      }
+    }
+    logger.info(
+        "Input includes {} MCF file(s), {} TMCF file(s), {} CSV file(s)",
+        mcfFiles.size(),
+        tmcfFiles.size(),
+        csvFiles.size());
+    // Various checks
+    if (nTsv > 0 && nTsv != csvFiles.size()) {
+      throw new CommandLine.ParameterException(
+          spec.commandLine(), "Please do not mix .tsv and .csv files");
+    }
+    if (!csvFiles.isEmpty() && tmcfFiles.size() != 1) {
+      throw new CommandLine.ParameterException(
+          spec.commandLine(), "Please provide one .tmcf file with CSV/TSV files");
+    }
+    return new FileGroup(tmcfFiles.get(0), csvFiles, mcfFiles, nTsv);
   }
 }
