@@ -443,7 +443,7 @@ public class McfChecker {
     }
     if (typeOf.equals(Vocabulary.CLASS_TYPE)
         && !McfUtil.getPropVal(node, Vocabulary.DCID).equals(Vocabulary.THING_TYPE)) {
-      checkRequiredSingleValueProp(nodeId, node, Vocabulary.CLASS_TYPE, Vocabulary.SUB_CLASS_OF);
+      checkRequiredValueProp(nodeId, node, Vocabulary.CLASS_TYPE, Vocabulary.SUB_CLASS_OF);
     }
   }
 

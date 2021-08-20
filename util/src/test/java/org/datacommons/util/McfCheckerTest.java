@@ -348,6 +348,15 @@ public class McfCheckerTest {
             + "description: \"Physical location.\"\n";
     assertTrue(failure(mcf, "Sanity_MissingOrEmpty_subClassOf", "subClassOf"));
 
+    // Class types can include multiple subClassOf.
+    mcf =
+        "Node: dcid:Place\n"
+            + "typeOf: schema:Class\n"
+            + "name: \"Place\"\n"
+            + "description: \"Physical location.\"\n"
+            + "subClassOf: schema:Thing, schema:Tangible\n";
+    assertTrue(success(mcf));
+
     // Class types must not have domainIncludes|rangeIncludes|subPropertyOf
     mcf =
         "Node: schema:Place\n"
