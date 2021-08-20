@@ -32,10 +32,10 @@ public class McfMutator {
 
   public static Mcf.McfGraph mutate(Mcf.McfGraph.Builder graph, LogWrapper logCtx) {
     McfMutator m = new McfMutator();
-    m.graph = graph;
+    m.graph = Mcf.McfGraph.newBuilder();
     m.logCtx = logCtx;
     for (String nodeId : graph.getNodesMap().keySet()) {
-      m.graph.putNodes(nodeId, m.mutateNode(nodeId, m.graph.getNodesOrThrow(nodeId).toBuilder()));
+      m.graph.putNodes(nodeId, m.mutateNode(nodeId, graph.getNodesOrThrow(nodeId).toBuilder()));
     }
     return m.graph.build();
   }
@@ -43,7 +43,7 @@ public class McfMutator {
   private Mcf.McfGraph.PropertyValues mutateNode(
       String nodeId, Mcf.McfGraph.PropertyValues.Builder node) {
     List<String> types = getPropVals(node.build(), Vocabulary.TYPE_OF);
-    if (types == null) {
+    if (types == null || types.isEmpty()) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "Mutator_MissingTypeOf",

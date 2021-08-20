@@ -128,7 +128,7 @@ public class LogWrapper {
       return true;
     }
     if (countersWithErrors.size() > MAX_ERROR_COUNTERS_LIMIT) {
-      logger.error("Found too failure types. Quitting!");
+      logger.error("Found too many failure types. Quitting!");
       return true;
     }
     return false;

@@ -70,6 +70,9 @@ public class Processor {
       logger.debug("Checking CSV " + csvFile.getPath());
       TmcfCsvParser parser =
           TmcfCsvParser.init(tmcfFile.getPath(), csvFile.getPath(), delimiter, logCtx);
+      if (logCtx.loggedTooManyFailures()) {
+        throw new DCTooManyFailuresException("processTables encountered too many failures");
+      }
       Mcf.McfGraph g;
       long numNodesProcessed = 0, numRowsProcessed = 0;
       while ((g = parser.parseNextRow()) != null) {
