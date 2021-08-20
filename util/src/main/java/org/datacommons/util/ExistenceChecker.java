@@ -40,6 +40,15 @@ public class ExistenceChecker {
     missingNodesOrTriples = new HashSet<>();
   }
 
+  public boolean checkNode(String node) throws IOException, InterruptedException {
+    return checkCommon(node, Vocabulary.TYPE_OF, "", node);
+  }
+
+  public boolean checkTriple(String sub, String pred, String obj)
+      throws IOException, InterruptedException {
+    return checkCommon(sub, pred, obj, makeKey(sub, pred, obj));
+  }
+
   public void addLocalGraph(Mcf.McfGraph graph) {
     for (Map.Entry<String, Mcf.McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
       // Skip doing anything with StatVarObs.
@@ -76,16 +85,7 @@ public class ExistenceChecker {
     }
   }
 
-  public boolean checkNode(String node) throws IOException, InterruptedException {
-    return checkCommon(node, Vocabulary.TYPE_OF, "", node);
-  }
-
-  public boolean checkTriple(String sub, String pred, String obj)
-      throws IOException, InterruptedException {
-    return checkCommon(sub, pred, obj, makeKey(sub, pred, obj));
-  }
-
-  public boolean checkCommon(String sub, String pred, String obj, String key)
+  private boolean checkCommon(String sub, String pred, String obj, String key)
       throws IOException, InterruptedException {
     logCtx.incrementCounterBy("Existence_NumChecks", 1);
     if (existingNodesOrTriples.contains(key)) return true;
