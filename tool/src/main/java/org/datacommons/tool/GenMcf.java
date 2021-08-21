@@ -21,12 +21,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
+import org.datacommons.util.FileGroup;
 import org.datacommons.util.LogWrapper;
 import picocli.CommandLine;
 
@@ -57,39 +56,11 @@ class GenMcf implements Callable<Integer> {
 
   @Override
   public Integer call() throws IOException, InvalidProtocolBufferException {
-    List<File> tmcfFiles = new ArrayList<>();
-    List<File> csvFiles = new ArrayList<>();
-    int nTsv = 0;
-    for (File file : files) {
-      String lowerPath = file.getPath().toLowerCase();
-      if (lowerPath.endsWith(".tmcf")) {
-        tmcfFiles.add(file);
-      } else if (lowerPath.endsWith(".csv")) {
-        csvFiles.add(file);
-      } else if (lowerPath.endsWith(".tsv")) {
-        nTsv++;
-        csvFiles.add(file);
-      } else {
-        throw new CommandLine.ParameterException(
-            spec.commandLine(), "Found an unsupported file type: " + file.getPath());
-      }
-    }
-    logger.info(
-        "Input includes {} TMCF file(s), {} CSV file(s)", tmcfFiles.size(), csvFiles.size());
-    if (csvFiles.isEmpty()) {
-      throw new CommandLine.ParameterException(
-          spec.commandLine(), "Please provide one or more CSV/TSV files");
-    }
-    if (tmcfFiles.size() != 1) {
-      throw new CommandLine.ParameterException(
-          spec.commandLine(), "Please provide exactly one .tmcf file");
-    }
-    if (nTsv > 0 && nTsv != csvFiles.size()) {
-      throw new CommandLine.ParameterException(
-          spec.commandLine(), "Please do not mix .tsv and .csv files");
-    }
+
+    FileGroup fg = FileGroup.Build(files, spec, logger);
+
     if (delimiter == null) {
-      delimiter = nTsv > 0 ? '\t' : ',';
+      delimiter = fg.GetNumTsv() > 0 ? '\t' : ',';
     }
 
     Path outPath = Paths.get(parent.outputDir.getPath(), "generated.mcf");
@@ -100,7 +71,7 @@ class GenMcf implements Callable<Integer> {
     Processor processor = new Processor(logCtx);
     Integer retVal = 0;
     try {
-      processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, writer);
+      processor.processTables(fg.GetTmcf(), fg.GetCsv(), delimiter, writer);
     } catch (DCTooManyFailuresException ex) {
       // Regardless of the failures, we will dump the logCtx and exit.
       retVal = -1;

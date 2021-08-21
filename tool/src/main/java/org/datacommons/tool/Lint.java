@@ -17,13 +17,12 @@ package org.datacommons.tool;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
+import org.datacommons.util.FileGroup;
 import org.datacommons.util.LogWrapper;
 import picocli.CommandLine;
 
@@ -54,56 +53,23 @@ class Lint implements Callable<Integer> {
 
   @Override
   public Integer call() throws IOException, InvalidProtocolBufferException {
-    List<File> mcfFiles = new ArrayList<>();
-    List<File> tmcfFiles = new ArrayList<>();
-    List<File> csvFiles = new ArrayList<>();
-    int nTsv = 0;
-    for (File file : files) {
-      String lowerPath = file.getPath().toLowerCase();
-      if (lowerPath.endsWith(".mcf")) {
-        mcfFiles.add(file);
-      } else if (lowerPath.endsWith(".tmcf")) {
-        tmcfFiles.add(file);
-      } else if (lowerPath.endsWith(".csv")) {
-        csvFiles.add(file);
-      } else if (lowerPath.endsWith(".tsv")) {
-        nTsv++;
-        csvFiles.add(file);
-      } else {
-        throw new CommandLine.ParameterException(
-            spec.commandLine(), "Found an unsupported file type: " + file.getPath());
-      }
-    }
-    logger.info(
-        "Input includes {} MCF file(s), {} TMCF file(s), {} CSV file(s)",
-        mcfFiles.size(),
-        tmcfFiles.size(),
-        csvFiles.size());
-    // Various checks
-    if (nTsv > 0 && nTsv != csvFiles.size()) {
-      throw new CommandLine.ParameterException(
-          spec.commandLine(), "Please do not mix .tsv and .csv files");
-    }
+
+    FileGroup fg = FileGroup.Build(files, spec, logger);
+
     if (delimiter == null) {
-      delimiter = nTsv > 0 ? '\t' : ',';
-    }
-    if (!csvFiles.isEmpty() && tmcfFiles.size() != 1) {
-      throw new CommandLine.ParameterException(
-          spec.commandLine(), "Please provide one .tmcf file with CSV/TSV files");
+      delimiter = fg.GetNumTsv() > 0 ? '\t' : ',';
     }
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
     Processor processor = new Processor(logCtx);
     Integer retVal = 0;
     try {
-      for (File f : mcfFiles) {
+      for (File f : fg.GetMcf()) {
         processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
       }
-      if (!csvFiles.isEmpty()) {
-        processor.processTables(tmcfFiles.get(0), csvFiles, delimiter, null);
+      if (!fg.GetCsv().isEmpty()) {
+        processor.processTables(fg.GetTmcf(), fg.GetCsv(), delimiter, null);
       } else {
-        for (File f : tmcfFiles) {
-          processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f);
-        }
+        processor.processNodes(Mcf.McfType.TEMPLATE_MCF, fg.GetTmcf());
       }
     } catch (DCTooManyFailuresException ex) {
       // Regardless of the failures, we will dump the logCtx and exit.
