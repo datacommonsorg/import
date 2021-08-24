@@ -79,7 +79,7 @@ class Lint implements Callable<Integer> {
       if (doExistenceChecks) {
         processor.checkAllNodes();
       }
-      if (!csvFiles.isEmpty()) {
+      if (!fg.GetCsv().isEmpty()) {
         processor.processTables(fg.GetTmcf(), fg.GetCsv(), delimiter, null);
       } else {
         processor.processNodes(Mcf.McfType.TEMPLATE_MCF, fg.GetTmcf());
