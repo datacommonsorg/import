@@ -51,8 +51,7 @@ public class GenMcfTest {
       String expectedReportString = TestUtil.getStringFromOutputReport(directory.getPath());
       TestUtil.assertReportFilesAreSimilar(expectedReportString, actualReportString);
       Path actualGeneratedFilePath = Paths.get(testFolder.getRoot().getPath(), "generated.mcf");
-      Path expectedGeneratedFilePath =
-          Path.of(directory.getPath(), "output", "generated.mcf");
+      Path expectedGeneratedFilePath = Path.of(directory.getPath(), "output", "generated.mcf");
       assertTrue(areSimilarGeneratedMcf(expectedGeneratedFilePath, actualGeneratedFilePath));
     }
   }

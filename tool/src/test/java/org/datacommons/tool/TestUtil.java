@@ -17,12 +17,13 @@ package org.datacommons.tool;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.google.gson.Gson;
+import com.google.protobuf.util.JsonFormat;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.datacommons.proto.Debug;
 import org.junit.rules.TemporaryFolder;
@@ -31,12 +32,35 @@ import org.junit.rules.TemporaryFolder;
 public class TestUtil {
   public static void assertReportFilesAreSimilar(String expected, String actual)
       throws IOException {
-    Debug.Log expectedLog = new Gson().fromJson(expected, Debug.Log.class);
-    Debug.Log actualLog = new Gson().fromJson(actual, Debug.Log.class);
-    assertEquals(expectedLog.getCounterSet(), actualLog.getCounterSet());
-    assertEquals(expectedLog.getLevelSummaryMap(), actualLog.getLevelSummaryMap());
+    Debug.Log.Builder expectedLogBuilder = Debug.Log.newBuilder();
+    Debug.Log.Builder actualLogBuilder = Debug.Log.newBuilder();
+    JsonFormat.parser().merge(expected, expectedLogBuilder);
+    JsonFormat.parser().merge(actual, actualLogBuilder);
+    Debug.Log expectedLog = expectedLogBuilder.build();
+    Debug.Log actualLog = actualLogBuilder.build();
+    assertMapsAreEqual(
+        "Counter Set",
+        expectedLog.getCounterSet().getCountersMap(),
+        actualLog.getCounterSet().getCountersMap());
+    assertMapsAreEqual(
+        "Level Summary", expectedLog.getLevelSummaryMap(), actualLog.getLevelSummaryMap());
     assertTrue(actualLog.getEntriesList().containsAll(expectedLog.getEntriesList()));
     assertTrue(expectedLog.getEntriesList().containsAll(actualLog.getEntriesList()));
+  }
+
+  public static void assertMapsAreEqual(
+      String mapType, Map<String, Long> expected, Map<String, Long> actual) {
+    assertEquals(
+        mapType + " has different size between actual and expected",
+        expected.keySet().size(),
+        actual.keySet().size());
+    for (String key : expected.keySet()) {
+      assertTrue(mapType + " actual report is missing the key: " + key, actual.containsKey(key));
+      assertEquals(
+          mapType + " has different values for the key: " + key,
+          expected.get(key),
+          actual.get(key));
+    }
   }
 
   public static String getStringFromTestFile(TemporaryFolder testFolder, String fileName)
@@ -45,9 +69,8 @@ public class TestUtil {
     return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
   }
 
-  public static String getStringFromOutputReport(String parentDirectoryPath)
-      throws IOException {
-    File file = new File(Path.of(parentDirectoryPath, "output","report.json").toString());
+  public static String getStringFromOutputReport(String parentDirectoryPath) throws IOException {
+    File file = new File(Path.of(parentDirectoryPath, "output", "report.json").toString());
     return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
   }
 }

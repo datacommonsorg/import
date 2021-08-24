@@ -68,7 +68,7 @@ class Lint implements Callable<Integer> {
       }
       if (!fg.GetCsv().isEmpty()) {
         processor.processTables(fg.GetTmcf(), fg.GetCsv(), delimiter, null);
-      } else {
+      } else if (fg.GetTmcf() != null) {
         processor.processNodes(Mcf.McfType.TEMPLATE_MCF, fg.GetTmcf());
       }
     } catch (DCTooManyFailuresException ex) {
