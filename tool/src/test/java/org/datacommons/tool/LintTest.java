@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import picocli.CommandLine;
 
+// TODO(shanth): Incorporate e2e test-cases for existence checks once this is generalized.
 public class LintTest {
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
