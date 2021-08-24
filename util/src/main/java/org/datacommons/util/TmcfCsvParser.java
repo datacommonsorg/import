@@ -320,6 +320,11 @@ public class TmcfCsvParser {
           ssArg.stripEnclosingQuotes = false;
           // TODO: set stripEscapesBeforeQuotes
           String origValue = dataRow.get(columnIndex);
+          // When CSVParser got the dataRow, it stripped surrounding quotes from each cell value.
+          // Therefore, if the origValue is surrounded by quotes at this point, its original form in
+          // the csv would've been "\"<text>\"" and we want to return origValue to that form before
+          // continuing.
+          origValue = origValue.replaceAll("^\"(.*)\"$", "\"\\\\\"$1\\\\\"\"");
           warnCb.setDetail(LogCb.VALUE_KEY, origValue);
           warnCb.setDetail(LogCb.COLUMN_KEY, column);
           warnCb.setCounterSuffix(currentProp);

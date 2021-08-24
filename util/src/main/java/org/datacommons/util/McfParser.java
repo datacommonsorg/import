@@ -528,7 +528,7 @@ public class McfParser {
   private static String stripEnclosingQuotePair(String val) {
     if (val.length() > 1) {
       if (val.charAt(0) == '"' && val.charAt(val.length() - 1) == '"') {
-        return val.length() == 2 ? "" : val.substring(1, val.length() - 2);
+        return val.length() == 2 ? "" : val.substring(1, val.length() - 1);
       }
     }
     return val;
