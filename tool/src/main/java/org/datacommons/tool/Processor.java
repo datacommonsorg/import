@@ -42,7 +42,7 @@ public class Processor {
   // NOTE: If doExistenceChecks is true, then it is important that the caller perform a
   // checkAllNodes() call *after* all instance MCF files are processed (via processNodes). This is
   // so that the newly added schema, StatVar, etc. are fully known to the Existence Checker first,
-  // before existene checks are performed.
+  // before existence checks are performed.
   public Processor(boolean doExistenceChecks, LogWrapper logCtx) {
     this.logCtx = logCtx;
     if (doExistenceChecks) {

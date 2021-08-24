@@ -28,7 +28,7 @@ public class ExistenceChecker {
   private HttpClient httpClient;
 
   // This is a combination of local KG data and prior cached checks.
-  // Node is just the DCID. Triple is "s,p,o" and the property just includes CACHED_PROPERTIES.
+  // Node is just the DCID. Triple is "s,p,o" and the property just includes SCHEMA_PROPERTIES.
   private Set<String> existingNodesOrTriples; // Existence cache
   private Set<String> missingNodesOrTriples; // Absence cache
   private LogWrapper logCtx;
@@ -99,7 +99,7 @@ public class ExistenceChecker {
     }
     if (dataJson.entrySet().size() != 1) {
       throw new IOException(
-          "Invalid payload content from Staging DC API endpoint for: '"
+          "Invalid results payload from Staging DC API endpoint for: '"
               + sub
               + "',"
               + " '"
