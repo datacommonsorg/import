@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.apache.commons.io.FileUtils;
 import org.datacommons.proto.Debug;
@@ -44,9 +45,9 @@ public class TestUtil {
     return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
   }
 
-  public static String getStringFromResource(Class resourceClass, String fileName)
+  public static String getStringFromOutputReport(String parentDirectoryPath)
       throws IOException {
-    File file = new File(resourceClass.getResource(fileName).getPath());
+    File file = new File(Path.of(parentDirectoryPath, "output","report.json").toString());
     return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
   }
 }

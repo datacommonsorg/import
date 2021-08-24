@@ -16,11 +16,14 @@ package org.datacommons.tool;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -30,34 +33,28 @@ public class GenMcfTest {
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
   @Test
-  public void GenMcfTest_FatalTmcf() throws IOException {
+  public void GenMcfTest() throws IOException {
     Main app = new Main();
-    String tmcf = resourceFile("TmcfWithErrors.tmcf");
-    String csv = resourceFile("Csv1.csv");
     CommandLine cmd = new CommandLine(app);
-    cmd.execute("genmcf", tmcf, csv, "--output-dir=" + testFolder.getRoot().getPath());
-    String actualReportString = TestUtil.getStringFromTestFile(testFolder, "report.json");
-    String expectedReportString =
-        TestUtil.getStringFromResource(this.getClass(), "GenMcfTest_FatalTmcfReport.json");
-    TestUtil.assertReportFilesAreSimilar(expectedReportString, actualReportString);
-    assertTrue(TestUtil.getStringFromTestFile(testFolder, "generated.mcf").isEmpty());
-  }
-
-  @Test
-  public void GenMcfTest_SuccessTmcf() throws IOException {
-    Main app = new Main();
-    String tmcf = resourceFile("Tmcf1.tmcf");
-    String csv = resourceFile("Csv1.csv");
-    CommandLine cmd = new CommandLine(app);
-    cmd.execute("genmcf", tmcf, csv, "--output-dir=" + testFolder.getRoot().getPath());
-    String actualReportString = TestUtil.getStringFromTestFile(testFolder, "report.json");
-    String expectedReportString =
-        TestUtil.getStringFromResource(this.getClass(), "GenMcfTest_SuccessTmcfReport.json");
-    Path actualGeneratedFilePath = Paths.get(testFolder.getRoot().getPath(), "generated.mcf");
-    Path expectedGeneratedFilePath =
-        Paths.get(this.getClass().getResource("GenMcfTest_SuccessTmcfGenerated.mcf").getPath());
-    TestUtil.assertReportFilesAreSimilar(expectedReportString, actualReportString);
-    assertTrue(areSimilarGeneratedMcf(expectedGeneratedFilePath, actualGeneratedFilePath));
+    File[] testDirectories = new File(resourceFile("genmcf")).listFiles(File::isDirectory);
+    for (File directory : testDirectories) {
+      List<String> argsList = new ArrayList<>();
+      argsList.add("genmcf");
+      File[] inputFiles = new File(Path.of(directory.getPath(), "input").toString()).listFiles();
+      for (File inputFile : inputFiles) {
+        argsList.add(inputFile.getPath());
+      }
+      argsList.add("--output-dir=" + testFolder.getRoot().getPath());
+      String[] args = argsList.toArray(new String[argsList.size()]);
+      cmd.execute(args);
+      String actualReportString = TestUtil.getStringFromTestFile(testFolder, "report.json");
+      String expectedReportString = TestUtil.getStringFromOutputReport(directory.getPath());
+      TestUtil.assertReportFilesAreSimilar(expectedReportString, actualReportString);
+      Path actualGeneratedFilePath = Paths.get(testFolder.getRoot().getPath(), "generated.mcf");
+      Path expectedGeneratedFilePath =
+          Path.of(directory.getPath(), "output", "generated.mcf");
+      assertTrue(areSimilarGeneratedMcf(expectedGeneratedFilePath, actualGeneratedFilePath));
+    }
   }
 
   private String resourceFile(String resource) {
@@ -68,8 +65,11 @@ public class GenMcfTest {
   // SVO MCF from csv and tmcf, Nodes will be assigned an ID that may not always be the same
   private boolean areSimilarGeneratedMcf(Path expectedFilePath, Path actualFilePath)
       throws IOException {
-    Iterator<String> expectedFileLines = Files.lines(expectedFilePath).iterator();
     Iterator<String> actualFileLines = Files.lines(actualFilePath).iterator();
+    if (!new File(expectedFilePath.toString()).isFile()) {
+      return !actualFileLines.hasNext();
+    }
+    Iterator<String> expectedFileLines = Files.lines(expectedFilePath).iterator();
     while (expectedFileLines.hasNext() && actualFileLines.hasNext()) {
       String expectedLine = expectedFileLines.next();
       String actualLine = actualFileLines.next();
