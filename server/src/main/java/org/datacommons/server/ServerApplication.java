@@ -14,20 +14,15 @@
 
 package org.datacommons.server;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
+import javax.annotation.PostConstruct;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.aspectj.weaver.Lint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,59 +31,35 @@ import org.springframework.web.bind.annotation.RestController;
 @EnableAutoConfiguration
 @RestController
 public class ServerApplication {
-  private static final Logger LOGGER = Logger.getLogger(Processor.class.getName());
+  private static final Logger logger = LogManager.getLogger(Lint.class);
 
-  @Autowired
-  private ObservationRepository obsRepo;
+  @Autowired private ObservationRepository obsRepo;
 
   public static void main(String[] args) {
-    try {
-      InputStream is = new ClassPathResource("OurWorldInData_Covid19.tmcf").getInputStream();
-      if (is == null) {
-        LOGGER.info("======= inputstream is null");
-      } else {
-        String text = new BufferedReader(
-          new InputStreamReader(is, StandardCharsets.UTF_8))
-            .lines()
-                .collect(Collectors.joining("\n"));
-        LOGGER.info(text);
-      }
-    } catch (IOException ex) {
-      LOGGER.info("IO exception");
-    }
-
     SpringApplication.run(ServerApplication.class, args);
   }
 
-  // @PostConstruct
-  // private void initDb() throws Exception {
-  //   LOGGER.info("==========  post construct");
+  @PostConstruct
+  private void initDb() throws Exception {
+    logger.info("==========  post construct");
 
-  //   List<File> csvFiles = new ArrayList<>();
-  //   File csvFile = new File(getClass().getResource("OurWorldInData_Covid19.csv").getFile());
-  //   LOGGER.info(Boolean.toString(csvFile.exists()));
-  //   csvFiles.add(csvFile);
-  //   File tmcfFile = new File(getClass().getResource("OurWorldInData_Covid19.tmcf").getFile());
-  //   LOGGER.info(Boolean.toString(tmcfFile.exists()));
+    Observation o = new Observation();
+    o.setObservationAbout("geoId/06");
+    o.setObservationDate("2019");
+    o.setValue("20");
+    obsRepo.save(o);
 
-  //   Observation o = new Observation();
-  //   o.setObservationAbout("geoId/06");
-  //   o.setObservationDate("2019");
-  //   o.setValue("20");
-  //   obsRepo.save(o);
-
-  //   LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), new File(".").toPath());
-  //   Processor processor = new Processor(logCtx);
-  //   try {
-  //     processor.processTables(tmcfFile, csvFiles, ',', obsRepo);
-  //   } catch (IOException ex) {
-  //     LOGGER.log(Level.SEVERE, "process table error", ex);
-  //     return;
-  //   }
-  // }
+    // logger.info("======== before");
+    // FileGroup fg = FileGroup.Build(files, spec, logger);
+    // logger.info("======== after");
+    // LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), new File(".").toPath());
+    // Processor processor = new Processor(logCtx);
+    // processor.processTables(fg.GetTmcf(), fg.GetCsv(), ',', obsRepo);
+  }
 
   @GetMapping("/hello")
-  public List<Observation> hello(@RequestParam(value = "name", defaultValue = "World") String name) {
-		return obsRepo.findAll();
+  public List<Observation> hello(
+      @RequestParam(value = "name", defaultValue = "World") String name) {
+    return obsRepo.findAll();
   }
 }

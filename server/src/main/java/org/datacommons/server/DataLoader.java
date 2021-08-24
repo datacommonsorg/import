@@ -14,31 +14,20 @@
 
 package org.datacommons.server;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.annotation.PostConstruct;
-
 import org.datacommons.proto.Debug;
 import org.datacommons.util.LogWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 public class DataLoader {
   private static final Logger LOGGER = Logger.getLogger(Processor.class.getName());
 
-  @Autowired
-  private ObservationRepository obsRepo;
+  @Autowired private ObservationRepository obsRepo;
 
   // @PostConstruct
   private void initDb() {
