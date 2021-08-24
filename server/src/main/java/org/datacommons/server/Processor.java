@@ -59,14 +59,15 @@ public class Processor {
               o.setObservationDate(tvs.get(0).getValue());
               tvs = McfUtil.getPropTvs(node, Vocabulary.VALUE);
               o.setValue(tvs.get(0).getValue());
+              tvs = McfUtil.getPropTvs(node, Vocabulary.LOCATION);
+              o.setLocation(tvs.get(0).getValue());
               obsRepo.save(o);
               break;
             }
           }
         }
-        if (numNodesProcessed == 1000) {
-          LOGGER.info(g.toString());
-          break;
+        if (numNodesProcessed / 1000 == 0) {
+          LOGGER.info(String.valueOf(numNodesProcessed));
         }
       }
     }

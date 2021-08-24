@@ -35,13 +35,6 @@ public class ServerCommand implements Callable<Integer> {
 
   @Override
   public Integer call() {
-
-    Observation o = new Observation();
-    o.setObservationAbout("geoId/09");
-    o.setObservationDate("2017");
-    o.setValue("100");
-    obsRepo.save(o);
-
     FileGroup fg = FileGroup.Build(files, spec, logger);
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), new File(".").toPath());
     Processor processor = new Processor(logCtx);
@@ -50,7 +43,6 @@ public class ServerCommand implements Callable<Integer> {
     } catch (IOException ex) {
       System.out.printf("Get error %s", ex);
     }
-
     return 0;
   }
 }

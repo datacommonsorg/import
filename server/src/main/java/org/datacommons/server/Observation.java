@@ -60,11 +60,11 @@ public class Observation {
     this.value = value;
   }
 
-  public String getLocatioin() {
+  public String getLocation() {
     return location;
   }
 
-  public void setLocataion(String location) {
+  public void setLocation(String location) {
     this.location = location;
   }
 }
