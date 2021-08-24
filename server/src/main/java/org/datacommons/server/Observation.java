@@ -22,11 +22,11 @@ public class Observation {
   @Column(name = "OBSERVATION_DATE")
   private String observationDate;
 
-  @Column(name = "LOCATION")
-  private String location;
-
   @Column(name = "VALUE")
   private String value;
+
+  @Column(name = "VARIABLE")
+  private String variable;
 
   public Long getId() {
     return id;
@@ -60,11 +60,11 @@ public class Observation {
     this.value = value;
   }
 
-  public String getLocation() {
-    return location;
+  public String getVariable() {
+    return variable;
   }
 
-  public void setLocation(String location) {
-    this.location = location;
+  public void setVariable(String variable) {
+    this.variable = variable;
   }
 }

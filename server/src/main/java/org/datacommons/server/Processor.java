@@ -16,10 +16,16 @@ package org.datacommons.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import org.datacommons.proto.Mcf;
-import org.datacommons.util.*;
+import org.datacommons.util.LogWrapper;
+import org.datacommons.util.McfChecker;
+import org.datacommons.util.McfMutator;
+import org.datacommons.util.McfUtil;
+import org.datacommons.util.TmcfCsvParser;
+import org.datacommons.util.Vocabulary;
 
 public class Processor {
 
@@ -39,6 +45,7 @@ public class Processor {
           TmcfCsvParser.init(tmcfFile.getPath(), csvFile.getPath(), delimiter, logCtx);
       Mcf.McfGraph g;
       long numNodesProcessed = 0;
+      List<Observation> allObservation = new ArrayList<Observation>();
       while ((g = parser.parseNextRow()) != null) {
         g = McfMutator.mutate(g.toBuilder(), logCtx);
         // This will set counters/messages in logCtx.
@@ -59,17 +66,20 @@ public class Processor {
               o.setObservationDate(tvs.get(0).getValue());
               tvs = McfUtil.getPropTvs(node, Vocabulary.VALUE);
               o.setValue(tvs.get(0).getValue());
-              tvs = McfUtil.getPropTvs(node, Vocabulary.LOCATION);
-              o.setLocation(tvs.get(0).getValue());
-              obsRepo.save(o);
+              tvs = McfUtil.getPropTvs(node, Vocabulary.VARIABLE_MEASURED);
+              o.setVariable(tvs.get(0).getValue());
+              allObservation.add(o);
               break;
             }
           }
         }
-        if (numNodesProcessed / 1000 == 0) {
+        if (numNodesProcessed == 1000) {
           LOGGER.info(String.valueOf(numNodesProcessed));
+          break;
         }
       }
+      obsRepo.saveAll(allObservation);
+      LOGGER.info("Added all entries");
     }
   }
 }

@@ -14,7 +14,6 @@
 
 package org.datacommons.server;
 
-import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -34,12 +33,10 @@ public class ServerApplication {
     SpringApplication.run(ServerApplication.class, args);
   }
 
-  @GetMapping("/hello")
+  @GetMapping("/stat/series")
   public List<Observation> hello(
-      @RequestParam(value = "name", defaultValue = "World") String name) {
-    List<Long> ids = new ArrayList<Long>();
-    ids.add(3L);
-    ids.add(5L);
-    return obsRepo.findAllById(ids);
+      @RequestParam(value = "place") String place,
+      @RequestParam(value = "statVar") String statVar) {
+    return obsRepo.findObservationByPlaceAndStatVar(place, statVar);
   }
 }
