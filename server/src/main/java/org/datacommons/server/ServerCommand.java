@@ -14,8 +14,14 @@
 
 package org.datacommons.server;
 
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
@@ -34,6 +41,8 @@ import picocli.CommandLine.Spec;
 @Command(name = "command", mixinStandardHelpOptions = true)
 public class ServerCommand implements Callable<Integer> {
   private static final Logger logger = LogManager.getLogger(ServerCommand.class);
+  // Always download to /tmp folder.
+  private static final String DEST_PATH = "/tmp";
 
   @Parameters(
       arity = "1..*",
@@ -41,8 +50,19 @@ public class ServerCommand implements Callable<Integer> {
           ("List of input files. The file extensions are used to infer the format. "
               + "Valid extensions include .tmcf for Template MCF, "
               + ".csv for tabular text files delimited by comma (overridden with -d), and .tsv "
-              + "for tab-delimited tabular files."))
+              + "for tab-delimited tabular files."
+              + "The files are GCP object names when --bucket, --project are specified."))
   private File[] files;
+
+  @Option(
+      names = {"-b", "--bucket"},
+      description = "GCS bucket to hold the tmcf and csv/tsv files ")
+  private String bucket;
+
+  @Option(
+      names = {"-p", "--project"},
+      description = "GCS project of the GCS bucket.")
+  private String project;
 
   // injected by picocli
   @Spec Model.CommandSpec spec;
@@ -51,10 +71,30 @@ public class ServerCommand implements Callable<Integer> {
 
   @Override
   public Integer call() throws IOException, InterruptedException {
+    processGcsFiles();
     FileGroup fg = FileGroup.Build(files, spec, logger);
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), new File(".").toPath());
     Processor processor = new Processor(logCtx);
     processor.processTables(fg.GetTmcf(), fg.GetCsv(), ',', observationRepository);
     return 0;
+  }
+
+  // If input files are from GCS, download the files locally and update
+  // file paths.
+  private void processGcsFiles() {
+    if (project == "" || bucket == "") {
+      return;
+    }
+    Storage storage = StorageOptions.newBuilder().setProjectId(project).build().getService();
+    File[] newFiles = new File[files.length];
+    int i = 0;
+    for (File file : files) {
+      Blob blob = storage.get(BlobId.of(bucket, file.getPath()));
+      Path localFile = Paths.get(DEST_PATH, file.getName());
+      blob.downloadTo(localFile);
+      newFiles[i] = localFile.toFile();
+      i++;
+    }
+    files = newFiles;
   }
 }
