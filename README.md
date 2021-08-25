@@ -17,17 +17,17 @@ joining.
 
 - [Download the tool](https://github.com/datacommonsorg/import/releases) and run it with:
 
-    ```bash
-    java -jar <path-to-jar> lint <list of mcf/tmcf/csv files>
-    ```
+  ```bash
+  java -jar <path-to-jar> lint <list of mcf/tmcf/csv files>
+  ```
 
   It's useful to create an alias like
 
-    ```bash
-    alias dc-import='java -jar<path-to-jar>'
-    ```
+  ```bash
+  alias dc-import='java -jar <path-to-jar>'
+  ```
 
-  so you can invoke the tool as ```dc-import lint```
+  so you can invoke the tool as `dc-import lint`
 
 - If there are warnings or errors, the tool will produce a JSON report with a
   table of exemplar errors.
@@ -45,28 +45,28 @@ joining.
 ### Prerequisites
 
 1. The tools are built using Apache Maven version 3.8.0.
-    - For MacOS: ```brew install maven```
+   - For MacOS: `brew install maven`
 2. The tools use protobuf and require that `protoc` be installed.
-    - For MacOS: ```brew install protoc```
+   - For MacOS: `brew install protoc`
 3. Make sure Java 11+ (but not Java 16) is installed
    - You can install it from [here](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk)
-4. Check what version of Java Maven is using: ```mvn --version```
+4. Check what version of Java Maven is using: `mvn --version`
 5. If Maven is using Java 16:
-    - Open ```~/.bash_profile```
-    - Add ```export JAVA_HOME=<Path to your downloaded Java 11>```
-    - Save your change and run ```source ~/.bash_profile```
+   - Open `~/.bash_profile`
+   - Add `export JAVA_HOME=<Path to your downloaded Java 11>`
+   - Save your change and run `source ~/.bash_profile`
 
 ### Build and Test Import Tool
 
 You can build and test the Java code from a Unix shell.
 
-To build: ```mvn compile```
+To build: `mvn compile`
 
-To run tests: ```mvn test```
+To run tests: `mvn test`
 
-To build binary: ```mvn package```
+To build binary: `mvn package`
 
-- which will produce  `tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar`
+- which will produce `tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar`
 - and you can run it with
 
   ```bash
@@ -77,23 +77,23 @@ To build binary: ```mvn package```
 
 The repo also hosts an experimental server for private DC.
 
-To build: ```mvn compile```
+To build: `mvn compile`
 
-To run tests: ```mvn test```
+To run tests: `mvn test`
 
-To build binary: ```mvn package```
+To build binary: `mvn package`
 
-- which will produce  `server/target/datacommons-server-0.1-alpha.1.jar`
+- which will produce `server/target/datacommons-server-0.1-alpha.1.jar`
 - and you can run it with
 
   ```bash
-  java -jar server/target/datacommons-server-0.1-alpha.1.jar
+  java -jar server/target/datacommons-server-0.1-alpha.1.jar <file1.tmcf> <file2.csv>
   ```
 
 Send a request:
 
 ```bash
-curl http://localhost:8080/hello
+curl http://localhost:8080/stat/series?place=country/USA&statVar=<statVar>
 ```
 
 Then should see "Hello World!" in the console output.
@@ -107,7 +107,7 @@ follow instructions in the
 to integrate with IntelliJ/Eclipse IDEs.
 
 The formatting is done as part of the build. It can be checked by running:
-```mvn com.coveo:fmt-maven-plugin:check```
+`mvn com.coveo:fmt-maven-plugin:check`
 
 ### Contributing Changes
 

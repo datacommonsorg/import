@@ -14,12 +14,22 @@
 
 package org.datacommons.server;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+import picocli.CommandLine;
 
-@SpringBootTest
-class ServerApplicationTests {
+// Command line runner that is to execute the ServerCommand.
+@Component
+public class CmdRunner implements CommandLineRunner {
 
-  @Test
-  void contextLoads() {}
+  private final ServerCommand serverCommand;
+
+  public CmdRunner(ServerCommand serverCommand) {
+    this.serverCommand = serverCommand;
+  }
+
+  @Override
+  public void run(String... args) throws Exception {
+    new CommandLine(serverCommand).execute(args);
+  }
 }
