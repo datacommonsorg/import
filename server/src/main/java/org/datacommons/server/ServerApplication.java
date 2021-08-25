@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @EnableAutoConfiguration
 @RestController
 public class ServerApplication {
+  // Dependency injection of ObservationRepository instance.
   @Autowired private ObservationRepository observationRepository;
 
   public static void main(String[] args) {

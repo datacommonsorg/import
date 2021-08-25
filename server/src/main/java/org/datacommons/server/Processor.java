@@ -44,7 +44,7 @@ public class Processor {
       List<File> csvFiles,
       char delimiter,
       ObservationRepository observationRepository)
-      throws IOException {
+      throws IOException, InterruptedException {
     for (File csvFile : csvFiles) {
       TmcfCsvParser parser =
           TmcfCsvParser.init(tmcfFile.getPath(), csvFile.getPath(), delimiter, logCtx);
@@ -54,7 +54,7 @@ public class Processor {
       while ((g = parser.parseNextRow()) != null) {
         g = McfMutator.mutate(g.toBuilder(), logCtx);
         // This will set counters/messages in logCtx.
-        boolean success = McfChecker.check(g, logCtx);
+        boolean success = McfChecker.check(g, null, logCtx);
         if (success) {
           logCtx.incrementCounterBy("NumRowSuccesses", 1);
         }

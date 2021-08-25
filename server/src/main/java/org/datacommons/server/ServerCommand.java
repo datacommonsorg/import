@@ -44,11 +44,13 @@ public class ServerCommand implements Callable<Integer> {
               + "for tab-delimited tabular files."))
   private File[] files;
 
-  @Spec Model.CommandSpec spec; // injected by picocli
+  // injected by picocli
+  @Spec Model.CommandSpec spec;
+  // Dependency injection of ObservationRepository instance.
   @Autowired private ObservationRepository observationRepository;
 
   @Override
-  public Integer call() throws IOException {
+  public Integer call() throws IOException, InterruptedException {
     FileGroup fg = FileGroup.Build(files, spec, logger);
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), new File(".").toPath());
     Processor processor = new Processor(logCtx);
