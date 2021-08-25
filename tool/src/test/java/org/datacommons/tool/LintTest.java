@@ -14,6 +14,7 @@ import picocli.CommandLine;
 // directory, add an input directory and an output directory. In the input directory, put the test
 // files you want to run the lint tool against. In the output directory, put a report.json file with
 // the expected report output.
+// TODO(shanth): Incorporate e2e test-cases for existence checks once this is generalized.
 public class LintTest {
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 

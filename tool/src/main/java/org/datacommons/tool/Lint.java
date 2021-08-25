@@ -47,6 +47,15 @@ class Lint implements Callable<Integer> {
       scope = CommandLine.ScopeType.INHERIT)
   private Character delimiter;
 
+  @CommandLine.Option(
+      names = {"-e", "--existence_checks"},
+      defaultValue = "false",
+      description =
+          "Check DCID references to schema nodes against the KG and locally. If set, then "
+              + "calls will be made to the Staging API server, and instance MCFs get fully "
+              + "loaded into memory.")
+  private boolean doExistenceChecks;
+
   @CommandLine.ParentCommand private Main parent;
 
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
@@ -60,18 +69,22 @@ class Lint implements Callable<Integer> {
       delimiter = fg.GetNumTsv() > 0 ? '\t' : ',';
     }
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
-    Processor processor = new Processor(logCtx);
+    Processor processor = new Processor(doExistenceChecks, logCtx);
     Integer retVal = 0;
     try {
+      // Process all the instance MCF first, so that we can add the nodes for Existence Check.
       for (File f : fg.GetMcf()) {
         processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
+      }
+      if (doExistenceChecks) {
+        processor.checkAllNodes();
       }
       if (!fg.GetCsv().isEmpty()) {
         processor.processTables(fg.GetTmcf(), fg.GetCsv(), delimiter, null);
       } else if (fg.GetTmcf() != null) {
         processor.processNodes(Mcf.McfType.TEMPLATE_MCF, fg.GetTmcf());
       }
-    } catch (DCTooManyFailuresException ex) {
+    } catch (DCTooManyFailuresException | InterruptedException ex) {
       // Regardless of the failures, we will dump the logCtx and exit.
       retVal = -1;
     }

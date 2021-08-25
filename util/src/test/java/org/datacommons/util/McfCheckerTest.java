@@ -17,6 +17,7 @@ package org.datacommons.util;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.net.http.HttpClient;
 import java.nio.file.Path;
 import java.util.Set;
 import org.datacommons.proto.Debug;
@@ -26,7 +27,7 @@ import org.junit.Test;
 public class McfCheckerTest {
 
   @Test
-  public void checkBasic() throws IOException {
+  public void checkBasic() throws IOException, InterruptedException {
     // Missing typeOf.
     String mcf = "Node: USState\n" + "name: \"California\"";
     assertTrue(failure(mcf, "Sanity_MissingOrEmpty_typeOf", "'typeOf', node: 'USState'"));
@@ -57,7 +58,7 @@ public class McfCheckerTest {
   }
 
   @Test
-  public void checkDcid() throws IOException {
+  public void checkDcid() throws IOException, InterruptedException {
     // DCID must have exactly one value.
     String mcf = "Node: USState\n" + "typeOf: schema:State\n" + "dcid: geoId/06, geoId/07\n";
     assertTrue(failure(mcf, "Sanity_MultipleDcidValues", "dcid with more than one value"));
@@ -80,7 +81,7 @@ public class McfCheckerTest {
   }
 
   @Test
-  public void checkPopObs() throws IOException {
+  public void checkPopObs() throws IOException, InterruptedException {
     // A valid Pop node.
     String mcf =
         "Node: USState\n"
@@ -156,7 +157,7 @@ public class McfCheckerTest {
   }
 
   @Test
-  public void checkStatVar() throws IOException {
+  public void checkStatVar() throws IOException, InterruptedException {
     // Missing popType
     String mcf =
         "Node: SV\n"
@@ -207,7 +208,7 @@ public class McfCheckerTest {
   }
 
   @Test
-  public void checkSVObs() throws IOException {
+  public void checkSVObs() throws IOException, InterruptedException {
     // A good StatVarObs node with double value.
     String mcf =
         "Node: SFWomenIncome2020\n"
@@ -292,7 +293,7 @@ public class McfCheckerTest {
   }
 
   @Test
-  public void checkSchema() throws IOException {
+  public void checkSchema() throws IOException, InterruptedException {
     // Property names must start with lower case.
     String mcf =
         "Node: dcid:Place\n"
@@ -381,7 +382,7 @@ public class McfCheckerTest {
   }
 
   @Test
-  public void checkTemplate() throws IOException {
+  public void checkTemplate() throws IOException, InterruptedException {
     // Incorrect column name.
     String mcf =
         "Node: E:CityStats->E1\n"
@@ -393,7 +394,8 @@ public class McfCheckerTest {
             mcf,
             "Sanity_TmcfMissingColumn",
             "column: 'StateNam', node: 'E:CityStats->E1'",
-            Set.of("StateId", "StateName")));
+            Set.of("StateId", "StateName"),
+            false));
 
     mcf =
         "Node: E:CityStats->E1\n"
@@ -410,7 +412,8 @@ public class McfCheckerTest {
             mcf,
             "Sanity_TmcfMissingEntityDef",
             "'E:CityStats->E3'",
-            Set.of("StateId", "StateName", "CityName")));
+            Set.of("StateId", "StateName", "CityName"),
+            false));
 
     // A legitimate mapping both with and without the columns.
     mcf =
@@ -423,21 +426,132 @@ public class McfCheckerTest {
             + "typeOf: City\n"
             + "name: C:CityStats->City\n"
             + "containedIn: E:CityStats->E1\n";
-    assertTrue(success(mcf, Set.of("StateId", "StateName", "City")));
+    assertTrue(success(mcf, Set.of("StateId", "StateName", "City"), false));
     assertTrue(success(mcf));
   }
 
+  // NOTE: This test actually makes RPCs to staging mixer.
+  @Test
+  public void checkExistence() throws IOException, InterruptedException {
+    // SVObs with a legitimate StatVar (Count_Person_Male)
+    String mcf =
+        "Node: SVO1\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:Count_Person_Male\n"
+            + "observationAbout: dcid:country/IdontKnow\n"
+            + "observationDate: \"2019\"\n"
+            + "value: 10000\n";
+    assertTrue(success(mcf, null, true));
+
+    // SVObs with a bogus StatVar.
+    mcf =
+        "Node: SVO2\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:Count_Person_NonExistent\n"
+            + "observationAbout: dcid:country/IdontKnow\n"
+            + "observationDate: \"2019\"\n"
+            + "value: 10000\n";
+    assertTrue(
+        failure(
+            mcf,
+            "Existence_MissingValueRef_variableMeasured",
+            "Count_Person_NonExistent",
+            null,
+            true));
+
+    // StatVar with missing popType.
+    mcf =
+        "Node: SV1\n"
+            + "typeOf: dcs:StatisticalVariable\n"
+            + "populationType: dcs:PersonFromMars\n"
+            + "measuredProperty: dcs:count\n"
+            + "statType: dcs:measuredValue\n";
+    assertTrue(
+        failure(mcf, "Existence_MissingValueRef_populationType", "PersonFromMars", null, true));
+
+    // StatVar where mprop is not domain of popType
+    mcf =
+        "Node: SV2\n"
+            + "typeOf: dcs:StatisticalVariable\n"
+            + "populationType: dcs:Person\n"
+            + "measuredProperty: dcs:receipts\n"
+            + "statType: dcs:measuredValue\n";
+    assertTrue(
+        failure(
+            mcf,
+            "Existence_MissingPropertyDomainDefinition",
+            "property: 'receipts', class: 'Person'",
+            null,
+            true));
+
+    // StatVar where constrainrProp doesn't exist.
+    mcf =
+        "Node: SV3\n"
+            + "typeOf: dcs:StatisticalVariable\n"
+            + "populationType: dcs:Person\n"
+            + "measuredProperty: dcs:count\n"
+            + "fooBarRandomProp: dcs:Male\n"
+            + "statType: dcs:measuredValue\n";
+    assertTrue(
+        failure(
+            mcf,
+            "Existence_MissingPropertyRef",
+            "property: 'fooBarRandomProp', node: 'SV3'",
+            null,
+            true));
+
+    // StatVar where constrainrProp's value doesn't exist.
+    mcf =
+        "Node: SV4\n"
+            + "typeOf: dcs:StatisticalVariable\n"
+            + "populationType: dcs:Person\n"
+            + "measuredProperty: dcs:count\n"
+            + "race: dcs:Jupiterian\n"
+            + "statType: dcs:measuredValue\n";
+    assertTrue(
+        failure(
+            mcf,
+            "Existence_MissingValueRef_race",
+            "reference: 'Jupiterian', property: 'race'",
+            null,
+            true));
+
+    // Space in a value should still be handled right.
+    mcf =
+        "Node: SV5\n"
+            + "typeOf: dcs:RaceCodeEnum\n"
+            + "measuredProperty: dcs:count\n"
+            + "race: dcs:Jupiterian Saturnarian\n"
+            + "statType: dcs:measuredValue\n";
+    assertTrue(
+        failure(
+            mcf,
+            "Existence_MissingValueRef_race",
+            "reference: 'Jupiterian Saturnarian', property: 'race'",
+            null,
+            true));
+  }
+
   private static boolean failure(
-      String mcfString, String counter, String message, Set<String> columns) throws IOException {
+      String mcfString,
+      String counter,
+      String message,
+      Set<String> columns,
+      boolean doExistenceCheck)
+      throws IOException, InterruptedException {
     Debug.Log.Builder log = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(log, Path.of("InMemory"));
+    ExistenceChecker ec = null;
+    if (doExistenceCheck) {
+      ec = new ExistenceChecker(HttpClient.newHttpClient(), lw);
+    }
     Mcf.McfGraph graph;
     if (columns != null) {
       graph = McfParser.parseTemplateMcfString(mcfString, lw);
     } else {
       graph = McfParser.parseInstanceMcfString(mcfString, false, lw);
     }
-    if (McfChecker.check(graph, columns, lw)) {
+    if (McfChecker.check(graph, columns, ec, lw)) {
       System.err.println("Check unexpectedly passed for " + mcfString);
       return false;
     }
@@ -445,11 +559,12 @@ public class McfCheckerTest {
   }
 
   private static boolean failure(String mcfString, String counter, String message)
-      throws IOException {
-    return failure(mcfString, counter, message, null);
+      throws IOException, InterruptedException {
+    return failure(mcfString, counter, message, null, false);
   }
 
-  private static boolean success(String mcfString, Set<String> columns) throws IOException {
+  private static boolean success(String mcfString, Set<String> columns, boolean doExistenceCheck)
+      throws IOException, InterruptedException {
     Debug.Log.Builder log = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(log, Path.of("InMemory"));
     Mcf.McfGraph graph;
@@ -458,14 +573,18 @@ public class McfCheckerTest {
     } else {
       graph = McfParser.parseInstanceMcfString(mcfString, false, lw);
     }
-    if (!McfChecker.check(graph, columns, lw)) {
+    ExistenceChecker ec = null;
+    if (doExistenceCheck) {
+      ec = new ExistenceChecker(HttpClient.newHttpClient(), lw);
+    }
+    if (!McfChecker.check(graph, columns, ec, lw)) {
       System.err.println("Check unexpectedly failed for \n" + mcfString + "\n :: \n" + log);
       return false;
     }
     return true;
   }
 
-  private static boolean success(String mcfString) throws IOException {
-    return success(mcfString, null);
+  private static boolean success(String mcfString) throws IOException, InterruptedException {
+    return success(mcfString, null, false);
   }
 }
