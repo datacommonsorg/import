@@ -29,6 +29,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import picocli.CommandLine;
 
+// To add a new test case, add a new directory in resources/org/datacommons/tool/lint. In that new
+// directory, add an input directory and an output directory. In the input directory, put the test
+// files you want to run the lint tool against. In the output directory, put a report.json file with
+// the expected report output.
 public class GenMcfTest {
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
