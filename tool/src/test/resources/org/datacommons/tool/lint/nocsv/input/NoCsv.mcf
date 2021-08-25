@@ -1,0 +1,128 @@
+typeOf: State
+
+Node: dcid:geoId/la
+typeOf: City
+containedIn: 90062
+
+Node: dcid:geoId/CA
+: State
+
+Node: CityStats/E2/2
+typeOf: City
+name: San,Francisco
+containedIn: dcid:geoId/CA
+
+Node: CityStats/E3/2
+typeOf: "Statistical\nPopulation"
+populationType: "Person"
+location: l:CityStats/E2/2
+gender: dcs:Female
+nationality: ""
+age: [20 30 Years]
+
+Node: CityStats/E4/2
+typeOf: Observation
+populationType: Person
+observedNode: l:CityStats/E3/2
+measuredProperty: count
+measuredValue: 10000000.0
+observationDate: 7
+observationPeriod: "P5Y"
+
+Node: CityStats/E4/3
+typeOf: Observation
+populationType: Person
+observedNode: l:CityStats/E3/2
+measuredProperty: count
+measuredValue: one thousand
+observationDate: 2007
+observationPeriod: "5"
+
+Node: CityStats/E4/4
+typeOf: Observation
+populationType: Person
+observedNode: l:CityStats/E3/2
+measuredProperty: count
+observationDate: 2007
+observationPeriod: "5"
+
+Node: CityStats/E5/2
+typeOf: StatisticalPopulation
+populationType: Person
+location: dcid:geoId–SFCounty
+
+Node: USA,Country
+typeOf: schema:Country
+name: "United States Of America"
+dcid: dc/ 2sffw13
+
+Node: dcid:dc/mx44
+typeOf: "City"
+name: Mountain View
+containedInPlace: dc/4fef4e, l:USACountry
+population: 81438
+area: 31.788
+inCounty: true
+
+Node: \"CANCountry\"
+typeOf: schema:Country
+name: "Canada"
+dcid: dc/2312ca,Canada
+location: [LatLong -100 10]
+
+Node: dcid:geoId/sf
+typeOf: City
+location: [LatLong -20 181]
+
+Node: dcid:Count_Death_10To12
+typeOf: dcs:StatisticalVariable
+age: [10 12
+
+Node: dcid:Count_Death_10YearsPlus
+typeOf: dcs:StatisticalVariable
+age: [10]
+populationType: dcs:Person
+measuredProperty: dcs:count
+statType: dcs:MeasuredValue
+
+Node: dcid:Count_Death_5To10
+typeOf: dcs:StatisticalVariable
+age: [5Years 10Years]
+populationType: dcs:Person
+measuredProperty: dcs:count
+statType: dcs:MeasuredValue
+
+Node: dcid:Count_Death_YearsLessThan5
+typeOf: dcs:StatisticalVariable
+age: [years less 5]
+populationType: dcs:Person
+measuredProperty: dcs:count
+statType: dcs:MeasuredValue
+
+Node: dcid:Count_Death_5YearsPlus
+typeOf: dcs:StatisticalVariable
+age: [5 years -]
+populationType: dcs:Person
+measuredProperty: dcs:count
+statType: dcs:MeasuredValue
+
+Node: dcid:Count_Death_15YearsPlus
+typeOf: dcs:StatisticalVariable
+age: [- - 15]
+PopulationType: dcs:Person
+measuredProperty: dcs:count
+statType: dcs:MeasuredValue
+
+Node: dcid:beverageType
+typeOf: dcs:Property
+subClassOf: dcid:substanceType
+name: "Beverage–type"
+label: BeverageType
+domainIncludes:""
+
+Node: dcid:Pop
+typeOf: dcs:Class
+domainIncludes: dcs:PopEnums
+name: "pop"
+
+inCounty: false

@@ -84,6 +84,10 @@ public class FileGroup {
       throw new CommandLine.ParameterException(
           spec.commandLine(), "Please provide one .tmcf file with CSV/TSV files");
     }
-    return new FileGroup(tmcfFiles.get(0), csvFiles, mcfFiles, nTsv);
+    if (tmcfFiles.isEmpty()) {
+      return new FileGroup(null, csvFiles, mcfFiles, nTsv);
+    } else {
+      return new FileGroup(tmcfFiles.get(0), csvFiles, mcfFiles, nTsv);
+    }
   }
 }
