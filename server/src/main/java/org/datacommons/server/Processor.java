@@ -30,7 +30,6 @@ import org.datacommons.util.Vocabulary;
 public class Processor {
 
   private static final Logger LOGGER = Logger.getLogger(Processor.class.getName());
-
   private LogWrapper logCtx;
 
   public Processor(LogWrapper logCtx) {
@@ -38,7 +37,10 @@ public class Processor {
   }
 
   public void processTables(
-      File tmcfFile, List<File> csvFiles, char delimiter, ObservationRepository obsRepo)
+      File tmcfFile,
+      List<File> csvFiles,
+      char delimiter,
+      ObservationRepository observationRepository)
       throws IOException {
     for (File csvFile : csvFiles) {
       TmcfCsvParser parser =
@@ -73,12 +75,12 @@ public class Processor {
             }
           }
         }
-        if (numNodesProcessed == 1000) {
+        if (numNodesProcessed % 1000 == 0) {
           LOGGER.info(String.valueOf(numNodesProcessed));
           break;
         }
       }
-      obsRepo.saveAll(allObservation);
+      observationRepository.saveAll(allObservation);
       LOGGER.info("Added all entries");
     }
   }

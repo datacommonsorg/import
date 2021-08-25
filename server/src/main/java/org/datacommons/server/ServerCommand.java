@@ -44,19 +44,14 @@ public class ServerCommand implements Callable<Integer> {
   private File[] files;
 
   @Spec Model.CommandSpec spec; // injected by picocli
-
-  @Autowired private ObservationRepository obsRepo;
+  @Autowired private ObservationRepository observationRepository;
 
   @Override
-  public Integer call() {
+  public Integer call() throws IOException {
     FileGroup fg = FileGroup.Build(files, spec, logger);
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), new File(".").toPath());
     Processor processor = new Processor(logCtx);
-    try {
-      processor.processTables(fg.GetTmcf(), fg.GetCsv(), ',', obsRepo);
-    } catch (IOException ex) {
-      System.out.printf("Get error %s", ex);
-    }
+    processor.processTables(fg.GetTmcf(), fg.GetCsv(), ',', observationRepository);
     return 0;
   }
 }

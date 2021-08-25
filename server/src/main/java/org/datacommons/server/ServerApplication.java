@@ -27,16 +27,16 @@ import org.springframework.web.bind.annotation.RestController;
 @EnableAutoConfiguration
 @RestController
 public class ServerApplication {
-  @Autowired private ObservationRepository obsRepo;
+  @Autowired private ObservationRepository observationRepository;
 
   public static void main(String[] args) {
     SpringApplication.run(ServerApplication.class, args);
   }
 
   @GetMapping("/stat/series")
-  public List<Observation> hello(
+  public List<Observation> getStatSeries(
       @RequestParam(value = "place") String place,
       @RequestParam(value = "statVar") String statVar) {
-    return obsRepo.findObservationByPlaceAndStatVar(place, statVar);
+    return observationRepository.findObservationByPlaceAndStatVar(place, statVar);
   }
 }
