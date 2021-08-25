@@ -29,6 +29,7 @@ import picocli.CommandLine.Model;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
+// Defines the command line argument and execute startup operations.
 @Component
 @Command(name = "command", mixinStandardHelpOptions = true)
 public class ServerCommand implements Callable<Integer> {

@@ -24,7 +24,7 @@ joining.
   It's useful to create an alias like
 
   ```bash
-  alias dc-import='java -jar<path-to-jar>'
+  alias dc-import='java -jar <path-to-jar>'
   ```
 
   so you can invoke the tool as `dc-import lint`

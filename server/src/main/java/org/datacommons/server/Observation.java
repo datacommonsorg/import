@@ -21,9 +21,12 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import org.hibernate.annotations.GenericGenerator;
 
+// Defines the Observation table for JPA query. This shares columns with the
+// StatVarObservation BigQuery table but does not have exactly the same schema.
+// For example, the stat var observation properties like "scaling factor",
+// "measurement method" would be saved separately to save the space (in memory).
 @Entity(name = "OBSERVATION")
 public class Observation {
-
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
   @GenericGenerator(name = "native", strategy = "native")
@@ -39,8 +42,8 @@ public class Observation {
   @Column(name = "VALUE")
   private String value;
 
-  @Column(name = "VARIABLE")
-  private String variable;
+  @Column(name = "VARIABLE_MEASURED")
+  private String variableMeasured;
 
   public Long getId() {
     return id;
@@ -74,11 +77,11 @@ public class Observation {
     this.value = value;
   }
 
-  public String getVariable() {
-    return variable;
+  public String getVariableMeasured() {
+    return variableMeasured;
   }
 
-  public void setVariable(String variable) {
-    this.variable = variable;
+  public void setVariableMeasured(String variable) {
+    this.variableMeasured = variable;
   }
 }

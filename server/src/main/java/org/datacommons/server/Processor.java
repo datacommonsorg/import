@@ -27,6 +27,7 @@ import org.datacommons.util.McfUtil;
 import org.datacommons.util.TmcfCsvParser;
 import org.datacommons.util.Vocabulary;
 
+// Class to process input files and store the transformed data into storage.
 public class Processor {
 
   private static final Logger LOGGER = Logger.getLogger(Processor.class.getName());
@@ -36,6 +37,8 @@ public class Processor {
     this.logCtx = logCtx;
   }
 
+  // Take a set of tmcf and csv files, parse the nodes and store observations
+  // into the in-memory Observation table.
   public void processTables(
       File tmcfFile,
       List<File> csvFiles,
@@ -47,7 +50,7 @@ public class Processor {
           TmcfCsvParser.init(tmcfFile.getPath(), csvFile.getPath(), delimiter, logCtx);
       Mcf.McfGraph g;
       long numNodesProcessed = 0;
-      List<Observation> allObservation = new ArrayList<Observation>();
+      List<Observation> allObservations = new ArrayList<Observation>();
       while ((g = parser.parseNextRow()) != null) {
         g = McfMutator.mutate(g.toBuilder(), logCtx);
         // This will set counters/messages in logCtx.
@@ -69,18 +72,17 @@ public class Processor {
               tvs = McfUtil.getPropTvs(node, Vocabulary.VALUE);
               o.setValue(tvs.get(0).getValue());
               tvs = McfUtil.getPropTvs(node, Vocabulary.VARIABLE_MEASURED);
-              o.setVariable(tvs.get(0).getValue());
-              allObservation.add(o);
+              o.setVariableMeasured(tvs.get(0).getValue());
+              allObservations.add(o);
               break;
             }
           }
         }
         if (numNodesProcessed % 1000 == 0) {
           LOGGER.info(String.valueOf(numNodesProcessed));
-          break;
         }
       }
-      observationRepository.saveAll(allObservation);
+      observationRepository.saveAll(allObservations);
       LOGGER.info("Added all entries");
     }
   }

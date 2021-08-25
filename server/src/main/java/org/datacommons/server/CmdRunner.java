@@ -18,6 +18,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 
+// Command line runner that is to execute the ServerCommand.
 @Component
 public class CmdRunner implements CommandLineRunner {
 
