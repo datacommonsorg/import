@@ -492,8 +492,7 @@ public class McfParser {
       return results;
     }
     List<String> parts = new ArrayList<>();
-    Map<Character, Character> symbolPairs = Map.of('"', '"');
-    if (!StringUtil.SplitStructuredLineWithEscapes(orig, arg.delimiter, symbolPairs, parts)) {
+    if (!StringUtil.SplitStructuredLineWithEscapes(orig, arg.delimiter, '"', parts)) {
       throw new AssertionError("Failed to split and strip string: " + orig);
     }
     for (String s : parts) {
@@ -501,6 +500,7 @@ public class McfParser {
       // After stripping whitespace some terms could become empty.
       if (arg.includeEmpty || !ss.isEmpty()) {
         if (arg.stripEscapesBeforeQuotes) {
+          // replace instances of \" with just "
           results.add(ss.replaceAll("\\\\\"", "\""));
         } else {
           results.add(ss);

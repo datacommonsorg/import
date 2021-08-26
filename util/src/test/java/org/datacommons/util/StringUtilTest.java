@@ -18,46 +18,27 @@ public class StringUtilTest {
 
     // no symbol pairs, just split across delimiter
     result.clear();
-    assertTrue(
-        StringUtil.SplitStructuredLineWithEscapes(
-            "o ne,two,three", delimiter, symbolPairs, result));
+    assertTrue(StringUtil.SplitStructuredLineWithEscapes("o ne,two,three", delimiter, '"', result));
     assertThat(result).containsExactly("o ne", "two", "three");
 
     // when delimiter within symbol pair, do not split on the delimiter
     result.clear();
     assertTrue(
         StringUtil.SplitStructuredLineWithEscapes(
-            "'one, two', three, \"four, five\"", delimiter, symbolPairs, result));
+            "'one, two', three, \"four, five\"", delimiter, '"', result));
     assertThat(result).containsExactly("'one", " two'", " three", " \"four, five\"");
 
     // escaped values will be returned with escape character
     result.clear();
     assertTrue(
         StringUtil.SplitStructuredLineWithEscapes(
-            "\"{ \\\"type\\\": \\\"feature\\\" }\"", delimiter, symbolPairs, result));
+            "\"{ \\\"type\\\": \\\"feature\\\" }\"", delimiter, '"', result));
     assertThat(result).containsExactly("\"{ \\\"type\\\": \\\"feature\\\" }\"");
 
     // symbol pairs must be closed
     result.clear();
     assertFalse(
         StringUtil.SplitStructuredLineWithEscapes(
-            "\"{ \\\"type\\\": \\\"feature\\\" }", delimiter, symbolPairs, result));
-
-    // multiple symbol pairs
-    result.clear();
-    symbolPairs = Map.of('{', '}', '[', ']');
-    assertTrue(
-        StringUtil.SplitStructuredLineWithEscapes(
-            "\\{item1\\},it\\\\em2,{\\{subitem1\\},sub\\\\item2},item4\\,item5,[5,{6,7}]",
-            delimiter,
-            symbolPairs,
-            result));
-    assertThat(result)
-        .containsExactly(
-            "\\{item1\\}",
-            "it\\\\em2",
-            "{\\{subitem1\\},sub\\\\item2}",
-            "item4\\,item5",
-            "[5,{6,7}]");
+            "\"{ \\\"type\\\": \\\"feature\\\" }", delimiter, '"', result));
   }
 }

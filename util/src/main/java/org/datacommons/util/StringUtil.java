@@ -15,39 +15,39 @@
 package org.datacommons.util;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Stack;
 
 // Common set of utils to handle strings
 public class StringUtil {
 
   // Splits a line using the given delimiter and places the columns into "columns". Delimiters
-  // within symbolPairs will not be split on. Characters can be escaped, but those characters will
-  // be replicated in the output columns rather than being consumed (ie. using \" to escape a double
-  // quote would pass this unchanged).
+  // within an expression (within a pair of expressionSymbol). Characters can be escaped, but those
+  // characters will be replicated in the output columns rather than being consumed (ie. using \" to
+  // escape a double quote would pass this unchanged).
   public static boolean SplitStructuredLineWithEscapes(
-      String line, char delimiter, Map<Character, Character> symbolPairs, List<String> columns) {
-    Stack<Character> expectedToClose = new Stack<>();
+      String line, char delimiter, char expressionSymbol, List<String> columns) {
+    boolean inExpression = false;
     int startIdx = 0;
     boolean inEscape = false;
     for (int i = 0; i < line.length(); i++) {
       char c = line.charAt(i);
       if (inEscape) {
+        // c is an escaped character so don't handle specially below
         inEscape = false;
       } else if (c == '\\') {
+        // next character is going to be an escaped character
         inEscape = true;
-      } else if (expectedToClose.isEmpty() && c == delimiter) {
+      } else if (!inExpression && c == delimiter) {
+        // delimiter outside of expression, so split line here
         columns.add(line.substring(startIdx, i));
         startIdx = i + 1;
-      } else if (!expectedToClose.isEmpty() && c == expectedToClose.peek()) {
-        expectedToClose.pop();
-      } else if (symbolPairs.containsKey(c)) {
-        expectedToClose.push(symbolPairs.get(c));
-      } else if (symbolPairs.containsValue(c)) {
-        return false;
+      } else if (c == expressionSymbol) {
+        // If we're in an expression, close the expression. If we're not in an expression,
+        // open a new expression.
+        inExpression = !inExpression;
       }
     }
     columns.add(line.substring(startIdx));
-    return expectedToClose.empty();
+    // all opened expressions must be closed.
+    return !inExpression;
   }
 }
