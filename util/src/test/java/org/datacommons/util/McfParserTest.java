@@ -61,10 +61,16 @@ public class McfParserTest {
     assertThat(splitAndStripWithQuoteEscape("one,   ,two, \"\" , three", arg, null))
         .containsExactly("one", "", "two", "", "three");
 
-    // Strings that are escaped normally show up without character.
-    // TODO: make this behavior match prod.
+    // Strings that are escaped normally show up with escape character.
     arg = new SplitAndStripArg();
     arg.includeEmpty = false;
+    assertThat(splitAndStripWithQuoteEscape("\"{ \\\"type\\\": \\\"feature\\\" }\"", arg, null))
+        .containsExactly("{ \\\"type\\\": \\\"feature\\\" }");
+
+    // Strings that are escaped when stripping of escaped quotes is requested
+    arg = new SplitAndStripArg();
+    arg.includeEmpty = false;
+    arg.stripEscapesBeforeQuotes = true;
     assertThat(splitAndStripWithQuoteEscape("\"{ \\\"type\\\": \\\"feature\\\" }\"", arg, null))
         .containsExactly("{ \"type\": \"feature\" }");
   }
