@@ -10,3 +10,5 @@ Year,Place_Id,Place_Name,Place_Type,LatLong,SV1,SV2
 2019,123,testPlace,AdministrativeArea1,[LatLong 53W 127N],1,2
 2019,veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcid,testPlace,AdministrativeArea1,[LatLong 53W 127N],1,2
 2019,CA-MN,Manitoba,Province,[Lat Long],1,2
+2019,CA-SK,Saskatchewan,Province,[LatLong 43N 116W],"[5 6]",2
+2019,CA-YU,Yukon,Territory,[LatLong 43S 116E],"\"[5]\"",2

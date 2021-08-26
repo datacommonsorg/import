@@ -7,10 +7,10 @@
     "counters": {
       "Sanity_SpaceInDcid": "1",
       "Sanity_InvalidObsDate": "2",
-      "NumRowSuccesses": "11",
+      "NumRowSuccesses": "13",
       "Sanity_MultipleDcidValues": "1",
-      "NumNodeSuccesses": "15",
-      "NumPVSuccesses": "84",
+      "NumNodeSuccesses": "21",
+      "NumPVSuccesses": "116",
       "Sanity_NonAsciiValueInNonText": "1",
       "StrSplit_EmptyToken_typeOf": "1",
       "Sanity_MissingOrEmpty_typeOf": "1",
@@ -191,7 +191,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "11"
+      "lineNumber": "12"
     },
     "userMessage": "Quantity value must be a number :: value: '[Lat Long]', property: 'location', node: 'dcid:CA-MN'",
     "counterKey": "MCF_QuantityMalformedValue"

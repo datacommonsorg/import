@@ -1,6 +1,6 @@
 {
   "levelSummary": {
-    "LEVEL_ERROR": "50",
+    "LEVEL_ERROR": "51",
     "LEVEL_WARNING": "2"
   },
   "counterSet": {
@@ -30,6 +30,7 @@
       "Sanity_UnexpectedPropInProperty": "1",
       "Sanity_NonAsciiValueInSchema": "1",
       "Sanity_NotInitLower_labelInProperty": "1",
+      "Sanity_EmptySchemaValue": "1",
       "Sanity_UnexpectedPropInClass": "1",
       "Sanity_NotInitUpper_nameInClass": "1",
       "Sanity_MissingOrEmpty_subClassOf": "1",
@@ -266,6 +267,14 @@
     },
     "userMessage": "Found a property reference that does not start with a lower-case :: reference: 'BeverageType', property: 'label, node: 'dcid:beverageType'",
     "counterKey": "Sanity_NotInitLower_labelInProperty"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "116"
+    },
+    "userMessage": "Found empty property value :: property: 'domainIncludes', node 'dcid:beverageType'",
+    "counterKey": "Sanity_EmptySchemaValue"
   }, {
     "level": "LEVEL_ERROR",
     "location": {

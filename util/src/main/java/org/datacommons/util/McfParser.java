@@ -17,14 +17,10 @@ package org.datacommons.util;
 import static org.datacommons.proto.Mcf.ValueType.RESOLVED_REF;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.*;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
@@ -482,53 +478,48 @@ public class McfParser {
     public char delimiter = ',';
     public boolean includeEmpty = false;
     public boolean stripEnclosingQuotes = true;
+    public boolean stripEscapesBeforeQuotes = false;
   }
 
   // NOTE: We do not strip enclosing quotes in this function.
   public static List<String> splitAndStripWithQuoteEscape(
       String orig, SplitAndStripArg arg, LogCb logCb) throws AssertionError {
-    List<String> splits = new ArrayList<>();
-    try {
-      // withIgnoreSurroundingSpaces() is important to treat something like:
-      //    `first, "second, with comma"`
-      // as two fields: 1. `first`, 2. `second, with comma`
-      CSVParser parser =
-          new CSVParser(
-              new StringReader(orig),
-              CSVFormat.DEFAULT
-                  .withDelimiter(arg.delimiter)
-                  .withEscape('\\')
-                  .withIgnoreSurroundingSpaces());
-      List<CSVRecord> records = parser.getRecords();
-      if (records.isEmpty()) {
-        if (logCb != null) {
-          logCb.logError("StrSplit_EmptyToken", "Empty value found");
-        }
-        return splits;
+    List<String> results = new ArrayList<>();
+    if (orig.contains("\n")) {
+      if (logCb != null) {
+        logCb.logError("StrSplit_MultiToken", "Found a new-line in value");
       }
-      if (records.size() != 1) {
-        if (logCb != null) {
-          logCb.logError("StrSplit_MultiToken", "Found a new-line in value");
-        }
-        return splits;
-      }
-      for (String s : records.get(0)) {
-        String ss = arg.stripEnclosingQuotes ? stripEnclosingQuotePair(s.trim()) : s.trim();
-        // After stripping whitespace some terms could become empty.
-        if (arg.includeEmpty || !ss.isEmpty()) {
-          splits.add(ss);
-        }
-      }
-    } catch (IOException ex) {
-      throw new AssertionError("Unexpected CSVParser error while parsing " + orig);
+      return results;
     }
-    return splits;
+    List<String> parts = new ArrayList<>();
+    if (!StringUtil.SplitStructuredLineWithEscapes(orig, arg.delimiter, '"', parts)) {
+      throw new AssertionError("Failed to split and strip string: " + orig);
+    }
+    for (String s : parts) {
+      String ss = arg.stripEnclosingQuotes ? stripEnclosingQuotePair(s.trim()) : s.trim();
+      // After stripping whitespace some terms could become empty.
+      if (arg.includeEmpty || !ss.isEmpty()) {
+        if (arg.stripEscapesBeforeQuotes) {
+          // replace instances of \" with just "
+          results.add(ss.replaceAll("\\\\\"", "\""));
+        } else {
+          results.add(ss);
+        }
+      }
+    }
+    if (results.isEmpty()) {
+      if (logCb != null) {
+        logCb.logError("StrSplit_EmptyToken", "Empty value found");
+      }
+      return results;
+    }
+    return results;
   }
 
   private static String stripEnclosingQuotePair(String val) {
     if (val.length() > 1) {
       if (val.charAt(0) == '"' && val.charAt(val.length() - 1) == '"') {
-        return val.length() == 2 ? "" : val.substring(1, val.length() - 2);
+        return val.length() == 2 ? "" : val.substring(1, val.length() - 1);
       }
     }
     return val;

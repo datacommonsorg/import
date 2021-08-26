@@ -319,7 +319,7 @@ public class TmcfCsvParser {
           ssArg.delimiter = delimiter;
           ssArg.includeEmpty = false;
           ssArg.stripEnclosingQuotes = false;
-          // TODO: set stripEscapesBeforeQuotes
+          ssArg.stripEscapesBeforeQuotes = true;
           String origValue = dataRow.get(columnIndex);
           warnCb.setDetail(LogCb.VALUE_KEY, origValue);
           warnCb.setDetail(LogCb.COLUMN_KEY, column);
