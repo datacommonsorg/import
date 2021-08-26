@@ -17,6 +17,7 @@ package org.datacommons.server;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 import java.io.File;
 import java.io.IOException;
@@ -70,7 +71,7 @@ public class ServerCommand implements Callable<Integer> {
   @Autowired private ObservationRepository observationRepository;
 
   @Override
-  public Integer call() throws IOException, InterruptedException {
+  public Integer call() throws IOException, InterruptedException, StorageException {
     processGcsFiles();
     FileGroup fg = FileGroup.Build(files, spec, logger);
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), new File(".").toPath());
@@ -81,7 +82,7 @@ public class ServerCommand implements Callable<Integer> {
 
   // If input files are from GCS, download the files locally and update
   // file paths.
-  private void processGcsFiles() {
+  private void processGcsFiles() throws StorageException {
     if (project == "" || bucket == "") {
       return;
     }
@@ -89,6 +90,7 @@ public class ServerCommand implements Callable<Integer> {
     File[] newFiles = new File[files.length];
     int i = 0;
     for (File file : files) {
+      logger.info("Reader GCS file {}/{}", bucket, file.getPath());
       Blob blob = storage.get(BlobId.of(bucket, file.getPath()));
       Path localFile = Paths.get(DEST_PATH, file.getName());
       blob.downloadTo(localFile);
