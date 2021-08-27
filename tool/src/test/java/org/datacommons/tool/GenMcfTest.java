@@ -46,8 +46,6 @@ public class GenMcfTest {
     TmcfCsvParser.TEST_mode = true;
 
     String goldenFilesPrefix = System.getProperty("goldenFilesPrefix");
-    goldenFilesPrefix =
-        "/Users/shanth/work/git/import/tool/src/test/resources/org/datacommons" + "/tool";
     Main app = new Main();
     CommandLine cmd = new CommandLine(app);
     File[] testDirectories = new File(resourceFile("genmcf")).listFiles(File::isDirectory);
