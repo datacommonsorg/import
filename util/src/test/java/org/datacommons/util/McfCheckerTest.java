@@ -80,16 +80,16 @@ public class McfCheckerTest {
     mcf = "Node: USState\n" + "typeOf: schema:State\n" + "dcid: \"bio/For Now Allowed\"\n";
     assertTrue(success(mcf));
 
-    String okCharsId = "A_B&C/D.F-G%H)I(J+K";
+    String okCharsId = "A_B&C/D.F-G%H)I(J+K:L";
     mcf = "Node: ID\n" + "typeOf: schema:State\n" + "dcid: \"" + okCharsId + "\"\n";
     assertTrue(success(mcf));
 
-    String bioOnlyBadCharsId = "A*B<C>D]E[F|G:H;I J'K";
+    String bioOnlyBadCharsId = "A*B<C>D]E[F|G;I J'K";
     mcf = "Node: ID\n" + "typeOf: schema:State\n" + "dcid: \"bio/" + bioOnlyBadCharsId + "\"\n";
     assertTrue(success(mcf));
     // Without bio/ prefix, it should fail
     mcf = "Node: ID\n" + "typeOf: schema:State\n" + "dcid: \"" + bioOnlyBadCharsId + "\"\n";
-    assertTrue(failure(mcf, "Sanity_InvalidChars_dcid", "invalid-chars: '*<>][|:; ''"));
+    assertTrue(failure(mcf, "Sanity_InvalidChars_dcid", "invalid-chars: '*<>][|; ''"));
 
     String badCharsId = "A^B#C~D\\E`F";
     for (var id : List.of(badCharsId, "bio/" + badCharsId)) {
