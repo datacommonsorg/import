@@ -17,6 +17,7 @@ package org.datacommons.tool;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.truth.Expect;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -39,6 +40,7 @@ import picocli.CommandLine;
 //
 public class GenMcfTest {
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
+  @Rule public final Expect expect = Expect.create();
 
   @Test
   public void GenMcfTest() throws IOException {
@@ -76,6 +78,7 @@ public class GenMcfTest {
             TestUtil.getOutputFilePath(directory.getPath(), "generated.mcf");
         Path expectedReportPath = TestUtil.getOutputFilePath(directory.getPath(), "report.json");
         TestUtil.assertReportFilesAreSimilar(
+            expect,
             directory,
             TestUtil.readStringFromPath(expectedReportPath),
             TestUtil.readStringFromPath(actualReportPath));

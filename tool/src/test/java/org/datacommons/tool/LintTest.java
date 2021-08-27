@@ -2,6 +2,7 @@ package org.datacommons.tool;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
+import com.google.common.truth.Expect;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,6 +26,7 @@ import picocli.CommandLine;
 // TODO(shanth): Incorporate e2e test-cases for existence checks once this is generalized.
 public class LintTest {
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
+  @Rule public final Expect expect = Expect.create();
 
   @Test
   public void LintTest() throws IOException {
@@ -54,6 +56,7 @@ public class LintTest {
       } else {
         Path expectedReportPath = TestUtil.getOutputFilePath(directory.getPath(), "report.json");
         TestUtil.assertReportFilesAreSimilar(
+            expect,
             directory,
             TestUtil.readStringFromPath(expectedReportPath),
             TestUtil.readStringFromPath(actualReportPath));
