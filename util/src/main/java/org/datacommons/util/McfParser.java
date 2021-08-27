@@ -307,13 +307,16 @@ public class McfParser {
     logCb.setCounterSuffix("");
     for (String field : fields) {
       logCb.setDetail(LogCb.VALUE_KEY, field);
+      McfGraph.TypedValue.Builder newTypedValueBuilder = McfGraph.TypedValue.newBuilder();
       McfGraph.TypedValue newTypedValue =
-          parseTypedValue(graph.getType(), isResolved, "", prop, field, logCb);
+          parseTypedValue(graph.getType(), isResolved, prop, field, newTypedValueBuilder, logCb);
       if (newTypedValue != null) {
         vals.addTypedValues(newTypedValue);
       }
     }
-    pvs.putPvs(prop, vals.build());
+    if (vals.getTypedValuesCount() > 0) {
+      pvs.putPvs(prop, vals.build());
+    }
     graph.putNodes(curEntity, pvs.build());
   }
 
@@ -322,9 +325,12 @@ public class McfParser {
   }
 
   public static McfGraph.TypedValue parseTypedValue(
-      Mcf.McfType mcfType, boolean isResolved, String col, String prop, String val, LogCb logCb) {
-    McfGraph.TypedValue.Builder tval = McfGraph.TypedValue.newBuilder();
-    if (!col.isEmpty()) tval.setColumn(col);
+      Mcf.McfType mcfType,
+      boolean isResolved,
+      String prop,
+      String val,
+      McfGraph.TypedValue.Builder tval,
+      LogCb logCb) {
     if (mcfType == Mcf.McfType.TEMPLATE_MCF) {
       if (prop.equals("C")) {
         logCb.logError(

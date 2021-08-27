@@ -327,9 +327,17 @@ public class TmcfCsvParser {
           List<String> values = McfParser.splitAndStripWithQuoteEscape(origValue, ssArg, warnCb);
           for (String value : values) {
             errCb.setDetail(LogCb.VALUE_KEY, value);
+            Mcf.McfGraph.TypedValue.Builder newTypedValueBuilder =
+                Mcf.McfGraph.TypedValue.newBuilder();
+            newTypedValueBuilder.setColumn(column);
             Mcf.McfGraph.TypedValue newTypedValue =
                 McfParser.parseTypedValue(
-                    Mcf.McfType.INSTANCE_MCF, false, column, currentProp, value, errCb);
+                    Mcf.McfType.INSTANCE_MCF,
+                    false,
+                    currentProp,
+                    value,
+                    newTypedValueBuilder,
+                    errCb);
             if (newTypedValue != null) {
               instanceValues.addTypedValues(newTypedValue);
             }
