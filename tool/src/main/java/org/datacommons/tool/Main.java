@@ -32,6 +32,13 @@ class Main {
       scope = CommandLine.ScopeType.INHERIT)
   public File outputDir;
 
+  @CommandLine.Option(
+      names = {"--verbose"},
+      description = "Print verbose log.",
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT)
+  public boolean verbose;
+
   public static void main(String... args) {
     System.exit(new CommandLine(new Main()).execute(args));
   }

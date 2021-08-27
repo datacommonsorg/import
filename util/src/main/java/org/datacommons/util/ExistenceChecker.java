@@ -13,12 +13,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Mcf;
 
 // This class checks the existence of typically schema-related, nodes or (select types of)
 // triples in the KG or local graph.
 // TODO: Consider changing callers to batch calls.
 public class ExistenceChecker {
+  private static final Logger logger = LogManager.getLogger(ExistenceChecker.class);
   // Use the staging end-point to not impact prod.
   private static final String API_ROOT = "https://staging.api.datacommons.org/node/property-values";
   // For now we only need checks for certain Property/Class props.
@@ -26,6 +29,7 @@ public class ExistenceChecker {
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES, Vocabulary.SUB_CLASS_OF);
   // Useful for mocking.
   private HttpClient httpClient;
+  private boolean verbose;
 
   // This is a combination of local KG data and prior cached checks.
   // Node is just the DCID. Triple is "s,p,o" and the property just includes SCHEMA_PROPERTIES.
@@ -33,9 +37,10 @@ public class ExistenceChecker {
   private Set<String> missingNodesOrTriples; // Absence cache
   private LogWrapper logCtx;
 
-  public ExistenceChecker(HttpClient httpClient, LogWrapper logCtx) {
+  public ExistenceChecker(HttpClient httpClient, boolean verbose, LogWrapper logCtx) {
     this.httpClient = httpClient;
     this.logCtx = logCtx;
+    this.verbose = verbose;
     existingNodesOrTriples = new HashSet<>();
     missingNodesOrTriples = new HashSet<>();
   }
@@ -46,6 +51,12 @@ public class ExistenceChecker {
 
   public boolean checkTriple(String sub, String pred, String obj)
       throws IOException, InterruptedException {
+    if (pred.equals(Vocabulary.DOMAIN_INCLUDES) && (sub.contains("/") || sub.equals("count"))) {
+      // Don't bother with domain checks for schema-less properties.
+      // Measured property 'count' is an aggregate that is not a property of an instance, but
+      // of a set.
+      return true;
+    }
     return checkCommon(sub, pred, obj, makeKey(sub, pred, obj));
   }
 
@@ -67,6 +78,7 @@ public class ExistenceChecker {
       if (missingNodesOrTriples.contains(dcid)) {
         missingNodesOrTriples.remove(dcid);
       }
+      if (verbose) logger.info("Local graph node - " + dcid);
 
       if (!typeOf.equals(Vocabulary.CLASS_TYPE) && !typeOf.equals(Vocabulary.PROPERTY_TYPE)) {
         continue;
@@ -79,6 +91,7 @@ public class ExistenceChecker {
             if (missingNodesOrTriples.contains(key)) {
               missingNodesOrTriples.remove(key);
             }
+            if (verbose) logger.info("Local graph triple - " + key);
           }
         }
       }
@@ -91,9 +104,11 @@ public class ExistenceChecker {
     if (existingNodesOrTriples.contains(key)) return true;
     if (missingNodesOrTriples.contains(key)) return false;
 
+    if (verbose) logger.info("Calling DC for - s:" + sub + ", p:" + pred);
     var dataJson = callDc(sub, pred);
     logCtx.incrementCounterBy("Existence_NumDcCalls", 1);
     if (dataJson == null) {
+      if (verbose) logger.info("DC call failed for - " + sub + ", " + pred);
       // If the DCID is malformed Mixer can return failure.
       return false;
     }
@@ -113,6 +128,7 @@ public class ExistenceChecker {
         if (obj.isEmpty()) {
           // Node existence check case.
           if (nodeJson.getAsJsonArray("out").size() > 0) {
+            if (verbose) logger.info("Found node in DC " + key);
             existingNodesOrTriples.add(key);
             return true;
           }
@@ -120,6 +136,7 @@ public class ExistenceChecker {
           // Triple existence check case.
           for (var objVal : nodeJson.getAsJsonArray("out")) {
             if (objVal.getAsJsonObject().getAsJsonPrimitive("dcid").getAsString().equals(obj)) {
+              if (verbose) logger.info("Found triple in DC " + key);
               existingNodesOrTriples.add(key);
               return true;
             }
@@ -128,6 +145,7 @@ public class ExistenceChecker {
       }
       break;
     }
+    if (verbose) logger.info("Missing in DC " + key);
     missingNodesOrTriples.add(key);
     return false;
   }

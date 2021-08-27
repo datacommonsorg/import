@@ -69,7 +69,7 @@ class Lint implements Callable<Integer> {
       delimiter = fg.GetNumTsv() > 0 ? '\t' : ',';
     }
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
-    Processor processor = new Processor(doExistenceChecks, logCtx);
+    Processor processor = new Processor(doExistenceChecks, parent.verbose, logCtx);
     Integer retVal = 0;
     try {
       // Process all the instance MCF first, so that we can add the nodes for Existence Check.

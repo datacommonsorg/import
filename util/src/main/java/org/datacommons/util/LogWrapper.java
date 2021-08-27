@@ -39,7 +39,7 @@ public class LogWrapper {
   private static final long SECONDS_BETWEEN_STATUS = 30;
   public static final String REPORT_JSON = "report.json";
   public static final int MAX_ERROR_COUNTERS_LIMIT = 50;
-  public static final int MAX_MESSAGES_PER_COUNTER = 10;
+  public static final int MAX_MESSAGES_PER_COUNTER = 30;
 
   private Debug.Log.Builder log;
   private Path logPath;
@@ -97,12 +97,13 @@ public class LogWrapper {
       throws InvalidProtocolBufferException, IOException {
     Instant now = Instant.now();
     if (Duration.between(lastStatusAt, now).getSeconds() >= SECONDS_BETWEEN_STATUS) {
-      logger.info(
-          "Processed {} {} of {};  {}.",
-          count - countAtLastStatus,
-          thing,
-          locationFile,
-          summaryString());
+      String msg;
+      if (locationFile.isEmpty()) {
+        logger.info("{} {} [{}]", count - countAtLastStatus, thing, summaryString());
+      } else {
+        logger.info(
+            "{} {} of {} [{}]", count - countAtLastStatus, thing, locationFile, summaryString());
+      }
       persistLog(true);
       lastStatusAt = now;
       countAtLastStatus = count;
@@ -116,9 +117,9 @@ public class LogWrapper {
     FileUtils.writeStringToFile(logFile, jsonStr, StandardCharsets.UTF_8);
     if (!silent) {
       logger.info(
-          "Failures: {}.  Wrote details to {}",
-          summaryString(),
-          logPath.toAbsolutePath().normalize().toString());
+          "Wrote details to {} [{}]",
+          logPath.toAbsolutePath().normalize().toString(),
+          summaryString());
     }
   }
 

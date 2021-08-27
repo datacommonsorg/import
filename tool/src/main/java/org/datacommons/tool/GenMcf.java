@@ -68,7 +68,7 @@ class GenMcf implements Callable<Integer> {
     BufferedWriter writer = new BufferedWriter(new FileWriter(outPath.toString()));
 
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
-    Processor processor = new Processor(false, logCtx);
+    Processor processor = new Processor(false, parent.verbose, logCtx);
     Integer retVal = 0;
     try {
       processor.processTables(fg.GetTmcf(), fg.GetCsv(), delimiter, writer);
