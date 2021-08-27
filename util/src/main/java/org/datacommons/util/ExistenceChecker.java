@@ -2,6 +2,10 @@ package org.datacommons.util;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Mcf;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -13,9 +17,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Mcf;
 
 // This class checks the existence of typically schema-related, nodes or (select types of)
 // triples in the KG or local graph.
@@ -40,6 +41,7 @@ public class ExistenceChecker {
   public ExistenceChecker(HttpClient httpClient, boolean verbose, LogWrapper logCtx) {
     this.httpClient = httpClient;
     this.logCtx = logCtx;
+    this.verbose = verbose;
     existingNodesOrTriples = new HashSet<>();
     missingNodesOrTriples = new HashSet<>();
   }
@@ -50,6 +52,10 @@ public class ExistenceChecker {
 
   public boolean checkTriple(String sub, String pred, String obj)
       throws IOException, InterruptedException {
+    if (pred.equals(Vocabulary.DOMAIN_INCLUDES) && sub.contains("/")) {
+      // Don't bother with domain checks for schema-less properties.
+      return true;
+    }
     return checkCommon(sub, pred, obj, makeKey(sub, pred, obj));
   }
 
@@ -101,7 +107,7 @@ public class ExistenceChecker {
     var dataJson = callDc(sub, pred);
     logCtx.incrementCounterBy("Existence_NumDcCalls", 1);
     if (dataJson == null) {
-      if (verbose) logger.info("DC call failed for - s:" + sub + ", p:" + pred);
+      if (verbose) logger.info("DC call failed for - " + sub + ", " + pred);
       // If the DCID is malformed Mixer can return failure.
       return false;
     }

@@ -14,16 +14,17 @@
 
 package org.datacommons.tool;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Mcf;
+import org.datacommons.util.*;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Mcf;
-import org.datacommons.util.*;
 
 class DCTooManyFailuresException extends Exception {
   public DCTooManyFailuresException() {}
@@ -56,7 +57,7 @@ public class Processor {
   public void processNodes(Mcf.McfType type, File file)
       throws IOException, DCTooManyFailuresException, InterruptedException {
     long numNodesProcessed = 0;
-    if (verbose) logger.info("Checking {}", file.getName());
+    logger.info("Checking {}", file.getName());
     // TODO: isResolved is more allowing, be stricter.
     logCtx.setLocationFile(file.getName());
     McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
@@ -87,7 +88,7 @@ public class Processor {
       throws IOException, DCTooManyFailuresException, InterruptedException {
     if (verbose) logger.info("TMCF " + tmcfFile.getName());
     for (File csvFile : csvFiles) {
-      if (verbose) logger.info("Checking CSV " + csvFile.getPath());
+      logger.info("Checking CSV " + csvFile.getPath());
       TmcfCsvParser parser =
           TmcfCsvParser.init(tmcfFile.getPath(), csvFile.getPath(), delimiter, logCtx);
       // If there were too many failures when initializing the parser, parser will be null and we
