@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import org.datacommons.util.TmcfCsvParser;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -20,6 +21,7 @@ public class LintTest {
 
   @Test
   public void LintTest() throws IOException {
+    TmcfCsvParser.TEST_mode = true;
     Main app = new Main();
     CommandLine cmd = new CommandLine(app);
     File[] testDirectories = new File(resourceFile("lint")).listFiles(File::isDirectory);
@@ -35,7 +37,7 @@ public class LintTest {
       cmd.execute(args);
       String actualReportString = TestUtil.getStringFromTestFile(testFolder, "report.json");
       String expectedReportString = TestUtil.getStringFromOutputReport(directory.getPath());
-      TestUtil.assertReportFilesAreSimilar(expectedReportString, actualReportString);
+      TestUtil.assertReportFilesAreSimilar(directory, expectedReportString, actualReportString);
     }
   }
 

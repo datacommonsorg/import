@@ -34,10 +34,12 @@ public class McfChecker {
   private final List<String> PROPS_ONLY_IN_PROP =
       List.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES, Vocabulary.SUB_PROPERTY_OF);
   private final List<String> PROPS_ONLY_IN_CLASS = List.of(Vocabulary.SUB_CLASS_OF);
-  private final Set<String> CLASS_REFS_IN_CLASS = Set.of(Vocabulary.DCID, Vocabulary.SUB_CLASS_OF);
+  private final Set<String> CLASS_REFS_IN_CLASS =
+      Set.of(Vocabulary.NAME, Vocabulary.LABEL, Vocabulary.DCID, Vocabulary.SUB_CLASS_OF);
   private final Set<String> CLASS_REFS_IN_PROP =
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES);
-  private final Set<String> PROP_REFS_IN_PROP = Set.of(Vocabulary.DCID, Vocabulary.SUB_PROPERTY_OF);
+  private final Set<String> PROP_REFS_IN_PROP =
+      Set.of(Vocabulary.NAME, Vocabulary.LABEL, Vocabulary.DCID, Vocabulary.SUB_PROPERTY_OF);
 
   // Includes: a-z A-Z 0-9 _ & + - % / . )(
   private final Pattern VALID_DCID_PATTERN = Pattern.compile("^[\\w&/%\\)\\(+\\-\\.]+$");
@@ -447,7 +449,6 @@ public class McfChecker {
         }
         if (tv.getType() == Mcf.ValueType.RESOLVED_REF) {
           if (!checkDcid(tv.getValue(), prop, nodeId, node)) {
-            System.err.println("FAiled for " + tv);
             // Failed. checkDcid would have updated logCtx, pass through...
           } else if (shouldCheckExistence(prop, types)
               && existenceChecker != null

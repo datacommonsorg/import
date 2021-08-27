@@ -14,16 +14,15 @@
 
 package org.datacommons.util;
 
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
-import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
 import java.util.Set;
-
-import static org.junit.Assert.assertTrue;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
+import org.junit.Test;
 
 public class McfCheckerTest {
 
@@ -534,8 +533,7 @@ public class McfCheckerTest {
             + "measuredProperty: dcs:count\n"
             + "race: dcs:Jupiterian Saturnarian\n"
             + "statType: dcs:measuredValue\n";
-    assertTrue(failure(mcf, "Sanity_InvalidChars_race", "invalid-chars: ' '",
-            null, true));
+    assertTrue(failure(mcf, "Sanity_InvalidChars_race", "invalid-chars: ' '", null, true));
   }
 
   private static boolean failure(

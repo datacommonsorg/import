@@ -94,19 +94,6 @@ public class McfUtil {
     return null;
   }
 
-  public static Mcf.McfGraph.TypedValue getPropTv(
-      Mcf.McfGraph.PropertyValues node, String property) {
-    try {
-      var tvs = node.getPvsOrThrow(property).getTypedValuesList();
-      if (!tvs.isEmpty()) {
-        return tvs.get(0);
-      }
-    } catch (IllegalArgumentException ex) {
-      // Not having a value is not an error.
-    }
-    return null;
-  }
-
   public static Mcf.McfGraph.Values newValues(Mcf.ValueType type, String value) {
     Mcf.McfGraph.Values.Builder vals = Mcf.McfGraph.Values.newBuilder();
     Mcf.McfGraph.TypedValue.Builder tv = vals.addTypedValuesBuilder();
@@ -118,7 +105,7 @@ public class McfUtil {
   // Given a list of MCF graphs, merges common nodes and de-duplicates PVs.
   public static Mcf.McfGraph mergeGraphs(List<Mcf.McfGraph> graphs) throws AssertionError {
     if (graphs.isEmpty()) {
-      throw new AssertionError("mergeGraphs called with empty graphs!");
+      return Mcf.McfGraph.newBuilder().build();
     }
 
     // node-id -> {prop -> vals}

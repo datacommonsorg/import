@@ -14,16 +14,15 @@
 
 package org.datacommons.tool;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import org.datacommons.util.TmcfCsvParser;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -38,6 +37,7 @@ public class GenMcfTest {
 
   @Test
   public void GenMcfTest() throws IOException {
+    TmcfCsvParser.TEST_mode = true;
     Main app = new Main();
     CommandLine cmd = new CommandLine(app);
     File[] testDirectories = new File(resourceFile("genmcf")).listFiles(File::isDirectory);
@@ -53,36 +53,19 @@ public class GenMcfTest {
       cmd.execute(args);
       String actualReportString = TestUtil.getStringFromTestFile(testFolder, "report.json");
       String expectedReportString = TestUtil.getStringFromOutputReport(directory.getPath());
-      TestUtil.assertReportFilesAreSimilar(expectedReportString, actualReportString);
-      Path actualGeneratedFilePath = Paths.get(testFolder.getRoot().getPath(), "generated.mcf");
-      Path expectedGeneratedFilePath = Path.of(directory.getPath(), "output", "generated.mcf");
-      assertTrue(areSimilarGeneratedMcf(expectedGeneratedFilePath, actualGeneratedFilePath));
+      TestUtil.assertReportFilesAreSimilar(directory, expectedReportString, actualReportString);
+
+      String actualGeneratedFilePath =
+          Paths.get(testFolder.getRoot().getPath(), "generated.mcf").toString();
+      String expectedGeneratedFilePath =
+          Path.of(directory.getPath(), "output", "generated.mcf").toString();
+      assertEquals(
+          org.datacommons.util.TestUtil.mcfFromFile(expectedGeneratedFilePath),
+          org.datacommons.util.TestUtil.mcfFromFile(actualGeneratedFilePath));
     }
   }
 
   private String resourceFile(String resource) {
     return this.getClass().getResource(resource).getPath();
-  }
-
-  // When testing GeneratedMcf, can't just check against an expected file because When generating
-  // SVO MCF from csv and tmcf, Nodes will be assigned an ID that may not always be the same
-  private boolean areSimilarGeneratedMcf(Path expectedFilePath, Path actualFilePath)
-      throws IOException {
-    Iterator<String> actualFileLines = Files.lines(actualFilePath).iterator();
-    if (!new File(expectedFilePath.toString()).isFile()) {
-      return !actualFileLines.hasNext();
-    }
-    Iterator<String> expectedFileLines = Files.lines(expectedFilePath).iterator();
-    while (expectedFileLines.hasNext() && actualFileLines.hasNext()) {
-      String expectedLine = expectedFileLines.next();
-      String actualLine = actualFileLines.next();
-      if (expectedLine.contains("Node") && !expectedLine.contains("dcid")) {
-        continue;
-      }
-      if (!actualLine.trim().equals(expectedLine.trim())) {
-        return false;
-      }
-    }
-    return true;
   }
 }
