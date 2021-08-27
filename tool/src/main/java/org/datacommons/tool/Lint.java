@@ -49,7 +49,7 @@ class Lint implements Callable<Integer> {
 
   @CommandLine.Option(
       names = {"-e", "--existence_checks"},
-      defaultValue = "false",
+      defaultValue = "true",
       description =
           "Check DCID references to schema nodes against the KG and locally. If set, then "
               + "calls will be made to the Staging API server, and instance MCFs get fully "
