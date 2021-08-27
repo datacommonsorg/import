@@ -72,7 +72,7 @@ public class GenMcfTest {
         Files.copy(actualGeneratedFilePath, goldenGeneratedPath, REPLACE_EXISTING);
         Path goldenReportPath =
             Path.of(goldenFilesPrefix, "genmcf", directory.getName(), "output", "report.json");
-        TestUtil.writeSortedReport(actualReportPath, goldenReportPath);
+        Files.copy(actualReportPath, goldenReportPath, REPLACE_EXISTING);
       } else {
         Path expectedGeneratedFilePath =
             TestUtil.getOutputFilePath(directory.getPath(), "generated.mcf");

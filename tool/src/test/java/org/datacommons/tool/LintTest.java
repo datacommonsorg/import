@@ -1,7 +1,10 @@
 package org.datacommons.tool;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +50,7 @@ public class LintTest {
       if (goldenFilesPrefix != null && !goldenFilesPrefix.isEmpty()) {
         Path goldenPath =
             Path.of(goldenFilesPrefix, "lint", directory.getName(), "output", "report.json");
-        TestUtil.writeSortedReport(actualReportPath, goldenPath);
+        Files.copy(actualReportPath, goldenPath, REPLACE_EXISTING);
       } else {
         Path expectedReportPath = TestUtil.getOutputFilePath(directory.getPath(), "report.json");
         TestUtil.assertReportFilesAreSimilar(

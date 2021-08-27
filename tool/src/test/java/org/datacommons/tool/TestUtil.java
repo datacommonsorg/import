@@ -24,9 +24,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.text.StringEscapeUtils;
 import org.datacommons.proto.Debug;
 import org.junit.rules.TemporaryFolder;
 
@@ -101,23 +103,6 @@ public class TestUtil {
     Debug.Log.Builder logBuilder = Debug.Log.newBuilder();
     JsonFormat.parser().merge(report, logBuilder);
     return logBuilder;
-  }
-
-  public static void writeSortedReport(Path inputPath, Path outputPath) throws IOException {
-    Debug.Log.Builder logBuilder = reportToProto(readStringFromPath(inputPath));
-    List<Debug.Log.Entry> entries = new ArrayList<>(logBuilder.getEntriesList());
-    Collections.sort(
-        entries,
-        new Comparator<Debug.Log.Entry>() {
-          @Override
-          public int compare(Debug.Log.Entry o1, Debug.Log.Entry o2) {
-            return o1.toString().compareTo(o2.toString());
-          }
-        });
-    logBuilder.clearEntries();
-    logBuilder.addAllEntries(entries);
-    String jsonStr = StringEscapeUtils.unescapeJson(JsonFormat.printer().print(logBuilder.build()));
-    FileUtils.writeStringToFile(new File(outputPath.toString()), jsonStr, StandardCharsets.UTF_8);
   }
 
   public static Path getTestFilePath(TemporaryFolder testFolder, String fileName)

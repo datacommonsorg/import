@@ -36,58 +36,18 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "FatalTmcf.tmcf",
+      "lineNumber": "5"
+    },
+    "userMessage": "Malformed line without a colon delimiter :: line: ': dcs:SV1'",
+    "counterKey": "MCF_MalformedColonLessLine"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "FatalTmcf.tmcf",
       "lineNumber": "11"
     },
-    "userMessage": "Found malformed entity name that is not an entity prefix (E:) :: name: '"E:SVTest->E1"'",
+    "userMessage": "Found malformed entity name that is not an entity prefix (E:) :: name: '\"E:SVTest->E1\"'",
     "counterKey": "TMCF_MalformedEntity"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "FatalTmcf.tmcf",
-      "lineNumber": "19"
-    },
-    "userMessage": "Column referred to in TMCF is missing from CSV header :: column: 'dcid1', node: 'E:SVTest->E3'",
-    "counterKey": "Sanity_TmcfMissingColumn"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "FatalTmcf.tmcf",
-      "lineNumber": "19"
-    },
-    "userMessage": "Found dcid with more than one value :: count: 3, node: 'E:SVTest->E3'",
-    "counterKey": "Sanity_MultipleDcidValues"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "FatalTmcf.tmcf",
-      "lineNumber": "19"
-    },
-    "userMessage": "Found property name that does not start with a lower-case :: property: 'C', node: 'E:SVTest->E3'",
-    "counterKey": "Sanity_NotInitLowerPropName"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "FatalTmcf.tmcf",
-      "lineNumber": "19"
-    },
-    "userMessage": "Found property name that does not start with a lower-case :: property: 'Dcid', node: 'E:SVTest->E3'",
-    "counterKey": "Sanity_NotInitLowerPropName"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "FatalTmcf.tmcf",
-      "lineNumber": "19"
-    },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E10', property: 'dcid' node: 'E:SVTest->E3'",
-    "counterKey": "Sanity_TmcfMissingEntityDef"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "FatalTmcf.tmcf",
-      "lineNumber": "19"
-    },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E13', property: 'dcid' node: 'E:SVTest->E3'",
-    "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -124,17 +84,57 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "FatalTmcf.tmcf",
-      "lineNumber": "3"
+      "lineNumber": "34"
     },
-    "userMessage": "Found multiple values for single-value property :: property: 'observationAbout', node: 'E:SVTest->E0'",
-    "counterKey": "Sanity_MultipleVals_observationAbout"
+    "userMessage": "Found malformed Complex value without a closing ] bracket :: value: '[', property: 'age', node: 'E:SVTest->E4'",
+    "counterKey": "MCF_MalformedComplexValue"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "FatalTmcf.tmcf",
-      "lineNumber": "3"
+      "lineNumber": "19"
     },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E30', property: 'observationAbout' node: 'E:SVTest->E0'",
+    "userMessage": "Found property name that does not start with a lower-case :: property: 'C', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_NotInitLowerPropName"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "FatalTmcf.tmcf",
+      "lineNumber": "19"
+    },
+    "userMessage": "Found dcid with more than one value :: count: 3, node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_MultipleDcidValues"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "FatalTmcf.tmcf",
+      "lineNumber": "19"
+    },
+    "userMessage": "Found property name that does not start with a lower-case :: property: 'Dcid', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_NotInitLowerPropName"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "FatalTmcf.tmcf",
+      "lineNumber": "19"
+    },
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E10', property: 'dcid' node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_TmcfMissingEntityDef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "FatalTmcf.tmcf",
+      "lineNumber": "19"
+    },
+    "userMessage": "Column referred to in TMCF is missing from CSV header :: column: 'dcid1', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_TmcfMissingColumn"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "FatalTmcf.tmcf",
+      "lineNumber": "19"
+    },
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E13', property: 'dcid' node: 'E:SVTest->E3'",
     "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
@@ -150,40 +150,24 @@
       "file": "FatalTmcf.tmcf",
       "lineNumber": "32"
     },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E1', property: 'dcid' node: 'E:SVTest->E4'",
-    "counterKey": "Sanity_TmcfMissingEntityDef"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "FatalTmcf.tmcf",
-      "lineNumber": "32"
-    },
     "userMessage": "Value of dcid property must not be an 'E:' reference :: value: 'E:SVTest->E1', node: 'E:SVTest->E4'",
     "counterKey": "Sanity_DcidTableEntity"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "FatalTmcf.tmcf",
-      "lineNumber": "34"
+      "lineNumber": "32"
     },
-    "userMessage": "Found malformed Complex value without a closing ] bracket :: value: '[', property: 'age', node: 'E:SVTest->E4'",
-    "counterKey": "MCF_MalformedComplexValue"
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E1', property: 'dcid' node: 'E:SVTest->E4'",
+    "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "FatalTmcf.tmcf",
-      "lineNumber": "5"
+      "lineNumber": "3"
     },
-    "userMessage": "Malformed line without a colon delimiter :: line: ': dcs:SV1'",
-    "counterKey": "MCF_MalformedColonLessLine"
-  }, {
-    "level": "LEVEL_FATAL",
-    "location": {
-      "file": "FatalTmcf.tmcf",
-      "lineNumber": "0"
-    },
-    "userMessage": "Found fatal sanity error in TMCF; check Sanity_ counter messages :: TMCF-file: FatalTmcf.tmcf",
-    "counterKey": "CSV_TmcfCheckFailure"
+    "userMessage": "Found multiple values for single-value property :: property: 'observationAbout', node: 'E:SVTest->E0'",
+    "counterKey": "Sanity_MultipleVals_observationAbout"
   }, {
     "level": "LEVEL_WARNING",
     "location": {
@@ -192,5 +176,21 @@
     },
     "userMessage": "Found multiple values for single-value property :: property: 'value', node: 'E:SVTest->E0'",
     "counterKey": "Sanity_MultipleVals_value"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "FatalTmcf.tmcf",
+      "lineNumber": "3"
+    },
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E30', property: 'observationAbout' node: 'E:SVTest->E0'",
+    "counterKey": "Sanity_TmcfMissingEntityDef"
+  }, {
+    "level": "LEVEL_FATAL",
+    "location": {
+      "file": "FatalTmcf.tmcf",
+      "lineNumber": "0"
+    },
+    "userMessage": "Found fatal sanity error in TMCF; check Sanity_ counter messages :: TMCF-file: FatalTmcf.tmcf",
+    "counterKey": "CSV_TmcfCheckFailure"
   }]
 }
