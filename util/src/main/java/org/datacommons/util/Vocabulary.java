@@ -165,7 +165,8 @@ public final class Vocabulary {
         || prop.equals(MEASUREMENT_METHOD)
         || prop.equals(MEASUREMENT_DENOMINATOR)
         || prop.equals(MEASUREMENT_QUALIFIER)
-        || prop.equals(STAT_TYPE);
+        || prop.equals(STAT_TYPE)
+        || prop.equals(UNIT);
   }
 
   public static boolean isGlobalReference(String val) {

@@ -19,6 +19,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
@@ -73,11 +74,28 @@ public class McfCheckerTest {
 
     // DCID must not have space.
     mcf = "Node: USState\n" + "typeOf: schema:State\n" + "dcid: \"dc/Not Allowed\"\n";
-    assertTrue(failure(mcf, "Sanity_SpaceInDcid", "whitespace in dcid"));
+    assertTrue(failure(mcf, "Sanity_InvalidChars_dcid", "invalid chars in dcid"));
 
     // Temporarily, bio/ DCIDs can have space.
     mcf = "Node: USState\n" + "typeOf: schema:State\n" + "dcid: \"bio/For Now Allowed\"\n";
     assertTrue(success(mcf));
+
+    String okCharsId = "A_B&C/D.F-G%H)I(J+K";
+    mcf = "Node: ID\n" + "typeOf: schema:State\n" + "dcid: \"" + okCharsId + "\"\n";
+    assertTrue(success(mcf));
+
+    String bioOnlyBadCharsId = "A*B<C>D]E[F|G:H;I J'K";
+    mcf = "Node: ID\n" + "typeOf: schema:State\n" + "dcid: \"bio/" + bioOnlyBadCharsId + "\"\n";
+    assertTrue(success(mcf));
+    // Without bio/ prefix, it should fail
+    mcf = "Node: ID\n" + "typeOf: schema:State\n" + "dcid: \"" + bioOnlyBadCharsId + "\"\n";
+    assertTrue(failure(mcf, "Sanity_InvalidChars_dcid", "invalid-chars: '*<>][|:; ''"));
+
+    String badCharsId = "A^B#C~D\\E`F";
+    for (var id : List.of(badCharsId, "bio/" + badCharsId)) {
+      mcf = "Node: ID\n" + "typeOf: schema:State\n" + "dcid: \"" + id + "\"\n";
+      assertTrue(failure(mcf, "Sanity_InvalidChars_dcid", "invalid-chars: '^#~\\`'"));
+    }
   }
 
   @Test
@@ -325,13 +343,23 @@ public class McfCheckerTest {
 
     // Property types must have lower-case names/IDs.
     mcf =
-        "Node: dcid:age\n"
+        "Node: dcid:Age\n"
             + "typeOf: schema:Property\n"
-            + "name: \"Age\"\n"
+            + "name: \"age\"\n"
             + "domainIncludes: schema:Person\n"
             + "rangeIncludes: schema:Number\n"
             + "description: \"Person Age.\"\n";
-    assertTrue(failure(mcf, "Sanity_NotInitLower_nameInProperty", "Age"));
+    assertTrue(failure(mcf, "Sanity_NotInitLower_dcidInProperty", "Age"));
+
+    // Property types must have names and IDs matching.
+    mcf =
+        "Node: dcid:age\n"
+            + "typeOf: schema:Property\n"
+            + "name: \"aGe\"\n"
+            + "domainIncludes: schema:Person\n"
+            + "rangeIncludes: schema:Number\n"
+            + "description: \"Person Age.\"\n";
+    assertTrue(failure(mcf, "Sanity_DcidNameMismatchInSchema", "aGe"));
 
     // Property types must not have subClassOf.
     mcf =
@@ -426,8 +454,8 @@ public class McfCheckerTest {
             + "typeOf: City\n"
             + "name: C:CityStats->City\n"
             + "containedIn: E:CityStats->E1\n";
-    assertTrue(success(mcf, Set.of("StateId", "StateName", "City"), false));
-    assertTrue(success(mcf));
+    assertTrue(success(mcf, Set.of("StateId", "StateName", "City"), false, true));
+    assertTrue(success(mcf, null, false, true));
   }
 
   // NOTE: This test actually makes RPCs to staging mixer.
@@ -441,7 +469,7 @@ public class McfCheckerTest {
             + "observationAbout: dcid:country/IdontKnow\n"
             + "observationDate: \"2019\"\n"
             + "value: 10000\n";
-    assertTrue(success(mcf, null, true));
+    assertTrue(success(mcf, null, true, false));
 
     // SVObs with a bogus StatVar.
     mcf =
@@ -500,7 +528,7 @@ public class McfCheckerTest {
             null,
             true));
 
-    // StatVar where constrainrProp's value doesn't exist.
+    // StatVar where constraintProp's value doesn't exist.
     mcf =
         "Node: SV4\n"
             + "typeOf: dcs:StatisticalVariable\n"
@@ -516,20 +544,14 @@ public class McfCheckerTest {
             null,
             true));
 
-    // Space in a value should still be handled right.
+    // Space in a value should fail local sanity check.
     mcf =
         "Node: SV5\n"
             + "typeOf: dcs:RaceCodeEnum\n"
             + "measuredProperty: dcs:count\n"
             + "race: dcs:Jupiterian Saturnarian\n"
             + "statType: dcs:measuredValue\n";
-    assertTrue(
-        failure(
-            mcf,
-            "Existence_MissingValueRef_race",
-            "reference: 'Jupiterian Saturnarian', property: 'race'",
-            null,
-            true));
+    assertTrue(failure(mcf, "Sanity_InvalidChars_race", "invalid-chars: ' '", null, true));
   }
 
   private static boolean failure(
@@ -563,12 +585,13 @@ public class McfCheckerTest {
     return failure(mcfString, counter, message, null, false);
   }
 
-  private static boolean success(String mcfString, Set<String> columns, boolean doExistenceCheck)
+  private static boolean success(
+      String mcfString, Set<String> columns, boolean doExistenceCheck, boolean isTemplate)
       throws IOException, InterruptedException {
     Debug.Log.Builder log = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(log, Path.of("InMemory"));
     Mcf.McfGraph graph;
-    if (columns != null) {
+    if (isTemplate) {
       graph = McfParser.parseTemplateMcfString(mcfString, lw);
     } else {
       graph = McfParser.parseInstanceMcfString(mcfString, false, lw);
@@ -585,6 +608,6 @@ public class McfCheckerTest {
   }
 
   private static boolean success(String mcfString) throws IOException, InterruptedException {
-    return success(mcfString, null, false);
+    return success(mcfString, null, false, false);
   }
 }

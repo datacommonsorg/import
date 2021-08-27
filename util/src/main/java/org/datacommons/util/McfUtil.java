@@ -108,7 +108,7 @@ public class McfUtil {
   // Given a list of MCF graphs, merges common nodes and de-duplicates PVs.
   public static Mcf.McfGraph mergeGraphs(List<Mcf.McfGraph> graphs) throws AssertionError {
     if (graphs.isEmpty()) {
-      throw new AssertionError("mergeGraphs called with empty graphs!");
+      return Mcf.McfGraph.newBuilder().build();
     }
 
     // node-id -> {prop -> vals}

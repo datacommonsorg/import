@@ -1,4 +1,4 @@
-Node: SVTest/E0/80541484-a9f6-4950-9acf-9c5e47958a80
+Node: SVTest/E0/2
 observationDate: 2019
 observationAbout: dcid:CA-BC
 variableMeasured: dcid:SV1
@@ -6,7 +6,7 @@ measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
 
-Node: SVTest/E1/80541484-a9f6-4950-9acf-9c5e47958a80
+Node: SVTest/E1/2
 observationDate: 2019
 observationAbout: dcid:CA-BC
 variableMeasured: dcid:SV2
@@ -14,7 +14,7 @@ measurementMethod: dcid:SVTest
 value: 2
 typeOf: dcid:StatVarObservation
 
-Node: SVTest/E0/b1e3ba3f-866f-42e3-9940-4ac05373826f
+Node: SVTest/E0/3
 observationDate: 2019
 observationAbout: dcid:CA-AB
 variableMeasured: dcid:SV1
@@ -22,7 +22,7 @@ measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
 
-Node: SVTest/E1/b1e3ba3f-866f-42e3-9940-4ac05373826f
+Node: SVTest/E1/3
 observationDate: 2019
 observationAbout: dcid:CA-AB
 variableMeasured: dcid:SV2
@@ -30,7 +30,7 @@ measurementMethod: dcid:SVTest
 value: 2
 typeOf: dcid:StatVarObservation
 
-Node: SVTest/E0/5076a445-c80e-4587-834f-ffb83e69c119
+Node: SVTest/E0/4
 observationDate: 2019
 observationAbout: dcid:US-SF
 variableMeasured: dcid:SV1
@@ -38,7 +38,7 @@ measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
 
-Node: SVTest/E1/5076a445-c80e-4587-834f-ffb83e69c119
+Node: SVTest/E1/4
 observationDate: 2019
 observationAbout: dcid:US-SF
 variableMeasured: dcid:SV2
@@ -57,7 +57,7 @@ dcid: "CH-SH"
 name: "Shanghai"
 typeOf: dcid:City
 
-Node: SVTest/E0/69bb3fad-75b6-493e-aea6-d49b626a601a
+Node: SVTest/E0/8
 observationDate: 2019
 observationAbout: dcid:CH-SH
 variableMeasured: dcid:SV1
@@ -65,7 +65,7 @@ measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
 
-Node: SVTest/E1/69bb3fad-75b6-493e-aea6-d49b626a601a
+Node: SVTest/E1/8
 observationDate: 2019
 observationAbout: dcid:CH-SH
 variableMeasured: dcid:SV2
@@ -73,7 +73,7 @@ measurementMethod: dcid:SVTest
 value: 2
 typeOf: dcid:StatVarObservation
 
-Node: SVTest/E0/a547a571-70d1-47bc-b71d-b7ad5bb8dbb2
+Node: SVTest/E0/10
 observationDate: 2019
 observationAbout: dcid:veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcid
 variableMeasured: dcid:SV1
@@ -81,7 +81,7 @@ measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
 
-Node: SVTest/E1/a547a571-70d1-47bc-b71d-b7ad5bb8dbb2
+Node: SVTest/E1/10
 observationDate: 2019
 observationAbout: dcid:veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcid
 variableMeasured: dcid:SV2
@@ -95,7 +95,7 @@ name: "Manitoba"
 location: [Lat Long]
 typeOf: dcid:Province
 
-Node: SVTest/E0/34b6f7f2-a791-4f0f-a39d-f865f10a5e0e
+Node: SVTest/E0/11
 observationDate: 2019
 observationAbout: dcid:CA-MN
 variableMeasured: dcid:SV1
@@ -103,7 +103,7 @@ measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
 
-Node: SVTest/E1/34b6f7f2-a791-4f0f-a39d-f865f10a5e0e
+Node: SVTest/E1/11
 observationDate: 2019
 observationAbout: dcid:CA-MN
 variableMeasured: dcid:SV2
@@ -117,7 +117,7 @@ name: "Saskatchewan"
 location: dcid:latLong/4300000_-11600000
 typeOf: dcid:Province
 
-Node: SVTest/E0/83e82312-f727-4fee-852c-80aab6927acd
+Node: SVTest/E0/12
 observationDate: 2019
 observationAbout: dcid:CA-SK
 variableMeasured: dcid:SV1
@@ -125,7 +125,7 @@ measurementMethod: dcid:SVTest
 value: dcid:65
 typeOf: dcid:StatVarObservation
 
-Node: SVTest/E1/83e82312-f727-4fee-852c-80aab6927acd
+Node: SVTest/E1/12
 observationDate: 2019
 observationAbout: dcid:CA-SK
 variableMeasured: dcid:SV2
@@ -153,7 +153,7 @@ name: "Yukon"
 location: dcid:latLong/-4300000_11600000
 typeOf: dcid:Territory
 
-Node: SVTest/E0/f63ab200-f511-4326-a38a-cf7e354ef307
+Node: SVTest/E0/12
 observationDate: 2019
 observationAbout: dcid:CA-YU
 variableMeasured: dcid:SV1
@@ -161,7 +161,7 @@ measurementMethod: dcid:SVTest
 value: "[5]"
 typeOf: dcid:StatVarObservation
 
-Node: SVTest/E1/f63ab200-f511-4326-a38a-cf7e354ef307
+Node: SVTest/E1/12
 observationDate: 2019
 observationAbout: dcid:CA-YU
 variableMeasured: dcid:SV2
@@ -175,3 +175,4 @@ name: "-43.00000,116.00000"
 typeOf: dcid:GeoCoordinates
 latitude: "43S"
 longitude: "116E"
+
