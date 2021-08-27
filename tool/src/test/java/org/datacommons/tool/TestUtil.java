@@ -42,6 +42,8 @@ public class TestUtil {
     JsonFormat.parser().merge(actual, actualLogBuilder);
     Debug.Log expectedLog = expectedLogBuilder.build();
     Debug.Log actualLog = actualLogBuilder.build();
+    // Compare the maps, printing log messages along the way and assert only at the very end. On
+    // failure, dump the whole report out for easy copy/paste.
     boolean pass = true;
     pass &=
         areMapsEqual(

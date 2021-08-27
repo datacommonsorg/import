@@ -19,6 +19,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
@@ -78,6 +79,23 @@ public class McfCheckerTest {
     // Temporarily, bio/ DCIDs can have space.
     mcf = "Node: USState\n" + "typeOf: schema:State\n" + "dcid: \"bio/For Now Allowed\"\n";
     assertTrue(success(mcf));
+
+    String okCharsId = "A_B&C/D.F-G%H)I(J+K";
+    mcf = "Node: ID\n" + "typeOf: schema:State\n" + "dcid: \"" + okCharsId + "\"\n";
+    assertTrue(success(mcf));
+
+    String bioOnlyBadCharsId = "A*B<C>D]E[F|G:H;I J'K";
+    mcf = "Node: ID\n" + "typeOf: schema:State\n" + "dcid: \"bio/" + bioOnlyBadCharsId + "\"\n";
+    assertTrue(success(mcf));
+    // Without bio/ prefix, it should fail
+    mcf = "Node: ID\n" + "typeOf: schema:State\n" + "dcid: \"" + bioOnlyBadCharsId + "\"\n";
+    assertTrue(failure(mcf, "Sanity_InvalidChars_dcid", "invalid-chars: '*<>][|:; ''"));
+
+    String badCharsId = "A^B#C~D\\E`F";
+    for (var id : List.of(badCharsId, "bio/" + badCharsId)) {
+      mcf = "Node: ID\n" + "typeOf: schema:State\n" + "dcid: \"" + id + "\"\n";
+      assertTrue(failure(mcf, "Sanity_InvalidChars_dcid", "invalid-chars: '^#~\\`'"));
+    }
   }
 
   @Test

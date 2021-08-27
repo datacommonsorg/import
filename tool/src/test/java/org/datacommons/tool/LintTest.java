@@ -21,7 +21,9 @@ public class LintTest {
 
   @Test
   public void LintTest() throws IOException {
+    // Set this so that the generated node IDs are deterministic
     TmcfCsvParser.TEST_mode = true;
+
     Main app = new Main();
     CommandLine cmd = new CommandLine(app);
     File[] testDirectories = new File(resourceFile("lint")).listFiles(File::isDirectory);

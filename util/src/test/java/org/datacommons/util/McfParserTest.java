@@ -18,12 +18,15 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static org.datacommons.util.McfParser.SplitAndStripArg;
 import static org.datacommons.util.McfParser.splitAndStripWithQuoteEscape;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
+import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfType;
 import org.junit.Test;
@@ -73,6 +76,26 @@ public class McfParserTest {
     arg.stripEscapesBeforeQuotes = true;
     assertThat(splitAndStripWithQuoteEscape("\"{ \\\"type\\\": \\\"feature\\\" }\"", arg, null))
         .containsExactly("{ \"type\": \"feature\" }");
+  }
+
+  @Test
+  public void testQuoting() throws IOException, URISyntaxException {
+    Debug.Log.Builder logCtx = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(logCtx, Path.of("InMemory"));
+
+    // Parsing weird double quotes fails.
+    String mcf =
+        "Node: US1\n"
+            + "typeOf: schema:State\n"
+            + "description: \"Odd\"double\"quotes"
+            + "\"fails\"\n";
+    var graph = McfParser.parseInstanceMcfString(mcf, true, lw);
+    assertTrue(TestUtil.checkLog(logCtx.build(), "StrSplit_BadQuotesInToken_description", "US1"));
+
+    // New-line in value.
+    mcf = "Node: US2\n" + "typeOf: schema:State\n" + "description: \"Line with\nnewline\"\n";
+    graph = McfParser.parseInstanceMcfString(mcf, true, lw);
+    assertTrue(TestUtil.checkLog(logCtx.build(), "StrSplit_BadQuotesInToken_description", "US2"));
   }
 
   @Test
