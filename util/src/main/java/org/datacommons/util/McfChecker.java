@@ -41,9 +41,9 @@ public class McfChecker {
   private final Set<String> PROP_REFS_IN_PROP =
       Set.of(Vocabulary.NAME, Vocabulary.LABEL, Vocabulary.DCID, Vocabulary.SUB_PROPERTY_OF);
 
-  // Includes: a-z A-Z 0-9 _ & + - % / . )(
-  private final Pattern VALID_DCID_PATTERN = Pattern.compile("^[\\w&/%\\)\\(+\\-\\.]+$");
-  // Everything in VALID_DCID_PATTERN, and then: ' * >< ][ | : ; <space>
+  // Includes: a-z A-Z 0-9 _ & + - % / . )( :
+  private final Pattern VALID_DCID_PATTERN = Pattern.compile("^[\\w&/%\\)\\(+\\-\\.:]+$");
+  // Everything in VALID_DCID_PATTERN, and then: ' * >< ][ | ; <space>
   // TODO: Drop this after Bio DCIDs are fixed
   private final Pattern VALID_BIO_DCID_PATTERN =
       Pattern.compile("^[\\w&/%\\)\\(+\\-\\.'\\*><\\]\\[|:; ]+$");
