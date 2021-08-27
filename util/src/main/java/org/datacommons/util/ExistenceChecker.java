@@ -104,7 +104,7 @@ public class ExistenceChecker {
     if (existingNodesOrTriples.contains(key)) return true;
     if (missingNodesOrTriples.contains(key)) return false;
 
-    if (verbose) logger.info("Calling DC for - s:" + sub + ", p:" + pred);
+    if (verbose) logger.info("Calling DC for - " + sub + ", " + pred);
     var dataJson = callDc(sub, pred);
     logCtx.incrementCounterBy("Existence_NumDcCalls", 1);
     if (dataJson == null) {
