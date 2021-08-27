@@ -307,8 +307,11 @@ public class McfParser {
     logCb.setCounterSuffix("");
     for (String field : fields) {
       logCb.setDetail(LogCb.VALUE_KEY, field);
-      parseTypedValue(
-          graph.getType(), isResolved, curEntity, prop, field, vals.addTypedValuesBuilder(), logCb);
+      McfGraph.TypedValue newTypedValue =
+          parseTypedValue(graph.getType(), isResolved, "", prop, field, logCb);
+      if (newTypedValue != null) {
+        vals.addTypedValues(newTypedValue);
+      }
     }
     pvs.putPvs(prop, vals.build());
     graph.putNodes(curEntity, pvs.build());
@@ -318,31 +321,27 @@ public class McfParser {
     return new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNum);
   }
 
-  public static void parseTypedValue(
-      Mcf.McfType mcfType,
-      boolean isResolved,
-      String node,
-      String prop,
-      String val,
-      McfGraph.TypedValue.Builder tval,
-      LogCb logCb) {
+  public static McfGraph.TypedValue parseTypedValue(
+      Mcf.McfType mcfType, boolean isResolved, String col, String prop, String val, LogCb logCb) {
+    McfGraph.TypedValue.Builder tval = McfGraph.TypedValue.newBuilder();
+    if (!col.isEmpty()) tval.setColumn(col);
     if (mcfType == Mcf.McfType.TEMPLATE_MCF) {
       if (prop.equals("C")) {
         logCb.logError(
             "TMCF_UnsupportedColumnNameInProperty",
             "TMCF properties cannot refer to CSV columns yet");
-        return;
+        return null;
       }
       SchemaTerm term = parseSchemaTerm(val, logCb);
-      if (term == null) return;
+      if (term == null) return null;
       if (term.type == SchemaTerm.Type.ENTITY) {
         tval.setValue(val);
         tval.setType(Mcf.ValueType.TABLE_ENTITY);
-        return;
+        return tval.build();
       } else if (term.type == SchemaTerm.Type.COLUMN) {
         tval.setValue(val);
         tval.setType(Mcf.ValueType.TABLE_COLUMN);
-        return;
+        return tval.build();
       }
       // Fallthrough...
     }
@@ -358,7 +357,7 @@ public class McfParser {
       if (!expectRef) {
         tval.setValue(val);
         tval.setType(Mcf.ValueType.TEXT);
-        return;
+        return tval.build();
       }
     }
 
@@ -367,11 +366,11 @@ public class McfParser {
         logCb.logError(
             "MCF_MalformedComplexValue",
             "Found malformed Complex value without a closing ] bracket");
-        return;
+        return null;
       }
       tval.setValue(val);
       tval.setType(Mcf.ValueType.COMPLEX_VALUE);
-      return;
+      return tval.build();
     }
 
     int colon = val.indexOf(Vocabulary.REFERENCE_DELIMITER);
@@ -382,17 +381,17 @@ public class McfParser {
         // Strip the prefix and set the value.
         tval.setValue(val.substring(colon + 1));
         tval.setType(RESOLVED_REF);
-        return;
+        return tval.build();
       } else if (Vocabulary.isInternalReference(val)) {
         if (isResolved) {
           logCb.logError(
               "MCF_LocalReferenceInResolvedFile",
               "Found an internal 'l:' reference in resolved entity value");
-          return;
+          return null;
         }
         tval.setValue(val);
         tval.setType(Mcf.ValueType.UNRESOLVED_REF);
-        return;
+        return tval.build();
       }
       // Fallthrough...
     }
@@ -406,14 +405,14 @@ public class McfParser {
       // local refs and accept the MCF without failing.
       tval.setValue(val);
       tval.setType(RESOLVED_REF);
-      return;
+      return tval.build();
     }
 
     if (McfUtil.isNumber(val) || McfUtil.isBool(val)) {
       // This parses to a number or bool.
       tval.setValue(val);
       tval.setType(Mcf.ValueType.NUMBER);
-      return;
+      return tval.build();
     }
 
     // Instead of failing an unquoted value, treat it as a string.
@@ -423,6 +422,7 @@ public class McfParser {
     // instead of failing.
     tval.setValue(val);
     tval.setType(Mcf.ValueType.TEXT);
+    return tval.build();
   }
 
   // Parses a token into a schema term.  This is relevant for values in a template MCF format.
