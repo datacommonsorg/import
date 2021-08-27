@@ -39,7 +39,7 @@ public class LogWrapper {
   private static final long SECONDS_BETWEEN_STATUS = 30;
   public static final String REPORT_JSON = "report.json";
   public static final int MAX_ERROR_COUNTERS_LIMIT = 50;
-  public static final int MAX_MESSAGES_PER_COUNTER = 10;
+  public static final int MAX_MESSAGES_PER_COUNTER = 30;
 
   private Debug.Log.Builder log;
   private Path logPath;
