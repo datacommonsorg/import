@@ -29,7 +29,7 @@ public class ExistenceCheckerTest {
     var mockResp = Mockito.mock(HttpResponse.class);
     when(mockHttp.send(any(), any())).thenReturn(mockResp);
 
-    var checker = new ExistenceChecker(mockHttp, TestUtil.newLogCtx("inmem"));
+    var checker = new ExistenceChecker(mockHttp, false, TestUtil.newLogCtx("inmem"));
 
     // Caching for miss.
     when(mockResp.body()).thenReturn(NONEXISTING_LAT);
@@ -56,7 +56,7 @@ public class ExistenceCheckerTest {
     var mockResp = Mockito.mock(HttpResponse.class);
     when(mockHttp.send(any(), any())).thenReturn(mockResp);
 
-    var checker = new ExistenceChecker(mockHttp, TestUtil.newLogCtx("inmem"));
+    var checker = new ExistenceChecker(mockHttp, false, TestUtil.newLogCtx("inmem"));
 
     when(mockResp.body()).thenReturn(NONEXISTING_LAT);
     assertFalse(checker.checkTriple("latitude", "rangeIncludes", "Place"));
@@ -75,7 +75,8 @@ public class ExistenceCheckerTest {
 
   @Test
   public void endToEnd() throws IOException, InterruptedException {
-    var checker = new ExistenceChecker(HttpClient.newHttpClient(), TestUtil.newLogCtx("inmem"));
+    var checker =
+        new ExistenceChecker(HttpClient.newHttpClient(), false, TestUtil.newLogCtx("inmem"));
     assertTrue(checker.checkNode("gender"));
     assertFalse(checker.checkNode("Nope"));
     assertTrue(checker.checkTriple("gender", "domainIncludes", "Person"));

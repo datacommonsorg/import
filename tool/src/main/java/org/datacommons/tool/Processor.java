@@ -38,15 +38,17 @@ public class Processor {
   private LogWrapper logCtx;
   private ExistenceChecker existenceChecker;
   private List<Mcf.McfGraph> nodesForExistenceCheck;
+  private boolean verbose;
 
   // NOTE: If doExistenceChecks is true, then it is important that the caller perform a
   // checkAllNodes() call *after* all instance MCF files are processed (via processNodes). This is
   // so that the newly added schema, StatVar, etc. are fully known to the Existence Checker first,
   // before existence checks are performed.
-  public Processor(boolean doExistenceChecks, LogWrapper logCtx) {
+  public Processor(boolean doExistenceChecks, boolean verbose, LogWrapper logCtx) {
     this.logCtx = logCtx;
+    this.verbose = verbose;
     if (doExistenceChecks) {
-      existenceChecker = new ExistenceChecker(HttpClient.newHttpClient(), logCtx);
+      existenceChecker = new ExistenceChecker(HttpClient.newHttpClient(), verbose, logCtx);
       nodesForExistenceCheck = new ArrayList<>();
     }
   }
@@ -54,7 +56,7 @@ public class Processor {
   public void processNodes(Mcf.McfType type, File file)
       throws IOException, DCTooManyFailuresException, InterruptedException {
     long numNodesProcessed = 0;
-    logger.debug("Checking {}", file.getName());
+    if (verbose) logger.info("Checking {}", file.getName());
     // TODO: isResolved is more allowing, be stricter.
     logCtx.setLocationFile(file.getName());
     McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
@@ -72,7 +74,7 @@ public class Processor {
       }
 
       numNodesProcessed++;
-      logCtx.provideStatus(numNodesProcessed, "nodes");
+      logCtx.provideStatus(numNodesProcessed, "nodes processed");
       if (logCtx.loggedTooManyFailures()) {
         throw new DCTooManyFailuresException("processNodes encountered too many failures");
       }
@@ -83,9 +85,9 @@ public class Processor {
   public void processTables(
       File tmcfFile, List<File> csvFiles, char delimiter, BufferedWriter writer)
       throws IOException, DCTooManyFailuresException, InterruptedException {
-    logger.debug("TMCF " + tmcfFile.getName());
+    if (verbose) logger.info("TMCF " + tmcfFile.getName());
     for (File csvFile : csvFiles) {
-      logger.debug("Checking CSV " + csvFile.getPath());
+      if (verbose) logger.info("Checking CSV " + csvFile.getPath());
       TmcfCsvParser parser =
           TmcfCsvParser.init(tmcfFile.getPath(), csvFile.getPath(), delimiter, logCtx);
       // If there were too many failures when initializing the parser, parser will be null and we
@@ -110,7 +112,7 @@ public class Processor {
 
         numNodesProcessed += g.getNodesCount();
         numRowsProcessed++;
-        logCtx.provideStatus(numRowsProcessed, "rows");
+        logCtx.provideStatus(numRowsProcessed, "rows processed");
         if (logCtx.loggedTooManyFailures()) {
           throw new DCTooManyFailuresException("processTables encountered too many failures");
         }
@@ -125,8 +127,14 @@ public class Processor {
 
   // Called only when existenceChecker is enabled.
   public void checkAllNodes() throws IOException, InterruptedException, DCTooManyFailuresException {
+    long numNodesChecked = 0;
+    logger.info("Performing existence checks");
+    logCtx.setLocationFile("");
     for (Mcf.McfGraph n : nodesForExistenceCheck) {
       McfChecker.check(n, existenceChecker, logCtx);
+      numNodesChecked += n.getNodesCount();
+      numNodesChecked++;
+      logCtx.provideStatus(numNodesChecked, "nodes checked");
       if (logCtx.loggedTooManyFailures()) {
         throw new DCTooManyFailuresException("checkNodes encountered too many failures");
       }
