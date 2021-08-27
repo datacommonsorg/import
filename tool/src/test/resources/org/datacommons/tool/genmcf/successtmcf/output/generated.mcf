@@ -55,7 +55,6 @@ typeOf: dcid:City
 Node: dcid:CH-SH
 dcid: "CH-SH"
 name: "Shanghai"
-location: 
 typeOf: dcid:City
 
 Node: SVTest/E0/8
