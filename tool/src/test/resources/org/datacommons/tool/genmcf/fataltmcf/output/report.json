@@ -1,6 +1,6 @@
 {
   "levelSummary": {
-    "LEVEL_ERROR": "19",
+    "LEVEL_ERROR": "18",
     "LEVEL_WARNING": "1",
     "LEVEL_FATAL": "1"
   },
@@ -13,8 +13,8 @@
       "TMCF_UnsupportedColumnNameInProperty": "1",
       "MCF_MalformedNodeName": "1",
       "MCF_MalformedComplexValue": "1",
-      "Sanity_NotInitLowerPropName": "2",
       "Sanity_MultipleDcidValues": "1",
+      "Sanity_NotInitLowerPropName": "1",
       "Sanity_TmcfMissingEntityDef": "4",
       "Sanity_TmcfMissingColumn": "1",
       "Sanity_MissingOrEmpty_typeOf": "1",
@@ -94,14 +94,6 @@
       "file": "FatalTmcf.tmcf",
       "lineNumber": "19"
     },
-    "userMessage": "Found property name that does not start with a lower-case :: property: 'C', node: 'E:SVTest->E3'",
-    "counterKey": "Sanity_NotInitLowerPropName"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "FatalTmcf.tmcf",
-      "lineNumber": "19"
-    },
     "userMessage": "Found dcid with more than one value :: count: 3, node: 'E:SVTest->E3'",
     "counterKey": "Sanity_MultipleDcidValues"
   }, {
@@ -118,6 +110,14 @@
       "file": "FatalTmcf.tmcf",
       "lineNumber": "19"
     },
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E13', property: 'dcid' node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_TmcfMissingEntityDef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "FatalTmcf.tmcf",
+      "lineNumber": "19"
+    },
     "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E10', property: 'dcid' node: 'E:SVTest->E3'",
     "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
@@ -128,14 +128,6 @@
     },
     "userMessage": "Column referred to in TMCF is missing from CSV header :: column: 'dcid1', node: 'E:SVTest->E3'",
     "counterKey": "Sanity_TmcfMissingColumn"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "FatalTmcf.tmcf",
-      "lineNumber": "19"
-    },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E13', property: 'dcid' node: 'E:SVTest->E3'",
-    "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
     "location": {

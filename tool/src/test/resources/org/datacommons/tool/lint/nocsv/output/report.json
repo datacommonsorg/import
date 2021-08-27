@@ -1,6 +1,6 @@
 {
   "levelSummary": {
-    "LEVEL_ERROR": "56",
+    "LEVEL_ERROR": "55",
     "LEVEL_WARNING": "2"
   },
   "counterSet": {
@@ -28,7 +28,7 @@
       "MCF_MalformedComplexValueParts": "1",
       "MCF_QuantityMalformedValue": "1",
       "MCF_QuantityRangeMalformedValues": "3",
-      "Sanity_NotInitLowerPropName": "3",
+      "Sanity_NotInitLowerPropName": "2",
       "Sanity_InvalidChars_domainIncludes": "1",
       "Sanity_UnexpectedPropInProperty": "1",
       "Sanity_NonAsciiValueInSchema": "1",
@@ -431,14 +431,6 @@
     },
     "userMessage": "Found malformed Node value with a comma; must be a unary value :: node: 'E:SVTest->E5,E:SVTest->E6'",
     "counterKey": "MCF_MalformedNodeName"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "NoCsv.tmcf",
-      "lineNumber": "19"
-    },
-    "userMessage": "Found property name that does not start with a lower-case :: property: 'C', node: 'E:SVTest->E3'",
-    "counterKey": "Sanity_NotInitLowerPropName"
   }, {
     "level": "LEVEL_ERROR",
     "location": {

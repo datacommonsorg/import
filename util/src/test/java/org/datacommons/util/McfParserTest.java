@@ -17,7 +17,11 @@ package org.datacommons.util;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static org.datacommons.util.McfParser.SplitAndStripArg;
+import static org.datacommons.util.McfParser.parseTypedValue;
 import static org.datacommons.util.McfParser.splitAndStripWithQuoteEscape;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -27,8 +31,10 @@ import java.nio.file.Path;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.datacommons.proto.Debug;
+import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfType;
+import org.datacommons.proto.Mcf.ValueType;
 import org.junit.Test;
 
 public class McfParserTest {
@@ -173,5 +179,84 @@ public class McfParserTest {
   private McfGraph expected(String protoFile) throws IOException {
     return TestUtil.graphFromProto(
         IOUtils.toString(this.getClass().getResourceAsStream(protoFile), StandardCharsets.UTF_8));
+  }
+
+  @Test
+  public void funcParseTypedValue() {
+    McfGraph.TypedValue.Builder expected = McfGraph.TypedValue.newBuilder();
+    String refProp = "unit";
+    String regProp = "testProp";
+
+    expected.setValue("E: Test->E1");
+    expected.setType(ValueType.TABLE_ENTITY);
+    McfGraph.TypedValue.Builder actual =
+        parseTypedValue(McfType.TEMPLATE_MCF, false, regProp, "E: Test->E1", null);
+    assertNotNull(actual);
+    assertEquals(expected.build(), actual.build());
+
+    expected.clear();
+    expected.setValue("C: Test->testCol");
+    expected.setType(ValueType.TABLE_COLUMN);
+    actual = parseTypedValue(McfType.TEMPLATE_MCF, false, regProp, "C: Test->testCol", null);
+    assertNotNull(actual);
+    assertEquals(expected.build(), actual.build());
+
+    expected.clear();
+    expected.setValue("testQuoted");
+    expected.setType(ValueType.TEXT);
+    actual = parseTypedValue(McfType.INSTANCE_MCF, false, regProp, "\"testQuoted\"", null);
+    assertNotNull(actual);
+    assertEquals(expected.build(), actual.build());
+
+    expected.clear();
+    expected.setValue("[1 2]");
+    expected.setType(ValueType.COMPLEX_VALUE);
+    actual = parseTypedValue(McfType.INSTANCE_MCF, false, regProp, "[1 2]", null);
+    assertNotNull(actual);
+    assertEquals(expected.build(), actual.build());
+
+    actual =
+        parseTypedValue(
+            McfType.INSTANCE_MCF,
+            false,
+            regProp,
+            "[",
+            new McfUtil.LogCb(TestUtil.newLogCtx("test"), Level.LEVEL_ERROR, 1));
+    assertNull(actual);
+
+    expected.clear();
+    expected.setValue("Person");
+    expected.setType(ValueType.RESOLVED_REF);
+    actual = parseTypedValue(McfType.INSTANCE_MCF, false, regProp, "dcid:Person", null);
+    assertNotNull(actual);
+    assertEquals(expected.build(), actual.build());
+
+    expected.clear();
+    expected.setValue("l:Person");
+    expected.setType(ValueType.UNRESOLVED_REF);
+    actual = parseTypedValue(McfType.INSTANCE_MCF, false, regProp, "l:Person", null);
+    assertNotNull(actual);
+    assertEquals(expected.build(), actual.build());
+
+    expected.clear();
+    expected.setValue("Person");
+    expected.setType(ValueType.RESOLVED_REF);
+    actual = parseTypedValue(McfType.INSTANCE_MCF, false, refProp, "Person", null);
+    assertNotNull(actual);
+    assertEquals(expected.build(), actual.build());
+
+    expected.clear();
+    expected.setValue("1");
+    expected.setType(ValueType.NUMBER);
+    actual = parseTypedValue(McfType.INSTANCE_MCF, false, regProp, "1", null);
+    assertNotNull(actual);
+    assertEquals(expected.build(), actual.build());
+
+    expected.clear();
+    expected.setValue("testVal");
+    expected.setType(ValueType.TEXT);
+    actual = parseTypedValue(McfType.INSTANCE_MCF, false, regProp, "testVal", null);
+    assertNotNull(actual);
+    assertEquals(expected.build(), actual.build());
   }
 }
