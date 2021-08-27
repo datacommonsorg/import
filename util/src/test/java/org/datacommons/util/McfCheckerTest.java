@@ -565,7 +565,7 @@ public class McfCheckerTest {
     LogWrapper lw = new LogWrapper(log, Path.of("InMemory"));
     ExistenceChecker ec = null;
     if (doExistenceCheck) {
-      ec = new ExistenceChecker(HttpClient.newHttpClient(), lw);
+      ec = new ExistenceChecker(HttpClient.newHttpClient(), false, lw);
     }
     Mcf.McfGraph graph;
     if (columns != null) {
@@ -598,7 +598,7 @@ public class McfCheckerTest {
     }
     ExistenceChecker ec = null;
     if (doExistenceCheck) {
-      ec = new ExistenceChecker(HttpClient.newHttpClient(), lw);
+      ec = new ExistenceChecker(HttpClient.newHttpClient(), false, lw);
     }
     if (!McfChecker.check(graph, columns, ec, lw)) {
       System.err.println("Check unexpectedly failed for \n" + mcfString + "\n :: \n" + log);
