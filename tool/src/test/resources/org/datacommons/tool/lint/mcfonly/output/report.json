@@ -1,6 +1,6 @@
 {
   "levelSummary": {
-    "LEVEL_ERROR": "31",
+    "LEVEL_ERROR": "36",
     "LEVEL_WARNING": "1"
   },
   "counterSet": {
@@ -9,12 +9,14 @@
       "MCF_MalformedColonLessLine": "1",
       "Mutator_MissingTypeOf": "1",
       "Sanity_MissingOrEmpty_typeOf": "1",
+      "Sanity_InvalidChars_typeOf": "1",
       "Sanity_InvalidObsDate": "1",
       "Sanity_NonDoubleObsValue": "1",
       "Sanity_ObsMissingValueProp": "1",
       "MCF_MalformedNodeName": "1",
-      "Sanity_SpaceInDcid": "1",
+      "Sanity_InvalidChars_dcid": "1",
       "Sanity_NonAsciiValueInNonText": "1",
+      "Sanity_InvalidChars_location": "1",
       "MCF_InvalidLatitude": "1",
       "Sanity_MultipleDcidValues": "1",
       "MCF_InvalidLongitude": "1",
@@ -27,10 +29,12 @@
       "MCF_QuantityMalformedValue": "1",
       "MCF_QuantityRangeMalformedValues": "3",
       "Sanity_NotInitLowerPropName": "1",
+      "Sanity_InvalidChars_domainIncludes": "1",
       "Sanity_UnexpectedPropInProperty": "1",
       "Sanity_NonAsciiValueInSchema": "1",
       "Sanity_NotInitLower_labelInProperty": "1",
       "Sanity_EmptySchemaValue": "1",
+      "Sanity_DcidNameMismatchInSchema": "2",
       "Sanity_UnexpectedPropInClass": "1",
       "Sanity_NotInitUpper_nameInClass": "1",
       "Sanity_MissingOrEmpty_subClassOf": "1"
@@ -72,6 +76,14 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "McfOnly.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Found invalid chars in dcid value :: value: 'Statistical\nPopulation', invalid-chars: '\', property: 'typeOf', node: 'CityStats/E3/2'",
+    "counterKey": "Sanity_InvalidChars_typeOf"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
       "lineNumber": "23"
     },
     "userMessage": "Found a non-ISO8601 compliant date value :: value: '7', property: 'observationDate', node: 'CityStats/E4/2'",
@@ -106,8 +118,8 @@
       "file": "McfOnly.mcf",
       "lineNumber": "49"
     },
-    "userMessage": "Found a whitespace in dcid value :: value: 'dc/ 2sffw13', node: 'CityStats/E5/2'",
-    "counterKey": "Sanity_SpaceInDcid"
+    "userMessage": "Found invalid chars in dcid value :: value: 'dc/ 2sffw13', invalid-chars: ' ', property: 'dcid', node: 'CityStats/E5/2'",
+    "counterKey": "Sanity_InvalidChars_dcid"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -116,6 +128,14 @@
     },
     "userMessage": "Found non-ascii characters in a value that is not text :: value: 'geoId–SFCounty', type: 'RESOLVED_REF', property: 'location', node: 'CityStats/E5/2'",
     "counterKey": "Sanity_NonAsciiValueInNonText"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "49"
+    },
+    "userMessage": "Found invalid chars in dcid value :: value: 'geoId–SFCounty', invalid-chars: '–', property: 'location', node: 'CityStats/E5/2'",
+    "counterKey": "Sanity_InvalidChars_location"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -242,6 +262,14 @@
       "file": "McfOnly.mcf",
       "lineNumber": "116"
     },
+    "userMessage": "Found invalid chars in dcid value :: value: '', invalid-chars: '', property: 'domainIncludes', node: 'dcid:beverageType'",
+    "counterKey": "Sanity_InvalidChars_domainIncludes"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "116"
+    },
     "userMessage": "Unexpected property in Property node :: property: 'subClassOf', node: 'dcid:beverageType'",
     "counterKey": "Sanity_UnexpectedPropInProperty"
   }, {
@@ -272,6 +300,14 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "McfOnly.mcf",
+      "lineNumber": "116"
+    },
+    "userMessage": "Schema node with dcid/name mismatch :: name: 'Beverage–type', dcid: 'beverageType', node: 'dcid:beverageType'",
+    "counterKey": "Sanity_DcidNameMismatchInSchema"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
       "lineNumber": "123"
     },
     "userMessage": "Unexpected property in Class node :: property: 'domainIncludes', node: 'dcid:Pop'",
@@ -284,6 +320,14 @@
     },
     "userMessage": "Found a class reference that does not start with an upper-case :: reference: 'pop', property: 'name, node: 'dcid:Pop'",
     "counterKey": "Sanity_NotInitUpper_nameInClass"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "123"
+    },
+    "userMessage": "Schema node with dcid/name mismatch :: name: 'pop', dcid: 'Pop', node: 'dcid:Pop'",
+    "counterKey": "Sanity_DcidNameMismatchInSchema"
   }, {
     "level": "LEVEL_ERROR",
     "location": {

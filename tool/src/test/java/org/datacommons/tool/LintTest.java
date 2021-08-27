@@ -1,10 +1,15 @@
 package org.datacommons.tool;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
+import com.google.common.truth.Expect;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import org.datacommons.util.TmcfCsvParser;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -14,16 +19,26 @@ import picocli.CommandLine;
 // directory, add an input directory and an output directory. In the input directory, put the test
 // files you want to run the lint tool against. In the output directory, put a report.json file with
 // the expected report output.
+//
+// These tests can be run in a mode to produce golden files, as below:
+//    mvn -DgoldenFilesPrefix=$PWD/tool/src/test/resources/org/datacommons/tool test
+//
 // TODO(shanth): Incorporate e2e test-cases for existence checks once this is generalized.
 public class LintTest {
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
+  @Rule public final Expect expect = Expect.create();
 
   @Test
   public void LintTest() throws IOException {
+    // Set this so that the generated node IDs are deterministic
+    TmcfCsvParser.TEST_mode = true;
+
+    String goldenFilesPrefix = System.getProperty("goldenFilesPrefix");
     Main app = new Main();
     CommandLine cmd = new CommandLine(app);
     File[] testDirectories = new File(resourceFile("lint")).listFiles(File::isDirectory);
     for (File directory : testDirectories) {
+      System.err.println("Processing " + directory.getName());
       List<String> argsList = new ArrayList<>();
       argsList.add("lint");
       File[] inputFiles = new File(Path.of(directory.getPath(), "input").toString()).listFiles();
@@ -33,9 +48,19 @@ public class LintTest {
       argsList.add("--output-dir=" + testFolder.getRoot().getPath());
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
-      String actualReportString = TestUtil.getStringFromTestFile(testFolder, "report.json");
-      String expectedReportString = TestUtil.getStringFromOutputReport(directory.getPath());
-      TestUtil.assertReportFilesAreSimilar(expectedReportString, actualReportString);
+      Path actualReportPath = TestUtil.getTestFilePath(testFolder, "report.json");
+      if (goldenFilesPrefix != null && !goldenFilesPrefix.isEmpty()) {
+        Path goldenPath =
+            Path.of(goldenFilesPrefix, "lint", directory.getName(), "output", "report.json");
+        Files.copy(actualReportPath, goldenPath, REPLACE_EXISTING);
+      } else {
+        Path expectedReportPath = TestUtil.getOutputFilePath(directory.getPath(), "report.json");
+        TestUtil.assertReportFilesAreSimilar(
+            expect,
+            directory,
+            TestUtil.readStringFromPath(expectedReportPath),
+            TestUtil.readStringFromPath(actualReportPath));
+      }
     }
   }
 

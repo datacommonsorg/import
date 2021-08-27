@@ -493,7 +493,11 @@ public class McfParser {
     }
     List<String> parts = new ArrayList<>();
     if (!StringUtil.SplitStructuredLineWithEscapes(orig, arg.delimiter, '"', parts)) {
-      throw new AssertionError("Failed to split and strip string: " + orig);
+      if (logCb != null) {
+        logCb.logError(
+            "StrSplit_BadQuotesInToken", "Found token with incorrectly double-quoted value");
+      }
+      return results;
     }
     for (String s : parts) {
       String ss = arg.stripEnclosingQuotes ? stripEnclosingQuotePair(s.trim()) : s.trim();
