@@ -307,11 +307,10 @@ public class McfParser {
     logCb.setCounterSuffix("");
     for (String field : fields) {
       logCb.setDetail(LogCb.VALUE_KEY, field);
-      McfGraph.TypedValue.Builder newTypedValueBuilder = McfGraph.TypedValue.newBuilder();
-      McfGraph.TypedValue newTypedValue =
-          parseTypedValue(graph.getType(), isResolved, prop, field, newTypedValueBuilder, logCb);
+      McfGraph.TypedValue.Builder newTypedValue =
+          parseTypedValue(graph.getType(), isResolved, prop, field, logCb);
       if (newTypedValue != null) {
-        vals.addTypedValues(newTypedValue);
+        vals.addTypedValues(newTypedValue.build());
       }
     }
     if (vals.getTypedValuesCount() > 0) {
@@ -324,13 +323,9 @@ public class McfParser {
     return new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNum);
   }
 
-  public static McfGraph.TypedValue parseTypedValue(
-      Mcf.McfType mcfType,
-      boolean isResolved,
-      String prop,
-      String val,
-      McfGraph.TypedValue.Builder tval,
-      LogCb logCb) {
+  public static McfGraph.TypedValue.Builder parseTypedValue(
+      Mcf.McfType mcfType, boolean isResolved, String prop, String val, LogCb logCb) {
+    McfGraph.TypedValue.Builder tval = McfGraph.TypedValue.newBuilder();
     if (mcfType == Mcf.McfType.TEMPLATE_MCF) {
       if (prop.equals("C")) {
         logCb.logError(
@@ -343,11 +338,11 @@ public class McfParser {
       if (term.type == SchemaTerm.Type.ENTITY) {
         tval.setValue(val);
         tval.setType(Mcf.ValueType.TABLE_ENTITY);
-        return tval.build();
+        return tval;
       } else if (term.type == SchemaTerm.Type.COLUMN) {
         tval.setValue(val);
         tval.setType(Mcf.ValueType.TABLE_COLUMN);
-        return tval.build();
+        return tval;
       }
       // Fallthrough...
     }
@@ -363,7 +358,7 @@ public class McfParser {
       if (!expectRef) {
         tval.setValue(val);
         tval.setType(Mcf.ValueType.TEXT);
-        return tval.build();
+        return tval;
       }
     }
 
@@ -376,7 +371,7 @@ public class McfParser {
       }
       tval.setValue(val);
       tval.setType(Mcf.ValueType.COMPLEX_VALUE);
-      return tval.build();
+      return tval;
     }
 
     int colon = val.indexOf(Vocabulary.REFERENCE_DELIMITER);
@@ -387,7 +382,7 @@ public class McfParser {
         // Strip the prefix and set the value.
         tval.setValue(val.substring(colon + 1));
         tval.setType(RESOLVED_REF);
-        return tval.build();
+        return tval;
       } else if (Vocabulary.isInternalReference(val)) {
         if (isResolved) {
           logCb.logError(
@@ -397,7 +392,7 @@ public class McfParser {
         }
         tval.setValue(val);
         tval.setType(Mcf.ValueType.UNRESOLVED_REF);
-        return tval.build();
+        return tval;
       }
       // Fallthrough...
     }
@@ -411,14 +406,14 @@ public class McfParser {
       // local refs and accept the MCF without failing.
       tval.setValue(val);
       tval.setType(RESOLVED_REF);
-      return tval.build();
+      return tval;
     }
 
     if (McfUtil.isNumber(val) || McfUtil.isBool(val)) {
       // This parses to a number or bool.
       tval.setValue(val);
       tval.setType(Mcf.ValueType.NUMBER);
-      return tval.build();
+      return tval;
     }
 
     // Instead of failing an unquoted value, treat it as a string.
@@ -428,7 +423,7 @@ public class McfParser {
     // instead of failing.
     tval.setValue(val);
     tval.setType(Mcf.ValueType.TEXT);
-    return tval.build();
+    return tval;
   }
 
   // Parses a token into a schema term.  This is relevant for values in a template MCF format.
