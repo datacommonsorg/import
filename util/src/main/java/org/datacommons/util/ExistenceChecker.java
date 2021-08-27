@@ -51,8 +51,10 @@ public class ExistenceChecker {
 
   public boolean checkTriple(String sub, String pred, String obj)
       throws IOException, InterruptedException {
-    if (pred.equals(Vocabulary.DOMAIN_INCLUDES) && sub.contains("/")) {
+    if (pred.equals(Vocabulary.DOMAIN_INCLUDES) && (sub.contains("/") || sub.equals("count"))) {
       // Don't bother with domain checks for schema-less properties.
+      // Measured property 'count' is an aggregate that is not a property of an instance, but
+      // of a set.
       return true;
     }
     return checkCommon(sub, pred, obj, makeKey(sub, pred, obj));
