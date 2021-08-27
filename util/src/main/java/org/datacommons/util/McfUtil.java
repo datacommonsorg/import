@@ -37,10 +37,13 @@ public class McfUtil {
         if (pv.getValue().getTypedValuesCount() == 0) continue;
         List<String> vals = new ArrayList<>();
         for (Mcf.McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
-          vals.add(getValue(tv));
+          String value = getValue(tv);
+          if (!value.isEmpty()) vals.add(value);
         }
         if (sort) Collections.sort(vals);
-        lines.add(pv.getKey() + ": " + String.join(", ", vals) + "\n");
+        if (!vals.isEmpty()) {
+          lines.add(pv.getKey() + ": " + String.join(", ", vals) + "\n");
+        }
       }
       if (sort) Collections.sort(lines);
       result.append(String.join("", lines));
