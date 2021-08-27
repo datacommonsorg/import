@@ -52,18 +52,13 @@ public class ServerCommand implements Callable<Integer> {
               + "Valid extensions include .tmcf for Template MCF, "
               + ".csv for tabular text files delimited by comma (overridden with -d), and .tsv "
               + "for tab-delimited tabular files."
-              + "The files are GCP object names when --bucket, --project are specified."))
+              + "The files are GCP object names when --bucket are specified."))
   private File[] files;
 
   @Option(
       names = {"-b", "--bucket"},
       description = "GCS bucket to hold the tmcf and csv/tsv files ")
   private String bucket;
-
-  @Option(
-      names = {"-p", "--project"},
-      description = "GCS project of the GCS bucket.")
-  private String project;
 
   // injected by picocli
   @Spec Model.CommandSpec spec;
@@ -83,14 +78,14 @@ public class ServerCommand implements Callable<Integer> {
   // If input files are from GCS, download the files locally and update
   // file paths.
   private void processGcsFiles() throws StorageException {
-    if (project == "" || bucket == "") {
+    if (bucket == "") {
       return;
     }
-    Storage storage = StorageOptions.newBuilder().setProjectId(project).build().getService();
+    Storage storage = StorageOptions.newBuilder().build().getService();
     File[] newFiles = new File[files.length];
     int i = 0;
     for (File file : files) {
-      logger.info("Reader GCS file {}/{}", bucket, file.getPath());
+      logger.info("Reading GCS file {}/{} ...", bucket, file.getPath());
       Blob blob = storage.get(BlobId.of(bucket, file.getPath()));
       Path localFile = Paths.get(DEST_PATH, file.getName());
       blob.downloadTo(localFile);
