@@ -17,17 +17,16 @@ package org.datacommons.tool;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.datacommons.proto.Debug;
 import org.junit.rules.TemporaryFolder;
 
@@ -36,14 +35,9 @@ public class TestUtil {
   public static void assertReportFilesAreSimilar(File directory, String expected, String actual)
       throws IOException {
     String testCase = directory.getName();
-    Debug.Log.Builder expectedLogBuilder = Debug.Log.newBuilder();
-    Debug.Log.Builder actualLogBuilder = Debug.Log.newBuilder();
-    JsonFormat.parser().merge(expected, expectedLogBuilder);
-    JsonFormat.parser().merge(actual, actualLogBuilder);
-    Debug.Log expectedLog = expectedLogBuilder.build();
-    Debug.Log actualLog = actualLogBuilder.build();
-    // Compare the maps, printing log messages along the way and assert only at the very end. On
-    // failure, dump the whole report out for easy copy/paste.
+    Debug.Log expectedLog = reportToProto(expected).build();
+    Debug.Log actualLog = reportToProto(actual).build();
+    // Compare the maps, printing log messages along the way and assert only at the very end.
     boolean pass = true;
     pass &=
         areMapsEqual(
@@ -59,9 +53,6 @@ public class TestUtil {
             actualLog.getLevelSummaryMap());
     pass &= actualLog.getEntriesList().containsAll(expectedLog.getEntriesList());
     pass &= expectedLog.getEntriesList().containsAll(actualLog.getEntriesList());
-    if (!pass) {
-      System.err.println("ACTUAL REPORT for " + testCase + " :: \n\n" + actual);
-    }
     assertThat(actualLog).ignoringRepeatedFieldOrder().isEqualTo(expectedLog);
     assertTrue(pass);
   }
@@ -87,7 +78,7 @@ public class TestUtil {
         equal = false;
         System.err.println(mapType + " actual report is missing the key: " + key);
       }
-      if (expected.get(key) != actual.get(key)) {
+      if (!expected.get(key).equals(actual.get(key))) {
         equal = false;
         System.err.println(
             testCase
@@ -105,14 +96,42 @@ public class TestUtil {
     return equal;
   }
 
-  public static String getStringFromTestFile(TemporaryFolder testFolder, String fileName)
-      throws IOException {
-    File file = new File(Paths.get(testFolder.getRoot().getPath(), fileName).toString());
-    return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+  private static Debug.Log.Builder reportToProto(String report)
+      throws InvalidProtocolBufferException {
+    Debug.Log.Builder logBuilder = Debug.Log.newBuilder();
+    JsonFormat.parser().merge(report, logBuilder);
+    return logBuilder;
   }
 
-  public static String getStringFromOutputReport(String parentDirectoryPath) throws IOException {
-    File file = new File(Path.of(parentDirectoryPath, "output", "report.json").toString());
+  public static void writeSortedReport(Path inputPath, Path outputPath) throws IOException {
+    Debug.Log.Builder logBuilder = reportToProto(readStringFromPath(inputPath));
+    List<Debug.Log.Entry> entries = new ArrayList<>(logBuilder.getEntriesList());
+    Collections.sort(
+        entries,
+        new Comparator<Debug.Log.Entry>() {
+          @Override
+          public int compare(Debug.Log.Entry o1, Debug.Log.Entry o2) {
+            return o1.toString().compareTo(o2.toString());
+          }
+        });
+    logBuilder.clearEntries();
+    logBuilder.addAllEntries(entries);
+    String jsonStr = StringEscapeUtils.unescapeJson(JsonFormat.printer().print(logBuilder.build()));
+    FileUtils.writeStringToFile(new File(outputPath.toString()), jsonStr, StandardCharsets.UTF_8);
+  }
+
+  public static Path getTestFilePath(TemporaryFolder testFolder, String fileName)
+      throws IOException {
+    return Paths.get(testFolder.getRoot().getPath(), fileName);
+  }
+
+  public static Path getOutputFilePath(String parentDirectoryPath, String fileName)
+      throws IOException {
+    return Path.of(parentDirectoryPath, "output", fileName);
+  }
+
+  public static String readStringFromPath(Path filePath) throws IOException {
+    File file = new File(filePath.toString());
     return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
   }
 }
