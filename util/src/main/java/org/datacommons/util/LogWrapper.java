@@ -16,6 +16,12 @@ package org.datacommons.util;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.text.StringEscapeUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Debug;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,11 +32,6 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.text.StringEscapeUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
 
 // The class that provides logging functionality.
 public class LogWrapper {
@@ -97,12 +98,13 @@ public class LogWrapper {
       throws InvalidProtocolBufferException, IOException {
     Instant now = Instant.now();
     if (Duration.between(lastStatusAt, now).getSeconds() >= SECONDS_BETWEEN_STATUS) {
-      logger.info(
-          "Processed {} {} of {};  {}.",
-          count - countAtLastStatus,
-          thing,
-          locationFile,
-          summaryString());
+      String msg;
+      if (locationFile.isEmpty()) {
+        logger.info("{} {} [{}]", count - countAtLastStatus, thing, summaryString());
+      } else {
+        logger.info(
+            "{} {} of {} [{}]", count - countAtLastStatus, thing, locationFile, summaryString());
+      }
       persistLog(true);
       lastStatusAt = now;
       countAtLastStatus = count;
@@ -116,9 +118,9 @@ public class LogWrapper {
     FileUtils.writeStringToFile(logFile, jsonStr, StandardCharsets.UTF_8);
     if (!silent) {
       logger.info(
-          "Failures: {}.  Wrote details to {}",
-          summaryString(),
-          logPath.toAbsolutePath().normalize().toString());
+          "Wrote details to {} [{}]",
+          logPath.toAbsolutePath().normalize().toString(),
+          summaryString());
     }
   }
 
