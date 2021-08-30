@@ -1,17 +1,19 @@
 {
   "levelSummary": {
-    "LEVEL_ERROR": "17",
+    "LEVEL_ERROR": "20",
     "LEVEL_WARNING": "4"
   },
   "counterSet": {
     "counters": {
-      "Sanity_SpaceInDcid": "1",
+      "Sanity_InvalidChars_dcid": "1",
+      "Sanity_InvalidChars_observationAbout": "2",
       "Sanity_InvalidObsDate": "2",
-      "NumRowSuccesses": "11",
+      "NumRowSuccesses": "13",
       "Sanity_MultipleDcidValues": "1",
-      "NumNodeSuccesses": "15",
-      "NumPVSuccesses": "84",
+      "NumNodeSuccesses": "21",
+      "NumPVSuccesses": "115",
       "Sanity_NonAsciiValueInNonText": "1",
+      "Sanity_InvalidChars_typeOf": "1",
       "StrSplit_EmptyToken_typeOf": "1",
       "Sanity_MissingOrEmpty_typeOf": "1",
       "CSV_InconsistentRows": "2",
@@ -33,8 +35,16 @@
       "file": "SuccessTmcf.csv",
       "lineNumber": "2"
     },
-    "userMessage": "Found a whitespace in dcid value :: value: 'US- CA', node: 'E:SVTest->E3'",
-    "counterKey": "Sanity_SpaceInDcid"
+    "userMessage": "Found invalid chars in dcid value :: value: 'US- CA', invalid-chars: ' ', property: 'dcid', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_InvalidChars_dcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "2"
+    },
+    "userMessage": "Found invalid chars in dcid value :: value: 'US- CA', invalid-chars: ' ', property: 'observationAbout', node: 'E:SVTest->E0'",
+    "counterKey": "Sanity_InvalidChars_observationAbout"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -43,6 +53,14 @@
     },
     "userMessage": "Found a non-ISO8601 compliant date value :: value: '19', property: 'observationDate', node: 'E:SVTest->E0'",
     "counterKey": "Sanity_InvalidObsDate"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "2"
+    },
+    "userMessage": "Found invalid chars in dcid value :: value: 'US- CA', invalid-chars: ' ', property: 'observationAbout', node: 'E:SVTest->E1'",
+    "counterKey": "Sanity_InvalidChars_observationAbout"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -67,6 +85,14 @@
     },
     "userMessage": "Found non-ascii characters in a value that is not text :: value: 'Administrative–Area1', type: 'RESOLVED_REF', property: 'typeOf', node: 'E:SVTest->E3'",
     "counterKey": "Sanity_NonAsciiValueInNonText"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "4"
+    },
+    "userMessage": "Found invalid chars in dcid value :: value: 'Administrative–Area1', invalid-chars: '–', property: 'typeOf', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_InvalidChars_typeOf"
   }, {
     "level": "LEVEL_WARNING",
     "location": {
@@ -191,7 +217,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "11"
+      "lineNumber": "12"
     },
     "userMessage": "Quantity value must be a number :: value: '[Lat Long]', property: 'location', node: 'dcid:CA-MN'",
     "counterKey": "MCF_QuantityMalformedValue"

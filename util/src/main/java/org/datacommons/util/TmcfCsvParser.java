@@ -319,24 +319,21 @@ public class TmcfCsvParser {
           ssArg.delimiter = delimiter;
           ssArg.includeEmpty = false;
           ssArg.stripEnclosingQuotes = false;
-          // TODO: set stripEscapesBeforeQuotes
+          ssArg.stripEscapesBeforeQuotes = true;
           String origValue = dataRow.get(columnIndex);
           warnCb.setDetail(LogCb.VALUE_KEY, origValue);
           warnCb.setDetail(LogCb.COLUMN_KEY, column);
           warnCb.setCounterSuffix(currentProp);
           List<String> values = McfParser.splitAndStripWithQuoteEscape(origValue, ssArg, warnCb);
           for (String value : values) {
-            Mcf.McfGraph.TypedValue.Builder newTypedValue = instanceValues.addTypedValuesBuilder();
             errCb.setDetail(LogCb.VALUE_KEY, value);
-            McfParser.parseTypedValue(
-                Mcf.McfType.INSTANCE_MCF,
-                false,
-                currentNodeId,
-                currentProp,
-                value,
-                newTypedValue,
-                errCb);
-            newTypedValue.setColumn(column);
+            Mcf.McfGraph.TypedValue.Builder newTypedValue =
+                McfParser.parseTypedValue(
+                    Mcf.McfType.INSTANCE_MCF, false, currentProp, value, errCb);
+            if (newTypedValue != null) {
+              newTypedValue.setColumn(column);
+              instanceValues.addTypedValues(newTypedValue.build());
+            }
           }
         } else {
           // Pass through constant value.

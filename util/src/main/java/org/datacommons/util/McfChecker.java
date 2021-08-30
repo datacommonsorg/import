@@ -16,9 +16,11 @@ package org.datacommons.util;
 
 import com.google.common.base.Charsets;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.util.McfUtil.LogCb;
@@ -38,6 +40,14 @@ public class McfChecker {
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES);
   private final Set<String> PROP_REFS_IN_PROP =
       Set.of(Vocabulary.NAME, Vocabulary.LABEL, Vocabulary.DCID, Vocabulary.SUB_PROPERTY_OF);
+
+  // Includes: a-z A-Z 0-9 _ & + - % / . )( :
+  private final Pattern VALID_DCID_PATTERN = Pattern.compile("^[\\w&/%\\)\\(+\\-\\.:]+$");
+  // Everything in VALID_DCID_PATTERN, and then: ' * >< ][ | ; <space>
+  // TODO: Drop this after Bio DCIDs are fixed
+  private final Pattern VALID_BIO_DCID_PATTERN =
+      Pattern.compile("^[\\w&/%\\)\\(+\\-\\.'\\*><\\]\\[|:; ]+$");
+
   private Mcf.McfGraph graph;
   private LogWrapper logCtx;
   private Set<String> columns; // Relevant only when graph.type() == TEMPLATE_MCF
@@ -211,22 +221,8 @@ public class McfChecker {
 
   private void checkSVObs(String nodeId, Mcf.McfGraph.PropertyValues node)
       throws IOException, InterruptedException {
-    var statVar =
-        checkRequiredSingleValueProp(
-            nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.VARIABLE_MEASURED);
-    // For SVObs, the only ref check we do is the existence of StatVar, and its an error if missing.
-    if (existenceChecker != null && !existenceChecker.checkNode(statVar)) {
-      addLog(
-          "Existence_MissingValueRef_variableMeasured",
-          "Failed StatVar existence check :: reference: '"
-              + statVar
-              + "', property: '"
-              + Vocabulary.VARIABLE_MEASURED
-              + "', node: '"
-              + nodeId
-              + "'",
-          node);
-    }
+    checkRequiredSingleValueProp(
+        nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.VARIABLE_MEASURED);
     checkRequiredSingleValueProp(
         nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.OBSERVATION_ABOUT);
     String obsDate =
@@ -329,24 +325,26 @@ public class McfChecker {
     }
   }
 
-  private boolean performExistenceChecks(List<String> types) {
-    // For types that aren't SVObs, legacy StatPop and legacy Observation we perform existence
-    // check.
-    if (existenceChecker == null) return false;
-    for (String t : types) {
-      if (Vocabulary.isStatVarObs(t)
-          || Vocabulary.isPopulation(t)
-          || Vocabulary.isLegacyObservation(t)) {
-        return false;
-      }
+  // Returns true if we want to check existence for the given prop and types.
+  private boolean shouldCheckExistence(String prop, Set<String> types) {
+    if (types.contains(Vocabulary.LEGACY_POPULATION_TYPE_SUFFIX)
+        || types.contains(Vocabulary.LEGACY_OBSERVATION_TYPE_SUFFIX)) {
+      return false;
+    }
+    // For StatVarObs, we check variableMeasured, measurementMethod and unit only.
+    if (types.contains(Vocabulary.STAT_VAR_OBSERVATION_TYPE)
+        && !prop.equals(Vocabulary.VARIABLE_MEASURED)
+        && !prop.equals(Vocabulary.MEASUREMENT_METHOD)
+        && !prop.equals(Vocabulary.UNIT)) {
+      return false;
     }
     return true;
   }
 
-  private List<String> checkCommon(String nodeId, Mcf.McfGraph.PropertyValues node)
+  private Set<String> checkCommon(String nodeId, Mcf.McfGraph.PropertyValues node)
       throws IOException, InterruptedException {
-    var types = checkRequiredValueProp(nodeId, node, "Thing", Vocabulary.TYPE_OF);
-    boolean doExistence = performExistenceChecks(types);
+    Set<String> types =
+        new HashSet<>(checkRequiredValueProp(nodeId, node, "Thing", Vocabulary.TYPE_OF));
     for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getPvsMap().entrySet()) {
       String prop = pv.getKey();
       if (prop.isEmpty()) {
@@ -379,19 +377,19 @@ public class McfChecker {
               node);
           continue;
         }
-        String dcid = vals.getTypedValues(0).getValue();
+        var dcid = vals.getTypedValues(0);
         if (vals.getTypedValues(0).getType() == Mcf.ValueType.TABLE_ENTITY) {
           addLog(
               "Sanity_DcidTableEntity",
               "Value of dcid property must not be an 'E:' reference :: value: '"
-                  + dcid
+                  + dcid.getValue()
                   + "', node: '"
                   + nodeId
                   + "'",
               node);
           continue;
         }
-        if (dcid.length() > MAX_DCID_LENGTH) {
+        if (dcid.getValue().length() > MAX_DCID_LENGTH) {
           addLog(
               "Sanity_VeryLongDcid",
               "Found a very long dcid value; must be less than "
@@ -402,17 +400,14 @@ public class McfChecker {
               node);
           continue;
         }
-        // TODO: Expand this to include other special characters.
-        if (!dcid.startsWith("bio/") && dcid.contains(" ")) {
-          addLog(
-              "Sanity_SpaceInDcid",
-              "Found a whitespace in dcid value :: value: '" + dcid + "', node: '" + nodeId + "'",
-              node);
+        // dcid value should typically be TEXT, but some MCFs mistakenly have refs too.
+        if ((dcid.getType() == Mcf.ValueType.TEXT || dcid.getType() == Mcf.ValueType.RESOLVED_REF)
+            && !checkDcid(dcid.getValue(), Vocabulary.DCID, nodeId, node)) {
           continue;
         }
       }
 
-      if (doExistence && !existenceChecker.checkNode(prop)) {
+      if (existenceChecker != null && !existenceChecker.checkNode(prop)) {
         // Mark reference check misses as warnings to flag the user to add schema.
         addLog(
             Debug.Log.Level.LEVEL_WARNING,
@@ -452,25 +447,66 @@ public class McfChecker {
                   + "'",
               node);
         }
-        if (doExistence
-            && tv.getType() == Mcf.ValueType.RESOLVED_REF
-            && !existenceChecker.checkNode(tv.getValue())) {
-          // Mark reference check misses as warnings to flag the user to add schema.
-          addLog(
-              Debug.Log.Level.LEVEL_WARNING,
-              "Existence_MissingValueRef_" + prop,
-              "Failed existence check :: reference: '"
-                  + tv.getValue()
-                  + "', property: '"
-                  + prop
-                  + "', node: '"
-                  + nodeId
-                  + "'",
-              node);
+        if (tv.getType() == Mcf.ValueType.RESOLVED_REF) {
+          if (!checkDcid(tv.getValue(), prop, nodeId, node)) {
+            // Failed. checkDcid would have updated logCtx, pass through...
+          } else if (shouldCheckExistence(prop, types)
+              && existenceChecker != null
+              && !existenceChecker.checkNode(tv.getValue())) {
+            // Mark reference check misses as warnings to flag the user to add schema.
+            addLog(
+                Debug.Log.Level.LEVEL_WARNING,
+                "Existence_MissingValueRef_" + prop,
+                "Failed existence check :: reference: '"
+                    + tv.getValue()
+                    + "', property: '"
+                    + prop
+                    + "', node: '"
+                    + nodeId
+                    + "'",
+                node);
+          }
         }
       }
     }
     return types;
+  }
+
+  private String getInvalidChars(String ref, Pattern p) {
+    StringBuilder result = new StringBuilder();
+    for (int i = 0; i < ref.length(); i++) {
+      var c = ref.charAt(i);
+      if (!p.matcher(Character.toString(c)).matches()) {
+        result.append(c);
+      }
+    }
+    return result.toString();
+  }
+
+  private boolean checkDcid(
+      String ref, String prop, String nodeId, Mcf.McfGraph.PropertyValues node) {
+    Pattern p;
+    if (ref.startsWith("bio/")) {
+      p = VALID_BIO_DCID_PATTERN;
+    } else {
+      p = VALID_DCID_PATTERN;
+    }
+    if (!p.matcher(ref).matches()) {
+      addLog(
+          "Sanity_InvalidChars_" + prop,
+          "Found invalid chars in dcid value :: value: '"
+              + ref
+              + "', invalid-chars: '"
+              + getInvalidChars(ref, p)
+              + "', property: '"
+              + prop
+              + "', node: '"
+              + nodeId
+              + "'",
+          node);
+      return false;
+    }
+    return true;
   }
 
   private void checkClassOrProp(String typeOf, String nodeId, Mcf.McfGraph.PropertyValues node) {
@@ -526,8 +562,25 @@ public class McfChecker {
         }
       }
     }
-    if (typeOf.equals(Vocabulary.CLASS_TYPE)
-        && !McfUtil.getPropVal(node, Vocabulary.DCID).equals(Vocabulary.THING_TYPE)) {
+    // Assert that the DCID matches name/label.
+    var dcid = McfUtil.getPropVal(node, Vocabulary.DCID);
+    var name = McfUtil.getPropVal(node, Vocabulary.NAME);
+    if (name.isEmpty()) name = McfUtil.getPropVal(node, Vocabulary.LABEL);
+    if (!dcid.isEmpty() && !name.isEmpty() && !dcid.equals(name)) {
+      addLog(
+          "Sanity_DcidNameMismatchInSchema",
+          "Schema node with dcid/name mismatch :: name: '"
+              + name
+              + "', dcid: '"
+              + dcid
+              + "',"
+              + " node: '"
+              + nodeId
+              + "'",
+          node);
+    }
+
+    if (typeOf.equals(Vocabulary.CLASS_TYPE) && !dcid.equals(Vocabulary.THING_TYPE)) {
       checkRequiredValueProp(nodeId, node, Vocabulary.CLASS_TYPE, Vocabulary.SUB_CLASS_OF);
     }
   }

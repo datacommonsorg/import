@@ -17,14 +17,10 @@ package org.datacommons.util;
 import static org.datacommons.proto.Mcf.ValueType.RESOLVED_REF;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.*;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
@@ -311,10 +307,15 @@ public class McfParser {
     logCb.setCounterSuffix("");
     for (String field : fields) {
       logCb.setDetail(LogCb.VALUE_KEY, field);
-      parseTypedValue(
-          graph.getType(), isResolved, curEntity, prop, field, vals.addTypedValuesBuilder(), logCb);
+      McfGraph.TypedValue.Builder newTypedValue =
+          parseTypedValue(graph.getType(), isResolved, prop, field, logCb);
+      if (newTypedValue != null) {
+        vals.addTypedValues(newTypedValue.build());
+      }
     }
-    pvs.putPvs(prop, vals.build());
+    if (vals.getTypedValuesCount() > 0) {
+      pvs.putPvs(prop, vals.build());
+    }
     graph.putNodes(curEntity, pvs.build());
   }
 
@@ -322,31 +323,26 @@ public class McfParser {
     return new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNum);
   }
 
-  public static void parseTypedValue(
-      Mcf.McfType mcfType,
-      boolean isResolved,
-      String node,
-      String prop,
-      String val,
-      McfGraph.TypedValue.Builder tval,
-      LogCb logCb) {
+  public static McfGraph.TypedValue.Builder parseTypedValue(
+      Mcf.McfType mcfType, boolean isResolved, String prop, String val, LogCb logCb) {
+    McfGraph.TypedValue.Builder tval = McfGraph.TypedValue.newBuilder();
     if (mcfType == Mcf.McfType.TEMPLATE_MCF) {
       if (prop.equals("C")) {
         logCb.logError(
             "TMCF_UnsupportedColumnNameInProperty",
             "TMCF properties cannot refer to CSV columns yet");
-        return;
+        return null;
       }
       SchemaTerm term = parseSchemaTerm(val, logCb);
-      if (term == null) return;
+      if (term == null) return null;
       if (term.type == SchemaTerm.Type.ENTITY) {
         tval.setValue(val);
         tval.setType(Mcf.ValueType.TABLE_ENTITY);
-        return;
+        return tval;
       } else if (term.type == SchemaTerm.Type.COLUMN) {
         tval.setValue(val);
         tval.setType(Mcf.ValueType.TABLE_COLUMN);
-        return;
+        return tval;
       }
       // Fallthrough...
     }
@@ -362,7 +358,7 @@ public class McfParser {
       if (!expectRef) {
         tval.setValue(val);
         tval.setType(Mcf.ValueType.TEXT);
-        return;
+        return tval;
       }
     }
 
@@ -371,11 +367,11 @@ public class McfParser {
         logCb.logError(
             "MCF_MalformedComplexValue",
             "Found malformed Complex value without a closing ] bracket");
-        return;
+        return null;
       }
       tval.setValue(val);
       tval.setType(Mcf.ValueType.COMPLEX_VALUE);
-      return;
+      return tval;
     }
 
     int colon = val.indexOf(Vocabulary.REFERENCE_DELIMITER);
@@ -386,17 +382,17 @@ public class McfParser {
         // Strip the prefix and set the value.
         tval.setValue(val.substring(colon + 1));
         tval.setType(RESOLVED_REF);
-        return;
+        return tval;
       } else if (Vocabulary.isInternalReference(val)) {
         if (isResolved) {
           logCb.logError(
               "MCF_LocalReferenceInResolvedFile",
               "Found an internal 'l:' reference in resolved entity value");
-          return;
+          return null;
         }
         tval.setValue(val);
         tval.setType(Mcf.ValueType.UNRESOLVED_REF);
-        return;
+        return tval;
       }
       // Fallthrough...
     }
@@ -410,14 +406,14 @@ public class McfParser {
       // local refs and accept the MCF without failing.
       tval.setValue(val);
       tval.setType(RESOLVED_REF);
-      return;
+      return tval;
     }
 
     if (McfUtil.isNumber(val) || McfUtil.isBool(val)) {
       // This parses to a number or bool.
       tval.setValue(val);
       tval.setType(Mcf.ValueType.NUMBER);
-      return;
+      return tval;
     }
 
     // Instead of failing an unquoted value, treat it as a string.
@@ -427,6 +423,7 @@ public class McfParser {
     // instead of failing.
     tval.setValue(val);
     tval.setType(Mcf.ValueType.TEXT);
+    return tval;
   }
 
   // Parses a token into a schema term.  This is relevant for values in a template MCF format.
@@ -482,53 +479,52 @@ public class McfParser {
     public char delimiter = ',';
     public boolean includeEmpty = false;
     public boolean stripEnclosingQuotes = true;
+    public boolean stripEscapesBeforeQuotes = false;
   }
 
   // NOTE: We do not strip enclosing quotes in this function.
   public static List<String> splitAndStripWithQuoteEscape(
       String orig, SplitAndStripArg arg, LogCb logCb) throws AssertionError {
-    List<String> splits = new ArrayList<>();
-    try {
-      // withIgnoreSurroundingSpaces() is important to treat something like:
-      //    `first, "second, with comma"`
-      // as two fields: 1. `first`, 2. `second, with comma`
-      CSVParser parser =
-          new CSVParser(
-              new StringReader(orig),
-              CSVFormat.DEFAULT
-                  .withDelimiter(arg.delimiter)
-                  .withEscape('\\')
-                  .withIgnoreSurroundingSpaces());
-      List<CSVRecord> records = parser.getRecords();
-      if (records.isEmpty()) {
-        if (logCb != null) {
-          logCb.logError("StrSplit_EmptyToken", "Empty value found");
-        }
-        return splits;
+    List<String> results = new ArrayList<>();
+    if (orig.contains("\n")) {
+      if (logCb != null) {
+        logCb.logError("StrSplit_MultiToken", "Found a new-line in value");
       }
-      if (records.size() != 1) {
-        if (logCb != null) {
-          logCb.logError("StrSplit_MultiToken", "Found a new-line in value");
-        }
-        return splits;
-      }
-      for (String s : records.get(0)) {
-        String ss = arg.stripEnclosingQuotes ? stripEnclosingQuotePair(s.trim()) : s.trim();
-        // After stripping whitespace some terms could become empty.
-        if (arg.includeEmpty || !ss.isEmpty()) {
-          splits.add(ss);
-        }
-      }
-    } catch (IOException ex) {
-      throw new AssertionError("Unexpected CSVParser error while parsing " + orig);
+      return results;
     }
-    return splits;
+    List<String> parts = new ArrayList<>();
+    if (!StringUtil.SplitStructuredLineWithEscapes(orig, arg.delimiter, '"', parts)) {
+      if (logCb != null) {
+        logCb.logError(
+            "StrSplit_BadQuotesInToken", "Found token with incorrectly double-quoted value");
+      }
+      return results;
+    }
+    for (String s : parts) {
+      String ss = arg.stripEnclosingQuotes ? stripEnclosingQuotePair(s.trim()) : s.trim();
+      // After stripping whitespace some terms could become empty.
+      if (arg.includeEmpty || !ss.isEmpty()) {
+        if (arg.stripEscapesBeforeQuotes) {
+          // replace instances of \" with just "
+          results.add(ss.replaceAll("\\\\\"", "\""));
+        } else {
+          results.add(ss);
+        }
+      }
+    }
+    if (results.isEmpty()) {
+      if (logCb != null) {
+        logCb.logError("StrSplit_EmptyToken", "Empty value found");
+      }
+      return results;
+    }
+    return results;
   }
 
   private static String stripEnclosingQuotePair(String val) {
     if (val.length() > 1) {
       if (val.charAt(0) == '"' && val.charAt(val.length() - 1) == '"') {
-        return val.length() == 2 ? "" : val.substring(1, val.length() - 2);
+        return val.length() == 2 ? "" : val.substring(1, val.length() - 1);
       }
     }
     return val;

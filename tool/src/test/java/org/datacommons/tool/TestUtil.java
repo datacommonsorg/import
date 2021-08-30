@@ -14,63 +14,56 @@
 
 package org.datacommons.tool;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+import com.google.common.truth.Expect;
+import com.google.common.truth.extensions.proto.ProtoTruth;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.datacommons.proto.Debug;
 import org.junit.rules.TemporaryFolder;
 
 // Common set of utils used in e2e tests.
 public class TestUtil {
-  public static void assertReportFilesAreSimilar(String expected, String actual)
+  public static void assertReportFilesAreSimilar(
+      Expect expect, File directory, String expected, String actual) throws IOException {
+    String testCase = directory.getName();
+    Debug.Log expectedLog = reportToProto(expected).build();
+    Debug.Log actualLog = reportToProto(actual).build();
+    expect
+        .that(expectedLog.getCounterSet().getCountersMap())
+        .isEqualTo(actualLog.getCounterSet().getCountersMap());
+    expect.that(expectedLog.getLevelSummaryMap()).isEqualTo(actualLog.getLevelSummaryMap());
+    expect
+        .about(ProtoTruth.protos())
+        .that(expectedLog.getEntriesList())
+        .ignoringRepeatedFieldOrder()
+        .containsExactlyElementsIn(expectedLog.getEntriesList());
+  }
+
+  private static Debug.Log.Builder reportToProto(String report)
+      throws InvalidProtocolBufferException {
+    Debug.Log.Builder logBuilder = Debug.Log.newBuilder();
+    JsonFormat.parser().merge(report, logBuilder);
+    return logBuilder;
+  }
+
+  public static Path getTestFilePath(TemporaryFolder testFolder, String fileName)
       throws IOException {
-    Debug.Log.Builder expectedLogBuilder = Debug.Log.newBuilder();
-    Debug.Log.Builder actualLogBuilder = Debug.Log.newBuilder();
-    JsonFormat.parser().merge(expected, expectedLogBuilder);
-    JsonFormat.parser().merge(actual, actualLogBuilder);
-    Debug.Log expectedLog = expectedLogBuilder.build();
-    Debug.Log actualLog = actualLogBuilder.build();
-    assertMapsAreEqual(
-        "Counter Set",
-        expectedLog.getCounterSet().getCountersMap(),
-        actualLog.getCounterSet().getCountersMap());
-    assertMapsAreEqual(
-        "Level Summary", expectedLog.getLevelSummaryMap(), actualLog.getLevelSummaryMap());
-    assertTrue(actualLog.getEntriesList().containsAll(expectedLog.getEntriesList()));
-    assertTrue(expectedLog.getEntriesList().containsAll(actualLog.getEntriesList()));
+    return Paths.get(testFolder.getRoot().getPath(), fileName);
   }
 
-  public static void assertMapsAreEqual(
-      String mapType, Map<String, Long> expected, Map<String, Long> actual) {
-    assertEquals(
-        mapType + " has different size between actual and expected",
-        expected.keySet().size(),
-        actual.keySet().size());
-    for (String key : expected.keySet()) {
-      assertTrue(mapType + " actual report is missing the key: " + key, actual.containsKey(key));
-      assertEquals(
-          mapType + " has different values for the key: " + key,
-          expected.get(key),
-          actual.get(key));
-    }
-  }
-
-  public static String getStringFromTestFile(TemporaryFolder testFolder, String fileName)
+  public static Path getOutputFilePath(String parentDirectoryPath, String fileName)
       throws IOException {
-    File file = new File(Paths.get(testFolder.getRoot().getPath(), fileName).toString());
-    return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    return Path.of(parentDirectoryPath, "output", fileName);
   }
 
-  public static String getStringFromOutputReport(String parentDirectoryPath) throws IOException {
-    File file = new File(Path.of(parentDirectoryPath, "output", "report.json").toString());
+  public static String readStringFromPath(Path filePath) throws IOException {
+    File file = new File(filePath.toString());
     return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
   }
 }

@@ -83,7 +83,7 @@ public class McfMutatorTest {
     String want =
         "Node: LegacyObs\n"
             + "measuredValue: \"10000000.0\"\n"
-            + "observationDate: 2009\n"
+            + "observationDate: \"2009\"\n"
             + "observedNode: dcid:country/USA\n"
             + "typeOf: dcid:Observation\n"
             + "\n";

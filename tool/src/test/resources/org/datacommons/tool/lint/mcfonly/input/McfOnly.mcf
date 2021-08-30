@@ -126,3 +126,10 @@ domainIncludes: dcs:PopEnums
 name: "pop"
 
 inCounty: false
+
+Node: dcid:Count_Death_10YearsPlus
+typeOf: dcs:StatisticalVariable
+age: "[10]"
+populationType: dcs:Person
+measuredProperty: dcs:count
+statType: dcs:MeasuredValue

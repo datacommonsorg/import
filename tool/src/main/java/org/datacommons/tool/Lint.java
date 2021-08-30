@@ -49,7 +49,7 @@ class Lint implements Callable<Integer> {
 
   @CommandLine.Option(
       names = {"-e", "--existence_checks"},
-      defaultValue = "false",
+      defaultValue = "true",
       description =
           "Check DCID references to schema nodes against the KG and locally. If set, then "
               + "calls will be made to the Staging API server, and instance MCFs get fully "
@@ -69,7 +69,7 @@ class Lint implements Callable<Integer> {
       delimiter = fg.GetNumTsv() > 0 ? '\t' : ',';
     }
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
-    Processor processor = new Processor(doExistenceChecks, logCtx);
+    Processor processor = new Processor(doExistenceChecks, parent.verbose, logCtx);
     Integer retVal = 0;
     try {
       // Process all the instance MCF first, so that we can add the nodes for Existence Check.
