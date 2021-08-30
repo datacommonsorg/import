@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.datacommons.proto.Mcf;
 import org.datacommons.util.LogWrapper;
@@ -50,7 +51,7 @@ public class Processor {
           TmcfCsvParser.init(tmcfFile.getPath(), csvFile.getPath(), delimiter, logCtx);
       Mcf.McfGraph g;
       long numNodesProcessed = 0;
-      List<Observation> allObservations = new ArrayList<Observation>();
+      List<Observation> cachedObservations = new ArrayList<Observation>();
       while ((g = parser.parseNextRow()) != null) {
         g = McfMutator.mutate(g.toBuilder(), logCtx);
         // This will set counters/messages in logCtx.
@@ -73,17 +74,20 @@ public class Processor {
               o.setValue(tvs.get(0).getValue());
               tvs = McfUtil.getPropTvs(node, Vocabulary.VARIABLE_MEASURED);
               o.setVariableMeasured(tvs.get(0).getValue());
-              allObservations.add(o);
+              cachedObservations.add(o);
               break;
             }
           }
         }
         if (numNodesProcessed % 1000 == 0) {
           LOGGER.info(String.valueOf(numNodesProcessed));
+          // Save observations in batch
+          observationRepository.saveAll(cachedObservations);
+          cachedObservations.clear();
         }
       }
-      observationRepository.saveAll(allObservations);
-      LOGGER.info("Added all entries");
+      observationRepository.saveAll(cachedObservations);
+      LOGGER.log(Level.INFO, "Added all entries for {0}", csvFile.getName());
     }
   }
 }
