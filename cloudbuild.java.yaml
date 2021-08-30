@@ -1,5 +1,0 @@
-# Generate protoc, build, check-format and run test
-steps:
-- name: "maven:3-jdk-11"
-  entrypoint: "mvn"
-  args: ["com.coveo:fmt-maven-plugin:check", "test"]
