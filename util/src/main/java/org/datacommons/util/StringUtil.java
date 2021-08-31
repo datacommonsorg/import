@@ -14,10 +14,33 @@
 
 package org.datacommons.util;
 
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 // Common set of utils to handle strings
 public class StringUtil {
+  // From https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatterBuilder.html
+  private static final List<String> DATE_PATTERNS =
+      List.of(
+          "yyyy",
+          "yyyy-MM",
+          "yyyyMM",
+          "yyyy-M",
+          "yyyy-MM-dd",
+          "yyyyMMdd",
+          "yyyy-M-d",
+          "yyyy-MM-dd'T'HH:mm",
+          "yyyy-MM-dd'T'HH:mm:ss",
+          "yyyy-MM-dd'T'HH:mm:ss.SSS",
+          "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+
+  // The Java API does not match 20071, 2007101, so add these for compatibility with CPP
+  // implementation.
+  private static final List<String> EXTRA_DATE_PATTERNS = List.of("^\\d{5}$", "^\\d{7}$");
 
   // Splits a line using the given delimiter and places the columns into "columns". Delimiters
   // within an expression (within a pair of expressionSymbol). Characters can be escaped, but those
@@ -49,5 +72,107 @@ public class StringUtil {
     columns.add(line.substring(startIdx));
     // all opened expressions must be closed.
     return !inExpression;
+  }
+
+  public static boolean isNumber(String val) {
+    try {
+      long l = Long.parseLong(val);
+      return true;
+    } catch (NumberFormatException e) {
+    }
+    try {
+      long l = Long.parseUnsignedLong(val);
+      return true;
+    } catch (NumberFormatException e) {
+    }
+    try {
+      double d = Double.parseDouble(val);
+      return true;
+    } catch (NumberFormatException e) {
+    }
+    return false;
+  }
+
+  public static boolean isBool(String val) {
+    String v = val.toLowerCase();
+    return v.equals("true") || v.equals("1") || v.equals("false") || v.equals("0");
+  }
+
+  public static boolean isValidISO8601Date(String dateValue) {
+    for (String pattern : DATE_PATTERNS) {
+      try {
+        DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH).parse(dateValue);
+        return true;
+      } catch (DateTimeParseException ex) {
+        // Pass through
+      }
+    }
+    for (String pattern : EXTRA_DATE_PATTERNS) {
+      if (Pattern.matches(pattern, dateValue)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Splits a string using the delimiter character. A field is not split if the delimiter is within
+  // a pair of double
+  // quotes. If "includeEmpty" is true, then empty field is included.
+  //
+  // For example "1,2,3" will be split into ["1","2","3"] but "'1,234',5" will be
+  // split into ["1,234", "5"].
+  public static final class SplitAndStripArg {
+    public char delimiter = ',';
+    public boolean includeEmpty = false;
+    public boolean stripEnclosingQuotes = true;
+    public boolean stripEscapesBeforeQuotes = false;
+  }
+
+  // NOTE: We do not strip enclosing quotes in this function.
+  public static List<String> splitAndStripWithQuoteEscape(
+      String orig, SplitAndStripArg arg, LogCb logCb) throws AssertionError {
+    List<String> results = new ArrayList<>();
+    if (orig.contains("\n")) {
+      if (logCb != null) {
+        logCb.logError("StrSplit_MultiToken", "Found a new-line in value");
+      }
+      return results;
+    }
+    List<String> parts = new ArrayList<>();
+    if (!SplitStructuredLineWithEscapes(orig, arg.delimiter, '"', parts)) {
+      if (logCb != null) {
+        logCb.logError(
+            "StrSplit_BadQuotesInToken", "Found token with incorrectly double-quoted value");
+      }
+      return results;
+    }
+    for (String s : parts) {
+      String ss = arg.stripEnclosingQuotes ? stripEnclosingQuotePair(s.trim()) : s.trim();
+      // After stripping whitespace some terms could become empty.
+      if (arg.includeEmpty || !ss.isEmpty()) {
+        if (arg.stripEscapesBeforeQuotes) {
+          // replace instances of \" with just "
+          results.add(ss.replaceAll("\\\\\"", "\""));
+        } else {
+          results.add(ss);
+        }
+      }
+    }
+    if (results.isEmpty()) {
+      if (logCb != null) {
+        logCb.logError("StrSplit_EmptyToken", "Empty value found");
+      }
+      return results;
+    }
+    return results;
+  }
+
+  public static String stripEnclosingQuotePair(String val) {
+    if (val.length() > 1) {
+      if (val.charAt(0) == '"' && val.charAt(val.length() - 1) == '"') {
+        return val.length() == 2 ? "" : val.substring(1, val.length() - 1);
+      }
+    }
+    return val;
   }
 }

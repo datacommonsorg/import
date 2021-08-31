@@ -26,7 +26,6 @@ import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
-import org.datacommons.util.McfUtil.LogCb;
 
 // A parser for converting text in Instance or Template MCF format into the McfGraph proto.
 //
@@ -293,7 +292,7 @@ public class McfParser {
       vals.clearTypedValues();
     }
 
-    SplitAndStripArg ssArg = new SplitAndStripArg();
+    StringUtil.SplitAndStripArg ssArg = new StringUtil.SplitAndStripArg();
     ssArg.delimiter = Vocabulary.VALUE_SEPARATOR;
     ssArg.includeEmpty = false;
     ssArg.stripEnclosingQuotes = false;
@@ -303,7 +302,7 @@ public class McfParser {
             .setDetail(LogCb.VALUE_KEY, values)
             .setDetail(LogCb.NODE_KEY, curEntity)
             .setCounterSuffix(prop);
-    List<String> fields = splitAndStripWithQuoteEscape(values, ssArg, logCb);
+    List<String> fields = StringUtil.splitAndStripWithQuoteEscape(values, ssArg, logCb);
     logCb.setCounterSuffix("");
     for (String field : fields) {
       logCb.setDetail(LogCb.VALUE_KEY, field);
@@ -353,7 +352,7 @@ public class McfParser {
       // If a value starts with double quotes, consider it a string.
       //
       // Strip enclosing double quotes.
-      val = stripEnclosingQuotePair(val);
+      val = StringUtil.stripEnclosingQuotePair(val);
 
       if (!expectRef) {
         tval.setValue(val);
@@ -409,7 +408,7 @@ public class McfParser {
       return tval;
     }
 
-    if (McfUtil.isNumber(val) || McfUtil.isBool(val)) {
+    if (StringUtil.isNumber(val) || StringUtil.isBool(val)) {
       // This parses to a number or bool.
       tval.setValue(val);
       tval.setType(Mcf.ValueType.NUMBER);
@@ -465,68 +464,5 @@ public class McfParser {
       term.value = value;
     }
     return term;
-  }
-
-  // Splits a string using the delimiter character. A field is not split if the delimiter is within
-  // a pair of double
-  // quotes. If "includeEmpty" is true, then empty field is included.
-  //
-  // For example "1,2,3" will be split into ["1","2","3"] but "'1,234',5" will be
-  // split into ["1,234", "5"].
-  // TODO: Support stripEscapesBeforeQuotes control like in internal version.
-  // TODO: Move this to its own file.
-  public static final class SplitAndStripArg {
-    public char delimiter = ',';
-    public boolean includeEmpty = false;
-    public boolean stripEnclosingQuotes = true;
-    public boolean stripEscapesBeforeQuotes = false;
-  }
-
-  // NOTE: We do not strip enclosing quotes in this function.
-  public static List<String> splitAndStripWithQuoteEscape(
-      String orig, SplitAndStripArg arg, LogCb logCb) throws AssertionError {
-    List<String> results = new ArrayList<>();
-    if (orig.contains("\n")) {
-      if (logCb != null) {
-        logCb.logError("StrSplit_MultiToken", "Found a new-line in value");
-      }
-      return results;
-    }
-    List<String> parts = new ArrayList<>();
-    if (!StringUtil.SplitStructuredLineWithEscapes(orig, arg.delimiter, '"', parts)) {
-      if (logCb != null) {
-        logCb.logError(
-            "StrSplit_BadQuotesInToken", "Found token with incorrectly double-quoted value");
-      }
-      return results;
-    }
-    for (String s : parts) {
-      String ss = arg.stripEnclosingQuotes ? stripEnclosingQuotePair(s.trim()) : s.trim();
-      // After stripping whitespace some terms could become empty.
-      if (arg.includeEmpty || !ss.isEmpty()) {
-        if (arg.stripEscapesBeforeQuotes) {
-          // replace instances of \" with just "
-          results.add(ss.replaceAll("\\\\\"", "\""));
-        } else {
-          results.add(ss);
-        }
-      }
-    }
-    if (results.isEmpty()) {
-      if (logCb != null) {
-        logCb.logError("StrSplit_EmptyToken", "Empty value found");
-      }
-      return results;
-    }
-    return results;
-  }
-
-  private static String stripEnclosingQuotePair(String val) {
-    if (val.length() > 1) {
-      if (val.charAt(0) == '"' && val.charAt(val.length() - 1) == '"') {
-        return val.length() == 2 ? "" : val.substring(1, val.length() - 1);
-      }
-    }
-    return val;
   }
 }

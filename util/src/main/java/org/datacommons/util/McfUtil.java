@@ -14,10 +14,7 @@
 
 package org.datacommons.util;
 
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.regex.Pattern;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
@@ -178,121 +175,6 @@ public class McfUtil {
       return Vocabulary.DCID_PREFIX + typedValue.getValue();
     } else {
       return typedValue.getValue();
-    }
-  }
-
-  // From https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatterBuilder.html
-  private static final List<String> DATE_PATTERNS =
-      List.of(
-          "yyyy",
-          "yyyy-MM",
-          "yyyyMM",
-          "yyyy-M",
-          "yyyy-MM-dd",
-          "yyyyMMdd",
-          "yyyy-M-d",
-          "yyyy-MM-dd'T'HH:mm",
-          "yyyy-MM-dd'T'HH:mm:ss",
-          "yyyy-MM-dd'T'HH:mm:ss.SSS",
-          "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-  // The Java API does not match 20071, 2007101, so add these for compatibility with CPP
-  // implementation.
-  private static final List<String> EXTRA_DATE_PATTERNS = List.of("^\\d{5}$", "^\\d{7}$");
-
-  public static boolean isValidISO8601Date(String dateValue) {
-    for (String pattern : DATE_PATTERNS) {
-      try {
-        DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH).parse(dateValue);
-        return true;
-      } catch (DateTimeParseException ex) {
-        // Pass through
-      }
-    }
-    for (String pattern : EXTRA_DATE_PATTERNS) {
-      if (Pattern.matches(pattern, dateValue)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  public static boolean isNumber(String val) {
-    try {
-      long l = Long.parseLong(val);
-      return true;
-    } catch (NumberFormatException e) {
-    }
-    try {
-      long l = Long.parseUnsignedLong(val);
-      return true;
-    } catch (NumberFormatException e) {
-    }
-    try {
-      double d = Double.parseDouble(val);
-      return true;
-    } catch (NumberFormatException e) {
-    }
-    return false;
-  }
-
-  public static boolean isBool(String val) {
-    String v = val.toLowerCase();
-    return v.equals("true") || v.equals("1") || v.equals("false") || v.equals("0");
-  }
-
-  // A class to hold information for logging errors or warnings
-  public static class LogCb {
-    public static final String VALUE_KEY = "value";
-    public static final String COLUMN_KEY = "column";
-    public static final String PROP_KEY = "property";
-    public static final String NODE_KEY = "node";
-    private static final List<String> messageDetailsKeys =
-        Arrays.asList(VALUE_KEY, COLUMN_KEY, PROP_KEY, NODE_KEY);
-    private final LogWrapper logCtx;
-    private final Debug.Log.Level logLevel;
-    private final long lineNum;
-    private Map<String, String> messageDetails = new HashMap<>();
-    private String counter_prefix = "";
-    private String counter_suffix = "";
-
-    public LogCb(LogWrapper logCtx, Debug.Log.Level logLevel, long lineNum) {
-      this.logCtx = logCtx;
-      this.logLevel = logLevel;
-      this.lineNum = lineNum;
-    }
-
-    public LogCb setDetail(String key, String val) {
-      this.messageDetails.put(key, val);
-      return this;
-    }
-
-    public LogCb setCounterPrefix(String prefix) {
-      this.counter_prefix = prefix;
-      return this;
-    }
-
-    public LogCb setCounterSuffix(String suffix) {
-      this.counter_suffix = suffix;
-      return this;
-    }
-
-    public void logError(String counter, String problemMessage) {
-      if (!counter_prefix.isEmpty()) {
-        counter = counter_prefix + "_" + counter;
-      }
-      if (!counter_suffix.isEmpty()) {
-        counter = counter + "_" + counter_suffix;
-      }
-      String message = problemMessage + " :: ";
-      boolean isFirstDetail = true;
-      for (String detailKey : messageDetailsKeys) {
-        if (messageDetails.containsKey(detailKey)) {
-          message +=
-              (isFirstDetail ? "" : ", ") + detailKey + ": '" + messageDetails.get(detailKey) + "'";
-          isFirstDetail = false;
-        }
-      }
-      this.logCtx.addEntry(this.logLevel, counter, message, this.lineNum);
     }
   }
 }

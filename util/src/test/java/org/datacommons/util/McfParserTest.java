@@ -14,15 +14,9 @@
 
 package org.datacommons.util;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.extensions.proto.ProtoTruth.assertThat;
-import static org.datacommons.util.McfParser.SplitAndStripArg;
 import static org.datacommons.util.McfParser.parseTypedValue;
-import static org.datacommons.util.McfParser.splitAndStripWithQuoteEscape;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -38,52 +32,6 @@ import org.datacommons.proto.Mcf.ValueType;
 import org.junit.Test;
 
 public class McfParserTest {
-  @Test
-  public void funcSplitAndStripWithQuoteEscape() {
-    SplitAndStripArg arg = new SplitAndStripArg();
-    assertThat(splitAndStripWithQuoteEscape("one,two,three", arg, null))
-        .containsExactly("one", "two", "three");
-
-    // Single quote (unterminated or otherwise) should be preserved.
-    assertThat(splitAndStripWithQuoteEscape("\"O'Brien\", 20", arg, null))
-        .containsExactly("O'Brien", "20");
-
-    // Whitespace surrounding ',' is excluded, but within is included.
-    assertThat(splitAndStripWithQuoteEscape(" o ne, two ,th ree", arg, null))
-        .containsExactly("o ne", "two", "th ree");
-
-    // One pair of double quotes are removed.
-    assertThat(splitAndStripWithQuoteEscape(" '\"one\"',two,\"three\"", arg, null))
-        .containsExactly("'\"one\"'", "two", "three");
-
-    // Comma within double quotes are not split.
-    assertThat(splitAndStripWithQuoteEscape("'one, two', three, \"four, five\"", arg, null))
-        .containsExactly("'one", "two'", "three", "four, five");
-
-    // Empty strings are by default removed.
-    assertThat(splitAndStripWithQuoteEscape("one,   ,two, \"\" , three", arg, null))
-        .containsExactly("one", "two", "three");
-
-    // Empty strings are kept when specifically requested.
-    arg = new SplitAndStripArg();
-    arg.includeEmpty = true;
-    assertThat(splitAndStripWithQuoteEscape("one,   ,two, \"\" , three", arg, null))
-        .containsExactly("one", "", "two", "", "three");
-
-    // Strings that are escaped normally show up with escape character.
-    arg = new SplitAndStripArg();
-    arg.includeEmpty = false;
-    assertThat(splitAndStripWithQuoteEscape("\"{ \\\"type\\\": \\\"feature\\\" }\"", arg, null))
-        .containsExactly("{ \\\"type\\\": \\\"feature\\\" }");
-
-    // Strings that are escaped when stripping of escaped quotes is requested
-    arg = new SplitAndStripArg();
-    arg.includeEmpty = false;
-    arg.stripEscapesBeforeQuotes = true;
-    assertThat(splitAndStripWithQuoteEscape("\"{ \\\"type\\\": \\\"feature\\\" }\"", arg, null))
-        .containsExactly("{ \"type\": \"feature\" }");
-  }
-
   @Test
   public void testQuoting() throws IOException, URISyntaxException {
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
@@ -221,7 +169,7 @@ public class McfParserTest {
             false,
             regProp,
             "[",
-            new McfUtil.LogCb(TestUtil.newLogCtx("test"), Level.LEVEL_ERROR, 1));
+            new LogCb(TestUtil.newLogCtx("test"), Level.LEVEL_ERROR, 1));
     assertNull(actual);
 
     expected.clear();
