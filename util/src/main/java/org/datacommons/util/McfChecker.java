@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
-import org.datacommons.util.McfUtil.LogCb;
 
 // Checks common types of nodes on naming and schema requirements.
 //
@@ -230,7 +229,7 @@ public class McfChecker {
             nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.OBSERVATION_DATE);
     if (graph.getType() != Mcf.McfType.TEMPLATE_MCF
         && !obsDate.isEmpty()
-        && !McfUtil.isValidISO8601Date(obsDate)) {
+        && !StringUtil.isValidISO8601Date(obsDate)) {
       addLog(
           "Sanity_InvalidObsDate",
           "Found a non-ISO8601 compliant date value :: value: '"
@@ -273,7 +272,7 @@ public class McfChecker {
             nodeId, node, Vocabulary.LEGACY_OBSERVATION_TYPE_SUFFIX, Vocabulary.OBSERVATION_DATE);
     if (graph.getType() != Mcf.McfType.TEMPLATE_MCF
         && !obsDate.isEmpty()
-        && !McfUtil.isValidISO8601Date(obsDate)) {
+        && !StringUtil.isValidISO8601Date(obsDate)) {
       addLog(
           "Sanity_InvalidObsDate",
           "Found a non-ISO8601 compliant date value :: value: '"
@@ -294,7 +293,7 @@ public class McfChecker {
             checkRequiredSingleValueProp(
                 nodeId, node, Vocabulary.LEGACY_OBSERVATION_TYPE_SUFFIX, prop);
         if (graph.getType() != Mcf.McfType.TEMPLATE_MCF && !val.isEmpty()) {
-          if (!McfUtil.isNumber(val)) {
+          if (!StringUtil.isNumber(val)) {
             addLog(
                 "Sanity_NonDoubleObsValue",
                 "Found a non-double Observation value :: value: '"

@@ -26,7 +26,6 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
-import org.datacommons.util.McfUtil.LogCb;
 
 // Converts a Template MCF file and an associated CSV into instance MCF.
 //
@@ -315,7 +314,7 @@ public class TmcfCsvParser {
             continue;
           }
 
-          McfParser.SplitAndStripArg ssArg = new McfParser.SplitAndStripArg();
+          StringUtil.SplitAndStripArg ssArg = new StringUtil.SplitAndStripArg();
           ssArg.delimiter = delimiter;
           ssArg.includeEmpty = false;
           ssArg.stripEnclosingQuotes = false;
@@ -324,7 +323,7 @@ public class TmcfCsvParser {
           warnCb.setDetail(LogCb.VALUE_KEY, origValue);
           warnCb.setDetail(LogCb.COLUMN_KEY, column);
           warnCb.setCounterSuffix(currentProp);
-          List<String> values = McfParser.splitAndStripWithQuoteEscape(origValue, ssArg, warnCb);
+          List<String> values = StringUtil.splitAndStripWithQuoteEscape(origValue, ssArg, warnCb);
           for (String value : values) {
             errCb.setDetail(LogCb.VALUE_KEY, value);
             Mcf.McfGraph.TypedValue.Builder newTypedValue =

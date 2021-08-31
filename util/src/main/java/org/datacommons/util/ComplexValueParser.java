@@ -19,7 +19,6 @@ import static org.datacommons.proto.Mcf.ValueType.*;
 import java.util.List;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
-import org.datacommons.util.McfUtil.LogCb;
 
 // Parse complex value strings into nodes.
 //
@@ -84,7 +83,7 @@ public class ComplexValueParser {
     }
 
     String trimmedComplexValue = complexValue.substring(1, complexValue.length() - 1);
-    McfParser.SplitAndStripArg arg = new McfParser.SplitAndStripArg();
+    StringUtil.SplitAndStripArg arg = new StringUtil.SplitAndStripArg();
     arg.delimiter = ' ';
     arg.includeEmpty = false;
     arg.stripEnclosingQuotes = false;
@@ -98,7 +97,7 @@ public class ComplexValueParser {
             .setDetail(LogCb.PROP_KEY, prop)
             .setDetail(LogCb.NODE_KEY, mainNodeId)
             .setCounterSuffix(prop);
-    List<String> fields = McfParser.splitAndStripWithQuoteEscape(trimmedComplexValue, arg, logCb);
+    List<String> fields = StringUtil.splitAndStripWithQuoteEscape(trimmedComplexValue, arg, logCb);
     if (fields.size() != 2 && fields.size() != 3) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
@@ -154,7 +153,7 @@ public class ComplexValueParser {
     // Compute DCID.
     boolean isLatLng = false;
     if (fields.size() == 2) {
-      if (!McfUtil.isNumber(fields.get(valueIdx))) {
+      if (!StringUtil.isNumber(fields.get(valueIdx))) {
         logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_QuantityMalformedValue",
@@ -286,7 +285,7 @@ public class ComplexValueParser {
   }
 
   private boolean parseQuantityRange(String startVal, String endVal, String unit) {
-    if (!(McfUtil.isNumber(startVal) || startVal.equals("-"))) {
+    if (!(StringUtil.isNumber(startVal) || startVal.equals("-"))) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_QuantityRangeMalformedValues",
@@ -300,7 +299,7 @@ public class ComplexValueParser {
           mainNode.getLocationsList());
       return false;
     }
-    if (!(McfUtil.isNumber(endVal) || endVal.equals("-"))) {
+    if (!(StringUtil.isNumber(endVal) || endVal.equals("-"))) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_QuantityRangeMalformedValues",
