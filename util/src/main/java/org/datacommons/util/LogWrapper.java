@@ -41,6 +41,8 @@ public class LogWrapper {
   public static final int MAX_ERROR_COUNTERS_LIMIT = 50;
   public static final int MAX_MESSAGES_PER_COUNTER = 30;
 
+  public static boolean TEST_MODE = false;
+
   private Debug.Log.Builder log;
   private Path logPath;
   private String locationFile;
@@ -146,6 +148,7 @@ public class LogWrapper {
 
   private void addEntry(
       Debug.Log.Level level, String counter, String message, String file, long lno) {
+    if (TEST_MODE) System.err.println(counter + " - " + message);
     if (level == Debug.Log.Level.LEVEL_ERROR || level == Debug.Log.Level.LEVEL_FATAL) {
       countersWithErrors.add(counter);
     }
