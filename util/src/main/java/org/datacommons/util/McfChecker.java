@@ -15,15 +15,14 @@
 package org.datacommons.util;
 
 import com.google.common.base.Charsets;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
-
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
 
 // Checks common types of nodes on naming and schema requirements.
 //

@@ -157,15 +157,16 @@ public class ExistenceChecker {
       throws IOException, InterruptedException {
     logCtx.incrementCounterBy("Existence_NumDcCalls", 1);
 
-    // Make one call with all entries in subMap.
     var dataJson = callDc(subs, pred);
 
     if (dataJson == null) {
       if (verbose) {
         logger.info("DC call failed for - " + Strings.join(subs, ',') + ", " + pred);
       }
-      // If the DCID is malformed Mixer can return failure. So Issue independent RPCs now.
-      logger.warn("DC Call failed due to bad DCID. Issuing individual calls now.");
+      logger.warn("DC Call failed (bad DCID or URI length). Issuing individual calls now.");
+      // Important: If the DCID is malformed, Mixer can return failure. Also, if the URI is too
+      // long, then too this happens. So Issue independent RPCs now. If this happens often enough,
+      // we can revisit.
       for (String sub : subs) {
         performDcCall(pred, List.of(sub), subMap);
       }
@@ -193,9 +194,6 @@ public class ExistenceChecker {
         var cbs = kv.getValue();
         var key = makeKey(sub, pred, obj);
         if (checkOneResult(obj, nodeJson)) {
-          if (verbose) {
-            logger.info("Found " + (obj.isEmpty() ? "node" : "triple") + " in DC " + key);
-          }
           existingNodesOrTriples.add(key);
         } else {
           if (verbose) {
