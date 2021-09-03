@@ -123,6 +123,7 @@ public class Processor {
           numRowsProcessed,
           numNodesProcessed);
     }
+    if (existenceChecker != null) existenceChecker.drainRemoteCalls();
   }
 
   // Called only when existenceChecker is enabled.

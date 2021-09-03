@@ -14,11 +14,7 @@
 
 package org.datacommons.server;
 
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.BlobId;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageException;
-import com.google.cloud.storage.StorageOptions;
+import com.google.cloud.storage.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -31,11 +27,8 @@ import org.datacommons.util.FileGroup;
 import org.datacommons.util.LogWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Model;
+import picocli.CommandLine.*;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
-import picocli.CommandLine.Spec;
 
 // Defines the command line argument and execute startup operations.
 @Component
@@ -71,7 +64,7 @@ public class ServerCommand implements Callable<Integer> {
     FileGroup fg = FileGroup.Build(files, spec, logger);
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), new File(".").toPath());
     Processor processor = new Processor(logCtx);
-    processor.processTables(fg.GetTmcf(), fg.GetCsv(), ',', observationRepository);
+    processor.processTables(fg.GetTmcf(), fg.GetCsvs(), ',', observationRepository);
     return 0;
   }
 

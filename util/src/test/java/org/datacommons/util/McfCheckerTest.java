@@ -587,7 +587,7 @@ public class McfCheckerTest {
     } else {
       graph = McfParser.parseInstanceMcfString(mcfString, false, lw);
     }
-    if (McfChecker.check(graph, columns, ec, lw) && !doExistenceCheck) {
+    if (McfChecker.checkTemplate(graph, columns, ec, lw) && !doExistenceCheck) {
       System.err.println("Check unexpectedly passed for " + mcfString);
       return false;
     }
@@ -617,7 +617,7 @@ public class McfCheckerTest {
     if (doExistenceCheck) {
       ec = new ExistenceChecker(HttpClient.newHttpClient(), false, lw);
     }
-    if (!McfChecker.check(graph, columns, ec, lw)) {
+    if (!McfChecker.checkTemplate(graph, columns, ec, lw)) {
       System.err.println("Check unexpectedly failed for \n" + mcfString + "\n :: \n" + log);
       return false;
     }

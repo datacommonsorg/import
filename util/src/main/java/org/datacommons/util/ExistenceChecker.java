@@ -281,18 +281,6 @@ public class ExistenceChecker {
     return false;
   }
 
-  private static void logEntry(LogCb logCb, String obj) {
-    String message, counter;
-    if (obj.isEmpty()) {
-      counter = "Existence_MissingReference";
-      message = "Failed reference existence check";
-    } else {
-      counter = "Existence_MissingTriple";
-      message = "Failed triple existence check";
-    }
-    logCb.logError(counter, message);
-  }
-
   private JsonObject callDc(List<String> nodes, String property)
       throws IOException, InterruptedException {
     List<String> args = new ArrayList<>();
@@ -313,6 +301,18 @@ public class ExistenceChecker {
   // See https://stackoverflow.com/a/4737967.  Mixer does not treat '+' in param value as space.
   private String spaceHandlingUrlEncoder(String part) {
     return URLEncoder.encode(part, StandardCharsets.UTF_8).replace("+", "%20");
+  }
+
+  private static void logEntry(LogCb logCb, String obj) {
+    String message, counter;
+    if (obj.isEmpty()) {
+      counter = "Existence_MissingReference";
+      message = "Failed reference existence check";
+    } else {
+      counter = "Existence_MissingTriple";
+      message = "Failed triple existence check";
+    }
+    logCb.logError(counter, message);
   }
 
   private static String makeKey(String s, String p, String o) {

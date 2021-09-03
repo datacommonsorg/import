@@ -15,14 +15,15 @@
 package org.datacommons.util;
 
 import com.google.common.base.Charsets;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
+
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
 
 // Checks common types of nodes on naming and schema requirements.
 //
@@ -61,7 +62,7 @@ public class McfChecker {
   }
 
   // Used to check a single node from TMcfCsvParser.
-  public static boolean check(
+  public static boolean checkNode(
       Mcf.McfType mcfType, String nodeId, Mcf.McfGraph.PropertyValues node, LogWrapper logCtx)
       throws IOException, InterruptedException {
     Mcf.McfGraph.Builder nodeGraph = Mcf.McfGraph.newBuilder();
@@ -71,7 +72,7 @@ public class McfChecker {
   }
 
   // Used with Template MCF when there are columns from CSV header.
-  public static boolean check(
+  public static boolean checkTemplate(
       Mcf.McfGraph graph, Set<String> columns, ExistenceChecker existenceChecker, LogWrapper logCtx)
       throws IOException, InterruptedException {
     return new McfChecker(graph, columns, existenceChecker, logCtx).check();

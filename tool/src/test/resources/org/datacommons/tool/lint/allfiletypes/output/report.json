@@ -1,7 +1,7 @@
 {
   "levelSummary": {
     "LEVEL_ERROR": "56",
-    "LEVEL_WARNING": "19"
+    "LEVEL_WARNING": "43"
   },
   "counterSet": {
     "counters": {
@@ -39,7 +39,7 @@
       "Sanity_UnexpectedPropInClass": "1",
       "Sanity_NotInitUpper_nameInClass": "1",
       "Sanity_MissingOrEmpty_subClassOf": "1",
-      "Existence_NumDcCalls": "2",
+      "Existence_NumDcCalls": "3",
       "Existence_MissingReference_containedIn": "1",
       "Existence_MissingReference_statType": "5",
       "Existence_MissingReference_domainIncludes": "2",
@@ -58,7 +58,9 @@
       "CSV_MalformedDCIDPVFailures": "4",
       "CSV_EmptyDcidReferences": "2",
       "Sanity_MissingOrEmpty_observationAbout": "2",
-      "Sanity_VeryLongDcid": "1"
+      "Sanity_VeryLongDcid": "1",
+      "Existence_MissingReference_variableMeasured": "12",
+      "Existence_MissingReference_measurementMethod": "12"
     }
   },
   "entries": [{
@@ -661,5 +663,197 @@
     },
     "userMessage": "Quantity value must be a number :: value: '[Lat Long]', property: 'location', node: 'dcid:CA-MN'",
     "counterKey": "MCF_QuantityMalformedValue"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "3"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "4"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "5"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "9"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "11"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "11"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "3"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV2', property: 'variableMeasured', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "4"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV2', property: 'variableMeasured', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "5"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV2', property: 'variableMeasured', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "9"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV2', property: 'variableMeasured', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "11"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV2', property: 'variableMeasured', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "11"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV2', property: 'variableMeasured', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "3"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "3"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "4"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "4"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "5"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "5"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "9"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "9"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "11"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "11"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "11"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "AllFileTypes.csv",
+      "lineNumber": "11"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
   }]
 }
