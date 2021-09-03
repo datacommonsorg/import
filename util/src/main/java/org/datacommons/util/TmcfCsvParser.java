@@ -72,7 +72,7 @@ public class TmcfCsvParser {
     }
     // Check TMCF.
     boolean success =
-        McfChecker.check(
+        McfChecker.checkTemplate(
             tmcfCsvParser.tmcf, tmcfCsvParser.csvParser.getHeaderMap().keySet(), null, logCtx);
     if (!success) {
       // Set location file to make sure log entry refers to the tmcf file.
@@ -207,7 +207,7 @@ public class TmcfCsvParser {
 
         Mcf.McfGraph.PropertyValues newNode = nodeBuilder.build();
         boolean success =
-            McfChecker.check(Mcf.McfType.INSTANCE_MCF, currentNodeId, newNode, logCtx);
+            McfChecker.checkNode(Mcf.McfType.INSTANCE_MCF, currentNodeId, newNode, logCtx);
         if (success) {
           logCtx.incrementCounterBy("NumNodeSuccesses", 1);
           logCtx.incrementCounterBy("NumPVSuccesses", newNode.getPvsCount());

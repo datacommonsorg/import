@@ -73,16 +73,18 @@ class Lint implements Callable<Integer> {
     Integer retVal = 0;
     try {
       // Process all the instance MCF first, so that we can add the nodes for Existence Check.
-      for (File f : fg.GetMcf()) {
+      for (File f : fg.GetMcfs()) {
         processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
       }
       if (doExistenceChecks) {
         processor.checkAllNodes();
       }
-      if (!fg.GetCsv().isEmpty()) {
-        processor.processTables(fg.GetTmcf(), fg.GetCsv(), delimiter, null);
-      } else if (fg.GetTmcf() != null) {
-        processor.processNodes(Mcf.McfType.TEMPLATE_MCF, fg.GetTmcf());
+      if (!fg.GetCsvs().isEmpty()) {
+        processor.processTables(fg.GetTmcf(), fg.GetCsvs(), delimiter, null);
+      } else if (fg.GetTmcfs() != null) {
+        for (File f : fg.GetTmcfs()) {
+          processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f);
+        }
       }
     } catch (DCTooManyFailuresException | InterruptedException ex) {
       // Regardless of the failures, we will dump the logCtx and exit.

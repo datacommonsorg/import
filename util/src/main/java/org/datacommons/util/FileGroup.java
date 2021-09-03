@@ -21,32 +21,38 @@ import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
 
 public class FileGroup {
-  private File tmcfFile;
   private List<File> csvFiles;
   private List<File> mcfFiles;
+  // NOTE: When csvFiles is provided, then tmcfFiles must be <= 1.
+  private List<File> tmcfFiles;
   int nTsv;
 
-  public FileGroup(File tmcfFile, List<File> csvFiles, List<File> mcfFiles, int nTsv) {
-    this.tmcfFile = tmcfFile;
+  public FileGroup(List<File> tmcfFiles, List<File> csvFiles, List<File> mcfFiles, int nTsv) {
+    this.tmcfFiles = tmcfFiles;
     this.csvFiles = csvFiles;
     this.mcfFiles = mcfFiles;
     this.nTsv = nTsv;
   }
 
   public File GetTmcf() {
-    return this.tmcfFile;
+    if (tmcfFiles != null && tmcfFiles.size() > 0) return tmcfFiles.get(0);
+    return null;
   }
 
-  public List<File> GetCsv() {
-    return this.csvFiles;
+  public List<File> GetTmcfs() {
+    return tmcfFiles;
   }
 
-  public List<File> GetMcf() {
-    return this.mcfFiles;
+  public List<File> GetCsvs() {
+    return csvFiles;
+  }
+
+  public List<File> GetMcfs() {
+    return mcfFiles;
   }
 
   public int GetNumTsv() {
-    return this.nTsv;
+    return nTsv;
   }
 
   public static FileGroup Build(File[] files, CommandLine.Model.CommandSpec spec, Logger logger) {
@@ -87,7 +93,7 @@ public class FileGroup {
     if (tmcfFiles.isEmpty()) {
       return new FileGroup(null, csvFiles, mcfFiles, nTsv);
     } else {
-      return new FileGroup(tmcfFiles.get(0), csvFiles, mcfFiles, nTsv);
+      return new FileGroup(tmcfFiles, csvFiles, mcfFiles, nTsv);
     }
   }
 }
