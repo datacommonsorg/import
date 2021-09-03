@@ -268,7 +268,6 @@ public class DcidGenerator {
     List<String> ordered_cprops = new ArrayList<>();
     for (var pv : pvMap.entrySet()) {
       var prop = pv.getKey();
-      var val = pv.getValue();
       if (Vocabulary.NON_CONSTRAINT_STAT_VAR_PROPERTIES.contains(prop)) {
         // Avoid the well-known props that don't go into PV.
         continue;
