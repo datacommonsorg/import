@@ -17,6 +17,8 @@ import org.datacommons.proto.Mcf;
 
 // This class checks the existence of typically schema-related, nodes or (select types of)
 // triples in the KG or local graph.
+// TODO: Use POST instead of GET while calling DC so we won't run into URL limits and can batch
+//  even more.
 public class ExistenceChecker {
   private static final Logger logger = LogManager.getLogger(ExistenceChecker.class);
   // Use the staging end-point to not impact prod.
@@ -26,7 +28,7 @@ public class ExistenceChecker {
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES, Vocabulary.SUB_CLASS_OF);
 
   // Batching thresholds.  Allow tests to set this.
-  public static int DC_CALL_BATCH_LIMIT = 500;
+  public static int DC_CALL_BATCH_LIMIT = 100;
   public static int MAX_PENDING_CALLS = 100000;
 
   // Useful for mocking.
@@ -303,7 +305,7 @@ public class ExistenceChecker {
     var request =
         HttpRequest.newBuilder(URI.create(url)).header("accept", "application/json").build();
     var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-    var payloadJson = new JsonParser().parse(response.body()).getAsJsonObject();
+    var payloadJson = new JsonParser().parse(response.body().trim()).getAsJsonObject();
     if (payloadJson == null || !payloadJson.has("payload")) return null;
     return new JsonParser().parse(payloadJson.get("payload").getAsString()).getAsJsonObject();
   }
