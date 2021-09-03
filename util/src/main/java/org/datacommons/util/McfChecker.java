@@ -216,6 +216,9 @@ public class McfChecker {
           "Found an unknown statType value :: value: '" + statType + "', node: '" + nodeId + "'",
           node);
     }
+
+    // Every SV must have DCID defined.
+    checkRequiredSingleValueProp(nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.DCID);
   }
 
   private void checkSVObs(String nodeId, Mcf.McfGraph.PropertyValues node)

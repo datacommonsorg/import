@@ -14,16 +14,17 @@
 
 package org.datacommons.util;
 
-import static org.junit.Assert.assertTrue;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
-import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 public class McfCheckerTest {
 
@@ -181,6 +182,7 @@ public class McfCheckerTest {
         "Node: SV\n"
             + "typeOf: schema:StatisticalVariable\n"
             + "measuredProperty: dcs:count\n"
+            + "dcid: \"Count_Person\"\n"
             + "statType: dcs:measuredValue";
     assertTrue(
         failure(
@@ -194,6 +196,7 @@ public class McfCheckerTest {
             + "typeOf: schema:StatisticalVariable\n"
             + "populationType: dcs:person\n"
             + "measuredProperty: dcs:count\n"
+            + "dcid: \"Count_Person\"\n"
             + "statType: dcs:measuredValue";
     assertTrue(failure(mcf, "Sanity_NotInitUpper_populationType", "person"));
 
@@ -202,6 +205,7 @@ public class McfCheckerTest {
         "Node: SV\n"
             + "typeOf: schema:StatisticalVariable\n"
             + "populationType: schema:Person\n"
+            + "dcid: \"Count_Person\"\n"
             + "statType: dcs:measuredValue";
     assertTrue(
         failure(mcf, "Sanity_MissingOrEmpty_measuredProperty", "'measuredProperty', node: 'SV'"));
@@ -212,6 +216,7 @@ public class McfCheckerTest {
             + "typeOf: schema:StatisticalVariable\n"
             + "populationType: schema:Person\n"
             + "statType: dcs:measuredValue\n"
+            + "dcid: \"Income_Person\"\n"
             + "measuredProperty: dcs:Income";
     assertTrue(failure(mcf, "Sanity_NotInitLower_measuredProperty", "Income"));
 
@@ -221,8 +226,18 @@ public class McfCheckerTest {
             + "typeOf: schema:StatisticalVariable\n"
             + "populationType: schema:Person\n"
             + "statType: dcs:projection\n"
+            + "dcid: \"Income_Person\"\n"
             + "measuredProperty: dcs:income";
     assertTrue(failure(mcf, "Sanity_UnknownStatType", "projection"));
+
+    // Missing DCID
+    mcf =
+        "Node: SV\n"
+            + "typeOf: schema:StatisticalVariable\n"
+            + "populationType: schema:Person\n"
+            + "statType: dcs:measuredValue\n"
+            + "measuredProperty: dcs:income";
+    assertTrue(failure(mcf, "Sanity_MissingOrEmpty_dcid", "SV"));
   }
 
   @Test
