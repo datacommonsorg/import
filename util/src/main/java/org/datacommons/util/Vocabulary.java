@@ -14,6 +14,9 @@
 
 package org.datacommons.util;
 
+import java.util.List;
+import java.util.Set;
+
 // A class of static constants and methods.
 public final class Vocabulary {
   // Common types
@@ -139,6 +142,60 @@ public final class Vocabulary {
   public static final String COLUMN_PREFIX = "C:";
   public static final String TABLE_DELIMITER = "->";
   public static final String FUNCTIONAL_DEPS = "functionalDeps";
+
+  // Census specific property.
+  public static final String CENSUS_ACS_TABLE_ID = "censusACSTableId";
+  public static final String ISTAT_ID = "istatId";
+  public static final String AUSTRIAN_MUNICIPALITY_KEY = "austrianMunicipalityKey";
+
+  // Legacy properties
+  public static final String IS_PUBLIC = "isPublic";
+  public static final String DBG_MCF_FILE = "resMCFFile";
+
+  // List of properties known not to be a constraint property.
+  public static final Set<String> NON_CONSTRAINT_STAT_VAR_PROPERTIES =
+      Set.of(
+          // Basic Properties
+          TYPE_OF,
+          DCID,
+          PROVENANCE,
+          IS_PUBLIC,
+          LOCAL_CURATOR_LEVEL_ID,
+          URL,
+          MEMBER_OF,
+          NAME,
+          LABEL,
+          DESCRIPTION,
+          DESCRIPTION_URL,
+          ALTERNATE_NAME,
+          KEY_STRING,
+          DBG_MCF_FILE,
+          // StatPop / StatVar properties (current + past)
+          POPULATION_TYPE,
+          POPULATION_GROUP,
+          LOCATION,
+          CONSTRAINT_PROPS,
+          MEASURED_PROP,
+          STAT_TYPE,
+          MEASUREMENT_DENOMINATOR,
+          MEASUREMENT_QUALIFIER,
+          MEASUREMENT_METHOD,
+          SCALING_FACTOR,
+          UNIT,
+          CENSUS_ACS_TABLE_ID);
+
+  // NOTE: This is an ordered list. When an entity has multiple properties in this
+  // list, we prefer the one ordered first.
+  public static final List<String> PLACE_RESOLVABLE_AND_ASSIGNABLE_IDS =
+      List.of(
+          Vocabulary.GEO_ID,
+          Vocabulary.ISO_CODE,
+          Vocabulary.NUTS_CODE,
+          Vocabulary.WIKIDATA_ID,
+          Vocabulary.GEO_NAMES_ID,
+          Vocabulary.ISTAT_ID,
+          Vocabulary.AUSTRIAN_MUNICIPALITY_KEY,
+          Vocabulary.INDIAN_CENSUS_AREA_CODE_2011);
 
   public static boolean isSchemaReferenceProperty(String prop) {
     return prop.equals(TYPE_OF)
