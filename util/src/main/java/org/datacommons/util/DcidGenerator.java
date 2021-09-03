@@ -70,7 +70,6 @@ public class DcidGenerator {
           Vocabulary.MEASUREMENT_QUALIFIER,
           Vocabulary.MEASUREMENT_DENOMINATOR);
 
-  static final int LAST_REQUIRED_STAT_VAR_OBS_PROP_INDEX = 3; // until value
   private static final List<String> ORDERED_STAT_VAR_OBS_KEY_PROPS =
       List.of(
           Vocabulary.OBSERVATION_ABOUT,
@@ -81,8 +80,9 @@ public class DcidGenerator {
           Vocabulary.UNIT,
           Vocabulary.MEASUREMENT_METHOD,
           Vocabulary.SCALING_FACTOR);
+  static final int LAST_REQUIRED_STAT_VAR_OBS_PROP_INDEX =
+      ORDERED_STAT_VAR_OBS_KEY_PROPS.indexOf(Vocabulary.GENERIC_VALUE);
 
-  static final int LAST_REQUIRED_LEGACY_OBS_PROP_INDEX = 2; // until measuredProp.
   private static final List<String> ORDERED_LEGACY_OBS_KEY_PROPS =
       List.of(
           Vocabulary.OBSERVED_NODE,
@@ -111,11 +111,15 @@ public class DcidGenerator {
           Vocabulary.MEASUREMENT_DENOMINATOR,
           Vocabulary.MEASUREMENT_QUALIFIER,
           Vocabulary.SCALING_FACTOR);
+  static final int LAST_REQUIRED_LEGACY_OBS_PROP_INDEX =
+      ORDERED_LEGACY_OBS_KEY_PROPS.indexOf(Vocabulary.MEASURED_PROP);
 
   private static final LogWrapper dummyLogCtx =
       new LogWrapper(Debug.Log.newBuilder(), Path.of("/tmp/report.html"));
 
   public static class Result {
+    // The dcid will be empty if there were any errors in the node. These should have been
+    // reported earlier by McfChecker.
     public String dcid = new String();
     // For SVObs/Pop types, dcid is a content hash. This is the string that went into the ID, and
     // it is used for debugging purposes.
