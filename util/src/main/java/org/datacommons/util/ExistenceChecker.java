@@ -132,8 +132,7 @@ public class ExistenceChecker {
     List<String> preds = new ArrayList<>(remoteBatchMap.keySet());
     for (var pred : preds) {
       if (verbose) {
-        logger.info(
-            "Draining " + remoteBatchMap.get(pred).size() + " dcids for " + "predicate " + pred);
+        logger.info("Draining " + remoteBatchMap.get(pred).size() + " dcids for predicate " + pred);
       }
       drainRemoteCallsForPredicate(pred, remoteBatchMap.get(pred));
       remoteBatchMap.remove(pred);
@@ -180,7 +179,7 @@ public class ExistenceChecker {
             "Draining due to batching limit with "
                 + subMap.size()
                 + " dcids for "
-                + "predicate"
+                + "predicate "
                 + pred);
       }
       drainRemoteCallsForPredicate(pred, subMap);
