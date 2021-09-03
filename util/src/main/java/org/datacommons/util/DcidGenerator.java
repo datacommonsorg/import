@@ -120,6 +120,7 @@ public class DcidGenerator {
   public static class Result {
     // The dcid will be empty if there were any errors in the node. These should have been
     // reported earlier by McfChecker.
+    // TODO: Consider return error message when dcid is empty.
     public String dcid = new String();
     // For SVObs/Pop types, dcid is a content hash. This is the string that went into the ID, and
     // it is used for debugging purposes.
