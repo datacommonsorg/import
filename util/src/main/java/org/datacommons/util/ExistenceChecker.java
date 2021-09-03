@@ -17,8 +17,14 @@ import org.datacommons.proto.Mcf;
 
 // This class checks the existence of typically schema-related, nodes or (select types of)
 // triples in the KG or local graph.
-// TODO: Use POST instead of GET while calling DC so we won't run into URL limits and can batch
-//  even more.
+//
+// Users of this class submit checks for node (submitNodeCheck) or triple (submitTripleCheck)
+// along with a logging callback (LogCb).  The implementation batches calls to DC, and on
+// completion invokes the callback to notify on existence failures.  At the very end, users
+// need to issue a final drain call (drainRemoteCalls).
+//
+// TODO: Use POST instead of GET while calling DC so we're not limited by URI length and can
+//  batch even more.
 public class ExistenceChecker {
   private static final Logger logger = LogManager.getLogger(ExistenceChecker.class);
   // Use the staging end-point to not impact prod.
@@ -83,6 +89,42 @@ public class ExistenceChecker {
       return;
     }
     batchRemoteCall(sub, pred, obj, logCb);
+  }
+
+  public void addLocalGraph(Mcf.McfGraph graph) {
+    for (Map.Entry<String, Mcf.McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
+      // Skip doing anything with StatVarObs.
+      String typeOf = McfUtil.getPropVal(node.getValue(), Vocabulary.TYPE_OF);
+      if (typeOf.equals(Vocabulary.STAT_VAR_OBSERVATION_TYPE)
+          || typeOf.equals(Vocabulary.LEGACY_OBSERVATION_TYPE_SUFFIX)) {
+        continue;
+      }
+
+      String dcid = McfUtil.getPropVal(node.getValue(), Vocabulary.DCID);
+      if (dcid.isEmpty()) {
+        continue;
+      }
+
+      existingNodesOrTriples.add(dcid);
+      if (missingNodesOrTriples.contains(dcid)) {
+        missingNodesOrTriples.remove(dcid);
+      }
+
+      if (!typeOf.equals(Vocabulary.CLASS_TYPE) && !typeOf.equals(Vocabulary.PROPERTY_TYPE)) {
+        continue;
+      }
+      for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getValue().getPvsMap().entrySet()) {
+        if (SCHEMA_PROPERTIES.contains(pv.getKey())) {
+          for (Mcf.McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
+            var key = makeKey(dcid, pv.getKey(), tv.getValue());
+            existingNodesOrTriples.add(key);
+            if (missingNodesOrTriples.contains(key)) {
+              missingNodesOrTriples.remove(key);
+            }
+          }
+        }
+      }
+    }
   }
 
   public void drainRemoteCalls() throws IOException, InterruptedException {
@@ -163,10 +205,10 @@ public class ExistenceChecker {
       if (verbose) {
         logger.info("DC call failed for - " + Strings.join(subs, ',') + ", " + pred);
       }
-      logger.warn("DC Call failed (bad DCID or URI length). Issuing individual calls now.");
-      // Important: If the DCID is malformed, Mixer can return failure. Also, if the URI is too
-      // long, then too this happens. So Issue independent RPCs now. If this happens often enough,
+      // Important: If the dcid is malformed, Mixer can return failure. Also, if the URI is too
+      // long, then too this happens. So issue independent RPCs now. If this happens often enough,
       // we can revisit.
+      logger.warn("DC Call failed (bad DCID or URI length). Issuing individual calls now.");
       for (String sub : subs) {
         performDcCall(pred, List.of(sub), subMap);
       }
@@ -228,42 +270,6 @@ public class ExistenceChecker {
       }
     }
     return false;
-  }
-
-  public void addLocalGraph(Mcf.McfGraph graph) {
-    for (Map.Entry<String, Mcf.McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
-      // Skip doing anything with StatVarObs.
-      String typeOf = McfUtil.getPropVal(node.getValue(), Vocabulary.TYPE_OF);
-      if (typeOf.equals(Vocabulary.STAT_VAR_OBSERVATION_TYPE)
-          || typeOf.equals(Vocabulary.LEGACY_OBSERVATION_TYPE_SUFFIX)) {
-        continue;
-      }
-
-      String dcid = McfUtil.getPropVal(node.getValue(), Vocabulary.DCID);
-      if (dcid.isEmpty()) {
-        continue;
-      }
-
-      existingNodesOrTriples.add(dcid);
-      if (missingNodesOrTriples.contains(dcid)) {
-        missingNodesOrTriples.remove(dcid);
-      }
-
-      if (!typeOf.equals(Vocabulary.CLASS_TYPE) && !typeOf.equals(Vocabulary.PROPERTY_TYPE)) {
-        continue;
-      }
-      for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getValue().getPvsMap().entrySet()) {
-        if (SCHEMA_PROPERTIES.contains(pv.getKey())) {
-          for (Mcf.McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
-            var key = makeKey(dcid, pv.getKey(), tv.getValue());
-            existingNodesOrTriples.add(key);
-            if (missingNodesOrTriples.contains(key)) {
-              missingNodesOrTriples.remove(key);
-            }
-          }
-        }
-      }
-    }
   }
 
   // Returns true if we were able to complete the check locally.
