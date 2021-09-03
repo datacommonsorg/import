@@ -9,17 +9,14 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.datacommons.proto.Mcf;
 
 // This class checks the existence of typically schema-related, nodes or (select types of)
 // triples in the KG or local graph.
-// TODO: Consider changing callers to batch calls.
 public class ExistenceChecker {
   private static final Logger logger = LogManager.getLogger(ExistenceChecker.class);
   // Use the staging end-point to not impact prod.
@@ -27,15 +24,32 @@ public class ExistenceChecker {
   // For now we only need checks for certain Property/Class props.
   private static final Set<String> SCHEMA_PROPERTIES =
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES, Vocabulary.SUB_CLASS_OF);
+
+  // Batching thresholds.  Allow tests to set this.
+  public static int DC_CALL_BATCH_LIMIT = 500;
+  public static int MAX_PENDING_CALLS = 100000;
+
   // Useful for mocking.
-  private HttpClient httpClient;
-  private boolean verbose;
+  private final HttpClient httpClient;
+
+  // Logging stuff.
+  private final boolean verbose;
+  private final LogWrapper logCtx;
 
   // This is a combination of local KG data and prior cached checks.
   // Node is just the DCID. Triple is "s,p,o" and the property just includes SCHEMA_PROPERTIES.
-  private Set<String> existingNodesOrTriples; // Existence cache
-  private Set<String> missingNodesOrTriples; // Absence cache
-  private LogWrapper logCtx;
+  private final Set<String> existingNodesOrTriples; // Existence cache
+  private final Set<String> missingNodesOrTriples; // Absence cache
+
+  // To amortize DC call latency we batch calls up to DC_CALL_BATCH_LIMIT. The batching happens
+  // per (triple) predicate.
+  //
+  // Batch map:  predicate -> subject -> object -> list of pending call-contexts
+  //
+  // We batch based on the number of subjects in a predicate. To avoid worst case memory
+  // usage, if all checks are for the same node, we have a global limit of max pending calls.
+  private final Map<String, Map<String, Map<String, List<LogCb>>>> remoteBatchMap;
+  private int totalPendingCallCount = 0;
 
   public ExistenceChecker(HttpClient httpClient, boolean verbose, LogWrapper logCtx) {
     this.httpClient = httpClient;
@@ -43,21 +57,177 @@ public class ExistenceChecker {
     this.verbose = verbose;
     existingNodesOrTriples = new HashSet<>();
     missingNodesOrTriples = new HashSet<>();
+    remoteBatchMap = new HashMap<>();
   }
 
-  public boolean checkNode(String node) throws IOException, InterruptedException {
-    return checkCommon(node, Vocabulary.TYPE_OF, "", node);
+  public void submitNodeCheck(String node, LogCb logCb) throws IOException, InterruptedException {
+    logCtx.incrementCounterBy("Existence_NumChecks", 1);
+    if (checkLocal(node, Vocabulary.TYPE_OF, "", logCb)) {
+      return;
+    }
+    batchRemoteCall(node, Vocabulary.TYPE_OF, "", logCb);
   }
 
-  public boolean checkTriple(String sub, String pred, String obj)
+  public void submitTripleCheck(String sub, String pred, String obj, LogCb logCb)
       throws IOException, InterruptedException {
     if (pred.equals(Vocabulary.DOMAIN_INCLUDES) && (sub.contains("/") || sub.equals("count"))) {
       // Don't bother with domain checks for schema-less properties.
       // Measured property 'count' is an aggregate that is not a property of an instance, but
       // of a set.
-      return true;
+      return;
     }
-    return checkCommon(sub, pred, obj, makeKey(sub, pred, obj));
+    logCtx.incrementCounterBy("Existence_NumChecks", 1);
+    if (checkLocal(sub, pred, obj, logCb)) {
+      return;
+    }
+    batchRemoteCall(sub, pred, obj, logCb);
+  }
+
+  public void drainRemoteCalls() throws IOException, InterruptedException {
+    // To avoid mutating map while iterating, get the keys first.
+    List<String> preds = new ArrayList<>(remoteBatchMap.keySet());
+    for (var pred : preds) {
+      if (verbose) {
+        logger.info(
+            "Draining " + remoteBatchMap.get(pred).size() + " dcids for " + "predicate " + pred);
+      }
+      drainRemoteCallsForPredicate(pred, remoteBatchMap.get(pred));
+      remoteBatchMap.remove(pred);
+    }
+  }
+
+  private void batchRemoteCall(String sub, String pred, String obj, LogCb logCb)
+      throws IOException, InterruptedException {
+    Map<String, Map<String, List<LogCb>>> subMap = null;
+    if (remoteBatchMap.containsKey(pred)) {
+      subMap = remoteBatchMap.get(pred);
+    } else {
+      subMap = new HashMap<>();
+    }
+
+    Map<String, List<LogCb>> objMap = null;
+    if (subMap.containsKey(sub)) {
+      objMap = subMap.get(sub);
+    } else {
+      objMap = new HashMap<>();
+    }
+
+    List<LogCb> calls = null;
+    if (objMap.containsKey(obj)) {
+      calls = objMap.get(obj);
+    } else {
+      calls = new ArrayList<>();
+    }
+
+    // Add pending call.
+    calls.add(logCb);
+    objMap.put(obj, calls);
+    subMap.put(sub, objMap);
+    totalPendingCallCount++;
+    remoteBatchMap.put(pred, subMap);
+
+    // Maybe drain the batch.
+    if (totalPendingCallCount >= MAX_PENDING_CALLS) {
+      if (verbose) logger.info("Draining remote calls due to MAX_PENDING_CALLS");
+      drainRemoteCalls();
+    } else if (subMap.size() >= DC_CALL_BATCH_LIMIT) {
+      if (verbose) {
+        logger.info(
+            "Draining due to batching limit with "
+                + subMap.size()
+                + " dcids for "
+                + "predicate"
+                + pred);
+      }
+      drainRemoteCallsForPredicate(pred, subMap);
+      remoteBatchMap.remove(pred);
+    }
+  }
+
+  private void drainRemoteCallsForPredicate(
+      String pred, Map<String, Map<String, List<LogCb>>> subMap)
+      throws IOException, InterruptedException {
+    performDcCall(pred, new ArrayList<>(subMap.keySet()), subMap);
+  }
+
+  private void performDcCall(
+      String pred, List<String> subs, Map<String, Map<String, List<LogCb>>> subMap)
+      throws IOException, InterruptedException {
+    logCtx.incrementCounterBy("Existence_NumDcCalls", 1);
+
+    // Make one call with all entries in subMap.
+    var dataJson = callDc(subs, pred);
+
+    if (dataJson == null) {
+      if (verbose) {
+        logger.info("DC call failed for - " + Strings.join(subs, ',') + ", " + pred);
+      }
+      // If the DCID is malformed Mixer can return failure. So Issue independent RPCs now.
+      logger.warn("DC Call failed due to bad DCID. Issuing individual calls now.");
+      for (String sub : subs) {
+        performDcCall(pred, List.of(sub), subMap);
+      }
+      return;
+    }
+
+    if (dataJson.entrySet().size() != subs.size()) {
+      // Should not really happen, so throw exception
+      throw new IOException(
+          "Invalid results payload from Staging DC API endpoint for: '"
+              + Strings.join(subs, ',')
+              + "',"
+              + " '"
+              + pred
+              + "': "
+              + dataJson);
+    }
+
+    for (var entry : dataJson.entrySet()) {
+      var sub = entry.getKey();
+      var nodeJson = entry.getValue().getAsJsonObject();
+      var objMap = subMap.get(sub);
+      for (var kv : objMap.entrySet()) {
+        var obj = kv.getKey();
+        var cbs = kv.getValue();
+        var key = makeKey(sub, pred, obj);
+        if (checkOneResult(obj, nodeJson)) {
+          if (verbose) {
+            logger.info("Found " + (obj.isEmpty() ? "node" : "triple") + " in DC " + key);
+          }
+          existingNodesOrTriples.add(key);
+        } else {
+          if (verbose) {
+            logger.info("Missing " + (obj.isEmpty() ? "node" : "triple") + " in DC " + key);
+          }
+          missingNodesOrTriples.add(key);
+          // Log the missing details.
+          for (var cb : cbs) {
+            logEntry(cb, obj);
+          }
+        }
+        totalPendingCallCount -= cbs.size();
+      }
+      subMap.remove(sub);
+    }
+  }
+
+  private boolean checkOneResult(String obj, JsonObject nodeJson) {
+    if (nodeJson.has("out")) {
+      if (obj.isEmpty()) {
+        // Node existence case.
+        if (nodeJson.getAsJsonArray("out").size() > 0) {
+          return true;
+        }
+      } else {
+        // Triple existence case.
+        for (var objVal : nodeJson.getAsJsonArray("out")) {
+          if (objVal.getAsJsonObject().getAsJsonPrimitive("dcid").getAsString().equals(obj)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   public void addLocalGraph(Mcf.McfGraph graph) {
@@ -78,7 +248,6 @@ public class ExistenceChecker {
       if (missingNodesOrTriples.contains(dcid)) {
         missingNodesOrTriples.remove(dcid);
       }
-      if (verbose) logger.info("Local graph node - " + dcid);
 
       if (!typeOf.equals(Vocabulary.CLASS_TYPE) && !typeOf.equals(Vocabulary.PROPERTY_TYPE)) {
         continue;
@@ -91,71 +260,45 @@ public class ExistenceChecker {
             if (missingNodesOrTriples.contains(key)) {
               missingNodesOrTriples.remove(key);
             }
-            if (verbose) logger.info("Local graph triple - " + key);
           }
         }
       }
     }
   }
 
-  private boolean checkCommon(String sub, String pred, String obj, String key)
-      throws IOException, InterruptedException {
-    logCtx.incrementCounterBy("Existence_NumChecks", 1);
-    if (existingNodesOrTriples.contains(key)) return true;
-    if (missingNodesOrTriples.contains(key)) return false;
-
-    if (verbose) logger.info("Calling DC for - " + sub + ", " + pred);
-    var dataJson = callDc(sub, pred);
-    logCtx.incrementCounterBy("Existence_NumDcCalls", 1);
-    if (dataJson == null) {
-      if (verbose) logger.info("DC call failed for - " + sub + ", " + pred);
-      // If the DCID is malformed Mixer can return failure.
-      return false;
+  // Returns true if we were able to complete the check locally.
+  private boolean checkLocal(String sub, String pred, String obj, LogCb logCb) {
+    String key = makeKey(sub, pred, obj);
+    if (existingNodesOrTriples.contains(key)) {
+      return true;
     }
-    if (dataJson.entrySet().size() != 1) {
-      throw new IOException(
-          "Invalid results payload from Staging DC API endpoint for: '"
-              + sub
-              + "',"
-              + " '"
-              + pred
-              + "': "
-              + dataJson);
+    if (missingNodesOrTriples.contains(key)) {
+      logEntry(logCb, obj);
+      return true;
     }
-    for (var entry : dataJson.entrySet()) {
-      var nodeJson = entry.getValue().getAsJsonObject();
-      if (nodeJson.has("out")) {
-        if (obj.isEmpty()) {
-          // Node existence check case.
-          if (nodeJson.getAsJsonArray("out").size() > 0) {
-            if (verbose) logger.info("Found node in DC " + key);
-            existingNodesOrTriples.add(key);
-            return true;
-          }
-        } else {
-          // Triple existence check case.
-          for (var objVal : nodeJson.getAsJsonArray("out")) {
-            if (objVal.getAsJsonObject().getAsJsonPrimitive("dcid").getAsString().equals(obj)) {
-              if (verbose) logger.info("Found triple in DC " + key);
-              existingNodesOrTriples.add(key);
-              return true;
-            }
-          }
-        }
-      }
-      break;
-    }
-    if (verbose) logger.info("Missing in DC " + key);
-    missingNodesOrTriples.add(key);
     return false;
   }
 
-  private JsonObject callDc(String node, String property) throws IOException, InterruptedException {
-    List<String> args =
-        List.of(
-            "dcids=" + spaceHandlingUrlEncoder(node),
-            "property=" + spaceHandlingUrlEncoder(property),
-            "direction=out");
+  private static void logEntry(LogCb logCb, String obj) {
+    String message, counter;
+    if (obj.isEmpty()) {
+      counter = "Existence_MissingReference";
+      message = "Failed reference existence check";
+    } else {
+      counter = "Existence_MissingTriple";
+      message = "Failed triple existence check";
+    }
+    logCb.logError(counter, message);
+  }
+
+  private JsonObject callDc(List<String> nodes, String property)
+      throws IOException, InterruptedException {
+    List<String> args = new ArrayList<>();
+    for (var node : nodes) {
+      args.add("dcids=" + spaceHandlingUrlEncoder(node));
+    }
+    args.add("property=" + spaceHandlingUrlEncoder(property));
+    args.add("direction=out");
     var url = API_ROOT + "?" + String.join("&", args);
     var request =
         HttpRequest.newBuilder(URI.create(url)).header("accept", "application/json").build();
@@ -171,6 +314,9 @@ public class ExistenceChecker {
   }
 
   private static String makeKey(String s, String p, String o) {
+    if (o.isEmpty()) {
+      return s;
+    }
     return s + "," + p + "," + o;
   }
 }

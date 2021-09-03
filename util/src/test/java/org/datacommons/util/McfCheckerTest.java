@@ -14,17 +14,16 @@
 
 package org.datacommons.util;
 
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
-import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
-
-import static org.junit.Assert.assertTrue;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
+import org.junit.Test;
 
 public class McfCheckerTest {
 
@@ -497,7 +496,7 @@ public class McfCheckerTest {
     assertTrue(
         failure(
             mcf,
-            "Existence_MissingValueRef_variableMeasured",
+            "Existence_MissingReference_variableMeasured",
             "Count_Person_NonExistent",
             null,
             true));
@@ -510,7 +509,7 @@ public class McfCheckerTest {
             + "measuredProperty: dcs:count\n"
             + "statType: dcs:measuredValue\n";
     assertTrue(
-        failure(mcf, "Existence_MissingValueRef_populationType", "PersonFromMars", null, true));
+        failure(mcf, "Existence_MissingReference_populationType", "PersonFromMars", null, true));
 
     // StatVar where mprop is not domain of popType
     mcf =
@@ -522,8 +521,8 @@ public class McfCheckerTest {
     assertTrue(
         failure(
             mcf,
-            "Existence_MissingPropertyDomainDefinition",
-            "property: 'receipts', class: 'Person'",
+            "Existence_MissingTriple_domainIncludes",
+            "subject: 'receipts', predicate: 'domainIncludes', object: 'Person'",
             null,
             true));
 
@@ -538,8 +537,8 @@ public class McfCheckerTest {
     assertTrue(
         failure(
             mcf,
-            "Existence_MissingPropertyRef",
-            "property: 'fooBarRandomProp', node: 'SV3'",
+            "Existence_MissingReference_Property",
+            "property-ref: 'fooBarRandomProp', node: 'SV3'",
             null,
             true));
 
@@ -554,8 +553,8 @@ public class McfCheckerTest {
     assertTrue(
         failure(
             mcf,
-            "Existence_MissingValueRef_race",
-            "reference: 'Jupiterian', property: 'race'",
+            "Existence_MissingReference_race",
+            "value-ref: 'Jupiterian', property: 'race'",
             null,
             true));
 
@@ -580,7 +579,7 @@ public class McfCheckerTest {
     LogWrapper lw = new LogWrapper(log, Path.of("InMemory"));
     ExistenceChecker ec = null;
     if (doExistenceCheck) {
-      ec = new ExistenceChecker(HttpClient.newHttpClient(), false, lw);
+      ec = new ExistenceChecker(HttpClient.newHttpClient(), true, lw);
     }
     Mcf.McfGraph graph;
     if (columns != null) {
@@ -588,9 +587,12 @@ public class McfCheckerTest {
     } else {
       graph = McfParser.parseInstanceMcfString(mcfString, false, lw);
     }
-    if (McfChecker.check(graph, columns, ec, lw)) {
+    if (McfChecker.check(graph, columns, ec, lw) && !doExistenceCheck) {
       System.err.println("Check unexpectedly passed for " + mcfString);
       return false;
+    }
+    if (doExistenceCheck) {
+      ec.drainRemoteCalls();
     }
     return TestUtil.checkLog(log.build(), counter, message);
   }
@@ -618,6 +620,9 @@ public class McfCheckerTest {
     if (!McfChecker.check(graph, columns, ec, lw)) {
       System.err.println("Check unexpectedly failed for \n" + mcfString + "\n :: \n" + log);
       return false;
+    }
+    if (ec != null) {
+      ec.drainRemoteCalls();
     }
     return true;
   }

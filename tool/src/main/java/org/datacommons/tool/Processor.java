@@ -139,5 +139,6 @@ public class Processor {
         throw new DCTooManyFailuresException("checkNodes encountered too many failures");
       }
     }
+    existenceChecker.drainRemoteCalls();
   }
 }
