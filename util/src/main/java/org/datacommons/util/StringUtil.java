@@ -14,12 +14,16 @@
 
 package org.datacommons.util;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
+import com.google.protobuf.util.JsonFormat;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
+import org.apache.commons.text.StringEscapeUtils;
 
 // Common set of utils to handle strings
 public class StringUtil {
@@ -174,5 +178,10 @@ public class StringUtil {
       }
     }
     return val;
+  }
+
+  public static String msgToJson(Message msg) throws InvalidProtocolBufferException {
+    // Without the un-escaping something like 'Node' shows up as \u0027Node\u0027
+    return StringEscapeUtils.unescapeJson(JsonFormat.printer().print(msg));
   }
 }
