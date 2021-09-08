@@ -2,6 +2,12 @@ package org.datacommons.util;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
+import org.datacommons.proto.Recon;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -12,82 +18,91 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
-import org.datacommons.proto.Recon;
 
-// Maps external IDs to DCIDs by calling DC Resolution API.
+// Resolves nodes with external IDs by calling DC Resolution API.
 //
-// This interface is used as follows:
-// 1. Make N submitNode(node) calls
-// 2. Call drainAll() finally
-// 3. Make N resolveNode(node) calls
+// This class is used as follows:
+// 1. Do N submitNode calls (which may batch up RPCs)
+// 2. Call drainRemoteCalls() (to drain all RPCs)
+// 3. Do N resolveNode calls (to resolve a dcid)
+//
 // If this order is not followed, errors will be thrown.
-public class ExternalIdMapper {
-  private static final int MAX_RESOLUTION_BATCH_IDS = 500;
+public class ExternalIdResolver {
+  private static final Logger logger = LogManager.getLogger(ExternalIdResolver.class);
+
   private static final String API_ROOT = "https://autopush.recon.datacommons.org/entity/resolve";
+  // Let tests modify it.
+  static int MAX_RESOLUTION_BATCH_IDS = 500;
 
   private boolean drained = false;
+  private final boolean verbose;
   private final LogWrapper logCtx;
   private final HttpClient httpClient;
 
   // IDs waiting to be mapped.
-  Map<String, Set<String>> pendingIds = new HashMap<>();
-  int numPendingIds = 0;
+  private Map<String, Set<String>> batchedIds = new HashMap<>();
+  private int numBatchedIds = 0;
 
   // IDs mapped already.
-  Map<String, Map<String, String>> mappedIds = new HashMap<>();
+  private Map<String, Map<String, String>> mappedIds = new HashMap<>();
 
-  public ExternalIdMapper(HttpClient httpClient, LogWrapper logCtx) {
+  public ExternalIdResolver(HttpClient httpClient, boolean verbose, LogWrapper logCtx) {
     this.httpClient = httpClient;
+    this.verbose = verbose;
     this.logCtx = logCtx;
   }
 
   public void submitNode(Mcf.McfGraph.PropertyValues node)
       throws IOException, InterruptedException {
     if (drained) {
-      throw new UnexpectedException("Cannot call submitMcf after drainAll!");
+      throw new UnexpectedException("Cannot call submitMcf after drainRemoteCalls!");
     }
     // Nothing to do if this is not a resolvable type.
     if (!isResolvableType(node)) return;
 
     for (var propIds : getExternalIds(node).entrySet()) {
       var prop = propIds.getKey();
-      Set<String> pending = pendingIds.getOrDefault(prop, null);
+      Set<String> batched = batchedIds.getOrDefault(prop, null);
       Map<String, String> mapped = mappedIds.getOrDefault(prop, null);
-      int numOrig = pending != null ? pending.size() : 0;
+      int numOrig = batched != null ? batched.size() : 0;
       for (var id : propIds.getValue()) {
         if (mapped != null && mapped.containsKey(id)) {
           // This ID is already mapped.
           continue;
         }
-        if (pending == null) pending = new HashSet<>();
-        pending.add(id);
+        if (batched == null) batched = new HashSet<>();
+        batched.add(id);
       }
-      if (pending != null) {
-        numPendingIds += (pending.size() - numOrig);
-        pendingIds.put(prop, pending);
+      if (batched != null) {
+        numBatchedIds += (batched.size() - numOrig);
+        batchedIds.put(prop, batched);
       }
     }
 
-    if (numPendingIds >= MAX_RESOLUTION_BATCH_IDS) {
-      processPending();
+    if (numBatchedIds >= MAX_RESOLUTION_BATCH_IDS) {
+      if (verbose) {
+        logger.info("Processing batched external-IDs due to MAX_RESOLUTION_BATCH_IDS threshold");
+      }
+      drainRemoteCallsInternal();
     }
   }
 
-  public void drainAll() throws IOException, InterruptedException {
-    processPending();
+  public void drainRemoteCalls() throws IOException, InterruptedException {
+    if (drained) {
+      throw new UnexpectedException("drainRemoteCalls() can only be called once!");
+    }
+    drainRemoteCallsInternal();
     drained = true;
   }
 
-  // Resolves the given node, if possible, and returns the node's DCID, if resolved. If not,
-  // returns empty string, and update "logCtx" with appropriate error.
+  // Resolves the given node, if possible, and returns the node's DCID if resolved. If not,
+  // returns empty string, and updates "logCtx" with appropriate error.
   //
-  // REQUIRES: drainAll() is called.
+  // REQUIRES: drainRemoteCalls() is called.
   public String resolveNode(String nodeId, Mcf.McfGraph.PropertyValues node)
       throws UnexpectedException {
     if (!drained) {
-      throw new UnexpectedException("Cannot call resolveNode before drainAll!");
+      throw new UnexpectedException("Cannot call resolveNode before drainRemoteCalls!");
     }
     String foundDcid = new String();
 
@@ -113,32 +128,36 @@ public class ExternalIdMapper {
                   + "', node: '"
                   + nodeId,
               node.getLocationsList());
-          return foundDcid;
+          return "";
         }
         var newDcid = mappedIds.get(prop).get(id);
         if (!foundDcid.isEmpty() && !foundDcid.equals(newDcid)) {
+          boolean foundFirst = foundExternalProp.compareTo(prop) < 0; // for deterministic order
           logCtx.addEntry(
               Debug.Log.Level.LEVEL_ERROR,
-              "Resolution_DivergingDcidsForExternalIds_" + prop + "_" + foundExternalProp,
+              "Resolution_DivergingDcidsForExternalIds_"
+                  + (foundFirst ? foundExternalProp : prop)
+                  + "_"
+                  + (foundFirst ? prop : foundExternalProp),
               "Found diverging DCIDs for external IDs :: extId1: '"
-                  + foundExternalId
+                  + (foundFirst ? foundExternalId : id)
                   + ", "
                   + "dcid1: '"
-                  + foundDcid
+                  + (foundFirst ? foundDcid : newDcid)
                   + "', property1: '"
-                  + foundExternalProp
+                  + (foundFirst ? foundExternalProp : prop)
                   + ", "
                   + "extId2: '"
-                  + id
+                  + (foundFirst ? id : foundExternalId)
                   + "', dcid2:"
-                  + newDcid
+                  + (foundFirst ? newDcid : foundDcid)
                   + ", property2: '"
-                  + prop
+                  + (foundFirst ? prop : foundExternalProp)
                   + "', node: '"
                   + nodeId
                   + "'",
               node.getLocationsList());
-          return foundDcid;
+          return "";
         }
         foundDcid = newDcid;
         foundExternalProp = prop;
@@ -156,10 +175,11 @@ public class ExternalIdMapper {
     return false;
   }
 
-  private void processPending() throws IOException, InterruptedException {
+  private void drainRemoteCallsInternal() throws IOException, InterruptedException {
+    // Package a request with all the batched IDs.
     Recon.ResolveEntitiesRequest.Builder request = Recon.ResolveEntitiesRequest.newBuilder();
     request.addWantedIdProperties(Vocabulary.DCID);
-    for (var propIds : pendingIds.entrySet()) {
+    for (var propIds : batchedIds.entrySet()) {
       var prop = propIds.getKey();
       for (var id : propIds.getValue()) {
         var reqEntity = request.addEntitiesBuilder();
@@ -173,32 +193,51 @@ public class ExternalIdMapper {
     if (request.getEntitiesCount() == 0) {
       return;
     }
+
+    // Issue the RPC.
+    if (verbose) {
+      logger.info("Issuing ResolveEntities call with " + request.getEntitiesCount() + " IDs");
+    }
     var response = callDc(request.build());
+
+    // Process response.
     for (var entity : response.getResolvedEntitiesList()) {
-      var parts = entity.getSourceId().split(":", 1);
-      if (parts.length != 2
-          || entity.getResolvedIdsCount() != 1
-          || entity.getResolvedIds(0).getIdsCount() != 1) {
+      if (entity.getResolvedIdsCount() == 0) {
+        // Unable to resolve ID.
+        if (verbose) logger.info("Unable to resolve " + entity.getSourceId());
+        continue;
+      }
+      var parts = entity.getSourceId().split(":", 2);
+      if (parts.length != 2 || entity.getResolvedIdsCount() != 1) {
         throw new InvalidProtocolBufferException(
             "Malformed ResolveEntitiesResponse.ResolvedEntity " + entity);
       }
       var extProp = parts[0];
       var extId = parts[1];
-      var idProp = entity.getResolvedIds(0).getIds(0);
-      if (idProp.getProp() != Vocabulary.DCID) {
-        throw new InvalidProtocolBufferException(
-            "Malformed ResolveEntitiesResponse.ResolvedEntity " + entity);
+      var dcid = new String();
+      // TODO: Assert only DCID is returned after
+      //  https://github.com/datacommonsorg/reconciliation/issues/13 is fixed.
+      for (var idProp : entity.getResolvedIds(0).getIdsList()) {
+        if (idProp.getProp().equals(Vocabulary.DCID)) {
+          dcid = idProp.getVal();
+          break;
+        }
       }
-      var dcid = idProp.getVal();
-      if (dcid.isEmpty()) continue;
-
-      var idMap = mappedIds.computeIfAbsent(extProp, k -> new HashMap<>());
-      idMap.put(extId, dcid);
+      if (!dcid.isEmpty()) {
+        mappedIds.computeIfAbsent(extProp, k -> new HashMap<>()).put(extId, dcid);
+        if (verbose) logger.info("Resolved " + entity.getSourceId() + " -> " + dcid);
+      } else {
+        if (verbose) logger.info("Resolved to empty dcid for " + entity.getSourceId());
+      }
     }
+
+    // Clear the batch.
+    batchedIds.clear();
   }
 
   private Recon.ResolveEntitiesResponse callDc(Recon.ResolveEntitiesRequest reconReq)
       throws IOException, InterruptedException {
+    logCtx.incrementCounterBy("Resolution_NumDcCalls", 1);
     var request =
         HttpRequest.newBuilder(URI.create(API_ROOT))
             .header("accept", "application/json")

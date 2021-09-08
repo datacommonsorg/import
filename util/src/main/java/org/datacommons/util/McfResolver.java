@@ -1,7 +1,5 @@
 package org.datacommons.util;
 
-import static org.datacommons.util.Vocabulary.PLACE_TYPES;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -148,12 +146,7 @@ public class McfResolver {
         } else if (isLegacyObs) {
           result = DcidGenerator.forObservation(nodeId, node.build());
         } else {
-          for (var type : types) {
-            if (PLACE_TYPES.contains(type)) {
-              result = DcidGenerator.forPlace(node.build());
-              break;
-            }
-          }
+          // TODO: Use ExternalIdResolver here.
         }
         if (result != null && !result.dcid.isEmpty()) {
           roundResult.numUpdated++;
