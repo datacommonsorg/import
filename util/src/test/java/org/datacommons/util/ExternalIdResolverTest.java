@@ -1,17 +1,16 @@
 package org.datacommons.util;
 
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
+import org.junit.Test;
 
 public class ExternalIdResolverTest {
   @Test
