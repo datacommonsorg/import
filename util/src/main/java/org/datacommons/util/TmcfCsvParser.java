@@ -14,6 +14,12 @@
 
 package org.datacommons.util;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -21,16 +27,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
 
 // Converts a Template MCF file and an associated CSV into instance MCF.
 //
 // NOTE: Sets the location file in LogWrapper (at different times to point to TMCF and CSV).
 // TODO: Add more column info in generated MCF, even when values are missing.
+// TODO: CSV Parser's getCurrentLineNumber() appears to return not increment line-number for the
+//       last line if it does not end with a newline. Consider tracking line-number directly.
 public class TmcfCsvParser {
   public static boolean TEST_mode = false;
 
