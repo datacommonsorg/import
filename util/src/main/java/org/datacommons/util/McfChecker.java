@@ -61,7 +61,7 @@ public class McfChecker {
   }
 
   // Used to check a single node from TMcfCsvParser.
-  public static boolean check(
+  public static boolean checkNode(
       Mcf.McfType mcfType, String nodeId, Mcf.McfGraph.PropertyValues node, LogWrapper logCtx)
       throws IOException, InterruptedException {
     Mcf.McfGraph.Builder nodeGraph = Mcf.McfGraph.newBuilder();
@@ -71,7 +71,7 @@ public class McfChecker {
   }
 
   // Used with Template MCF when there are columns from CSV header.
-  public static boolean check(
+  public static boolean checkTemplate(
       Mcf.McfGraph graph, Set<String> columns, ExistenceChecker existenceChecker, LogWrapper logCtx)
       throws IOException, InterruptedException {
     return new McfChecker(graph, columns, existenceChecker, logCtx).check();
@@ -193,18 +193,15 @@ public class McfChecker {
             nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.MEASURED_PROP);
     checkInitCasing(nodeId, node, Vocabulary.MEASURED_PROP, mProp, "", false);
     // TODO: Do this check for all constraint properties too.
-    if (existenceChecker != null
-        && !existenceChecker.checkTriple(mProp, Vocabulary.DOMAIN_INCLUDES, popType)) {
-      addLog(
-          "Existence_MissingPropertyDomainDefinition",
-          "Class not in the domain of Property used in StatVar :: property: '"
-              + mProp
-              + "', class: '"
-              + popType
-              + "', node: '"
-              + nodeId
-              + "'",
-          node);
+    if (existenceChecker != null) {
+      LogCb logCb =
+          new LogCb(logCtx, Debug.Log.Level.LEVEL_WARNING, node)
+              .setDetail(LogCb.SUB_KEY, mProp)
+              .setDetail(LogCb.PRED_KEY, Vocabulary.DOMAIN_INCLUDES)
+              .setDetail(LogCb.OBJ_KEY, popType)
+              .setDetail(LogCb.NODE_KEY, nodeId)
+              .setCounterSuffix(Vocabulary.DOMAIN_INCLUDES);
+      existenceChecker.submitTripleCheck(mProp, Vocabulary.DOMAIN_INCLUDES, popType, logCb);
     }
 
     String statType =
@@ -216,6 +213,9 @@ public class McfChecker {
           "Found an unknown statType value :: value: '" + statType + "', node: '" + nodeId + "'",
           node);
     }
+
+    // Every SV must have DCID defined.
+    checkRequiredSingleValueProp(nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.DCID);
   }
 
   private void checkSVObs(String nodeId, Mcf.McfGraph.PropertyValues node)
@@ -406,13 +406,13 @@ public class McfChecker {
         }
       }
 
-      if (existenceChecker != null && !existenceChecker.checkNode(prop)) {
-        // Mark reference check misses as warnings to flag the user to add schema.
-        addLog(
-            Debug.Log.Level.LEVEL_WARNING,
-            "Existence_MissingPropertyRef",
-            "Failed existence check :: property: '" + prop + "', node: '" + nodeId + "'",
-            node);
+      if (existenceChecker != null) {
+        LogCb logCb =
+            new LogCb(logCtx, Debug.Log.Level.LEVEL_WARNING, node)
+                .setDetail(LogCb.PREF_KEY, prop)
+                .setDetail(LogCb.NODE_KEY, nodeId)
+                .setCounterSuffix(Vocabulary.PROPERTY_TYPE);
+        existenceChecker.submitNodeCheck(prop, logCb);
       }
 
       for (Mcf.McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
@@ -449,21 +449,14 @@ public class McfChecker {
         if (tv.getType() == Mcf.ValueType.RESOLVED_REF) {
           if (!checkDcid(tv.getValue(), prop, nodeId, node)) {
             // Failed. checkDcid would have updated logCtx, pass through...
-          } else if (shouldCheckExistence(prop, types)
-              && existenceChecker != null
-              && !existenceChecker.checkNode(tv.getValue())) {
-            // Mark reference check misses as warnings to flag the user to add schema.
-            addLog(
-                Debug.Log.Level.LEVEL_WARNING,
-                "Existence_MissingValueRef_" + prop,
-                "Failed existence check :: reference: '"
-                    + tv.getValue()
-                    + "', property: '"
-                    + prop
-                    + "', node: '"
-                    + nodeId
-                    + "'",
-                node);
+          } else if (shouldCheckExistence(prop, types) && existenceChecker != null) {
+            LogCb logCb =
+                new LogCb(logCtx, Debug.Log.Level.LEVEL_WARNING, node)
+                    .setDetail(LogCb.VREF_KEY, tv.getValue())
+                    .setDetail(LogCb.PROP_KEY, prop)
+                    .setDetail(LogCb.NODE_KEY, nodeId)
+                    .setCounterSuffix(prop);
+            existenceChecker.submitNodeCheck(tv.getValue(), logCb);
           }
         }
       }

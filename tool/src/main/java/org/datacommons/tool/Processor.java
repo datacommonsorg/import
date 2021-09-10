@@ -123,6 +123,7 @@ public class Processor {
           numRowsProcessed,
           numNodesProcessed);
     }
+    if (existenceChecker != null) existenceChecker.drainRemoteCalls();
   }
 
   // Called only when existenceChecker is enabled.
@@ -139,5 +140,6 @@ public class Processor {
         throw new DCTooManyFailuresException("checkNodes encountered too many failures");
       }
     }
+    existenceChecker.drainRemoteCalls();
   }
 }

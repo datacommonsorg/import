@@ -71,7 +71,7 @@ class GenMcf implements Callable<Integer> {
     Processor processor = new Processor(false, parent.verbose, logCtx);
     Integer retVal = 0;
     try {
-      processor.processTables(fg.GetTmcf(), fg.GetCsv(), delimiter, writer);
+      processor.processTables(fg.GetTmcf(), fg.GetCsvs(), delimiter, writer);
     } catch (DCTooManyFailuresException | InterruptedException ex) {
       // Regardless of the failures, we will dump the logCtx and exit.
       retVal = -1;

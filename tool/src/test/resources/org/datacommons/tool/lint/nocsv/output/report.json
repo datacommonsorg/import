@@ -1,7 +1,7 @@
 {
   "levelSummary": {
-    "LEVEL_ERROR": "56",
-    "LEVEL_WARNING": "17"
+    "LEVEL_ERROR": "55",
+    "LEVEL_WARNING": "16"
   },
   "counterSet": {
     "counters": {
@@ -16,8 +16,6 @@
       "MCF_QuantityMalformedValue": "1",
       "MCF_QuantityRangeMalformedValues": "3",
       "Existence_NumChecks": "149",
-      "Existence_NumDcCalls": "48",
-      "Existence_MissingValueRef_containedIn": "1",
       "Sanity_MissingOrEmpty_typeOf": "2",
       "Sanity_InvalidChars_typeOf": "1",
       "Sanity_InvalidObsDate": "1",
@@ -26,30 +24,29 @@
       "Sanity_InvalidChars_dcid": "1",
       "Sanity_NonAsciiValueInNonText": "1",
       "Sanity_InvalidChars_location": "1",
-      "Existence_MissingValueRef_containedInPlace": "1",
-      "Existence_MissingPropertyRef": "4",
       "Sanity_MultipleDcidValues": "2",
       "Sanity_MissingOrEmpty_populationType": "2",
       "Sanity_MissingOrEmpty_measuredProperty": "1",
-      "Existence_MissingPropertyDomainDefinition": "1",
       "Sanity_MissingOrEmpty_statType": "1",
       "Sanity_UnknownStatType": "1",
-      "Existence_MissingValueRef_statType": "5",
       "Sanity_NotInitLowerPropName": "2",
-      "Existence_MissingValueRef_subClassOf": "1",
       "Sanity_InvalidChars_domainIncludes": "1",
       "Sanity_UnexpectedPropInProperty": "1",
       "Sanity_NonAsciiValueInSchema": "1",
       "Sanity_NotInitLower_labelInProperty": "1",
       "Sanity_EmptySchemaValue": "1",
       "Sanity_DcidNameMismatchInSchema": "2",
-      "Existence_MissingValueRef_domainIncludes": "1",
       "Sanity_UnexpectedPropInClass": "1",
       "Sanity_NotInitUpper_nameInClass": "1",
       "Sanity_MissingOrEmpty_subClassOf": "1",
+      "Existence_NumDcCalls": "2",
+      "Existence_MissingReference_containedIn": "1",
+      "Existence_MissingReference_statType": "5",
+      "Existence_MissingReference_domainIncludes": "2",
+      "Existence_MissingReference_containedInPlace": "1",
+      "Existence_MissingReference_Property": "4",
+      "Existence_MissingReference_subClassOf": "1",
       "TMCF_MalformedEntity": "2",
-      "Existence_MissingValueRef_variableMeasured": "1",
-      "Existence_MissingValueRef_measurementMethod": "1",
       "Sanity_MultipleVals_observationAbout": "1",
       "Sanity_MultipleVals_value": "1",
       "Sanity_TmcfMissingEntityDef": "5",
@@ -155,14 +152,6 @@
     "userMessage": "Malformed start+end components in QuantityRange value; one of them must be a number  :: startValue: '-', endValue: '-', property: 'age', node: 'dcid:Count_Death_15YearsPlus'",
     "counterKey": "MCF_QuantityRangeMalformedValues"
   }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "3"
-    },
-    "userMessage": "Failed existence check :: reference: '90062', property: 'containedIn', node: 'dcid:geoId/la'",
-    "counterKey": "Existence_MissingValueRef_containedIn"
-  }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "NoCsv.mcf",
@@ -227,30 +216,6 @@
     "userMessage": "Found invalid chars in dcid value :: value: 'geoId–SFCounty', invalid-chars: '–', property: 'location', node: 'CityStats/E5/2'",
     "counterKey": "Sanity_InvalidChars_location"
   }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "59"
-    },
-    "userMessage": "Failed existence check :: reference: 'dc/4fef4e', property: 'containedInPlace', node: 'dcid:dc/mx44'",
-    "counterKey": "Existence_MissingValueRef_containedInPlace"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "59"
-    },
-    "userMessage": "Failed existence check :: property: 'population', node: 'dcid:dc/mx44'",
-    "counterKey": "Existence_MissingPropertyRef"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "59"
-    },
-    "userMessage": "Failed existence check :: property: 'inCounty', node: 'dcid:dc/mx44'",
-    "counterKey": "Existence_MissingPropertyRef"
-  }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "NoCsv.mcf",
@@ -280,14 +245,6 @@
       "file": "NoCsv.mcf",
       "lineNumber": "77"
     },
-    "userMessage": "Class not in the domain of Property used in StatVar :: property: '', class: '', node: 'dcid:Count_Death_10To12'",
-    "counterKey": "Existence_MissingPropertyDomainDefinition"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "77"
-    },
     "userMessage": "Found a missing or empty property value :: property: 'statType', node: 'dcid:Count_Death_10To12', type: 'StatisticalVariable'",
     "counterKey": "Sanity_MissingOrEmpty_statType"
   }, {
@@ -298,46 +255,6 @@
     },
     "userMessage": "Found an unknown statType value :: value: '', node: 'dcid:Count_Death_10To12'",
     "counterKey": "Sanity_UnknownStatType"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "81"
-    },
-    "userMessage": "Failed existence check :: reference: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_10YearsPlus'",
-    "counterKey": "Existence_MissingValueRef_statType"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "88"
-    },
-    "userMessage": "Failed existence check :: reference: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_5To10'",
-    "counterKey": "Existence_MissingValueRef_statType"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "95"
-    },
-    "userMessage": "Failed existence check :: reference: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_YearsLessThan5'",
-    "counterKey": "Existence_MissingValueRef_statType"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "102"
-    },
-    "userMessage": "Failed existence check :: reference: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_5YearsPlus'",
-    "counterKey": "Existence_MissingValueRef_statType"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "109"
-    },
-    "userMessage": "Failed existence check :: reference: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_15YearsPlus'",
-    "counterKey": "Existence_MissingValueRef_statType"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -354,22 +271,6 @@
     },
     "userMessage": "Found a missing or empty property value :: property: 'populationType', node: 'dcid:Count_Death_15YearsPlus', type: 'StatisticalVariable'",
     "counterKey": "Sanity_MissingOrEmpty_populationType"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "116"
-    },
-    "userMessage": "Failed existence check :: property: 'label', node: 'dcid:beverageType'",
-    "counterKey": "Existence_MissingPropertyRef"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "116"
-    },
-    "userMessage": "Failed existence check :: reference: 'substanceType', property: 'subClassOf', node: 'dcid:beverageType'",
-    "counterKey": "Existence_MissingValueRef_subClassOf"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -419,22 +320,6 @@
     "userMessage": "Schema node with dcid/name mismatch :: name: 'Beverage–type', dcid: 'beverageType', node: 'dcid:beverageType'",
     "counterKey": "Sanity_DcidNameMismatchInSchema"
   }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "123"
-    },
-    "userMessage": "Failed existence check :: reference: 'PopEnums', property: 'domainIncludes', node: 'dcid:Pop'",
-    "counterKey": "Existence_MissingValueRef_domainIncludes"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "123"
-    },
-    "userMessage": "Failed existence check :: property: 'inCounty', node: 'dcid:Pop'",
-    "counterKey": "Existence_MissingPropertyRef"
-  }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "NoCsv.mcf",
@@ -467,6 +352,118 @@
     "userMessage": "Found a missing or empty property value :: property: 'subClassOf', node: 'dcid:Pop', type: 'Class'",
     "counterKey": "Sanity_MissingOrEmpty_subClassOf"
   }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "3"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: '90062', property: 'containedIn', node: 'dcid:geoId/la'",
+    "counterKey": "Existence_MissingReference_containedIn"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "81"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_10YearsPlus'",
+    "counterKey": "Existence_MissingReference_statType"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "88"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_5To10'",
+    "counterKey": "Existence_MissingReference_statType"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "95"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_YearsLessThan5'",
+    "counterKey": "Existence_MissingReference_statType"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "102"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_5YearsPlus'",
+    "counterKey": "Existence_MissingReference_statType"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "109"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_15YearsPlus'",
+    "counterKey": "Existence_MissingReference_statType"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "123"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'PopEnums', property: 'domainIncludes', node: 'dcid:Pop'",
+    "counterKey": "Existence_MissingReference_domainIncludes"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "59"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'dc/4fef4e', property: 'containedInPlace', node: 'dcid:dc/mx44'",
+    "counterKey": "Existence_MissingReference_containedInPlace"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "59"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'inCounty', node: 'dcid:dc/mx44'",
+    "counterKey": "Existence_MissingReference_Property"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "123"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'inCounty', node: 'dcid:Pop'",
+    "counterKey": "Existence_MissingReference_Property"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "116"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'label', node: 'dcid:beverageType'",
+    "counterKey": "Existence_MissingReference_Property"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "59"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'population', node: 'dcid:dc/mx44'",
+    "counterKey": "Existence_MissingReference_Property"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "116"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'substanceType', property: 'subClassOf', node: 'dcid:beverageType'",
+    "counterKey": "Existence_MissingReference_subClassOf"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "77"
+    },
+    "userMessage": "Failed reference existence check :: subject: '', predicate: 'domainIncludes', object: '', node: 'dcid:Count_Death_10To12'",
+    "counterKey": "Existence_MissingReference_domainIncludes"
+  }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "NoCsv.tmcf",
@@ -491,22 +488,6 @@
     "userMessage": "Found malformed entity name that is not an entity prefix (E:) :: name: '\"E:SVTest->E1\"'",
     "counterKey": "TMCF_MalformedEntity"
   }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.tmcf",
-      "lineNumber": "3"
-    },
-    "userMessage": "Failed existence check :: reference: 'SV2', property: 'variableMeasured', node: 'E:SVTest->E0'",
-    "counterKey": "Existence_MissingValueRef_variableMeasured"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "NoCsv.tmcf",
-      "lineNumber": "3"
-    },
-    "userMessage": "Failed existence check :: reference: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
-    "counterKey": "Existence_MissingValueRef_measurementMethod"
-  }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "NoCsv.tmcf",
@@ -528,7 +509,7 @@
       "file": "NoCsv.tmcf",
       "lineNumber": "3"
     },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E3', property: 'observationAbout' node: 'E:SVTest->E0'",
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E30', property: 'observationAbout' node: 'E:SVTest->E0'",
     "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
@@ -536,7 +517,7 @@
       "file": "NoCsv.tmcf",
       "lineNumber": "3"
     },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E30', property: 'observationAbout' node: 'E:SVTest->E0'",
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E3', property: 'observationAbout' node: 'E:SVTest->E0'",
     "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
