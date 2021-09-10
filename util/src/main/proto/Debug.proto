@@ -63,4 +63,40 @@ message Log {
     map<string, int64> level_summary = 1;
     optional CounterSet counter_set = 2;
     repeated Entry entries = 3;
+    repeated StatValidationResult stats_check_summary = 4;
+}
+
+message DataPoint {
+    message DataValue {
+        optional double value = 1;
+        repeated Log.Location locations = 2;
+    }
+
+    optional string date = 1;
+    repeated DataValue values = 2;
+}
+
+message StatValidationResult {
+    optional string place_dcid = 1;
+    optional string stat_var_dcid = 2;
+    optional string measurement_method = 3;
+    optional string observation_period = 4;
+    optional string scaling_factor = 5;
+    optional string unit = 6;
+
+    message StatValidationCounter {
+        optional string counter_name = 1;
+        repeated DataPoint problem_points = 2;
+        optional string details = 3;
+    }
+
+    repeated StatValidationCounter validation_counters = 7;
+
+    message PercentDifference {
+        optional double percent_difference = 1;
+        optional DataPoint diff_data_point = 2;
+        optional DataPoint base_data_point = 3;
+    }
+
+    optional PercentDifference series_largest_percent_diff = 8;
 }

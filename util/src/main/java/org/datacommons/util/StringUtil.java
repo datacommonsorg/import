@@ -14,8 +14,11 @@
 
 package org.datacommons.util;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -113,6 +116,25 @@ public class StringUtil {
       }
     }
     return false;
+  }
+
+  public static LocalDateTime getValidISO8601Date(String dateValue) {
+    // TODO: handle the extra date patterns
+    for (String pattern : DATE_PATTERNS) {
+      try {
+        DateTimeFormatter dateFormat =
+            new DateTimeFormatterBuilder()
+                .appendPattern(pattern)
+                .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
+                .parseDefaulting(ChronoField.MONTH_OF_YEAR, 1)
+                .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+                .toFormatter(Locale.ENGLISH);
+        return LocalDateTime.parse(dateValue, dateFormat);
+      } catch (DateTimeParseException ex) {
+        // Pass through
+      }
+    }
+    return null;
   }
 
   // Splits a string using the delimiter character. A field is not split if the delimiter is within

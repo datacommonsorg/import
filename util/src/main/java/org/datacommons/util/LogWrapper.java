@@ -31,6 +31,7 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
+import org.datacommons.proto.Debug.StatValidationResult;
 
 // The class that provides logging functionality.
 public class LogWrapper {
@@ -83,6 +84,11 @@ public class LogWrapper {
     } else {
       addEntry(level, counter, message, "FileNotSet.idk", -1);
     }
+  }
+
+  public void addStatsCheckSummaryEntry(StatValidationResult statValidationResult) {
+    if (log == null) return;
+    log.addStatsCheckSummary(statValidationResult);
   }
 
   public void incrementCounterBy(String counter, int incr) {
