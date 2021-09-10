@@ -1,18 +1,17 @@
 package org.datacommons.util;
 
-import org.apache.commons.io.IOUtils;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.commons.io.IOUtils;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
+import org.junit.Test;
 
 public class McfResolverTest {
   @Test

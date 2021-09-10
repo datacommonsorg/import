@@ -14,12 +14,6 @@
 
 package org.datacommons.util;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -27,6 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
 
 // Converts a Template MCF file and an associated CSV into instance MCF.
 //
