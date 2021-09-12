@@ -47,9 +47,18 @@ public class TestUtil {
     return McfUtil.serializeMcfGraph(graph, true);
   }
 
+  public static long getCounter(Debug.Log log, String counter) {
+    for (Map.Entry<String, Debug.Log.CounterSet> kv : log.getLevelSummaryMap().entrySet()) {
+      if (kv.getValue().getCountersMap().containsKey(counter)) {
+        return kv.getValue().getCountersMap().get(counter);
+      }
+    }
+    return -1;
+  }
+
   public static boolean checkLog(Debug.Log log, String counter, String subMessage) {
-    if (!log.getCounterSet().getCountersMap().containsKey(counter)) {
-      System.err.println("Missing counter " + counter + " stat :: " + log.getCounterSet());
+    if (getCounter(log, counter) == -1) {
+      System.err.println("Missing counter " + counter + " stat :: " + log.getLevelSummaryMap());
       return false;
     }
     boolean foundCounter = false;
@@ -64,17 +73,18 @@ public class TestUtil {
     if (foundCounter) {
       System.err.println("Missing message fragment '" + subMessage + "' :: " + log);
     } else {
-      System.err.println("Missing counter " + counter + " in entries :: " + log.getCounterSet());
+      System.err.println(
+          "Missing counter " + counter + " in entries :: " + log.getLevelSummaryMap());
     }
     return false;
   }
 
   public static boolean checkCounter(Debug.Log log, String counter, long expectedCount) {
-    if (!log.getCounterSet().getCountersMap().containsKey(counter)) {
-      System.err.println("Missing counter " + counter + " stat :: " + log.getCounterSet());
+    long actualCount = getCounter(log, counter);
+    if (actualCount == -1) {
+      System.err.println("Missing counter " + counter + " stat :: " + log.getLevelSummaryMap());
       return false;
     }
-    long actualCount = log.getCounterSet().getCountersOrDefault(counter, -1);
     if (actualCount == expectedCount) {
       return true;
     }

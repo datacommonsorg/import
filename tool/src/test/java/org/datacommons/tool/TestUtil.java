@@ -34,9 +34,6 @@ public class TestUtil {
     String testCase = directory.getName();
     Debug.Log expectedLog = reportToProto(expected).build();
     Debug.Log actualLog = reportToProto(actual).build();
-    expect
-        .that(expectedLog.getCounterSet().getCountersMap())
-        .isEqualTo(actualLog.getCounterSet().getCountersMap());
     expect.that(expectedLog.getLevelSummaryMap()).isEqualTo(actualLog.getLevelSummaryMap());
     expect
         .about(ProtoTruth.protos())
