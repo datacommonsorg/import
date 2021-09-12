@@ -39,10 +39,12 @@ public class ExternalIdResolver {
   private final HttpClient httpClient;
 
   // IDs waiting to be mapped.
+  // Key: ID property, Value: set of external IDs
   private Map<String, Set<String>> batchedIds = new HashMap<>();
   private int numBatchedIds = 0;
 
   // IDs mapped already.
+  // Key: ID property, Value: Map(Key: external ID, Value: DCID)
   private Map<String, Map<String, String>> mappedIds = new HashMap<>();
 
   public ExternalIdResolver(HttpClient httpClient, boolean verbose, LogWrapper logCtx) {
