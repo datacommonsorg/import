@@ -1,5 +1,7 @@
 package org.datacommons.util;
 
+import static org.datacommons.util.Vocabulary.*;
+
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import java.nio.file.Path;
@@ -40,26 +42,26 @@ public class DcidGenerator {
   // external IDs (like geoId/06).
   private static final Set<String> TYPES_USING_SHORT_ID =
       Set.of(
-          "City",
-          "County",
-          "Province",
-          "State",
-          "Country",
-          "Continent",
-          "CollegeOrUniversity",
-          "Source",
-          "Curator",
-          "Provenance",
-          "AdministrativeArea",
-          "AdministrativeArea1",
-          "AdministrativeArea2",
-          "AdministrativeArea3",
-          "AdministrativeArea4",
-          "AdministrativeArea5",
-          "Place",
-          "Town",
-          "Village",
-          "Neighborhood");
+          SOURCE_TYPE,
+          CURATOR_TYPE,
+          PROVENANCE_TYPE,
+          CITY,
+          COUNTY,
+          PROVINCE,
+          STATE,
+          COUNTRY,
+          CONTINENT,
+          ADMIN_AREA,
+          ADMIN_AREA_1,
+          ADMIN_AREA_2,
+          ADMIN_AREA_3,
+          ADMIN_AREA_4,
+          ADMIN_AREA_5,
+          PLACE_TYPE,
+          TOWN,
+          VILLAGE,
+          NEIGHBORHOOD,
+          "CollegeOrUniversity");
 
   private static final Set<String> FIXED_STAT_VAR_PROPS =
       Set.of(
