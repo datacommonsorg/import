@@ -31,6 +31,8 @@ import org.datacommons.proto.Mcf;
 //
 // NOTE: Sets the location file in LogWrapper (at different times to point to TMCF and CSV).
 // TODO: Add more column info in generated MCF, even when values are missing.
+// TODO: CSV Parser's getCurrentLineNumber() appears to return not increment line-number for the
+//       last line if it does not end with a newline. Consider tracking line-number directly.
 public class TmcfCsvParser {
   public static boolean TEST_mode = false;
 

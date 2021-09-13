@@ -1,0 +1,15 @@
+Node: E:Test->E0
+typeOf: schema:Country
+dcid: C:Test->CountryDcid
+
+Node: E:Test->E1
+typeOf: schema:State
+dcid: C:Test->StateDcid
+containedInPlace: E:Test->E0
+
+Node: E:Test->E2
+typeOf: dcs:StatVarObservation
+variableMeasured: dcs:Count_Person
+observationAbout: E:Test->E1
+value: C:Test->Value
+observationDate: "2020"
