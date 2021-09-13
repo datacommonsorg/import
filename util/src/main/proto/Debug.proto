@@ -60,7 +60,7 @@ message Log {
     }
 
     // Key: Level.name()
-    map<string, int64> level_summary = 1;
-    optional CounterSet counter_set = 2;
+    map<string, CounterSet> level_summary = 1;
     repeated Entry entries = 3;
+    reserved 2;
 }

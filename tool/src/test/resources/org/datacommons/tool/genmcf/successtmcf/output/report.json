@@ -1,32 +1,38 @@
 {
   "levelSummary": {
-    "LEVEL_ERROR": "20",
-    "LEVEL_WARNING": "4"
-  },
-  "counterSet": {
-    "counters": {
-      "Sanity_InvalidChars_dcid": "1",
-      "Sanity_InvalidChars_observationAbout": "2",
-      "Sanity_InvalidObsDate": "2",
-      "NumRowSuccesses": "13",
-      "Sanity_MultipleDcidValues": "1",
-      "NumNodeSuccesses": "21",
-      "NumPVSuccesses": "115",
-      "Sanity_NonAsciiValueInNonText": "1",
-      "Sanity_InvalidChars_typeOf": "1",
-      "StrSplit_EmptyToken_typeOf": "1",
-      "Sanity_MissingOrEmpty_typeOf": "1",
-      "CSV_InconsistentRows": "2",
-      "Sanity_MultipleVals_observationDate": "2",
-      "StrSplit_EmptyToken_location": "1",
-      "MCF_MalformedComplexValueParts": "1",
-      "MCF_MalformedComplexValue": "1",
-      "CSV_MalformedDCIDFailures": "1",
-      "CSV_MalformedDCIDPVFailures": "4",
-      "CSV_EmptyDcidReferences": "2",
-      "Sanity_MissingOrEmpty_observationAbout": "2",
-      "Sanity_VeryLongDcid": "1",
-      "MCF_QuantityMalformedValue": "1"
+    "LEVEL_ERROR": {
+      "counters": {
+        "Sanity_InvalidChars_dcid": "1",
+        "Sanity_InvalidChars_observationAbout": "2",
+        "Sanity_InvalidObsDate": "2",
+        "Sanity_MultipleDcidValues": "1",
+        "Sanity_NonAsciiValueInNonText": "1",
+        "Sanity_InvalidChars_typeOf": "1",
+        "Sanity_MissingOrEmpty_typeOf": "1",
+        "CSV_InconsistentRows": "2",
+        "Sanity_MultipleVals_observationDate": "2",
+        "StrSplit_EmptyToken_location": "1",
+        "MCF_MalformedComplexValueParts": "1",
+        "MCF_MalformedComplexValue": "1",
+        "Sanity_MissingOrEmpty_observationAbout": "2",
+        "Sanity_VeryLongDcid": "1",
+        "MCF_QuantityMalformedValue": "1"
+      }
+    },
+    "LEVEL_INFO": {
+      "counters": {
+        "NumRowSuccesses": "13",
+        "NumNodeSuccesses": "21",
+        "NumPVSuccesses": "115",
+        "CSV_MalformedDCIDPVFailures": "4"
+      }
+    },
+    "LEVEL_WARNING": {
+      "counters": {
+        "StrSplit_EmptyToken_typeOf": "1",
+        "CSV_MalformedDCIDFailures": "1",
+        "CSV_EmptyDcidReferences": "2"
+      }
     }
   },
   "entries": [{

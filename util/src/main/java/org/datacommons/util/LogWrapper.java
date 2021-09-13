@@ -14,7 +14,9 @@
 
 package org.datacommons.util;
 
-import com.google.protobuf.InvalidProtocolBufferException;
+import static org.datacommons.proto.Debug.Log.Level.LEVEL_FATAL;
+import static org.datacommons.proto.Debug.Log.Level.LEVEL_INFO;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -41,12 +43,12 @@ public class LogWrapper {
 
   public static boolean TEST_MODE = false;
 
-  private Debug.Log.Builder log;
-  private Path logPath;
+  private final Debug.Log.Builder log;
+  private final Path logPath;
   private String locationFile;
   private Instant lastStatusAt;
   private long countAtLastStatus;
-  private Set<String> countersWithErrors;
+  private final Set<String> countersWithErrors;
 
   public LogWrapper(Debug.Log.Builder log, Path outputDir) {
     this.log = log;
@@ -86,18 +88,12 @@ public class LogWrapper {
   }
 
   public void incrementCounterBy(String counter, int incr) {
-    Long c = Long.valueOf(incr);
-    if (log.getCounterSet().getCountersMap().containsKey(counter)) {
-      c = log.getCounterSet().getCountersMap().get(counter) + Long.valueOf(incr);
-    }
-    log.getCounterSetBuilder().putCounters(counter, c);
+    incrementCounterBy(LEVEL_INFO.name(), counter, incr);
   }
 
-  public void provideStatus(long count, String thing)
-      throws InvalidProtocolBufferException, IOException {
+  public void provideStatus(long count, String thing) throws IOException {
     Instant now = Instant.now();
     if (Duration.between(lastStatusAt, now).getSeconds() >= SECONDS_BETWEEN_STATUS) {
-      String msg;
       if (locationFile.isEmpty()) {
         logger.info("{} {} [{}]", count - countAtLastStatus, thing, summaryString());
       } else {
@@ -110,7 +106,7 @@ public class LogWrapper {
     }
   }
 
-  public void persistLog(boolean silent) throws InvalidProtocolBufferException, IOException {
+  public void persistLog(boolean silent) throws IOException {
     File logFile = new File(logPath.toString());
     FileUtils.writeStringToFile(logFile, StringUtil.msgToJson(log.build()), StandardCharsets.UTF_8);
     if (!silent) {
@@ -122,7 +118,7 @@ public class LogWrapper {
   }
 
   public boolean loggedTooManyFailures() {
-    if (log.getLevelSummaryOrDefault("LEVEL_FATAL", 0) > 0) {
+    if (log.getLevelSummaryMap().containsKey(LEVEL_FATAL.name())) {
       logger.error("Found a fatal failure. Quitting!");
       return true;
     }
@@ -134,25 +130,46 @@ public class LogWrapper {
   }
 
   public String summaryString() {
-    return log.getLevelSummaryMap().getOrDefault("LEVEL_FATAL", 0L)
+    return log.getLevelSummaryMap()
+            .getOrDefault("LEVEL_FATAL", Debug.Log.CounterSet.getDefaultInstance())
+            .getCountersMap()
+            .size()
         + " fatal, "
-        + log.getLevelSummaryMap().getOrDefault("LEVEL_ERROR", 0L)
+        + log.getLevelSummaryMap()
+            .getOrDefault("LEVEL_ERROR", Debug.Log.CounterSet.getDefaultInstance())
+            .getCountersMap()
+            .size()
         + " error(s), "
-        + log.getLevelSummaryMap().getOrDefault("LEVEL_WARNING", 0L)
+        + log.getLevelSummaryMap()
+            .getOrDefault("LEVEL_WARNING", Debug.Log.CounterSet.getDefaultInstance())
+            .getCountersMap()
+            .size()
         + " warning(s)";
+  }
+
+  public void incrementCounterBy(String level, String counter, int incr) {
+    long c = incr;
+    var cset =
+        log
+            .getLevelSummaryMap()
+            .getOrDefault(level, Debug.Log.CounterSet.getDefaultInstance())
+            .toBuilder();
+    if (cset.getCountersMap().containsKey(counter)) {
+      c += cset.getCountersMap().get(counter);
+    }
+    cset.putCounters(counter, c);
+    log.putLevelSummary(level, cset.build());
   }
 
   private void addEntry(
       Debug.Log.Level level, String counter, String message, String file, long lno) {
     if (TEST_MODE) System.err.println(counter + " - " + message);
-    if (level == Debug.Log.Level.LEVEL_ERROR || level == Debug.Log.Level.LEVEL_FATAL) {
-      countersWithErrors.add(counter);
-    }
     String counterName = counter == null || counter.isEmpty() ? "MissingCounterName" : counter;
-    long counterValue = log.getCounterSet().getCountersOrDefault(counterName, 0);
-    log.getCounterSetBuilder().putCounters(counterName, counterValue + 1);
-    log.putLevelSummary(level.name(), log.getLevelSummaryOrDefault(level.name(), 0) + 1);
-
+    if (level == Debug.Log.Level.LEVEL_ERROR || level == LEVEL_FATAL) {
+      countersWithErrors.add(counterName);
+    }
+    incrementCounterBy(level.name(), counterName, 1);
+    var counterValue = log.getLevelSummaryMap().get(level.name()).getCountersMap().get(counterName);
     if (counterValue <= MAX_MESSAGES_PER_COUNTER) {
       // Log only up to certain full messages per counter. This can spam the log for WARNING msgs.
       Debug.Log.Entry.Builder e = log.addEntriesBuilder();

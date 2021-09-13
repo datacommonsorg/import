@@ -24,7 +24,7 @@ public final class Debug {
      * Key: Level.name()
      * </pre>
      *
-     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
     int getLevelSummaryCount();
     /**
@@ -34,12 +34,12 @@ public final class Debug {
      * Key: Level.name()
      * </pre>
      *
-     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
     boolean containsLevelSummary(java.lang.String key);
     /** Use {@link #getLevelSummaryMap()} instead. */
     @java.lang.Deprecated
-    java.util.Map<java.lang.String, java.lang.Long> getLevelSummary();
+    java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet> getLevelSummary();
     /**
      *
      *
@@ -47,9 +47,10 @@ public final class Debug {
      * Key: Level.name()
      * </pre>
      *
-     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
-    java.util.Map<java.lang.String, java.lang.Long> getLevelSummaryMap();
+    java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
+        getLevelSummaryMap();
     /**
      *
      *
@@ -57,9 +58,10 @@ public final class Debug {
      * Key: Level.name()
      * </pre>
      *
-     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
-    long getLevelSummaryOrDefault(java.lang.String key, long defaultValue);
+    org.datacommons.proto.Debug.Log.CounterSet getLevelSummaryOrDefault(
+        java.lang.String key, org.datacommons.proto.Debug.Log.CounterSet defaultValue);
     /**
      *
      *
@@ -67,24 +69,9 @@ public final class Debug {
      * Key: Level.name()
      * </pre>
      *
-     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
-    long getLevelSummaryOrThrow(java.lang.String key);
-
-    /**
-     * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
-     *
-     * @return Whether the counterSet field is set.
-     */
-    boolean hasCounterSet();
-    /**
-     * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
-     *
-     * @return The counterSet.
-     */
-    org.datacommons.proto.Debug.Log.CounterSet getCounterSet();
-    /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
-    org.datacommons.proto.Debug.Log.CounterSetOrBuilder getCounterSetOrBuilder();
+    org.datacommons.proto.Debug.Log.CounterSet getLevelSummaryOrThrow(java.lang.String key);
 
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
     java.util.List<org.datacommons.proto.Debug.Log.Entry> getEntriesList();
@@ -159,36 +146,22 @@ public final class Debug {
                           LevelSummaryDefaultEntryHolder.defaultEntry);
                   mutable_bitField0_ |= 0x00000001;
                 }
-                com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> levelSummary__ =
-                    input.readMessage(
-                        LevelSummaryDefaultEntryHolder.defaultEntry.getParserForType(),
-                        extensionRegistry);
+                com.google.protobuf.MapEntry<
+                        java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
+                    levelSummary__ =
+                        input.readMessage(
+                            LevelSummaryDefaultEntryHolder.defaultEntry.getParserForType(),
+                            extensionRegistry);
                 levelSummary_
                     .getMutableMap()
                     .put(levelSummary__.getKey(), levelSummary__.getValue());
                 break;
               }
-            case 18:
-              {
-                org.datacommons.proto.Debug.Log.CounterSet.Builder subBuilder = null;
-                if (((bitField0_ & 0x00000001) != 0)) {
-                  subBuilder = counterSet_.toBuilder();
-                }
-                counterSet_ =
-                    input.readMessage(
-                        org.datacommons.proto.Debug.Log.CounterSet.PARSER, extensionRegistry);
-                if (subBuilder != null) {
-                  subBuilder.mergeFrom(counterSet_);
-                  counterSet_ = subBuilder.buildPartial();
-                }
-                bitField0_ |= 0x00000001;
-                break;
-              }
             case 26:
               {
-                if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+                if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                   entries_ = new java.util.ArrayList<org.datacommons.proto.Debug.Log.Entry>();
-                  mutable_bitField0_ |= 0x00000004;
+                  mutable_bitField0_ |= 0x00000002;
                 }
                 entries_.add(
                     input.readMessage(
@@ -209,7 +182,7 @@ public final class Debug {
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) != 0)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           entries_ = java.util.Collections.unmodifiableList(entries_);
         }
         this.unknownFields = unknownFields.build();
@@ -3669,23 +3642,28 @@ public final class Debug {
       }
     }
 
-    private int bitField0_;
     public static final int LEVEL_SUMMARY_FIELD_NUMBER = 1;
 
     private static final class LevelSummaryDefaultEntryHolder {
-      static final com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> defaultEntry =
-          com.google.protobuf.MapEntry.<java.lang.String, java.lang.Long>newDefaultInstance(
-              org.datacommons.proto.Debug
-                  .internal_static_org_datacommons_proto_Log_LevelSummaryEntry_descriptor,
-              com.google.protobuf.WireFormat.FieldType.STRING,
-              "",
-              com.google.protobuf.WireFormat.FieldType.INT64,
-              0L);
+      static final com.google.protobuf.MapEntry<
+              java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
+          defaultEntry =
+              com.google.protobuf.MapEntry
+                  .<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>newDefaultInstance(
+                      org.datacommons.proto.Debug
+                          .internal_static_org_datacommons_proto_Log_LevelSummaryEntry_descriptor,
+                      com.google.protobuf.WireFormat.FieldType.STRING,
+                      "",
+                      com.google.protobuf.WireFormat.FieldType.MESSAGE,
+                      org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance());
     }
 
-    private com.google.protobuf.MapField<java.lang.String, java.lang.Long> levelSummary_;
+    private com.google.protobuf.MapField<
+            java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
+        levelSummary_;
 
-    private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
+    private com.google.protobuf.MapField<
+            java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
         internalGetLevelSummary() {
       if (levelSummary_ == null) {
         return com.google.protobuf.MapField.emptyMapField(
@@ -3704,7 +3682,7 @@ public final class Debug {
      * Key: Level.name()
      * </pre>
      *
-     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
     public boolean containsLevelSummary(java.lang.String key) {
       if (key == null) {
@@ -3714,7 +3692,8 @@ public final class Debug {
     }
     /** Use {@link #getLevelSummaryMap()} instead. */
     @java.lang.Deprecated
-    public java.util.Map<java.lang.String, java.lang.Long> getLevelSummary() {
+    public java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
+        getLevelSummary() {
       return getLevelSummaryMap();
     }
     /**
@@ -3724,9 +3703,10 @@ public final class Debug {
      * Key: Level.name()
      * </pre>
      *
-     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
-    public java.util.Map<java.lang.String, java.lang.Long> getLevelSummaryMap() {
+    public java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
+        getLevelSummaryMap() {
       return internalGetLevelSummary().getMap();
     }
     /**
@@ -3736,13 +3716,15 @@ public final class Debug {
      * Key: Level.name()
      * </pre>
      *
-     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
-    public long getLevelSummaryOrDefault(java.lang.String key, long defaultValue) {
+    public org.datacommons.proto.Debug.Log.CounterSet getLevelSummaryOrDefault(
+        java.lang.String key, org.datacommons.proto.Debug.Log.CounterSet defaultValue) {
       if (key == null) {
         throw new java.lang.NullPointerException();
       }
-      java.util.Map<java.lang.String, java.lang.Long> map = internalGetLevelSummary().getMap();
+      java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet> map =
+          internalGetLevelSummary().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
@@ -3752,44 +3734,18 @@ public final class Debug {
      * Key: Level.name()
      * </pre>
      *
-     * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+     * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
-    public long getLevelSummaryOrThrow(java.lang.String key) {
+    public org.datacommons.proto.Debug.Log.CounterSet getLevelSummaryOrThrow(java.lang.String key) {
       if (key == null) {
         throw new java.lang.NullPointerException();
       }
-      java.util.Map<java.lang.String, java.lang.Long> map = internalGetLevelSummary().getMap();
+      java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet> map =
+          internalGetLevelSummary().getMap();
       if (!map.containsKey(key)) {
         throw new java.lang.IllegalArgumentException();
       }
       return map.get(key);
-    }
-
-    public static final int COUNTER_SET_FIELD_NUMBER = 2;
-    private org.datacommons.proto.Debug.Log.CounterSet counterSet_;
-    /**
-     * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
-     *
-     * @return Whether the counterSet field is set.
-     */
-    public boolean hasCounterSet() {
-      return ((bitField0_ & 0x00000001) != 0);
-    }
-    /**
-     * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
-     *
-     * @return The counterSet.
-     */
-    public org.datacommons.proto.Debug.Log.CounterSet getCounterSet() {
-      return counterSet_ == null
-          ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
-          : counterSet_;
-    }
-    /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
-    public org.datacommons.proto.Debug.Log.CounterSetOrBuilder getCounterSetOrBuilder() {
-      return counterSet_ == null
-          ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
-          : counterSet_;
     }
 
     public static final int ENTRIES_FIELD_NUMBER = 3;
@@ -3832,9 +3788,6 @@ public final class Debug {
     public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
           output, internalGetLevelSummary(), LevelSummaryDefaultEntryHolder.defaultEntry, 1);
-      if (((bitField0_ & 0x00000001) != 0)) {
-        output.writeMessage(2, getCounterSet());
-      }
       for (int i = 0; i < entries_.size(); i++) {
         output.writeMessage(3, entries_.get(i));
       }
@@ -3847,18 +3800,16 @@ public final class Debug {
       if (size != -1) return size;
 
       size = 0;
-      for (java.util.Map.Entry<java.lang.String, java.lang.Long> entry :
+      for (java.util.Map.Entry<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet> entry :
           internalGetLevelSummary().getMap().entrySet()) {
-        com.google.protobuf.MapEntry<java.lang.String, java.lang.Long> levelSummary__ =
-            LevelSummaryDefaultEntryHolder.defaultEntry
-                .newBuilderForType()
-                .setKey(entry.getKey())
-                .setValue(entry.getValue())
-                .build();
+        com.google.protobuf.MapEntry<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
+            levelSummary__ =
+                LevelSummaryDefaultEntryHolder.defaultEntry
+                    .newBuilderForType()
+                    .setKey(entry.getKey())
+                    .setValue(entry.getValue())
+                    .build();
         size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, levelSummary__);
-      }
-      if (((bitField0_ & 0x00000001) != 0)) {
-        size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getCounterSet());
       }
       for (int i = 0; i < entries_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, entries_.get(i));
@@ -3879,10 +3830,6 @@ public final class Debug {
       org.datacommons.proto.Debug.Log other = (org.datacommons.proto.Debug.Log) obj;
 
       if (!internalGetLevelSummary().equals(other.internalGetLevelSummary())) return false;
-      if (hasCounterSet() != other.hasCounterSet()) return false;
-      if (hasCounterSet()) {
-        if (!getCounterSet().equals(other.getCounterSet())) return false;
-      }
       if (!getEntriesList().equals(other.getEntriesList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
@@ -3898,10 +3845,6 @@ public final class Debug {
       if (!internalGetLevelSummary().getMap().isEmpty()) {
         hash = (37 * hash) + LEVEL_SUMMARY_FIELD_NUMBER;
         hash = (53 * hash) + internalGetLevelSummary().hashCode();
-      }
-      if (hasCounterSet()) {
-        hash = (37 * hash) + COUNTER_SET_FIELD_NUMBER;
-        hash = (53 * hash) + getCounterSet().hashCode();
       }
       if (getEntriesCount() > 0) {
         hash = (37 * hash) + ENTRIES_FIELD_NUMBER;
@@ -4067,7 +4010,6 @@ public final class Debug {
 
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
-          getCounterSetFieldBuilder();
           getEntriesFieldBuilder();
         }
       }
@@ -4076,15 +4018,9 @@ public final class Debug {
       public Builder clear() {
         super.clear();
         internalGetMutableLevelSummary().clear();
-        if (counterSetBuilder_ == null) {
-          counterSet_ = null;
-        } else {
-          counterSetBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000002);
         if (entriesBuilder_ == null) {
           entries_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
+          bitField0_ = (bitField0_ & ~0x00000002);
         } else {
           entriesBuilder_.clear();
         }
@@ -4114,27 +4050,17 @@ public final class Debug {
       public org.datacommons.proto.Debug.Log buildPartial() {
         org.datacommons.proto.Debug.Log result = new org.datacommons.proto.Debug.Log(this);
         int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
         result.levelSummary_ = internalGetLevelSummary();
         result.levelSummary_.makeImmutable();
-        if (((from_bitField0_ & 0x00000002) != 0)) {
-          if (counterSetBuilder_ == null) {
-            result.counterSet_ = counterSet_;
-          } else {
-            result.counterSet_ = counterSetBuilder_.build();
-          }
-          to_bitField0_ |= 0x00000001;
-        }
         if (entriesBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) != 0)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             entries_ = java.util.Collections.unmodifiableList(entries_);
-            bitField0_ = (bitField0_ & ~0x00000004);
+            bitField0_ = (bitField0_ & ~0x00000002);
           }
           result.entries_ = entries_;
         } else {
           result.entries_ = entriesBuilder_.build();
         }
-        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -4187,14 +4113,11 @@ public final class Debug {
       public Builder mergeFrom(org.datacommons.proto.Debug.Log other) {
         if (other == org.datacommons.proto.Debug.Log.getDefaultInstance()) return this;
         internalGetMutableLevelSummary().mergeFrom(other.internalGetLevelSummary());
-        if (other.hasCounterSet()) {
-          mergeCounterSet(other.getCounterSet());
-        }
         if (entriesBuilder_ == null) {
           if (!other.entries_.isEmpty()) {
             if (entries_.isEmpty()) {
               entries_ = other.entries_;
-              bitField0_ = (bitField0_ & ~0x00000004);
+              bitField0_ = (bitField0_ & ~0x00000002);
             } else {
               ensureEntriesIsMutable();
               entries_.addAll(other.entries_);
@@ -4207,7 +4130,7 @@ public final class Debug {
               entriesBuilder_.dispose();
               entriesBuilder_ = null;
               entries_ = other.entries_;
-              bitField0_ = (bitField0_ & ~0x00000004);
+              bitField0_ = (bitField0_ & ~0x00000002);
               entriesBuilder_ =
                   com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
                       ? getEntriesFieldBuilder()
@@ -4248,9 +4171,12 @@ public final class Debug {
 
       private int bitField0_;
 
-      private com.google.protobuf.MapField<java.lang.String, java.lang.Long> levelSummary_;
+      private com.google.protobuf.MapField<
+              java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
+          levelSummary_;
 
-      private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
+      private com.google.protobuf.MapField<
+              java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
           internalGetLevelSummary() {
         if (levelSummary_ == null) {
           return com.google.protobuf.MapField.emptyMapField(
@@ -4259,7 +4185,8 @@ public final class Debug {
         return levelSummary_;
       }
 
-      private com.google.protobuf.MapField<java.lang.String, java.lang.Long>
+      private com.google.protobuf.MapField<
+              java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
           internalGetMutableLevelSummary() {
         onChanged();
         ;
@@ -4283,7 +4210,7 @@ public final class Debug {
        * Key: Level.name()
        * </pre>
        *
-       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
        */
       public boolean containsLevelSummary(java.lang.String key) {
         if (key == null) {
@@ -4293,7 +4220,8 @@ public final class Debug {
       }
       /** Use {@link #getLevelSummaryMap()} instead. */
       @java.lang.Deprecated
-      public java.util.Map<java.lang.String, java.lang.Long> getLevelSummary() {
+      public java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
+          getLevelSummary() {
         return getLevelSummaryMap();
       }
       /**
@@ -4303,9 +4231,10 @@ public final class Debug {
        * Key: Level.name()
        * </pre>
        *
-       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
        */
-      public java.util.Map<java.lang.String, java.lang.Long> getLevelSummaryMap() {
+      public java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
+          getLevelSummaryMap() {
         return internalGetLevelSummary().getMap();
       }
       /**
@@ -4315,13 +4244,15 @@ public final class Debug {
        * Key: Level.name()
        * </pre>
        *
-       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
        */
-      public long getLevelSummaryOrDefault(java.lang.String key, long defaultValue) {
+      public org.datacommons.proto.Debug.Log.CounterSet getLevelSummaryOrDefault(
+          java.lang.String key, org.datacommons.proto.Debug.Log.CounterSet defaultValue) {
         if (key == null) {
           throw new java.lang.NullPointerException();
         }
-        java.util.Map<java.lang.String, java.lang.Long> map = internalGetLevelSummary().getMap();
+        java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet> map =
+            internalGetLevelSummary().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
       /**
@@ -4331,13 +4262,15 @@ public final class Debug {
        * Key: Level.name()
        * </pre>
        *
-       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
        */
-      public long getLevelSummaryOrThrow(java.lang.String key) {
+      public org.datacommons.proto.Debug.Log.CounterSet getLevelSummaryOrThrow(
+          java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
         }
-        java.util.Map<java.lang.String, java.lang.Long> map = internalGetLevelSummary().getMap();
+        java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet> map =
+            internalGetLevelSummary().getMap();
         if (!map.containsKey(key)) {
           throw new java.lang.IllegalArgumentException();
         }
@@ -4355,7 +4288,7 @@ public final class Debug {
        * Key: Level.name()
        * </pre>
        *
-       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
        */
       public Builder removeLevelSummary(java.lang.String key) {
         if (key == null) {
@@ -4366,7 +4299,8 @@ public final class Debug {
       }
       /** Use alternate mutation accessors instead. */
       @java.lang.Deprecated
-      public java.util.Map<java.lang.String, java.lang.Long> getMutableLevelSummary() {
+      public java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
+          getMutableLevelSummary() {
         return internalGetMutableLevelSummary().getMutableMap();
       }
       /**
@@ -4376,13 +4310,16 @@ public final class Debug {
        * Key: Level.name()
        * </pre>
        *
-       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
        */
-      public Builder putLevelSummary(java.lang.String key, long value) {
+      public Builder putLevelSummary(
+          java.lang.String key, org.datacommons.proto.Debug.Log.CounterSet value) {
         if (key == null) {
           throw new java.lang.NullPointerException();
         }
-
+        if (value == null) {
+          throw new java.lang.NullPointerException();
+        }
         internalGetMutableLevelSummary().getMutableMap().put(key, value);
         return this;
       }
@@ -4393,139 +4330,21 @@ public final class Debug {
        * Key: Level.name()
        * </pre>
        *
-       * <code>map&lt;string, int64&gt; level_summary = 1;</code>
+       * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
        */
-      public Builder putAllLevelSummary(java.util.Map<java.lang.String, java.lang.Long> values) {
+      public Builder putAllLevelSummary(
+          java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet> values) {
         internalGetMutableLevelSummary().getMutableMap().putAll(values);
         return this;
-      }
-
-      private org.datacommons.proto.Debug.Log.CounterSet counterSet_;
-      private com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Debug.Log.CounterSet,
-              org.datacommons.proto.Debug.Log.CounterSet.Builder,
-              org.datacommons.proto.Debug.Log.CounterSetOrBuilder>
-          counterSetBuilder_;
-      /**
-       * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
-       *
-       * @return Whether the counterSet field is set.
-       */
-      public boolean hasCounterSet() {
-        return ((bitField0_ & 0x00000002) != 0);
-      }
-      /**
-       * <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code>
-       *
-       * @return The counterSet.
-       */
-      public org.datacommons.proto.Debug.Log.CounterSet getCounterSet() {
-        if (counterSetBuilder_ == null) {
-          return counterSet_ == null
-              ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
-              : counterSet_;
-        } else {
-          return counterSetBuilder_.getMessage();
-        }
-      }
-      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
-      public Builder setCounterSet(org.datacommons.proto.Debug.Log.CounterSet value) {
-        if (counterSetBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          counterSet_ = value;
-          onChanged();
-        } else {
-          counterSetBuilder_.setMessage(value);
-        }
-        bitField0_ |= 0x00000002;
-        return this;
-      }
-      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
-      public Builder setCounterSet(
-          org.datacommons.proto.Debug.Log.CounterSet.Builder builderForValue) {
-        if (counterSetBuilder_ == null) {
-          counterSet_ = builderForValue.build();
-          onChanged();
-        } else {
-          counterSetBuilder_.setMessage(builderForValue.build());
-        }
-        bitField0_ |= 0x00000002;
-        return this;
-      }
-      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
-      public Builder mergeCounterSet(org.datacommons.proto.Debug.Log.CounterSet value) {
-        if (counterSetBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) != 0)
-              && counterSet_ != null
-              && counterSet_ != org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()) {
-            counterSet_ =
-                org.datacommons.proto.Debug.Log.CounterSet.newBuilder(counterSet_)
-                    .mergeFrom(value)
-                    .buildPartial();
-          } else {
-            counterSet_ = value;
-          }
-          onChanged();
-        } else {
-          counterSetBuilder_.mergeFrom(value);
-        }
-        bitField0_ |= 0x00000002;
-        return this;
-      }
-      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
-      public Builder clearCounterSet() {
-        if (counterSetBuilder_ == null) {
-          counterSet_ = null;
-          onChanged();
-        } else {
-          counterSetBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
-      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
-      public org.datacommons.proto.Debug.Log.CounterSet.Builder getCounterSetBuilder() {
-        bitField0_ |= 0x00000002;
-        onChanged();
-        return getCounterSetFieldBuilder().getBuilder();
-      }
-      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
-      public org.datacommons.proto.Debug.Log.CounterSetOrBuilder getCounterSetOrBuilder() {
-        if (counterSetBuilder_ != null) {
-          return counterSetBuilder_.getMessageOrBuilder();
-        } else {
-          return counterSet_ == null
-              ? org.datacommons.proto.Debug.Log.CounterSet.getDefaultInstance()
-              : counterSet_;
-        }
-      }
-      /** <code>optional .org.datacommons.proto.Log.CounterSet counter_set = 2;</code> */
-      private com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Debug.Log.CounterSet,
-              org.datacommons.proto.Debug.Log.CounterSet.Builder,
-              org.datacommons.proto.Debug.Log.CounterSetOrBuilder>
-          getCounterSetFieldBuilder() {
-        if (counterSetBuilder_ == null) {
-          counterSetBuilder_ =
-              new com.google.protobuf.SingleFieldBuilderV3<
-                  org.datacommons.proto.Debug.Log.CounterSet,
-                  org.datacommons.proto.Debug.Log.CounterSet.Builder,
-                  org.datacommons.proto.Debug.Log.CounterSetOrBuilder>(
-                  getCounterSet(), getParentForChildren(), isClean());
-          counterSet_ = null;
-        }
-        return counterSetBuilder_;
       }
 
       private java.util.List<org.datacommons.proto.Debug.Log.Entry> entries_ =
           java.util.Collections.emptyList();
 
       private void ensureEntriesIsMutable() {
-        if (!((bitField0_ & 0x00000004) != 0)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           entries_ = new java.util.ArrayList<org.datacommons.proto.Debug.Log.Entry>(entries_);
-          bitField0_ |= 0x00000004;
+          bitField0_ |= 0x00000002;
         }
       }
 
@@ -4652,7 +4471,7 @@ public final class Debug {
       public Builder clearEntries() {
         if (entriesBuilder_ == null) {
           entries_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
+          bitField0_ = (bitField0_ & ~0x00000002);
           onChanged();
         } else {
           entriesBuilder_.clear();
@@ -4717,7 +4536,7 @@ public final class Debug {
                   org.datacommons.proto.Debug.Log.Entry,
                   org.datacommons.proto.Debug.Log.Entry.Builder,
                   org.datacommons.proto.Debug.Log.EntryOrBuilder>(
-                  entries_, ((bitField0_ & 0x00000004) != 0), getParentForChildren(), isClean());
+                  entries_, ((bitField0_ & 0x00000002) != 0), getParentForChildren(), isClean());
           entries_ = null;
         }
         return entriesBuilder_;
@@ -4809,25 +4628,25 @@ public final class Debug {
 
   static {
     java.lang.String[] descriptorData = {
-      "\n\013Debug.proto\022\025org.datacommons.proto\"\273\005\n"
+      "\n\013Debug.proto\022\025org.datacommons.proto\"\254\005\n"
           + "\003Log\022C\n\rlevel_summary\030\001 \003(\0132,.org.dataco"
-          + "mmons.proto.Log.LevelSummaryEntry\022:\n\013cou"
-          + "nter_set\030\002 \001(\0132%.org.datacommons.proto.L"
-          + "og.CounterSet\0221\n\007entries\030\003 \003(\0132 .org.dat"
-          + "acommons.proto.Log.Entry\032-\n\010Location\022\014\n\004"
-          + "file\030\001 \001(\t\022\023\n\013line_number\030\002 \001(\003\032\204\001\n\nCoun"
-          + "terSet\022E\n\010counters\030\001 \003(\01323.org.datacommo"
-          + "ns.proto.Log.CounterSet.CountersEntry\032/\n"
-          + "\rCountersEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001"
-          + "(\003:\0028\001\032\257\001\n\005Entry\022/\n\005level\030\001 \001(\0162 .org.da"
-          + "tacommons.proto.Log.Level\0225\n\010location\030\002 "
-          + "\001(\0132#.org.datacommons.proto.Log.Location"
-          + "\022\024\n\014user_message\030\003 \001(\t\022\023\n\013counter_key\030\004 "
-          + "\001(\t\022\023\n\013column_name\030\005 \003(\t\0323\n\021LevelSummary"
-          + "Entry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\003:\0028\001\"c\n"
-          + "\005Level\022\025\n\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLEVEL_I"
-          + "NFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LEVEL_ERROR\020"
-          + "\003\022\017\n\013LEVEL_FATAL\020\004"
+          + "mmons.proto.Log.LevelSummaryEntry\0221\n\007ent"
+          + "ries\030\003 \003(\0132 .org.datacommons.proto.Log.E"
+          + "ntry\032-\n\010Location\022\014\n\004file\030\001 \001(\t\022\023\n\013line_n"
+          + "umber\030\002 \001(\003\032\204\001\n\nCounterSet\022E\n\010counters\030\001"
+          + " \003(\01323.org.datacommons.proto.Log.Counter"
+          + "Set.CountersEntry\032/\n\rCountersEntry\022\013\n\003ke"
+          + "y\030\001 \001(\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\257\001\n\005Entry\022/\n\005"
+          + "level\030\001 \001(\0162 .org.datacommons.proto.Log."
+          + "Level\0225\n\010location\030\002 \001(\0132#.org.datacommon"
+          + "s.proto.Log.Location\022\024\n\014user_message\030\003 \001"
+          + "(\t\022\023\n\013counter_key\030\004 \001(\t\022\023\n\013column_name\030\005"
+          + " \003(\t\032Z\n\021LevelSummaryEntry\022\013\n\003key\030\001 \001(\t\0224"
+          + "\n\005value\030\002 \001(\0132%.org.datacommons.proto.Lo"
+          + "g.CounterSet:\0028\001\"c\n\005Level\022\025\n\021LEVEL_UNSPE"
+          + "CIFIED\020\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WARNIN"
+          + "G\020\002\022\017\n\013LEVEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010"
+          + "\002\020\003"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -4837,7 +4656,7 @@ public final class Debug {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_descriptor,
             new java.lang.String[] {
-              "LevelSummary", "CounterSet", "Entries",
+              "LevelSummary", "Entries",
             });
     internal_static_org_datacommons_proto_Log_Location_descriptor =
         internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(0);
