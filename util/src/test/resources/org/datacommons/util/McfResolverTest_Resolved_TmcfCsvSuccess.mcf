@@ -1,0 +1,44 @@
+Node: Test/E2/1
+dcid: "dc/o/mk12ld8ebwkb"
+keyString: "observationAbout=geoId/06variableMeasured=Count_PersonobservationDate=2020value=39512200"
+observationAbout: dcid:geoId/06
+observationDate: "2020"
+typeOf: dcid:StatVarObservation
+value: 39512200
+variableMeasured: dcid:Count_Person
+
+Node: Test/E2/2
+dcid: "dc/o/gmwehsegtlqlb"
+keyString: "observationAbout=isoCode/IN-KAvariableMeasured=Count_PersonobservationDate=2020value=61797000"
+observationAbout: dcid:isoCode/IN-KA
+observationDate: "2020"
+typeOf: dcid:StatVarObservation
+value: 61797000
+variableMeasured: dcid:Count_Person
+
+Node: Test/E2/3
+dcid: "dc/o/pq5ezynrgc8lg"
+keyString: "observationAbout=geoId/48variableMeasured=Count_PersonobservationDate=2020value=28995900"
+observationAbout: dcid:geoId/48
+observationDate: "2020"
+typeOf: dcid:StatVarObservation
+value: 28995900
+variableMeasured: dcid:Count_Person
+
+Node: dcid:country/USA
+dcid: "country/USA"
+typeOf: dcid:Country
+
+Node: dcid:geoId/06
+containedInPlace: dcid:country/USA
+dcid: "geoId/06"
+typeOf: dcid:State
+
+Node: dcid:geoId/48
+containedInPlace: dcid:country/USA
+dcid: "geoId/48"
+typeOf: dcid:State
+
+Node: dcid:isoCode/IN-KA
+dcid: "isoCode/IN-KA"
+typeOf: dcid:State

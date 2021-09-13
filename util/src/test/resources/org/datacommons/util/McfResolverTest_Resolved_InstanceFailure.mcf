@@ -1,0 +1,27 @@
+Node: AlbumLocalId
+bestSong: l:SongLocalId
+name: "Bad"
+typeOf: dcid:MusicAlbum
+
+Node: GoogleId
+dcid: "org/goog"
+name: "Google Inc"
+parent: l:AlphabetId
+typeOf: dcid:Organization
+
+Node: SVId
+measuredProperty: dcid:count
+populationType: dcid:Person
+typeOf: dcid:StatisticalVariable
+
+Node: SongLocalId
+albumOf: l:AlbumLocalId
+name: "Liberian Girl"
+typeOf: dcid:Song
+
+Node: UnresSVObsId
+observationAbout: dcid:geoId/1234567
+observationDate: "2017-01"
+typeOf: dcid:StatVarObservation
+value: 1000
+variableMeasured: l:SVId
