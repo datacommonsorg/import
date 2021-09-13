@@ -14,16 +14,17 @@
 
 package org.datacommons.tool;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Mcf;
+import org.datacommons.util.*;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Mcf;
-import org.datacommons.util.*;
 
 class DCTooManyFailuresException extends Exception {
   public DCTooManyFailuresException() {}
@@ -37,19 +38,24 @@ public class Processor {
   private static final Logger logger = LogManager.getLogger(Processor.class);
   private LogWrapper logCtx;
   private ExistenceChecker existenceChecker;
-  private List<Mcf.McfGraph> nodesForExistenceCheck;
+  private ExternalIdResolver idResolver;
+  private List<Mcf.McfGraph> nodesForVariousChecks;
   private boolean verbose;
 
   // NOTE: If doExistenceChecks is true, then it is important that the caller perform a
   // checkAllNodes() call *after* all instance MCF files are processed (via processNodes). This is
   // so that the newly added schema, StatVar, etc. are fully known to the Existence Checker first,
   // before existence checks are performed.
-  public Processor(boolean doExistenceChecks, boolean verbose, LogWrapper logCtx) {
+  public Processor(boolean doExistenceChecks, boolean doResolution, boolean verbose,
+                   LogWrapper logCtx) {
     this.logCtx = logCtx;
     this.verbose = verbose;
+    nodesForVariousChecks = new ArrayList<>();
     if (doExistenceChecks) {
       existenceChecker = new ExistenceChecker(HttpClient.newHttpClient(), verbose, logCtx);
-      nodesForExistenceCheck = new ArrayList<>();
+    }
+    if (doResolution) {
+      idResolver = new ExternalIdResolver(HttpClient.newHttpClient(), verbose, logCtx);
     }
   }
 
@@ -68,7 +74,7 @@ public class Processor {
         // Add instance MCF nodes to ExistenceChecker.  We load all the nodes up first
         // before we check them later in checkAllNodes().
         existenceChecker.addLocalGraph(n);
-        nodesForExistenceCheck.add(n);
+        nodesForVariousChecks.add(n);
       } else {
         McfChecker.check(n, existenceChecker, logCtx);
       }
@@ -131,7 +137,7 @@ public class Processor {
     long numNodesChecked = 0;
     logger.info("Performing existence checks");
     logCtx.setLocationFile("");
-    for (Mcf.McfGraph n : nodesForExistenceCheck) {
+    for (Mcf.McfGraph n : nodesForVariousChecks) {
       McfChecker.check(n, existenceChecker, logCtx);
       numNodesChecked += n.getNodesCount();
       numNodesChecked++;

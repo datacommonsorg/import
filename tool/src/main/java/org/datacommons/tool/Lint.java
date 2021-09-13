@@ -15,9 +15,6 @@
 package org.datacommons.tool;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
@@ -25,6 +22,10 @@ import org.datacommons.proto.Mcf;
 import org.datacommons.util.FileGroup;
 import org.datacommons.util.LogWrapper;
 import picocli.CommandLine;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "lint", description = "Run various checks on input MCF/TMCF/CSV files")
 class Lint implements Callable<Integer> {
@@ -47,15 +48,6 @@ class Lint implements Callable<Integer> {
       scope = CommandLine.ScopeType.INHERIT)
   private Character delimiter;
 
-  @CommandLine.Option(
-      names = {"-e", "--existence_checks"},
-      defaultValue = "true",
-      description =
-          "Check DCID references to schema nodes against the KG and locally. If set, then "
-              + "calls will be made to the Staging API server, and instance MCFs get fully "
-              + "loaded into memory.")
-  private boolean doExistenceChecks;
-
   @CommandLine.ParentCommand private Main parent;
 
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
@@ -69,14 +61,15 @@ class Lint implements Callable<Integer> {
       delimiter = fg.GetNumTsv() > 0 ? '\t' : ',';
     }
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
-    Processor processor = new Processor(doExistenceChecks, parent.verbose, logCtx);
+    Processor processor = new Processor(parent.doExistenceChecks,
+            parent.doResolution, parent.verbose, logCtx);
     Integer retVal = 0;
     try {
       // Process all the instance MCF first, so that we can add the nodes for Existence Check.
       for (File f : fg.GetMcfs()) {
         processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
       }
-      if (doExistenceChecks) {
+      if (parent.doExistenceChecks) {
         processor.checkAllNodes();
       }
       if (!fg.GetCsvs().isEmpty()) {

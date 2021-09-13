@@ -14,8 +14,9 @@
 
 package org.datacommons.tool;
 
-import java.io.File;
 import picocli.CommandLine;
+
+import java.io.File;
 
 // TODO: Add e2e tests once Debug.Log is fully plumbed in.
 @CommandLine.Command(
@@ -38,6 +39,22 @@ class Main {
       defaultValue = "false",
       scope = CommandLine.ScopeType.INHERIT)
   public boolean verbose;
+
+  @CommandLine.Option(
+          names = {"-e", "--existence_checks"},
+          defaultValue = "true",
+          description =
+                  "Check DCID references to schema nodes against the KG and locally. If set, then "
+                          + "calls will be made to the Staging API server, and instance MCFs get fully "
+                          + "loaded into memory.")
+  public boolean doExistenceChecks;
+
+  @CommandLine.Option(
+          names = {"-r", "--resolve_nodes"},
+          defaultValue = "true",
+          description =
+                  "Resolves local references and generates node DCIDs.")
+  public boolean doResolution;
 
   public static void main(String... args) {
     System.exit(new CommandLine(new Main()).execute(args));

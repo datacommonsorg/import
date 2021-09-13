@@ -15,6 +15,14 @@
 package org.datacommons.tool;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
+import org.datacommons.util.FileGroup;
+import org.datacommons.util.LogWrapper;
+import picocli.CommandLine;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -22,12 +30,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
-import org.datacommons.util.FileGroup;
-import org.datacommons.util.LogWrapper;
-import picocli.CommandLine;
 
 @CommandLine.Command(name = "genmcf", description = "Generate Instance MCF from TMCF/CSV files")
 class GenMcf implements Callable<Integer> {
@@ -68,9 +70,17 @@ class GenMcf implements Callable<Integer> {
     BufferedWriter writer = new BufferedWriter(new FileWriter(outPath.toString()));
 
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
-    Processor processor = new Processor(false, parent.verbose, logCtx);
+    Processor processor = new Processor(parent.doExistenceChecks, parent.doResolution,
+            parent.verbose, logCtx);
     Integer retVal = 0;
     try {
+      if (parent.doExistenceChecks) {
+        // Process all the instance MCF first, so that we can add the nodes for Existence Check.
+        for (File f : fg.GetMcfs()) {
+          processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
+        }
+        processor.checkAllNodes();
+      }
       processor.processTables(fg.GetTmcf(), fg.GetCsvs(), delimiter, writer);
     } catch (DCTooManyFailuresException | InterruptedException ex) {
       // Regardless of the failures, we will dump the logCtx and exit.
