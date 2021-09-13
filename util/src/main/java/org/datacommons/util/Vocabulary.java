@@ -32,10 +32,42 @@ public final class Vocabulary {
   public static final String LEGACY_OBSERVATION_TYPE_SUFFIX = "Observation";
   public static final String LEGACY_POPULATION_TYPE_SUFFIX = "Population";
   public static final String STAT_VAR_GROUP_TYPE = "StatVarGroup";
-  public static final String PLACE_TYPE = "Place";
-  public static final String ADMIN_AREA_TYPE = "AdministrativeArea";
   public static final String THING_TYPE = "Thing";
   public static final String GEO_COORDINATES_TYPE = "GeoCoordinates";
+
+  // Place types
+  public static final String PLACE_TYPE = "Place";
+  public static final String CONTINENT = "Continent";
+  public static final String COUNTRY = "Country";
+  public static final String STATE = "State";
+  public static final String PROVINCE = "Province";
+  public static final String COUNTY = "County";
+  public static final String CITY = "City";
+  public static final String STATE_COMPONENT = "StateComponent";
+  public static final String CENSUS_CBSA = "CensusCoreBasedStatisticalArea";
+  public static final String US_METRO_DIVISION = "USMetropolitanDivision";
+  public static final String CENSUS_COUNTY_SUBDIV = "CensusCountyDivision";
+  public static final String CENSUS_TRACT = "CensusTract";
+  public static final String CENSUS_BLOCKGROUP = "CensusBlockGroup";
+  public static final String CENSUS_ZCTA = "CensusZipCodeTabulationArea";
+  public static final String CONGRESSIONAL_DISTRICT = "CongressionalDistrict";
+  public static final String SCHOOL_DISTRICT = "SchoolDistrict";
+  public static final String ELEM_SCHOOL_DISTRICT = "ElementarySchoolDistrict";
+  public static final String HIGH_SCHOOL_DISTRICT = "HighSchoolDistrict";
+  public static final String COMMUTING_ZONE = "CommutingZone";
+  public static final String BOROUGH = "Borough";
+  public static final String TOWN = "Town";
+  public static final String VILLAGE = "Village";
+  public static final String NEIGHBORHOOD = "Neighborhood";
+  public static final String EU_NUTS1 = "EurostatNUTS1";
+  public static final String EU_NUTS2 = "EurostatNUTS2";
+  public static final String EU_NUTS3 = "EurostatNUTS3";
+  public static final String ADMIN_AREA = "AdministrativeArea";
+  public static final String ADMIN_AREA_1 = "AdministrativeArea1";
+  public static final String ADMIN_AREA_2 = "AdministrativeArea2";
+  public static final String ADMIN_AREA_3 = "AdministrativeArea3";
+  public static final String ADMIN_AREA_4 = "AdministrativeArea4";
+  public static final String ADMIN_AREA_5 = "AdministrativeArea5";
 
   // Schema/Horizontal properties.
   public static final String TYPE_OF = "typeOf";
@@ -151,6 +183,41 @@ public final class Vocabulary {
   // Legacy properties
   public static final String IS_PUBLIC = "isPublic";
   public static final String DBG_MCF_FILE = "resMCFFile";
+
+  public static final Set<String> PLACE_TYPES =
+      Set.of(
+          PLACE_TYPE,
+          CONTINENT,
+          COUNTRY,
+          STATE,
+          PROVINCE,
+          COUNTY,
+          CITY,
+          STATE_COMPONENT,
+          CENSUS_CBSA,
+          US_METRO_DIVISION,
+          CENSUS_COUNTY_SUBDIV,
+          CENSUS_TRACT,
+          CENSUS_BLOCKGROUP,
+          CENSUS_ZCTA,
+          CONGRESSIONAL_DISTRICT,
+          SCHOOL_DISTRICT,
+          ELEM_SCHOOL_DISTRICT,
+          HIGH_SCHOOL_DISTRICT,
+          COMMUTING_ZONE,
+          BOROUGH,
+          TOWN,
+          VILLAGE,
+          NEIGHBORHOOD,
+          EU_NUTS1,
+          EU_NUTS2,
+          EU_NUTS3,
+          ADMIN_AREA,
+          ADMIN_AREA_1,
+          ADMIN_AREA_2,
+          ADMIN_AREA_3,
+          ADMIN_AREA_4,
+          ADMIN_AREA_5);
 
   // List of properties known not to be a constraint property.
   public static final Set<String> NON_CONSTRAINT_STAT_VAR_PROPERTIES =
