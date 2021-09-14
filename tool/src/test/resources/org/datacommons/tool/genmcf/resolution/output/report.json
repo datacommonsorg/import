@@ -3,12 +3,210 @@
     "LEVEL_INFO": {
       "counters": {
         "Resolution_NumDcCalls": "1",
+        "Existence_NumChecks": "145",
+        "Existence_NumDcCalls": "2",
         "NumNodeSuccesses": "20",
         "NumPVSuccesses": "70",
-        "Existence_NumChecks": "90",
-        "NumRowSuccesses": "10",
-        "Existence_NumDcCalls": "1"
+        "NumRowSuccesses": "10"
+      }
+    },
+    "LEVEL_ERROR": {
+      "counters": {
+        "Sanity_MissingOrEmpty_statType": "1",
+        "Sanity_UnknownStatType": "1",
+        "Sanity_MissingOrEmpty_dcid": "1",
+        "Resolution_OrphanLocalReference_parent": "1",
+        "Resolution_DcidAssignmentFailure_Song": "1",
+        "Resolution_DcidAssignmentFailure_StatisticalVariable": "1",
+        "Resolution_DcidAssignmentFailure_MusicAlbum": "1",
+        "Resolution_UnresolvedExternalId_wikidataId": "1",
+        "Resolution_DcidAssignmentFailure_City": "1",
+        "Resolution_IrreplaceableLocalRef_PotentialCycle": "6",
+        "Resolution_UnassignableNodeDcid_PotentialCycle": "4"
+      }
+    },
+    "LEVEL_WARNING": {
+      "counters": {
+        "Existence_MissingReference_typeOf": "1",
+        "Existence_MissingReference_Property": "2"
       }
     }
-  }
+  },
+  "entries": [{
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'statType', node: 'SVId', type: 'StatisticalVariable'",
+    "counterKey": "Sanity_MissingOrEmpty_statType"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Found an unknown statType value :: value: '', node: 'SVId'",
+    "counterKey": "Sanity_UnknownStatType"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'dcid', node: 'SVId', type: 'StatisticalVariable'",
+    "counterKey": "Sanity_MissingOrEmpty_dcid"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "51"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'Song', property: 'typeOf', node: 'SongLocalId'",
+    "counterKey": "Existence_MissingReference_typeOf"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "51"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'albumOf', node: 'SongLocalId'",
+    "counterKey": "Existence_MissingReference_Property"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "45"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'bestSong', node: 'AlbumLocalId'",
+    "counterKey": "Existence_MissingReference_Property"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "57"
+    },
+    "userMessage": "Found orphan local ref :: ref: 'l:AlphabetId', property: 'parent', node: 'GoogleId'",
+    "counterKey": "Resolution_OrphanLocalReference_parent"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "51"
+    },
+    "userMessage": "Failed to assign DCID :: type: 'Song', node: 'SongLocalId'",
+    "counterKey": "Resolution_DcidAssignmentFailure_Song"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Failed to assign DCID :: type: 'StatisticalVariable', node: 'SVId'",
+    "counterKey": "Resolution_DcidAssignmentFailure_StatisticalVariable"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "45"
+    },
+    "userMessage": "Failed to assign DCID :: type: 'MusicAlbum', node: 'AlbumLocalId'",
+    "counterKey": "Resolution_DcidAssignmentFailure_MusicAlbum"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "2"
+    },
+    "userMessage": "Unresolved external ID :: id: 'Q486860', property: 'wikidataId', node: 'PlaceLocalId",
+    "counterKey": "Resolution_UnresolvedExternalId_wikidataId"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "2"
+    },
+    "userMessage": "Failed to assign DCID :: type: 'City', node: 'PlaceLocalId'",
+    "counterKey": "Resolution_DcidAssignmentFailure_City"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "37"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'PopLocalId', node: 'ObsLocalId'",
+    "counterKey": "Resolution_IrreplaceableLocalRef_PotentialCycle"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "29"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'PlaceLocalId', node: 'PopLocalId'",
+    "counterKey": "Resolution_IrreplaceableLocalRef_PotentialCycle"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "51"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'AlbumLocalId', node: 'SongLocalId'",
+    "counterKey": "Resolution_IrreplaceableLocalRef_PotentialCycle"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "7"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'PlaceLocalId', node: 'SVObsId'",
+    "counterKey": "Resolution_IrreplaceableLocalRef_PotentialCycle"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "21"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'SVId', node: 'UnresSVObsId'",
+    "counterKey": "Resolution_IrreplaceableLocalRef_PotentialCycle"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "45"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'SongLocalId', node: 'AlbumLocalId'",
+    "counterKey": "Resolution_IrreplaceableLocalRef_PotentialCycle"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "37"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'PopLocalId', node: 'ObsLocalId'",
+    "counterKey": "Resolution_UnassignableNodeDcid_PotentialCycle"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "29"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'PlaceLocalId', node: 'PopLocalId'",
+    "counterKey": "Resolution_UnassignableNodeDcid_PotentialCycle"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "7"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'PlaceLocalId', node: 'SVObsId'",
+    "counterKey": "Resolution_UnassignableNodeDcid_PotentialCycle"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "21"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'PlaceLocalId', node: 'UnresSVObsId'",
+    "counterKey": "Resolution_UnassignableNodeDcid_PotentialCycle"
+  }]
 }

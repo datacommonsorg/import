@@ -11,8 +11,8 @@
         "MCF_MalformedComplexValue": "1",
         "Sanity_MultipleDcidValues": "1",
         "Sanity_NotInitLowerPropName": "1",
-        "Sanity_TmcfMissingColumn": "1",
         "Sanity_TmcfMissingEntityDef": "4",
+        "Sanity_TmcfMissingColumn": "1",
         "Sanity_MissingOrEmpty_typeOf": "1",
         "Sanity_DcidTableEntity": "1",
         "Sanity_MultipleVals_observationAbout": "1"
@@ -115,16 +115,16 @@
       "file": "FatalTmcf.tmcf",
       "lineNumber": "19"
     },
-    "userMessage": "Column referred to in TMCF is missing from CSV header :: column: 'dcid1', node: 'E:SVTest->E3'",
-    "counterKey": "Sanity_TmcfMissingColumn"
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E10', property: 'dcid' node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "FatalTmcf.tmcf",
       "lineNumber": "19"
     },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E10', property: 'dcid' node: 'E:SVTest->E3'",
-    "counterKey": "Sanity_TmcfMissingEntityDef"
+    "userMessage": "Column referred to in TMCF is missing from CSV header :: column: 'dcid1', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_TmcfMissingColumn"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
