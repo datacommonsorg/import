@@ -5,6 +5,8 @@ variableMeasured: dcid:SV1
 measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=CA-BCvariableMeasured=SV1observationDate=2019value=1measurementMethod=SVTest"
+dcid: "dc/o/d1z0kb7760pv4"
 
 Node: SVTest/E1/2
 observationDate: 2019
@@ -13,6 +15,8 @@ variableMeasured: dcid:SV2
 measurementMethod: dcid:SVTest
 value: 2
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=CA-BCvariableMeasured=SV2observationDate=2019value=2measurementMethod=SVTest"
+dcid: "dc/o/cgyktw1tzk4vh"
 
 Node: SVTest/E0/3
 observationDate: 2019
@@ -21,6 +25,8 @@ variableMeasured: dcid:SV1
 measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=CA-ABvariableMeasured=SV1observationDate=2019value=1measurementMethod=SVTest"
+dcid: "dc/o/n5nl1vw8g2wf8"
 
 Node: SVTest/E1/3
 observationDate: 2019
@@ -29,6 +35,8 @@ variableMeasured: dcid:SV2
 measurementMethod: dcid:SVTest
 value: 2
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=CA-ABvariableMeasured=SV2observationDate=2019value=2measurementMethod=SVTest"
+dcid: "dc/o/83wn7f54yb206"
 
 Node: SVTest/E0/4
 observationDate: 2019
@@ -37,6 +45,8 @@ variableMeasured: dcid:SV1
 measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=US-SFvariableMeasured=SV1observationDate=2019value=1measurementMethod=SVTest"
+dcid: "dc/o/981vk7xx5jkb1"
 
 Node: SVTest/E1/4
 observationDate: 2019
@@ -45,6 +55,8 @@ variableMeasured: dcid:SV2
 measurementMethod: dcid:SVTest
 value: 2
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=US-SFvariableMeasured=SV2observationDate=2019value=2measurementMethod=SVTest"
+dcid: "dc/o/gqx64pf94pk8f"
 
 Node: dcid:CA-VN
 dcid: "CA-VN"
@@ -64,6 +76,8 @@ variableMeasured: dcid:SV1
 measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=CH-SHvariableMeasured=SV1observationDate=2019value=1measurementMethod=SVTest"
+dcid: "dc/o/gcznxwyvl8ey8"
 
 Node: SVTest/E1/8
 observationDate: 2019
@@ -72,6 +86,8 @@ variableMeasured: dcid:SV2
 measurementMethod: dcid:SVTest
 value: 2
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=CH-SHvariableMeasured=SV2observationDate=2019value=2measurementMethod=SVTest"
+dcid: "dc/o/3wcd3e0qq9078"
 
 Node: SVTest/E0/10
 observationDate: 2019
@@ -80,6 +96,8 @@ variableMeasured: dcid:SV1
 measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcidvariableMeasured=SV1observationDate=2019value=1measurementMethod=SVTest"
+dcid: "dc/o/9btsfc4ppfeb3"
 
 Node: SVTest/E1/10
 observationDate: 2019
@@ -88,6 +106,8 @@ variableMeasured: dcid:SV2
 measurementMethod: dcid:SVTest
 value: 2
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcidvariableMeasured=SV2observationDate=2019value=2measurementMethod=SVTest"
+dcid: "dc/o/xkgngf29h5w72"
 
 Node: dcid:CA-MN
 dcid: "CA-MN"
@@ -102,6 +122,8 @@ variableMeasured: dcid:SV1
 measurementMethod: dcid:SVTest
 value: 1
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=CA-MNvariableMeasured=SV1observationDate=2019value=1measurementMethod=SVTest"
+dcid: "dc/o/507leweysp3m3"
 
 Node: SVTest/E1/11
 observationDate: 2019
@@ -110,6 +132,8 @@ variableMeasured: dcid:SV2
 measurementMethod: dcid:SVTest
 value: 2
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=CA-MNvariableMeasured=SV2observationDate=2019value=2measurementMethod=SVTest"
+dcid: "dc/o/drp7x0m0q3lg4"
 
 Node: dcid:CA-SK
 dcid: "CA-SK"
@@ -124,6 +148,8 @@ variableMeasured: dcid:SV1
 measurementMethod: dcid:SVTest
 value: dcid:65
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=CA-SKvariableMeasured=SV1observationDate=2019value=65measurementMethod=SVTest"
+dcid: "dc/o/0kthqe4zex29h"
 
 Node: SVTest/E1/12
 observationDate: 2019
@@ -132,6 +158,8 @@ variableMeasured: dcid:SV2
 measurementMethod: dcid:SVTest
 value: 2
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=CA-SKvariableMeasured=SV2observationDate=2019value=2measurementMethod=SVTest"
+dcid: "dc/o/f0myz6jnqx4vc"
 
 Node: latLong/4300000_-11600000
 dcid: "latLong/4300000_-11600000"
@@ -160,6 +188,8 @@ variableMeasured: dcid:SV1
 measurementMethod: dcid:SVTest
 value: "[5]"
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=CA-YUvariableMeasured=SV1observationDate=2019value=[5]measurementMethod=SVTest"
+dcid: "dc/o/k8g99srhppqyf"
 
 Node: SVTest/E1/12
 observationDate: 2019
@@ -168,6 +198,8 @@ variableMeasured: dcid:SV2
 measurementMethod: dcid:SVTest
 value: 2
 typeOf: dcid:StatVarObservation
+keyString: "observationAbout=CA-YUvariableMeasured=SV2observationDate=2019value=2measurementMethod=SVTest"
+dcid: "dc/o/7bhp5lkg655k2"
 
 Node: latLong/-4300000_11600000
 dcid: "latLong/-4300000_11600000"

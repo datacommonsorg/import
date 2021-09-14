@@ -175,7 +175,7 @@ public class Processor {
           logCtx.incrementCounterBy("NumRowSuccesses", 1);
         }
         if (idResolver != null) {
-          resolveAndWrite(g);
+          resolveAndWrite(g, OutputFileType.TABLES, OutputFileType.TABLES_FAILURE);
         } else {
           if (writers != null) {
             writers.get(OutputFileType.TABLES).write(McfUtil.serializeMcfGraph(g, false));
@@ -216,20 +216,25 @@ public class Processor {
 
   // Called only when resolution is enabled.
   private void resolveNodes() throws IOException {
-    resolveAndWrite(McfUtil.mergeGraphs(nodesForVariousChecks));
+    resolveAndWrite(
+        McfUtil.mergeGraphs(nodesForVariousChecks),
+        OutputFileType.NODES,
+        OutputFileType.NODES_FAILURE);
   }
 
-  private void resolveAndWrite(Mcf.McfGraph mcfGraph) throws IOException {
+  private void resolveAndWrite(
+      Mcf.McfGraph mcfGraph, OutputFileType successFile, OutputFileType failureFile)
+      throws IOException {
     McfResolver resolver = new McfResolver(mcfGraph, verbose, idResolver, logCtx);
     resolver.resolve();
     if (writers != null) {
       var resolved = resolver.resolvedGraph();
       if (!resolved.getNodesMap().isEmpty()) {
-        writers.get(OutputFileType.NODES).write(McfUtil.serializeMcfGraph(resolved, false));
+        writers.get(successFile).write(McfUtil.serializeMcfGraph(resolved, false));
       }
       var failed = resolver.failedGraph();
       if (!failed.getNodesMap().isEmpty()) {
-        writers.get(OutputFileType.NODES_FAILURE).write(McfUtil.serializeMcfGraph(failed, false));
+        writers.get(failureFile).write(McfUtil.serializeMcfGraph(failed, false));
       }
     }
   }

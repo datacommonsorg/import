@@ -34,26 +34,48 @@ public class McfResolver {
   }
 
   public void resolve() throws UnexpectedException {
-    boolean firstRound = true;
+    int round = 0;
     RoundResult localRefReplacement = new RoundResult();
     RoundResult dcidAssignment = new RoundResult();
     while (true) {
-      if (firstRound || localRefReplacement.numUpdated > 0) {
+      if (round == 0 || dcidAssignment.numUpdated > 0) {
         // First round, or a new DCID got assigned, so we might have a local-ref to replace.
         localRefReplacement = replaceLocalRefs();
+        if (verbose) {
+          logger.info(
+              "LocalRef Replacement Round "
+                  + (round + 1)
+                  + " :: replaced "
+                  + localRefReplacement.numUpdated
+                  + ", failed "
+                  + failed.getNodesMap().size()
+                  + ", remaining "
+                  + localRefReplacement.needsWork.size());
+        }
         moveFailedNodes(localRefReplacement.failed, "ReplaceLocalRefs");
       } else {
         break;
       }
-      if (firstRound || dcidAssignment.numUpdated > 0) {
+      if (round == 0 || localRefReplacement.numUpdated > 0) {
         // First round, or a new local-ref got replaced, so we might be able to assign DCID.
         // For instance, with SVObs or Obs if we assign DCID to place node.
         dcidAssignment = assignDcids();
+        if (verbose) {
+          logger.info(
+              "DCID Assignment Round "
+                  + (round + 1)
+                  + " :: assigned "
+                  + dcidAssignment.numUpdated
+                  + ", failed "
+                  + failed.getNodesMap().size()
+                  + ", remaining "
+                  + dcidAssignment.needsWork.size());
+        }
         moveFailedNodes(dcidAssignment.failed, "AssignDcids");
       } else {
         break;
       }
-      firstRound = false;
+      round++;
     }
 
     // If there are entries in needsWork, then something is oddly broken. Likely it is a cycle of

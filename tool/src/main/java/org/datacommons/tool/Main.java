@@ -41,17 +41,20 @@ class Main {
   public boolean verbose;
 
   @CommandLine.Option(
-      names = {"-e", "--existence_checks"},
+      names = {"-e", "--existence-checks"},
       defaultValue = "true",
+      scope = CommandLine.ScopeType.INHERIT,
       description =
           "Check DCID references to schema nodes against the KG and locally. If set, then "
               + "calls will be made to the Staging API server, and instance MCFs get fully "
               + "loaded into memory.")
   public boolean doExistenceChecks;
 
+  // TODO: Default to true after some trials.
   @CommandLine.Option(
-      names = {"-r", "--resolve_nodes"},
-      defaultValue = "true",
+      names = {"-r", "--resolution"},
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT,
       description = "Resolves local references and generates node DCIDs.")
   public boolean doResolution;
 

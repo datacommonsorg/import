@@ -1,0 +1,150 @@
+Node: COVID19_cases_india/E1/1
+isoCode: "IN-KL"
+typeOf: dcid:AdministrativeArea1
+dcid: "wikidataId/Q1186"
+
+Node: COVID19_cases_india/E0/1
+observationDate: "2020-01-30"
+observationAbout: dcid:wikidataId/Q1186
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+measurementMethod: dcid:Covid19IndiaProject
+value: 1
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=wikidataId/Q1186variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-30value=1measurementMethod=Covid19IndiaProject"
+dcid: "dc/o/9x17ndwcrjrbg"
+
+Node: COVID19_cases_india/E1/2
+isoCode: "IN-KL"
+typeOf: dcid:AdministrativeArea1
+dcid: "wikidataId/Q1186"
+
+Node: COVID19_cases_india/E0/2
+observationDate: "2020-02-02"
+observationAbout: dcid:wikidataId/Q1186
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+measurementMethod: dcid:Covid19IndiaProject
+value: 2
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=wikidataId/Q1186variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=2measurementMethod=Covid19IndiaProject"
+dcid: "dc/o/801ld43crfgc"
+
+Node: COVID19_cases_india/E1/3
+isoCode: "IN-KL"
+typeOf: dcid:AdministrativeArea1
+dcid: "wikidataId/Q1186"
+
+Node: COVID19_cases_india/E0/3
+observationDate: "2020-02-03"
+observationAbout: dcid:wikidataId/Q1186
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+measurementMethod: dcid:Covid19IndiaProject
+value: 3
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=wikidataId/Q1186variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-03value=3measurementMethod=Covid19IndiaProject"
+dcid: "dc/o/n0tb2bwg29y81"
+
+Node: COVID19_cases_india/E1/4
+isoCode: "IN-DL"
+typeOf: dcid:AdministrativeArea1
+dcid: "wikidataId/Q1353"
+
+Node: COVID19_cases_india/E0/4
+observationDate: "2020-03-02"
+observationAbout: dcid:wikidataId/Q1353
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+measurementMethod: dcid:Covid19IndiaProject
+value: 1
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=wikidataId/Q1353variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-02value=1measurementMethod=Covid19IndiaProject"
+dcid: "dc/o/eq7mwn8ecnn9c"
+
+Node: COVID19_cases_india/E1/5
+isoCode: "IN-KL"
+typeOf: dcid:AdministrativeArea1
+dcid: "wikidataId/Q1186"
+
+Node: COVID19_cases_india/E0/5
+observationDate: "2020-03-02"
+observationAbout: dcid:wikidataId/Q1186
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+measurementMethod: dcid:Covid19IndiaProject
+value: 3
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=wikidataId/Q1186variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-02value=3measurementMethod=Covid19IndiaProject"
+dcid: "dc/o/qv9fz1g85zmc2"
+
+Node: COVID19_cases_india/E1/6
+isoCode: "IN-TG"
+typeOf: dcid:AdministrativeArea1
+dcid: "wikidataId/Q677037"
+
+Node: COVID19_cases_india/E0/6
+observationDate: "2020-03-02"
+observationAbout: dcid:wikidataId/Q677037
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+measurementMethod: dcid:Covid19IndiaProject
+value: 1
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=wikidataId/Q677037variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-02value=1measurementMethod=Covid19IndiaProject"
+dcid: "dc/o/2n9qbbhn7zby1"
+
+Node: COVID19_cases_india/E1/7
+isoCode: "IN-DL"
+typeOf: dcid:AdministrativeArea1
+dcid: "wikidataId/Q1353"
+
+Node: COVID19_cases_india/E0/7
+observationDate: "2020-03-03"
+observationAbout: dcid:wikidataId/Q1353
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+measurementMethod: dcid:Covid19IndiaProject
+value: 1
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=wikidataId/Q1353variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-03value=1measurementMethod=Covid19IndiaProject"
+dcid: "dc/o/1dh8xtn34sn17"
+
+Node: COVID19_cases_india/E1/8
+isoCode: "IN-KL"
+typeOf: dcid:AdministrativeArea1
+dcid: "wikidataId/Q1186"
+
+Node: COVID19_cases_india/E0/8
+observationDate: "2020-03-03"
+observationAbout: dcid:wikidataId/Q1186
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+measurementMethod: dcid:Covid19IndiaProject
+value: 3
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=wikidataId/Q1186variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-03value=3measurementMethod=Covid19IndiaProject"
+dcid: "dc/o/3zr9tkhtk368b"
+
+Node: COVID19_cases_india/E1/9
+isoCode: "IN-RJ"
+typeOf: dcid:AdministrativeArea1
+dcid: "wikidataId/Q1437"
+
+Node: COVID19_cases_india/E0/9
+observationDate: "2020-03-03"
+observationAbout: dcid:wikidataId/Q1437
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+measurementMethod: dcid:Covid19IndiaProject
+value: 1
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=wikidataId/Q1437variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-03value=1measurementMethod=Covid19IndiaProject"
+dcid: "dc/o/3lq3ync3n0cn1"
+
+Node: COVID19_cases_india/E1/10
+isoCode: "IN-TG"
+typeOf: dcid:AdministrativeArea1
+dcid: "wikidataId/Q677037"
+
+Node: COVID19_cases_india/E0/10
+observationDate: "2020-03-03"
+observationAbout: dcid:wikidataId/Q677037
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+measurementMethod: dcid:Covid19IndiaProject
+value: 1
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=wikidataId/Q677037variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-03value=1measurementMethod=Covid19IndiaProject"
+dcid: "dc/o/th6dl6jf1vhy4"
+

@@ -59,6 +59,7 @@ public class GenMcfTest {
       for (File inputFile : inputFiles) {
         argsList.add(inputFile.getPath());
       }
+      argsList.add("--resolution");
       argsList.add("--output-dir=" + testFolder.getRoot().getPath());
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
@@ -68,14 +69,14 @@ public class GenMcfTest {
 
       if (goldenFilesPrefix != null && !goldenFilesPrefix.isEmpty()) {
         Path goldenGeneratedPath =
-            Path.of(goldenFilesPrefix, "genmcf", directory.getName(), "output", "generated.mcf");
+            Path.of(goldenFilesPrefix, "genmcf", directory.getName(), "output", "tables.mcf");
         Files.copy(actualGeneratedFilePath, goldenGeneratedPath, REPLACE_EXISTING);
         Path goldenReportPath =
             Path.of(goldenFilesPrefix, "genmcf", directory.getName(), "output", "report.json");
         Files.copy(actualReportPath, goldenReportPath, REPLACE_EXISTING);
       } else {
         Path expectedGeneratedFilePath =
-            TestUtil.getOutputFilePath(directory.getPath(), "generated.mcf");
+            TestUtil.getOutputFilePath(directory.getPath(), "tables.mcf");
         Path expectedReportPath = TestUtil.getOutputFilePath(directory.getPath(), "report.json");
         TestUtil.assertReportFilesAreSimilar(
             expect,
