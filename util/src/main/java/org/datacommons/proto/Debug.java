@@ -84,6 +84,29 @@ public final class Debug {
         getEntriesOrBuilderList();
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
     org.datacommons.proto.Debug.Log.EntryOrBuilder getEntriesOrBuilder(int index);
+
+    /**
+     * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+     */
+    java.util.List<org.datacommons.proto.Debug.StatValidationResult> getStatsCheckSummaryList();
+    /**
+     * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+     */
+    org.datacommons.proto.Debug.StatValidationResult getStatsCheckSummary(int index);
+    /**
+     * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+     */
+    int getStatsCheckSummaryCount();
+    /**
+     * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+     */
+    java.util.List<? extends org.datacommons.proto.Debug.StatValidationResultOrBuilder>
+        getStatsCheckSummaryOrBuilderList();
+    /**
+     * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+     */
+    org.datacommons.proto.Debug.StatValidationResultOrBuilder getStatsCheckSummaryOrBuilder(
+        int index);
   }
   /**
    *
@@ -106,6 +129,7 @@ public final class Debug {
 
     private Log() {
       entries_ = java.util.Collections.emptyList();
+      statsCheckSummary_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -168,6 +192,19 @@ public final class Debug {
                         org.datacommons.proto.Debug.Log.Entry.PARSER, extensionRegistry));
                 break;
               }
+            case 34:
+              {
+                if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+                  statsCheckSummary_ =
+                      new java.util.ArrayList<org.datacommons.proto.Debug.StatValidationResult>();
+                  mutable_bitField0_ |= 0x00000004;
+                }
+                statsCheckSummary_.add(
+                    input.readMessage(
+                        org.datacommons.proto.Debug.StatValidationResult.PARSER,
+                        extensionRegistry));
+                break;
+              }
             default:
               {
                 if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
@@ -184,6 +221,9 @@ public final class Debug {
       } finally {
         if (((mutable_bitField0_ & 0x00000002) != 0)) {
           entries_ = java.util.Collections.unmodifiableList(entries_);
+        }
+        if (((mutable_bitField0_ & 0x00000004) != 0)) {
+          statsCheckSummary_ = java.util.Collections.unmodifiableList(statsCheckSummary_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -3772,6 +3812,42 @@ public final class Debug {
       return entries_.get(index);
     }
 
+    public static final int STATS_CHECK_SUMMARY_FIELD_NUMBER = 4;
+    private java.util.List<org.datacommons.proto.Debug.StatValidationResult> statsCheckSummary_;
+    /**
+     * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+     */
+    public java.util.List<org.datacommons.proto.Debug.StatValidationResult>
+        getStatsCheckSummaryList() {
+      return statsCheckSummary_;
+    }
+    /**
+     * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+     */
+    public java.util.List<? extends org.datacommons.proto.Debug.StatValidationResultOrBuilder>
+        getStatsCheckSummaryOrBuilderList() {
+      return statsCheckSummary_;
+    }
+    /**
+     * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+     */
+    public int getStatsCheckSummaryCount() {
+      return statsCheckSummary_.size();
+    }
+    /**
+     * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+     */
+    public org.datacommons.proto.Debug.StatValidationResult getStatsCheckSummary(int index) {
+      return statsCheckSummary_.get(index);
+    }
+    /**
+     * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+     */
+    public org.datacommons.proto.Debug.StatValidationResultOrBuilder getStatsCheckSummaryOrBuilder(
+        int index) {
+      return statsCheckSummary_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
 
     @java.lang.Override
@@ -3790,6 +3866,9 @@ public final class Debug {
           output, internalGetLevelSummary(), LevelSummaryDefaultEntryHolder.defaultEntry, 1);
       for (int i = 0; i < entries_.size(); i++) {
         output.writeMessage(3, entries_.get(i));
+      }
+      for (int i = 0; i < statsCheckSummary_.size(); i++) {
+        output.writeMessage(4, statsCheckSummary_.get(i));
       }
       unknownFields.writeTo(output);
     }
@@ -3814,6 +3893,10 @@ public final class Debug {
       for (int i = 0; i < entries_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, entries_.get(i));
       }
+      for (int i = 0; i < statsCheckSummary_.size(); i++) {
+        size +=
+            com.google.protobuf.CodedOutputStream.computeMessageSize(4, statsCheckSummary_.get(i));
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -3831,6 +3914,7 @@ public final class Debug {
 
       if (!internalGetLevelSummary().equals(other.internalGetLevelSummary())) return false;
       if (!getEntriesList().equals(other.getEntriesList())) return false;
+      if (!getStatsCheckSummaryList().equals(other.getStatsCheckSummaryList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -3849,6 +3933,10 @@ public final class Debug {
       if (getEntriesCount() > 0) {
         hash = (37 * hash) + ENTRIES_FIELD_NUMBER;
         hash = (53 * hash) + getEntriesList().hashCode();
+      }
+      if (getStatsCheckSummaryCount() > 0) {
+        hash = (37 * hash) + STATS_CHECK_SUMMARY_FIELD_NUMBER;
+        hash = (53 * hash) + getStatsCheckSummaryList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -4011,6 +4099,7 @@ public final class Debug {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getEntriesFieldBuilder();
+          getStatsCheckSummaryFieldBuilder();
         }
       }
 
@@ -4023,6 +4112,12 @@ public final class Debug {
           bitField0_ = (bitField0_ & ~0x00000002);
         } else {
           entriesBuilder_.clear();
+        }
+        if (statsCheckSummaryBuilder_ == null) {
+          statsCheckSummary_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          statsCheckSummaryBuilder_.clear();
         }
         return this;
       }
@@ -4060,6 +4155,15 @@ public final class Debug {
           result.entries_ = entries_;
         } else {
           result.entries_ = entriesBuilder_.build();
+        }
+        if (statsCheckSummaryBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) != 0)) {
+            statsCheckSummary_ = java.util.Collections.unmodifiableList(statsCheckSummary_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.statsCheckSummary_ = statsCheckSummary_;
+        } else {
+          result.statsCheckSummary_ = statsCheckSummaryBuilder_.build();
         }
         onBuilt();
         return result;
@@ -4137,6 +4241,33 @@ public final class Debug {
                       : null;
             } else {
               entriesBuilder_.addAllMessages(other.entries_);
+            }
+          }
+        }
+        if (statsCheckSummaryBuilder_ == null) {
+          if (!other.statsCheckSummary_.isEmpty()) {
+            if (statsCheckSummary_.isEmpty()) {
+              statsCheckSummary_ = other.statsCheckSummary_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureStatsCheckSummaryIsMutable();
+              statsCheckSummary_.addAll(other.statsCheckSummary_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.statsCheckSummary_.isEmpty()) {
+            if (statsCheckSummaryBuilder_.isEmpty()) {
+              statsCheckSummaryBuilder_.dispose();
+              statsCheckSummaryBuilder_ = null;
+              statsCheckSummary_ = other.statsCheckSummary_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              statsCheckSummaryBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getStatsCheckSummaryFieldBuilder()
+                      : null;
+            } else {
+              statsCheckSummaryBuilder_.addAllMessages(other.statsCheckSummary_);
             }
           }
         }
@@ -4542,6 +4673,261 @@ public final class Debug {
         return entriesBuilder_;
       }
 
+      private java.util.List<org.datacommons.proto.Debug.StatValidationResult> statsCheckSummary_ =
+          java.util.Collections.emptyList();
+
+      private void ensureStatsCheckSummaryIsMutable() {
+        if (!((bitField0_ & 0x00000004) != 0)) {
+          statsCheckSummary_ =
+              new java.util.ArrayList<org.datacommons.proto.Debug.StatValidationResult>(
+                  statsCheckSummary_);
+          bitField0_ |= 0x00000004;
+        }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Debug.StatValidationResult,
+              org.datacommons.proto.Debug.StatValidationResult.Builder,
+              org.datacommons.proto.Debug.StatValidationResultOrBuilder>
+          statsCheckSummaryBuilder_;
+
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public java.util.List<org.datacommons.proto.Debug.StatValidationResult>
+          getStatsCheckSummaryList() {
+        if (statsCheckSummaryBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(statsCheckSummary_);
+        } else {
+          return statsCheckSummaryBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public int getStatsCheckSummaryCount() {
+        if (statsCheckSummaryBuilder_ == null) {
+          return statsCheckSummary_.size();
+        } else {
+          return statsCheckSummaryBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public org.datacommons.proto.Debug.StatValidationResult getStatsCheckSummary(int index) {
+        if (statsCheckSummaryBuilder_ == null) {
+          return statsCheckSummary_.get(index);
+        } else {
+          return statsCheckSummaryBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public Builder setStatsCheckSummary(
+          int index, org.datacommons.proto.Debug.StatValidationResult value) {
+        if (statsCheckSummaryBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureStatsCheckSummaryIsMutable();
+          statsCheckSummary_.set(index, value);
+          onChanged();
+        } else {
+          statsCheckSummaryBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public Builder setStatsCheckSummary(
+          int index, org.datacommons.proto.Debug.StatValidationResult.Builder builderForValue) {
+        if (statsCheckSummaryBuilder_ == null) {
+          ensureStatsCheckSummaryIsMutable();
+          statsCheckSummary_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          statsCheckSummaryBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public Builder addStatsCheckSummary(org.datacommons.proto.Debug.StatValidationResult value) {
+        if (statsCheckSummaryBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureStatsCheckSummaryIsMutable();
+          statsCheckSummary_.add(value);
+          onChanged();
+        } else {
+          statsCheckSummaryBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public Builder addStatsCheckSummary(
+          int index, org.datacommons.proto.Debug.StatValidationResult value) {
+        if (statsCheckSummaryBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureStatsCheckSummaryIsMutable();
+          statsCheckSummary_.add(index, value);
+          onChanged();
+        } else {
+          statsCheckSummaryBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public Builder addStatsCheckSummary(
+          org.datacommons.proto.Debug.StatValidationResult.Builder builderForValue) {
+        if (statsCheckSummaryBuilder_ == null) {
+          ensureStatsCheckSummaryIsMutable();
+          statsCheckSummary_.add(builderForValue.build());
+          onChanged();
+        } else {
+          statsCheckSummaryBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public Builder addStatsCheckSummary(
+          int index, org.datacommons.proto.Debug.StatValidationResult.Builder builderForValue) {
+        if (statsCheckSummaryBuilder_ == null) {
+          ensureStatsCheckSummaryIsMutable();
+          statsCheckSummary_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          statsCheckSummaryBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public Builder addAllStatsCheckSummary(
+          java.lang.Iterable<? extends org.datacommons.proto.Debug.StatValidationResult> values) {
+        if (statsCheckSummaryBuilder_ == null) {
+          ensureStatsCheckSummaryIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, statsCheckSummary_);
+          onChanged();
+        } else {
+          statsCheckSummaryBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public Builder clearStatsCheckSummary() {
+        if (statsCheckSummaryBuilder_ == null) {
+          statsCheckSummary_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          statsCheckSummaryBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public Builder removeStatsCheckSummary(int index) {
+        if (statsCheckSummaryBuilder_ == null) {
+          ensureStatsCheckSummaryIsMutable();
+          statsCheckSummary_.remove(index);
+          onChanged();
+        } else {
+          statsCheckSummaryBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public org.datacommons.proto.Debug.StatValidationResult.Builder getStatsCheckSummaryBuilder(
+          int index) {
+        return getStatsCheckSummaryFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public org.datacommons.proto.Debug.StatValidationResultOrBuilder
+          getStatsCheckSummaryOrBuilder(int index) {
+        if (statsCheckSummaryBuilder_ == null) {
+          return statsCheckSummary_.get(index);
+        } else {
+          return statsCheckSummaryBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public java.util.List<? extends org.datacommons.proto.Debug.StatValidationResultOrBuilder>
+          getStatsCheckSummaryOrBuilderList() {
+        if (statsCheckSummaryBuilder_ != null) {
+          return statsCheckSummaryBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(statsCheckSummary_);
+        }
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public org.datacommons.proto.Debug.StatValidationResult.Builder
+          addStatsCheckSummaryBuilder() {
+        return getStatsCheckSummaryFieldBuilder()
+            .addBuilder(org.datacommons.proto.Debug.StatValidationResult.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public org.datacommons.proto.Debug.StatValidationResult.Builder addStatsCheckSummaryBuilder(
+          int index) {
+        return getStatsCheckSummaryFieldBuilder()
+            .addBuilder(
+                index, org.datacommons.proto.Debug.StatValidationResult.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
+       */
+      public java.util.List<org.datacommons.proto.Debug.StatValidationResult.Builder>
+          getStatsCheckSummaryBuilderList() {
+        return getStatsCheckSummaryFieldBuilder().getBuilderList();
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Debug.StatValidationResult,
+              org.datacommons.proto.Debug.StatValidationResult.Builder,
+              org.datacommons.proto.Debug.StatValidationResultOrBuilder>
+          getStatsCheckSummaryFieldBuilder() {
+        if (statsCheckSummaryBuilder_ == null) {
+          statsCheckSummaryBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.Debug.StatValidationResult,
+                  org.datacommons.proto.Debug.StatValidationResult.Builder,
+                  org.datacommons.proto.Debug.StatValidationResultOrBuilder>(
+                  statsCheckSummary_,
+                  ((bitField0_ & 0x00000004) != 0),
+                  getParentForChildren(),
+                  isClean());
+          statsCheckSummary_ = null;
+        }
+        return statsCheckSummaryBuilder_;
+      }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -4595,6 +4981,7647 @@ public final class Debug {
     }
   }
 
+  public interface DataPointOrBuilder
+      extends
+      // @@protoc_insertion_point(interface_extends:org.datacommons.proto.DataPoint)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional string date = 1;</code>
+     *
+     * @return Whether the date field is set.
+     */
+    boolean hasDate();
+    /**
+     * <code>optional string date = 1;</code>
+     *
+     * @return The date.
+     */
+    java.lang.String getDate();
+    /**
+     * <code>optional string date = 1;</code>
+     *
+     * @return The bytes for date.
+     */
+    com.google.protobuf.ByteString getDateBytes();
+
+    /**
+     *
+     *
+     * <pre>
+     * Multiple values for a single date only happens when there's a bug.
+     * </pre>
+     *
+     * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+     */
+    java.util.List<org.datacommons.proto.Debug.DataPoint.DataValue> getValuesList();
+    /**
+     *
+     *
+     * <pre>
+     * Multiple values for a single date only happens when there's a bug.
+     * </pre>
+     *
+     * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+     */
+    org.datacommons.proto.Debug.DataPoint.DataValue getValues(int index);
+    /**
+     *
+     *
+     * <pre>
+     * Multiple values for a single date only happens when there's a bug.
+     * </pre>
+     *
+     * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+     */
+    int getValuesCount();
+    /**
+     *
+     *
+     * <pre>
+     * Multiple values for a single date only happens when there's a bug.
+     * </pre>
+     *
+     * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+     */
+    java.util.List<? extends org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder>
+        getValuesOrBuilderList();
+    /**
+     *
+     *
+     * <pre>
+     * Multiple values for a single date only happens when there's a bug.
+     * </pre>
+     *
+     * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+     */
+    org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder getValuesOrBuilder(int index);
+  }
+  /** Protobuf type {@code org.datacommons.proto.DataPoint} */
+  public static final class DataPoint extends com.google.protobuf.GeneratedMessageV3
+      implements
+      // @@protoc_insertion_point(message_implements:org.datacommons.proto.DataPoint)
+      DataPointOrBuilder {
+    private static final long serialVersionUID = 0L;
+    // Use DataPoint.newBuilder() to construct.
+    private DataPoint(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+
+    private DataPoint() {
+      date_ = "";
+      values_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+      return new DataPoint();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+      return this.unknownFields;
+    }
+
+    private DataPoint(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10:
+              {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000001;
+                date_ = bs;
+                break;
+              }
+            case 18:
+              {
+                if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                  values_ =
+                      new java.util.ArrayList<org.datacommons.proto.Debug.DataPoint.DataValue>();
+                  mutable_bitField0_ |= 0x00000002;
+                }
+                values_.add(
+                    input.readMessage(
+                        org.datacommons.proto.Debug.DataPoint.DataValue.PARSER, extensionRegistry));
+                break;
+              }
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
+          values_ = java.util.Collections.unmodifiableList(values_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Debug.internal_static_org_datacommons_proto_DataPoint_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.datacommons.proto.Debug
+          .internal_static_org_datacommons_proto_DataPoint_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.datacommons.proto.Debug.DataPoint.class,
+              org.datacommons.proto.Debug.DataPoint.Builder.class);
+    }
+
+    public interface DataValueOrBuilder
+        extends
+        // @@protoc_insertion_point(interface_extends:org.datacommons.proto.DataPoint.DataValue)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>optional double value = 1;</code>
+       *
+       * @return Whether the value field is set.
+       */
+      boolean hasValue();
+      /**
+       * <code>optional double value = 1;</code>
+       *
+       * @return The value.
+       */
+      double getValue();
+
+      /**
+       *
+       *
+       * <pre>
+       * The location in the file where this value was read from.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       */
+      java.util.List<org.datacommons.proto.Debug.Log.Location> getLocationsList();
+      /**
+       *
+       *
+       * <pre>
+       * The location in the file where this value was read from.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       */
+      org.datacommons.proto.Debug.Log.Location getLocations(int index);
+      /**
+       *
+       *
+       * <pre>
+       * The location in the file where this value was read from.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       */
+      int getLocationsCount();
+      /**
+       *
+       *
+       * <pre>
+       * The location in the file where this value was read from.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       */
+      java.util.List<? extends org.datacommons.proto.Debug.Log.LocationOrBuilder>
+          getLocationsOrBuilderList();
+      /**
+       *
+       *
+       * <pre>
+       * The location in the file where this value was read from.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       */
+      org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationsOrBuilder(int index);
+    }
+    /** Protobuf type {@code org.datacommons.proto.DataPoint.DataValue} */
+    public static final class DataValue extends com.google.protobuf.GeneratedMessageV3
+        implements
+        // @@protoc_insertion_point(message_implements:org.datacommons.proto.DataPoint.DataValue)
+        DataValueOrBuilder {
+      private static final long serialVersionUID = 0L;
+      // Use DataValue.newBuilder() to construct.
+      private DataValue(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+
+      private DataValue() {
+        locations_ = java.util.Collections.emptyList();
+      }
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+        return new DataValue();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+        return this.unknownFields;
+      }
+
+      private DataValue(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 9:
+                {
+                  bitField0_ |= 0x00000001;
+                  value_ = input.readDouble();
+                  break;
+                }
+              case 18:
+                {
+                  if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                    locations_ =
+                        new java.util.ArrayList<org.datacommons.proto.Debug.Log.Location>();
+                    mutable_bitField0_ |= 0x00000002;
+                  }
+                  locations_.add(
+                      input.readMessage(
+                          org.datacommons.proto.Debug.Log.Location.PARSER, extensionRegistry));
+                  break;
+                }
+              default:
+                {
+                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(this);
+        } finally {
+          if (((mutable_bitField0_ & 0x00000002) != 0)) {
+            locations_ = java.util.Collections.unmodifiableList(locations_);
+          }
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_DataPoint_DataValue_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_DataPoint_DataValue_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.datacommons.proto.Debug.DataPoint.DataValue.class,
+                org.datacommons.proto.Debug.DataPoint.DataValue.Builder.class);
+      }
+
+      private int bitField0_;
+      public static final int VALUE_FIELD_NUMBER = 1;
+      private double value_;
+      /**
+       * <code>optional double value = 1;</code>
+       *
+       * @return Whether the value field is set.
+       */
+      public boolean hasValue() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>optional double value = 1;</code>
+       *
+       * @return The value.
+       */
+      public double getValue() {
+        return value_;
+      }
+
+      public static final int LOCATIONS_FIELD_NUMBER = 2;
+      private java.util.List<org.datacommons.proto.Debug.Log.Location> locations_;
+      /**
+       *
+       *
+       * <pre>
+       * The location in the file where this value was read from.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       */
+      public java.util.List<org.datacommons.proto.Debug.Log.Location> getLocationsList() {
+        return locations_;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * The location in the file where this value was read from.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       */
+      public java.util.List<? extends org.datacommons.proto.Debug.Log.LocationOrBuilder>
+          getLocationsOrBuilderList() {
+        return locations_;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * The location in the file where this value was read from.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       */
+      public int getLocationsCount() {
+        return locations_.size();
+      }
+      /**
+       *
+       *
+       * <pre>
+       * The location in the file where this value was read from.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       */
+      public org.datacommons.proto.Debug.Log.Location getLocations(int index) {
+        return locations_.get(index);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * The location in the file where this value was read from.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       */
+      public org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationsOrBuilder(int index) {
+        return locations_.get(index);
+      }
+
+      private byte memoizedIsInitialized = -1;
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+        if (((bitField0_ & 0x00000001) != 0)) {
+          output.writeDouble(1, value_);
+        }
+        for (int i = 0; i < locations_.size(); i++) {
+          output.writeMessage(2, locations_.get(i));
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) != 0)) {
+          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(1, value_);
+        }
+        for (int i = 0; i < locations_.size(); i++) {
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, locations_.get(i));
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+          return true;
+        }
+        if (!(obj instanceof org.datacommons.proto.Debug.DataPoint.DataValue)) {
+          return super.equals(obj);
+        }
+        org.datacommons.proto.Debug.DataPoint.DataValue other =
+            (org.datacommons.proto.Debug.DataPoint.DataValue) obj;
+
+        if (hasValue() != other.hasValue()) return false;
+        if (hasValue()) {
+          if (java.lang.Double.doubleToLongBits(getValue())
+              != java.lang.Double.doubleToLongBits(other.getValue())) return false;
+        }
+        if (!getLocationsList().equals(other.getLocationsList())) return false;
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (hasValue()) {
+          hash = (37 * hash) + VALUE_FIELD_NUMBER;
+          hash =
+              (53 * hash)
+                  + com.google.protobuf.Internal.hashLong(
+                      java.lang.Double.doubleToLongBits(getValue()));
+        }
+        if (getLocationsCount() > 0) {
+          hash = (37 * hash) + LOCATIONS_FIELD_NUMBER;
+          hash = (53 * hash) + getLocationsList().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static org.datacommons.proto.Debug.DataPoint.DataValue parseFrom(
+          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Debug.DataPoint.DataValue parseFrom(
+          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.DataPoint.DataValue parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Debug.DataPoint.DataValue parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.DataPoint.DataValue parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Debug.DataPoint.DataValue parseFrom(
+          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.DataPoint.DataValue parseFrom(
+          java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Debug.DataPoint.DataValue parseFrom(
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.DataPoint.DataValue parseDelimitedFrom(
+          java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Debug.DataPoint.DataValue parseDelimitedFrom(
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.DataPoint.DataValue parseFrom(
+          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Debug.DataPoint.DataValue parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() {
+        return newBuilder();
+      }
+
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+
+      public static Builder newBuilder(org.datacommons.proto.Debug.DataPoint.DataValue prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /** Protobuf type {@code org.datacommons.proto.DataPoint.DataValue} */
+      public static final class Builder
+          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+          implements
+          // @@protoc_insertion_point(builder_implements:org.datacommons.proto.DataPoint.DataValue)
+          org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+          return org.datacommons.proto.Debug
+              .internal_static_org_datacommons_proto_DataPoint_DataValue_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return org.datacommons.proto.Debug
+              .internal_static_org_datacommons_proto_DataPoint_DataValue_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  org.datacommons.proto.Debug.DataPoint.DataValue.class,
+                  org.datacommons.proto.Debug.DataPoint.DataValue.Builder.class);
+        }
+
+        // Construct using org.datacommons.proto.Debug.DataPoint.DataValue.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+            getLocationsFieldBuilder();
+          }
+        }
+
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          value_ = 0D;
+          bitField0_ = (bitField0_ & ~0x00000001);
+          if (locationsBuilder_ == null) {
+            locations_ = java.util.Collections.emptyList();
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            locationsBuilder_.clear();
+          }
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+          return org.datacommons.proto.Debug
+              .internal_static_org_datacommons_proto_DataPoint_DataValue_descriptor;
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Debug.DataPoint.DataValue getDefaultInstanceForType() {
+          return org.datacommons.proto.Debug.DataPoint.DataValue.getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Debug.DataPoint.DataValue build() {
+          org.datacommons.proto.Debug.DataPoint.DataValue result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Debug.DataPoint.DataValue buildPartial() {
+          org.datacommons.proto.Debug.DataPoint.DataValue result =
+              new org.datacommons.proto.Debug.DataPoint.DataValue(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) != 0)) {
+            result.value_ = value_;
+            to_bitField0_ |= 0x00000001;
+          }
+          if (locationsBuilder_ == null) {
+            if (((bitField0_ & 0x00000002) != 0)) {
+              locations_ = java.util.Collections.unmodifiableList(locations_);
+              bitField0_ = (bitField0_ & ~0x00000002);
+            }
+            result.locations_ = locations_;
+          } else {
+            result.locations_ = locationsBuilder_.build();
+          }
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          return super.setField(field, value);
+        }
+
+        @java.lang.Override
+        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+
+        @java.lang.Override
+        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index,
+            java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof org.datacommons.proto.Debug.DataPoint.DataValue) {
+            return mergeFrom((org.datacommons.proto.Debug.DataPoint.DataValue) other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(org.datacommons.proto.Debug.DataPoint.DataValue other) {
+          if (other == org.datacommons.proto.Debug.DataPoint.DataValue.getDefaultInstance())
+            return this;
+          if (other.hasValue()) {
+            setValue(other.getValue());
+          }
+          if (locationsBuilder_ == null) {
+            if (!other.locations_.isEmpty()) {
+              if (locations_.isEmpty()) {
+                locations_ = other.locations_;
+                bitField0_ = (bitField0_ & ~0x00000002);
+              } else {
+                ensureLocationsIsMutable();
+                locations_.addAll(other.locations_);
+              }
+              onChanged();
+            }
+          } else {
+            if (!other.locations_.isEmpty()) {
+              if (locationsBuilder_.isEmpty()) {
+                locationsBuilder_.dispose();
+                locationsBuilder_ = null;
+                locations_ = other.locations_;
+                bitField0_ = (bitField0_ & ~0x00000002);
+                locationsBuilder_ =
+                    com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                        ? getLocationsFieldBuilder()
+                        : null;
+              } else {
+                locationsBuilder_.addAllMessages(other.locations_);
+              }
+            }
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          org.datacommons.proto.Debug.DataPoint.DataValue parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage =
+                (org.datacommons.proto.Debug.DataPoint.DataValue) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private int bitField0_;
+
+        private double value_;
+        /**
+         * <code>optional double value = 1;</code>
+         *
+         * @return Whether the value field is set.
+         */
+        public boolean hasValue() {
+          return ((bitField0_ & 0x00000001) != 0);
+        }
+        /**
+         * <code>optional double value = 1;</code>
+         *
+         * @return The value.
+         */
+        public double getValue() {
+          return value_;
+        }
+        /**
+         * <code>optional double value = 1;</code>
+         *
+         * @param value The value to set.
+         * @return This builder for chaining.
+         */
+        public Builder setValue(double value) {
+          bitField0_ |= 0x00000001;
+          value_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional double value = 1;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearValue() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          value_ = 0D;
+          onChanged();
+          return this;
+        }
+
+        private java.util.List<org.datacommons.proto.Debug.Log.Location> locations_ =
+            java.util.Collections.emptyList();
+
+        private void ensureLocationsIsMutable() {
+          if (!((bitField0_ & 0x00000002) != 0)) {
+            locations_ =
+                new java.util.ArrayList<org.datacommons.proto.Debug.Log.Location>(locations_);
+            bitField0_ |= 0x00000002;
+          }
+        }
+
+        private com.google.protobuf.RepeatedFieldBuilderV3<
+                org.datacommons.proto.Debug.Log.Location,
+                org.datacommons.proto.Debug.Log.Location.Builder,
+                org.datacommons.proto.Debug.Log.LocationOrBuilder>
+            locationsBuilder_;
+
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public java.util.List<org.datacommons.proto.Debug.Log.Location> getLocationsList() {
+          if (locationsBuilder_ == null) {
+            return java.util.Collections.unmodifiableList(locations_);
+          } else {
+            return locationsBuilder_.getMessageList();
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public int getLocationsCount() {
+          if (locationsBuilder_ == null) {
+            return locations_.size();
+          } else {
+            return locationsBuilder_.getCount();
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public org.datacommons.proto.Debug.Log.Location getLocations(int index) {
+          if (locationsBuilder_ == null) {
+            return locations_.get(index);
+          } else {
+            return locationsBuilder_.getMessage(index);
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public Builder setLocations(int index, org.datacommons.proto.Debug.Log.Location value) {
+          if (locationsBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureLocationsIsMutable();
+            locations_.set(index, value);
+            onChanged();
+          } else {
+            locationsBuilder_.setMessage(index, value);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public Builder setLocations(
+            int index, org.datacommons.proto.Debug.Log.Location.Builder builderForValue) {
+          if (locationsBuilder_ == null) {
+            ensureLocationsIsMutable();
+            locations_.set(index, builderForValue.build());
+            onChanged();
+          } else {
+            locationsBuilder_.setMessage(index, builderForValue.build());
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public Builder addLocations(org.datacommons.proto.Debug.Log.Location value) {
+          if (locationsBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureLocationsIsMutable();
+            locations_.add(value);
+            onChanged();
+          } else {
+            locationsBuilder_.addMessage(value);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public Builder addLocations(int index, org.datacommons.proto.Debug.Log.Location value) {
+          if (locationsBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureLocationsIsMutable();
+            locations_.add(index, value);
+            onChanged();
+          } else {
+            locationsBuilder_.addMessage(index, value);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public Builder addLocations(
+            org.datacommons.proto.Debug.Log.Location.Builder builderForValue) {
+          if (locationsBuilder_ == null) {
+            ensureLocationsIsMutable();
+            locations_.add(builderForValue.build());
+            onChanged();
+          } else {
+            locationsBuilder_.addMessage(builderForValue.build());
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public Builder addLocations(
+            int index, org.datacommons.proto.Debug.Log.Location.Builder builderForValue) {
+          if (locationsBuilder_ == null) {
+            ensureLocationsIsMutable();
+            locations_.add(index, builderForValue.build());
+            onChanged();
+          } else {
+            locationsBuilder_.addMessage(index, builderForValue.build());
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public Builder addAllLocations(
+            java.lang.Iterable<? extends org.datacommons.proto.Debug.Log.Location> values) {
+          if (locationsBuilder_ == null) {
+            ensureLocationsIsMutable();
+            com.google.protobuf.AbstractMessageLite.Builder.addAll(values, locations_);
+            onChanged();
+          } else {
+            locationsBuilder_.addAllMessages(values);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public Builder clearLocations() {
+          if (locationsBuilder_ == null) {
+            locations_ = java.util.Collections.emptyList();
+            bitField0_ = (bitField0_ & ~0x00000002);
+            onChanged();
+          } else {
+            locationsBuilder_.clear();
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public Builder removeLocations(int index) {
+          if (locationsBuilder_ == null) {
+            ensureLocationsIsMutable();
+            locations_.remove(index);
+            onChanged();
+          } else {
+            locationsBuilder_.remove(index);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public org.datacommons.proto.Debug.Log.Location.Builder getLocationsBuilder(int index) {
+          return getLocationsFieldBuilder().getBuilder(index);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationsOrBuilder(int index) {
+          if (locationsBuilder_ == null) {
+            return locations_.get(index);
+          } else {
+            return locationsBuilder_.getMessageOrBuilder(index);
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public java.util.List<? extends org.datacommons.proto.Debug.Log.LocationOrBuilder>
+            getLocationsOrBuilderList() {
+          if (locationsBuilder_ != null) {
+            return locationsBuilder_.getMessageOrBuilderList();
+          } else {
+            return java.util.Collections.unmodifiableList(locations_);
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public org.datacommons.proto.Debug.Log.Location.Builder addLocationsBuilder() {
+          return getLocationsFieldBuilder()
+              .addBuilder(org.datacommons.proto.Debug.Log.Location.getDefaultInstance());
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public org.datacommons.proto.Debug.Log.Location.Builder addLocationsBuilder(int index) {
+          return getLocationsFieldBuilder()
+              .addBuilder(index, org.datacommons.proto.Debug.Log.Location.getDefaultInstance());
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The location in the file where this value was read from.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         */
+        public java.util.List<org.datacommons.proto.Debug.Log.Location.Builder>
+            getLocationsBuilderList() {
+          return getLocationsFieldBuilder().getBuilderList();
+        }
+
+        private com.google.protobuf.RepeatedFieldBuilderV3<
+                org.datacommons.proto.Debug.Log.Location,
+                org.datacommons.proto.Debug.Log.Location.Builder,
+                org.datacommons.proto.Debug.Log.LocationOrBuilder>
+            getLocationsFieldBuilder() {
+          if (locationsBuilder_ == null) {
+            locationsBuilder_ =
+                new com.google.protobuf.RepeatedFieldBuilderV3<
+                    org.datacommons.proto.Debug.Log.Location,
+                    org.datacommons.proto.Debug.Log.Location.Builder,
+                    org.datacommons.proto.Debug.Log.LocationOrBuilder>(
+                    locations_,
+                    ((bitField0_ & 0x00000002) != 0),
+                    getParentForChildren(),
+                    isClean());
+            locations_ = null;
+          }
+          return locationsBuilder_;
+        }
+
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+        // @@protoc_insertion_point(builder_scope:org.datacommons.proto.DataPoint.DataValue)
+      }
+
+      // @@protoc_insertion_point(class_scope:org.datacommons.proto.DataPoint.DataValue)
+      private static final org.datacommons.proto.Debug.DataPoint.DataValue DEFAULT_INSTANCE;
+
+      static {
+        DEFAULT_INSTANCE = new org.datacommons.proto.Debug.DataPoint.DataValue();
+      }
+
+      public static org.datacommons.proto.Debug.DataPoint.DataValue getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      @java.lang.Deprecated
+      public static final com.google.protobuf.Parser<DataValue> PARSER =
+          new com.google.protobuf.AbstractParser<DataValue>() {
+            @java.lang.Override
+            public DataValue parsePartialFrom(
+                com.google.protobuf.CodedInputStream input,
+                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+              return new DataValue(input, extensionRegistry);
+            }
+          };
+
+      public static com.google.protobuf.Parser<DataValue> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<DataValue> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.DataPoint.DataValue getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+    }
+
+    private int bitField0_;
+    public static final int DATE_FIELD_NUMBER = 1;
+    private volatile java.lang.Object date_;
+    /**
+     * <code>optional string date = 1;</code>
+     *
+     * @return Whether the date field is set.
+     */
+    public boolean hasDate() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>optional string date = 1;</code>
+     *
+     * @return The date.
+     */
+    public java.lang.String getDate() {
+      java.lang.Object ref = date_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          date_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string date = 1;</code>
+     *
+     * @return The bytes for date.
+     */
+    public com.google.protobuf.ByteString getDateBytes() {
+      java.lang.Object ref = date_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        date_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int VALUES_FIELD_NUMBER = 2;
+    private java.util.List<org.datacommons.proto.Debug.DataPoint.DataValue> values_;
+    /**
+     *
+     *
+     * <pre>
+     * Multiple values for a single date only happens when there's a bug.
+     * </pre>
+     *
+     * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+     */
+    public java.util.List<org.datacommons.proto.Debug.DataPoint.DataValue> getValuesList() {
+      return values_;
+    }
+    /**
+     *
+     *
+     * <pre>
+     * Multiple values for a single date only happens when there's a bug.
+     * </pre>
+     *
+     * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+     */
+    public java.util.List<? extends org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder>
+        getValuesOrBuilderList() {
+      return values_;
+    }
+    /**
+     *
+     *
+     * <pre>
+     * Multiple values for a single date only happens when there's a bug.
+     * </pre>
+     *
+     * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+     */
+    public int getValuesCount() {
+      return values_.size();
+    }
+    /**
+     *
+     *
+     * <pre>
+     * Multiple values for a single date only happens when there's a bug.
+     * </pre>
+     *
+     * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+     */
+    public org.datacommons.proto.Debug.DataPoint.DataValue getValues(int index) {
+      return values_.get(index);
+    }
+    /**
+     *
+     *
+     * <pre>
+     * Multiple values for a single date only happens when there's a bug.
+     * </pre>
+     *
+     * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+     */
+    public org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder getValuesOrBuilder(int index) {
+      return values_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, date_);
+      }
+      for (int i = 0; i < values_.size(); i++) {
+        output.writeMessage(2, values_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, date_);
+      }
+      for (int i = 0; i < values_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, values_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (!(obj instanceof org.datacommons.proto.Debug.DataPoint)) {
+        return super.equals(obj);
+      }
+      org.datacommons.proto.Debug.DataPoint other = (org.datacommons.proto.Debug.DataPoint) obj;
+
+      if (hasDate() != other.hasDate()) return false;
+      if (hasDate()) {
+        if (!getDate().equals(other.getDate())) return false;
+      }
+      if (!getValuesList().equals(other.getValuesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasDate()) {
+        hash = (37 * hash) + DATE_FIELD_NUMBER;
+        hash = (53 * hash) + getDate().hashCode();
+      }
+      if (getValuesCount() > 0) {
+        hash = (37 * hash) + VALUES_FIELD_NUMBER;
+        hash = (53 * hash) + getValuesList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.datacommons.proto.Debug.DataPoint parseFrom(java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Debug.DataPoint parseFrom(
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.DataPoint parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Debug.DataPoint parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.DataPoint parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Debug.DataPoint parseFrom(
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.DataPoint parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Debug.DataPoint parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.DataPoint parseDelimitedFrom(
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Debug.DataPoint parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.DataPoint parseFrom(
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Debug.DataPoint parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+
+    public static Builder newBuilder(org.datacommons.proto.Debug.DataPoint prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /** Protobuf type {@code org.datacommons.proto.DataPoint} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
+        // @@protoc_insertion_point(builder_implements:org.datacommons.proto.DataPoint)
+        org.datacommons.proto.Debug.DataPointOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_DataPoint_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_DataPoint_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.datacommons.proto.Debug.DataPoint.class,
+                org.datacommons.proto.Debug.DataPoint.Builder.class);
+      }
+
+      // Construct using org.datacommons.proto.Debug.DataPoint.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+          getValuesFieldBuilder();
+        }
+      }
+
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        date_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (valuesBuilder_ == null) {
+          values_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          valuesBuilder_.clear();
+        }
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_DataPoint_descriptor;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.DataPoint getDefaultInstanceForType() {
+        return org.datacommons.proto.Debug.DataPoint.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.DataPoint build() {
+        org.datacommons.proto.Debug.DataPoint result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.DataPoint buildPartial() {
+        org.datacommons.proto.Debug.DataPoint result =
+            new org.datacommons.proto.Debug.DataPoint(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.date_ = date_;
+        if (valuesBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) != 0)) {
+            values_ = java.util.Collections.unmodifiableList(values_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.values_ = values_;
+        } else {
+          result.values_ = valuesBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.setField(field, value);
+      }
+
+      @java.lang.Override
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+
+      @java.lang.Override
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index,
+          java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.datacommons.proto.Debug.DataPoint) {
+          return mergeFrom((org.datacommons.proto.Debug.DataPoint) other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.datacommons.proto.Debug.DataPoint other) {
+        if (other == org.datacommons.proto.Debug.DataPoint.getDefaultInstance()) return this;
+        if (other.hasDate()) {
+          bitField0_ |= 0x00000001;
+          date_ = other.date_;
+          onChanged();
+        }
+        if (valuesBuilder_ == null) {
+          if (!other.values_.isEmpty()) {
+            if (values_.isEmpty()) {
+              values_ = other.values_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureValuesIsMutable();
+              values_.addAll(other.values_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.values_.isEmpty()) {
+            if (valuesBuilder_.isEmpty()) {
+              valuesBuilder_.dispose();
+              valuesBuilder_ = null;
+              values_ = other.values_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              valuesBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getValuesFieldBuilder()
+                      : null;
+            } else {
+              valuesBuilder_.addAllMessages(other.values_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.datacommons.proto.Debug.DataPoint parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.datacommons.proto.Debug.DataPoint) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private int bitField0_;
+
+      private java.lang.Object date_ = "";
+      /**
+       * <code>optional string date = 1;</code>
+       *
+       * @return Whether the date field is set.
+       */
+      public boolean hasDate() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>optional string date = 1;</code>
+       *
+       * @return The date.
+       */
+      public java.lang.String getDate() {
+        java.lang.Object ref = date_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            date_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string date = 1;</code>
+       *
+       * @return The bytes for date.
+       */
+      public com.google.protobuf.ByteString getDateBytes() {
+        java.lang.Object ref = date_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          date_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string date = 1;</code>
+       *
+       * @param value The date to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDate(java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        date_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string date = 1;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearDate() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        date_ = getDefaultInstance().getDate();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string date = 1;</code>
+       *
+       * @param value The bytes for date to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDateBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        date_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<org.datacommons.proto.Debug.DataPoint.DataValue> values_ =
+          java.util.Collections.emptyList();
+
+      private void ensureValuesIsMutable() {
+        if (!((bitField0_ & 0x00000002) != 0)) {
+          values_ =
+              new java.util.ArrayList<org.datacommons.proto.Debug.DataPoint.DataValue>(values_);
+          bitField0_ |= 0x00000002;
+        }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Debug.DataPoint.DataValue,
+              org.datacommons.proto.Debug.DataPoint.DataValue.Builder,
+              org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder>
+          valuesBuilder_;
+
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public java.util.List<org.datacommons.proto.Debug.DataPoint.DataValue> getValuesList() {
+        if (valuesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(values_);
+        } else {
+          return valuesBuilder_.getMessageList();
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public int getValuesCount() {
+        if (valuesBuilder_ == null) {
+          return values_.size();
+        } else {
+          return valuesBuilder_.getCount();
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public org.datacommons.proto.Debug.DataPoint.DataValue getValues(int index) {
+        if (valuesBuilder_ == null) {
+          return values_.get(index);
+        } else {
+          return valuesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public Builder setValues(int index, org.datacommons.proto.Debug.DataPoint.DataValue value) {
+        if (valuesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureValuesIsMutable();
+          values_.set(index, value);
+          onChanged();
+        } else {
+          valuesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public Builder setValues(
+          int index, org.datacommons.proto.Debug.DataPoint.DataValue.Builder builderForValue) {
+        if (valuesBuilder_ == null) {
+          ensureValuesIsMutable();
+          values_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          valuesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public Builder addValues(org.datacommons.proto.Debug.DataPoint.DataValue value) {
+        if (valuesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureValuesIsMutable();
+          values_.add(value);
+          onChanged();
+        } else {
+          valuesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public Builder addValues(int index, org.datacommons.proto.Debug.DataPoint.DataValue value) {
+        if (valuesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureValuesIsMutable();
+          values_.add(index, value);
+          onChanged();
+        } else {
+          valuesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public Builder addValues(
+          org.datacommons.proto.Debug.DataPoint.DataValue.Builder builderForValue) {
+        if (valuesBuilder_ == null) {
+          ensureValuesIsMutable();
+          values_.add(builderForValue.build());
+          onChanged();
+        } else {
+          valuesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public Builder addValues(
+          int index, org.datacommons.proto.Debug.DataPoint.DataValue.Builder builderForValue) {
+        if (valuesBuilder_ == null) {
+          ensureValuesIsMutable();
+          values_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          valuesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public Builder addAllValues(
+          java.lang.Iterable<? extends org.datacommons.proto.Debug.DataPoint.DataValue> values) {
+        if (valuesBuilder_ == null) {
+          ensureValuesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, values_);
+          onChanged();
+        } else {
+          valuesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public Builder clearValues() {
+        if (valuesBuilder_ == null) {
+          values_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          valuesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public Builder removeValues(int index) {
+        if (valuesBuilder_ == null) {
+          ensureValuesIsMutable();
+          values_.remove(index);
+          onChanged();
+        } else {
+          valuesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public org.datacommons.proto.Debug.DataPoint.DataValue.Builder getValuesBuilder(int index) {
+        return getValuesFieldBuilder().getBuilder(index);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder getValuesOrBuilder(
+          int index) {
+        if (valuesBuilder_ == null) {
+          return values_.get(index);
+        } else {
+          return valuesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public java.util.List<? extends org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder>
+          getValuesOrBuilderList() {
+        if (valuesBuilder_ != null) {
+          return valuesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(values_);
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public org.datacommons.proto.Debug.DataPoint.DataValue.Builder addValuesBuilder() {
+        return getValuesFieldBuilder()
+            .addBuilder(org.datacommons.proto.Debug.DataPoint.DataValue.getDefaultInstance());
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public org.datacommons.proto.Debug.DataPoint.DataValue.Builder addValuesBuilder(int index) {
+        return getValuesFieldBuilder()
+            .addBuilder(
+                index, org.datacommons.proto.Debug.DataPoint.DataValue.getDefaultInstance());
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Multiple values for a single date only happens when there's a bug.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
+       */
+      public java.util.List<org.datacommons.proto.Debug.DataPoint.DataValue.Builder>
+          getValuesBuilderList() {
+        return getValuesFieldBuilder().getBuilderList();
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Debug.DataPoint.DataValue,
+              org.datacommons.proto.Debug.DataPoint.DataValue.Builder,
+              org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder>
+          getValuesFieldBuilder() {
+        if (valuesBuilder_ == null) {
+          valuesBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.Debug.DataPoint.DataValue,
+                  org.datacommons.proto.Debug.DataPoint.DataValue.Builder,
+                  org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder>(
+                  values_, ((bitField0_ & 0x00000002) != 0), getParentForChildren(), isClean());
+          values_ = null;
+        }
+        return valuesBuilder_;
+      }
+
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+      // @@protoc_insertion_point(builder_scope:org.datacommons.proto.DataPoint)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.datacommons.proto.DataPoint)
+    private static final org.datacommons.proto.Debug.DataPoint DEFAULT_INSTANCE;
+
+    static {
+      DEFAULT_INSTANCE = new org.datacommons.proto.Debug.DataPoint();
+    }
+
+    public static org.datacommons.proto.Debug.DataPoint getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated
+    public static final com.google.protobuf.Parser<DataPoint> PARSER =
+        new com.google.protobuf.AbstractParser<DataPoint>() {
+          @java.lang.Override
+          public DataPoint parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new DataPoint(input, extensionRegistry);
+          }
+        };
+
+    public static com.google.protobuf.Parser<DataPoint> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<DataPoint> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.datacommons.proto.Debug.DataPoint getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+  }
+
+  public interface StatValidationResultOrBuilder
+      extends
+      // @@protoc_insertion_point(interface_extends:org.datacommons.proto.StatValidationResult)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     *
+     *
+     * <pre>
+     * DCID of the place.
+     * </pre>
+     *
+     * <code>optional string place_dcid = 1;</code>
+     *
+     * @return Whether the placeDcid field is set.
+     */
+    boolean hasPlaceDcid();
+    /**
+     *
+     *
+     * <pre>
+     * DCID of the place.
+     * </pre>
+     *
+     * <code>optional string place_dcid = 1;</code>
+     *
+     * @return The placeDcid.
+     */
+    java.lang.String getPlaceDcid();
+    /**
+     *
+     *
+     * <pre>
+     * DCID of the place.
+     * </pre>
+     *
+     * <code>optional string place_dcid = 1;</code>
+     *
+     * @return The bytes for placeDcid.
+     */
+    com.google.protobuf.ByteString getPlaceDcidBytes();
+
+    /**
+     *
+     *
+     * <pre>
+     * DCID of the stat var.
+     * </pre>
+     *
+     * <code>optional string stat_var_dcid = 2;</code>
+     *
+     * @return Whether the statVarDcid field is set.
+     */
+    boolean hasStatVarDcid();
+    /**
+     *
+     *
+     * <pre>
+     * DCID of the stat var.
+     * </pre>
+     *
+     * <code>optional string stat_var_dcid = 2;</code>
+     *
+     * @return The statVarDcid.
+     */
+    java.lang.String getStatVarDcid();
+    /**
+     *
+     *
+     * <pre>
+     * DCID of the stat var.
+     * </pre>
+     *
+     * <code>optional string stat_var_dcid = 2;</code>
+     *
+     * @return The bytes for statVarDcid.
+     */
+    com.google.protobuf.ByteString getStatVarDcidBytes();
+
+    /**
+     *
+     *
+     * <pre>
+     * Additional information that characterizes the time series that this
+     * StatValidationResult is validating.
+     * </pre>
+     *
+     * <code>optional string measurement_method = 3;</code>
+     *
+     * @return Whether the measurementMethod field is set.
+     */
+    boolean hasMeasurementMethod();
+    /**
+     *
+     *
+     * <pre>
+     * Additional information that characterizes the time series that this
+     * StatValidationResult is validating.
+     * </pre>
+     *
+     * <code>optional string measurement_method = 3;</code>
+     *
+     * @return The measurementMethod.
+     */
+    java.lang.String getMeasurementMethod();
+    /**
+     *
+     *
+     * <pre>
+     * Additional information that characterizes the time series that this
+     * StatValidationResult is validating.
+     * </pre>
+     *
+     * <code>optional string measurement_method = 3;</code>
+     *
+     * @return The bytes for measurementMethod.
+     */
+    com.google.protobuf.ByteString getMeasurementMethodBytes();
+
+    /**
+     * <code>optional string observation_period = 4;</code>
+     *
+     * @return Whether the observationPeriod field is set.
+     */
+    boolean hasObservationPeriod();
+    /**
+     * <code>optional string observation_period = 4;</code>
+     *
+     * @return The observationPeriod.
+     */
+    java.lang.String getObservationPeriod();
+    /**
+     * <code>optional string observation_period = 4;</code>
+     *
+     * @return The bytes for observationPeriod.
+     */
+    com.google.protobuf.ByteString getObservationPeriodBytes();
+
+    /**
+     * <code>optional string scaling_factor = 5;</code>
+     *
+     * @return Whether the scalingFactor field is set.
+     */
+    boolean hasScalingFactor();
+    /**
+     * <code>optional string scaling_factor = 5;</code>
+     *
+     * @return The scalingFactor.
+     */
+    java.lang.String getScalingFactor();
+    /**
+     * <code>optional string scaling_factor = 5;</code>
+     *
+     * @return The bytes for scalingFactor.
+     */
+    com.google.protobuf.ByteString getScalingFactorBytes();
+
+    /**
+     * <code>optional string unit = 6;</code>
+     *
+     * @return Whether the unit field is set.
+     */
+    boolean hasUnit();
+    /**
+     * <code>optional string unit = 6;</code>
+     *
+     * @return The unit.
+     */
+    java.lang.String getUnit();
+    /**
+     * <code>optional string unit = 6;</code>
+     *
+     * @return The bytes for unit.
+     */
+    com.google.protobuf.ByteString getUnitBytes();
+
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+     * </code>
+     */
+    java.util.List<org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry>
+        getValidationCountersList();
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+     * </code>
+     */
+    org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry getValidationCounters(
+        int index);
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+     * </code>
+     */
+    int getValidationCountersCount();
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+     * </code>
+     */
+    java.util.List<
+            ? extends org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder>
+        getValidationCountersOrBuilderList();
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+     * </code>
+     */
+    org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder
+        getValidationCountersOrBuilder(int index);
+
+    /**
+     *
+     *
+     * <pre>
+     * the largest % increase or decrease in time series. Remains as default
+     * values if sawtooth exists.
+     * </pre>
+     *
+     * <code>
+     * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+     * </code>
+     *
+     * @return Whether the seriesLargestPercentDiff field is set.
+     */
+    boolean hasSeriesLargestPercentDiff();
+    /**
+     *
+     *
+     * <pre>
+     * the largest % increase or decrease in time series. Remains as default
+     * values if sawtooth exists.
+     * </pre>
+     *
+     * <code>
+     * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+     * </code>
+     *
+     * @return The seriesLargestPercentDiff.
+     */
+    org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+        getSeriesLargestPercentDiff();
+    /**
+     *
+     *
+     * <pre>
+     * the largest % increase or decrease in time series. Remains as default
+     * values if sawtooth exists.
+     * </pre>
+     *
+     * <code>
+     * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+     * </code>
+     */
+    org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder
+        getSeriesLargestPercentDiffOrBuilder();
+  }
+  /** Protobuf type {@code org.datacommons.proto.StatValidationResult} */
+  public static final class StatValidationResult extends com.google.protobuf.GeneratedMessageV3
+      implements
+      // @@protoc_insertion_point(message_implements:org.datacommons.proto.StatValidationResult)
+      StatValidationResultOrBuilder {
+    private static final long serialVersionUID = 0L;
+    // Use StatValidationResult.newBuilder() to construct.
+    private StatValidationResult(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+
+    private StatValidationResult() {
+      placeDcid_ = "";
+      statVarDcid_ = "";
+      measurementMethod_ = "";
+      observationPeriod_ = "";
+      scalingFactor_ = "";
+      unit_ = "";
+      validationCounters_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+      return new StatValidationResult();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+      return this.unknownFields;
+    }
+
+    private StatValidationResult(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10:
+              {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000001;
+                placeDcid_ = bs;
+                break;
+              }
+            case 18:
+              {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000002;
+                statVarDcid_ = bs;
+                break;
+              }
+            case 26:
+              {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000004;
+                measurementMethod_ = bs;
+                break;
+              }
+            case 34:
+              {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000008;
+                observationPeriod_ = bs;
+                break;
+              }
+            case 42:
+              {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000010;
+                scalingFactor_ = bs;
+                break;
+              }
+            case 50:
+              {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000020;
+                unit_ = bs;
+                break;
+              }
+            case 58:
+              {
+                if (!((mutable_bitField0_ & 0x00000040) != 0)) {
+                  validationCounters_ =
+                      new java.util.ArrayList<
+                          org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry>();
+                  mutable_bitField0_ |= 0x00000040;
+                }
+                validationCounters_.add(
+                    input.readMessage(
+                        org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.PARSER,
+                        extensionRegistry));
+                break;
+              }
+            case 66:
+              {
+                org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder
+                    subBuilder = null;
+                if (((bitField0_ & 0x00000040) != 0)) {
+                  subBuilder = seriesLargestPercentDiff_.toBuilder();
+                }
+                seriesLargestPercentDiff_ =
+                    input.readMessage(
+                        org.datacommons.proto.Debug.StatValidationResult.PercentDifference.PARSER,
+                        extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(seriesLargestPercentDiff_);
+                  seriesLargestPercentDiff_ = subBuilder.buildPartial();
+                }
+                bitField0_ |= 0x00000040;
+                break;
+              }
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000040) != 0)) {
+          validationCounters_ = java.util.Collections.unmodifiableList(validationCounters_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Debug
+          .internal_static_org_datacommons_proto_StatValidationResult_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.datacommons.proto.Debug
+          .internal_static_org_datacommons_proto_StatValidationResult_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.datacommons.proto.Debug.StatValidationResult.class,
+              org.datacommons.proto.Debug.StatValidationResult.Builder.class);
+    }
+
+    public interface StatValidationEntryOrBuilder
+        extends
+        // @@protoc_insertion_point(interface_extends:org.datacommons.proto.StatValidationResult.StatValidationEntry)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       *
+       *
+       * <pre>
+       * Key that describes the failed validation check.
+       * </pre>
+       *
+       * <code>optional string counter_key = 1;</code>
+       *
+       * @return Whether the counterKey field is set.
+       */
+      boolean hasCounterKey();
+      /**
+       *
+       *
+       * <pre>
+       * Key that describes the failed validation check.
+       * </pre>
+       *
+       * <code>optional string counter_key = 1;</code>
+       *
+       * @return The counterKey.
+       */
+      java.lang.String getCounterKey();
+      /**
+       *
+       *
+       * <pre>
+       * Key that describes the failed validation check.
+       * </pre>
+       *
+       * <code>optional string counter_key = 1;</code>
+       *
+       * @return The bytes for counterKey.
+       */
+      com.google.protobuf.ByteString getCounterKeyBytes();
+
+      /**
+       *
+       *
+       * <pre>
+       * DataPoints that caused this validation error.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+       */
+      java.util.List<org.datacommons.proto.Debug.DataPoint> getProblemPointsList();
+      /**
+       *
+       *
+       * <pre>
+       * DataPoints that caused this validation error.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+       */
+      org.datacommons.proto.Debug.DataPoint getProblemPoints(int index);
+      /**
+       *
+       *
+       * <pre>
+       * DataPoints that caused this validation error.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+       */
+      int getProblemPointsCount();
+      /**
+       *
+       *
+       * <pre>
+       * DataPoints that caused this validation error.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+       */
+      java.util.List<? extends org.datacommons.proto.Debug.DataPointOrBuilder>
+          getProblemPointsOrBuilderList();
+      /**
+       *
+       *
+       * <pre>
+       * DataPoints that caused this validation error.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+       */
+      org.datacommons.proto.Debug.DataPointOrBuilder getProblemPointsOrBuilder(int index);
+
+      /**
+       *
+       *
+       * <pre>
+       * Additional details as a message that is user understandable.
+       * </pre>
+       *
+       * <code>optional string additional_details = 3;</code>
+       *
+       * @return Whether the additionalDetails field is set.
+       */
+      boolean hasAdditionalDetails();
+      /**
+       *
+       *
+       * <pre>
+       * Additional details as a message that is user understandable.
+       * </pre>
+       *
+       * <code>optional string additional_details = 3;</code>
+       *
+       * @return The additionalDetails.
+       */
+      java.lang.String getAdditionalDetails();
+      /**
+       *
+       *
+       * <pre>
+       * Additional details as a message that is user understandable.
+       * </pre>
+       *
+       * <code>optional string additional_details = 3;</code>
+       *
+       * @return The bytes for additionalDetails.
+       */
+      com.google.protobuf.ByteString getAdditionalDetailsBytes();
+    }
+    /**
+     *
+     *
+     * <pre>
+     * Information about a single stat validation check that failed.
+     * </pre>
+     *
+     * Protobuf type {@code org.datacommons.proto.StatValidationResult.StatValidationEntry}
+     */
+    public static final class StatValidationEntry extends com.google.protobuf.GeneratedMessageV3
+        implements
+        // @@protoc_insertion_point(message_implements:org.datacommons.proto.StatValidationResult.StatValidationEntry)
+        StatValidationEntryOrBuilder {
+      private static final long serialVersionUID = 0L;
+      // Use StatValidationEntry.newBuilder() to construct.
+      private StatValidationEntry(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+
+      private StatValidationEntry() {
+        counterKey_ = "";
+        problemPoints_ = java.util.Collections.emptyList();
+        additionalDetails_ = "";
+      }
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+        return new StatValidationEntry();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+        return this.unknownFields;
+      }
+
+      private StatValidationEntry(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10:
+                {
+                  com.google.protobuf.ByteString bs = input.readBytes();
+                  bitField0_ |= 0x00000001;
+                  counterKey_ = bs;
+                  break;
+                }
+              case 18:
+                {
+                  if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                    problemPoints_ =
+                        new java.util.ArrayList<org.datacommons.proto.Debug.DataPoint>();
+                    mutable_bitField0_ |= 0x00000002;
+                  }
+                  problemPoints_.add(
+                      input.readMessage(
+                          org.datacommons.proto.Debug.DataPoint.PARSER, extensionRegistry));
+                  break;
+                }
+              case 26:
+                {
+                  com.google.protobuf.ByteString bs = input.readBytes();
+                  bitField0_ |= 0x00000002;
+                  additionalDetails_ = bs;
+                  break;
+                }
+              default:
+                {
+                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(this);
+        } finally {
+          if (((mutable_bitField0_ & 0x00000002) != 0)) {
+            problemPoints_ = java.util.Collections.unmodifiableList(problemPoints_);
+          }
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.class,
+                org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.Builder.class);
+      }
+
+      private int bitField0_;
+      public static final int COUNTER_KEY_FIELD_NUMBER = 1;
+      private volatile java.lang.Object counterKey_;
+      /**
+       *
+       *
+       * <pre>
+       * Key that describes the failed validation check.
+       * </pre>
+       *
+       * <code>optional string counter_key = 1;</code>
+       *
+       * @return Whether the counterKey field is set.
+       */
+      public boolean hasCounterKey() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key that describes the failed validation check.
+       * </pre>
+       *
+       * <code>optional string counter_key = 1;</code>
+       *
+       * @return The counterKey.
+       */
+      public java.lang.String getCounterKey() {
+        java.lang.Object ref = counterKey_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            counterKey_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Key that describes the failed validation check.
+       * </pre>
+       *
+       * <code>optional string counter_key = 1;</code>
+       *
+       * @return The bytes for counterKey.
+       */
+      public com.google.protobuf.ByteString getCounterKeyBytes() {
+        java.lang.Object ref = counterKey_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          counterKey_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      public static final int PROBLEM_POINTS_FIELD_NUMBER = 2;
+      private java.util.List<org.datacommons.proto.Debug.DataPoint> problemPoints_;
+      /**
+       *
+       *
+       * <pre>
+       * DataPoints that caused this validation error.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+       */
+      public java.util.List<org.datacommons.proto.Debug.DataPoint> getProblemPointsList() {
+        return problemPoints_;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DataPoints that caused this validation error.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+       */
+      public java.util.List<? extends org.datacommons.proto.Debug.DataPointOrBuilder>
+          getProblemPointsOrBuilderList() {
+        return problemPoints_;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DataPoints that caused this validation error.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+       */
+      public int getProblemPointsCount() {
+        return problemPoints_.size();
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DataPoints that caused this validation error.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+       */
+      public org.datacommons.proto.Debug.DataPoint getProblemPoints(int index) {
+        return problemPoints_.get(index);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DataPoints that caused this validation error.
+       * </pre>
+       *
+       * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+       */
+      public org.datacommons.proto.Debug.DataPointOrBuilder getProblemPointsOrBuilder(int index) {
+        return problemPoints_.get(index);
+      }
+
+      public static final int ADDITIONAL_DETAILS_FIELD_NUMBER = 3;
+      private volatile java.lang.Object additionalDetails_;
+      /**
+       *
+       *
+       * <pre>
+       * Additional details as a message that is user understandable.
+       * </pre>
+       *
+       * <code>optional string additional_details = 3;</code>
+       *
+       * @return Whether the additionalDetails field is set.
+       */
+      public boolean hasAdditionalDetails() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Additional details as a message that is user understandable.
+       * </pre>
+       *
+       * <code>optional string additional_details = 3;</code>
+       *
+       * @return The additionalDetails.
+       */
+      public java.lang.String getAdditionalDetails() {
+        java.lang.Object ref = additionalDetails_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            additionalDetails_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Additional details as a message that is user understandable.
+       * </pre>
+       *
+       * <code>optional string additional_details = 3;</code>
+       *
+       * @return The bytes for additionalDetails.
+       */
+      public com.google.protobuf.ByteString getAdditionalDetailsBytes() {
+        java.lang.Object ref = additionalDetails_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          additionalDetails_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      private byte memoizedIsInitialized = -1;
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+        if (((bitField0_ & 0x00000001) != 0)) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 1, counterKey_);
+        }
+        for (int i = 0; i < problemPoints_.size(); i++) {
+          output.writeMessage(2, problemPoints_.get(i));
+        }
+        if (((bitField0_ & 0x00000002) != 0)) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 3, additionalDetails_);
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) != 0)) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, counterKey_);
+        }
+        for (int i = 0; i < problemPoints_.size(); i++) {
+          size +=
+              com.google.protobuf.CodedOutputStream.computeMessageSize(2, problemPoints_.get(i));
+        }
+        if (((bitField0_ & 0x00000002) != 0)) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, additionalDetails_);
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+          return true;
+        }
+        if (!(obj
+            instanceof org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry)) {
+          return super.equals(obj);
+        }
+        org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry other =
+            (org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry) obj;
+
+        if (hasCounterKey() != other.hasCounterKey()) return false;
+        if (hasCounterKey()) {
+          if (!getCounterKey().equals(other.getCounterKey())) return false;
+        }
+        if (!getProblemPointsList().equals(other.getProblemPointsList())) return false;
+        if (hasAdditionalDetails() != other.hasAdditionalDetails()) return false;
+        if (hasAdditionalDetails()) {
+          if (!getAdditionalDetails().equals(other.getAdditionalDetails())) return false;
+        }
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (hasCounterKey()) {
+          hash = (37 * hash) + COUNTER_KEY_FIELD_NUMBER;
+          hash = (53 * hash) + getCounterKey().hashCode();
+        }
+        if (getProblemPointsCount() > 0) {
+          hash = (37 * hash) + PROBLEM_POINTS_FIELD_NUMBER;
+          hash = (53 * hash) + getProblemPointsList().hashCode();
+        }
+        if (hasAdditionalDetails()) {
+          hash = (37 * hash) + ADDITIONAL_DETAILS_FIELD_NUMBER;
+          hash = (53 * hash) + getAdditionalDetails().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry parseFrom(
+          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry parseFrom(
+          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry parseFrom(
+          byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry parseFrom(
+          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry parseFrom(
+          java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry parseFrom(
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
+          parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
+          parseDelimitedFrom(
+              java.io.InputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry parseFrom(
+          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() {
+        return newBuilder();
+      }
+
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+
+      public static Builder newBuilder(
+          org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Information about a single stat validation check that failed.
+       * </pre>
+       *
+       * Protobuf type {@code org.datacommons.proto.StatValidationResult.StatValidationEntry}
+       */
+      public static final class Builder
+          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+          implements
+          // @@protoc_insertion_point(builder_implements:org.datacommons.proto.StatValidationResult.StatValidationEntry)
+          org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+          return org.datacommons.proto.Debug
+              .internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return org.datacommons.proto.Debug
+              .internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.class,
+                  org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.Builder
+                      .class);
+        }
+
+        // Construct using
+        // org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+            getProblemPointsFieldBuilder();
+          }
+        }
+
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          counterKey_ = "";
+          bitField0_ = (bitField0_ & ~0x00000001);
+          if (problemPointsBuilder_ == null) {
+            problemPoints_ = java.util.Collections.emptyList();
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            problemPointsBuilder_.clear();
+          }
+          additionalDetails_ = "";
+          bitField0_ = (bitField0_ & ~0x00000004);
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+          return org.datacommons.proto.Debug
+              .internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_descriptor;
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
+            getDefaultInstanceForType() {
+          return org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
+              .getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry build() {
+          org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry result =
+              buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry buildPartial() {
+          org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry result =
+              new org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) != 0)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.counterKey_ = counterKey_;
+          if (problemPointsBuilder_ == null) {
+            if (((bitField0_ & 0x00000002) != 0)) {
+              problemPoints_ = java.util.Collections.unmodifiableList(problemPoints_);
+              bitField0_ = (bitField0_ & ~0x00000002);
+            }
+            result.problemPoints_ = problemPoints_;
+          } else {
+            result.problemPoints_ = problemPointsBuilder_.build();
+          }
+          if (((from_bitField0_ & 0x00000004) != 0)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.additionalDetails_ = additionalDetails_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          return super.setField(field, value);
+        }
+
+        @java.lang.Override
+        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+
+        @java.lang.Override
+        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index,
+            java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other
+              instanceof org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry) {
+            return mergeFrom(
+                (org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry) other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(
+            org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry other) {
+          if (other
+              == org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
+                  .getDefaultInstance()) return this;
+          if (other.hasCounterKey()) {
+            bitField0_ |= 0x00000001;
+            counterKey_ = other.counterKey_;
+            onChanged();
+          }
+          if (problemPointsBuilder_ == null) {
+            if (!other.problemPoints_.isEmpty()) {
+              if (problemPoints_.isEmpty()) {
+                problemPoints_ = other.problemPoints_;
+                bitField0_ = (bitField0_ & ~0x00000002);
+              } else {
+                ensureProblemPointsIsMutable();
+                problemPoints_.addAll(other.problemPoints_);
+              }
+              onChanged();
+            }
+          } else {
+            if (!other.problemPoints_.isEmpty()) {
+              if (problemPointsBuilder_.isEmpty()) {
+                problemPointsBuilder_.dispose();
+                problemPointsBuilder_ = null;
+                problemPoints_ = other.problemPoints_;
+                bitField0_ = (bitField0_ & ~0x00000002);
+                problemPointsBuilder_ =
+                    com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                        ? getProblemPointsFieldBuilder()
+                        : null;
+              } else {
+                problemPointsBuilder_.addAllMessages(other.problemPoints_);
+              }
+            }
+          }
+          if (other.hasAdditionalDetails()) {
+            bitField0_ |= 0x00000004;
+            additionalDetails_ = other.additionalDetails_;
+            onChanged();
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage =
+                (org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry)
+                    e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private int bitField0_;
+
+        private java.lang.Object counterKey_ = "";
+        /**
+         *
+         *
+         * <pre>
+         * Key that describes the failed validation check.
+         * </pre>
+         *
+         * <code>optional string counter_key = 1;</code>
+         *
+         * @return Whether the counterKey field is set.
+         */
+        public boolean hasCounterKey() {
+          return ((bitField0_ & 0x00000001) != 0);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Key that describes the failed validation check.
+         * </pre>
+         *
+         * <code>optional string counter_key = 1;</code>
+         *
+         * @return The counterKey.
+         */
+        public java.lang.String getCounterKey() {
+          java.lang.Object ref = counterKey_;
+          if (!(ref instanceof java.lang.String)) {
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              counterKey_ = s;
+            }
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Key that describes the failed validation check.
+         * </pre>
+         *
+         * <code>optional string counter_key = 1;</code>
+         *
+         * @return The bytes for counterKey.
+         */
+        public com.google.protobuf.ByteString getCounterKeyBytes() {
+          java.lang.Object ref = counterKey_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            counterKey_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Key that describes the failed validation check.
+         * </pre>
+         *
+         * <code>optional string counter_key = 1;</code>
+         *
+         * @param value The counterKey to set.
+         * @return This builder for chaining.
+         */
+        public Builder setCounterKey(java.lang.String value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          bitField0_ |= 0x00000001;
+          counterKey_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Key that describes the failed validation check.
+         * </pre>
+         *
+         * <code>optional string counter_key = 1;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearCounterKey() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          counterKey_ = getDefaultInstance().getCounterKey();
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Key that describes the failed validation check.
+         * </pre>
+         *
+         * <code>optional string counter_key = 1;</code>
+         *
+         * @param value The bytes for counterKey to set.
+         * @return This builder for chaining.
+         */
+        public Builder setCounterKeyBytes(com.google.protobuf.ByteString value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          bitField0_ |= 0x00000001;
+          counterKey_ = value;
+          onChanged();
+          return this;
+        }
+
+        private java.util.List<org.datacommons.proto.Debug.DataPoint> problemPoints_ =
+            java.util.Collections.emptyList();
+
+        private void ensureProblemPointsIsMutable() {
+          if (!((bitField0_ & 0x00000002) != 0)) {
+            problemPoints_ =
+                new java.util.ArrayList<org.datacommons.proto.Debug.DataPoint>(problemPoints_);
+            bitField0_ |= 0x00000002;
+          }
+        }
+
+        private com.google.protobuf.RepeatedFieldBuilderV3<
+                org.datacommons.proto.Debug.DataPoint,
+                org.datacommons.proto.Debug.DataPoint.Builder,
+                org.datacommons.proto.Debug.DataPointOrBuilder>
+            problemPointsBuilder_;
+
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public java.util.List<org.datacommons.proto.Debug.DataPoint> getProblemPointsList() {
+          if (problemPointsBuilder_ == null) {
+            return java.util.Collections.unmodifiableList(problemPoints_);
+          } else {
+            return problemPointsBuilder_.getMessageList();
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public int getProblemPointsCount() {
+          if (problemPointsBuilder_ == null) {
+            return problemPoints_.size();
+          } else {
+            return problemPointsBuilder_.getCount();
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public org.datacommons.proto.Debug.DataPoint getProblemPoints(int index) {
+          if (problemPointsBuilder_ == null) {
+            return problemPoints_.get(index);
+          } else {
+            return problemPointsBuilder_.getMessage(index);
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public Builder setProblemPoints(int index, org.datacommons.proto.Debug.DataPoint value) {
+          if (problemPointsBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureProblemPointsIsMutable();
+            problemPoints_.set(index, value);
+            onChanged();
+          } else {
+            problemPointsBuilder_.setMessage(index, value);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public Builder setProblemPoints(
+            int index, org.datacommons.proto.Debug.DataPoint.Builder builderForValue) {
+          if (problemPointsBuilder_ == null) {
+            ensureProblemPointsIsMutable();
+            problemPoints_.set(index, builderForValue.build());
+            onChanged();
+          } else {
+            problemPointsBuilder_.setMessage(index, builderForValue.build());
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public Builder addProblemPoints(org.datacommons.proto.Debug.DataPoint value) {
+          if (problemPointsBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureProblemPointsIsMutable();
+            problemPoints_.add(value);
+            onChanged();
+          } else {
+            problemPointsBuilder_.addMessage(value);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public Builder addProblemPoints(int index, org.datacommons.proto.Debug.DataPoint value) {
+          if (problemPointsBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureProblemPointsIsMutable();
+            problemPoints_.add(index, value);
+            onChanged();
+          } else {
+            problemPointsBuilder_.addMessage(index, value);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public Builder addProblemPoints(
+            org.datacommons.proto.Debug.DataPoint.Builder builderForValue) {
+          if (problemPointsBuilder_ == null) {
+            ensureProblemPointsIsMutable();
+            problemPoints_.add(builderForValue.build());
+            onChanged();
+          } else {
+            problemPointsBuilder_.addMessage(builderForValue.build());
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public Builder addProblemPoints(
+            int index, org.datacommons.proto.Debug.DataPoint.Builder builderForValue) {
+          if (problemPointsBuilder_ == null) {
+            ensureProblemPointsIsMutable();
+            problemPoints_.add(index, builderForValue.build());
+            onChanged();
+          } else {
+            problemPointsBuilder_.addMessage(index, builderForValue.build());
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public Builder addAllProblemPoints(
+            java.lang.Iterable<? extends org.datacommons.proto.Debug.DataPoint> values) {
+          if (problemPointsBuilder_ == null) {
+            ensureProblemPointsIsMutable();
+            com.google.protobuf.AbstractMessageLite.Builder.addAll(values, problemPoints_);
+            onChanged();
+          } else {
+            problemPointsBuilder_.addAllMessages(values);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public Builder clearProblemPoints() {
+          if (problemPointsBuilder_ == null) {
+            problemPoints_ = java.util.Collections.emptyList();
+            bitField0_ = (bitField0_ & ~0x00000002);
+            onChanged();
+          } else {
+            problemPointsBuilder_.clear();
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public Builder removeProblemPoints(int index) {
+          if (problemPointsBuilder_ == null) {
+            ensureProblemPointsIsMutable();
+            problemPoints_.remove(index);
+            onChanged();
+          } else {
+            problemPointsBuilder_.remove(index);
+          }
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public org.datacommons.proto.Debug.DataPoint.Builder getProblemPointsBuilder(int index) {
+          return getProblemPointsFieldBuilder().getBuilder(index);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public org.datacommons.proto.Debug.DataPointOrBuilder getProblemPointsOrBuilder(int index) {
+          if (problemPointsBuilder_ == null) {
+            return problemPoints_.get(index);
+          } else {
+            return problemPointsBuilder_.getMessageOrBuilder(index);
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public java.util.List<? extends org.datacommons.proto.Debug.DataPointOrBuilder>
+            getProblemPointsOrBuilderList() {
+          if (problemPointsBuilder_ != null) {
+            return problemPointsBuilder_.getMessageOrBuilderList();
+          } else {
+            return java.util.Collections.unmodifiableList(problemPoints_);
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public org.datacommons.proto.Debug.DataPoint.Builder addProblemPointsBuilder() {
+          return getProblemPointsFieldBuilder()
+              .addBuilder(org.datacommons.proto.Debug.DataPoint.getDefaultInstance());
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public org.datacommons.proto.Debug.DataPoint.Builder addProblemPointsBuilder(int index) {
+          return getProblemPointsFieldBuilder()
+              .addBuilder(index, org.datacommons.proto.Debug.DataPoint.getDefaultInstance());
+        }
+        /**
+         *
+         *
+         * <pre>
+         * DataPoints that caused this validation error.
+         * </pre>
+         *
+         * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
+         */
+        public java.util.List<org.datacommons.proto.Debug.DataPoint.Builder>
+            getProblemPointsBuilderList() {
+          return getProblemPointsFieldBuilder().getBuilderList();
+        }
+
+        private com.google.protobuf.RepeatedFieldBuilderV3<
+                org.datacommons.proto.Debug.DataPoint,
+                org.datacommons.proto.Debug.DataPoint.Builder,
+                org.datacommons.proto.Debug.DataPointOrBuilder>
+            getProblemPointsFieldBuilder() {
+          if (problemPointsBuilder_ == null) {
+            problemPointsBuilder_ =
+                new com.google.protobuf.RepeatedFieldBuilderV3<
+                    org.datacommons.proto.Debug.DataPoint,
+                    org.datacommons.proto.Debug.DataPoint.Builder,
+                    org.datacommons.proto.Debug.DataPointOrBuilder>(
+                    problemPoints_,
+                    ((bitField0_ & 0x00000002) != 0),
+                    getParentForChildren(),
+                    isClean());
+            problemPoints_ = null;
+          }
+          return problemPointsBuilder_;
+        }
+
+        private java.lang.Object additionalDetails_ = "";
+        /**
+         *
+         *
+         * <pre>
+         * Additional details as a message that is user understandable.
+         * </pre>
+         *
+         * <code>optional string additional_details = 3;</code>
+         *
+         * @return Whether the additionalDetails field is set.
+         */
+        public boolean hasAdditionalDetails() {
+          return ((bitField0_ & 0x00000004) != 0);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Additional details as a message that is user understandable.
+         * </pre>
+         *
+         * <code>optional string additional_details = 3;</code>
+         *
+         * @return The additionalDetails.
+         */
+        public java.lang.String getAdditionalDetails() {
+          java.lang.Object ref = additionalDetails_;
+          if (!(ref instanceof java.lang.String)) {
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              additionalDetails_ = s;
+            }
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Additional details as a message that is user understandable.
+         * </pre>
+         *
+         * <code>optional string additional_details = 3;</code>
+         *
+         * @return The bytes for additionalDetails.
+         */
+        public com.google.protobuf.ByteString getAdditionalDetailsBytes() {
+          java.lang.Object ref = additionalDetails_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            additionalDetails_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Additional details as a message that is user understandable.
+         * </pre>
+         *
+         * <code>optional string additional_details = 3;</code>
+         *
+         * @param value The additionalDetails to set.
+         * @return This builder for chaining.
+         */
+        public Builder setAdditionalDetails(java.lang.String value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          bitField0_ |= 0x00000004;
+          additionalDetails_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Additional details as a message that is user understandable.
+         * </pre>
+         *
+         * <code>optional string additional_details = 3;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearAdditionalDetails() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          additionalDetails_ = getDefaultInstance().getAdditionalDetails();
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Additional details as a message that is user understandable.
+         * </pre>
+         *
+         * <code>optional string additional_details = 3;</code>
+         *
+         * @param value The bytes for additionalDetails to set.
+         * @return This builder for chaining.
+         */
+        public Builder setAdditionalDetailsBytes(com.google.protobuf.ByteString value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          bitField0_ |= 0x00000004;
+          additionalDetails_ = value;
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+        // @@protoc_insertion_point(builder_scope:org.datacommons.proto.StatValidationResult.StatValidationEntry)
+      }
+
+      // @@protoc_insertion_point(class_scope:org.datacommons.proto.StatValidationResult.StatValidationEntry)
+      private static final org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
+          DEFAULT_INSTANCE;
+
+      static {
+        DEFAULT_INSTANCE =
+            new org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry();
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
+          getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      @java.lang.Deprecated
+      public static final com.google.protobuf.Parser<StatValidationEntry> PARSER =
+          new com.google.protobuf.AbstractParser<StatValidationEntry>() {
+            @java.lang.Override
+            public StatValidationEntry parsePartialFrom(
+                com.google.protobuf.CodedInputStream input,
+                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+              return new StatValidationEntry(input, extensionRegistry);
+            }
+          };
+
+      public static com.google.protobuf.Parser<StatValidationEntry> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<StatValidationEntry> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
+          getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+    }
+
+    public interface PercentDifferenceOrBuilder
+        extends
+        // @@protoc_insertion_point(interface_extends:org.datacommons.proto.StatValidationResult.PercentDifference)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       *
+       *
+       * <pre>
+       * The actual percent difference.
+       * </pre>
+       *
+       * <code>optional double percent_difference = 1;</code>
+       *
+       * @return Whether the percentDifference field is set.
+       */
+      boolean hasPercentDifference();
+      /**
+       *
+       *
+       * <pre>
+       * The actual percent difference.
+       * </pre>
+       *
+       * <code>optional double percent_difference = 1;</code>
+       *
+       * @return The percentDifference.
+       */
+      double getPercentDifference();
+
+      /**
+       *
+       *
+       * <pre>
+       * The datapoint that caused the percent difference.
+       * </pre>
+       *
+       * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+       *
+       * @return Whether the diffDataPoint field is set.
+       */
+      boolean hasDiffDataPoint();
+      /**
+       *
+       *
+       * <pre>
+       * The datapoint that caused the percent difference.
+       * </pre>
+       *
+       * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+       *
+       * @return The diffDataPoint.
+       */
+      org.datacommons.proto.Debug.DataPoint getDiffDataPoint();
+      /**
+       *
+       *
+       * <pre>
+       * The datapoint that caused the percent difference.
+       * </pre>
+       *
+       * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+       */
+      org.datacommons.proto.Debug.DataPointOrBuilder getDiffDataPointOrBuilder();
+
+      /**
+       *
+       *
+       * <pre>
+       * The datapoint with the starting value of the fluctuation.
+       * </pre>
+       *
+       * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+       *
+       * @return Whether the baseDataPoint field is set.
+       */
+      boolean hasBaseDataPoint();
+      /**
+       *
+       *
+       * <pre>
+       * The datapoint with the starting value of the fluctuation.
+       * </pre>
+       *
+       * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+       *
+       * @return The baseDataPoint.
+       */
+      org.datacommons.proto.Debug.DataPoint getBaseDataPoint();
+      /**
+       *
+       *
+       * <pre>
+       * The datapoint with the starting value of the fluctuation.
+       * </pre>
+       *
+       * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+       */
+      org.datacommons.proto.Debug.DataPointOrBuilder getBaseDataPointOrBuilder();
+    }
+    /**
+     *
+     *
+     * <pre>
+     * Describes a fluctuation between DataPoints in a time series.
+     * </pre>
+     *
+     * Protobuf type {@code org.datacommons.proto.StatValidationResult.PercentDifference}
+     */
+    public static final class PercentDifference extends com.google.protobuf.GeneratedMessageV3
+        implements
+        // @@protoc_insertion_point(message_implements:org.datacommons.proto.StatValidationResult.PercentDifference)
+        PercentDifferenceOrBuilder {
+      private static final long serialVersionUID = 0L;
+      // Use PercentDifference.newBuilder() to construct.
+      private PercentDifference(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+
+      private PercentDifference() {}
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+        return new PercentDifference();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+        return this.unknownFields;
+      }
+
+      private PercentDifference(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 9:
+                {
+                  bitField0_ |= 0x00000001;
+                  percentDifference_ = input.readDouble();
+                  break;
+                }
+              case 18:
+                {
+                  org.datacommons.proto.Debug.DataPoint.Builder subBuilder = null;
+                  if (((bitField0_ & 0x00000002) != 0)) {
+                    subBuilder = diffDataPoint_.toBuilder();
+                  }
+                  diffDataPoint_ =
+                      input.readMessage(
+                          org.datacommons.proto.Debug.DataPoint.PARSER, extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(diffDataPoint_);
+                    diffDataPoint_ = subBuilder.buildPartial();
+                  }
+                  bitField0_ |= 0x00000002;
+                  break;
+                }
+              case 26:
+                {
+                  org.datacommons.proto.Debug.DataPoint.Builder subBuilder = null;
+                  if (((bitField0_ & 0x00000004) != 0)) {
+                    subBuilder = baseDataPoint_.toBuilder();
+                  }
+                  baseDataPoint_ =
+                      input.readMessage(
+                          org.datacommons.proto.Debug.DataPoint.PARSER, extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(baseDataPoint_);
+                    baseDataPoint_ = subBuilder.buildPartial();
+                  }
+                  bitField0_ |= 0x00000004;
+                  break;
+                }
+              default:
+                {
+                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.datacommons.proto.Debug.StatValidationResult.PercentDifference.class,
+                org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder.class);
+      }
+
+      private int bitField0_;
+      public static final int PERCENT_DIFFERENCE_FIELD_NUMBER = 1;
+      private double percentDifference_;
+      /**
+       *
+       *
+       * <pre>
+       * The actual percent difference.
+       * </pre>
+       *
+       * <code>optional double percent_difference = 1;</code>
+       *
+       * @return Whether the percentDifference field is set.
+       */
+      public boolean hasPercentDifference() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * The actual percent difference.
+       * </pre>
+       *
+       * <code>optional double percent_difference = 1;</code>
+       *
+       * @return The percentDifference.
+       */
+      public double getPercentDifference() {
+        return percentDifference_;
+      }
+
+      public static final int DIFF_DATA_POINT_FIELD_NUMBER = 2;
+      private org.datacommons.proto.Debug.DataPoint diffDataPoint_;
+      /**
+       *
+       *
+       * <pre>
+       * The datapoint that caused the percent difference.
+       * </pre>
+       *
+       * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+       *
+       * @return Whether the diffDataPoint field is set.
+       */
+      public boolean hasDiffDataPoint() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * The datapoint that caused the percent difference.
+       * </pre>
+       *
+       * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+       *
+       * @return The diffDataPoint.
+       */
+      public org.datacommons.proto.Debug.DataPoint getDiffDataPoint() {
+        return diffDataPoint_ == null
+            ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
+            : diffDataPoint_;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * The datapoint that caused the percent difference.
+       * </pre>
+       *
+       * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+       */
+      public org.datacommons.proto.Debug.DataPointOrBuilder getDiffDataPointOrBuilder() {
+        return diffDataPoint_ == null
+            ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
+            : diffDataPoint_;
+      }
+
+      public static final int BASE_DATA_POINT_FIELD_NUMBER = 3;
+      private org.datacommons.proto.Debug.DataPoint baseDataPoint_;
+      /**
+       *
+       *
+       * <pre>
+       * The datapoint with the starting value of the fluctuation.
+       * </pre>
+       *
+       * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+       *
+       * @return Whether the baseDataPoint field is set.
+       */
+      public boolean hasBaseDataPoint() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * The datapoint with the starting value of the fluctuation.
+       * </pre>
+       *
+       * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+       *
+       * @return The baseDataPoint.
+       */
+      public org.datacommons.proto.Debug.DataPoint getBaseDataPoint() {
+        return baseDataPoint_ == null
+            ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
+            : baseDataPoint_;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * The datapoint with the starting value of the fluctuation.
+       * </pre>
+       *
+       * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+       */
+      public org.datacommons.proto.Debug.DataPointOrBuilder getBaseDataPointOrBuilder() {
+        return baseDataPoint_ == null
+            ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
+            : baseDataPoint_;
+      }
+
+      private byte memoizedIsInitialized = -1;
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+        if (((bitField0_ & 0x00000001) != 0)) {
+          output.writeDouble(1, percentDifference_);
+        }
+        if (((bitField0_ & 0x00000002) != 0)) {
+          output.writeMessage(2, getDiffDataPoint());
+        }
+        if (((bitField0_ & 0x00000004) != 0)) {
+          output.writeMessage(3, getBaseDataPoint());
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) != 0)) {
+          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(1, percentDifference_);
+        }
+        if (((bitField0_ & 0x00000002) != 0)) {
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getDiffDataPoint());
+        }
+        if (((bitField0_ & 0x00000004) != 0)) {
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, getBaseDataPoint());
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+          return true;
+        }
+        if (!(obj instanceof org.datacommons.proto.Debug.StatValidationResult.PercentDifference)) {
+          return super.equals(obj);
+        }
+        org.datacommons.proto.Debug.StatValidationResult.PercentDifference other =
+            (org.datacommons.proto.Debug.StatValidationResult.PercentDifference) obj;
+
+        if (hasPercentDifference() != other.hasPercentDifference()) return false;
+        if (hasPercentDifference()) {
+          if (java.lang.Double.doubleToLongBits(getPercentDifference())
+              != java.lang.Double.doubleToLongBits(other.getPercentDifference())) return false;
+        }
+        if (hasDiffDataPoint() != other.hasDiffDataPoint()) return false;
+        if (hasDiffDataPoint()) {
+          if (!getDiffDataPoint().equals(other.getDiffDataPoint())) return false;
+        }
+        if (hasBaseDataPoint() != other.hasBaseDataPoint()) return false;
+        if (hasBaseDataPoint()) {
+          if (!getBaseDataPoint().equals(other.getBaseDataPoint())) return false;
+        }
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (hasPercentDifference()) {
+          hash = (37 * hash) + PERCENT_DIFFERENCE_FIELD_NUMBER;
+          hash =
+              (53 * hash)
+                  + com.google.protobuf.Internal.hashLong(
+                      java.lang.Double.doubleToLongBits(getPercentDifference()));
+        }
+        if (hasDiffDataPoint()) {
+          hash = (37 * hash) + DIFF_DATA_POINT_FIELD_NUMBER;
+          hash = (53 * hash) + getDiffDataPoint().hashCode();
+        }
+        if (hasBaseDataPoint()) {
+          hash = (37 * hash) + BASE_DATA_POINT_FIELD_NUMBER;
+          hash = (53 * hash) + getBaseDataPoint().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
+          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
+          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
+          byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
+          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
+          java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+          parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+          parseDelimitedFrom(
+              java.io.InputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
+          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() {
+        return newBuilder();
+      }
+
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+
+      public static Builder newBuilder(
+          org.datacommons.proto.Debug.StatValidationResult.PercentDifference prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Describes a fluctuation between DataPoints in a time series.
+       * </pre>
+       *
+       * Protobuf type {@code org.datacommons.proto.StatValidationResult.PercentDifference}
+       */
+      public static final class Builder
+          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+          implements
+          // @@protoc_insertion_point(builder_implements:org.datacommons.proto.StatValidationResult.PercentDifference)
+          org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+          return org.datacommons.proto.Debug
+              .internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return org.datacommons.proto.Debug
+              .internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  org.datacommons.proto.Debug.StatValidationResult.PercentDifference.class,
+                  org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder.class);
+        }
+
+        // Construct using
+        // org.datacommons.proto.Debug.StatValidationResult.PercentDifference.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+            getDiffDataPointFieldBuilder();
+            getBaseDataPointFieldBuilder();
+          }
+        }
+
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          percentDifference_ = 0D;
+          bitField0_ = (bitField0_ & ~0x00000001);
+          if (diffDataPointBuilder_ == null) {
+            diffDataPoint_ = null;
+          } else {
+            diffDataPointBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000002);
+          if (baseDataPointBuilder_ == null) {
+            baseDataPoint_ = null;
+          } else {
+            baseDataPointBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000004);
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+          return org.datacommons.proto.Debug
+              .internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_descriptor;
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+            getDefaultInstanceForType() {
+          return org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+              .getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Debug.StatValidationResult.PercentDifference build() {
+          org.datacommons.proto.Debug.StatValidationResult.PercentDifference result =
+              buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Debug.StatValidationResult.PercentDifference buildPartial() {
+          org.datacommons.proto.Debug.StatValidationResult.PercentDifference result =
+              new org.datacommons.proto.Debug.StatValidationResult.PercentDifference(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) != 0)) {
+            result.percentDifference_ = percentDifference_;
+            to_bitField0_ |= 0x00000001;
+          }
+          if (((from_bitField0_ & 0x00000002) != 0)) {
+            if (diffDataPointBuilder_ == null) {
+              result.diffDataPoint_ = diffDataPoint_;
+            } else {
+              result.diffDataPoint_ = diffDataPointBuilder_.build();
+            }
+            to_bitField0_ |= 0x00000002;
+          }
+          if (((from_bitField0_ & 0x00000004) != 0)) {
+            if (baseDataPointBuilder_ == null) {
+              result.baseDataPoint_ = baseDataPoint_;
+            } else {
+              result.baseDataPoint_ = baseDataPointBuilder_.build();
+            }
+            to_bitField0_ |= 0x00000004;
+          }
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          return super.setField(field, value);
+        }
+
+        @java.lang.Override
+        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+
+        @java.lang.Override
+        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index,
+            java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof org.datacommons.proto.Debug.StatValidationResult.PercentDifference) {
+            return mergeFrom(
+                (org.datacommons.proto.Debug.StatValidationResult.PercentDifference) other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(
+            org.datacommons.proto.Debug.StatValidationResult.PercentDifference other) {
+          if (other
+              == org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+                  .getDefaultInstance()) return this;
+          if (other.hasPercentDifference()) {
+            setPercentDifference(other.getPercentDifference());
+          }
+          if (other.hasDiffDataPoint()) {
+            mergeDiffDataPoint(other.getDiffDataPoint());
+          }
+          if (other.hasBaseDataPoint()) {
+            mergeBaseDataPoint(other.getBaseDataPoint());
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          org.datacommons.proto.Debug.StatValidationResult.PercentDifference parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage =
+                (org.datacommons.proto.Debug.StatValidationResult.PercentDifference)
+                    e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private int bitField0_;
+
+        private double percentDifference_;
+        /**
+         *
+         *
+         * <pre>
+         * The actual percent difference.
+         * </pre>
+         *
+         * <code>optional double percent_difference = 1;</code>
+         *
+         * @return Whether the percentDifference field is set.
+         */
+        public boolean hasPercentDifference() {
+          return ((bitField0_ & 0x00000001) != 0);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The actual percent difference.
+         * </pre>
+         *
+         * <code>optional double percent_difference = 1;</code>
+         *
+         * @return The percentDifference.
+         */
+        public double getPercentDifference() {
+          return percentDifference_;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The actual percent difference.
+         * </pre>
+         *
+         * <code>optional double percent_difference = 1;</code>
+         *
+         * @param value The percentDifference to set.
+         * @return This builder for chaining.
+         */
+        public Builder setPercentDifference(double value) {
+          bitField0_ |= 0x00000001;
+          percentDifference_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The actual percent difference.
+         * </pre>
+         *
+         * <code>optional double percent_difference = 1;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearPercentDifference() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          percentDifference_ = 0D;
+          onChanged();
+          return this;
+        }
+
+        private org.datacommons.proto.Debug.DataPoint diffDataPoint_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+                org.datacommons.proto.Debug.DataPoint,
+                org.datacommons.proto.Debug.DataPoint.Builder,
+                org.datacommons.proto.Debug.DataPointOrBuilder>
+            diffDataPointBuilder_;
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint that caused the percent difference.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+         *
+         * @return Whether the diffDataPoint field is set.
+         */
+        public boolean hasDiffDataPoint() {
+          return ((bitField0_ & 0x00000002) != 0);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint that caused the percent difference.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+         *
+         * @return The diffDataPoint.
+         */
+        public org.datacommons.proto.Debug.DataPoint getDiffDataPoint() {
+          if (diffDataPointBuilder_ == null) {
+            return diffDataPoint_ == null
+                ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
+                : diffDataPoint_;
+          } else {
+            return diffDataPointBuilder_.getMessage();
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint that caused the percent difference.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+         */
+        public Builder setDiffDataPoint(org.datacommons.proto.Debug.DataPoint value) {
+          if (diffDataPointBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            diffDataPoint_ = value;
+            onChanged();
+          } else {
+            diffDataPointBuilder_.setMessage(value);
+          }
+          bitField0_ |= 0x00000002;
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint that caused the percent difference.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+         */
+        public Builder setDiffDataPoint(
+            org.datacommons.proto.Debug.DataPoint.Builder builderForValue) {
+          if (diffDataPointBuilder_ == null) {
+            diffDataPoint_ = builderForValue.build();
+            onChanged();
+          } else {
+            diffDataPointBuilder_.setMessage(builderForValue.build());
+          }
+          bitField0_ |= 0x00000002;
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint that caused the percent difference.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+         */
+        public Builder mergeDiffDataPoint(org.datacommons.proto.Debug.DataPoint value) {
+          if (diffDataPointBuilder_ == null) {
+            if (((bitField0_ & 0x00000002) != 0)
+                && diffDataPoint_ != null
+                && diffDataPoint_ != org.datacommons.proto.Debug.DataPoint.getDefaultInstance()) {
+              diffDataPoint_ =
+                  org.datacommons.proto.Debug.DataPoint.newBuilder(diffDataPoint_)
+                      .mergeFrom(value)
+                      .buildPartial();
+            } else {
+              diffDataPoint_ = value;
+            }
+            onChanged();
+          } else {
+            diffDataPointBuilder_.mergeFrom(value);
+          }
+          bitField0_ |= 0x00000002;
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint that caused the percent difference.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+         */
+        public Builder clearDiffDataPoint() {
+          if (diffDataPointBuilder_ == null) {
+            diffDataPoint_ = null;
+            onChanged();
+          } else {
+            diffDataPointBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000002);
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint that caused the percent difference.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+         */
+        public org.datacommons.proto.Debug.DataPoint.Builder getDiffDataPointBuilder() {
+          bitField0_ |= 0x00000002;
+          onChanged();
+          return getDiffDataPointFieldBuilder().getBuilder();
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint that caused the percent difference.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+         */
+        public org.datacommons.proto.Debug.DataPointOrBuilder getDiffDataPointOrBuilder() {
+          if (diffDataPointBuilder_ != null) {
+            return diffDataPointBuilder_.getMessageOrBuilder();
+          } else {
+            return diffDataPoint_ == null
+                ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
+                : diffDataPoint_;
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint that caused the percent difference.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+                org.datacommons.proto.Debug.DataPoint,
+                org.datacommons.proto.Debug.DataPoint.Builder,
+                org.datacommons.proto.Debug.DataPointOrBuilder>
+            getDiffDataPointFieldBuilder() {
+          if (diffDataPointBuilder_ == null) {
+            diffDataPointBuilder_ =
+                new com.google.protobuf.SingleFieldBuilderV3<
+                    org.datacommons.proto.Debug.DataPoint,
+                    org.datacommons.proto.Debug.DataPoint.Builder,
+                    org.datacommons.proto.Debug.DataPointOrBuilder>(
+                    getDiffDataPoint(), getParentForChildren(), isClean());
+            diffDataPoint_ = null;
+          }
+          return diffDataPointBuilder_;
+        }
+
+        private org.datacommons.proto.Debug.DataPoint baseDataPoint_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+                org.datacommons.proto.Debug.DataPoint,
+                org.datacommons.proto.Debug.DataPoint.Builder,
+                org.datacommons.proto.Debug.DataPointOrBuilder>
+            baseDataPointBuilder_;
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint with the starting value of the fluctuation.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+         *
+         * @return Whether the baseDataPoint field is set.
+         */
+        public boolean hasBaseDataPoint() {
+          return ((bitField0_ & 0x00000004) != 0);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint with the starting value of the fluctuation.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+         *
+         * @return The baseDataPoint.
+         */
+        public org.datacommons.proto.Debug.DataPoint getBaseDataPoint() {
+          if (baseDataPointBuilder_ == null) {
+            return baseDataPoint_ == null
+                ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
+                : baseDataPoint_;
+          } else {
+            return baseDataPointBuilder_.getMessage();
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint with the starting value of the fluctuation.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+         */
+        public Builder setBaseDataPoint(org.datacommons.proto.Debug.DataPoint value) {
+          if (baseDataPointBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            baseDataPoint_ = value;
+            onChanged();
+          } else {
+            baseDataPointBuilder_.setMessage(value);
+          }
+          bitField0_ |= 0x00000004;
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint with the starting value of the fluctuation.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+         */
+        public Builder setBaseDataPoint(
+            org.datacommons.proto.Debug.DataPoint.Builder builderForValue) {
+          if (baseDataPointBuilder_ == null) {
+            baseDataPoint_ = builderForValue.build();
+            onChanged();
+          } else {
+            baseDataPointBuilder_.setMessage(builderForValue.build());
+          }
+          bitField0_ |= 0x00000004;
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint with the starting value of the fluctuation.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+         */
+        public Builder mergeBaseDataPoint(org.datacommons.proto.Debug.DataPoint value) {
+          if (baseDataPointBuilder_ == null) {
+            if (((bitField0_ & 0x00000004) != 0)
+                && baseDataPoint_ != null
+                && baseDataPoint_ != org.datacommons.proto.Debug.DataPoint.getDefaultInstance()) {
+              baseDataPoint_ =
+                  org.datacommons.proto.Debug.DataPoint.newBuilder(baseDataPoint_)
+                      .mergeFrom(value)
+                      .buildPartial();
+            } else {
+              baseDataPoint_ = value;
+            }
+            onChanged();
+          } else {
+            baseDataPointBuilder_.mergeFrom(value);
+          }
+          bitField0_ |= 0x00000004;
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint with the starting value of the fluctuation.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+         */
+        public Builder clearBaseDataPoint() {
+          if (baseDataPointBuilder_ == null) {
+            baseDataPoint_ = null;
+            onChanged();
+          } else {
+            baseDataPointBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000004);
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint with the starting value of the fluctuation.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+         */
+        public org.datacommons.proto.Debug.DataPoint.Builder getBaseDataPointBuilder() {
+          bitField0_ |= 0x00000004;
+          onChanged();
+          return getBaseDataPointFieldBuilder().getBuilder();
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint with the starting value of the fluctuation.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+         */
+        public org.datacommons.proto.Debug.DataPointOrBuilder getBaseDataPointOrBuilder() {
+          if (baseDataPointBuilder_ != null) {
+            return baseDataPointBuilder_.getMessageOrBuilder();
+          } else {
+            return baseDataPoint_ == null
+                ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
+                : baseDataPoint_;
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * The datapoint with the starting value of the fluctuation.
+         * </pre>
+         *
+         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+                org.datacommons.proto.Debug.DataPoint,
+                org.datacommons.proto.Debug.DataPoint.Builder,
+                org.datacommons.proto.Debug.DataPointOrBuilder>
+            getBaseDataPointFieldBuilder() {
+          if (baseDataPointBuilder_ == null) {
+            baseDataPointBuilder_ =
+                new com.google.protobuf.SingleFieldBuilderV3<
+                    org.datacommons.proto.Debug.DataPoint,
+                    org.datacommons.proto.Debug.DataPoint.Builder,
+                    org.datacommons.proto.Debug.DataPointOrBuilder>(
+                    getBaseDataPoint(), getParentForChildren(), isClean());
+            baseDataPoint_ = null;
+          }
+          return baseDataPointBuilder_;
+        }
+
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+        // @@protoc_insertion_point(builder_scope:org.datacommons.proto.StatValidationResult.PercentDifference)
+      }
+
+      // @@protoc_insertion_point(class_scope:org.datacommons.proto.StatValidationResult.PercentDifference)
+      private static final org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+          DEFAULT_INSTANCE;
+
+      static {
+        DEFAULT_INSTANCE = new org.datacommons.proto.Debug.StatValidationResult.PercentDifference();
+      }
+
+      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+          getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      @java.lang.Deprecated
+      public static final com.google.protobuf.Parser<PercentDifference> PARSER =
+          new com.google.protobuf.AbstractParser<PercentDifference>() {
+            @java.lang.Override
+            public PercentDifference parsePartialFrom(
+                com.google.protobuf.CodedInputStream input,
+                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+              return new PercentDifference(input, extensionRegistry);
+            }
+          };
+
+      public static com.google.protobuf.Parser<PercentDifference> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<PercentDifference> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+          getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+    }
+
+    private int bitField0_;
+    public static final int PLACE_DCID_FIELD_NUMBER = 1;
+    private volatile java.lang.Object placeDcid_;
+    /**
+     *
+     *
+     * <pre>
+     * DCID of the place.
+     * </pre>
+     *
+     * <code>optional string place_dcid = 1;</code>
+     *
+     * @return Whether the placeDcid field is set.
+     */
+    public boolean hasPlaceDcid() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     *
+     *
+     * <pre>
+     * DCID of the place.
+     * </pre>
+     *
+     * <code>optional string place_dcid = 1;</code>
+     *
+     * @return The placeDcid.
+     */
+    public java.lang.String getPlaceDcid() {
+      java.lang.Object ref = placeDcid_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          placeDcid_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     *
+     *
+     * <pre>
+     * DCID of the place.
+     * </pre>
+     *
+     * <code>optional string place_dcid = 1;</code>
+     *
+     * @return The bytes for placeDcid.
+     */
+    public com.google.protobuf.ByteString getPlaceDcidBytes() {
+      java.lang.Object ref = placeDcid_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        placeDcid_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int STAT_VAR_DCID_FIELD_NUMBER = 2;
+    private volatile java.lang.Object statVarDcid_;
+    /**
+     *
+     *
+     * <pre>
+     * DCID of the stat var.
+     * </pre>
+     *
+     * <code>optional string stat_var_dcid = 2;</code>
+     *
+     * @return Whether the statVarDcid field is set.
+     */
+    public boolean hasStatVarDcid() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     *
+     *
+     * <pre>
+     * DCID of the stat var.
+     * </pre>
+     *
+     * <code>optional string stat_var_dcid = 2;</code>
+     *
+     * @return The statVarDcid.
+     */
+    public java.lang.String getStatVarDcid() {
+      java.lang.Object ref = statVarDcid_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          statVarDcid_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     *
+     *
+     * <pre>
+     * DCID of the stat var.
+     * </pre>
+     *
+     * <code>optional string stat_var_dcid = 2;</code>
+     *
+     * @return The bytes for statVarDcid.
+     */
+    public com.google.protobuf.ByteString getStatVarDcidBytes() {
+      java.lang.Object ref = statVarDcid_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        statVarDcid_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int MEASUREMENT_METHOD_FIELD_NUMBER = 3;
+    private volatile java.lang.Object measurementMethod_;
+    /**
+     *
+     *
+     * <pre>
+     * Additional information that characterizes the time series that this
+     * StatValidationResult is validating.
+     * </pre>
+     *
+     * <code>optional string measurement_method = 3;</code>
+     *
+     * @return Whether the measurementMethod field is set.
+     */
+    public boolean hasMeasurementMethod() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     *
+     *
+     * <pre>
+     * Additional information that characterizes the time series that this
+     * StatValidationResult is validating.
+     * </pre>
+     *
+     * <code>optional string measurement_method = 3;</code>
+     *
+     * @return The measurementMethod.
+     */
+    public java.lang.String getMeasurementMethod() {
+      java.lang.Object ref = measurementMethod_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          measurementMethod_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     *
+     *
+     * <pre>
+     * Additional information that characterizes the time series that this
+     * StatValidationResult is validating.
+     * </pre>
+     *
+     * <code>optional string measurement_method = 3;</code>
+     *
+     * @return The bytes for measurementMethod.
+     */
+    public com.google.protobuf.ByteString getMeasurementMethodBytes() {
+      java.lang.Object ref = measurementMethod_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        measurementMethod_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int OBSERVATION_PERIOD_FIELD_NUMBER = 4;
+    private volatile java.lang.Object observationPeriod_;
+    /**
+     * <code>optional string observation_period = 4;</code>
+     *
+     * @return Whether the observationPeriod field is set.
+     */
+    public boolean hasObservationPeriod() {
+      return ((bitField0_ & 0x00000008) != 0);
+    }
+    /**
+     * <code>optional string observation_period = 4;</code>
+     *
+     * @return The observationPeriod.
+     */
+    public java.lang.String getObservationPeriod() {
+      java.lang.Object ref = observationPeriod_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          observationPeriod_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string observation_period = 4;</code>
+     *
+     * @return The bytes for observationPeriod.
+     */
+    public com.google.protobuf.ByteString getObservationPeriodBytes() {
+      java.lang.Object ref = observationPeriod_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        observationPeriod_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int SCALING_FACTOR_FIELD_NUMBER = 5;
+    private volatile java.lang.Object scalingFactor_;
+    /**
+     * <code>optional string scaling_factor = 5;</code>
+     *
+     * @return Whether the scalingFactor field is set.
+     */
+    public boolean hasScalingFactor() {
+      return ((bitField0_ & 0x00000010) != 0);
+    }
+    /**
+     * <code>optional string scaling_factor = 5;</code>
+     *
+     * @return The scalingFactor.
+     */
+    public java.lang.String getScalingFactor() {
+      java.lang.Object ref = scalingFactor_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          scalingFactor_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string scaling_factor = 5;</code>
+     *
+     * @return The bytes for scalingFactor.
+     */
+    public com.google.protobuf.ByteString getScalingFactorBytes() {
+      java.lang.Object ref = scalingFactor_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        scalingFactor_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int UNIT_FIELD_NUMBER = 6;
+    private volatile java.lang.Object unit_;
+    /**
+     * <code>optional string unit = 6;</code>
+     *
+     * @return Whether the unit field is set.
+     */
+    public boolean hasUnit() {
+      return ((bitField0_ & 0x00000020) != 0);
+    }
+    /**
+     * <code>optional string unit = 6;</code>
+     *
+     * @return The unit.
+     */
+    public java.lang.String getUnit() {
+      java.lang.Object ref = unit_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          unit_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string unit = 6;</code>
+     *
+     * @return The bytes for unit.
+     */
+    public com.google.protobuf.ByteString getUnitBytes() {
+      java.lang.Object ref = unit_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        unit_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int VALIDATION_COUNTERS_FIELD_NUMBER = 7;
+    private java.util.List<org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry>
+        validationCounters_;
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+     * </code>
+     */
+    public java.util.List<org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry>
+        getValidationCountersList() {
+      return validationCounters_;
+    }
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+     * </code>
+     */
+    public java.util.List<
+            ? extends org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder>
+        getValidationCountersOrBuilderList() {
+      return validationCounters_;
+    }
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+     * </code>
+     */
+    public int getValidationCountersCount() {
+      return validationCounters_.size();
+    }
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+     * </code>
+     */
+    public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
+        getValidationCounters(int index) {
+      return validationCounters_.get(index);
+    }
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+     * </code>
+     */
+    public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder
+        getValidationCountersOrBuilder(int index) {
+      return validationCounters_.get(index);
+    }
+
+    public static final int SERIES_LARGEST_PERCENT_DIFF_FIELD_NUMBER = 8;
+    private org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+        seriesLargestPercentDiff_;
+    /**
+     *
+     *
+     * <pre>
+     * the largest % increase or decrease in time series. Remains as default
+     * values if sawtooth exists.
+     * </pre>
+     *
+     * <code>
+     * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+     * </code>
+     *
+     * @return Whether the seriesLargestPercentDiff field is set.
+     */
+    public boolean hasSeriesLargestPercentDiff() {
+      return ((bitField0_ & 0x00000040) != 0);
+    }
+    /**
+     *
+     *
+     * <pre>
+     * the largest % increase or decrease in time series. Remains as default
+     * values if sawtooth exists.
+     * </pre>
+     *
+     * <code>
+     * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+     * </code>
+     *
+     * @return The seriesLargestPercentDiff.
+     */
+    public org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+        getSeriesLargestPercentDiff() {
+      return seriesLargestPercentDiff_ == null
+          ? org.datacommons.proto.Debug.StatValidationResult.PercentDifference.getDefaultInstance()
+          : seriesLargestPercentDiff_;
+    }
+    /**
+     *
+     *
+     * <pre>
+     * the largest % increase or decrease in time series. Remains as default
+     * values if sawtooth exists.
+     * </pre>
+     *
+     * <code>
+     * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+     * </code>
+     */
+    public org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder
+        getSeriesLargestPercentDiffOrBuilder() {
+      return seriesLargestPercentDiff_ == null
+          ? org.datacommons.proto.Debug.StatValidationResult.PercentDifference.getDefaultInstance()
+          : seriesLargestPercentDiff_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, placeDcid_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, statVarDcid_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, measurementMethod_);
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, observationPeriod_);
+      }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, scalingFactor_);
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, unit_);
+      }
+      for (int i = 0; i < validationCounters_.size(); i++) {
+        output.writeMessage(7, validationCounters_.get(i));
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        output.writeMessage(8, getSeriesLargestPercentDiff());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, placeDcid_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, statVarDcid_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, measurementMethod_);
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, observationPeriod_);
+      }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, scalingFactor_);
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, unit_);
+      }
+      for (int i = 0; i < validationCounters_.size(); i++) {
+        size +=
+            com.google.protobuf.CodedOutputStream.computeMessageSize(7, validationCounters_.get(i));
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        size +=
+            com.google.protobuf.CodedOutputStream.computeMessageSize(
+                8, getSeriesLargestPercentDiff());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (!(obj instanceof org.datacommons.proto.Debug.StatValidationResult)) {
+        return super.equals(obj);
+      }
+      org.datacommons.proto.Debug.StatValidationResult other =
+          (org.datacommons.proto.Debug.StatValidationResult) obj;
+
+      if (hasPlaceDcid() != other.hasPlaceDcid()) return false;
+      if (hasPlaceDcid()) {
+        if (!getPlaceDcid().equals(other.getPlaceDcid())) return false;
+      }
+      if (hasStatVarDcid() != other.hasStatVarDcid()) return false;
+      if (hasStatVarDcid()) {
+        if (!getStatVarDcid().equals(other.getStatVarDcid())) return false;
+      }
+      if (hasMeasurementMethod() != other.hasMeasurementMethod()) return false;
+      if (hasMeasurementMethod()) {
+        if (!getMeasurementMethod().equals(other.getMeasurementMethod())) return false;
+      }
+      if (hasObservationPeriod() != other.hasObservationPeriod()) return false;
+      if (hasObservationPeriod()) {
+        if (!getObservationPeriod().equals(other.getObservationPeriod())) return false;
+      }
+      if (hasScalingFactor() != other.hasScalingFactor()) return false;
+      if (hasScalingFactor()) {
+        if (!getScalingFactor().equals(other.getScalingFactor())) return false;
+      }
+      if (hasUnit() != other.hasUnit()) return false;
+      if (hasUnit()) {
+        if (!getUnit().equals(other.getUnit())) return false;
+      }
+      if (!getValidationCountersList().equals(other.getValidationCountersList())) return false;
+      if (hasSeriesLargestPercentDiff() != other.hasSeriesLargestPercentDiff()) return false;
+      if (hasSeriesLargestPercentDiff()) {
+        if (!getSeriesLargestPercentDiff().equals(other.getSeriesLargestPercentDiff()))
+          return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPlaceDcid()) {
+        hash = (37 * hash) + PLACE_DCID_FIELD_NUMBER;
+        hash = (53 * hash) + getPlaceDcid().hashCode();
+      }
+      if (hasStatVarDcid()) {
+        hash = (37 * hash) + STAT_VAR_DCID_FIELD_NUMBER;
+        hash = (53 * hash) + getStatVarDcid().hashCode();
+      }
+      if (hasMeasurementMethod()) {
+        hash = (37 * hash) + MEASUREMENT_METHOD_FIELD_NUMBER;
+        hash = (53 * hash) + getMeasurementMethod().hashCode();
+      }
+      if (hasObservationPeriod()) {
+        hash = (37 * hash) + OBSERVATION_PERIOD_FIELD_NUMBER;
+        hash = (53 * hash) + getObservationPeriod().hashCode();
+      }
+      if (hasScalingFactor()) {
+        hash = (37 * hash) + SCALING_FACTOR_FIELD_NUMBER;
+        hash = (53 * hash) + getScalingFactor().hashCode();
+      }
+      if (hasUnit()) {
+        hash = (37 * hash) + UNIT_FIELD_NUMBER;
+        hash = (53 * hash) + getUnit().hashCode();
+      }
+      if (getValidationCountersCount() > 0) {
+        hash = (37 * hash) + VALIDATION_COUNTERS_FIELD_NUMBER;
+        hash = (53 * hash) + getValidationCountersList().hashCode();
+      }
+      if (hasSeriesLargestPercentDiff()) {
+        hash = (37 * hash) + SERIES_LARGEST_PERCENT_DIFF_FIELD_NUMBER;
+        hash = (53 * hash) + getSeriesLargestPercentDiff().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.datacommons.proto.Debug.StatValidationResult parseFrom(
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Debug.StatValidationResult parseFrom(
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.StatValidationResult parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Debug.StatValidationResult parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.StatValidationResult parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Debug.StatValidationResult parseFrom(
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.StatValidationResult parseFrom(
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Debug.StatValidationResult parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.StatValidationResult parseDelimitedFrom(
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Debug.StatValidationResult parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.StatValidationResult parseFrom(
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Debug.StatValidationResult parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+
+    public static Builder newBuilder(org.datacommons.proto.Debug.StatValidationResult prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /** Protobuf type {@code org.datacommons.proto.StatValidationResult} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
+        // @@protoc_insertion_point(builder_implements:org.datacommons.proto.StatValidationResult)
+        org.datacommons.proto.Debug.StatValidationResultOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_StatValidationResult_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_StatValidationResult_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.datacommons.proto.Debug.StatValidationResult.class,
+                org.datacommons.proto.Debug.StatValidationResult.Builder.class);
+      }
+
+      // Construct using org.datacommons.proto.Debug.StatValidationResult.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+          getValidationCountersFieldBuilder();
+          getSeriesLargestPercentDiffFieldBuilder();
+        }
+      }
+
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        placeDcid_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        statVarDcid_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        measurementMethod_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        observationPeriod_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        scalingFactor_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
+        unit_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
+        if (validationCountersBuilder_ == null) {
+          validationCounters_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000040);
+        } else {
+          validationCountersBuilder_.clear();
+        }
+        if (seriesLargestPercentDiffBuilder_ == null) {
+          seriesLargestPercentDiff_ = null;
+        } else {
+          seriesLargestPercentDiffBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000080);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_StatValidationResult_descriptor;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.StatValidationResult getDefaultInstanceForType() {
+        return org.datacommons.proto.Debug.StatValidationResult.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.StatValidationResult build() {
+        org.datacommons.proto.Debug.StatValidationResult result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.StatValidationResult buildPartial() {
+        org.datacommons.proto.Debug.StatValidationResult result =
+            new org.datacommons.proto.Debug.StatValidationResult(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.placeDcid_ = placeDcid_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.statVarDcid_ = statVarDcid_;
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.measurementMethod_ = measurementMethod_;
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.observationPeriod_ = observationPeriod_;
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.scalingFactor_ = scalingFactor_;
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.unit_ = unit_;
+        if (validationCountersBuilder_ == null) {
+          if (((bitField0_ & 0x00000040) != 0)) {
+            validationCounters_ = java.util.Collections.unmodifiableList(validationCounters_);
+            bitField0_ = (bitField0_ & ~0x00000040);
+          }
+          result.validationCounters_ = validationCounters_;
+        } else {
+          result.validationCounters_ = validationCountersBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          if (seriesLargestPercentDiffBuilder_ == null) {
+            result.seriesLargestPercentDiff_ = seriesLargestPercentDiff_;
+          } else {
+            result.seriesLargestPercentDiff_ = seriesLargestPercentDiffBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000040;
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.setField(field, value);
+      }
+
+      @java.lang.Override
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+
+      @java.lang.Override
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index,
+          java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.datacommons.proto.Debug.StatValidationResult) {
+          return mergeFrom((org.datacommons.proto.Debug.StatValidationResult) other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.datacommons.proto.Debug.StatValidationResult other) {
+        if (other == org.datacommons.proto.Debug.StatValidationResult.getDefaultInstance())
+          return this;
+        if (other.hasPlaceDcid()) {
+          bitField0_ |= 0x00000001;
+          placeDcid_ = other.placeDcid_;
+          onChanged();
+        }
+        if (other.hasStatVarDcid()) {
+          bitField0_ |= 0x00000002;
+          statVarDcid_ = other.statVarDcid_;
+          onChanged();
+        }
+        if (other.hasMeasurementMethod()) {
+          bitField0_ |= 0x00000004;
+          measurementMethod_ = other.measurementMethod_;
+          onChanged();
+        }
+        if (other.hasObservationPeriod()) {
+          bitField0_ |= 0x00000008;
+          observationPeriod_ = other.observationPeriod_;
+          onChanged();
+        }
+        if (other.hasScalingFactor()) {
+          bitField0_ |= 0x00000010;
+          scalingFactor_ = other.scalingFactor_;
+          onChanged();
+        }
+        if (other.hasUnit()) {
+          bitField0_ |= 0x00000020;
+          unit_ = other.unit_;
+          onChanged();
+        }
+        if (validationCountersBuilder_ == null) {
+          if (!other.validationCounters_.isEmpty()) {
+            if (validationCounters_.isEmpty()) {
+              validationCounters_ = other.validationCounters_;
+              bitField0_ = (bitField0_ & ~0x00000040);
+            } else {
+              ensureValidationCountersIsMutable();
+              validationCounters_.addAll(other.validationCounters_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.validationCounters_.isEmpty()) {
+            if (validationCountersBuilder_.isEmpty()) {
+              validationCountersBuilder_.dispose();
+              validationCountersBuilder_ = null;
+              validationCounters_ = other.validationCounters_;
+              bitField0_ = (bitField0_ & ~0x00000040);
+              validationCountersBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getValidationCountersFieldBuilder()
+                      : null;
+            } else {
+              validationCountersBuilder_.addAllMessages(other.validationCounters_);
+            }
+          }
+        }
+        if (other.hasSeriesLargestPercentDiff()) {
+          mergeSeriesLargestPercentDiff(other.getSeriesLargestPercentDiff());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.datacommons.proto.Debug.StatValidationResult parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage =
+              (org.datacommons.proto.Debug.StatValidationResult) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private int bitField0_;
+
+      private java.lang.Object placeDcid_ = "";
+      /**
+       *
+       *
+       * <pre>
+       * DCID of the place.
+       * </pre>
+       *
+       * <code>optional string place_dcid = 1;</code>
+       *
+       * @return Whether the placeDcid field is set.
+       */
+      public boolean hasPlaceDcid() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DCID of the place.
+       * </pre>
+       *
+       * <code>optional string place_dcid = 1;</code>
+       *
+       * @return The placeDcid.
+       */
+      public java.lang.String getPlaceDcid() {
+        java.lang.Object ref = placeDcid_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            placeDcid_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DCID of the place.
+       * </pre>
+       *
+       * <code>optional string place_dcid = 1;</code>
+       *
+       * @return The bytes for placeDcid.
+       */
+      public com.google.protobuf.ByteString getPlaceDcidBytes() {
+        java.lang.Object ref = placeDcid_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          placeDcid_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DCID of the place.
+       * </pre>
+       *
+       * <code>optional string place_dcid = 1;</code>
+       *
+       * @param value The placeDcid to set.
+       * @return This builder for chaining.
+       */
+      public Builder setPlaceDcid(java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        placeDcid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DCID of the place.
+       * </pre>
+       *
+       * <code>optional string place_dcid = 1;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearPlaceDcid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        placeDcid_ = getDefaultInstance().getPlaceDcid();
+        onChanged();
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DCID of the place.
+       * </pre>
+       *
+       * <code>optional string place_dcid = 1;</code>
+       *
+       * @param value The bytes for placeDcid to set.
+       * @return This builder for chaining.
+       */
+      public Builder setPlaceDcidBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        placeDcid_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object statVarDcid_ = "";
+      /**
+       *
+       *
+       * <pre>
+       * DCID of the stat var.
+       * </pre>
+       *
+       * <code>optional string stat_var_dcid = 2;</code>
+       *
+       * @return Whether the statVarDcid field is set.
+       */
+      public boolean hasStatVarDcid() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DCID of the stat var.
+       * </pre>
+       *
+       * <code>optional string stat_var_dcid = 2;</code>
+       *
+       * @return The statVarDcid.
+       */
+      public java.lang.String getStatVarDcid() {
+        java.lang.Object ref = statVarDcid_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            statVarDcid_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DCID of the stat var.
+       * </pre>
+       *
+       * <code>optional string stat_var_dcid = 2;</code>
+       *
+       * @return The bytes for statVarDcid.
+       */
+      public com.google.protobuf.ByteString getStatVarDcidBytes() {
+        java.lang.Object ref = statVarDcid_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          statVarDcid_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DCID of the stat var.
+       * </pre>
+       *
+       * <code>optional string stat_var_dcid = 2;</code>
+       *
+       * @param value The statVarDcid to set.
+       * @return This builder for chaining.
+       */
+      public Builder setStatVarDcid(java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000002;
+        statVarDcid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DCID of the stat var.
+       * </pre>
+       *
+       * <code>optional string stat_var_dcid = 2;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearStatVarDcid() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        statVarDcid_ = getDefaultInstance().getStatVarDcid();
+        onChanged();
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * DCID of the stat var.
+       * </pre>
+       *
+       * <code>optional string stat_var_dcid = 2;</code>
+       *
+       * @param value The bytes for statVarDcid to set.
+       * @return This builder for chaining.
+       */
+      public Builder setStatVarDcidBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000002;
+        statVarDcid_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object measurementMethod_ = "";
+      /**
+       *
+       *
+       * <pre>
+       * Additional information that characterizes the time series that this
+       * StatValidationResult is validating.
+       * </pre>
+       *
+       * <code>optional string measurement_method = 3;</code>
+       *
+       * @return Whether the measurementMethod field is set.
+       */
+      public boolean hasMeasurementMethod() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Additional information that characterizes the time series that this
+       * StatValidationResult is validating.
+       * </pre>
+       *
+       * <code>optional string measurement_method = 3;</code>
+       *
+       * @return The measurementMethod.
+       */
+      public java.lang.String getMeasurementMethod() {
+        java.lang.Object ref = measurementMethod_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            measurementMethod_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Additional information that characterizes the time series that this
+       * StatValidationResult is validating.
+       * </pre>
+       *
+       * <code>optional string measurement_method = 3;</code>
+       *
+       * @return The bytes for measurementMethod.
+       */
+      public com.google.protobuf.ByteString getMeasurementMethodBytes() {
+        java.lang.Object ref = measurementMethod_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          measurementMethod_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Additional information that characterizes the time series that this
+       * StatValidationResult is validating.
+       * </pre>
+       *
+       * <code>optional string measurement_method = 3;</code>
+       *
+       * @param value The measurementMethod to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMeasurementMethod(java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000004;
+        measurementMethod_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Additional information that characterizes the time series that this
+       * StatValidationResult is validating.
+       * </pre>
+       *
+       * <code>optional string measurement_method = 3;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearMeasurementMethod() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        measurementMethod_ = getDefaultInstance().getMeasurementMethod();
+        onChanged();
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Additional information that characterizes the time series that this
+       * StatValidationResult is validating.
+       * </pre>
+       *
+       * <code>optional string measurement_method = 3;</code>
+       *
+       * @param value The bytes for measurementMethod to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMeasurementMethodBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000004;
+        measurementMethod_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object observationPeriod_ = "";
+      /**
+       * <code>optional string observation_period = 4;</code>
+       *
+       * @return Whether the observationPeriod field is set.
+       */
+      public boolean hasObservationPeriod() {
+        return ((bitField0_ & 0x00000008) != 0);
+      }
+      /**
+       * <code>optional string observation_period = 4;</code>
+       *
+       * @return The observationPeriod.
+       */
+      public java.lang.String getObservationPeriod() {
+        java.lang.Object ref = observationPeriod_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            observationPeriod_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string observation_period = 4;</code>
+       *
+       * @return The bytes for observationPeriod.
+       */
+      public com.google.protobuf.ByteString getObservationPeriodBytes() {
+        java.lang.Object ref = observationPeriod_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          observationPeriod_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string observation_period = 4;</code>
+       *
+       * @param value The observationPeriod to set.
+       * @return This builder for chaining.
+       */
+      public Builder setObservationPeriod(java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000008;
+        observationPeriod_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string observation_period = 4;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearObservationPeriod() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        observationPeriod_ = getDefaultInstance().getObservationPeriod();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string observation_period = 4;</code>
+       *
+       * @param value The bytes for observationPeriod to set.
+       * @return This builder for chaining.
+       */
+      public Builder setObservationPeriodBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000008;
+        observationPeriod_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object scalingFactor_ = "";
+      /**
+       * <code>optional string scaling_factor = 5;</code>
+       *
+       * @return Whether the scalingFactor field is set.
+       */
+      public boolean hasScalingFactor() {
+        return ((bitField0_ & 0x00000010) != 0);
+      }
+      /**
+       * <code>optional string scaling_factor = 5;</code>
+       *
+       * @return The scalingFactor.
+       */
+      public java.lang.String getScalingFactor() {
+        java.lang.Object ref = scalingFactor_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            scalingFactor_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string scaling_factor = 5;</code>
+       *
+       * @return The bytes for scalingFactor.
+       */
+      public com.google.protobuf.ByteString getScalingFactorBytes() {
+        java.lang.Object ref = scalingFactor_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          scalingFactor_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string scaling_factor = 5;</code>
+       *
+       * @param value The scalingFactor to set.
+       * @return This builder for chaining.
+       */
+      public Builder setScalingFactor(java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000010;
+        scalingFactor_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string scaling_factor = 5;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearScalingFactor() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        scalingFactor_ = getDefaultInstance().getScalingFactor();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string scaling_factor = 5;</code>
+       *
+       * @param value The bytes for scalingFactor to set.
+       * @return This builder for chaining.
+       */
+      public Builder setScalingFactorBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000010;
+        scalingFactor_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object unit_ = "";
+      /**
+       * <code>optional string unit = 6;</code>
+       *
+       * @return Whether the unit field is set.
+       */
+      public boolean hasUnit() {
+        return ((bitField0_ & 0x00000020) != 0);
+      }
+      /**
+       * <code>optional string unit = 6;</code>
+       *
+       * @return The unit.
+       */
+      public java.lang.String getUnit() {
+        java.lang.Object ref = unit_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            unit_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string unit = 6;</code>
+       *
+       * @return The bytes for unit.
+       */
+      public com.google.protobuf.ByteString getUnitBytes() {
+        java.lang.Object ref = unit_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          unit_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string unit = 6;</code>
+       *
+       * @param value The unit to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUnit(java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000020;
+        unit_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string unit = 6;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearUnit() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        unit_ = getDefaultInstance().getUnit();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string unit = 6;</code>
+       *
+       * @param value The bytes for unit to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUnitBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000020;
+        unit_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry>
+          validationCounters_ = java.util.Collections.emptyList();
+
+      private void ensureValidationCountersIsMutable() {
+        if (!((bitField0_ & 0x00000040) != 0)) {
+          validationCounters_ =
+              new java.util.ArrayList<
+                  org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry>(
+                  validationCounters_);
+          bitField0_ |= 0x00000040;
+        }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry,
+              org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.Builder,
+              org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder>
+          validationCountersBuilder_;
+
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public java.util.List<org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry>
+          getValidationCountersList() {
+        if (validationCountersBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(validationCounters_);
+        } else {
+          return validationCountersBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public int getValidationCountersCount() {
+        if (validationCountersBuilder_ == null) {
+          return validationCounters_.size();
+        } else {
+          return validationCountersBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
+          getValidationCounters(int index) {
+        if (validationCountersBuilder_ == null) {
+          return validationCounters_.get(index);
+        } else {
+          return validationCountersBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public Builder setValidationCounters(
+          int index, org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry value) {
+        if (validationCountersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureValidationCountersIsMutable();
+          validationCounters_.set(index, value);
+          onChanged();
+        } else {
+          validationCountersBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public Builder setValidationCounters(
+          int index,
+          org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.Builder
+              builderForValue) {
+        if (validationCountersBuilder_ == null) {
+          ensureValidationCountersIsMutable();
+          validationCounters_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          validationCountersBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public Builder addValidationCounters(
+          org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry value) {
+        if (validationCountersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureValidationCountersIsMutable();
+          validationCounters_.add(value);
+          onChanged();
+        } else {
+          validationCountersBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public Builder addValidationCounters(
+          int index, org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry value) {
+        if (validationCountersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureValidationCountersIsMutable();
+          validationCounters_.add(index, value);
+          onChanged();
+        } else {
+          validationCountersBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public Builder addValidationCounters(
+          org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.Builder
+              builderForValue) {
+        if (validationCountersBuilder_ == null) {
+          ensureValidationCountersIsMutable();
+          validationCounters_.add(builderForValue.build());
+          onChanged();
+        } else {
+          validationCountersBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public Builder addValidationCounters(
+          int index,
+          org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.Builder
+              builderForValue) {
+        if (validationCountersBuilder_ == null) {
+          ensureValidationCountersIsMutable();
+          validationCounters_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          validationCountersBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public Builder addAllValidationCounters(
+          java.lang.Iterable<
+                  ? extends org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry>
+              values) {
+        if (validationCountersBuilder_ == null) {
+          ensureValidationCountersIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, validationCounters_);
+          onChanged();
+        } else {
+          validationCountersBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public Builder clearValidationCounters() {
+        if (validationCountersBuilder_ == null) {
+          validationCounters_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000040);
+          onChanged();
+        } else {
+          validationCountersBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public Builder removeValidationCounters(int index) {
+        if (validationCountersBuilder_ == null) {
+          ensureValidationCountersIsMutable();
+          validationCounters_.remove(index);
+          onChanged();
+        } else {
+          validationCountersBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.Builder
+          getValidationCountersBuilder(int index) {
+        return getValidationCountersFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder
+          getValidationCountersOrBuilder(int index) {
+        if (validationCountersBuilder_ == null) {
+          return validationCounters_.get(index);
+        } else {
+          return validationCountersBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public java.util.List<
+              ? extends
+                  org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder>
+          getValidationCountersOrBuilderList() {
+        if (validationCountersBuilder_ != null) {
+          return validationCountersBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(validationCounters_);
+        }
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.Builder
+          addValidationCountersBuilder() {
+        return getValidationCountersFieldBuilder()
+            .addBuilder(
+                org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
+                    .getDefaultInstance());
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.Builder
+          addValidationCountersBuilder(int index) {
+        return getValidationCountersFieldBuilder()
+            .addBuilder(
+                index,
+                org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
+                    .getDefaultInstance());
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
+       * </code>
+       */
+      public java.util.List<
+              org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.Builder>
+          getValidationCountersBuilderList() {
+        return getValidationCountersFieldBuilder().getBuilderList();
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry,
+              org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.Builder,
+              org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder>
+          getValidationCountersFieldBuilder() {
+        if (validationCountersBuilder_ == null) {
+          validationCountersBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry,
+                  org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.Builder,
+                  org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder>(
+                  validationCounters_,
+                  ((bitField0_ & 0x00000040) != 0),
+                  getParentForChildren(),
+                  isClean());
+          validationCounters_ = null;
+        }
+        return validationCountersBuilder_;
+      }
+
+      private org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+          seriesLargestPercentDiff_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+              org.datacommons.proto.Debug.StatValidationResult.PercentDifference,
+              org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder,
+              org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder>
+          seriesLargestPercentDiffBuilder_;
+      /**
+       *
+       *
+       * <pre>
+       * the largest % increase or decrease in time series. Remains as default
+       * values if sawtooth exists.
+       * </pre>
+       *
+       * <code>
+       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+       * </code>
+       *
+       * @return Whether the seriesLargestPercentDiff field is set.
+       */
+      public boolean hasSeriesLargestPercentDiff() {
+        return ((bitField0_ & 0x00000080) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * the largest % increase or decrease in time series. Remains as default
+       * values if sawtooth exists.
+       * </pre>
+       *
+       * <code>
+       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+       * </code>
+       *
+       * @return The seriesLargestPercentDiff.
+       */
+      public org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+          getSeriesLargestPercentDiff() {
+        if (seriesLargestPercentDiffBuilder_ == null) {
+          return seriesLargestPercentDiff_ == null
+              ? org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+                  .getDefaultInstance()
+              : seriesLargestPercentDiff_;
+        } else {
+          return seriesLargestPercentDiffBuilder_.getMessage();
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * the largest % increase or decrease in time series. Remains as default
+       * values if sawtooth exists.
+       * </pre>
+       *
+       * <code>
+       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+       * </code>
+       */
+      public Builder setSeriesLargestPercentDiff(
+          org.datacommons.proto.Debug.StatValidationResult.PercentDifference value) {
+        if (seriesLargestPercentDiffBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          seriesLargestPercentDiff_ = value;
+          onChanged();
+        } else {
+          seriesLargestPercentDiffBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000080;
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * the largest % increase or decrease in time series. Remains as default
+       * values if sawtooth exists.
+       * </pre>
+       *
+       * <code>
+       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+       * </code>
+       */
+      public Builder setSeriesLargestPercentDiff(
+          org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder
+              builderForValue) {
+        if (seriesLargestPercentDiffBuilder_ == null) {
+          seriesLargestPercentDiff_ = builderForValue.build();
+          onChanged();
+        } else {
+          seriesLargestPercentDiffBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000080;
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * the largest % increase or decrease in time series. Remains as default
+       * values if sawtooth exists.
+       * </pre>
+       *
+       * <code>
+       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+       * </code>
+       */
+      public Builder mergeSeriesLargestPercentDiff(
+          org.datacommons.proto.Debug.StatValidationResult.PercentDifference value) {
+        if (seriesLargestPercentDiffBuilder_ == null) {
+          if (((bitField0_ & 0x00000080) != 0)
+              && seriesLargestPercentDiff_ != null
+              && seriesLargestPercentDiff_
+                  != org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+                      .getDefaultInstance()) {
+            seriesLargestPercentDiff_ =
+                org.datacommons.proto.Debug.StatValidationResult.PercentDifference.newBuilder(
+                        seriesLargestPercentDiff_)
+                    .mergeFrom(value)
+                    .buildPartial();
+          } else {
+            seriesLargestPercentDiff_ = value;
+          }
+          onChanged();
+        } else {
+          seriesLargestPercentDiffBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000080;
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * the largest % increase or decrease in time series. Remains as default
+       * values if sawtooth exists.
+       * </pre>
+       *
+       * <code>
+       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+       * </code>
+       */
+      public Builder clearSeriesLargestPercentDiff() {
+        if (seriesLargestPercentDiffBuilder_ == null) {
+          seriesLargestPercentDiff_ = null;
+          onChanged();
+        } else {
+          seriesLargestPercentDiffBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000080);
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * the largest % increase or decrease in time series. Remains as default
+       * values if sawtooth exists.
+       * </pre>
+       *
+       * <code>
+       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+       * </code>
+       */
+      public org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder
+          getSeriesLargestPercentDiffBuilder() {
+        bitField0_ |= 0x00000080;
+        onChanged();
+        return getSeriesLargestPercentDiffFieldBuilder().getBuilder();
+      }
+      /**
+       *
+       *
+       * <pre>
+       * the largest % increase or decrease in time series. Remains as default
+       * values if sawtooth exists.
+       * </pre>
+       *
+       * <code>
+       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+       * </code>
+       */
+      public org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder
+          getSeriesLargestPercentDiffOrBuilder() {
+        if (seriesLargestPercentDiffBuilder_ != null) {
+          return seriesLargestPercentDiffBuilder_.getMessageOrBuilder();
+        } else {
+          return seriesLargestPercentDiff_ == null
+              ? org.datacommons.proto.Debug.StatValidationResult.PercentDifference
+                  .getDefaultInstance()
+              : seriesLargestPercentDiff_;
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * the largest % increase or decrease in time series. Remains as default
+       * values if sawtooth exists.
+       * </pre>
+       *
+       * <code>
+       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
+       * </code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+              org.datacommons.proto.Debug.StatValidationResult.PercentDifference,
+              org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder,
+              org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder>
+          getSeriesLargestPercentDiffFieldBuilder() {
+        if (seriesLargestPercentDiffBuilder_ == null) {
+          seriesLargestPercentDiffBuilder_ =
+              new com.google.protobuf.SingleFieldBuilderV3<
+                  org.datacommons.proto.Debug.StatValidationResult.PercentDifference,
+                  org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder,
+                  org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder>(
+                  getSeriesLargestPercentDiff(), getParentForChildren(), isClean());
+          seriesLargestPercentDiff_ = null;
+        }
+        return seriesLargestPercentDiffBuilder_;
+      }
+
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+      // @@protoc_insertion_point(builder_scope:org.datacommons.proto.StatValidationResult)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.datacommons.proto.StatValidationResult)
+    private static final org.datacommons.proto.Debug.StatValidationResult DEFAULT_INSTANCE;
+
+    static {
+      DEFAULT_INSTANCE = new org.datacommons.proto.Debug.StatValidationResult();
+    }
+
+    public static org.datacommons.proto.Debug.StatValidationResult getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated
+    public static final com.google.protobuf.Parser<StatValidationResult> PARSER =
+        new com.google.protobuf.AbstractParser<StatValidationResult>() {
+          @java.lang.Override
+          public StatValidationResult parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new StatValidationResult(input, extensionRegistry);
+          }
+        };
+
+    public static com.google.protobuf.Parser<StatValidationResult> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StatValidationResult> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.datacommons.proto.Debug.StatValidationResult getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
       internal_static_org_datacommons_proto_Log_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -4619,6 +12646,26 @@ public final class Debug {
       internal_static_org_datacommons_proto_Log_LevelSummaryEntry_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_Log_LevelSummaryEntry_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_org_datacommons_proto_DataPoint_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_DataPoint_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_org_datacommons_proto_DataPoint_DataValue_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_DataPoint_DataValue_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_org_datacommons_proto_StatValidationResult_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_StatValidationResult_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -4628,25 +12675,47 @@ public final class Debug {
 
   static {
     java.lang.String[] descriptorData = {
-      "\n\013Debug.proto\022\025org.datacommons.proto\"\254\005\n"
+      "\n\013Debug.proto\022\025org.datacommons.proto\"\366\005\n"
           + "\003Log\022C\n\rlevel_summary\030\001 \003(\0132,.org.dataco"
           + "mmons.proto.Log.LevelSummaryEntry\0221\n\007ent"
           + "ries\030\003 \003(\0132 .org.datacommons.proto.Log.E"
-          + "ntry\032-\n\010Location\022\014\n\004file\030\001 \001(\t\022\023\n\013line_n"
-          + "umber\030\002 \001(\003\032\204\001\n\nCounterSet\022E\n\010counters\030\001"
-          + " \003(\01323.org.datacommons.proto.Log.Counter"
-          + "Set.CountersEntry\032/\n\rCountersEntry\022\013\n\003ke"
-          + "y\030\001 \001(\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\257\001\n\005Entry\022/\n\005"
-          + "level\030\001 \001(\0162 .org.datacommons.proto.Log."
-          + "Level\0225\n\010location\030\002 \001(\0132#.org.datacommon"
-          + "s.proto.Log.Location\022\024\n\014user_message\030\003 \001"
-          + "(\t\022\023\n\013counter_key\030\004 \001(\t\022\023\n\013column_name\030\005"
-          + " \003(\t\032Z\n\021LevelSummaryEntry\022\013\n\003key\030\001 \001(\t\0224"
-          + "\n\005value\030\002 \001(\0132%.org.datacommons.proto.Lo"
-          + "g.CounterSet:\0028\001\"c\n\005Level\022\025\n\021LEVEL_UNSPE"
-          + "CIFIED\020\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WARNIN"
-          + "G\020\002\022\017\n\013LEVEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010"
-          + "\002\020\003"
+          + "ntry\022H\n\023stats_check_summary\030\004 \003(\0132+.org."
+          + "datacommons.proto.StatValidationResult\032-"
+          + "\n\010Location\022\014\n\004file\030\001 \001(\t\022\023\n\013line_number\030"
+          + "\002 \001(\003\032\204\001\n\nCounterSet\022E\n\010counters\030\001 \003(\01323"
+          + ".org.datacommons.proto.Log.CounterSet.Co"
+          + "untersEntry\032/\n\rCountersEntry\022\013\n\003key\030\001 \001("
+          + "\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\257\001\n\005Entry\022/\n\005level\030"
+          + "\001 \001(\0162 .org.datacommons.proto.Log.Level\022"
+          + "5\n\010location\030\002 \001(\0132#.org.datacommons.prot"
+          + "o.Log.Location\022\024\n\014user_message\030\003 \001(\t\022\023\n\013"
+          + "counter_key\030\004 \001(\t\022\023\n\013column_name\030\005 \003(\t\032Z"
+          + "\n\021LevelSummaryEntry\022\013\n\003key\030\001 \001(\t\0224\n\005valu"
+          + "e\030\002 \001(\0132%.org.datacommons.proto.Log.Coun"
+          + "terSet:\0028\001\"c\n\005Level\022\025\n\021LEVEL_UNSPECIFIED"
+          + "\020\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n"
+          + "\013LEVEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010\002\020\003\"\251\001"
+          + "\n\tDataPoint\022\014\n\004date\030\001 \001(\t\022:\n\006values\030\002 \003("
+          + "\0132*.org.datacommons.proto.DataPoint.Data"
+          + "Value\032R\n\tDataValue\022\r\n\005value\030\001 \001(\001\0226\n\tloc"
+          + "ations\030\002 \003(\0132#.org.datacommons.proto.Log"
+          + ".Location\"\214\005\n\024StatValidationResult\022\022\n\npl"
+          + "ace_dcid\030\001 \001(\t\022\025\n\rstat_var_dcid\030\002 \001(\t\022\032\n"
+          + "\022measurement_method\030\003 \001(\t\022\032\n\022observation"
+          + "_period\030\004 \001(\t\022\026\n\016scaling_factor\030\005 \001(\t\022\014\n"
+          + "\004unit\030\006 \001(\t\022\\\n\023validation_counters\030\007 \003(\013"
+          + "2?.org.datacommons.proto.StatValidationR"
+          + "esult.StatValidationEntry\022b\n\033series_larg"
+          + "est_percent_diff\030\010 \001(\0132=.org.datacommons"
+          + ".proto.StatValidationResult.PercentDiffe"
+          + "rence\032\200\001\n\023StatValidationEntry\022\023\n\013counter"
+          + "_key\030\001 \001(\t\0228\n\016problem_points\030\002 \003(\0132 .org"
+          + ".datacommons.proto.DataPoint\022\032\n\022addition"
+          + "al_details\030\003 \001(\t\032\245\001\n\021PercentDifference\022\032"
+          + "\n\022percent_difference\030\001 \001(\001\0229\n\017diff_data_"
+          + "point\030\002 \001(\0132 .org.datacommons.proto.Data"
+          + "Point\0229\n\017base_data_point\030\003 \001(\0132 .org.dat"
+          + "acommons.proto.DataPoint"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -4656,7 +12725,7 @@ public final class Debug {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_descriptor,
             new java.lang.String[] {
-              "LevelSummary", "Entries",
+              "LevelSummary", "Entries", "StatsCheckSummary",
             });
     internal_static_org_datacommons_proto_Log_Location_descriptor =
         internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(0);
@@ -4697,6 +12766,57 @@ public final class Debug {
             internal_static_org_datacommons_proto_Log_LevelSummaryEntry_descriptor,
             new java.lang.String[] {
               "Key", "Value",
+            });
+    internal_static_org_datacommons_proto_DataPoint_descriptor =
+        getDescriptor().getMessageTypes().get(1);
+    internal_static_org_datacommons_proto_DataPoint_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_DataPoint_descriptor,
+            new java.lang.String[] {
+              "Date", "Values",
+            });
+    internal_static_org_datacommons_proto_DataPoint_DataValue_descriptor =
+        internal_static_org_datacommons_proto_DataPoint_descriptor.getNestedTypes().get(0);
+    internal_static_org_datacommons_proto_DataPoint_DataValue_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_DataPoint_DataValue_descriptor,
+            new java.lang.String[] {
+              "Value", "Locations",
+            });
+    internal_static_org_datacommons_proto_StatValidationResult_descriptor =
+        getDescriptor().getMessageTypes().get(2);
+    internal_static_org_datacommons_proto_StatValidationResult_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_StatValidationResult_descriptor,
+            new java.lang.String[] {
+              "PlaceDcid",
+              "StatVarDcid",
+              "MeasurementMethod",
+              "ObservationPeriod",
+              "ScalingFactor",
+              "Unit",
+              "ValidationCounters",
+              "SeriesLargestPercentDiff",
+            });
+    internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_descriptor =
+        internal_static_org_datacommons_proto_StatValidationResult_descriptor
+            .getNestedTypes()
+            .get(0);
+    internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_descriptor,
+            new java.lang.String[] {
+              "CounterKey", "ProblemPoints", "AdditionalDetails",
+            });
+    internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_descriptor =
+        internal_static_org_datacommons_proto_StatValidationResult_descriptor
+            .getNestedTypes()
+            .get(1);
+    internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_descriptor,
+            new java.lang.String[] {
+              "PercentDifference", "DiffDataPoint", "BaseDataPoint",
             });
   }
 
