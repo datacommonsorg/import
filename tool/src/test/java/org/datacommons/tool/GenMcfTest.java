@@ -63,7 +63,7 @@ public class GenMcfTest {
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
 
-      Path actualGeneratedFilePath = TestUtil.getTestFilePath(testFolder, "generated.mcf");
+      Path actualGeneratedFilePath = TestUtil.getTestFilePath(testFolder, "tables.mcf");
       Path actualReportPath = TestUtil.getTestFilePath(testFolder, "report.json");
 
       if (goldenFilesPrefix != null && !goldenFilesPrefix.isEmpty()) {

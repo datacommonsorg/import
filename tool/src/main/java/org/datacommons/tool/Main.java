@@ -51,7 +51,7 @@ class Main {
 
   @CommandLine.Option(
       names = {"-r", "--resolve_nodes"},
-      defaultValue = "false",
+      defaultValue = "true",
       description = "Resolves local references and generates node DCIDs.")
   public boolean doResolution;
 

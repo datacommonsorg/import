@@ -59,7 +59,7 @@ public class McfResolver {
     // If there are entries in needsWork, then something is oddly broken. Likely it is a cycle of
     // local refs, and thus we are neither able to assign DCIDs nor replace local-refs.
     for (var kv : localRefReplacement.needsWork.entrySet()) {
-      var pvs = output.getNodesOrThrow(kv.getKey());
+      var pvs = getPvs(kv.getKey());
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "Resolution_IrreplaceableLocalRef_PotentialCycle",
@@ -72,7 +72,7 @@ public class McfResolver {
     }
     moveFailedNodes(localRefReplacement.needsWork.keySet(), "ReplaceLocalRefs_Remaining");
     for (var kv : dcidAssignment.needsWork.entrySet()) {
-      var pvs = output.getNodesOrThrow(kv.getKey());
+      var pvs = getPvs(kv.getKey());
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
           "Resolution_UnassignableNodeDcid_PotentialCycle",
@@ -92,6 +92,14 @@ public class McfResolver {
 
   public Mcf.McfGraph failedGraph() {
     return failed.build();
+  }
+
+  private Mcf.McfGraph.PropertyValues getPvs(String nodeId) {
+    if (output.containsNodes(nodeId)) {
+      return output.getNodesOrThrow(nodeId);
+    } else {
+      return failed.getNodesOrThrow(nodeId);
+    }
   }
 
   // Result from one round of DCID assignment or local-ref replacement.
@@ -162,7 +170,7 @@ public class McfResolver {
       }
 
       // 4. Attempt DCID generation.
-      DcidGenerator.Result result = null;
+      DcidGenerator.Result result = new DcidGenerator.Result();
       if (isSvObs) {
         result = DcidGenerator.forStatVarObs(nodeId, node.build());
       } else if (isLegacyPop) {
@@ -172,7 +180,7 @@ public class McfResolver {
       } else if (idResolver != null) {
         result.dcid = idResolver.resolveNode(nodeId, node.build());
       }
-      if (result != null && !result.dcid.isEmpty()) {
+      if (!result.dcid.isEmpty()) {
         roundResult.numUpdated++;
         if (!result.keyString.isEmpty()) {
           node.putPvs(

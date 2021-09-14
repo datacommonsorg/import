@@ -138,7 +138,7 @@ public class Processor {
       } else {
         McfChecker.check(n, existenceChecker, logCtx);
       }
-      if (existenceChecker != null && idResolver != null) {
+      if (existenceChecker != null || idResolver != null) {
         nodesForVariousChecks.add(n);
       }
 
@@ -173,20 +173,9 @@ public class Processor {
         boolean success = McfChecker.check(g, existenceChecker, logCtx);
         if (success) {
           logCtx.incrementCounterBy("NumRowSuccesses", 1);
-          if (idResolver != null) {
-            McfResolver resolver = new McfResolver(g, verbose, idResolver, logCtx);
-            resolver.resolve();
-            var resolved = resolver.resolvedGraph();
-            if (!resolved.getNodesMap().isEmpty()) {
-              writers.get(OutputFileType.TABLES).write(McfUtil.serializeMcfGraph(resolved, false));
-            }
-            var failed = resolver.failedGraph();
-            if (!failed.getNodesMap().isEmpty()) {
-              writers
-                  .get(OutputFileType.TABLES_FAILURE)
-                  .write(McfUtil.serializeMcfGraph(failed, false));
-            }
-          }
+        }
+        if (idResolver != null) {
+          resolveAndWrite(g);
         } else {
           if (writers != null) {
             writers.get(OutputFileType.TABLES).write(McfUtil.serializeMcfGraph(g, false));
@@ -227,16 +216,21 @@ public class Processor {
 
   // Called only when resolution is enabled.
   private void resolveNodes() throws IOException {
-    var mergedGraph = McfUtil.mergeGraphs(nodesForVariousChecks);
-    McfResolver resolver = new McfResolver(mergedGraph, verbose, idResolver, logCtx);
+    resolveAndWrite(McfUtil.mergeGraphs(nodesForVariousChecks));
+  }
+
+  private void resolveAndWrite(Mcf.McfGraph mcfGraph) throws IOException {
+    McfResolver resolver = new McfResolver(mcfGraph, verbose, idResolver, logCtx);
     resolver.resolve();
-    var resolved = resolver.resolvedGraph();
-    if (!resolved.getNodesMap().isEmpty()) {
-      writers.get(OutputFileType.NODES).write(McfUtil.serializeMcfGraph(resolved, false));
-    }
-    var failed = resolver.failedGraph();
-    if (!failed.getNodesMap().isEmpty()) {
-      writers.get(OutputFileType.NODES_FAILURE).write(McfUtil.serializeMcfGraph(failed, false));
+    if (writers != null) {
+      var resolved = resolver.resolvedGraph();
+      if (!resolved.getNodesMap().isEmpty()) {
+        writers.get(OutputFileType.NODES).write(McfUtil.serializeMcfGraph(resolved, false));
+      }
+      var failed = resolver.failedGraph();
+      if (!failed.getNodesMap().isEmpty()) {
+        writers.get(OutputFileType.NODES_FAILURE).write(McfUtil.serializeMcfGraph(failed, false));
+      }
     }
   }
 
@@ -248,6 +242,7 @@ public class Processor {
       TmcfCsvParser parser =
           TmcfCsvParser.init(
               fileGroup.getTmcf().getPath(), csvFile.getPath(), fileGroup.delimiter(), dummyLog);
+      if (parser == null) continue;
       Mcf.McfGraph g;
       while ((g = parser.parseNextRow()) != null) {
         for (var idAndNode : g.getNodesMap().entrySet()) {

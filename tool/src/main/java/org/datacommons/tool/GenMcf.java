@@ -14,11 +14,15 @@
 
 package org.datacommons.tool;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,12 +68,26 @@ class GenMcf implements Callable<Integer> {
     args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
     args.logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
     args.writers = new HashMap<>();
-    for (Processor.OutputFileType type : Processor.OutputFileType.values()) {
-      Path tablesPath = Paths.get(parent.outputDir.getPath(), type.name().toLowerCase() + ".mcf");
+
+    List<Processor.OutputFileType> outputTypes = new ArrayList<>();
+    outputTypes.add(Processor.OutputFileType.TABLES);
+    if (args.doResolution) {
+      outputTypes.add(Processor.OutputFileType.TABLES_FAILURE);
+      if (!args.fileGroup.getMcfs().isEmpty()) {
+        outputTypes.add(Processor.OutputFileType.NODES);
+        outputTypes.add(Processor.OutputFileType.NODES_FAILURE);
+      }
     }
-    logger.info(
-        "Writing generated MCF to {}",
-        Path.of(parent.outputDir.toString()).toAbsolutePath().normalize().toString());
+
+    for (Processor.OutputFileType type : outputTypes) {
+      var fName = type.name().toLowerCase() + ".mcf";
+      Path filePath = Paths.get(parent.outputDir.getPath(), fName);
+      logger.info(
+          "Writing generated {} to {}",
+          type.name(),
+          Path.of(filePath.toString()).toAbsolutePath().normalize().toString());
+      args.writers.put(type, new BufferedWriter(new FileWriter(filePath.toString())));
+    }
     return Processor.process(args);
   }
 }
