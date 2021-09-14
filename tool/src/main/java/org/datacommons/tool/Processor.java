@@ -14,40 +14,65 @@
 
 package org.datacommons.tool;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Mcf;
-import org.datacommons.util.*;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.util.ArrayList;
 import java.util.List;
-
-class DCTooManyFailuresException extends Exception {
-  public DCTooManyFailuresException() {}
-
-  public DCTooManyFailuresException(String message) {
-    super(message);
-  }
-}
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Mcf;
+import org.datacommons.util.*;
 
 public class Processor {
   private static final Logger logger = LogManager.getLogger(Processor.class);
-  private LogWrapper logCtx;
+  private final LogWrapper logCtx;
   private ExistenceChecker existenceChecker;
   private ExternalIdResolver idResolver;
-  private List<Mcf.McfGraph> nodesForVariousChecks;
-  private boolean verbose;
+  private final List<Mcf.McfGraph> nodesForVariousChecks;
+  private final boolean verbose;
+
+  public static Integer process(
+      boolean doExistenceChecks,
+      boolean doResolution,
+      boolean verbose,
+      FileGroup fg,
+      BufferedWriter writer,
+      LogWrapper logCtx)
+      throws IOException {
+    Processor processor = new Processor(doExistenceChecks, doResolution, verbose, logCtx);
+    Integer retVal = 0;
+    try {
+      // Process all the instance MCF first, so that we can add the nodes for Existence Check.
+      for (File f : fg.getMcfs()) {
+        processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
+      }
+      if (doExistenceChecks) {
+        processor.checkAllNodes();
+      }
+      if (!fg.getCsvs().isEmpty()) {
+        processor.processTables(fg.getTmcf(), fg.getCsvs(), fg.delimiter(), writer);
+      } else if (fg.getTmcfs() != null) {
+        for (File f : fg.getTmcfs()) {
+          processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f);
+        }
+      }
+    } catch (DCTooManyFailuresException | InterruptedException | IOException ex) {
+      // Regardless of the failures, we will dump the logCtx and exit.
+      retVal = -1;
+    }
+    if (writer != null) writer.close();
+    logCtx.persistLog(false);
+    return retVal;
+  }
 
   // NOTE: If doExistenceChecks is true, then it is important that the caller perform a
   // checkAllNodes() call *after* all instance MCF files are processed (via processNodes). This is
   // so that the newly added schema, StatVar, etc. are fully known to the Existence Checker first,
   // before existence checks are performed.
-  public Processor(boolean doExistenceChecks, boolean doResolution, boolean verbose,
-                   LogWrapper logCtx) {
+  private Processor(
+      boolean doExistenceChecks, boolean doResolution, boolean verbose, LogWrapper logCtx) {
     this.logCtx = logCtx;
     this.verbose = verbose;
     nodesForVariousChecks = new ArrayList<>();
@@ -59,7 +84,7 @@ public class Processor {
     }
   }
 
-  public void processNodes(Mcf.McfType type, File file)
+  private void processNodes(Mcf.McfType type, File file)
       throws IOException, DCTooManyFailuresException, InterruptedException {
     long numNodesProcessed = 0;
     if (verbose) logger.info("Checking {}", file.getName());
@@ -88,7 +113,7 @@ public class Processor {
     logger.info("Checked {} with {} nodes", file.getName(), numNodesProcessed);
   }
 
-  public void processTables(
+  private void processTables(
       File tmcfFile, List<File> csvFiles, char delimiter, BufferedWriter writer)
       throws IOException, DCTooManyFailuresException, InterruptedException {
     if (verbose) logger.info("TMCF " + tmcfFile.getName());
@@ -133,7 +158,8 @@ public class Processor {
   }
 
   // Called only when existenceChecker is enabled.
-  public void checkAllNodes() throws IOException, InterruptedException, DCTooManyFailuresException {
+  private void checkAllNodes()
+      throws IOException, InterruptedException, DCTooManyFailuresException {
     long numNodesChecked = 0;
     logger.info("Performing existence checks");
     logCtx.setLocationFile("");
@@ -147,5 +173,13 @@ public class Processor {
       }
     }
     existenceChecker.drainRemoteCalls();
+  }
+
+  private static class DCTooManyFailuresException extends Exception {
+    public DCTooManyFailuresException() {}
+
+    public DCTooManyFailuresException(String message) {
+      super(message);
+    }
   }
 }

@@ -15,17 +15,15 @@
 package org.datacommons.tool;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
-import org.datacommons.util.FileGroup;
-import org.datacommons.util.LogWrapper;
-import picocli.CommandLine;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Callable;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Debug;
+import org.datacommons.util.FileGroup;
+import org.datacommons.util.LogWrapper;
+import picocli.CommandLine;
 
 @CommandLine.Command(name = "lint", description = "Run various checks on input MCF/TMCF/CSV files")
 class Lint implements Callable<Integer> {
@@ -54,34 +52,13 @@ class Lint implements Callable<Integer> {
 
   @Override
   public Integer call() throws IOException, InvalidProtocolBufferException {
-    FileGroup fg = FileGroup.build(files, spec, logger);
-    if (delimiter == null) {
-      delimiter = fg.delimiter();
-    }
-    LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
-    Processor processor = new Processor(parent.doExistenceChecks,
-            parent.doResolution, parent.verbose, logCtx);
-    Integer retVal = 0;
-    try {
-      // Process all the instance MCF first, so that we can add the nodes for Existence Check.
-      for (File f : fg.getMcfs()) {
-        processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
-      }
-      if (parent.doExistenceChecks) {
-        processor.checkAllNodes();
-      }
-      if (!fg.getCsvs().isEmpty()) {
-        processor.processTables(fg.getTmcf(), fg.getCsvs(), delimiter, null);
-      } else if (fg.getTmcfs() != null) {
-        for (File f : fg.getTmcfs()) {
-          processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f);
-        }
-      }
-    } catch (DCTooManyFailuresException | InterruptedException ex) {
-      // Regardless of the failures, we will dump the logCtx and exit.
-      retVal = -1;
-    }
-    logCtx.persistLog(false);
-    return retVal;
+    FileGroup fg = FileGroup.build(files, spec, delimiter, logger);
+    return Processor.process(
+        parent.doExistenceChecks,
+        parent.doResolution,
+        parent.verbose,
+        fg,
+        null,
+        new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath()));
   }
 }

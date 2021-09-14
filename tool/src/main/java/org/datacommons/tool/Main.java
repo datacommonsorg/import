@@ -14,9 +14,8 @@
 
 package org.datacommons.tool;
 
-import picocli.CommandLine;
-
 import java.io.File;
+import picocli.CommandLine;
 
 @CommandLine.Command(
     name = "dc-import",
@@ -40,19 +39,18 @@ class Main {
   public boolean verbose;
 
   @CommandLine.Option(
-          names = {"-e", "--existence_checks"},
-          defaultValue = "true",
-          description =
-                  "Check DCID references to schema nodes against the KG and locally. If set, then "
-                          + "calls will be made to the Staging API server, and instance MCFs get fully "
-                          + "loaded into memory.")
+      names = {"-e", "--existence_checks"},
+      defaultValue = "true",
+      description =
+          "Check DCID references to schema nodes against the KG and locally. If set, then "
+              + "calls will be made to the Staging API server, and instance MCFs get fully "
+              + "loaded into memory.")
   public boolean doExistenceChecks;
 
   @CommandLine.Option(
-          names = {"-r", "--resolve_nodes"},
-          defaultValue = "true",
-          description =
-                  "Resolves local references and generates node DCIDs.")
+      names = {"-r", "--resolve_nodes"},
+      defaultValue = "true",
+      description = "Resolves local references and generates node DCIDs.")
   public boolean doResolution;
 
   public static void main(String... args) {

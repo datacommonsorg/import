@@ -61,10 +61,10 @@ public class ServerCommand implements Callable<Integer> {
   @Override
   public Integer call() throws IOException, InterruptedException, StorageException {
     processGcsFiles();
-    FileGroup fg = FileGroup.build(files, spec, logger);
+    FileGroup fg = FileGroup.build(files, spec, ',', logger);
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), new File(".").toPath());
     Processor processor = new Processor(logCtx);
-    processor.processTables(fg.getTmcf(), fg.getCsvs(), ',', observationRepository);
+    processor.processTables(fg.getTmcf(), fg.getCsvs(), fg.delimiter(), observationRepository);
     return 0;
   }
 
