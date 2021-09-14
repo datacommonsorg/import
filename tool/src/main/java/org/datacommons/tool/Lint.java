@@ -14,7 +14,6 @@
 
 package org.datacommons.tool;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Callable;
@@ -51,14 +50,16 @@ class Lint implements Callable<Integer> {
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
 
   @Override
-  public Integer call() throws IOException, InvalidProtocolBufferException {
-    FileGroup fg = FileGroup.build(files, spec, delimiter, logger);
-    return Processor.process(
-        parent.doExistenceChecks,
-        parent.doResolution,
-        parent.verbose,
-        fg,
-        null,
-        new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath()));
+  public Integer call() throws IOException {
+    if (!parent.outputDir.exists()) {
+      parent.outputDir.mkdirs();
+    }
+    Processor.Args args = new Processor.Args();
+    args.doExistenceChecks = parent.doExistenceChecks;
+    args.doResolution = parent.doResolution;
+    args.verbose = parent.verbose;
+    args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
+    args.logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
+    return Processor.process(args);
   }
 }

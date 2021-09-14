@@ -14,12 +14,11 @@
 
 package org.datacommons.tool;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,15 +54,22 @@ class GenMcf implements Callable<Integer> {
 
   @Override
   public Integer call() throws IOException {
-    FileGroup fg = FileGroup.build(files, spec, delimiter, logger);
-    Path outPath = Paths.get(parent.outputDir.getPath(), "generated.mcf");
-    logger.info("Writing generated MCF to {}", outPath.toAbsolutePath().normalize().toString());
-    return Processor.process(
-        parent.doExistenceChecks,
-        parent.doResolution,
-        parent.verbose,
-        fg,
-        new BufferedWriter(new FileWriter(outPath.toString())),
-        new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath()));
+    if (!parent.outputDir.exists()) {
+      parent.outputDir.mkdirs();
+    }
+    Processor.Args args = new Processor.Args();
+    args.doExistenceChecks = parent.doExistenceChecks;
+    args.doResolution = parent.doResolution;
+    args.verbose = parent.verbose;
+    args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
+    args.logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
+    args.writers = new HashMap<>();
+    for (Processor.OutputFileType type : Processor.OutputFileType.values()) {
+      Path tablesPath = Paths.get(parent.outputDir.getPath(), type.name().toLowerCase() + ".mcf");
+    }
+    logger.info(
+        "Writing generated MCF to {}",
+        Path.of(parent.outputDir.toString()).toAbsolutePath().normalize().toString());
+    return Processor.process(args);
   }
 }

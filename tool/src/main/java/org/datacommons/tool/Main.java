@@ -26,8 +26,10 @@ import picocli.CommandLine;
 class Main {
   @CommandLine.Option(
       names = {"-o", "--output-dir"},
-      description = "Directory to write output files. Default is current working directory.",
-      defaultValue = ".",
+      description =
+          "Directory to write output files. Default is dc_generated/ within current"
+              + " working directory.",
+      defaultValue = "dc_generated",
       scope = CommandLine.ScopeType.INHERIT)
   public File outputDir;
 
@@ -49,7 +51,7 @@ class Main {
 
   @CommandLine.Option(
       names = {"-r", "--resolve_nodes"},
-      defaultValue = "true",
+      defaultValue = "false",
       description = "Resolves local references and generates node DCIDs.")
   public boolean doResolution;
 

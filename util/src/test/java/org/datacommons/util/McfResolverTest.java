@@ -22,6 +22,7 @@ public class McfResolverTest {
         new McfResolver(
             TestUtil.graphFromMcf(getContent("McfResolverTest_Unresolved_Instance.mcf")),
             true,
+            null,
             logCtx);
     resolver.resolve();
     assertEquals(
@@ -61,7 +62,7 @@ public class McfResolverTest {
     List<Mcf.McfGraph> failList = new ArrayList<>();
     Mcf.McfGraph graph;
     while ((graph = parser.parseNextRow()) != null) {
-      McfResolver resolver = new McfResolver(graph, true, logCtx);
+      McfResolver resolver = new McfResolver(graph, true, null, logCtx);
       resolver.resolve();
       passList.add(resolver.resolvedGraph());
       failList.add(resolver.failedGraph());

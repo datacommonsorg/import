@@ -1,5 +1,6 @@
 package org.datacommons.util;
 
+import java.rmi.UnexpectedException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -16,12 +17,15 @@ import org.datacommons.proto.Mcf;
 public class McfResolver {
   private static final Logger logger = LogManager.getLogger(McfResolver.class);
 
+  private final ExternalIdResolver idResolver;
   private final Mcf.McfGraph.Builder output;
   private final Mcf.McfGraph.Builder failed;
   private final LogWrapper logCtx;
   private final boolean verbose;
 
-  public McfResolver(Mcf.McfGraph subGraph, boolean verbose, LogWrapper logCtx) {
+  public McfResolver(
+      Mcf.McfGraph subGraph, boolean verbose, ExternalIdResolver idResolver, LogWrapper logCtx) {
+    this.idResolver = idResolver;
     this.logCtx = logCtx;
     this.verbose = verbose;
     // We add input to output, and as the rounds progress move failed nodes out.
@@ -29,7 +33,7 @@ public class McfResolver {
     failed = Mcf.McfGraph.newBuilder();
   }
 
-  public void resolve() {
+  public void resolve() throws UnexpectedException {
     boolean firstRound = true;
     RoundResult localRefReplacement = new RoundResult();
     RoundResult dcidAssignment = new RoundResult();
@@ -102,7 +106,7 @@ public class McfResolver {
     public Map<String, String> needsWork = new HashMap<>();
   }
 
-  private RoundResult assignDcids() {
+  private RoundResult assignDcids() throws UnexpectedException {
     RoundResult roundResult = new RoundResult();
     // For each node...
     for (var nodeId : output.getNodesMap().keySet()) {
@@ -165,8 +169,8 @@ public class McfResolver {
         result = DcidGenerator.forPopulation(nodeId, node.build());
       } else if (isLegacyObs) {
         result = DcidGenerator.forObservation(nodeId, node.build());
-      } else {
-        // TODO: Use ExternalIdResolver here.
+      } else if (idResolver != null) {
+        result.dcid = idResolver.resolveNode(nodeId, node.build());
       }
       if (result != null && !result.dcid.isEmpty()) {
         roundResult.numUpdated++;
@@ -178,7 +182,7 @@ public class McfResolver {
         output.putNodes(nodeId, node.build());
       } else {
         // This is not a node we can assign DCID. So move it to failed nodes.
-        // TODO: propagate error from DcidGenerator library.
+        // TODO: propagate error from DcidGenerator and IDResolver library.
         logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
             "Resolution_DcidAssignmentFailure_" + types.get(0),

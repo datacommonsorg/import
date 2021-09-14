@@ -18,69 +18,105 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.util.*;
 
 public class Processor {
   private static final Logger logger = LogManager.getLogger(Processor.class);
   private final LogWrapper logCtx;
+  private final FileGroup fileGroup;
+  private final boolean verbose;
+  // Set only for "genmcf"
+  private final Map<OutputFileType, BufferedWriter> writers;
+  private final List<Mcf.McfGraph> nodesForVariousChecks;
   private ExistenceChecker existenceChecker;
   private ExternalIdResolver idResolver;
-  private final List<Mcf.McfGraph> nodesForVariousChecks;
-  private final boolean verbose;
 
-  public static Integer process(
-      boolean doExistenceChecks,
-      boolean doResolution,
-      boolean verbose,
-      FileGroup fg,
-      BufferedWriter writer,
-      LogWrapper logCtx)
-      throws IOException {
-    Processor processor = new Processor(doExistenceChecks, doResolution, verbose, logCtx);
+  // TODO: Produce output MCF files in files corresponding to the input (like prod).
+  public enum OutputFileType {
+    TABLES,
+    TABLES_FAILURE,
+    NODES,
+    NODES_FAILURE,
+  };
+
+  static class Args {
+    public boolean doExistenceChecks = false;
+    public boolean doResolution = false;
+    public boolean verbose = false;
+    public FileGroup fileGroup = null;
+    public Map<OutputFileType, BufferedWriter> writers = null;
+    LogWrapper logCtx = null;
+  }
+
+  public static Integer process(Args args) throws IOException {
     Integer retVal = 0;
     try {
+      Processor processor = new Processor(args);
+      if (args.doResolution) {
+        processor.lookupExternalIds();
+      }
       // Process all the instance MCF first, so that we can add the nodes for Existence Check.
-      for (File f : fg.getMcfs()) {
-        processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
+      processor.processNodes(Mcf.McfType.INSTANCE_MCF);
+      if (args.doExistenceChecks) {
+        processor.checkNodes();
       }
-      if (doExistenceChecks) {
-        processor.checkAllNodes();
+      if (args.doResolution) {
+        processor.resolveNodes();
       }
-      if (!fg.getCsvs().isEmpty()) {
-        processor.processTables(fg.getTmcf(), fg.getCsvs(), fg.delimiter(), writer);
-      } else if (fg.getTmcfs() != null) {
-        for (File f : fg.getTmcfs()) {
-          processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f);
-        }
+      if (!args.fileGroup.getCsvs().isEmpty()) {
+        processor.processTables();
+      } else if (args.fileGroup.getTmcfs() != null) {
+        processor.processNodes(Mcf.McfType.TEMPLATE_MCF);
       }
     } catch (DCTooManyFailuresException | InterruptedException | IOException ex) {
       // Regardless of the failures, we will dump the logCtx and exit.
       retVal = -1;
     }
-    if (writer != null) writer.close();
-    logCtx.persistLog(false);
+    if (args.writers != null) {
+      for (var writer : args.writers.entrySet()) {
+        writer.getValue().close();
+      }
+    }
+    args.logCtx.persistLog(false);
     return retVal;
   }
 
   // NOTE: If doExistenceChecks is true, then it is important that the caller perform a
-  // checkAllNodes() call *after* all instance MCF files are processed (via processNodes). This is
+  // checkNodes() call *after* all instance MCF files are processed (via processNodes). This is
   // so that the newly added schema, StatVar, etc. are fully known to the Existence Checker first,
   // before existence checks are performed.
-  private Processor(
-      boolean doExistenceChecks, boolean doResolution, boolean verbose, LogWrapper logCtx) {
-    this.logCtx = logCtx;
-    this.verbose = verbose;
+  private Processor(Args args) {
+    this.logCtx = args.logCtx;
+    this.writers = args.writers;
+    this.verbose = args.verbose;
+    this.fileGroup = args.fileGroup;
     nodesForVariousChecks = new ArrayList<>();
-    if (doExistenceChecks) {
+    if (args.doExistenceChecks) {
       existenceChecker = new ExistenceChecker(HttpClient.newHttpClient(), verbose, logCtx);
     }
-    if (doResolution) {
+    if (args.doResolution) {
       idResolver = new ExternalIdResolver(HttpClient.newHttpClient(), verbose, logCtx);
+    }
+  }
+
+  private void processNodes(Mcf.McfType type)
+      throws IOException, DCTooManyFailuresException, InterruptedException {
+    if (type == Mcf.McfType.INSTANCE_MCF) {
+      for (var f : fileGroup.getMcfs()) {
+        processNodes(type, f);
+      }
+    } else {
+      for (var f : fileGroup.getTmcfs()) {
+        processNodes(type, f);
+      }
     }
   }
 
@@ -97,11 +133,13 @@ public class Processor {
 
       if (existenceChecker != null && type == Mcf.McfType.INSTANCE_MCF) {
         // Add instance MCF nodes to ExistenceChecker.  We load all the nodes up first
-        // before we check them later in checkAllNodes().
+        // before we check them later in checkNodes().
         existenceChecker.addLocalGraph(n);
-        nodesForVariousChecks.add(n);
       } else {
         McfChecker.check(n, existenceChecker, logCtx);
+      }
+      if (existenceChecker != null && idResolver != null) {
+        nodesForVariousChecks.add(n);
       }
 
       numNodesProcessed++;
@@ -113,14 +151,14 @@ public class Processor {
     logger.info("Checked {} with {} nodes", file.getName(), numNodesProcessed);
   }
 
-  private void processTables(
-      File tmcfFile, List<File> csvFiles, char delimiter, BufferedWriter writer)
+  private void processTables()
       throws IOException, DCTooManyFailuresException, InterruptedException {
-    if (verbose) logger.info("TMCF " + tmcfFile.getName());
-    for (File csvFile : csvFiles) {
+    if (verbose) logger.info("TMCF " + fileGroup.getTmcf().getName());
+    for (File csvFile : fileGroup.getCsvs()) {
       if (verbose) logger.info("Checking CSV " + csvFile.getPath());
       TmcfCsvParser parser =
-          TmcfCsvParser.init(tmcfFile.getPath(), csvFile.getPath(), delimiter, logCtx);
+          TmcfCsvParser.init(
+              fileGroup.getTmcf().getPath(), csvFile.getPath(), fileGroup.delimiter(), logCtx);
       // If there were too many failures when initializing the parser, parser will be null and we
       // don't want to continue processing.
       if (logCtx.loggedTooManyFailures()) {
@@ -135,12 +173,25 @@ public class Processor {
         boolean success = McfChecker.check(g, existenceChecker, logCtx);
         if (success) {
           logCtx.incrementCounterBy("NumRowSuccesses", 1);
+          if (idResolver != null) {
+            McfResolver resolver = new McfResolver(g, verbose, idResolver, logCtx);
+            resolver.resolve();
+            var resolved = resolver.resolvedGraph();
+            if (!resolved.getNodesMap().isEmpty()) {
+              writers.get(OutputFileType.TABLES).write(McfUtil.serializeMcfGraph(resolved, false));
+            }
+            var failed = resolver.failedGraph();
+            if (!failed.getNodesMap().isEmpty()) {
+              writers
+                  .get(OutputFileType.TABLES_FAILURE)
+                  .write(McfUtil.serializeMcfGraph(failed, false));
+            }
+          }
+        } else {
+          if (writers != null) {
+            writers.get(OutputFileType.TABLES).write(McfUtil.serializeMcfGraph(g, false));
+          }
         }
-
-        if (writer != null) {
-          writer.write(McfUtil.serializeMcfGraph(g, false));
-        }
-
         numNodesProcessed += g.getNodesCount();
         numRowsProcessed++;
         logCtx.provideStatus(numRowsProcessed, "rows processed");
@@ -158,8 +209,7 @@ public class Processor {
   }
 
   // Called only when existenceChecker is enabled.
-  private void checkAllNodes()
-      throws IOException, InterruptedException, DCTooManyFailuresException {
+  private void checkNodes() throws IOException, InterruptedException, DCTooManyFailuresException {
     long numNodesChecked = 0;
     logger.info("Performing existence checks");
     logCtx.setLocationFile("");
@@ -173,6 +223,39 @@ public class Processor {
       }
     }
     existenceChecker.drainRemoteCalls();
+  }
+
+  // Called only when resolution is enabled.
+  private void resolveNodes() throws IOException {
+    var mergedGraph = McfUtil.mergeGraphs(nodesForVariousChecks);
+    McfResolver resolver = new McfResolver(mergedGraph, verbose, idResolver, logCtx);
+    resolver.resolve();
+    var resolved = resolver.resolvedGraph();
+    if (!resolved.getNodesMap().isEmpty()) {
+      writers.get(OutputFileType.NODES).write(McfUtil.serializeMcfGraph(resolved, false));
+    }
+    var failed = resolver.failedGraph();
+    if (!failed.getNodesMap().isEmpty()) {
+      writers.get(OutputFileType.NODES_FAILURE).write(McfUtil.serializeMcfGraph(failed, false));
+    }
+  }
+
+  // Process all the CSV tables to load all external IDs.
+  private void lookupExternalIds() throws IOException, InterruptedException {
+    LogWrapper dummyLog = new LogWrapper(Debug.Log.newBuilder(), Path.of("."));
+    for (File csvFile : fileGroup.getCsvs()) {
+      if (verbose) logger.info("Reading external IDs from CSV " + csvFile.getPath());
+      TmcfCsvParser parser =
+          TmcfCsvParser.init(
+              fileGroup.getTmcf().getPath(), csvFile.getPath(), fileGroup.delimiter(), dummyLog);
+      Mcf.McfGraph g;
+      while ((g = parser.parseNextRow()) != null) {
+        for (var idAndNode : g.getNodesMap().entrySet()) {
+          idResolver.submitNode(idAndNode.getValue());
+        }
+      }
+    }
+    idResolver.drainRemoteCalls();
   }
 
   private static class DCTooManyFailuresException extends Exception {
