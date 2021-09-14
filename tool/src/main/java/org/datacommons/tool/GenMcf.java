@@ -59,12 +59,10 @@ class GenMcf implements Callable<Integer> {
   @Override
   public Integer call() throws IOException, InvalidProtocolBufferException {
 
-    FileGroup fg = FileGroup.Build(files, spec, logger);
-
+    FileGroup fg = FileGroup.build(files, spec, logger);
     if (delimiter == null) {
-      delimiter = fg.GetNumTsv() > 0 ? '\t' : ',';
+      delimiter = fg.delimiter();
     }
-
     Path outPath = Paths.get(parent.outputDir.getPath(), "generated.mcf");
     logger.info("Writing generated MCF to {}", outPath.toAbsolutePath().normalize().toString());
     BufferedWriter writer = new BufferedWriter(new FileWriter(outPath.toString()));

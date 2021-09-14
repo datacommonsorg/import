@@ -54,11 +54,9 @@ class Lint implements Callable<Integer> {
 
   @Override
   public Integer call() throws IOException, InvalidProtocolBufferException {
-
-    FileGroup fg = FileGroup.Build(files, spec, logger);
-
+    FileGroup fg = FileGroup.build(files, spec, logger);
     if (delimiter == null) {
-      delimiter = fg.GetNumTsv() > 0 ? '\t' : ',';
+      delimiter = fg.delimiter();
     }
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
     Processor processor = new Processor(parent.doExistenceChecks,
@@ -66,16 +64,16 @@ class Lint implements Callable<Integer> {
     Integer retVal = 0;
     try {
       // Process all the instance MCF first, so that we can add the nodes for Existence Check.
-      for (File f : fg.GetMcfs()) {
+      for (File f : fg.getMcfs()) {
         processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
       }
       if (parent.doExistenceChecks) {
         processor.checkAllNodes();
       }
-      if (!fg.GetCsvs().isEmpty()) {
-        processor.processTables(fg.GetTmcf(), fg.GetCsvs(), delimiter, null);
-      } else if (fg.GetTmcfs() != null) {
-        for (File f : fg.GetTmcfs()) {
+      if (!fg.getCsvs().isEmpty()) {
+        processor.processTables(fg.getTmcf(), fg.getCsvs(), delimiter, null);
+      } else if (fg.getTmcfs() != null) {
+        for (File f : fg.getTmcfs()) {
           processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f);
         }
       }

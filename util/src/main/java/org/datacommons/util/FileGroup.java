@@ -14,11 +14,12 @@
 
 package org.datacommons.util;
 
+import org.apache.logging.log4j.Logger;
+import picocli.CommandLine;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.logging.log4j.Logger;
-import picocli.CommandLine;
 
 public class FileGroup {
   private List<File> csvFiles;
@@ -34,28 +35,28 @@ public class FileGroup {
     this.nTsv = nTsv;
   }
 
-  public File GetTmcf() {
+  public File getTmcf() {
     if (tmcfFiles != null && tmcfFiles.size() > 0) return tmcfFiles.get(0);
     return null;
   }
 
-  public List<File> GetTmcfs() {
+  public List<File> getTmcfs() {
     return tmcfFiles;
   }
 
-  public List<File> GetCsvs() {
+  public List<File> getCsvs() {
     return csvFiles;
   }
 
-  public List<File> GetMcfs() {
+  public List<File> getMcfs() {
     return mcfFiles;
   }
 
-  public int GetNumTsv() {
-    return nTsv;
+  public char delimiter() {
+    return nTsv > 0 ? '\t' : ',';
   }
 
-  public static FileGroup Build(File[] files, CommandLine.Model.CommandSpec spec, Logger logger) {
+  public static FileGroup build(File[] files, CommandLine.Model.CommandSpec spec, Logger logger) {
     List<File> tmcfFiles = new ArrayList<>();
     List<File> csvFiles = new ArrayList<>();
     List<File> mcfFiles = new ArrayList<>();
