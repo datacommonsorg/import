@@ -18,7 +18,6 @@ import picocli.CommandLine;
 
 import java.io.File;
 
-// TODO: Add e2e tests once Debug.Log is fully plumbed in.
 @CommandLine.Command(
     name = "dc-import",
     mixinStandardHelpOptions = true,

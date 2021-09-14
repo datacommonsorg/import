@@ -68,7 +68,6 @@ class GenMcf implements Callable<Integer> {
     Path outPath = Paths.get(parent.outputDir.getPath(), "generated.mcf");
     logger.info("Writing generated MCF to {}", outPath.toAbsolutePath().normalize().toString());
     BufferedWriter writer = new BufferedWriter(new FileWriter(outPath.toString()));
-
     LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
     Processor processor = new Processor(parent.doExistenceChecks, parent.doResolution,
             parent.verbose, logCtx);
