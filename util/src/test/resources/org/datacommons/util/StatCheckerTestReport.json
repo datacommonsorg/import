@@ -7,7 +7,7 @@
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
-      "counterName": "Series_Inconsistent_Values",
+      "counterKey": "StatsCheck_Inconsistent_Values",
       "problemPoints": [{
         "date": "2015",
         "values": [{
@@ -25,7 +25,7 @@
         }]
       }]
     }, {
-      "counterName": "Series_Beyond_1_Sigma",
+      "counterKey": "StatsCheck_1_Sigma",
       "problemPoints": [{
         "date": "2014",
         "values": [{
@@ -54,7 +54,7 @@
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
-      "counterName": "Series_Beyond_1_Sigma",
+      "counterKey": "StatsCheck_1_Sigma",
       "problemPoints": [{
         "date": "2014",
         "values": [{

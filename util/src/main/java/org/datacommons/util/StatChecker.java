@@ -28,7 +28,7 @@ import org.datacommons.proto.Debug.DataPoint;
 import org.datacommons.proto.Debug.DataPoint.DataValue;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.PercentDifference;
-import org.datacommons.proto.Debug.StatValidationResult.StatValidationCounter;
+import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.ValueType;
 
@@ -46,10 +46,16 @@ public class StatChecker {
   private static final String RECEIVED_SAMPLE_PLACES_KEY = "Received_Sample_Places";
   private static final Character PLACE_NAMESPACE_DELIMITER = '/';
   private final LogWrapper logCtx;
+  // key is a string made up of place dcid, stat var dcid, measurement method, observation period,
+  // scaling factor, and unit of the stat var observations of the series summary.
   private final Map<String, SeriesSummary> seriesSummaryMap;
+  // key is place namespace + length of place dcid, value is set of place dcids
   private final Map<String, Set<String>> samplePlaces;
   private final boolean shouldGenerateSamplePlaces;
 
+  // Creates a StatChecker instance. If no samplePlaces are provided, for each pair of (place
+  // namespace, place dcid length), we will use the first 5 places that stat var observations are
+  // added for as the sample places.
   public StatChecker(LogWrapper logCtx, Set<String> samplePlaces) {
     this.logCtx = logCtx;
     this.seriesSummaryMap = new HashMap<>();
@@ -65,11 +71,30 @@ public class StatChecker {
   // Given a graph, extract time series info (about the chosen sample places) from the
   // statVarObservation nodes and save it into seriesSummaryMap.
   public void extractSeriesInfoFromGraph(McfGraph graph) {
-    for (String nodeId : graph.getNodesMap().keySet()) {
-      McfGraph.PropertyValues node = graph.getNodesMap().get(nodeId);
-      if (shouldExtractSeriesInfo(node)) {
-        extractSeriesInfoFromNode(node);
+    for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
+      if (shouldExtractSeriesInfo(node.getValue())) {
+        extractSeriesInfoFromNode(node.getValue());
       }
+    }
+  }
+
+  // Iterate through seriesSummaries, perform a list of checks (value inconsistencies, sigma
+  // variance, percent fluctuations, holes in dates, invalid dates, etc) and add these results to
+  // the logCtx.
+  public void check() {
+    for (String hash : seriesSummaryMap.keySet()) {
+      List<DataPoint> timeSeries = new ArrayList<>(seriesSummaryMap.get(hash).timeSeries.values());
+      StatValidationResult.Builder resBuilder = seriesSummaryMap.get(hash).validationResult;
+      // Check inconsistent values (sawtooth).
+      checkValueInconsistencies(timeSeries, resBuilder);
+      // Check N-Sigma variance.
+      checkSigmaDivergence(timeSeries, resBuilder);
+      // Check N-Percent fluctuations.
+      checkPercentFluctuations(timeSeries, resBuilder);
+      // Check for holes in dates, invalid dates, etc.
+      checkDates(timeSeries, resBuilder);
+      // add result to log.
+      logCtx.addStatsCheckSummaryEntry(resBuilder.build());
     }
   }
 
@@ -95,9 +120,7 @@ public class StatChecker {
       String placekey = placeNameSpace + placeDcid.length();
       // If this is a new place type (determined by place dcid namespace and length) and/or the
       // place type hasn't hit the maximum number of sample places, add place to sample places map.
-      if (!samplePlaces.containsKey(placekey)) {
-        samplePlaces.put(placekey, new HashSet<>());
-      }
+      samplePlaces.computeIfAbsent(placekey, k -> new HashSet<>());
       if (samplePlaces.get(placekey).size() >= MAX_NUM_PLACE_PER_TYPE
           && !samplePlaces.get(placekey).contains(placeDcid)) {
         return false;
@@ -113,20 +136,27 @@ public class StatChecker {
   // places) and save it into seriesSummaryMap.
   private void extractSeriesInfoFromNode(McfGraph.PropertyValues node) {
     StatValidationResult.Builder vres = StatValidationResult.newBuilder();
+    // Add information about the node to StatValidationResult
     vres.setPlaceDcid(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT));
     vres.setStatVarDcid(McfUtil.getPropVal(node, Vocabulary.VARIABLE_MEASURED));
     vres.setMeasurementMethod(McfUtil.getPropVal(node, Vocabulary.MEASUREMENT_METHOD));
     vres.setObservationPeriod(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_PERIOD));
     vres.setScalingFactor(McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR));
     vres.setUnit(McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR));
+
+    // Get the series summary for this node. If the series summary for this node is not already in
+    // in the seriesSummaryMap, add it to the seriesSummaryMap.
     String hash = vres.toString();
-    SeriesSummary summary = new SeriesSummary();
+    SeriesSummary summary;
     if (seriesSummaryMap.containsKey(hash)) {
       summary = seriesSummaryMap.get(hash);
     } else {
+      summary = new SeriesSummary();
       summary.validationResult = vres;
       summary.timeSeries = new TreeMap<>();
     }
+
+    // Add the value of this StatVarObservation node to the timeseries of this node's SeriesSummary.
     String obsDate = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE);
     String value = McfUtil.getPropVal(node, Vocabulary.VALUE);
     DataValue dataVal =
@@ -143,27 +173,10 @@ public class StatChecker {
     seriesSummaryMap.put(hash, summary);
   }
 
-  public void check() {
-    for (String hash : seriesSummaryMap.keySet()) {
-      List<DataPoint> timeSeries = new ArrayList<>(seriesSummaryMap.get(hash).timeSeries.values());
-      StatValidationResult.Builder resBuilder = seriesSummaryMap.get(hash).validationResult;
-      // Check inconsistent values (sawtooth).
-      checkValueInconsistencies(timeSeries, resBuilder);
-      // Check N-Sigma variance.
-      checkSigmaDivergence(timeSeries, resBuilder);
-      // Check N-Percent fluctuations.
-      checkPercentFluctuations(timeSeries, resBuilder);
-      // Check for holes in dates, invalid dates, etc.
-      checkDates(timeSeries, resBuilder);
-      // add result to log.
-      logCtx.addStatsCheckSummaryEntry(resBuilder.build());
-    }
-  }
-
   protected static void checkValueInconsistencies(
       List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder) {
-    StatValidationCounter.Builder inconsistentValueCounter = StatValidationCounter.newBuilder();
-    inconsistentValueCounter.setCounterName("Series_Inconsistent_Values");
+    StatValidationEntry.Builder inconsistentValueCounter = StatValidationEntry.newBuilder();
+    inconsistentValueCounter.setCounterKey("StatsCheck_Inconsistent_Values");
     for (DataPoint dp : timeSeries) {
       double v = 0;
       boolean vInitialized = false;
@@ -182,33 +195,33 @@ public class StatChecker {
 
   protected static void checkSigmaDivergence(
       List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder) {
-    Stats stats = getStats(timeSeries);
-    if (stats.stdDev == 0) {
+    MeanAndStdDev meanAndStdDev = getStats(timeSeries);
+    if (meanAndStdDev.stdDev == 0) {
       return;
     }
-    StatValidationCounter.Builder sigma1Counter = StatValidationCounter.newBuilder();
-    sigma1Counter.setCounterName("Series_Beyond_1_Sigma");
-    StatValidationCounter.Builder sigma2Counter = StatValidationCounter.newBuilder();
-    sigma2Counter.setCounterName("Series_Beyond_2_Sigma");
-    StatValidationCounter.Builder sigma3Counter = StatValidationCounter.newBuilder();
-    sigma3Counter.setCounterName("Series_Beyond_3_Sigma");
+    StatValidationEntry.Builder sigma1Counter = StatValidationEntry.newBuilder();
+    sigma1Counter.setCounterKey("StatsCheck_1_Sigma");
+    StatValidationEntry.Builder sigma2Counter = StatValidationEntry.newBuilder();
+    sigma2Counter.setCounterKey("StatsCheck_2_Sigma");
+    StatValidationEntry.Builder sigma3Counter = StatValidationEntry.newBuilder();
+    sigma3Counter.setCounterKey("StatsCheck_3_Sigma");
     // Only add data points to the counter of the greatest standard deviation that it belongs to.
     // ie. if the data point is beyond 3 std deviation, only add it to that counter.
     for (DataPoint dp : timeSeries) {
       double val = dp.getValues(0).getValue();
-      if (Math.abs(val - stats.mean) > 3 * stats.stdDev) {
+      if (Math.abs(val - meanAndStdDev.mean) > 3 * meanAndStdDev.stdDev) {
         sigma3Counter.addProblemPoints(dp);
         continue;
       }
-      if (Math.abs(val - stats.mean) > 2 * stats.stdDev) {
+      if (Math.abs(val - meanAndStdDev.mean) > 2 * meanAndStdDev.stdDev) {
         sigma2Counter.addProblemPoints(dp);
         continue;
       }
-      if (Math.abs(val - stats.mean) > 1 * stats.stdDev) {
+      if (Math.abs(val - meanAndStdDev.mean) > 1 * meanAndStdDev.stdDev) {
         sigma1Counter.addProblemPoints(dp);
       }
     }
-    for (StatValidationCounter.Builder counter :
+    for (StatValidationEntry.Builder counter :
         List.of(sigma1Counter, sigma2Counter, sigma3Counter)) {
       if (counter.getProblemPointsList().isEmpty()) {
         continue;
@@ -217,13 +230,13 @@ public class StatChecker {
     }
   }
 
-  private static class Stats {
+  private static class MeanAndStdDev {
     double mean = 0;
     double stdDev = 0;
   }
 
-  private static Stats getStats(List<DataPoint> timeSeries) {
-    Stats result = new Stats();
+  private static MeanAndStdDev getStats(List<DataPoint> timeSeries) {
+    MeanAndStdDev result = new MeanAndStdDev();
     if (timeSeries.size() < 2) return result;
     double weights = 0;
     double sum = 0;
@@ -246,6 +259,7 @@ public class StatChecker {
   // Goes through sorted (but possibly discontinuous) time series, saving the largest fluctuation,
   // and the datapoints that cause this fluctuation.
   // Currently ignore fluctuations starting from 0 (division by 0 problem).
+  // TODO: Add counters for percent difference >50, >100, and >500.
   protected static void checkPercentFluctuations(
       List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder) {
     double maxDelta = 0;
@@ -292,10 +306,11 @@ public class StatChecker {
   protected static void checkDates(
       List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder) {
     Set<LocalDateTime> dateTimes = new TreeSet<>();
-    StatValidationCounter.Builder invalidDateCounter = StatValidationCounter.newBuilder();
-    invalidDateCounter.setCounterName("Series_Invalid_Date");
+    StatValidationEntry.Builder invalidDateCounter = StatValidationEntry.newBuilder();
+    invalidDateCounter.setCounterKey("StatsCheck_Invalid_Date");
     // To keep track of the different lengths of the date strings.
     Map<Integer, List<DataPoint>> dateLen = new HashMap<>();
+
     // In the first pass, get sorted dates in LocalDateTime form and check for invalid dates and
     // inconsistent date granularities.
     for (DataPoint dp : timeSeries) {
@@ -313,8 +328,8 @@ public class StatChecker {
     }
     List<Integer> dateLenList = new ArrayList<>(dateLen.keySet());
     if (dateLenList.size() > 1) {
-      StatValidationCounter.Builder inconsistentDateCounter = StatValidationCounter.newBuilder();
-      inconsistentDateCounter.setCounterName("Series_Inconsistent_Date_Granularity");
+      StatValidationEntry.Builder inconsistentDateCounter = StatValidationEntry.newBuilder();
+      inconsistentDateCounter.setCounterKey("StatsCheck_Inconsistent_Date_Granularity");
       // When there are multiple date granularity, the problem points will be those that are of a
       // different date granularity than the most common one.
       dateLenList.sort((d1, d2) -> dateLen.get(d2).size() - dateLen.get(d1).size());
@@ -331,14 +346,18 @@ public class StatChecker {
     long window = -1;
     LocalDateTime prev = null;
     List<LocalDateTime> dateTimesList = new ArrayList<>(dateTimes);
+
     // In this second pass, compute the data holes.
+    // Date arithmetic is complicated by leap year considerations. For now assume
+    // only month boundary.
+    // TODO: Handle days granularity
     for (LocalDateTime dt : dateTimesList) {
       if (prev != null) {
         long delta = ChronoUnit.MONTHS.between(prev, dt);
         if (window > 0 && window != delta) {
-          StatValidationCounter.Builder dataHoleCounter = StatValidationCounter.newBuilder();
-          dataHoleCounter.setCounterName("Series_Data_Holes");
-          dataHoleCounter.setDetails(
+          StatValidationEntry.Builder dataHoleCounter = StatValidationEntry.newBuilder();
+          dataHoleCounter.setCounterKey("StatsCheck_Data_Holes");
+          dataHoleCounter.setAdditionalDetails(
               "Data hole found between the dates: " + prev.toString() + " and " + dt.toString());
           resBuilder.addValidationCounters(dataHoleCounter.build());
           return;
