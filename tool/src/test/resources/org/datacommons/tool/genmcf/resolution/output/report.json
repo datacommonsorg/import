@@ -4,97 +4,11 @@
       "counters": {
         "Resolution_NumDcCalls": "1",
         "NumNodeSuccesses": "20",
-        "NumPVSuccesses": "80",
-        "Existence_NumChecks": "110",
+        "NumPVSuccesses": "70",
+        "Existence_NumChecks": "90",
         "NumRowSuccesses": "10",
         "Existence_NumDcCalls": "1"
       }
-    },
-    "LEVEL_WARNING": {
-      "counters": {
-        "Existence_MissingReference_measurementMethod": "10"
-      }
     }
-  },
-  "entries": [{
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "2"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'Covid19IndiaProject', property: 'measurementMethod', node: 'E:COVID19_cases_india->E0'",
-    "counterKey": "Existence_MissingReference_measurementMethod"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "3"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'Covid19IndiaProject', property: 'measurementMethod', node: 'E:COVID19_cases_india->E0'",
-    "counterKey": "Existence_MissingReference_measurementMethod"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "4"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'Covid19IndiaProject', property: 'measurementMethod', node: 'E:COVID19_cases_india->E0'",
-    "counterKey": "Existence_MissingReference_measurementMethod"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "5"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'Covid19IndiaProject', property: 'measurementMethod', node: 'E:COVID19_cases_india->E0'",
-    "counterKey": "Existence_MissingReference_measurementMethod"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "6"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'Covid19IndiaProject', property: 'measurementMethod', node: 'E:COVID19_cases_india->E0'",
-    "counterKey": "Existence_MissingReference_measurementMethod"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "7"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'Covid19IndiaProject', property: 'measurementMethod', node: 'E:COVID19_cases_india->E0'",
-    "counterKey": "Existence_MissingReference_measurementMethod"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "8"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'Covid19IndiaProject', property: 'measurementMethod', node: 'E:COVID19_cases_india->E0'",
-    "counterKey": "Existence_MissingReference_measurementMethod"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "9"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'Covid19IndiaProject', property: 'measurementMethod', node: 'E:COVID19_cases_india->E0'",
-    "counterKey": "Existence_MissingReference_measurementMethod"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "10"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'Covid19IndiaProject', property: 'measurementMethod', node: 'E:COVID19_cases_india->E0'",
-    "counterKey": "Existence_MissingReference_measurementMethod"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "11"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'Covid19IndiaProject', property: 'measurementMethod', node: 'E:COVID19_cases_india->E0'",
-    "counterKey": "Existence_MissingReference_measurementMethod"
-  }]
+  }
 }
