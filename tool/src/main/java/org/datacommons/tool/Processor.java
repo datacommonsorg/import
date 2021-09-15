@@ -280,10 +280,14 @@ public class Processor {
   }
 
   private void writeGraph(OutputFileType type, Mcf.McfGraph graph) throws IOException {
-    if (!writers.containsKey(type)) {
-      writers.put(type, new BufferedWriter(new FileWriter(outputFiles.get(type).toString())));
+    var writer = writers.getOrDefault(type, null);
+    if (writer == null) {
+      var fileString = outputFiles.get(type).toString();
+      logger.info("Writing to file-type " + type.name() + " in " + fileString);
+      writer = new BufferedWriter(new FileWriter(fileString));
+      writers.put(type, writer);
     }
-    writers.get(type).write(McfUtil.serializeMcfGraph(graph, false));
+    writer.write(McfUtil.serializeMcfGraph(graph, false));
   }
 
   private void closeFiles() throws IOException {
