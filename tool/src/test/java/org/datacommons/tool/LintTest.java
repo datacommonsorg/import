@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import org.datacommons.util.TmcfCsvParser;
@@ -45,10 +46,12 @@ public class LintTest {
       for (File inputFile : inputFiles) {
         argsList.add(inputFile.getPath());
       }
-      argsList.add("--output-dir=" + testFolder.getRoot().getPath());
+      argsList.add(
+          "--output-dir=" + Paths.get(testFolder.getRoot().getPath(), directory.getName()));
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
-      Path actualReportPath = TestUtil.getTestFilePath(testFolder, "report.json");
+      Path actualReportPath =
+          TestUtil.getTestFilePath(testFolder, directory.getName(), "report.json");
       if (goldenFilesPrefix != null && !goldenFilesPrefix.isEmpty()) {
         Path goldenPath =
             Path.of(goldenFilesPrefix, "lint", directory.getName(), "output", "report.json");

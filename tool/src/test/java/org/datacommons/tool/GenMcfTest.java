@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import org.datacommons.util.TmcfCsvParser;
@@ -60,7 +61,8 @@ public class GenMcfTest {
         argsList.add(inputFile.getPath());
       }
       argsList.add("--resolution");
-      argsList.add("--output-dir=" + testFolder.getRoot().getPath());
+      argsList.add(
+          "--output-dir=" + Paths.get(testFolder.getRoot().getPath(), directory.getName()));
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
 
@@ -74,7 +76,7 @@ public class GenMcfTest {
 
       if (goldenFilesPrefix != null && !goldenFilesPrefix.isEmpty()) {
         for (var f : files) {
-          Path actual = TestUtil.getTestFilePath(testFolder, f);
+          Path actual = TestUtil.getTestFilePath(testFolder, directory.getName(), f);
           if (!f.equals("report.json") && !new File(actual.toString()).exists()) continue;
 
           Path golden = Path.of(goldenFilesPrefix, "genmcf", directory.getName(), "output", f);
@@ -82,7 +84,7 @@ public class GenMcfTest {
         }
       } else {
         for (var f : files) {
-          Path actual = TestUtil.getTestFilePath(testFolder, f);
+          Path actual = TestUtil.getTestFilePath(testFolder, directory.getName(), f);
           if (!f.equals("report.json") && !new File(actual.toString()).exists()) continue;
 
           Path expected = TestUtil.getOutputFilePath(directory.getPath(), f);

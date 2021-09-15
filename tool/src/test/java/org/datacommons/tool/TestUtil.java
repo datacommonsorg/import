@@ -49,9 +49,9 @@ public class TestUtil {
     return logBuilder;
   }
 
-  public static Path getTestFilePath(TemporaryFolder testFolder, String fileName)
+  public static Path getTestFilePath(TemporaryFolder testFolder, String directory, String fileName)
       throws IOException {
-    return Paths.get(testFolder.getRoot().getPath(), fileName);
+    return Paths.get(testFolder.getRoot().getPath(), directory, fileName);
   }
 
   public static Path getOutputFilePath(String parentDirectoryPath, String fileName)
