@@ -17,8 +17,11 @@ package org.datacommons.util;
 import com.google.protobuf.TextFormat;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
+import org.apache.commons.io.IOUtils;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
@@ -45,6 +48,10 @@ public class TestUtil {
     Mcf.McfGraph graph =
         McfParser.parseInstanceMcfFile(filePath, false, TestUtil.newLogCtx(filePath));
     return McfUtil.serializeMcfGraph(graph, true);
+  }
+
+  public static String stringFromFile(String filePath) throws IOException {
+    return IOUtils.toString(Paths.get(filePath).toUri(), StandardCharsets.UTF_8);
   }
 
   public static long getCounter(Debug.Log log, String counter) {

@@ -1,27 +1,38 @@
+# From InMemory:45
+# Error: Failed to assign DCID :: type: 'MusicAlbum', node: 'AlbumLocalId'
 Node: AlbumLocalId
 bestSong: l:SongLocalId
 name: "Bad"
 typeOf: dcid:MusicAlbum
 
+# From InMemory:57
+# Error: Found orphan local ref :: ref: 'l:AlphabetId', property: 'parent', node: 'GoogleId'
 Node: GoogleId
 dcid: "org/goog"
 name: "Google Inc"
 parent: l:AlphabetId
 typeOf: dcid:Organization
 
+# From InMemory:15
+# Error: Failed to assign DCID :: type: 'StatisticalVariable', node: 'SVId'
 Node: SVId
 measuredProperty: dcid:count
 populationType: dcid:Person
 typeOf: dcid:StatisticalVariable
 
+# From InMemory:51
+# Error: Failed to assign DCID :: type: 'Song', node: 'SongLocalId'
 Node: SongLocalId
 albumOf: l:AlbumLocalId
 name: "Liberian Girl"
 typeOf: dcid:Song
 
+# From InMemory:21
+# Error: Found a local ref to an unresolvable node :: ref: 'l:SVId', property: 'variableMeasured', node: 'UnresSVObsId'
 Node: UnresSVObsId
 observationAbout: dcid:geoId/1234567
 observationDate: "2017-01"
 typeOf: dcid:StatVarObservation
 value: 1000
 variableMeasured: l:SVId
+

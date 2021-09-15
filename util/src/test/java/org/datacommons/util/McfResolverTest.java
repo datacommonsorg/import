@@ -25,9 +25,11 @@ public class McfResolverTest {
             null,
             logCtx);
     resolver.resolve();
+    System.err.println(
+        TestUtil.mcfFromFile(getFile("McfResolverTest_Resolved_InstanceFailure" + ".mcf")));
     assertEquals(
         McfUtil.serializeMcfGraph(resolver.failedGraph(), true),
-        TestUtil.mcfFromFile(getFile("McfResolverTest_Resolved_InstanceFailure.mcf")));
+        TestUtil.stringFromFile(getFile("McfResolverTest_Resolved_InstanceFailure.mcf")));
     assertEquals(
         McfUtil.serializeMcfGraph(resolver.resolvedGraph(), true),
         TestUtil.mcfFromFile(getFile("McfResolverTest_Resolved_InstanceSuccess.mcf")));

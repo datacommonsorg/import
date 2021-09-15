@@ -14,13 +14,6 @@
 
 package org.datacommons.tool;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
-import org.datacommons.util.FileGroup;
-import org.datacommons.util.LogWrapper;
-import picocli.CommandLine;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -31,6 +24,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Debug;
+import org.datacommons.util.FileGroup;
+import org.datacommons.util.LogWrapper;
+import picocli.CommandLine;
 
 @CommandLine.Command(name = "genmcf", description = "Generate Instance MCF from TMCF/CSV files")
 class GenMcf implements Callable<Integer> {
@@ -71,15 +70,16 @@ class GenMcf implements Callable<Integer> {
     args.writers = new HashMap<>();
 
     List<Processor.OutputFileType> outputTypes = new ArrayList<>();
-    outputTypes.add(Processor.OutputFileType.TABLES);
+    outputTypes.add(Processor.OutputFileType.TABLE_NODES);
     if (args.doResolution) {
-      outputTypes.add(Processor.OutputFileType.TABLES_FAILURE);
+      outputTypes.add(Processor.OutputFileType.FAILED_TABLE_NODES);
       if (!args.fileGroup.getMcfs().isEmpty()) {
         outputTypes.add(Processor.OutputFileType.NODES);
-        outputTypes.add(Processor.OutputFileType.NODES_FAILURE);
+        outputTypes.add(Processor.OutputFileType.FAILED_NODES);
       }
     }
 
+    // Open relevant files.
     for (Processor.OutputFileType type : outputTypes) {
       var fName = type.name().toLowerCase() + ".mcf";
       Path filePath = Paths.get(parent.outputDir.getPath(), fName);
@@ -89,6 +89,26 @@ class GenMcf implements Callable<Integer> {
           Path.of(filePath.toString()).toAbsolutePath().normalize().toString());
       args.writers.put(type, new BufferedWriter(new FileWriter(filePath.toString())));
     }
-    return Processor.process(args);
+
+    Integer retVal = Processor.process(args);
+
+    // Close files.
+    if (args.writers != null) {
+      for (var writer : args.writers.entrySet()) {
+        writer.getValue().close();
+      }
+    }
+
+    // Delete empty files.
+    for (Processor.OutputFileType type : Processor.OutputFileType.values()) {
+      var fName = type.name().toLowerCase() + ".mcf";
+      Path filePath = Paths.get(parent.outputDir.getPath(), fName);
+      File file = new File(filePath.toString());
+      if (file.exists() && file.length() == 0) {
+        file.delete();
+      }
+    }
+
+    return retVal;
   }
 }

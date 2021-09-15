@@ -21,8 +21,8 @@
         "Resolution_DcidAssignmentFailure_MusicAlbum": "1",
         "Resolution_UnresolvedExternalId_wikidataId": "1",
         "Resolution_DcidAssignmentFailure_City": "1",
-        "Resolution_IrreplaceableLocalRef_PotentialCycle": "6",
-        "Resolution_UnassignableNodeDcid_PotentialCycle": "4"
+        "Resolution_IrreplaceableLocalRef": "6",
+        "Resolution_UnassignableNodeDcid": "4"
       }
     },
     "LEVEL_WARNING": {
@@ -135,7 +135,7 @@
       "lineNumber": "37"
     },
     "userMessage": "Unable to replace a local reference :: ref: 'PopLocalId', node: 'ObsLocalId'",
-    "counterKey": "Resolution_IrreplaceableLocalRef_PotentialCycle"
+    "counterKey": "Resolution_IrreplaceableLocalRef"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -143,7 +143,7 @@
       "lineNumber": "29"
     },
     "userMessage": "Unable to replace a local reference :: ref: 'PlaceLocalId', node: 'PopLocalId'",
-    "counterKey": "Resolution_IrreplaceableLocalRef_PotentialCycle"
+    "counterKey": "Resolution_IrreplaceableLocalRef"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -151,7 +151,7 @@
       "lineNumber": "51"
     },
     "userMessage": "Unable to replace a local reference :: ref: 'AlbumLocalId', node: 'SongLocalId'",
-    "counterKey": "Resolution_IrreplaceableLocalRef_PotentialCycle"
+    "counterKey": "Resolution_IrreplaceableLocalRef"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -159,7 +159,7 @@
       "lineNumber": "7"
     },
     "userMessage": "Unable to replace a local reference :: ref: 'PlaceLocalId', node: 'SVObsId'",
-    "counterKey": "Resolution_IrreplaceableLocalRef_PotentialCycle"
+    "counterKey": "Resolution_IrreplaceableLocalRef"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -167,7 +167,7 @@
       "lineNumber": "21"
     },
     "userMessage": "Unable to replace a local reference :: ref: 'SVId', node: 'UnresSVObsId'",
-    "counterKey": "Resolution_IrreplaceableLocalRef_PotentialCycle"
+    "counterKey": "Resolution_IrreplaceableLocalRef"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -175,7 +175,7 @@
       "lineNumber": "45"
     },
     "userMessage": "Unable to replace a local reference :: ref: 'SongLocalId', node: 'AlbumLocalId'",
-    "counterKey": "Resolution_IrreplaceableLocalRef_PotentialCycle"
+    "counterKey": "Resolution_IrreplaceableLocalRef"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -183,7 +183,7 @@
       "lineNumber": "37"
     },
     "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'PopLocalId', node: 'ObsLocalId'",
-    "counterKey": "Resolution_UnassignableNodeDcid_PotentialCycle"
+    "counterKey": "Resolution_UnassignableNodeDcid"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -191,7 +191,7 @@
       "lineNumber": "29"
     },
     "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'PlaceLocalId', node: 'PopLocalId'",
-    "counterKey": "Resolution_UnassignableNodeDcid_PotentialCycle"
+    "counterKey": "Resolution_UnassignableNodeDcid"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -199,7 +199,7 @@
       "lineNumber": "7"
     },
     "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'PlaceLocalId', node: 'SVObsId'",
-    "counterKey": "Resolution_UnassignableNodeDcid_PotentialCycle"
+    "counterKey": "Resolution_UnassignableNodeDcid"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -207,6 +207,6 @@
       "lineNumber": "21"
     },
     "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'PlaceLocalId', node: 'UnresSVObsId'",
-    "counterKey": "Resolution_UnassignableNodeDcid_PotentialCycle"
+    "counterKey": "Resolution_UnassignableNodeDcid"
   }]
 }

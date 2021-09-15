@@ -81,31 +81,39 @@ public class McfResolver {
     // If there are entries in needsWork, then something is oddly broken. Likely it is a cycle of
     // local refs, and thus we are neither able to assign DCIDs nor replace local-refs.
     for (var kv : localRefReplacement.needsWork.entrySet()) {
-      var pvs = getPvs(kv.getKey());
-      logCtx.addEntry(
-          Debug.Log.Level.LEVEL_ERROR,
-          "Resolution_IrreplaceableLocalRef_PotentialCycle",
+      moveFailedNode(kv.getKey(), "ReplaceLocalRefs_Remaining");
+      var node = failed.getNodesMap().get(kv.getKey()).toBuilder();
+      var userMessage =
           "Unable to replace a local reference :: ref: '"
               + kv.getValue()
               + "', node: '"
               + kv.getKey()
-              + "'",
-          pvs.getLocationsList());
-    }
-    moveFailedNodes(localRefReplacement.needsWork.keySet(), "ReplaceLocalRefs_Remaining");
-    for (var kv : dcidAssignment.needsWork.entrySet()) {
-      var pvs = getPvs(kv.getKey());
+              + "'";
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
-          "Resolution_UnassignableNodeDcid_PotentialCycle",
+          "Resolution_IrreplaceableLocalRef",
+          userMessage,
+          node.getLocationsList());
+      node.setErrorMessage(userMessage);
+      failed.putNodes(kv.getKey(), node.build());
+    }
+    for (var kv : dcidAssignment.needsWork.entrySet()) {
+      moveFailedNode(kv.getKey(), "AssignDcids_Remaining");
+      var node = failed.getNodesMap().get(kv.getKey()).toBuilder();
+      var userMessage =
           "Unable to assign DCID due to unresolved local reference :: ref: '"
               + kv.getValue()
               + "', node: '"
               + kv.getKey()
-              + "'",
-          pvs.getLocationsList());
+              + "'";
+      logCtx.addEntry(
+          Debug.Log.Level.LEVEL_ERROR,
+          "Resolution_UnassignableNodeDcid",
+          userMessage,
+          node.getLocationsList());
+      node.setErrorMessage(userMessage);
+      failed.putNodes(kv.getKey(), node.build());
     }
-    moveFailedNodes(dcidAssignment.needsWork.keySet(), "AssignDcids_Remaining");
   }
 
   public Mcf.McfGraph resolvedGraph() {
@@ -114,14 +122,6 @@ public class McfResolver {
 
   public Mcf.McfGraph failedGraph() {
     return failed.build();
-  }
-
-  private Mcf.McfGraph.PropertyValues getPvs(String nodeId) {
-    if (output.containsNodes(nodeId)) {
-      return output.getNodesOrThrow(nodeId);
-    } else {
-      return failed.getNodesOrThrow(nodeId);
-    }
   }
 
   // Result from one round of DCID assignment or local-ref replacement.
@@ -209,17 +209,20 @@ public class McfResolver {
               Vocabulary.KEY_STRING, McfUtil.newValues(Mcf.ValueType.TEXT, result.keyString));
         }
         node.putPvs(Vocabulary.DCID, McfUtil.newValues(Mcf.ValueType.TEXT, result.dcid));
-        output.putNodes(nodeId, node.build());
       } else {
         // This is not a node we can assign DCID. So move it to failed nodes.
         // TODO: propagate error from DcidGenerator and IDResolver library.
+        String userMessage =
+            "Failed to assign DCID :: type: '" + types.get(0) + "', node: '" + nodeId + "'";
         logCtx.addEntry(
             Debug.Log.Level.LEVEL_ERROR,
             "Resolution_DcidAssignmentFailure_" + types.get(0),
-            "Failed to assign DCID :: type: '" + types.get(0) + "', node: '" + nodeId + "'",
+            userMessage,
             node.getLocationsList());
+        node.setErrorMessage(userMessage);
         roundResult.failed.add(nodeId);
       }
+      output.putNodes(nodeId, node.build());
     }
     return roundResult;
   }
@@ -244,17 +247,20 @@ public class McfResolver {
           if (!inOutput && !inFailed) {
             // This local ID is missing from the entire sub-graph. Mark it as orphan local-ref
             // and move it to failed nodes.
-            logCtx.addEntry(
-                Debug.Log.Level.LEVEL_ERROR,
-                "Resolution_OrphanLocalReference_" + prop,
+            var userMessage =
                 "Found orphan local ref :: ref: '"
                     + tv.getValue()
                     + "', property: '"
                     + prop
                     + "', node: '"
                     + nodeId
-                    + "'",
+                    + "'";
+            logCtx.addEntry(
+                Debug.Log.Level.LEVEL_ERROR,
+                "Resolution_OrphanLocalReference_" + prop,
+                userMessage,
                 node.getLocationsList());
+            node.setErrorMessage(userMessage);
             roundResult.failed.add(nodeId);
           } else if (inOutput) {
             // Check if it already has DCID assigned.
@@ -265,42 +271,48 @@ public class McfResolver {
               tv.setType(Mcf.ValueType.RESOLVED_REF);
               // Update values in PV.
               node.putPvs(prop, vals.build());
-              // Update PVs in node.
-              output.putNodes(nodeId, node.build());
             } else {
               // This could be waiting on the resolution of another ref, so defer to next round.
               roundResult.needsWork.put(nodeId, localId);
             }
           } else { // (inFailed)
             // This is a reference to a failed node. This node is doomed too.
-            logCtx.addEntry(
-                Debug.Log.Level.LEVEL_ERROR,
-                "Resolution_ReferenceToFailedNode_" + prop,
+            var userMessage =
                 "Found a local ref to an unresolvable node :: ref: '"
                     + tv.getValue()
                     + "', property: '"
                     + prop
                     + "', node: '"
                     + nodeId
-                    + "'",
+                    + "'";
+            logCtx.addEntry(
+                Debug.Log.Level.LEVEL_ERROR,
+                "Resolution_ReferenceToFailedNode_" + prop,
+                userMessage,
                 node.getLocationsList());
+            node.setErrorMessage(userMessage);
             roundResult.failed.add(nodeId);
           }
         }
       }
+      output.putNodes(nodeId, node.build());
     }
     return roundResult;
   }
 
   private void moveFailedNodes(Set<String> failedNodes, String context) {
     for (var failedNode : failedNodes) {
-      if (!output.containsNodes(failedNode)) continue;
-      if (verbose) {
-        logger.info(context + " :: failed node " + failedNode);
-      }
-      failed.putNodes(failedNode, output.getNodesOrThrow(failedNode));
-      output.removeNodes(failedNode);
+      moveFailedNode(failedNode, context);
     }
+  }
+
+  private void moveFailedNode(String failedNode, String context) {
+    if (!output.containsNodes(failedNode)) return;
+    if (verbose) {
+      logger.info(context + " :: failed node " + failedNode);
+    }
+    failed.putNodes(failedNode, output.getNodesOrThrow(failedNode));
+    output.removeNodes(failedNode);
   }
 
   private String getLocalId(Mcf.McfGraph.TypedValue.Builder tv) {

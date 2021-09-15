@@ -41,10 +41,10 @@ public class Processor {
 
   // TODO: Produce output MCF files in files corresponding to the input (like prod).
   public enum OutputFileType {
-    TABLES,
-    TABLES_FAILURE,
     NODES,
-    NODES_FAILURE,
+    FAILED_NODES,
+    TABLE_NODES,
+    FAILED_TABLE_NODES,
   };
 
   static class Args {
@@ -79,11 +79,6 @@ public class Processor {
     } catch (DCTooManyFailuresException | InterruptedException | IOException ex) {
       // Regardless of the failures, we will dump the logCtx and exit.
       retVal = -1;
-    }
-    if (args.writers != null) {
-      for (var writer : args.writers.entrySet()) {
-        writer.getValue().close();
-      }
     }
     args.logCtx.persistLog(false);
     return retVal;
@@ -175,10 +170,10 @@ public class Processor {
           logCtx.incrementCounterBy("NumRowSuccesses", 1);
         }
         if (idResolver != null) {
-          resolveAndWrite(g, OutputFileType.TABLES, OutputFileType.TABLES_FAILURE);
+          resolveAndWrite(g, OutputFileType.TABLE_NODES, OutputFileType.FAILED_TABLE_NODES);
         } else {
           if (writers != null) {
-            writers.get(OutputFileType.TABLES).write(McfUtil.serializeMcfGraph(g, false));
+            writers.get(OutputFileType.TABLE_NODES).write(McfUtil.serializeMcfGraph(g, false));
           }
         }
         numNodesProcessed += g.getNodesCount();
@@ -219,7 +214,7 @@ public class Processor {
     resolveAndWrite(
         McfUtil.mergeGraphs(nodesForVariousChecks),
         OutputFileType.NODES,
-        OutputFileType.NODES_FAILURE);
+        OutputFileType.FAILED_NODES);
   }
 
   private void resolveAndWrite(

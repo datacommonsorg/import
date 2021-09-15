@@ -28,6 +28,13 @@ public class McfUtil {
     if (sort) Collections.sort(keys);
     for (String key : keys) {
       Mcf.McfGraph.PropertyValues node = graph.getNodesMap().get(key);
+      if (node.hasErrorMessage()) {
+        // Print location and user-message.
+        for (var loc : node.getLocationsList()) {
+          result.append("# From " + loc.getFile() + ":" + loc.getLineNumber() + "\n");
+        }
+        result.append("# Error: " + node.getErrorMessage() + "\n");
+      }
       result.append(sentinel + ": " + key + "\n");
       List<String> lines = new ArrayList<>();
       for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getPvsMap().entrySet()) {
