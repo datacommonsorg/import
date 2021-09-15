@@ -14,6 +14,13 @@
 
 package org.datacommons.tool;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Debug;
+import org.datacommons.util.FileGroup;
+import org.datacommons.util.LogWrapper;
+import picocli.CommandLine;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -24,12 +31,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
-import org.datacommons.util.FileGroup;
-import org.datacommons.util.LogWrapper;
-import picocli.CommandLine;
 
 @CommandLine.Command(name = "genmcf", description = "Generate Instance MCF from TMCF/CSV files")
 class GenMcf implements Callable<Integer> {

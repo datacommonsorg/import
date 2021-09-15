@@ -14,21 +14,22 @@
 
 package org.datacommons.tool;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static org.junit.Assert.assertEquals;
-
 import com.google.common.truth.Expect;
+import org.datacommons.util.TmcfCsvParser;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import picocli.CommandLine;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import org.datacommons.util.TmcfCsvParser;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import picocli.CommandLine;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static org.junit.Assert.assertEquals;
 
 // To add a new test case, add a new directory in resources/org/datacommons/tool/lint. In that new
 // directory, add an input directory and an output directory. In the input directory, put the test
@@ -64,6 +65,7 @@ public class GenMcfTest {
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
 
+      List<String> optFiles = List.of("tables_failure.mcf", "nodes.mcf", "nodes_fail"
       Path actualGeneratedFilePath = TestUtil.getTestFilePath(testFolder, "tables.mcf");
       Path actualReportPath = TestUtil.getTestFilePath(testFolder, "report.json");
 
