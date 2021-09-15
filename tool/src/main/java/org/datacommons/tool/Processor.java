@@ -40,10 +40,16 @@ public class Processor {
   private ExternalIdResolver idResolver;
 
   // TODO: Produce output MCF files in files corresponding to the input (like prod).
+  // We seprate output MCF based on *.mcf vs. TMCF/CSV inputs is that they often represent
+  // different things.
   public enum OutputFileType {
+    // Output MCF where *.mcf inputs get resolved into.
     NODES,
+    // Output MCF where failed nodes from *.mcf inputs flow into.
     FAILED_NODES,
+    // Output MCF where TMCF/CSV inputs get resolved into.
     TABLE_NODES,
+    // Output MCF where TMCF/CSV failed nodes flow into.
     FAILED_TABLE_NODES,
   };
 
@@ -61,7 +67,7 @@ public class Processor {
     try {
       Processor processor = new Processor(args);
 
-      // Process all the instance MCF first, so that we can add the nodes for Existence Check.
+      // Process all the instance MCF first, so that we can do existence checks, resolution etc.
       processor.processNodes(Mcf.McfType.INSTANCE_MCF);
 
       // Perform existence checks.
@@ -69,7 +75,7 @@ public class Processor {
         processor.checkNodes();
       }
 
-      // Use the in-memory nodes + scan through all the CSV nodes to lookup external IDs.
+      // Use the in-memory MCF nodes and also scan through all the CSV nodes to lookup external IDs.
       if (args.doResolution) {
         processor.lookupExternalIds();
       }
@@ -79,7 +85,7 @@ public class Processor {
         processor.resolveNodes();
       }
 
-      // Now process all the tables, resolving within processsTables().
+      // Now process all the tables, resolving within processsTables() if necessary.
       if (!args.fileGroup.getCsvs().isEmpty()) {
         processor.processTables();
       } else if (args.fileGroup.getTmcfs() != null) {
