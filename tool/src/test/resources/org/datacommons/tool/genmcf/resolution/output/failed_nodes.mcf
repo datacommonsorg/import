@@ -7,7 +7,7 @@ name: "Google Inc"
 typeOf: dcid:Organization
 
 # From misc.mcf:51
-# Error: Unable to replace a local reference :: ref: 'AlbumLocalId', node: 'SongLocalId'
+# Error: Failed to assign DCID :: type: 'Song', node: 'SongLocalId'
 Node: SongLocalId
 albumOf: l:AlbumLocalId
 name: "Liberian Girl"
@@ -21,50 +21,17 @@ measuredProperty: dcid:count
 typeOf: dcid:StatisticalVariable
 
 # From misc.mcf:45
-# Error: Unable to replace a local reference :: ref: 'SongLocalId', node: 'AlbumLocalId'
+# Error: Failed to assign DCID :: type: 'MusicAlbum', node: 'AlbumLocalId'
 Node: AlbumLocalId
 bestSong: l:SongLocalId
 name: "Bad"
 typeOf: dcid:MusicAlbum
 
-# From misc.mcf:2
-# Error: Failed to assign DCID :: type: 'City', node: 'PlaceLocalId'
-Node: PlaceLocalId
-wikidataId: "Q486860"
-typeOf: dcid:City
-
-# From misc.mcf:37
-# Error: Unable to assign DCID due to unresolved local reference :: ref: 'PopLocalId', node: 'ObsLocalId'
-Node: ObsLocalId
-observationDate: "2017-01"
-measuredProperty: dcid:count
-typeOf: dcid:Observation
-measuredValue: 10000
-observedNode: l:PopLocalId
-
-# From misc.mcf:29
-# Error: Unable to assign DCID due to unresolved local reference :: ref: 'PlaceLocalId', node: 'PopLocalId'
-Node: PopLocalId
-populationType: dcid:Person
-gender: dcid:Male
-location: l:PlaceLocalId
-typeOf: dcid:StatisticalPopulation
-age: dcid:Years18Onwards
-
-# From misc.mcf:7
-# Error: Unable to assign DCID due to unresolved local reference :: ref: 'PlaceLocalId', node: 'SVObsId'
-Node: SVObsId
-observationDate: "2017-01"
-observationAbout: l:PlaceLocalId
-variableMeasured: dcid:Count_Person
-value: 1000
-typeOf: dcid:StatVarObservation
-
 # From misc.mcf:21
-# Error: Unable to assign DCID due to unresolved local reference :: ref: 'PlaceLocalId', node: 'UnresSVObsId'
+# Error: Found a local ref to an unresolvable node :: ref: 'l:SVId', property: 'variableMeasured', node: 'UnresSVObsId'
 Node: UnresSVObsId
 observationDate: "2017-01"
-observationAbout: l:PlaceLocalId
+observationAbout: dcid:geoId/0649670
 variableMeasured: l:SVId
 value: 1000
 typeOf: dcid:StatVarObservation

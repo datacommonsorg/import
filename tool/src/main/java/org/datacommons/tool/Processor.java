@@ -60,17 +60,26 @@ public class Processor {
     Integer retVal = 0;
     try {
       Processor processor = new Processor(args);
-      if (args.doResolution) {
-        processor.lookupExternalIds();
-      }
+
       // Process all the instance MCF first, so that we can add the nodes for Existence Check.
       processor.processNodes(Mcf.McfType.INSTANCE_MCF);
+
+      // Perform existence checks.
       if (args.doExistenceChecks) {
         processor.checkNodes();
       }
+
+      // Use the in-memory nodes + scan through all the CSV nodes to lookup external IDs.
+      if (args.doResolution) {
+        processor.lookupExternalIds();
+      }
+
+      // Having looked up the external IDs, resolve the instances.
       if (args.doResolution) {
         processor.resolveNodes();
       }
+
+      // Now process all the tables, resolving within processsTables().
       if (!args.fileGroup.getCsvs().isEmpty()) {
         processor.processTables();
       } else if (args.fileGroup.getTmcfs() != null) {
@@ -237,6 +246,11 @@ public class Processor {
   // Process all the CSV tables to load all external IDs.
   private void lookupExternalIds() throws IOException, InterruptedException {
     LogWrapper dummyLog = new LogWrapper(Debug.Log.newBuilder(), Path.of("."));
+    for (var g : nodesForVariousChecks) {
+      for (var idAndNode : g.getNodesMap().entrySet()) {
+        idResolver.submitNode(idAndNode.getValue());
+      }
+    }
     for (File csvFile : fileGroup.getCsvs()) {
       if (verbose) logger.info("Reading external IDs from CSV " + csvFile.getPath());
       TmcfCsvParser parser =
