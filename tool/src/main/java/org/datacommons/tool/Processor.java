@@ -14,6 +14,12 @@
 
 package org.datacommons.tool;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
+import org.datacommons.util.*;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -24,11 +30,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
-import org.datacommons.util.*;
 
 public class Processor {
   private static final Logger logger = LogManager.getLogger(Processor.class);
@@ -39,6 +40,7 @@ public class Processor {
   private final Map<OutputFileType, Path> outputFiles;
   private ExistenceChecker existenceChecker;
   private ExternalIdResolver idResolver;
+  private StatVarState statVarState;
   private final Map<OutputFileType, BufferedWriter> writers = new HashMap<>();
   private final List<Mcf.McfGraph> nodesForVariousChecks = new ArrayList<>();
 
@@ -121,6 +123,7 @@ public class Processor {
     if (args.doResolution) {
       idResolver = new ExternalIdResolver(HttpClient.newHttpClient(), verbose, logCtx);
     }
+    statVarState = new StatVarState(logCtx);
   }
 
   private void processNodes(Mcf.McfType type)
@@ -152,7 +155,7 @@ public class Processor {
         // before we check them later in checkNodes().
         existenceChecker.addLocalGraph(n);
       } else {
-        McfChecker.check(n, existenceChecker, logCtx);
+        McfChecker.check(n, existenceChecker, statVarState, logCtx);
       }
       if (existenceChecker != null || idResolver != null) {
         nodesForVariousChecks.add(n);
@@ -186,7 +189,7 @@ public class Processor {
         g = McfMutator.mutate(g.toBuilder(), logCtx);
 
         // This will set counters/messages in logCtx.
-        boolean success = McfChecker.check(g, existenceChecker, logCtx);
+        boolean success = McfChecker.check(g, existenceChecker, statVarState, logCtx);
         if (success) {
           logCtx.incrementCounterBy("NumRowSuccesses", 1);
         }
@@ -219,7 +222,7 @@ public class Processor {
     logger.info("Performing existence checks");
     logCtx.setLocationFile("");
     for (Mcf.McfGraph n : nodesForVariousChecks) {
-      McfChecker.check(n, existenceChecker, logCtx);
+      McfChecker.check(n, existenceChecker, statVarState, logCtx);
       numNodesChecked += n.getNodesCount();
       numNodesChecked++;
       logCtx.provideStatus(numNodesChecked, "nodes checked");

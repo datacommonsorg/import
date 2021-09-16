@@ -15,14 +15,15 @@
 package org.datacommons.util;
 
 import com.google.common.base.Charsets;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
+
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
 
 // Checks common types of nodes on naming and schema requirements.
 //
@@ -52,12 +53,14 @@ public class McfChecker {
   private Set<String> columns; // Relevant only when graph.type() == TEMPLATE_MCF
   boolean foundFailure = false;
   private ExistenceChecker existenceChecker;
+  private StatVarState svState;
 
   // Argument |graph| may be Instance or Template MCF.
   public static boolean check(
-      Mcf.McfGraph graph, ExistenceChecker existenceChecker, LogWrapper logCtx)
+      Mcf.McfGraph graph, ExistenceChecker existenceChecker, StatVarState svState,
+      LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return new McfChecker(graph, null, existenceChecker, logCtx).check();
+    return new McfChecker(graph, null, existenceChecker, svState, logCtx).check();
   }
 
   // Used to check a single node from TMcfCsvParser.
@@ -67,25 +70,27 @@ public class McfChecker {
     Mcf.McfGraph.Builder nodeGraph = Mcf.McfGraph.newBuilder();
     nodeGraph.setType(mcfType);
     nodeGraph.putNodes(nodeId, node);
-    return new McfChecker(nodeGraph.build(), null, null, logCtx).check();
+    return new McfChecker(nodeGraph.build(), null, null, null, logCtx).check();
   }
 
   // Used with Template MCF when there are columns from CSV header.
   public static boolean checkTemplate(
       Mcf.McfGraph graph, Set<String> columns, ExistenceChecker existenceChecker, LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return new McfChecker(graph, columns, existenceChecker, logCtx).check();
+    return new McfChecker(graph, columns, existenceChecker, null, logCtx).check();
   }
 
   private McfChecker(
       Mcf.McfGraph graph,
       Set<String> columns,
       ExistenceChecker existenceChecker,
+      StatVarState svState,
       LogWrapper logCtx) {
     this.graph = graph;
     this.columns = columns;
     this.logCtx = logCtx;
     this.existenceChecker = existenceChecker;
+    this.svState = svState;
   }
 
   // Returns true if there was an sanity error found.
@@ -216,6 +221,8 @@ public class McfChecker {
 
     // Every SV must have DCID defined.
     checkRequiredSingleValueProp(nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.DCID);
+
+    if (svState != null) svState.check(nodeId, node);
   }
 
   private void checkSVObs(String nodeId, Mcf.McfGraph.PropertyValues node)
