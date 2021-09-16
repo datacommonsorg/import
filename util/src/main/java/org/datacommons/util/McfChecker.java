@@ -15,15 +15,14 @@
 package org.datacommons.util;
 
 import com.google.common.base.Charsets;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
-
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
 
 // Checks common types of nodes on naming and schema requirements.
 //
@@ -51,13 +50,15 @@ public class McfChecker {
   private Mcf.McfGraph graph;
   private LogWrapper logCtx;
   private Set<String> columns; // Relevant only when graph.type() == TEMPLATE_MCF
-  boolean foundFailure = false;
+  boolean nodeFailure = false; // Failure of a specific node being processed.
   private ExistenceChecker existenceChecker;
   private StatVarState svState;
 
   // Argument |graph| may be Instance or Template MCF.
   public static boolean check(
-      Mcf.McfGraph graph, ExistenceChecker existenceChecker, StatVarState svState,
+      Mcf.McfGraph graph,
+      ExistenceChecker existenceChecker,
+      StatVarState svState,
       LogWrapper logCtx)
       throws IOException, InterruptedException {
     return new McfChecker(graph, null, existenceChecker, svState, logCtx).check();
@@ -95,13 +96,15 @@ public class McfChecker {
 
   // Returns true if there was an sanity error found.
   private boolean check() throws IOException, InterruptedException {
-    foundFailure = false;
+    boolean foundFailure = false;
     for (String nodeId : graph.getNodesMap().keySet()) {
+      nodeFailure = false;
       Mcf.McfGraph.PropertyValues node = graph.toBuilder().getNodesOrThrow(nodeId);
       checkNode(nodeId, node);
       if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
         checkTemplateNode(nodeId, node);
       }
+      foundFailure |= nodeFailure;
     }
     return !foundFailure;
   }
@@ -222,7 +225,9 @@ public class McfChecker {
     // Every SV must have DCID defined.
     checkRequiredSingleValueProp(nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.DCID);
 
-    if (svState != null) svState.check(nodeId, node);
+    if (svState != null && !nodeFailure) {
+      nodeFailure = !svState.check(nodeId, node);
+    }
   }
 
   private void checkSVObs(String nodeId, Mcf.McfGraph.PropertyValues node)
@@ -686,7 +691,7 @@ public class McfChecker {
 
   private void addLog(
       Debug.Log.Level level, String counter, String message, Mcf.McfGraph.PropertyValues node) {
-    foundFailure = true;
+    nodeFailure = true;
     logCtx.addEntry(level, counter, message, node.getLocationsList());
   }
 }

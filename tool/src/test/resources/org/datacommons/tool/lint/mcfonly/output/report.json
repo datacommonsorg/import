@@ -24,6 +24,7 @@
         "Sanity_MissingOrEmpty_measuredProperty": "1",
         "Sanity_MissingOrEmpty_statType": "1",
         "Sanity_UnknownStatType": "1",
+        "StatVarChecker_MalformedNode": "4",
         "Sanity_NotInitLowerPropName": "1",
         "Sanity_InvalidChars_domainIncludes": "1",
         "Sanity_UnexpectedPropInProperty": "1",
@@ -254,6 +255,38 @@
     },
     "userMessage": "Found an unknown statType value :: value: '', node: 'dcid:Count_Death_10To12'",
     "counterKey": "Sanity_UnknownStatType"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "81"
+    },
+    "userMessage": "Unable to compute StatVar DCID :: node: 'dcid:Count_Death_10YearsPlus",
+    "counterKey": "StatVarChecker_MalformedNode"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "88"
+    },
+    "userMessage": "Unable to compute StatVar DCID :: node: 'dcid:Count_Death_5To10",
+    "counterKey": "StatVarChecker_MalformedNode"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "95"
+    },
+    "userMessage": "Unable to compute StatVar DCID :: node: 'dcid:Count_Death_YearsLessThan5",
+    "counterKey": "StatVarChecker_MalformedNode"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "102"
+    },
+    "userMessage": "Unable to compute StatVar DCID :: node: 'dcid:Count_Death_5YearsPlus",
+    "counterKey": "StatVarChecker_MalformedNode"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
