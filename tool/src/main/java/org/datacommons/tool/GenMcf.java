@@ -14,13 +14,10 @@
 
 package org.datacommons.tool;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,29 +52,23 @@ class GenMcf implements Callable<Integer> {
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
 
   @Override
-  public Integer call() throws IOException, InvalidProtocolBufferException {
-
-    FileGroup fg = FileGroup.Build(files, spec, logger);
-
-    if (delimiter == null) {
-      delimiter = fg.GetNumTsv() > 0 ? '\t' : ',';
+  public Integer call() throws IOException {
+    if (!parent.outputDir.exists()) {
+      parent.outputDir.mkdirs();
+    }
+    Processor.Args args = new Processor.Args();
+    args.doExistenceChecks = parent.doExistenceChecks;
+    args.doResolution = parent.doResolution;
+    args.verbose = parent.verbose;
+    args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
+    args.logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
+    args.outputFiles = new HashMap<>();
+    for (Processor.OutputFileType type : Processor.OutputFileType.values()) {
+      var fName = type.name().toLowerCase() + ".mcf";
+      args.outputFiles.put(type, Paths.get(parent.outputDir.getPath(), fName));
     }
 
-    Path outPath = Paths.get(parent.outputDir.getPath(), "generated.mcf");
-    logger.info("Writing generated MCF to {}", outPath.toAbsolutePath().normalize().toString());
-    BufferedWriter writer = new BufferedWriter(new FileWriter(outPath.toString()));
-
-    LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
-    Processor processor = new Processor(false, parent.verbose, logCtx);
-    Integer retVal = 0;
-    try {
-      processor.processTables(fg.GetTmcf(), fg.GetCsvs(), delimiter, writer);
-    } catch (DCTooManyFailuresException | InterruptedException ex) {
-      // Regardless of the failures, we will dump the logCtx and exit.
-      retVal = -1;
-    }
-    writer.close();
-    logCtx.persistLog(false);
-    return retVal;
+    // Process all the things.
+    return Processor.process(args);
   }
 }

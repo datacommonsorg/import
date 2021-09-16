@@ -25,37 +25,41 @@ public class FileGroup {
   private List<File> mcfFiles;
   // NOTE: When csvFiles is provided, then tmcfFiles must be <= 1.
   private List<File> tmcfFiles;
-  int nTsv;
+  char delimiter;
 
-  public FileGroup(List<File> tmcfFiles, List<File> csvFiles, List<File> mcfFiles, int nTsv) {
+  public FileGroup(List<File> tmcfFiles, List<File> csvFiles, List<File> mcfFiles, char delimiter) {
     this.tmcfFiles = tmcfFiles;
     this.csvFiles = csvFiles;
     this.mcfFiles = mcfFiles;
-    this.nTsv = nTsv;
+    this.delimiter = delimiter;
   }
 
-  public File GetTmcf() {
+  public File getTmcf() {
     if (tmcfFiles != null && tmcfFiles.size() > 0) return tmcfFiles.get(0);
     return null;
   }
 
-  public List<File> GetTmcfs() {
+  public List<File> getTmcfs() {
     return tmcfFiles;
   }
 
-  public List<File> GetCsvs() {
+  public List<File> getCsvs() {
     return csvFiles;
   }
 
-  public List<File> GetMcfs() {
+  public List<File> getMcfs() {
     return mcfFiles;
   }
 
-  public int GetNumTsv() {
-    return nTsv;
+  public char delimiter() {
+    return delimiter;
   }
 
-  public static FileGroup Build(File[] files, CommandLine.Model.CommandSpec spec, Logger logger) {
+  public static FileGroup build(
+      File[] files,
+      CommandLine.Model.CommandSpec spec,
+      Character overrideDelimiter,
+      Logger logger) {
     List<File> tmcfFiles = new ArrayList<>();
     List<File> csvFiles = new ArrayList<>();
     List<File> mcfFiles = new ArrayList<>();
@@ -90,10 +94,11 @@ public class FileGroup {
       throw new CommandLine.ParameterException(
           spec.commandLine(), "Please provide one .tmcf file with CSV/TSV files");
     }
+    char delim = (overrideDelimiter == null ? (nTsv > 0 ? '\t' : ',') : overrideDelimiter);
     if (tmcfFiles.isEmpty()) {
-      return new FileGroup(null, csvFiles, mcfFiles, nTsv);
+      return new FileGroup(null, csvFiles, mcfFiles, delim);
     } else {
-      return new FileGroup(tmcfFiles, csvFiles, mcfFiles, nTsv);
+      return new FileGroup(tmcfFiles, csvFiles, mcfFiles, delim);
     }
   }
 }

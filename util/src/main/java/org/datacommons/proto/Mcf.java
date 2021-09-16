@@ -2779,6 +2779,43 @@ public final class Mcf {
        * @return The bytes for templateNode.
        */
       com.google.protobuf.ByteString getTemplateNodeBytes();
+
+      /**
+       *
+       *
+       * <pre>
+       * Debug info. Error message for setting comments while serializing a node.
+       * </pre>
+       *
+       * <code>optional string error_message = 4;</code>
+       *
+       * @return Whether the errorMessage field is set.
+       */
+      boolean hasErrorMessage();
+      /**
+       *
+       *
+       * <pre>
+       * Debug info. Error message for setting comments while serializing a node.
+       * </pre>
+       *
+       * <code>optional string error_message = 4;</code>
+       *
+       * @return The errorMessage.
+       */
+      java.lang.String getErrorMessage();
+      /**
+       *
+       *
+       * <pre>
+       * Debug info. Error message for setting comments while serializing a node.
+       * </pre>
+       *
+       * <code>optional string error_message = 4;</code>
+       *
+       * @return The bytes for errorMessage.
+       */
+      com.google.protobuf.ByteString getErrorMessageBytes();
     }
     /**
      *
@@ -2802,6 +2839,7 @@ public final class Mcf {
       private PropertyValues() {
         locations_ = java.util.Collections.emptyList();
         templateNode_ = "";
+        errorMessage_ = "";
       }
 
       @java.lang.Override
@@ -2868,6 +2906,13 @@ public final class Mcf {
                   com.google.protobuf.ByteString bs = input.readBytes();
                   bitField0_ |= 0x00000001;
                   templateNode_ = bs;
+                  break;
+                }
+              case 34:
+                {
+                  com.google.protobuf.ByteString bs = input.readBytes();
+                  bitField0_ |= 0x00000002;
+                  errorMessage_ = bs;
                   break;
                 }
               default:
@@ -3157,6 +3202,69 @@ public final class Mcf {
         }
       }
 
+      public static final int ERROR_MESSAGE_FIELD_NUMBER = 4;
+      private volatile java.lang.Object errorMessage_;
+      /**
+       *
+       *
+       * <pre>
+       * Debug info. Error message for setting comments while serializing a node.
+       * </pre>
+       *
+       * <code>optional string error_message = 4;</code>
+       *
+       * @return Whether the errorMessage field is set.
+       */
+      public boolean hasErrorMessage() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Debug info. Error message for setting comments while serializing a node.
+       * </pre>
+       *
+       * <code>optional string error_message = 4;</code>
+       *
+       * @return The errorMessage.
+       */
+      public java.lang.String getErrorMessage() {
+        java.lang.Object ref = errorMessage_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            errorMessage_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Debug info. Error message for setting comments while serializing a node.
+       * </pre>
+       *
+       * <code>optional string error_message = 4;</code>
+       *
+       * @return The bytes for errorMessage.
+       */
+      public com.google.protobuf.ByteString getErrorMessageBytes() {
+        java.lang.Object ref = errorMessage_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          errorMessage_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
       private byte memoizedIsInitialized = -1;
 
       @java.lang.Override
@@ -3178,6 +3286,9 @@ public final class Mcf {
         }
         if (((bitField0_ & 0x00000001) != 0)) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 3, templateNode_);
+        }
+        if (((bitField0_ & 0x00000002) != 0)) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 4, errorMessage_);
         }
         unknownFields.writeTo(output);
       }
@@ -3205,6 +3316,9 @@ public final class Mcf {
         if (((bitField0_ & 0x00000001) != 0)) {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, templateNode_);
         }
+        if (((bitField0_ & 0x00000002) != 0)) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, errorMessage_);
+        }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
         return size;
@@ -3226,6 +3340,10 @@ public final class Mcf {
         if (hasTemplateNode() != other.hasTemplateNode()) return false;
         if (hasTemplateNode()) {
           if (!getTemplateNode().equals(other.getTemplateNode())) return false;
+        }
+        if (hasErrorMessage() != other.hasErrorMessage()) return false;
+        if (hasErrorMessage()) {
+          if (!getErrorMessage().equals(other.getErrorMessage())) return false;
         }
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
@@ -3249,6 +3367,10 @@ public final class Mcf {
         if (hasTemplateNode()) {
           hash = (37 * hash) + TEMPLATE_NODE_FIELD_NUMBER;
           hash = (53 * hash) + getTemplateNode().hashCode();
+        }
+        if (hasErrorMessage()) {
+          hash = (37 * hash) + ERROR_MESSAGE_FIELD_NUMBER;
+          hash = (53 * hash) + getErrorMessage().hashCode();
         }
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
@@ -3429,6 +3551,8 @@ public final class Mcf {
           }
           templateNode_ = "";
           bitField0_ = (bitField0_ & ~0x00000004);
+          errorMessage_ = "";
+          bitField0_ = (bitField0_ & ~0x00000008);
           return this;
         }
 
@@ -3473,6 +3597,10 @@ public final class Mcf {
             to_bitField0_ |= 0x00000001;
           }
           result.templateNode_ = templateNode_;
+          if (((from_bitField0_ & 0x00000008) != 0)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.errorMessage_ = errorMessage_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -3557,6 +3685,11 @@ public final class Mcf {
           if (other.hasTemplateNode()) {
             bitField0_ |= 0x00000004;
             templateNode_ = other.templateNode_;
+            onChanged();
+          }
+          if (other.hasErrorMessage()) {
+            bitField0_ |= 0x00000008;
+            errorMessage_ = other.errorMessage_;
             onChanged();
           }
           this.mergeUnknownFields(other.unknownFields);
@@ -4243,6 +4376,127 @@ public final class Mcf {
           }
           bitField0_ |= 0x00000004;
           templateNode_ = value;
+          onChanged();
+          return this;
+        }
+
+        private java.lang.Object errorMessage_ = "";
+        /**
+         *
+         *
+         * <pre>
+         * Debug info. Error message for setting comments while serializing a node.
+         * </pre>
+         *
+         * <code>optional string error_message = 4;</code>
+         *
+         * @return Whether the errorMessage field is set.
+         */
+        public boolean hasErrorMessage() {
+          return ((bitField0_ & 0x00000008) != 0);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info. Error message for setting comments while serializing a node.
+         * </pre>
+         *
+         * <code>optional string error_message = 4;</code>
+         *
+         * @return The errorMessage.
+         */
+        public java.lang.String getErrorMessage() {
+          java.lang.Object ref = errorMessage_;
+          if (!(ref instanceof java.lang.String)) {
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              errorMessage_ = s;
+            }
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info. Error message for setting comments while serializing a node.
+         * </pre>
+         *
+         * <code>optional string error_message = 4;</code>
+         *
+         * @return The bytes for errorMessage.
+         */
+        public com.google.protobuf.ByteString getErrorMessageBytes() {
+          java.lang.Object ref = errorMessage_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            errorMessage_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info. Error message for setting comments while serializing a node.
+         * </pre>
+         *
+         * <code>optional string error_message = 4;</code>
+         *
+         * @param value The errorMessage to set.
+         * @return This builder for chaining.
+         */
+        public Builder setErrorMessage(java.lang.String value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          bitField0_ |= 0x00000008;
+          errorMessage_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info. Error message for setting comments while serializing a node.
+         * </pre>
+         *
+         * <code>optional string error_message = 4;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearErrorMessage() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          errorMessage_ = getDefaultInstance().getErrorMessage();
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Debug info. Error message for setting comments while serializing a node.
+         * </pre>
+         *
+         * <code>optional string error_message = 4;</code>
+         *
+         * @param value The bytes for errorMessage to set.
+         * @return This builder for chaining.
+         */
+        public Builder setErrorMessageBytes(com.google.protobuf.ByteString value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          bitField0_ |= 0x00000008;
+          errorMessage_ = value;
           onChanged();
           return this;
         }
@@ -5134,28 +5388,29 @@ public final class Mcf {
   static {
     java.lang.String[] descriptorData = {
       "\n\tMcf.proto\022\025org.datacommons.proto\032\013Debu"
-          + "g.proto\"\204\005\n\010McfGraph\022:\n\004type\030\001 \001(\0162\036.org"
+          + "g.proto\"\233\005\n\010McfGraph\022:\n\004type\030\001 \001(\0162\036.org"
           + ".datacommons.proto.McfType:\014INSTANCE_MCF"
           + "\0229\n\005nodes\030\002 \003(\0132*.org.datacommons.proto."
           + "McfGraph.NodesEntry\032[\n\nTypedValue\022.\n\004typ"
           + "e\030\001 \001(\0162 .org.datacommons.proto.ValueTyp"
           + "e\022\r\n\005value\030\002 \001(\t\022\016\n\006column\030\003 \001(\t\032J\n\006Valu"
           + "es\022@\n\014typed_values\030\001 \003(\0132*.org.datacommo"
-          + "ns.proto.McfGraph.TypedValue\032\371\001\n\016Propert"
+          + "ns.proto.McfGraph.TypedValue\032\220\002\n\016Propert"
           + "yValues\022D\n\003pvs\030\001 \003(\01327.org.datacommons.p"
           + "roto.McfGraph.PropertyValues.PvsEntry\0226\n"
           + "\tlocations\030\002 \003(\0132#.org.datacommons.proto"
-          + ".Log.Location\022\025\n\rtemplate_node\030\003 \001(\t\032R\n\010"
-          + "PvsEntry\022\013\n\003key\030\001 \001(\t\0225\n\005value\030\002 \001(\0132&.o"
-          + "rg.datacommons.proto.McfGraph.Values:\0028\001"
-          + "\032\\\n\nNodesEntry\022\013\n\003key\030\001 \001(\t\022=\n\005value\030\002 \001"
-          + "(\0132..org.datacommons.proto.McfGraph.Prop"
-          + "ertyValues:\0028\001*C\n\007McfType\022\024\n\020UNKNOWN_MCF"
-          + "_TYPE\020\000\022\020\n\014INSTANCE_MCF\020\001\022\020\n\014TEMPLATE_MC"
-          + "F\020\002*\226\001\n\tValueType\022\026\n\022UNKNOWN_VALUE_TYPE\020"
-          + "\000\022\010\n\004TEXT\020\001\022\n\n\006NUMBER\020\002\022\022\n\016UNRESOLVED_RE"
-          + "F\020\003\022\020\n\014RESOLVED_REF\020\004\022\021\n\rCOMPLEX_VALUE\020\005"
-          + "\022\020\n\014TABLE_COLUMN\020\006\022\020\n\014TABLE_ENTITY\020\007"
+          + ".Log.Location\022\025\n\rtemplate_node\030\003 \001(\t\022\025\n\r"
+          + "error_message\030\004 \001(\t\032R\n\010PvsEntry\022\013\n\003key\030\001"
+          + " \001(\t\0225\n\005value\030\002 \001(\0132&.org.datacommons.pr"
+          + "oto.McfGraph.Values:\0028\001\032\\\n\nNodesEntry\022\013\n"
+          + "\003key\030\001 \001(\t\022=\n\005value\030\002 \001(\0132..org.datacomm"
+          + "ons.proto.McfGraph.PropertyValues:\0028\001*C\n"
+          + "\007McfType\022\024\n\020UNKNOWN_MCF_TYPE\020\000\022\020\n\014INSTAN"
+          + "CE_MCF\020\001\022\020\n\014TEMPLATE_MCF\020\002*\226\001\n\tValueType"
+          + "\022\026\n\022UNKNOWN_VALUE_TYPE\020\000\022\010\n\004TEXT\020\001\022\n\n\006NU"
+          + "MBER\020\002\022\022\n\016UNRESOLVED_REF\020\003\022\020\n\014RESOLVED_R"
+          + "EF\020\004\022\021\n\rCOMPLEX_VALUE\020\005\022\020\n\014TABLE_COLUMN\020"
+          + "\006\022\020\n\014TABLE_ENTITY\020\007"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -5193,7 +5448,7 @@ public final class Mcf {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor,
             new java.lang.String[] {
-              "Pvs", "Locations", "TemplateNode",
+              "Pvs", "Locations", "TemplateNode", "ErrorMessage",
             });
     internal_static_org_datacommons_proto_McfGraph_PropertyValues_PvsEntry_descriptor =
         internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor

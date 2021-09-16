@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import org.datacommons.util.TmcfCsvParser;
@@ -59,32 +60,46 @@ public class GenMcfTest {
       for (File inputFile : inputFiles) {
         argsList.add(inputFile.getPath());
       }
-      argsList.add("--output-dir=" + testFolder.getRoot().getPath());
+      argsList.add("--resolution");
+      argsList.add(
+          "--output-dir=" + Paths.get(testFolder.getRoot().getPath(), directory.getName()));
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
 
-      Path actualGeneratedFilePath = TestUtil.getTestFilePath(testFolder, "generated.mcf");
-      Path actualReportPath = TestUtil.getTestFilePath(testFolder, "report.json");
+      List<String> files =
+          List.of(
+              "report.json",
+              "table_nodes.mcf",
+              "failed_table_nodes.mcf",
+              "nodes.mcf",
+              "failed_nodes.mcf");
 
       if (goldenFilesPrefix != null && !goldenFilesPrefix.isEmpty()) {
-        Path goldenGeneratedPath =
-            Path.of(goldenFilesPrefix, "genmcf", directory.getName(), "output", "generated.mcf");
-        Files.copy(actualGeneratedFilePath, goldenGeneratedPath, REPLACE_EXISTING);
-        Path goldenReportPath =
-            Path.of(goldenFilesPrefix, "genmcf", directory.getName(), "output", "report.json");
-        Files.copy(actualReportPath, goldenReportPath, REPLACE_EXISTING);
+        for (var f : files) {
+          Path actual = TestUtil.getTestFilePath(testFolder, directory.getName(), f);
+          if (!f.equals("report.json") && !new File(actual.toString()).exists()) continue;
+
+          Path golden = Path.of(goldenFilesPrefix, "genmcf", directory.getName(), "output", f);
+          Files.copy(actual, golden, REPLACE_EXISTING);
+        }
       } else {
-        Path expectedGeneratedFilePath =
-            TestUtil.getOutputFilePath(directory.getPath(), "generated.mcf");
-        Path expectedReportPath = TestUtil.getOutputFilePath(directory.getPath(), "report.json");
-        TestUtil.assertReportFilesAreSimilar(
-            expect,
-            directory,
-            TestUtil.readStringFromPath(expectedReportPath),
-            TestUtil.readStringFromPath(actualReportPath));
-        assertEquals(
-            org.datacommons.util.TestUtil.mcfFromFile(expectedGeneratedFilePath.toString()),
-            org.datacommons.util.TestUtil.mcfFromFile(actualGeneratedFilePath.toString()));
+        for (var f : files) {
+          Path actual = TestUtil.getTestFilePath(testFolder, directory.getName(), f);
+          if (!f.equals("report.json") && !new File(actual.toString()).exists()) continue;
+
+          Path expected = TestUtil.getOutputFilePath(directory.getPath(), f);
+          if (f.equals("report.json")) {
+            TestUtil.assertReportFilesAreSimilar(
+                expect,
+                directory,
+                TestUtil.readStringFromPath(expected),
+                TestUtil.readStringFromPath(actual));
+          } else {
+            assertEquals(
+                org.datacommons.util.TestUtil.mcfFromFile(expected.toString()),
+                org.datacommons.util.TestUtil.mcfFromFile(actual.toString()));
+          }
+        }
       }
     }
   }

@@ -17,7 +17,6 @@ package org.datacommons.tool;
 import java.io.File;
 import picocli.CommandLine;
 
-// TODO: Add e2e tests once Debug.Log is fully plumbed in.
 @CommandLine.Command(
     name = "dc-import",
     mixinStandardHelpOptions = true,
@@ -27,8 +26,10 @@ import picocli.CommandLine;
 class Main {
   @CommandLine.Option(
       names = {"-o", "--output-dir"},
-      description = "Directory to write output files. Default is current working directory.",
-      defaultValue = ".",
+      description =
+          "Directory to write output files. Default is dc_generated/ within current"
+              + " working directory.",
+      defaultValue = "dc_generated",
       scope = CommandLine.ScopeType.INHERIT)
   public File outputDir;
 
@@ -38,6 +39,24 @@ class Main {
       defaultValue = "false",
       scope = CommandLine.ScopeType.INHERIT)
   public boolean verbose;
+
+  @CommandLine.Option(
+      names = {"-e", "--existence-checks"},
+      defaultValue = "true",
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "Check DCID references to schema nodes against the KG and locally. If set, then "
+              + "calls will be made to the Staging API server, and instance MCFs get fully "
+              + "loaded into memory.")
+  public boolean doExistenceChecks;
+
+  // TODO: Default to true after some trials.
+  @CommandLine.Option(
+      names = {"-r", "--resolution"},
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT,
+      description = "Resolves local references and generates node DCIDs.")
+  public boolean doResolution;
 
   public static void main(String... args) {
     System.exit(new CommandLine(new Main()).execute(args));
