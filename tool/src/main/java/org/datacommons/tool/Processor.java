@@ -283,7 +283,7 @@ public class Processor {
     var writer = writers.getOrDefault(type, null);
     if (writer == null) {
       var fileString = outputFiles.get(type).toString();
-      logger.info("Writing to file-type " + type.name() + " in " + fileString);
+      logger.info("Writing to file " + fileString + " of type " + type.name());
       writer = new BufferedWriter(new FileWriter(fileString));
       writers.put(type, writer);
     }

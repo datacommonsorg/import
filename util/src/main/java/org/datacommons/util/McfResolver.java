@@ -45,12 +45,13 @@ public class McfResolver {
           logger.info(
               "LocalRef Replacement Round "
                   + (round + 1)
-                  + " :: replaced "
+                  + " :: "
                   + localRefReplacement.numUpdated
-                  + ", failed "
+                  + " replaced, "
                   + failed.getNodesMap().size()
-                  + ", remaining "
-                  + localRefReplacement.needsWork.size());
+                  + " failed, "
+                  + localRefReplacement.needsWork.size()
+                  + " remaining");
         }
         moveFailedNodes(localRefReplacement.failed, "ReplaceLocalRefs");
       } else {
@@ -64,12 +65,13 @@ public class McfResolver {
           logger.info(
               "DCID Assignment Round "
                   + (round + 1)
-                  + " :: assigned "
+                  + " :: "
                   + dcidAssignment.numUpdated
-                  + ", failed "
+                  + " assigned, "
                   + failed.getNodesMap().size()
-                  + ", remaining "
-                  + dcidAssignment.needsWork.size());
+                  + " failed, "
+                  + dcidAssignment.needsWork.size()
+                  + " remaining");
         }
         moveFailedNodes(dcidAssignment.failed, "AssignDcids");
       } else {
