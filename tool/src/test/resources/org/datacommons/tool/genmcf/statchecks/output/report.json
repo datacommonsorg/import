@@ -8,6 +8,14 @@
         "NumRowSuccesses": "18",
         "Existence_NumDcCalls": "1"
       }
+    },
+    "LEVEL_WARNING": {
+      "counters": {
+        "StatsCheck_Inconsistent_Values": "1",
+        "StatsCheck_2_Sigma": "1",
+        "StatsCheck_Data_Holes": "1",
+        "StatsCheck_Inconsistent_Date_Granularity": "1"
+      }
     }
   },
   "statsCheckSummary": [{

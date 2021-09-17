@@ -25,7 +25,8 @@
     "LEVEL_WARNING": {
       "counters": {
         "Existence_MissingReference_typeOf": "1",
-        "Existence_MissingReference_Property": "2"
+        "Existence_MissingReference_Property": "2",
+        "StatsCheck_1_Sigma": "1"
       }
     }
   },
