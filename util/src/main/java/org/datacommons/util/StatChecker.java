@@ -35,7 +35,6 @@ import org.datacommons.proto.Mcf.ValueType;
 
 // A checker that checks time-series for holes, variance in values, etc.
 //
-// TODO: add counters to main log counters
 public class StatChecker {
   private static final class SeriesSummary {
     StatValidationResult.Builder validationResult;
