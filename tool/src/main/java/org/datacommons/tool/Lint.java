@@ -14,16 +14,15 @@
 
 package org.datacommons.tool;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.util.FileGroup;
 import org.datacommons.util.LogWrapper;
 import picocli.CommandLine;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "lint", description = "Run various checks on input MCF/TMCF/CSV files")
 class Lint implements Callable<Integer> {

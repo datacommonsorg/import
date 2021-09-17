@@ -14,9 +14,8 @@
 
 package org.datacommons.tool;
 
-import picocli.CommandLine;
-
 import java.io.File;
+import picocli.CommandLine;
 
 @CommandLine.Command(
     name = "dc-import",
