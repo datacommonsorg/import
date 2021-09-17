@@ -117,5 +117,99 @@
     },
     "userMessage": "Found a local ref to an unresolvable node :: ref: 'l:SVId', property: 'variableMeasured', node: 'UnresSVObsId'",
     "counterKey": "Resolution_ReferenceToFailedNode_variableMeasured"
+  }],
+  "statsCheckSummary": [{
+    "placeDcid": "wikidataId/Q1437",
+    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "geoId/0649670",
+    "statVarDcid": "l:SVId",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "wikidataId/Q1353",
+    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "wikidataId/Q1186",
+    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "validationCounters": [{
+      "counterKey": "StatsCheck_1_Sigma",
+      "problemPoints": [{
+        "date": "2020-01-30",
+        "values": [{
+          "value": 1.0,
+          "locations": [{
+            "file": "covid.csv",
+            "lineNumber": "2"
+          }]
+        }]
+      }]
+    }],
+    "seriesLargestPercentDiff": {
+      "percentDifference": 1.0,
+      "diffDataPoint": {
+        "date": "2020-02-02",
+        "values": [{
+          "value": 2.0,
+          "locations": [{
+            "file": "covid.csv",
+            "lineNumber": "3"
+          }]
+        }]
+      },
+      "baseDataPoint": {
+        "date": "2020-01-30",
+        "values": [{
+          "value": 1.0,
+          "locations": [{
+            "file": "covid.csv",
+            "lineNumber": "2"
+          }]
+        }]
+      }
+    }
+  }, {
+    "placeDcid": "geoId/0649670",
+    "statVarDcid": "Count_Person",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "wikidataId/Q677037",
+    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
   }]
 }

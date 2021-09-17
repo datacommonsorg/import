@@ -49,7 +49,7 @@ public class StatCheckerTest {
     String mcfPath = this.getClass().getResource("StatCheckerTest.mcf").getPath();
     Mcf.McfGraph graph = McfParser.parseInstanceMcfFile(mcfPath, false, lw);
     // create stat checker, extract series from the graph and check the series from the graph
-    StatChecker sc = new StatChecker(lw, null);
+    StatChecker sc = new StatChecker(lw, null, false);
     sc.extractSeriesInfoFromGraph(graph);
     sc.check();
     // check statsCheckSummary in logCtx is as expected

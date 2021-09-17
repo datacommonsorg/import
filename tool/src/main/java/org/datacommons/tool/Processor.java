@@ -22,8 +22,10 @@ import java.net.http.HttpClient;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
@@ -39,6 +41,7 @@ public class Processor {
   private final Map<OutputFileType, Path> outputFiles;
   private ExistenceChecker existenceChecker;
   private ExternalIdResolver idResolver;
+  private StatChecker statChecker;
   private final Map<OutputFileType, BufferedWriter> writers = new HashMap<>();
   private final List<Mcf.McfGraph> nodesForVariousChecks = new ArrayList<>();
 
@@ -59,6 +62,8 @@ public class Processor {
   static class Args {
     public boolean doExistenceChecks = false;
     public boolean doResolution = false;
+    public boolean doStatChecks = false;
+    public List<String> samplePlaces = null;
     public boolean verbose = false;
     public FileGroup fileGroup = null;
     public Map<OutputFileType, Path> outputFiles = null;
@@ -81,12 +86,13 @@ public class Processor {
         processor.checkNodes();
       }
 
+      Mcf.McfGraph graphAfterResolution = null;
       if (args.doResolution) {
         // Find external IDs from in-memory MCF nodes and CSVs, and map them to DCIDs.
         processor.lookupExternalIds();
 
         // Having looked up the external IDs, resolve the instances.
-        processor.resolveNodes();
+        graphAfterResolution = processor.resolveNodes();
 
         // Resolution for table nodes will happen inside processTables().
       }
@@ -97,6 +103,10 @@ public class Processor {
       } else if (args.fileGroup.getTmcfs() != null) {
         // Sanity check the TMCF nodes.
         processor.processNodes(Mcf.McfType.TEMPLATE_MCF);
+      }
+
+      if (args.doStatChecks) {
+        processor.checkStats(graphAfterResolution);
       }
 
       if (args.outputFiles != null) {
@@ -120,6 +130,11 @@ public class Processor {
     }
     if (args.doResolution) {
       idResolver = new ExternalIdResolver(HttpClient.newHttpClient(), verbose, logCtx);
+    }
+    if (args.doStatChecks) {
+      Set<String> samplePlaces =
+          args.samplePlaces == null ? null : new HashSet<>(args.samplePlaces);
+      statChecker = new StatChecker(logCtx, samplePlaces, verbose);
     }
   }
 
@@ -154,7 +169,7 @@ public class Processor {
       } else {
         McfChecker.check(n, existenceChecker, logCtx);
       }
-      if (existenceChecker != null || idResolver != null) {
+      if (existenceChecker != null || idResolver != null || statChecker != null) {
         nodesForVariousChecks.add(n);
       }
 
@@ -191,11 +206,17 @@ public class Processor {
           logCtx.incrementCounterBy("NumRowSuccesses", 1);
         }
         if (idResolver != null) {
-          resolveCommon(g, OutputFileType.TABLE_NODES, OutputFileType.FAILED_TABLE_NODES);
+          g = resolveCommon(g, OutputFileType.TABLE_NODES, OutputFileType.FAILED_TABLE_NODES);
         } else {
           if (outputFiles != null) {
             writeGraph(OutputFileType.TABLE_NODES, g);
           }
+        }
+
+        // This will extract and save time series info from the relevant nodes from g and save it
+        // to statChecker.
+        if (statChecker != null) {
+          statChecker.extractSeriesInfoFromGraph(g);
         }
         numNodesProcessed += g.getNodesCount();
         numRowsProcessed++;
@@ -231,14 +252,14 @@ public class Processor {
   }
 
   // Called only when resolution is enabled.
-  private void resolveNodes() throws IOException {
-    resolveCommon(
+  private Mcf.McfGraph resolveNodes() throws IOException {
+    return resolveCommon(
         McfUtil.mergeGraphs(nodesForVariousChecks),
         OutputFileType.NODES,
         OutputFileType.FAILED_NODES);
   }
 
-  private void resolveCommon(
+  private Mcf.McfGraph resolveCommon(
       Mcf.McfGraph mcfGraph, OutputFileType successFile, OutputFileType failureFile)
       throws IOException {
     McfResolver resolver = new McfResolver(mcfGraph, verbose, idResolver, logCtx);
@@ -253,6 +274,7 @@ public class Processor {
         writeGraph(failureFile, failed);
       }
     }
+    return McfUtil.mergeGraphs(List.of(resolver.resolvedGraph(), resolver.failedGraph()));
   }
 
   // Process all the CSV tables to load all external IDs.
@@ -295,6 +317,21 @@ public class Processor {
     for (var kv : writers.entrySet()) {
       kv.getValue().close();
     }
+  }
+
+  private void checkStats(Mcf.McfGraph resolvedNodes) {
+    // For table nodes, series info has already been extracted. We now need to also extract
+    // series info from the nodes from the instance mcf. If resolution occurred, we extract series
+    // info from the resolved nodes. Otherwise, extract series from nodesForVariousChecks
+    if (resolvedNodes != null) {
+      statChecker.extractSeriesInfoFromGraph(resolvedNodes);
+    } else {
+      for (Mcf.McfGraph g : nodesForVariousChecks) {
+        statChecker.extractSeriesInfoFromGraph(g);
+      }
+    }
+    if (verbose) logger.info("Performing stats checks");
+    statChecker.check();
   }
 
   private static class DCTooManyFailuresException extends Exception {

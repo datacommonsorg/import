@@ -59,6 +59,8 @@ class GenMcf implements Callable<Integer> {
     Processor.Args args = new Processor.Args();
     args.doExistenceChecks = parent.doExistenceChecks;
     args.doResolution = parent.doResolution;
+    args.doStatChecks = parent.doStatChecks;
+    args.samplePlaces = parent.samplePlaces;
     args.verbose = parent.verbose;
     args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
     args.logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());

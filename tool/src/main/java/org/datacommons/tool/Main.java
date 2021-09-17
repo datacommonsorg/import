@@ -15,6 +15,7 @@
 package org.datacommons.tool;
 
 import java.io.File;
+import java.util.List;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -57,6 +58,21 @@ class Main {
       scope = CommandLine.ScopeType.INHERIT,
       description = "Resolves local references and generates node DCIDs.")
   public boolean doResolution;
+
+  // TODO: Default to true after some trials.
+  @CommandLine.Option(
+      names = {"-s", "--stat-checks"},
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "Checks integrity of time series by checking for holes, variance in values, etc.")
+  public boolean doStatChecks;
+
+  @CommandLine.Option(
+      names = {"-p", "--sample-places"},
+      scope = CommandLine.ScopeType.INHERIT,
+      description = "List of place dcids to run stats check on.")
+  public List<String> samplePlaces;
 
   public static void main(String... args) {
     System.exit(new CommandLine(new Main()).execute(args));

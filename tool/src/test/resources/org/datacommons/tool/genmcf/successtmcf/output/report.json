@@ -514,5 +514,126 @@
     },
     "userMessage": "Failed reference existence check :: value-ref: 'latLong/-4300000_11600000', property: 'location', node: 'E:SVTest->E3'",
     "counterKey": "Existence_MissingReference_location"
+  }],
+  "statsCheckSummary": [{
+    "placeDcid": "CA-MN",
+    "statVarDcid": "SV2",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "CH-SH",
+    "statVarDcid": "SV2",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcid",
+    "statVarDcid": "SV2",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "US-SF",
+    "statVarDcid": "SV2",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "CH-SH",
+    "statVarDcid": "SV1",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "CA-MN",
+    "statVarDcid": "SV1",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcid",
+    "statVarDcid": "SV1",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "CA-BC",
+    "statVarDcid": "SV2",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "CA-AB",
+    "statVarDcid": "SV2",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "US-SF",
+    "statVarDcid": "SV1",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "CA-AB",
+    "statVarDcid": "SV1",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
+  }, {
+    "placeDcid": "CA-BC",
+    "statVarDcid": "SV1",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "seriesLargestPercentDiff": {
+      "percentDifference": 0.0
+    }
   }]
 }

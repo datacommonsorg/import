@@ -37,9 +37,14 @@ public class TestUtil {
     expect.that(expectedLog.getLevelSummaryMap()).isEqualTo(actualLog.getLevelSummaryMap());
     expect
         .about(ProtoTruth.protos())
-        .that(expectedLog.getEntriesList())
+        .that(actualLog.getEntriesList())
         .ignoringRepeatedFieldOrder()
         .containsExactlyElementsIn(expectedLog.getEntriesList());
+    expect
+        .about(ProtoTruth.protos())
+        .that(actualLog.getStatsCheckSummaryList())
+        .ignoringRepeatedFieldOrder()
+        .containsExactlyElementsIn(expectedLog.getStatsCheckSummaryList());
   }
 
   private static Debug.Log.Builder reportToProto(String report)

@@ -45,6 +45,7 @@ public class StatChecker {
   private static final double SMALL_NUMBER = 0.000001;
   private static final String RECEIVED_SAMPLE_PLACES_KEY = "Received_Sample_Places";
   private static final Character PLACE_NAMESPACE_DELIMITER = '/';
+  private final boolean verbose;
   private final LogWrapper logCtx;
   // key is a string made up of place dcid, stat var dcid, measurement method, observation period,
   // scaling factor, and unit of the stat var observations of the series summary.
@@ -56,8 +57,9 @@ public class StatChecker {
   // Creates a StatChecker instance. If no samplePlaces are provided, for each pair of (place
   // namespace, place dcid length), we will use the first 5 places that stat var observations are
   // added for as the sample places.
-  public StatChecker(LogWrapper logCtx, Set<String> samplePlaces) {
+  public StatChecker(LogWrapper logCtx, Set<String> samplePlaces, boolean verbose) {
     this.logCtx = logCtx;
+    this.verbose = verbose;
     this.seriesSummaryMap = new HashMap<>();
     this.samplePlaces = new HashMap<>();
     if (samplePlaces == null) {
@@ -354,7 +356,7 @@ public class StatChecker {
     for (LocalDateTime dt : dateTimesList) {
       if (prev != null) {
         long delta = ChronoUnit.MONTHS.between(prev, dt);
-        if (window > 0 && window != delta) {
+        if (window >= 0 && window != delta) {
           StatValidationEntry.Builder dataHoleCounter = StatValidationEntry.newBuilder();
           dataHoleCounter.setCounterKey("StatsCheck_Data_Holes");
           dataHoleCounter.setAdditionalDetails(
