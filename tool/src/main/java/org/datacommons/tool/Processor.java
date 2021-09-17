@@ -86,15 +86,20 @@ public class Processor {
         processor.checkNodes();
       }
 
-      Mcf.McfGraph graphAfterResolution = null;
       if (args.doResolution) {
         // Find external IDs from in-memory MCF nodes and CSVs, and map them to DCIDs.
         processor.lookupExternalIds();
 
         // Having looked up the external IDs, resolve the instances.
-        graphAfterResolution = processor.resolveNodes();
+        Mcf.McfGraph resolvedGraph = processor.resolveNodes();
+
+        // Add stats from resolved graph to statChecker.
+        processor.addStats(List.of(resolvedGraph));
 
         // Resolution for table nodes will happen inside processTables().
+      } else {
+        // Add stats from graphs from nodesForVariousChecks to statChecker.
+        processor.addStats(processor.nodesForVariousChecks);
       }
 
       if (!args.fileGroup.getCsvs().isEmpty()) {
@@ -105,8 +110,9 @@ public class Processor {
         processor.processNodes(Mcf.McfType.TEMPLATE_MCF);
       }
 
+      // We've been adding stats to statChecker all along, now do the actual check.
       if (args.doStatChecks) {
-        processor.checkStats(graphAfterResolution);
+        processor.checkStats();
       }
 
       if (args.outputFiles != null) {
@@ -274,7 +280,7 @@ public class Processor {
         writeGraph(failureFile, failed);
       }
     }
-    return McfUtil.mergeGraphs(List.of(resolver.resolvedGraph(), resolver.failedGraph()));
+    return resolver.resolvedGraph();
   }
 
   // Process all the CSV tables to load all external IDs.
@@ -319,17 +325,15 @@ public class Processor {
     }
   }
 
-  private void checkStats(Mcf.McfGraph resolvedNodes) {
-    // For table nodes, series info has already been extracted. We now need to also extract
-    // series info from the nodes from the instance mcf. If resolution occurred, we extract series
-    // info from the resolved nodes. Otherwise, extract series from nodesForVariousChecks
-    if (resolvedNodes != null) {
-      statChecker.extractSeriesInfoFromGraph(resolvedNodes);
-    } else {
-      for (Mcf.McfGraph g : nodesForVariousChecks) {
-        statChecker.extractSeriesInfoFromGraph(g);
-      }
+  // add stats from graphs to statChecker if statChecker is not null
+  private void addStats(List<Mcf.McfGraph> graphs) {
+    if (statChecker == null) return;
+    for (Mcf.McfGraph g : graphs) {
+      statChecker.extractSeriesInfoFromGraph(g);
     }
+  }
+
+  private void checkStats() {
     if (verbose) logger.info("Performing stats checks");
     statChecker.check();
   }

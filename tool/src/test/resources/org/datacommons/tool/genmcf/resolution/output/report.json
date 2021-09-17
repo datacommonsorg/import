@@ -25,8 +25,7 @@
     "LEVEL_WARNING": {
       "counters": {
         "Existence_MissingReference_typeOf": "1",
-        "Existence_MissingReference_Property": "2",
-        "StatsCheck_1_Sigma": "1"
+        "Existence_MissingReference_Property": "2"
       }
     }
   },
@@ -125,30 +124,21 @@
     "measurementMethod": "",
     "observationPeriod": "",
     "scalingFactor": "",
-    "unit": "",
-    "seriesLargestPercentDiff": {
-      "percentDifference": 0.0
-    }
-  }, {
-    "placeDcid": "geoId/0649670",
-    "statVarDcid": "l:SVId",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "seriesLargestPercentDiff": {
-      "percentDifference": 0.0
-    }
+    "unit": ""
   }, {
     "placeDcid": "wikidataId/Q1353",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
     "observationPeriod": "",
     "scalingFactor": "",
-    "unit": "",
-    "seriesLargestPercentDiff": {
-      "percentDifference": 0.0
-    }
+    "unit": ""
+  }, {
+    "placeDcid": "geoId/0649670",
+    "statVarDcid": "Count_Person",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": ""
   }, {
     "placeDcid": "wikidataId/Q1186",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
@@ -156,19 +146,6 @@
     "observationPeriod": "",
     "scalingFactor": "",
     "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_1_Sigma",
-      "problemPoints": [{
-        "date": "2020-01-30",
-        "values": [{
-          "value": 1.0,
-          "locations": [{
-            "file": "covid.csv",
-            "lineNumber": "2"
-          }]
-        }]
-      }]
-    }],
     "seriesLargestPercentDiff": {
       "percentDifference": 1.0,
       "diffDataPoint": {
@@ -193,24 +170,11 @@
       }
     }
   }, {
-    "placeDcid": "geoId/0649670",
-    "statVarDcid": "Count_Person",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "seriesLargestPercentDiff": {
-      "percentDifference": 0.0
-    }
-  }, {
     "placeDcid": "wikidataId/Q677037",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
     "observationPeriod": "",
     "scalingFactor": "",
-    "unit": "",
-    "seriesLargestPercentDiff": {
-      "percentDifference": 0.0
-    }
+    "unit": ""
   }]
 }

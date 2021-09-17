@@ -189,16 +189,12 @@ public class StatCheckerTest {
     Map<String, DataPoint> timeSeries = new TreeMap<>();
 
     StatChecker.checkPercentFluctuations(new ArrayList<>(timeSeries.values()), resBuilder);
-    assertEquals(0.0, resBuilder.getSeriesLargestPercentDiff().getPercentDifference(), 0.0);
-    assertFalse(resBuilder.getSeriesLargestPercentDiff().hasDiffDataPoint());
-    assertFalse(resBuilder.getSeriesLargestPercentDiff().hasBaseDataPoint());
+    assertFalse(resBuilder.hasSeriesLargestPercentDiff());
 
     resBuilder.clear();
     addDataPoint(timeSeries, "2001", -8.0);
     StatChecker.checkPercentFluctuations(new ArrayList<>(timeSeries.values()), resBuilder);
-    assertEquals(0.0, resBuilder.getSeriesLargestPercentDiff().getPercentDifference(), 0.0);
-    assertFalse(resBuilder.getSeriesLargestPercentDiff().hasDiffDataPoint());
-    assertFalse(resBuilder.getSeriesLargestPercentDiff().hasBaseDataPoint());
+    assertFalse(resBuilder.hasSeriesLargestPercentDiff());
 
     resBuilder.clear();
     addDataPoint(timeSeries, "1993", -2.0);
@@ -239,8 +235,6 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2011", 5.6);
     addDataPoint(timeSeries, "2012", 5.6);
     StatChecker.checkSigmaDivergence(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
-    assertFalse(checkHasCounter(resBuilder, "StatsCheck_1_Sigma", new ArrayList<>()));
-    assertFalse(checkHasCounter(resBuilder, "StatsCheck_2_Sigma", new ArrayList<>()));
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_3_Sigma", new ArrayList<>()));
 
     resBuilder.clear();
@@ -249,10 +243,7 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2011", 10.0);
     addDataPoint(timeSeries, "2012", 50.0);
     StatChecker.checkSigmaDivergence(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
-    assertTrue(checkHasCounter(resBuilder, "StatsCheck_1_Sigma", List.of("2011")));
-    assertFalse(checkHasCounter(resBuilder, "StatsCheck_2_Sigma", new ArrayList<>()));
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_3_Sigma", new ArrayList<>()));
-    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_1_Sigma"));
 
     resBuilder.clear();
     timeSeries.clear();
@@ -267,10 +258,7 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2018", 5.0);
     addDataPoint(timeSeries, "2019", 5.0);
     StatChecker.checkSigmaDivergence(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
-    assertFalse(checkHasCounter(resBuilder, "StatsCheck_1_Sigma", new ArrayList<>()));
-    assertFalse(checkHasCounter(resBuilder, "StatsCheck_2_Sigma", new ArrayList<>()));
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_3_Sigma", List.of("2012")));
-    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_1_Sigma"));
     assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_3_Sigma"));
   }
 

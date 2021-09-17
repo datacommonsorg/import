@@ -71,7 +71,10 @@ class Main {
   @CommandLine.Option(
       names = {"-p", "--sample-places"},
       scope = CommandLine.ScopeType.INHERIT,
-      description = "List of place dcids to run stats check on.")
+      description =
+          "List of place dcids to run stats check on. This should only be set if "
+              + "--stat-checks is true. If --stat-checks is true and this is not set, 5 sample places "
+              + "are picked for roughly each distinct place type.")
   public List<String> samplePlaces;
 
   public static void main(String... args) {

@@ -203,13 +203,7 @@ public class StatChecker {
     if (meanAndStdDev.stdDev == 0) {
       return;
     }
-    String sigma1CounterKey = "StatsCheck_1_Sigma";
-    String sigma2CounterKey = "StatsCheck_2_Sigma";
     String sigma3CounterKey = "StatsCheck_3_Sigma";
-    StatValidationEntry.Builder sigma1Counter = StatValidationEntry.newBuilder();
-    sigma1Counter.setCounterKey(sigma1CounterKey);
-    StatValidationEntry.Builder sigma2Counter = StatValidationEntry.newBuilder();
-    sigma2Counter.setCounterKey(sigma2CounterKey);
     StatValidationEntry.Builder sigma3Counter = StatValidationEntry.newBuilder();
     sigma3Counter.setCounterKey(sigma3CounterKey);
     // Only add data points to the counter of the greatest standard deviation that it belongs to.
@@ -219,24 +213,10 @@ public class StatChecker {
       if (Math.abs(val - meanAndStdDev.mean) > 3 * meanAndStdDev.stdDev) {
         sigma3Counter.addProblemPoints(dp);
         logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), sigma3CounterKey, 1);
-        continue;
-      }
-      if (Math.abs(val - meanAndStdDev.mean) > 2 * meanAndStdDev.stdDev) {
-        sigma2Counter.addProblemPoints(dp);
-        logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), sigma2CounterKey, 1);
-        continue;
-      }
-      if (Math.abs(val - meanAndStdDev.mean) > 1 * meanAndStdDev.stdDev) {
-        sigma1Counter.addProblemPoints(dp);
-        logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), sigma1CounterKey, 1);
       }
     }
-    for (StatValidationEntry.Builder counter :
-        List.of(sigma1Counter, sigma2Counter, sigma3Counter)) {
-      if (counter.getProblemPointsList().isEmpty()) {
-        continue;
-      }
-      resBuilder.addValidationCounters(counter.build());
+    if (!sigma3Counter.getProblemPointsList().isEmpty()) {
+      resBuilder.addValidationCounters(sigma3Counter.build());
     }
   }
 
@@ -298,14 +278,12 @@ public class StatChecker {
       }
       baseDataPoint = dp;
     }
+    // only set largestPercentDiff if the largest percent diff is greater than 0.
+    if (maxDelta == 0) return;
     PercentDifference.Builder largestPercentDiff =
         resBuilder.getSeriesLargestPercentDiffBuilder().setPercentDifference(maxDelta);
-    if (maxDeltaDP != null) {
-      largestPercentDiff.setDiffDataPoint(maxDeltaDP);
-    }
-    if (maxDeltaBaseDP != null) {
-      largestPercentDiff.setBaseDataPoint(maxDeltaBaseDP);
-    }
+    largestPercentDiff.setDiffDataPoint(maxDeltaDP);
+    largestPercentDiff.setBaseDataPoint(maxDeltaBaseDP);
     largestPercentDiff.build();
   }
 
@@ -348,6 +326,8 @@ public class StatChecker {
       dateLenList.sort((d1, d2) -> dateLen.get(d2).size() - dateLen.get(d1).size());
       for (int i = 1; i < dateLenList.size(); i++) {
         dateLen.get(dateLenList.get(i)).forEach(inconsistentDateCounter::addProblemPoints);
+        // increment counter by number of data points of current date granularity. This way, counter
+        // number will match number of problem points.
         logCtx.incrementCounterBy(
             Level.LEVEL_WARNING.name(),
             inconsistentDateCounterKey,

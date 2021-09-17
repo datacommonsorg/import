@@ -59,6 +59,10 @@ class Lint implements Callable<Integer> {
     args.doResolution = parent.doResolution;
     args.doStatChecks = parent.doStatChecks;
     args.samplePlaces = parent.samplePlaces;
+    if (args.samplePlaces != null && !args.doStatChecks) {
+      logger.warn(
+          "Sample places entered without stat checks being enabled. Sample places will be unused.");
+    }
     args.verbose = parent.verbose;
     args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
     args.logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
