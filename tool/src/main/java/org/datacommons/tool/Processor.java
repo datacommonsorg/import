@@ -38,6 +38,7 @@ public class Processor {
   // Set only for "genmcf"
   private final Map<OutputFileType, Path> outputFiles;
   private ExistenceChecker existenceChecker;
+  private ResolutionMode resolutionMode;
   private ExternalIdResolver idResolver;
   private final Map<OutputFileType, BufferedWriter> writers = new HashMap<>();
   private final List<Mcf.McfGraph> nodesForVariousChecks = new ArrayList<>();
@@ -56,9 +57,15 @@ public class Processor {
     FAILED_TABLE_NODES,
   };
 
+  public enum ResolutionMode {
+    NONE,
+    LOCAL,
+    FULL,
+  };
+
   static class Args {
     public boolean doExistenceChecks = false;
-    public boolean doResolution = false;
+    public ResolutionMode resolutionMode = ResolutionMode.NONE;
     public boolean verbose = false;
     public FileGroup fileGroup = null;
     public Map<OutputFileType, Path> outputFiles = null;
@@ -83,9 +90,11 @@ public class Processor {
         processor.checkNodes();
       }
 
-      if (args.doResolution) {
-        // Find external IDs from in-memory MCF nodes and CSVs, and map them to DCIDs.
-        processor.lookupExternalIds();
+      if (args.resolutionMode != ResolutionMode.NONE) {
+        if (args.resolutionMode == ResolutionMode.FULL) {
+          // Find external IDs from in-memory MCF nodes and CSVs, and map them to DCIDs.
+          processor.lookupExternalIds();
+        }
 
         // Having looked up the external IDs, resolve the instances.
         processor.resolveNodes();
@@ -96,7 +105,9 @@ public class Processor {
       if (!args.fileGroup.getCsvs().isEmpty()) {
         // Process all the tables.
         logger.info(
-            "Loading, Checking " + (args.doResolution ? "and Resolving " : "") + "Table MCF nodes");
+            "Loading, Checking "
+                + (args.resolutionMode != ResolutionMode.NONE ? "and Resolving " : "")
+                + "Table MCF nodes");
         processor.processTables();
       } else if (args.fileGroup.getTmcfs() != null) {
         // Sanity check the TMCF nodes.
@@ -106,8 +117,9 @@ public class Processor {
       if (args.outputFiles != null) {
         processor.closeFiles();
       }
-    } catch (DCTooManyFailuresException | InterruptedException | IOException ex) {
-      // Regardless of the failures, we will dump the logCtx and exit.
+    } catch (DCTooManyFailuresException | InterruptedException ex) {
+      // Only for DCTooManyFailuresException, we will dump the logCtx and exit.
+      logger.error("Aborting prematurely, see report.json.");
       retVal = -1;
     }
     args.logCtx.persistLog(false);
@@ -119,10 +131,11 @@ public class Processor {
     this.outputFiles = args.outputFiles;
     this.verbose = args.verbose;
     this.fileGroup = args.fileGroup;
+    this.resolutionMode = args.resolutionMode;
     if (args.doExistenceChecks) {
       existenceChecker = new ExistenceChecker(HttpClient.newHttpClient(), verbose, logCtx);
     }
-    if (args.doResolution) {
+    if (resolutionMode == ResolutionMode.FULL) {
       idResolver = new ExternalIdResolver(HttpClient.newHttpClient(), verbose, logCtx);
     }
   }
@@ -158,7 +171,7 @@ public class Processor {
       } else {
         McfChecker.check(n, existenceChecker, logCtx);
       }
-      if (existenceChecker != null || idResolver != null) {
+      if (existenceChecker != null || resolutionMode != ResolutionMode.NONE) {
         nodesForVariousChecks.add(n);
       }
 
@@ -194,7 +207,7 @@ public class Processor {
         if (success) {
           logCtx.incrementCounterBy("NumRowSuccesses", 1);
         }
-        if (idResolver != null) {
+        if (resolutionMode != ResolutionMode.NONE) {
           resolveCommon(g, OutputFileType.TABLE_NODES, OutputFileType.FAILED_TABLE_NODES);
         } else {
           if (outputFiles != null) {
@@ -209,7 +222,10 @@ public class Processor {
         }
       }
       logger.info(
-          "Checked " + (idResolver != null ? ", Resolved " : "") + "CSV {} ({} rows, {} nodes)",
+          "Checked "
+              + (resolutionMode != ResolutionMode.NONE ? ", Resolved " : "")
+              + "CSV {} ({}"
+              + " rows, {} nodes)",
           csvFile.getName(),
           numRowsProcessed,
           numNodesProcessed);
@@ -271,8 +287,8 @@ public class Processor {
       }
       numNodesProcessed += g.getNodesCount();
       dummyLog.provideStatus(numNodesProcessed, "nodes processed");
-      if (logCtx.loggedTooManyFailures()) {
-        System.err.println("Too Many Errors ::\n" + logCtx.dumpLog());
+      if (dummyLog.loggedTooManyFailures()) {
+        System.err.println("Too Many Errors ::\n" + dummyLog.dumpLog());
         throw new DCTooManyFailuresException("encountered too many failures");
       }
     }
@@ -291,8 +307,8 @@ public class Processor {
         }
         numRowsProcessed++;
         dummyLog.provideStatus(numRowsProcessed, "rows processed");
-        if (logCtx.loggedTooManyFailures()) {
-          System.err.println("Too Many Errors ::\n" + logCtx.dumpLog());
+        if (dummyLog.loggedTooManyFailures()) {
+          System.err.println("Too Many Errors ::\n" + dummyLog.dumpLog());
           throw new DCTooManyFailuresException("encountered too many failures");
         }
       }

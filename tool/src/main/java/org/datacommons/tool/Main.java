@@ -52,11 +52,22 @@ class Main {
 
   // TODO: Default to true after some trials.
   @CommandLine.Option(
-      names = {"-r", "--resolution"},
+      names = {"-r", "--full-resolution"},
       defaultValue = "false",
       scope = CommandLine.ScopeType.INHERIT,
-      description = "Resolves local references and generates node DCIDs.")
-  public boolean doResolution;
+      description =
+          "Resolves external IDs, local references and generates node DCIDs. "
+              + "Mutually exclusive with -l.")
+  public boolean fullResolution;
+
+  @CommandLine.Option(
+      names = {"-l", "--local-resolution"},
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "Resolves local references and generates node DCIDs (without Recon API). "
+              + "Mutually exclusive with -r.")
+  public boolean localResolution;
 
   public static void main(String... args) {
     System.exit(new CommandLine(new Main()).execute(args));

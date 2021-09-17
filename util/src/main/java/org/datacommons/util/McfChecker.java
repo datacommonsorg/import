@@ -186,12 +186,16 @@ public class McfChecker {
     String popType =
         checkRequiredSingleValueProp(
             nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.POPULATION_TYPE);
-    checkInitCasing(nodeId, node, Vocabulary.POPULATION_TYPE, popType, "", true);
+    if (!popType.isEmpty()) {
+      checkInitCasing(nodeId, node, Vocabulary.POPULATION_TYPE, popType, "", true);
+    }
 
     String mProp =
         checkRequiredSingleValueProp(
             nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.MEASURED_PROP);
-    checkInitCasing(nodeId, node, Vocabulary.MEASURED_PROP, mProp, "", false);
+    if (!mProp.isEmpty()) {
+      checkInitCasing(nodeId, node, Vocabulary.MEASURED_PROP, mProp, "", false);
+    }
     // TODO: Do this check for all constraint properties too.
     if (existenceChecker != null) {
       LogCb logCb =
@@ -206,7 +210,8 @@ public class McfChecker {
 
     String statType =
         checkRequiredSingleValueProp(nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.STAT_TYPE);
-    if (!Vocabulary.isStatValueProperty(statType)
+    if (!statType.isEmpty()
+        && !Vocabulary.isStatValueProperty(statType)
         && !statType.equals(Vocabulary.MEASUREMENT_RESULT)) {
       addLog(
           "Sanity_UnknownStatType",
@@ -253,7 +258,9 @@ public class McfChecker {
     String popType =
         checkRequiredSingleValueProp(
             nodeId, node, "StatisticalPopulation", Vocabulary.POPULATION_TYPE);
-    checkInitCasing(nodeId, node, Vocabulary.POPULATION_TYPE, popType, "", true);
+    if (!popType.isEmpty()) {
+      checkInitCasing(nodeId, node, Vocabulary.POPULATION_TYPE, popType, "", true);
+    }
 
     checkRequiredSingleValueProp(nodeId, node, "StatisticalPopulation", Vocabulary.LOCATION);
   }
@@ -262,7 +269,9 @@ public class McfChecker {
     String mProp =
         checkRequiredSingleValueProp(
             nodeId, node, Vocabulary.LEGACY_OBSERVATION_TYPE_SUFFIX, Vocabulary.MEASURED_PROP);
-    checkInitCasing(nodeId, node, Vocabulary.MEASURED_PROP, mProp, "", false);
+    if (!mProp.isEmpty()) {
+      checkInitCasing(nodeId, node, Vocabulary.MEASURED_PROP, mProp, "", false);
+    }
 
     checkRequiredSingleValueProp(
         nodeId, node, Vocabulary.LEGACY_OBSERVATION_TYPE_SUFFIX, Vocabulary.OBSERVED_NODE);

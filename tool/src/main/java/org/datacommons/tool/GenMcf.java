@@ -58,7 +58,16 @@ class GenMcf implements Callable<Integer> {
     }
     Processor.Args args = new Processor.Args();
     args.doExistenceChecks = parent.doExistenceChecks;
-    args.doResolution = parent.doResolution;
+    if (parent.localResolution && parent.fullResolution) {
+      throw new IllegalArgumentException("Cannot set both -f " + "and -l");
+    }
+    if (parent.fullResolution) {
+      args.resolutionMode = Processor.ResolutionMode.FULL;
+    } else if (parent.localResolution) {
+      args.resolutionMode = Processor.ResolutionMode.LOCAL;
+    } else {
+      args.resolutionMode = Processor.ResolutionMode.NONE;
+    }
     args.verbose = parent.verbose;
     args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
     args.logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());

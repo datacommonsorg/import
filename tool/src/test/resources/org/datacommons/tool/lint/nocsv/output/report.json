@@ -23,7 +23,6 @@
         "Sanity_MissingOrEmpty_populationType": "2",
         "Sanity_MissingOrEmpty_measuredProperty": "1",
         "Sanity_MissingOrEmpty_statType": "1",
-        "Sanity_UnknownStatType": "1",
         "Sanity_NotInitLowerPropName": "2",
         "Sanity_InvalidChars_domainIncludes": "1",
         "Sanity_UnexpectedPropInProperty": "1",
@@ -253,14 +252,6 @@
     },
     "userMessage": "Found a missing or empty property value :: property: 'statType', node: 'dcid:Count_Death_10To12', type: 'StatisticalVariable'",
     "counterKey": "Sanity_MissingOrEmpty_statType"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "NoCsv.mcf",
-      "lineNumber": "77"
-    },
-    "userMessage": "Found an unknown statType value :: value: '', node: 'dcid:Count_Death_10To12'",
-    "counterKey": "Sanity_UnknownStatType"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -515,7 +506,7 @@
       "file": "NoCsv.tmcf",
       "lineNumber": "3"
     },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E3', property: 'observationAbout' node: 'E:SVTest->E0'",
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E30', property: 'observationAbout' node: 'E:SVTest->E0'",
     "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
@@ -523,7 +514,7 @@
       "file": "NoCsv.tmcf",
       "lineNumber": "3"
     },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E30', property: 'observationAbout' node: 'E:SVTest->E0'",
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E3', property: 'observationAbout' node: 'E:SVTest->E0'",
     "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
@@ -579,7 +570,7 @@
       "file": "NoCsv.tmcf",
       "lineNumber": "19"
     },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E13', property: 'dcid' node: 'E:SVTest->E3'",
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E10', property: 'dcid' node: 'E:SVTest->E3'",
     "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
@@ -587,7 +578,7 @@
       "file": "NoCsv.tmcf",
       "lineNumber": "19"
     },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E10', property: 'dcid' node: 'E:SVTest->E3'",
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E13', property: 'dcid' node: 'E:SVTest->E3'",
     "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
