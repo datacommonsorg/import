@@ -48,13 +48,13 @@ public class Processor {
   // different things.  Input MCFs have schema/StatVars while TMCF/CSVs have stats.
   public enum OutputFileType {
     // Output MCF where *.mcf inputs get resolved into.
-    NODES,
+    INSTANCE_MCF_NODES,
     // Output MCF where failed nodes from *.mcf inputs flow into.
-    FAILED_NODES,
+    FAILED_INSTANCE_MCF_NODES,
     // Output MCF where TMCF/CSV inputs get resolved into.
-    TABLE_NODES,
+    TABLE_MCF_NODES,
     // Output MCF where TMCF/CSV failed nodes flow into.
-    FAILED_TABLE_NODES,
+    FAILED_TABLE_MCF_NODES,
   };
 
   public enum ResolutionMode {
@@ -78,12 +78,16 @@ public class Processor {
       Processor processor = new Processor(args);
 
       // Load all the instance MCFs into memory, so we can do existence checks, resolution, etc.
-      logger.info("Loading Instance MCF files");
+      if (args.doExistenceChecks) {
+        logger.info("Loading Instance MCF files");
+      } else {
+        logger.info("Loading and Checking Instance MCF files");
+      }
       processor.processNodes(Mcf.McfType.INSTANCE_MCF);
 
       // Perform existence checks.
       if (args.doExistenceChecks) {
-        logger.info("Performing Existence checks on Instance MCF nodes");
+        logger.info("Checking Instance MCF nodes (with Existence)");
         // NOTE: If doExistenceChecks is true, we do a checkNodes() call *after* all instance MCF
         // files are processed (via processNodes). This is so that the newly added schema, StatVar,
         // etc. are known to the Existence Checker first, before existence checks are performed.
@@ -97,6 +101,7 @@ public class Processor {
         }
 
         // Having looked up the external IDs, resolve the instances.
+        logger.info("Resolving Instance MCF nodes");
         processor.resolveNodes();
 
         // Resolution for table nodes will happen inside processTables().
@@ -104,13 +109,17 @@ public class Processor {
 
       if (!args.fileGroup.getCsvs().isEmpty()) {
         // Process all the tables.
-        logger.info(
-            "Loading, Checking "
-                + (args.resolutionMode != ResolutionMode.NONE ? "and Resolving " : "")
-                + "Table MCF nodes");
+        if (args.resolutionMode == ResolutionMode.FULL) {
+          logger.info("Re-loading, Checking and Resolving Table MCF files");
+        } else if (args.resolutionMode == ResolutionMode.LOCAL) {
+          logger.info("Loading, Checking and Resolving Table MCF files");
+        } else {
+          logger.info("Loading and Checking Table MCF files");
+        }
         processor.processTables();
       } else if (args.fileGroup.getTmcfs() != null) {
         // Sanity check the TMCF nodes.
+        logger.info("Loading and Checking Template MCF files");
         processor.processNodes(Mcf.McfType.TEMPLATE_MCF);
       }
 
@@ -208,10 +217,10 @@ public class Processor {
           logCtx.incrementCounterBy("NumRowSuccesses", 1);
         }
         if (resolutionMode != ResolutionMode.NONE) {
-          resolveCommon(g, OutputFileType.TABLE_NODES, OutputFileType.FAILED_TABLE_NODES);
+          resolveCommon(g, OutputFileType.TABLE_MCF_NODES, OutputFileType.FAILED_TABLE_MCF_NODES);
         } else {
           if (outputFiles != null) {
-            writeGraph(OutputFileType.TABLE_NODES, g);
+            writeGraph(OutputFileType.TABLE_MCF_NODES, g);
           }
         }
         numNodesProcessed += g.getNodesCount();
@@ -251,11 +260,10 @@ public class Processor {
 
   // Called only when resolution is enabled.
   private void resolveNodes() throws IOException {
-    logger.info("Resolving and writing Instance MCF nodes");
     resolveCommon(
         McfUtil.mergeGraphs(nodesForVariousChecks),
-        OutputFileType.NODES,
-        OutputFileType.FAILED_NODES);
+        OutputFileType.INSTANCE_MCF_NODES,
+        OutputFileType.FAILED_INSTANCE_MCF_NODES);
   }
 
   private void resolveCommon(
@@ -279,7 +287,7 @@ public class Processor {
   private void lookupExternalIds()
       throws IOException, InterruptedException, DCTooManyFailuresException {
     LogWrapper dummyLog = new LogWrapper(Debug.Log.newBuilder());
-    logger.info("Looking up External IDs in all Instance MCF nodes");
+    logger.info("Processing External IDs from Instance MCF nodes");
     long numNodesProcessed = 0;
     for (var g : nodesForVariousChecks) {
       for (var idAndNode : g.getNodesMap().entrySet()) {
@@ -292,7 +300,8 @@ public class Processor {
         throw new DCTooManyFailuresException("encountered too many failures");
       }
     }
-    logger.info("Looking up External IDs in all Table MCF nodes");
+
+    logger.info("Loading and Processing External IDs from Table MCF files");
     long numRowsProcessed = 0;
     for (File csvFile : fileGroup.getCsvs()) {
       if (verbose) logger.info("Reading external IDs from CSV " + csvFile.getPath());
@@ -320,7 +329,7 @@ public class Processor {
     var writer = writers.getOrDefault(type, null);
     if (writer == null) {
       var fileString = outputFiles.get(type).toString();
-      logger.info("Writing to file " + fileString + " of type " + type.name());
+      logger.info("Opening file " + fileString + " of type " + type.name());
       writer = new BufferedWriter(new FileWriter(fileString));
       writers.put(type, writer);
     }

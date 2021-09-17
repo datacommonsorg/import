@@ -209,7 +209,9 @@ public class ExternalIdResolver {
         continue;
       }
       var parts = entity.getSourceId().split(":", 2);
-      if (parts.length != 2 || entity.getResolvedIdsCount() != 1) {
+      // TODO: Add back the (entity.getResolvedIdsCount() == 1) assertion after
+      // https://github.com/datacommonsorg/reconciliation/issues/15 is fixed.
+      if (parts.length != 2) {
         throw new InvalidProtocolBufferException(
             "Malformed ResolveEntitiesResponse.ResolvedEntity " + entity);
       }
