@@ -47,18 +47,24 @@ class Main {
       description =
           "Check DCID references to schema nodes against the KG and locally. If set, then "
               + "calls will be made to the Staging API server, and instance MCFs get fully "
-              + "loaded into memory.")
+              + "loaded into memory. Defaults to true.")
   public boolean doExistenceChecks;
 
-  // TODO: Default to true after some trials.
+  // TODO: Default to LOCAL after some trials.
   @CommandLine.Option(
       names = {"-r", "--resolution"},
-      defaultValue = "false",
+      defaultValue = "NONE",
       scope = CommandLine.ScopeType.INHERIT,
-      description = "Resolves local references and generates node DCIDs.")
-  public boolean doResolution;
+      description =
+          "Specifies the mode of resolution to use: ${COMPLETION-CANDIDATES}.  For no resolution,"
+              + " set NONE.  To lookup external IDs (like ISO) in DC, resolve local references "
+              + "and generated DCIDs, set FULL.  To just resolve local references and generate "
+              + "DCIDs, set LOCAL.  Note that FULL mode may be slower since it makes "
+              + "(batched) DC Recon API calls and two passes over your CSV files. Default to NONE.")
+  public Processor.ResolutionMode resolutionMode = Processor.ResolutionMode.NONE;
 
   public static void main(String... args) {
-    System.exit(new CommandLine(new Main()).execute(args));
+    System.exit(
+        new CommandLine(new Main()).setCaseInsensitiveEnumValuesAllowed(true).execute(args));
   }
 }

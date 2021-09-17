@@ -18,7 +18,6 @@ import com.google.protobuf.TextFormat;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
@@ -29,7 +28,7 @@ import org.datacommons.proto.Mcf;
 public class TestUtil {
   public static LogWrapper newLogCtx(String mcfFile) {
     Debug.Log.Builder log = Debug.Log.newBuilder();
-    LogWrapper logCtx = new LogWrapper(log, Path.of("/tmp/report.html"));
+    LogWrapper logCtx = new LogWrapper(log);
     logCtx.setLocationFile(mcfFile);
     return logCtx;
   }

@@ -1,14 +1,13 @@
 package org.datacommons.util;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,9 +21,6 @@ import org.datacommons.proto.Mcf;
 // along with a logging callback (LogCb).  The implementation batches calls to DC, and on
 // completion invokes the callback to notify on existence failures.  At the very end, users
 // need to issue a final drain call (drainRemoteCalls).
-//
-// TODO: Use POST instead of GET while calling DC so we're not limited by URI length and can
-//  batch even more.
 public class ExistenceChecker {
   private static final Logger logger = LogManager.getLogger(ExistenceChecker.class);
   // Use the staging end-point to not impact prod.
@@ -34,7 +30,7 @@ public class ExistenceChecker {
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES, Vocabulary.SUB_CLASS_OF);
 
   // Batching thresholds.  Allow tests to set this.
-  public static int DC_CALL_BATCH_LIMIT = 100;
+  public static int DC_CALL_BATCH_LIMIT = 1000;
   public static int MAX_PENDING_CALLS = 100000;
 
   // Useful for mocking.
@@ -287,23 +283,23 @@ public class ExistenceChecker {
   private JsonObject callDc(List<String> nodes, String property)
       throws IOException, InterruptedException {
     List<String> args = new ArrayList<>();
+    JsonObject arg = new JsonObject();
+    JsonArray dcids = new JsonArray();
     for (var node : nodes) {
-      args.add("dcids=" + spaceHandlingUrlEncoder(node));
+      dcids.add(node);
     }
-    args.add("property=" + spaceHandlingUrlEncoder(property));
-    args.add("direction=out");
-    var url = API_ROOT + "?" + String.join("&", args);
+    arg.add("dcids", dcids);
+    arg.addProperty("property", property);
+    arg.addProperty("direction", "out");
     var request =
-        HttpRequest.newBuilder(URI.create(url)).header("accept", "application/json").build();
+        HttpRequest.newBuilder(URI.create(API_ROOT))
+            .header("accept", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(arg.toString()))
+            .build();
     var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     var payloadJson = new JsonParser().parse(response.body().trim()).getAsJsonObject();
     if (payloadJson == null || !payloadJson.has("payload")) return null;
     return new JsonParser().parse(payloadJson.get("payload").getAsString()).getAsJsonObject();
-  }
-
-  // See https://stackoverflow.com/a/4737967.  Mixer does not treat '+' in param value as space.
-  private String spaceHandlingUrlEncoder(String part) {
-    return URLEncoder.encode(part, StandardCharsets.UTF_8).replace("+", "%20");
   }
 
   private static void logEntry(LogCb logCb, String obj) {

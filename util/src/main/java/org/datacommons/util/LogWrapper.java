@@ -17,6 +17,7 @@ package org.datacommons.util;
 import static org.datacommons.proto.Debug.Log.Level.LEVEL_FATAL;
 import static org.datacommons.proto.Debug.Log.Level.LEVEL_INFO;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -45,20 +46,31 @@ public class LogWrapper {
   public static boolean TEST_MODE = false;
 
   private final Debug.Log.Builder log;
-  private final Path logPath;
+  private Path logPath;
   private String locationFile;
   private Instant lastStatusAt;
   private long countAtLastStatus;
-  private final Set<String> countersWithErrors;
+  private final Set<String> countersWithErrors = new HashSet<>();
+  public final boolean persistLog;
 
   public LogWrapper(Debug.Log.Builder log, Path outputDir) {
     this.log = log;
-    this.countersWithErrors = new HashSet<>();
-    logPath = Paths.get(outputDir.toString(), REPORT_JSON);
-    logger.info(
-        "Report written every {}s to {}",
-        SECONDS_BETWEEN_STATUS,
-        logPath.toAbsolutePath().normalize().toString());
+    this.persistLog = true;
+    init(log, outputDir);
+  }
+
+  public LogWrapper(Debug.Log.Builder log) {
+    this.log = log;
+    this.persistLog = false;
+    init(log, null);
+  }
+
+  private void init(Debug.Log.Builder log, Path outputDir) {
+    if (persistLog) {
+      logPath = Paths.get(outputDir.toString(), REPORT_JSON);
+      logger.info(
+          "Report written periodically to {}", logPath.toAbsolutePath().normalize().toString());
+    }
     locationFile = "FileNotSet.idk";
     lastStatusAt = Instant.now();
     countAtLastStatus = 0;
@@ -106,7 +118,7 @@ public class LogWrapper {
         logger.info(
             "{} {} of {} [{}]", count - countAtLastStatus, thing, locationFile, summaryString());
       }
-      persistLog(true);
+      if (persistLog) persistLog(true);
       lastStatusAt = now;
       countAtLastStatus = count;
     }
@@ -121,6 +133,10 @@ public class LogWrapper {
           logPath.toAbsolutePath().normalize().toString(),
           summaryString());
     }
+  }
+
+  public String dumpLog() throws InvalidProtocolBufferException {
+    return StringUtil.msgToJson(log.build());
   }
 
   public boolean loggedTooManyFailures() {
