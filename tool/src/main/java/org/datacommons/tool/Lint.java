@@ -14,15 +14,16 @@
 
 package org.datacommons.tool;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.util.FileGroup;
 import org.datacommons.util.LogWrapper;
 import picocli.CommandLine;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "lint", description = "Run various checks on input MCF/TMCF/CSV files")
 class Lint implements Callable<Integer> {
@@ -56,16 +57,7 @@ class Lint implements Callable<Integer> {
     }
     Processor.Args args = new Processor.Args();
     args.doExistenceChecks = parent.doExistenceChecks;
-    if (parent.localResolution && parent.fullResolution) {
-      throw new IllegalArgumentException("Cannot set both -f " + "and -l");
-    }
-    if (parent.fullResolution) {
-      args.resolutionMode = Processor.ResolutionMode.FULL;
-    } else if (parent.localResolution) {
-      args.resolutionMode = Processor.ResolutionMode.LOCAL;
-    } else {
-      args.resolutionMode = Processor.ResolutionMode.NONE;
-    }
+    args.resolutionMode = parent.resolutionMode;
     args.verbose = parent.verbose;
     args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
     args.logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
