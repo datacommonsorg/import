@@ -79,7 +79,7 @@ public class Processor {
 
       // Load all the instance MCFs into memory, so we can do existence checks, resolution, etc.
       if (args.doExistenceChecks) {
-        logger.info("Loading Instance MCF files");
+        logger.info("Loading Instance MCF files into memory");
       } else {
         logger.info("Loading and Checking Instance MCF files");
       }
@@ -87,7 +87,7 @@ public class Processor {
 
       // Perform existence checks.
       if (args.doExistenceChecks) {
-        logger.info("Checking Instance MCF nodes (with Existence)");
+        logger.info("Checking Instance MCF nodes (with Existence checks)");
         // NOTE: If doExistenceChecks is true, we do a checkNodes() call *after* all instance MCF
         // files are processed (via processNodes). This is so that the newly added schema, StatVar,
         // etc. are known to the Existence Checker first, before existence checks are performed.
@@ -232,7 +232,7 @@ public class Processor {
       }
       logger.info(
           "Checked "
-              + (resolutionMode != ResolutionMode.NONE ? ", Resolved " : "")
+              + (resolutionMode != ResolutionMode.NONE ? "and Resolved " : "")
               + "CSV {} ({}"
               + " rows, {} nodes)",
           csvFile.getName(),
@@ -329,7 +329,7 @@ public class Processor {
     var writer = writers.getOrDefault(type, null);
     if (writer == null) {
       var fileString = outputFiles.get(type).toString();
-      logger.info("Opening file " + fileString + " of type " + type.name());
+      logger.info("Opening output file " + fileString + " of type " + type.name());
       writer = new BufferedWriter(new FileWriter(fileString));
       writers.put(type, writer);
     }
