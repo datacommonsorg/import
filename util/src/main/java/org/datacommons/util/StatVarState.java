@@ -27,11 +27,7 @@ public class StatVarState {
 
     var generated = DcidGenerator.forStatVar(id, node);
     if (generated.dcid.isEmpty()) {
-      logCtx.addEntry(
-          Debug.Log.Level.LEVEL_ERROR,
-          "StatVarChecker_MalformedNode",
-          "Unable to compute StatVar DCID :: node: '" + id,
-          node.getLocationsList());
+      // This is due to malformed SV node, which should have been handled in the checker.
       return false;
     }
 
