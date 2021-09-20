@@ -22,6 +22,7 @@ import com.google.protobuf.util.JsonFormat;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,7 @@ public class StatCheckerTest {
     String mcfPath = this.getClass().getResource("StatCheckerTest.mcf").getPath();
     Mcf.McfGraph graph = McfParser.parseInstanceMcfFile(mcfPath, false, lw);
     // create stat checker, extract series from the graph and check the series from the graph
-    StatChecker sc = new StatChecker(lw, null);
+    StatChecker sc = new StatChecker(lw, null, false);
     sc.extractSeriesInfoFromGraph(graph);
     sc.check();
     // check statsCheckSummary in logCtx is as expected
@@ -67,31 +68,35 @@ public class StatCheckerTest {
 
   @Test
   public void testFuncCheckValueInconsistencies() {
+    Debug.Log.Builder log = Debug.Log.newBuilder();
+    LogWrapper logCtx = new LogWrapper(log, Path.of("/tmp/statCheckerTest"));
     StatValidationResult.Builder resBuilder = StatValidationResult.newBuilder();
     Map<String, DataPoint> timeSeries = new TreeMap<>();
 
-    StatChecker.checkValueInconsistencies(new ArrayList<>(timeSeries.values()), resBuilder);
+    StatChecker.checkValueInconsistencies(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Value", new ArrayList<>()));
 
     resBuilder.clear();
     addDataPoint(timeSeries, "2011", 24.0);
-    StatChecker.checkValueInconsistencies(new ArrayList<>(timeSeries.values()), resBuilder);
+    StatChecker.checkValueInconsistencies(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Value", new ArrayList<>()));
 
     resBuilder.clear();
     addDataPoint(timeSeries, "2012", 24.0);
     addDataPoint(timeSeries, "2013", 240.3);
-    StatChecker.checkValueInconsistencies(new ArrayList<>(timeSeries.values()), resBuilder);
+    StatChecker.checkValueInconsistencies(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Value", new ArrayList<>()));
 
-    resBuilder.clear();
     addDataPoint(timeSeries, "2013", -20.3);
-    StatChecker.checkValueInconsistencies(new ArrayList<>(timeSeries.values()), resBuilder);
+    StatChecker.checkValueInconsistencies(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Values", List.of("2013")));
+    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_Inconsistent_Values"));
   }
 
   @Test
   public void testFuncCheckDates() {
+    Debug.Log.Builder log = Debug.Log.newBuilder();
+    LogWrapper logCtx = new LogWrapper(log, Path.of("/tmp/statCheckerTest"));
     StatValidationResult.Builder resBuilder = StatValidationResult.newBuilder();
     Map<String, DataPoint> timeSeries = new TreeMap<>();
 
@@ -103,7 +108,7 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2015", 1.0);
     addDataPoint(timeSeries, "2014", 1.0);
     addDataPoint(timeSeries, "2016", 1.0);
-    StatChecker.checkDates(new ArrayList<>(timeSeries.values()), resBuilder);
+    StatChecker.checkDates(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Invalid_Date", new ArrayList<>()));
     assertFalse(
         checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Date_Granularity", new ArrayList<>()));
@@ -115,7 +120,7 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2011-09", 1.0);
     addDataPoint(timeSeries, "2012-03", 1.0);
     addDataPoint(timeSeries, "2011-12", 1.0);
-    StatChecker.checkDates(new ArrayList<>(timeSeries.values()), resBuilder);
+    StatChecker.checkDates(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Invalid_Date", new ArrayList<>()));
     assertFalse(
         checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Date_Granularity", new ArrayList<>()));
@@ -127,11 +132,12 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2017", 1.0);
     addDataPoint(timeSeries, "2013", 1.0);
     addDataPoint(timeSeries, "2011", 1.0);
-    StatChecker.checkDates(new ArrayList<>(timeSeries.values()), resBuilder);
+    StatChecker.checkDates(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Invalid_Date", new ArrayList<>()));
     assertFalse(
         checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Date_Granularity", new ArrayList<>()));
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_Data_Holes", new ArrayList<>()));
+    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_Data_Holes"));
 
     // Data hole, year + month.
     resBuilder.clear();
@@ -139,11 +145,12 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2017-03", 1.0);
     addDataPoint(timeSeries, "2017-06", 1.0);
     addDataPoint(timeSeries, "2017-12", 1.0);
-    StatChecker.checkDates(new ArrayList<>(timeSeries.values()), resBuilder);
+    StatChecker.checkDates(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Invalid_Date", new ArrayList<>()));
     assertFalse(
         checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Date_Granularity", new ArrayList<>()));
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_Data_Holes", new ArrayList<>()));
+    assertEquals(2, TestUtil.getCounter(log.build(), "StatsCheck_Data_Holes"));
 
     // Inconsistent granularity.
     resBuilder.clear();
@@ -151,12 +158,14 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2012", 1.0);
     addDataPoint(timeSeries, "2015-01", 1.0);
     addDataPoint(timeSeries, "2018", 1.0);
-    StatChecker.checkDates(new ArrayList<>(timeSeries.values()), resBuilder);
+    StatChecker.checkDates(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Invalid_Date", new ArrayList<>()));
     assertTrue(
         checkHasCounter(
             resBuilder, "StatsCheck_Inconsistent_Date_Granularity", List.of("2015-01")));
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Data_Holes", new ArrayList<>()));
+    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_Inconsistent_Date_Granularity"));
+    assertEquals(2, TestUtil.getCounter(log.build(), "StatsCheck_Data_Holes"));
 
     // Invalid date.
     resBuilder.clear();
@@ -164,11 +173,14 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2012-01", 1.0);
     addDataPoint(timeSeries, "2012:02", 1.0);
     addDataPoint(timeSeries, "2012-03", 1.0);
-    StatChecker.checkDates(new ArrayList<>(timeSeries.values()), resBuilder);
+    StatChecker.checkDates(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_Invalid_Date", List.of("2012:02")));
     assertFalse(
         checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Date_Granularity", new ArrayList<>()));
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Data_Holes", new ArrayList<>()));
+    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_Invalid_Date"));
+    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_Inconsistent_Date_Granularity"));
+    assertEquals(2, TestUtil.getCounter(log.build(), "StatsCheck_Data_Holes"));
   }
 
   @Test
@@ -177,16 +189,12 @@ public class StatCheckerTest {
     Map<String, DataPoint> timeSeries = new TreeMap<>();
 
     StatChecker.checkPercentFluctuations(new ArrayList<>(timeSeries.values()), resBuilder);
-    assertEquals(0.0, resBuilder.getSeriesLargestPercentDiff().getPercentDifference(), 0.0);
-    assertFalse(resBuilder.getSeriesLargestPercentDiff().hasDiffDataPoint());
-    assertFalse(resBuilder.getSeriesLargestPercentDiff().hasBaseDataPoint());
+    assertFalse(resBuilder.hasSeriesLargestPercentDiff());
 
     resBuilder.clear();
     addDataPoint(timeSeries, "2001", -8.0);
     StatChecker.checkPercentFluctuations(new ArrayList<>(timeSeries.values()), resBuilder);
-    assertEquals(0.0, resBuilder.getSeriesLargestPercentDiff().getPercentDifference(), 0.0);
-    assertFalse(resBuilder.getSeriesLargestPercentDiff().hasDiffDataPoint());
-    assertFalse(resBuilder.getSeriesLargestPercentDiff().hasBaseDataPoint());
+    assertFalse(resBuilder.hasSeriesLargestPercentDiff());
 
     resBuilder.clear();
     addDataPoint(timeSeries, "1993", -2.0);
@@ -218,15 +226,15 @@ public class StatCheckerTest {
 
   @Test
   public void testFuncCheckSigma() {
+    Debug.Log.Builder log = Debug.Log.newBuilder();
+    LogWrapper logCtx = new LogWrapper(log, Path.of("/tmp/statCheckerTest"));
     StatValidationResult.Builder resBuilder = StatValidationResult.newBuilder();
     Map<String, DataPoint> timeSeries = new TreeMap<>();
 
     addDataPoint(timeSeries, "2010", 5.6);
     addDataPoint(timeSeries, "2011", 5.6);
     addDataPoint(timeSeries, "2012", 5.6);
-    StatChecker.checkSigmaDivergence(new ArrayList<>(timeSeries.values()), resBuilder);
-    assertFalse(checkHasCounter(resBuilder, "StatsCheck_1_Sigma", new ArrayList<>()));
-    assertFalse(checkHasCounter(resBuilder, "StatsCheck_2_Sigma", new ArrayList<>()));
+    StatChecker.checkSigmaDivergence(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_3_Sigma", new ArrayList<>()));
 
     resBuilder.clear();
@@ -234,9 +242,7 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2010", 50.0);
     addDataPoint(timeSeries, "2011", 10.0);
     addDataPoint(timeSeries, "2012", 50.0);
-    StatChecker.checkSigmaDivergence(new ArrayList<>(timeSeries.values()), resBuilder);
-    assertTrue(checkHasCounter(resBuilder, "StatsCheck_1_Sigma", List.of("2011")));
-    assertFalse(checkHasCounter(resBuilder, "StatsCheck_2_Sigma", new ArrayList<>()));
+    StatChecker.checkSigmaDivergence(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_3_Sigma", new ArrayList<>()));
 
     resBuilder.clear();
@@ -251,10 +257,9 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2017", 5.0);
     addDataPoint(timeSeries, "2018", 5.0);
     addDataPoint(timeSeries, "2019", 5.0);
-    StatChecker.checkSigmaDivergence(new ArrayList<>(timeSeries.values()), resBuilder);
-    assertFalse(checkHasCounter(resBuilder, "StatsCheck_1_Sigma", new ArrayList<>()));
-    assertFalse(checkHasCounter(resBuilder, "StatsCheck_2_Sigma", new ArrayList<>()));
+    StatChecker.checkSigmaDivergence(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_3_Sigma", List.of("2012")));
+    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_3_Sigma"));
   }
 
   private boolean checkHasCounter(

@@ -1,0 +1,70 @@
+{
+  "levelSummary": {
+    "LEVEL_INFO": {
+      "counters": {
+        "NumNodeSuccesses": "18",
+        "NumPVSuccesses": "90",
+        "Existence_NumChecks": "108",
+        "NumRowSuccesses": "18",
+        "Existence_NumDcCalls": "1"
+      }
+    },
+    "LEVEL_WARNING": {
+      "counters": {
+        "StatsCheck_Inconsistent_Values": "1",
+        "StatsCheck_Data_Holes": "1",
+        "StatsCheck_Inconsistent_Date_Granularity": "1"
+      }
+    }
+  },
+  "statsCheckSummary": [{
+    "placeDcid": "geoId/06",
+    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "validationCounters": [{
+      "counterKey": "StatsCheck_Inconsistent_Values",
+      "problemPoints": [{
+        "date": "2020-02-03",
+        "values": [{
+          "value": 3.0,
+          "locations": [{
+            "file": "covid.csv",
+            "lineNumber": "4"
+          }]
+        }, {
+          "value": 8.0,
+          "locations": [{
+            "file": "covid.csv",
+            "lineNumber": "5"
+          }]
+        }]
+      }]
+    }, {
+      "counterKey": "StatsCheck_Data_Holes",
+      "additionalDetails": "Data hole found between the dates: 2020-03-03T00:00 and 2020-05-03T00:00"
+    }]
+  }, {
+    "placeDcid": "geoId/0601",
+    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "validationCounters": [{
+      "counterKey": "StatsCheck_Inconsistent_Date_Granularity",
+      "problemPoints": [{
+        "date": "2020-03",
+        "values": [{
+          "value": 1.0,
+          "locations": [{
+            "file": "covid.csv",
+            "lineNumber": "15"
+          }]
+        }]
+      }]
+    }]
+  }]
+}
