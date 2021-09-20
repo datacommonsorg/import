@@ -13,7 +13,6 @@
     "LEVEL_ERROR": {
       "counters": {
         "Sanity_MissingOrEmpty_statType": "1",
-        "Sanity_UnknownStatType": "1",
         "Sanity_MissingOrEmpty_dcid": "1",
         "Resolution_OrphanLocalReference_parent": "1",
         "Resolution_DcidAssignmentFailure_Song": "1",
@@ -37,14 +36,6 @@
     },
     "userMessage": "Found a missing or empty property value :: property: 'statType', node: 'SVId', type: 'StatisticalVariable'",
     "counterKey": "Sanity_MissingOrEmpty_statType"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "misc.mcf",
-      "lineNumber": "15"
-    },
-    "userMessage": "Found an unknown statType value :: value: '', node: 'SVId'",
-    "counterKey": "Sanity_UnknownStatType"
   }, {
     "level": "LEVEL_ERROR",
     "location": {

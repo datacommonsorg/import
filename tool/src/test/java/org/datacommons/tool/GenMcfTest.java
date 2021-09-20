@@ -60,7 +60,8 @@ public class GenMcfTest {
       for (File inputFile : inputFiles) {
         argsList.add(inputFile.getPath());
       }
-      argsList.add("--resolution");
+      argsList.add("--resolution=FULL");
+      argsList.add("--stat-checks");
       argsList.add(
           "--output-dir=" + Paths.get(testFolder.getRoot().getPath(), directory.getName()));
       String[] args = argsList.toArray(new String[argsList.size()]);

@@ -26,6 +26,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import org.datacommons.proto.Debug.DataPoint;
 import org.datacommons.proto.Debug.DataPoint.DataValue;
+import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.PercentDifference;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
@@ -34,7 +35,6 @@ import org.datacommons.proto.Mcf.ValueType;
 
 // A checker that checks time-series for holes, variance in values, etc.
 //
-// TODO: add counters to main log counters
 public class StatChecker {
   private static final class SeriesSummary {
     StatValidationResult.Builder validationResult;
@@ -45,6 +45,7 @@ public class StatChecker {
   private static final double SMALL_NUMBER = 0.000001;
   private static final String RECEIVED_SAMPLE_PLACES_KEY = "Received_Sample_Places";
   private static final Character PLACE_NAMESPACE_DELIMITER = '/';
+  private final boolean verbose;
   private final LogWrapper logCtx;
   // key is a string made up of place dcid, stat var dcid, measurement method, observation period,
   // scaling factor, and unit of the stat var observations of the series summary.
@@ -56,8 +57,9 @@ public class StatChecker {
   // Creates a StatChecker instance. If no samplePlaces are provided, for each pair of (place
   // namespace, place dcid length), we will use the first 5 places that stat var observations are
   // added for as the sample places.
-  public StatChecker(LogWrapper logCtx, Set<String> samplePlaces) {
+  public StatChecker(LogWrapper logCtx, Set<String> samplePlaces, boolean verbose) {
     this.logCtx = logCtx;
+    this.verbose = verbose;
     this.seriesSummaryMap = new HashMap<>();
     this.samplePlaces = new HashMap<>();
     if (samplePlaces == null) {
@@ -86,15 +88,17 @@ public class StatChecker {
       List<DataPoint> timeSeries = new ArrayList<>(seriesSummaryMap.get(hash).timeSeries.values());
       StatValidationResult.Builder resBuilder = seriesSummaryMap.get(hash).validationResult;
       // Check inconsistent values (sawtooth).
-      checkValueInconsistencies(timeSeries, resBuilder);
+      checkValueInconsistencies(timeSeries, resBuilder, logCtx);
       // Check N-Sigma variance.
-      checkSigmaDivergence(timeSeries, resBuilder);
+      checkSigmaDivergence(timeSeries, resBuilder, logCtx);
       // Check N-Percent fluctuations.
       checkPercentFluctuations(timeSeries, resBuilder);
       // Check for holes in dates, invalid dates, etc.
-      checkDates(timeSeries, resBuilder);
+      checkDates(timeSeries, resBuilder, logCtx);
       // add result to log.
-      logCtx.addStatsCheckSummaryEntry(resBuilder.build());
+      if (!resBuilder.getValidationCountersList().isEmpty()) {
+        logCtx.addStatsCheckSummaryEntry(resBuilder.build());
+      }
     }
   }
 
@@ -112,7 +116,7 @@ public class StatChecker {
       return false;
     }
     if (shouldGenerateSamplePlaces) {
-      int nameSpaceSplit = placeDcid.indexOf('/');
+      int nameSpaceSplit = placeDcid.indexOf(PLACE_NAMESPACE_DELIMITER);
       String placeNameSpace = "";
       if (nameSpaceSplit >= 0) {
         placeNameSpace = placeDcid.substring(0, nameSpaceSplit);
@@ -174,15 +178,17 @@ public class StatChecker {
   }
 
   protected static void checkValueInconsistencies(
-      List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder) {
+      List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder, LogWrapper logCtx) {
     StatValidationEntry.Builder inconsistentValueCounter = StatValidationEntry.newBuilder();
-    inconsistentValueCounter.setCounterKey("StatsCheck_Inconsistent_Values");
+    String counterKey = "StatsCheck_Inconsistent_Values";
+    inconsistentValueCounter.setCounterKey(counterKey);
     for (DataPoint dp : timeSeries) {
       double v = 0;
       boolean vInitialized = false;
       for (DataValue val : dp.getValuesList()) {
         if (vInitialized && val.getValue() != v) {
           inconsistentValueCounter.addProblemPoints(dp);
+          logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), counterKey, 1);
         }
         vInitialized = true;
         v = val.getValue();
@@ -194,39 +200,25 @@ public class StatChecker {
   }
 
   protected static void checkSigmaDivergence(
-      List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder) {
+      List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder, LogWrapper logCtx) {
     MeanAndStdDev meanAndStdDev = getStats(timeSeries);
     if (meanAndStdDev.stdDev == 0) {
       return;
     }
-    StatValidationEntry.Builder sigma1Counter = StatValidationEntry.newBuilder();
-    sigma1Counter.setCounterKey("StatsCheck_1_Sigma");
-    StatValidationEntry.Builder sigma2Counter = StatValidationEntry.newBuilder();
-    sigma2Counter.setCounterKey("StatsCheck_2_Sigma");
+    String sigma3CounterKey = "StatsCheck_3_Sigma";
     StatValidationEntry.Builder sigma3Counter = StatValidationEntry.newBuilder();
-    sigma3Counter.setCounterKey("StatsCheck_3_Sigma");
+    sigma3Counter.setCounterKey(sigma3CounterKey);
     // Only add data points to the counter of the greatest standard deviation that it belongs to.
     // ie. if the data point is beyond 3 std deviation, only add it to that counter.
     for (DataPoint dp : timeSeries) {
       double val = dp.getValues(0).getValue();
       if (Math.abs(val - meanAndStdDev.mean) > 3 * meanAndStdDev.stdDev) {
         sigma3Counter.addProblemPoints(dp);
-        continue;
-      }
-      if (Math.abs(val - meanAndStdDev.mean) > 2 * meanAndStdDev.stdDev) {
-        sigma2Counter.addProblemPoints(dp);
-        continue;
-      }
-      if (Math.abs(val - meanAndStdDev.mean) > 1 * meanAndStdDev.stdDev) {
-        sigma1Counter.addProblemPoints(dp);
+        logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), sigma3CounterKey, 1);
       }
     }
-    for (StatValidationEntry.Builder counter :
-        List.of(sigma1Counter, sigma2Counter, sigma3Counter)) {
-      if (counter.getProblemPointsList().isEmpty()) {
-        continue;
-      }
-      resBuilder.addValidationCounters(counter.build());
+    if (!sigma3Counter.getProblemPointsList().isEmpty()) {
+      resBuilder.addValidationCounters(sigma3Counter.build());
     }
   }
 
@@ -288,14 +280,12 @@ public class StatChecker {
       }
       baseDataPoint = dp;
     }
+    // only set largestPercentDiff if the largest percent diff is greater than 0.
+    if (maxDelta == 0) return;
     PercentDifference.Builder largestPercentDiff =
         resBuilder.getSeriesLargestPercentDiffBuilder().setPercentDifference(maxDelta);
-    if (maxDeltaDP != null) {
-      largestPercentDiff.setDiffDataPoint(maxDeltaDP);
-    }
-    if (maxDeltaBaseDP != null) {
-      largestPercentDiff.setBaseDataPoint(maxDeltaBaseDP);
-    }
+    largestPercentDiff.setDiffDataPoint(maxDeltaDP);
+    largestPercentDiff.setBaseDataPoint(maxDeltaBaseDP);
     largestPercentDiff.build();
   }
 
@@ -304,10 +294,11 @@ public class StatChecker {
   // try to infer holes and instead mark as "series_inconsistent_date_granularity" and
   // "series_invalid_date".
   protected static void checkDates(
-      List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder) {
+      List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder, LogWrapper logCtx) {
     Set<LocalDateTime> dateTimes = new TreeSet<>();
     StatValidationEntry.Builder invalidDateCounter = StatValidationEntry.newBuilder();
-    invalidDateCounter.setCounterKey("StatsCheck_Invalid_Date");
+    String invalidDateCounterKey = "StatsCheck_Invalid_Date";
+    invalidDateCounter.setCounterKey(invalidDateCounterKey);
     // To keep track of the different lengths of the date strings.
     Map<Integer, List<DataPoint>> dateLen = new HashMap<>();
 
@@ -318,6 +309,7 @@ public class StatChecker {
       LocalDateTime dateTime = StringUtil.getValidISO8601Date(date);
       if (dateTime == null) {
         invalidDateCounter.addProblemPoints(dp);
+        logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), invalidDateCounterKey, 1);
         continue;
       }
       if (!dateLen.containsKey(date.length())) {
@@ -329,13 +321,16 @@ public class StatChecker {
     List<Integer> dateLenList = new ArrayList<>(dateLen.keySet());
     if (dateLenList.size() > 1) {
       StatValidationEntry.Builder inconsistentDateCounter = StatValidationEntry.newBuilder();
-      inconsistentDateCounter.setCounterKey("StatsCheck_Inconsistent_Date_Granularity");
+      String inconsistentDateCounterKey = "StatsCheck_Inconsistent_Date_Granularity";
+      inconsistentDateCounter.setCounterKey(inconsistentDateCounterKey);
       // When there are multiple date granularity, the problem points will be those that are of a
       // different date granularity than the most common one.
       dateLenList.sort((d1, d2) -> dateLen.get(d2).size() - dateLen.get(d1).size());
       for (int i = 1; i < dateLenList.size(); i++) {
         dateLen.get(dateLenList.get(i)).forEach(inconsistentDateCounter::addProblemPoints);
       }
+      // Increment counter for each series where there is an inconsistent date problem.
+      logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), inconsistentDateCounterKey, 1);
       resBuilder.addValidationCounters(inconsistentDateCounter.build());
       return;
     }
@@ -354,11 +349,13 @@ public class StatChecker {
     for (LocalDateTime dt : dateTimesList) {
       if (prev != null) {
         long delta = ChronoUnit.MONTHS.between(prev, dt);
-        if (window > 0 && window != delta) {
+        if (window >= 0 && window != delta) {
           StatValidationEntry.Builder dataHoleCounter = StatValidationEntry.newBuilder();
-          dataHoleCounter.setCounterKey("StatsCheck_Data_Holes");
+          String dataHoleCounterKey = "StatsCheck_Data_Holes";
+          dataHoleCounter.setCounterKey(dataHoleCounterKey);
           dataHoleCounter.setAdditionalDetails(
               "Data hole found between the dates: " + prev.toString() + " and " + dt.toString());
+          logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), dataHoleCounterKey, 1);
           resBuilder.addValidationCounters(dataHoleCounter.build());
           return;
         }
