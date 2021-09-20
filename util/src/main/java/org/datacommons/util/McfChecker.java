@@ -94,7 +94,7 @@ public class McfChecker {
     this.svState = svState;
   }
 
-  // Returns true if there was an sanity error found.
+  // Returns true if there was no sanity error found.
   private boolean check() throws IOException, InterruptedException {
     boolean foundFailure = false;
     for (String nodeId : graph.getNodesMap().keySet()) {

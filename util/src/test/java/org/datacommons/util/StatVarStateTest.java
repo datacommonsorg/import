@@ -28,7 +28,7 @@ public class StatVarStateTest {
                 + "    gender: schema:Male        \n"
                 + "    statType: dcs:measuredValue\n"));
     assertTrue(
-        TestUtil.checkLog(log.build(), "Checker_SameDcidForDifferentStatVars", "Count_Person"));
+        TestUtil.checkLog(log.build(), "Sanity_SameDcidForDifferentStatVars", "Count_Person"));
   }
 
   @Test
@@ -51,7 +51,7 @@ public class StatVarStateTest {
     assertTrue(
         TestUtil.checkLog(
             log.build(),
-            "Checker_DifferentDcidsForSameStatVar",
+            "Sanity_DifferentDcidsForSameStatVar",
             "dcid1: 'Count_Person', dcid2: 'Count_Person_Male'"));
   }
 

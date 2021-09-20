@@ -35,10 +35,10 @@ public class StatVarState {
     if (existingGeneratedDcid != null && !existingGeneratedDcid.equals(generated.dcid)) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
-          "Checker_SameDcidForDifferentStatVars",
+          "Sanity_SameDcidForDifferentStatVars",
           "Found same curated ID for different StatVars :: curatedDcid: '"
               + curatedDcid
-              + "', one node: '"
+              + "', node: '"
               + id
               + "'",
           node.getLocationsList());
@@ -50,12 +50,12 @@ public class StatVarState {
     if (existingCuratedDcid != null && !existingCuratedDcid.equals(curatedDcid)) {
       logCtx.addEntry(
           Debug.Log.Level.LEVEL_ERROR,
-          "Checker_DifferentDcidsForSameStatVar",
+          "Sanity_DifferentDcidsForSameStatVar",
           "Found different curated IDs for same StatVar :: dcid1: '"
               + existingCuratedDcid
               + "', dcid2: '"
               + curatedDcid
-              + "', one node: '"
+              + "', node: '"
               + id
               + "'",
           node.getLocationsList());
