@@ -107,7 +107,6 @@ public class Processor {
 
         // Having looked up the external IDs, resolve the instances.
         logger.info("Resolving Instance MCF nodes");
-        processor.resolveNodes();
         Mcf.McfGraph resolvedGraph = processor.resolveNodes();
 
         // Add stats from resolved graph to statChecker.
@@ -200,7 +199,9 @@ public class Processor {
       } else {
         McfChecker.check(n, existenceChecker, logCtx);
       }
-      if (existenceChecker != null || resolutionMode != ResolutionMode.NONE || statChecker != null) {
+      if (existenceChecker != null
+          || resolutionMode != ResolutionMode.NONE
+          || statChecker != null) {
         nodesForVariousChecks.add(n);
       }
 
@@ -237,7 +238,9 @@ public class Processor {
           logCtx.incrementCounterBy("NumRowSuccesses", 1);
         }
         if (resolutionMode != ResolutionMode.NONE) {
-          g = resolveCommon(g, OutputFileType.TABLE_MCF_NODES, OutputFileType.FAILED_TABLE_MCF_NODES);
+          g =
+              resolveCommon(
+                  g, OutputFileType.TABLE_MCF_NODES, OutputFileType.FAILED_TABLE_MCF_NODES);
         } else {
           if (outputFiles != null) {
             writeGraph(OutputFileType.TABLE_MCF_NODES, g);
