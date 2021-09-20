@@ -44,29 +44,6 @@
           }]
         }]
       }]
-    }],
-    "seriesLargestPercentDiff": {
-      "percentDifference": 2.9997000299970003E-4,
-      "diffDataPoint": {
-        "date": "2015",
-        "values": [{
-          "value": 1000400.0,
-          "locations": [{
-            "file": "StatCheckerTest.mcf",
-            "lineNumber": "9"
-          }]
-        }]
-      },
-      "baseDataPoint": {
-        "date": "2014",
-        "values": [{
-          "value": 1000100.0,
-          "locations": [{
-            "file": "StatCheckerTest.mcf",
-            "lineNumber": "1"
-          }]
-        }]
-      }
-    }
+    }]
   }]
 }

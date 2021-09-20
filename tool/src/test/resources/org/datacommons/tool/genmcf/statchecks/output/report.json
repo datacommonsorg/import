@@ -2,10 +2,10 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "NumNodeSuccesses": "18",
-        "NumPVSuccesses": "90",
-        "Existence_NumChecks": "108",
-        "NumRowSuccesses": "18",
+        "NumNodeSuccesses": "22",
+        "NumPVSuccesses": "110",
+        "Existence_NumChecks": "132",
+        "NumRowSuccesses": "22",
         "Existence_NumDcCalls": "1"
       }
     },
@@ -13,7 +13,10 @@
       "counters": {
         "StatsCheck_Inconsistent_Values": "1",
         "StatsCheck_Data_Holes": "1",
-        "StatsCheck_Inconsistent_Date_Granularity": "1"
+        "StatsCheck_Inconsistent_Date_Granularity": "1",
+        "StatsCheck_PercentFluctuationGreaterThan50": "1",
+        "StatsCheck_PercentFluctuationGreaterThan100": "1",
+        "StatsCheck_PercentFluctuationGreaterThan500": "1"
       }
     }
   },
@@ -32,13 +35,13 @@
           "value": 3.0,
           "locations": [{
             "file": "covid.csv",
-            "lineNumber": "4"
+            "lineNumber": "6"
           }]
         }, {
           "value": 8.0,
           "locations": [{
             "file": "covid.csv",
-            "lineNumber": "5"
+            "lineNumber": "7"
           }]
         }]
       }]
@@ -61,10 +64,84 @@
           "value": 1.0,
           "locations": [{
             "file": "covid.csv",
-            "lineNumber": "15"
+            "lineNumber": "16"
           }]
         }]
       }]
+    }]
+  }, {
+    "placeDcid": "geoId/07",
+    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "validationCounters": [{
+      "counterKey": "StatsCheck_PercentFluctuationGreaterThan50",
+      "problemPoints": [{
+        "date": "2020-05-02",
+        "values": [{
+          "value": 5.0,
+          "locations": [{
+            "file": "covid.csv",
+            "lineNumber": "21"
+          }]
+        }]
+      }, {
+        "date": "2020-06-02",
+        "values": [{
+          "value": 275.0,
+          "locations": [{
+            "file": "covid.csv",
+            "lineNumber": "22"
+          }]
+        }]
+      }],
+      "percentDifference": 54.0
+    }, {
+      "counterKey": "StatsCheck_PercentFluctuationGreaterThan100",
+      "problemPoints": [{
+        "date": "2020-03-02",
+        "values": [{
+          "value": 1.0,
+          "locations": [{
+            "file": "covid.csv",
+            "lineNumber": "10"
+          }]
+        }]
+      }, {
+        "date": "2020-04-02",
+        "values": [{
+          "value": 112.0,
+          "locations": [{
+            "file": "covid.csv",
+            "lineNumber": "20"
+          }]
+        }]
+      }],
+      "percentDifference": 111.0
+    }, {
+      "counterKey": "StatsCheck_PercentFluctuationGreaterThan500",
+      "problemPoints": [{
+        "date": "2020-02-02",
+        "values": [{
+          "value": 0.0,
+          "locations": [{
+            "file": "covid.csv",
+            "lineNumber": "5"
+          }]
+        }]
+      }, {
+        "date": "2020-03-02",
+        "values": [{
+          "value": 1.0,
+          "locations": [{
+            "file": "covid.csv",
+            "lineNumber": "10"
+          }]
+        }]
+      }],
+      "percentDifference": 1000000.0
     }]
   }]
 }

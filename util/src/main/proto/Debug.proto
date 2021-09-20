@@ -98,21 +98,9 @@ message StatValidationResult {
         repeated DataPoint problem_points = 2;
         // Additional details as a message that is user understandable.
         optional string additional_details = 3;
+        // Only set for percent fluctuation counters.
+        optional double percent_difference = 4;
     }
 
     repeated StatValidationEntry validation_counters = 7;
-
-    // Describes a fluctuation between DataPoints in a time series.
-    message PercentDifference {
-        // The actual percent difference.
-        optional double percent_difference = 1;
-        // The datapoint that caused the percent difference.
-        optional DataPoint diff_data_point = 2;
-        // The datapoint with the starting value of the fluctuation.
-        optional DataPoint base_data_point = 3;
-    }
-
-    // the largest % increase or decrease in time series. Remains as default
-    // values if sawtooth exists.
-    optional PercentDifference series_largest_percent_diff = 8;
 }

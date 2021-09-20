@@ -1,13 +1,14 @@
 DateTime,geoId,CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+2020-01-02,geoId/07,1
 2020-01-30,geoId/06,1
 2020-02-02,geoId/06,2
+2020-02-02,geoId/07,0
 2020-02-03,geoId/06,3
 2020-02-03,geoId/06,8
 2020-03-02,geoId/06,1
 2020-03-02,geoId/06,1
-2020-03-02,geoId/07,3
+2020-03-02,geoId/07,1
 2020-03-02,geoId/08,1
-2020-03-03,geoId/07,7
 2020-03-03,geoId/09,1
 2020-03-03,geoId/10,3
 2020-03-03,geoId/11,1
@@ -16,4 +17,7 @@ DateTime,geoId,CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 2020-03-04,geoId/0601,1
 2020-03-05,geoId/0601,1
 2020-03-06,geoId/0601,1
+2020-04-02,geoId/07,112
+2020-05-02,geoId/07,5
 2020-05-03,geoId/06,8
+2020-06-02,geoId/07,275

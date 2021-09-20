@@ -28,7 +28,6 @@ import org.datacommons.proto.Debug.DataPoint;
 import org.datacommons.proto.Debug.DataPoint.DataValue;
 import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Debug.StatValidationResult;
-import org.datacommons.proto.Debug.StatValidationResult.PercentDifference;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.ValueType;
@@ -92,7 +91,7 @@ public class StatChecker {
       // Check N-Sigma variance.
       checkSigmaDivergence(timeSeries, resBuilder, logCtx);
       // Check N-Percent fluctuations.
-      checkPercentFluctuations(timeSeries, resBuilder);
+      checkPercentFluctuations(timeSeries, resBuilder, logCtx);
       // Check for holes in dates, invalid dates, etc.
       checkDates(timeSeries, resBuilder, logCtx);
       // add result to log.
@@ -248,17 +247,20 @@ public class StatChecker {
     return result;
   }
 
-  // Goes through sorted (but possibly discontinuous) time series, saving the largest fluctuation,
-  // and the datapoints that cause this fluctuation.
-  // Currently ignore fluctuations starting from 0 (division by 0 problem).
-  // TODO: Add counters for percent difference >50, >100, and >500.
+  // Goes through sorted (but possibly discontinuous) time series, saving the largest fluctuation
+  // for each bucket of fluctuations >50, >100, and >500.
   protected static void checkPercentFluctuations(
-      List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder) {
-    double maxDelta = 0;
-    DataPoint maxDeltaDP = null;
-    DataPoint maxDeltaBaseDP = null;
+      List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder, LogWrapper logCtx) {
     DataPoint baseDataPoint = null;
-
+    String percent50CounterKey = "StatsCheck_PercentFluctuationGreaterThan50";
+    String percent100CounterKey = "StatsCheck_PercentFluctuationGreaterThan100";
+    String percent500CounterKey = "StatsCheck_PercentFluctuationGreaterThan500";
+    StatValidationEntry.Builder percent50Counter = StatValidationEntry.newBuilder();
+    percent50Counter.setCounterKey(percent50CounterKey);
+    StatValidationEntry.Builder percent100Counter = StatValidationEntry.newBuilder();
+    percent100Counter.setCounterKey(percent100CounterKey);
+    StatValidationEntry.Builder percent500Counter = StatValidationEntry.newBuilder();
+    percent500Counter.setCounterKey(percent500CounterKey);
     for (DataPoint dp : timeSeries) {
       // Don't try to compare between times because this is a Sawtooth
       if (dp.getValuesCount() > 1) return;
@@ -272,21 +274,39 @@ public class StatChecker {
         } else {
           currDelta = (currVal - baseVal) / Math.abs(baseVal);
         }
-        if (Math.abs(maxDelta) < Math.abs(currDelta)) {
-          maxDelta = currDelta;
-          maxDeltaDP = dp;
-          maxDeltaBaseDP = baseDataPoint;
+        if (Math.abs(currDelta) > 500) {
+          // For these percent fluctuation counters, just show the details for the max fluctuation.
+          if (!percent500Counter.hasPercentDifference()
+              || Math.abs(currDelta) > Math.abs(percent500Counter.getPercentDifference())) {
+            percent500Counter.addProblemPoints(baseDataPoint);
+            percent500Counter.addProblemPoints(dp);
+            percent500Counter.setPercentDifference(currDelta);
+          }
+        } else if (Math.abs(currDelta) > 100) {
+          if (!percent100Counter.hasPercentDifference()
+              || Math.abs(currDelta) > Math.abs(percent100Counter.getPercentDifference())) {
+            percent100Counter.addProblemPoints(baseDataPoint);
+            percent100Counter.addProblemPoints(dp);
+            percent100Counter.setPercentDifference(currDelta);
+          }
+        } else if (Math.abs(currDelta) > 50) {
+          if (!percent50Counter.hasPercentDifference()
+              || Math.abs(currDelta) > Math.abs(percent50Counter.getPercentDifference())) {
+            percent50Counter.addProblemPoints(baseDataPoint);
+            percent50Counter.addProblemPoints(dp);
+            percent50Counter.setPercentDifference(currDelta);
+          }
         }
       }
       baseDataPoint = dp;
     }
-    // only set largestPercentDiff if the largest percent diff is greater than 0.
-    if (maxDelta == 0) return;
-    PercentDifference.Builder largestPercentDiff =
-        resBuilder.getSeriesLargestPercentDiffBuilder().setPercentDifference(maxDelta);
-    largestPercentDiff.setDiffDataPoint(maxDeltaDP);
-    largestPercentDiff.setBaseDataPoint(maxDeltaBaseDP);
-    largestPercentDiff.build();
+    for (StatValidationEntry.Builder counter :
+        List.of(percent50Counter, percent100Counter, percent500Counter)) {
+      if (counter.hasPercentDifference()) {
+        resBuilder.addValidationCounters(counter.build());
+        logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), counter.getCounterKey(), 1);
+      }
+    }
   }
 
   // Check if there are holes in the dates by inferring based on whether the successive dates have
