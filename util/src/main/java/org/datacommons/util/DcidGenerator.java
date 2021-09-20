@@ -4,7 +4,6 @@ import static org.datacommons.util.Vocabulary.*;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
-import java.nio.file.Path;
 import java.util.*;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
@@ -116,8 +115,7 @@ public class DcidGenerator {
   static final int LAST_REQUIRED_LEGACY_OBS_PROP_INDEX =
       ORDERED_LEGACY_OBS_KEY_PROPS.indexOf(Vocabulary.MEASURED_PROP);
 
-  private static final LogWrapper dummyLogCtx =
-      new LogWrapper(Debug.Log.newBuilder(), Path.of("/tmp/report.html"));
+  private static final LogWrapper dummyLogCtx = new LogWrapper(Debug.Log.newBuilder());
 
   public static class Result {
     // The dcid will be empty if there were any errors in the node. These should have been
