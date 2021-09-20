@@ -68,35 +68,5 @@
         }]
       }
     }
-  }, {
-    "placeDcid": "geoId/06",
-    "statVarDcid": "Count_Person_Female",
-    "measurementMethod": "CensusACS5YrSurvey",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "seriesLargestPercentDiff": {
-      "percentDifference": 1.9992003198720512E-4,
-      "diffDataPoint": {
-        "date": "2016",
-        "values": [{
-          "value": 500300.0,
-          "locations": [{
-            "file": "StatCheckerTest.mcf",
-            "lineNumber": "100"
-          }]
-        }]
-      },
-      "baseDataPoint": {
-        "date": "2015",
-        "values": [{
-          "value": 500200.0,
-          "locations": [{
-            "file": "StatCheckerTest.mcf",
-            "lineNumber": "92"
-          }]
-        }]
-      }
-    }
   }]
 }

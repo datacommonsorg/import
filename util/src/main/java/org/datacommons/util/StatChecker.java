@@ -96,7 +96,9 @@ public class StatChecker {
       // Check for holes in dates, invalid dates, etc.
       checkDates(timeSeries, resBuilder, logCtx);
       // add result to log.
-      logCtx.addStatsCheckSummaryEntry(resBuilder.build());
+      if (!resBuilder.getValidationCountersList().isEmpty()) {
+        logCtx.addStatsCheckSummaryEntry(resBuilder.build());
+      }
     }
   }
 
@@ -326,13 +328,9 @@ public class StatChecker {
       dateLenList.sort((d1, d2) -> dateLen.get(d2).size() - dateLen.get(d1).size());
       for (int i = 1; i < dateLenList.size(); i++) {
         dateLen.get(dateLenList.get(i)).forEach(inconsistentDateCounter::addProblemPoints);
-        // increment counter by number of data points of current date granularity. This way, counter
-        // number will match number of problem points.
-        logCtx.incrementCounterBy(
-            Level.LEVEL_WARNING.name(),
-            inconsistentDateCounterKey,
-            dateLen.get(dateLenList.get(i)).size());
       }
+      // Increment counter for each series where there is an inconsistent date problem.
+      logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), inconsistentDateCounterKey, 1);
       resBuilder.addValidationCounters(inconsistentDateCounter.build());
       return;
     }

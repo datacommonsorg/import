@@ -111,9 +111,7 @@ public class Processor {
       }
 
       // We've been adding stats to statChecker all along, now do the actual check.
-      if (args.doStatChecks) {
-        processor.checkStats();
-      }
+      processor.checkStats();
 
       if (args.outputFiles != null) {
         processor.closeFiles();
@@ -335,6 +333,7 @@ public class Processor {
 
   private void checkStats() {
     if (verbose) logger.info("Performing stats checks");
+    if (statChecker == null) return;
     statChecker.check();
   }
 
