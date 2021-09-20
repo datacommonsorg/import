@@ -21,12 +21,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.datacommons.proto.Mcf;
-import org.datacommons.util.LogWrapper;
-import org.datacommons.util.McfChecker;
-import org.datacommons.util.McfMutator;
-import org.datacommons.util.McfUtil;
-import org.datacommons.util.TmcfCsvParser;
-import org.datacommons.util.Vocabulary;
+import org.datacommons.util.*;
 
 // Class to process input files and store the transformed data into storage.
 public class Processor {
@@ -55,7 +50,7 @@ public class Processor {
       while ((g = parser.parseNextRow()) != null) {
         g = McfMutator.mutate(g.toBuilder(), logCtx);
         // This will set counters/messages in logCtx.
-        boolean success = McfChecker.check(g, null, logCtx);
+        boolean success = McfChecker.check(g, null, null, logCtx);
         if (success) {
           logCtx.incrementCounterBy("NumRowSuccesses", 1);
         }

@@ -32,12 +32,14 @@
         "Sanity_DcidNameMismatchInSchema": "2",
         "Sanity_UnexpectedPropInClass": "1",
         "Sanity_NotInitUpper_nameInClass": "1",
-        "Sanity_MissingOrEmpty_subClassOf": "1"
+        "Sanity_MissingOrEmpty_subClassOf": "1",
+        "Sanity_SameDcidForDifferentStatVars": "1",
+        "Sanity_DifferentDcidsForSameStatVar": "1"
       }
     },
     "LEVEL_INFO": {
       "counters": {
-        "Existence_NumChecks": "149",
+        "Existence_NumChecks": "178",
         "Existence_NumDcCalls": "2"
       }
     },
@@ -341,6 +343,22 @@
     },
     "userMessage": "Found a missing or empty property value :: property: 'subClassOf', node: 'dcid:Pop', type: 'Class'",
     "counterKey": "Sanity_MissingOrEmpty_subClassOf"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "145"
+    },
+    "userMessage": "Found same curated ID for different StatVars :: curatedDcid: 'Count_Person', node: 'Count_Person'",
+    "counterKey": "Sanity_SameDcidForDifferentStatVars"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "154"
+    },
+    "userMessage": "Found different curated IDs for same StatVar :: dcid1: 'Count_Person', dcid2: 'Count_Person_Female', node: 'dcid:Count_Person_Female'",
+    "counterKey": "Sanity_DifferentDcidsForSameStatVar"
   }, {
     "level": "LEVEL_WARNING",
     "location": {

@@ -50,14 +50,18 @@ public class McfChecker {
   private Mcf.McfGraph graph;
   private LogWrapper logCtx;
   private Set<String> columns; // Relevant only when graph.type() == TEMPLATE_MCF
-  boolean foundFailure = false;
+  boolean nodeFailure = false; // Failure of a specific node being processed.
   private ExistenceChecker existenceChecker;
+  private StatVarState svState;
 
   // Argument |graph| may be Instance or Template MCF.
   public static boolean check(
-      Mcf.McfGraph graph, ExistenceChecker existenceChecker, LogWrapper logCtx)
+      Mcf.McfGraph graph,
+      ExistenceChecker existenceChecker,
+      StatVarState svState,
+      LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return new McfChecker(graph, null, existenceChecker, logCtx).check();
+    return new McfChecker(graph, null, existenceChecker, svState, logCtx).check();
   }
 
   // Used to check a single node from TMcfCsvParser.
@@ -67,36 +71,40 @@ public class McfChecker {
     Mcf.McfGraph.Builder nodeGraph = Mcf.McfGraph.newBuilder();
     nodeGraph.setType(mcfType);
     nodeGraph.putNodes(nodeId, node);
-    return new McfChecker(nodeGraph.build(), null, null, logCtx).check();
+    return new McfChecker(nodeGraph.build(), null, null, null, logCtx).check();
   }
 
   // Used with Template MCF when there are columns from CSV header.
   public static boolean checkTemplate(
       Mcf.McfGraph graph, Set<String> columns, ExistenceChecker existenceChecker, LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return new McfChecker(graph, columns, existenceChecker, logCtx).check();
+    return new McfChecker(graph, columns, existenceChecker, null, logCtx).check();
   }
 
   private McfChecker(
       Mcf.McfGraph graph,
       Set<String> columns,
       ExistenceChecker existenceChecker,
+      StatVarState svState,
       LogWrapper logCtx) {
     this.graph = graph;
     this.columns = columns;
     this.logCtx = logCtx;
     this.existenceChecker = existenceChecker;
+    this.svState = svState;
   }
 
-  // Returns true if there was an sanity error found.
+  // Returns true if there was no sanity error found.
   private boolean check() throws IOException, InterruptedException {
-    foundFailure = false;
+    boolean foundFailure = false;
     for (String nodeId : graph.getNodesMap().keySet()) {
+      nodeFailure = false;
       Mcf.McfGraph.PropertyValues node = graph.toBuilder().getNodesOrThrow(nodeId);
       checkNode(nodeId, node);
       if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
         checkTemplateNode(nodeId, node);
       }
+      foundFailure |= nodeFailure;
     }
     return !foundFailure;
   }
@@ -221,6 +229,10 @@ public class McfChecker {
 
     // Every SV must have DCID defined.
     checkRequiredSingleValueProp(nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.DCID);
+
+    if (svState != null && !nodeFailure) {
+      nodeFailure = !svState.check(nodeId, node);
+    }
   }
 
   private void checkSVObs(String nodeId, Mcf.McfGraph.PropertyValues node)
@@ -688,7 +700,7 @@ public class McfChecker {
 
   private void addLog(
       Debug.Log.Level level, String counter, String message, Mcf.McfGraph.PropertyValues node) {
-    foundFailure = true;
+    nodeFailure = true;
     logCtx.addEntry(level, counter, message, node.getLocationsList());
   }
 }
