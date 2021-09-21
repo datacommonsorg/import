@@ -22,9 +22,9 @@ class Args {
   public String toString() {
     StringBuilder argStr = new StringBuilder();
     if (outputFiles != null) {
-      argStr.append("genmcf with ");
+      argStr.append("genmcf with");
     } else {
-      argStr.append("lint with ");
+      argStr.append("lint with");
     }
     argStr.append(" existence-checks=" + doExistenceChecks);
     argStr.append(", resolution=" + resolutionMode.name());

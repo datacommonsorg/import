@@ -17,7 +17,10 @@ package org.datacommons.tool;
 import java.io.File;
 import java.io.IOException;
 import java.net.http.HttpClient;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,8 +46,6 @@ public class Processor {
     Integer retVal = 0;
     Processor processor = new Processor(args);
     try {
-      logger.info("Command options: " + args.toString());
-
       // Load all the instance MCFs into memory, so we can do existence checks, resolution, etc.
       if (args.doExistenceChecks) {
         logger.info("Loading Instance MCF files into memory");
@@ -110,6 +111,8 @@ public class Processor {
   }
 
   private Processor(Args args) {
+    logger.info("Command options: " + args.toString());
+
     this.args = args;
     this.logCtx =
         new LogWrapper(Debug.Log.newBuilder().setCommandArgs(args.toProto()), args.outputDir);
