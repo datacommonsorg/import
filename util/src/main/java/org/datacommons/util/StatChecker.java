@@ -283,7 +283,7 @@ public class StatChecker {
     maxPercentFluctuationCounter.addProblemPoints(maxDeltaDP);
     maxPercentFluctuationCounter.setPercentDifference(maxDelta);
     resBuilder.addValidationCounters(maxPercentFluctuationCounter.build());
-    logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), counterKey, 1);
+    logCtx.incrementWarningCounterBy(counterKey, 1);
   }
 
   // Check if there are holes in the dates by inferring based on whether the successive dates have
