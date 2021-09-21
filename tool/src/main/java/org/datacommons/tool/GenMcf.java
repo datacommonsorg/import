@@ -21,9 +21,7 @@ import java.util.HashMap;
 import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
 import org.datacommons.util.FileGroup;
-import org.datacommons.util.LogWrapper;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "genmcf", description = "Generate Instance MCF from TMCF/CSV files")
@@ -56,7 +54,7 @@ class GenMcf implements Callable<Integer> {
     if (!parent.outputDir.exists()) {
       parent.outputDir.mkdirs();
     }
-    Processor.Args args = new Processor.Args();
+    Args args = new Args();
     args.doExistenceChecks = parent.doExistenceChecks;
     args.resolutionMode = parent.resolutionMode;
     args.doStatChecks = parent.doStatChecks;
@@ -68,9 +66,9 @@ class GenMcf implements Callable<Integer> {
     }
     args.verbose = parent.verbose;
     args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
-    args.logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
+    args.outputDir = parent.outputDir.toPath();
     args.outputFiles = new HashMap<>();
-    for (Processor.OutputFileType type : Processor.OutputFileType.values()) {
+    for (Args.OutputFileType type : Args.OutputFileType.values()) {
       var fName = type.name().toLowerCase() + ".mcf";
       args.outputFiles.put(type, Paths.get(parent.outputDir.getPath(), fName));
     }

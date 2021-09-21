@@ -62,7 +62,7 @@ class Main {
               + "and generated DCIDs, set FULL.  To just resolve local references and generate "
               + "DCIDs, set LOCAL.  Note that FULL mode may be slower since it makes "
               + "(batched) DC Recon API calls and two passes over your CSV files. Default to NONE.")
-  public Processor.ResolutionMode resolutionMode = Processor.ResolutionMode.NONE;
+  public Args.ResolutionMode resolutionMode = Args.ResolutionMode.NONE;
 
   // TODO: Default to true after some trials.
   @CommandLine.Option(

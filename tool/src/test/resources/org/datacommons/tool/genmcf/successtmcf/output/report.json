@@ -514,5 +514,11 @@
     },
     "userMessage": "Failed reference existence check :: value-ref: 'latLong/-4300000_11600000', property: 'location', node: 'E:SVTest->E3'",
     "counterKey": "Existence_MissingReference_location"
-  }]
+  }],
+  "commandArgs": {
+    "existenceChecks": true,
+    "resolution": "RESOLUTION_MODE_FULL",
+    "numThreads": 1,
+    "statChecks": true
+  }
 }

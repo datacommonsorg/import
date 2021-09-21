@@ -479,5 +479,11 @@
     },
     "userMessage": "Failed reference existence check :: subject: '', predicate: 'domainIncludes', object: '', node: 'dcid:Count_Death_10To12'",
     "counterKey": "Existence_MissingReference_domainIncludes"
-  }]
+  }],
+  "commandArgs": {
+    "existenceChecks": true,
+    "resolution": "RESOLUTION_MODE_NONE",
+    "numThreads": 1,
+    "statChecks": true
+  }
 }
