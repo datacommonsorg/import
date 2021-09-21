@@ -43,7 +43,7 @@ public class LogWrapperTest {
         Debug.Log.Level.LEVEL_FATAL, "CSV_FoundABomb", "Found a Time Bomb", "TestInput.csv", 30);
 
     assertEquals("1 fatal, 1 error(s), 1 warning(s)", lw.summaryString());
-    assertEquals(false, lw.trackStatus(1, "", ""));
+    assertEquals(false, lw.trackStatus(1, ""));
 
     File wantFile = new File(this.getClass().getResource("LogWrapperTest_result.json").getPath());
     lw.persistLog();
@@ -61,15 +61,15 @@ public class LogWrapperTest {
     for (int i = 1; i <= 50; i++) {
       lw.addEntry(
           Debug.Log.Level.LEVEL_ERROR, "MCF_ErrorCounter" + i, "Foo Error", "TestInput.mcf", i);
-      assertTrue(lw.trackStatus(1, "", ""));
+      assertTrue(lw.trackStatus(1, ""));
     }
     // One more with the same counter is fine.
     lw.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_ErrorCounter1", "Foo Error", "TestInput.mcf", 1);
-    assertTrue(lw.trackStatus(1, "", ""));
+    assertTrue(lw.trackStatus(1, ""));
 
     // One more with a new counter is not.
     lw.addEntry(
         Debug.Log.Level.LEVEL_ERROR, "MCF_ErrorCounter51", "Foo Error", "TestInput.mcf", 51);
-    assertFalse(lw.trackStatus(1, "", ""));
+    assertFalse(lw.trackStatus(1, ""));
   }
 }

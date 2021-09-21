@@ -51,6 +51,7 @@ public class LogWrapper {
 
   private Instant lastStatusAt;
   private long countAtLastStatus = 0;
+  private long currentCount = 0;
   private final Set<String> countersWithErrors = new HashSet<>();
 
   public LogWrapper(Debug.Log.Builder log, Path outputDir) {
@@ -95,23 +96,16 @@ public class LogWrapper {
 
   // Updates status, provides message and return a boolean indicating if everything was successful.
   // If this returns false, we should bail.
-  public synchronized boolean trackStatus(long count, String filePath, String thing)
-      throws IOException {
+  public synchronized boolean trackStatus(long incCount, String thing) throws IOException {
     Instant now = Instant.now();
     if (Duration.between(lastStatusAt, now).getSeconds() >= SECONDS_BETWEEN_STATUS) {
-      if (filePath.isEmpty()) {
-        logger.info("{} {} [{}]", count - countAtLastStatus, thing, summaryString());
-      } else {
-        logger.info(
-            "{} {} of {} [{}]",
-            count - countAtLastStatus,
-            thing,
-            Path.of(filePath).getFileName().toString(),
-            summaryString());
-      }
+      logger.info("{} {} [{}]", currentCount - countAtLastStatus, thing, summaryString());
       if (persistLog) persistLog(true);
       lastStatusAt = now;
-      countAtLastStatus = count;
+      currentCount += incCount;
+      countAtLastStatus = currentCount;
+    } else {
+      currentCount += incCount;
     }
     return !loggedTooManyFailures();
   }
