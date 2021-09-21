@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
@@ -38,7 +39,6 @@ public class Processor {
   private ExternalIdResolver idResolver;
   private StatChecker statChecker;
   private StatVarState statVarState;
-  private final Map<OutputFileType, BufferedWriter> writers = new HashMap<>();
   private final List<Mcf.McfGraph> nodesForVariousChecks = new ArrayList<>();
   private final ExecutorService execService;
 
@@ -133,10 +133,6 @@ public class Processor {
 
       // We've been adding stats to statChecker all along, now do the actual check.
       processor.checkStats();
-
-      if (args.outputFiles != null) {
-        processor.closeFiles();
-      }
     } catch (DCTooManyFailuresException | InterruptedException ex) {
       // Only for DCTooManyFailuresException, we will dump the logCtx and exit.
       logger.error("Aborting prematurely, see report.json.");
@@ -229,6 +225,7 @@ public class Processor {
     if (existenceChecker != null) existenceChecker.drainRemoteCalls();
   }
 
+  // This is a thread-safe function invoked in parallel per CSV file.
   private void processTable(File csvFile)
       throws IOException, DCTooManyFailuresException, InterruptedException {
     if (args.verbose) logger.info("Checking CSV " + csvFile.getPath());
@@ -243,6 +240,8 @@ public class Processor {
     if (parser == null) {
       throw new DCTooManyFailuresException("processTables encountered too many failures");
     }
+    BufferedWriter writer = getWriter(OutputFileType.TABLE_MCF_NODES, csvFile);
+    BufferedWriter failureWriter = getWriter(OutputFileType.FAILED_TABLE_MCF_NODES, csvFile);
     Mcf.McfGraph g;
     long numNodesProcessed = 0, numRowsProcessed = 0;
     while ((g = parser.parseNextRow()) != null) {
@@ -254,10 +253,10 @@ public class Processor {
         args.logCtx.incrementInfoCounterBy("NumRowSuccesses", 1);
       }
       if (args.resolutionMode != ResolutionMode.NONE) {
-        g = resolveCommon(g, OutputFileType.TABLE_MCF_NODES, OutputFileType.FAILED_TABLE_MCF_NODES);
+        g = resolveCommon(g, writer, failureWriter);
       } else {
         if (args.outputFiles != null) {
-          writeGraph(OutputFileType.TABLE_MCF_NODES, g);
+          writer.write(McfUtil.serializeMcfGraph(g, false));
         }
       }
 
@@ -280,6 +279,19 @@ public class Processor {
         csvFile.getName(),
         numRowsProcessed,
         numNodesProcessed);
+    if (writer != null) writer.close();
+    if (failureWriter != null) failureWriter.close();
+  }
+
+  // Create a writer per type of file.
+  private BufferedWriter getWriter(OutputFileType type, File csvFile) throws IOException {
+    if (args.outputFiles == null) return null;
+    String filePath = args.outputFiles.get(type).toString();
+    if (csvFile != null) {
+      String fileSuffix = FilenameUtils.removeExtension(csvFile.getName()) + ".csv";
+      filePath = FilenameUtils.removeExtension(filePath) + "_" + fileSuffix;
+    }
+    return new BufferedWriter(new FileWriter(filePath));
   }
 
   // Called only when existenceChecker is enabled.
@@ -298,25 +310,27 @@ public class Processor {
 
   // Called only when resolution is enabled.
   private Mcf.McfGraph resolveNodes() throws IOException {
-    return resolveCommon(
-        McfUtil.mergeGraphs(nodesForVariousChecks),
-        OutputFileType.INSTANCE_MCF_NODES,
-        OutputFileType.FAILED_INSTANCE_MCF_NODES);
+    BufferedWriter writer = getWriter(OutputFileType.INSTANCE_MCF_NODES, null);
+    BufferedWriter failureWriter = getWriter(OutputFileType.FAILED_INSTANCE_MCF_NODES, null);
+    var result = resolveCommon(McfUtil.mergeGraphs(nodesForVariousChecks), writer, failureWriter);
+    if (writer != null) writer.close();
+    if (failureWriter != null) failureWriter.close();
+    return result;
   }
 
   private Mcf.McfGraph resolveCommon(
-      Mcf.McfGraph mcfGraph, OutputFileType successFile, OutputFileType failureFile)
+      Mcf.McfGraph mcfGraph, BufferedWriter writer, BufferedWriter failureWriter)
       throws IOException {
     McfResolver resolver = new McfResolver(mcfGraph, args.verbose, idResolver, args.logCtx);
     resolver.resolve();
-    if (args.outputFiles != null) {
+    if (writer != null && failureWriter != null) {
       var resolved = resolver.resolvedGraph();
       if (!resolved.getNodesMap().isEmpty()) {
-        writeGraph(successFile, resolved);
+        writer.write(McfUtil.serializeMcfGraph(resolved, false));
       }
       var failed = resolver.failedGraph();
       if (!failed.getNodesMap().isEmpty()) {
-        writeGraph(failureFile, failed);
+        failureWriter.write(McfUtil.serializeMcfGraph(failed, false));
       }
     }
     return resolver.resolvedGraph();
@@ -355,6 +369,7 @@ public class Processor {
     idResolver.drainRemoteCalls();
   }
 
+  // This is a thread-safe function invoked in parallel per CSV file.
   private void lookupExternalIdsFromTable(File csvFile, LogWrapper dummyLog)
       throws DCTooManyFailuresException, IOException, InterruptedException {
     if (args.verbose) logger.info("Reading external IDs from CSV " + csvFile.getPath());
@@ -374,24 +389,6 @@ public class Processor {
         System.err.println("Too Many Errors ::\n" + dummyLog.dumpLog());
         throw new DCTooManyFailuresException("encountered too many failures");
       }
-    }
-  }
-
-  private void writeGraph(OutputFileType type, Mcf.McfGraph graph) throws IOException {
-    var writer = writers.getOrDefault(type, null);
-    if (writer == null) {
-      var fileString = args.outputFiles.get(type).toString();
-      logger.info("Opening output file " + fileString + " of type " + type.name());
-      writer = new BufferedWriter(new FileWriter(fileString));
-      writers.put(type, writer);
-    }
-    writer.write(McfUtil.serializeMcfGraph(graph, false));
-  }
-
-  private void closeFiles() throws IOException {
-    // Close any file that was written to.
-    for (var kv : writers.entrySet()) {
-      kv.getValue().close();
     }
   }
 
