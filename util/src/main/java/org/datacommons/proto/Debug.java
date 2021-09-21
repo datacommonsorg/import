@@ -7438,52 +7438,6 @@ public final class Debug {
      */
     org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder
         getValidationCountersOrBuilder(int index);
-
-    /**
-     *
-     *
-     * <pre>
-     * the largest % increase or decrease in time series. Remains as default
-     * values if sawtooth exists.
-     * </pre>
-     *
-     * <code>
-     * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-     * </code>
-     *
-     * @return Whether the seriesLargestPercentDiff field is set.
-     */
-    boolean hasSeriesLargestPercentDiff();
-    /**
-     *
-     *
-     * <pre>
-     * the largest % increase or decrease in time series. Remains as default
-     * values if sawtooth exists.
-     * </pre>
-     *
-     * <code>
-     * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-     * </code>
-     *
-     * @return The seriesLargestPercentDiff.
-     */
-    org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-        getSeriesLargestPercentDiff();
-    /**
-     *
-     *
-     * <pre>
-     * the largest % increase or decrease in time series. Remains as default
-     * values if sawtooth exists.
-     * </pre>
-     *
-     * <code>
-     * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-     * </code>
-     */
-    org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder
-        getSeriesLargestPercentDiffOrBuilder();
   }
   /** Protobuf type {@code org.datacommons.proto.StatValidationResult} */
   public static final class StatValidationResult extends com.google.protobuf.GeneratedMessageV3
@@ -7590,24 +7544,6 @@ public final class Debug {
                     input.readMessage(
                         org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry.PARSER,
                         extensionRegistry));
-                break;
-              }
-            case 66:
-              {
-                org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder
-                    subBuilder = null;
-                if (((bitField0_ & 0x00000040) != 0)) {
-                  subBuilder = seriesLargestPercentDiff_.toBuilder();
-                }
-                seriesLargestPercentDiff_ =
-                    input.readMessage(
-                        org.datacommons.proto.Debug.StatValidationResult.PercentDifference.PARSER,
-                        extensionRegistry);
-                if (subBuilder != null) {
-                  subBuilder.mergeFrom(seriesLargestPercentDiff_);
-                  seriesLargestPercentDiff_ = subBuilder.buildPartial();
-                }
-                bitField0_ |= 0x00000040;
                 break;
               }
             default:
@@ -7777,6 +7713,31 @@ public final class Debug {
        * @return The bytes for additionalDetails.
        */
       com.google.protobuf.ByteString getAdditionalDetailsBytes();
+
+      /**
+       *
+       *
+       * <pre>
+       * Only set for percent fluctuation counters.
+       * </pre>
+       *
+       * <code>optional double percent_difference = 4;</code>
+       *
+       * @return Whether the percentDifference field is set.
+       */
+      boolean hasPercentDifference();
+      /**
+       *
+       *
+       * <pre>
+       * Only set for percent fluctuation counters.
+       * </pre>
+       *
+       * <code>optional double percent_difference = 4;</code>
+       *
+       * @return The percentDifference.
+       */
+      double getPercentDifference();
     }
     /**
      *
@@ -7857,6 +7818,12 @@ public final class Debug {
                   com.google.protobuf.ByteString bs = input.readBytes();
                   bitField0_ |= 0x00000002;
                   additionalDetails_ = bs;
+                  break;
+                }
+              case 33:
+                {
+                  bitField0_ |= 0x00000004;
+                  percentDifference_ = input.readDouble();
                   break;
                 }
               default:
@@ -8088,6 +8055,37 @@ public final class Debug {
         }
       }
 
+      public static final int PERCENT_DIFFERENCE_FIELD_NUMBER = 4;
+      private double percentDifference_;
+      /**
+       *
+       *
+       * <pre>
+       * Only set for percent fluctuation counters.
+       * </pre>
+       *
+       * <code>optional double percent_difference = 4;</code>
+       *
+       * @return Whether the percentDifference field is set.
+       */
+      public boolean hasPercentDifference() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * Only set for percent fluctuation counters.
+       * </pre>
+       *
+       * <code>optional double percent_difference = 4;</code>
+       *
+       * @return The percentDifference.
+       */
+      public double getPercentDifference() {
+        return percentDifference_;
+      }
+
       private byte memoizedIsInitialized = -1;
 
       @java.lang.Override
@@ -8111,6 +8109,9 @@ public final class Debug {
         if (((bitField0_ & 0x00000002) != 0)) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 3, additionalDetails_);
         }
+        if (((bitField0_ & 0x00000004) != 0)) {
+          output.writeDouble(4, percentDifference_);
+        }
         unknownFields.writeTo(output);
       }
 
@@ -8129,6 +8130,9 @@ public final class Debug {
         }
         if (((bitField0_ & 0x00000002) != 0)) {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, additionalDetails_);
+        }
+        if (((bitField0_ & 0x00000004) != 0)) {
+          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(4, percentDifference_);
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -8156,6 +8160,11 @@ public final class Debug {
         if (hasAdditionalDetails()) {
           if (!getAdditionalDetails().equals(other.getAdditionalDetails())) return false;
         }
+        if (hasPercentDifference() != other.hasPercentDifference()) return false;
+        if (hasPercentDifference()) {
+          if (java.lang.Double.doubleToLongBits(getPercentDifference())
+              != java.lang.Double.doubleToLongBits(other.getPercentDifference())) return false;
+        }
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -8178,6 +8187,13 @@ public final class Debug {
         if (hasAdditionalDetails()) {
           hash = (37 * hash) + ADDITIONAL_DETAILS_FIELD_NUMBER;
           hash = (53 * hash) + getAdditionalDetails().hashCode();
+        }
+        if (hasPercentDifference()) {
+          hash = (37 * hash) + PERCENT_DIFFERENCE_FIELD_NUMBER;
+          hash =
+              (53 * hash)
+                  + com.google.protobuf.Internal.hashLong(
+                      java.lang.Double.doubleToLongBits(getPercentDifference()));
         }
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
@@ -8343,6 +8359,8 @@ public final class Debug {
           }
           additionalDetails_ = "";
           bitField0_ = (bitField0_ & ~0x00000004);
+          percentDifference_ = 0D;
+          bitField0_ = (bitField0_ & ~0x00000008);
           return this;
         }
 
@@ -8392,6 +8410,10 @@ public final class Debug {
             to_bitField0_ |= 0x00000002;
           }
           result.additionalDetails_ = additionalDetails_;
+          if (((from_bitField0_ & 0x00000008) != 0)) {
+            result.percentDifference_ = percentDifference_;
+            to_bitField0_ |= 0x00000004;
+          }
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -8485,6 +8507,9 @@ public final class Debug {
             bitField0_ |= 0x00000004;
             additionalDetails_ = other.additionalDetails_;
             onChanged();
+          }
+          if (other.hasPercentDifference()) {
+            setPercentDifference(other.getPercentDifference());
           }
           this.mergeUnknownFields(other.unknownFields);
           onChanged();
@@ -9115,6 +9140,71 @@ public final class Debug {
           return this;
         }
 
+        private double percentDifference_;
+        /**
+         *
+         *
+         * <pre>
+         * Only set for percent fluctuation counters.
+         * </pre>
+         *
+         * <code>optional double percent_difference = 4;</code>
+         *
+         * @return Whether the percentDifference field is set.
+         */
+        public boolean hasPercentDifference() {
+          return ((bitField0_ & 0x00000008) != 0);
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Only set for percent fluctuation counters.
+         * </pre>
+         *
+         * <code>optional double percent_difference = 4;</code>
+         *
+         * @return The percentDifference.
+         */
+        public double getPercentDifference() {
+          return percentDifference_;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Only set for percent fluctuation counters.
+         * </pre>
+         *
+         * <code>optional double percent_difference = 4;</code>
+         *
+         * @param value The percentDifference to set.
+         * @return This builder for chaining.
+         */
+        public Builder setPercentDifference(double value) {
+          bitField0_ |= 0x00000008;
+          percentDifference_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         *
+         *
+         * <pre>
+         * Only set for percent fluctuation counters.
+         * </pre>
+         *
+         * <code>optional double percent_difference = 4;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearPercentDifference() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          percentDifference_ = 0D;
+          onChanged();
+          return this;
+        }
+
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -9167,1265 +9257,6 @@ public final class Debug {
 
       @java.lang.Override
       public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
-          getDefaultInstanceForType() {
-        return DEFAULT_INSTANCE;
-      }
-    }
-
-    public interface PercentDifferenceOrBuilder
-        extends
-        // @@protoc_insertion_point(interface_extends:org.datacommons.proto.StatValidationResult.PercentDifference)
-        com.google.protobuf.MessageOrBuilder {
-
-      /**
-       *
-       *
-       * <pre>
-       * The actual percent difference.
-       * </pre>
-       *
-       * <code>optional double percent_difference = 1;</code>
-       *
-       * @return Whether the percentDifference field is set.
-       */
-      boolean hasPercentDifference();
-      /**
-       *
-       *
-       * <pre>
-       * The actual percent difference.
-       * </pre>
-       *
-       * <code>optional double percent_difference = 1;</code>
-       *
-       * @return The percentDifference.
-       */
-      double getPercentDifference();
-
-      /**
-       *
-       *
-       * <pre>
-       * The datapoint that caused the percent difference.
-       * </pre>
-       *
-       * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-       *
-       * @return Whether the diffDataPoint field is set.
-       */
-      boolean hasDiffDataPoint();
-      /**
-       *
-       *
-       * <pre>
-       * The datapoint that caused the percent difference.
-       * </pre>
-       *
-       * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-       *
-       * @return The diffDataPoint.
-       */
-      org.datacommons.proto.Debug.DataPoint getDiffDataPoint();
-      /**
-       *
-       *
-       * <pre>
-       * The datapoint that caused the percent difference.
-       * </pre>
-       *
-       * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-       */
-      org.datacommons.proto.Debug.DataPointOrBuilder getDiffDataPointOrBuilder();
-
-      /**
-       *
-       *
-       * <pre>
-       * The datapoint with the starting value of the fluctuation.
-       * </pre>
-       *
-       * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-       *
-       * @return Whether the baseDataPoint field is set.
-       */
-      boolean hasBaseDataPoint();
-      /**
-       *
-       *
-       * <pre>
-       * The datapoint with the starting value of the fluctuation.
-       * </pre>
-       *
-       * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-       *
-       * @return The baseDataPoint.
-       */
-      org.datacommons.proto.Debug.DataPoint getBaseDataPoint();
-      /**
-       *
-       *
-       * <pre>
-       * The datapoint with the starting value of the fluctuation.
-       * </pre>
-       *
-       * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-       */
-      org.datacommons.proto.Debug.DataPointOrBuilder getBaseDataPointOrBuilder();
-    }
-    /**
-     *
-     *
-     * <pre>
-     * Describes a fluctuation between DataPoints in a time series.
-     * </pre>
-     *
-     * Protobuf type {@code org.datacommons.proto.StatValidationResult.PercentDifference}
-     */
-    public static final class PercentDifference extends com.google.protobuf.GeneratedMessageV3
-        implements
-        // @@protoc_insertion_point(message_implements:org.datacommons.proto.StatValidationResult.PercentDifference)
-        PercentDifferenceOrBuilder {
-      private static final long serialVersionUID = 0L;
-      // Use PercentDifference.newBuilder() to construct.
-      private PercentDifference(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-        super(builder);
-      }
-
-      private PercentDifference() {}
-
-      @java.lang.Override
-      @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
-        return new PercentDifference();
-      }
-
-      @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
-        return this.unknownFields;
-      }
-
-      private PercentDifference(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        this();
-        if (extensionRegistry == null) {
-          throw new java.lang.NullPointerException();
-        }
-        int mutable_bitField0_ = 0;
-        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-            com.google.protobuf.UnknownFieldSet.newBuilder();
-        try {
-          boolean done = false;
-          while (!done) {
-            int tag = input.readTag();
-            switch (tag) {
-              case 0:
-                done = true;
-                break;
-              case 9:
-                {
-                  bitField0_ |= 0x00000001;
-                  percentDifference_ = input.readDouble();
-                  break;
-                }
-              case 18:
-                {
-                  org.datacommons.proto.Debug.DataPoint.Builder subBuilder = null;
-                  if (((bitField0_ & 0x00000002) != 0)) {
-                    subBuilder = diffDataPoint_.toBuilder();
-                  }
-                  diffDataPoint_ =
-                      input.readMessage(
-                          org.datacommons.proto.Debug.DataPoint.PARSER, extensionRegistry);
-                  if (subBuilder != null) {
-                    subBuilder.mergeFrom(diffDataPoint_);
-                    diffDataPoint_ = subBuilder.buildPartial();
-                  }
-                  bitField0_ |= 0x00000002;
-                  break;
-                }
-              case 26:
-                {
-                  org.datacommons.proto.Debug.DataPoint.Builder subBuilder = null;
-                  if (((bitField0_ & 0x00000004) != 0)) {
-                    subBuilder = baseDataPoint_.toBuilder();
-                  }
-                  baseDataPoint_ =
-                      input.readMessage(
-                          org.datacommons.proto.Debug.DataPoint.PARSER, extensionRegistry);
-                  if (subBuilder != null) {
-                    subBuilder.mergeFrom(baseDataPoint_);
-                    baseDataPoint_ = subBuilder.buildPartial();
-                  }
-                  bitField0_ |= 0x00000004;
-                  break;
-                }
-              default:
-                {
-                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                    done = true;
-                  }
-                  break;
-                }
-            }
-          }
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          throw e.setUnfinishedMessage(this);
-        } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(e)
-              .setUnfinishedMessage(this);
-        } finally {
-          this.unknownFields = unknownFields.build();
-          makeExtensionsImmutable();
-        }
-      }
-
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Debug
-            .internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Debug
-            .internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Debug.StatValidationResult.PercentDifference.class,
-                org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder.class);
-      }
-
-      private int bitField0_;
-      public static final int PERCENT_DIFFERENCE_FIELD_NUMBER = 1;
-      private double percentDifference_;
-      /**
-       *
-       *
-       * <pre>
-       * The actual percent difference.
-       * </pre>
-       *
-       * <code>optional double percent_difference = 1;</code>
-       *
-       * @return Whether the percentDifference field is set.
-       */
-      public boolean hasPercentDifference() {
-        return ((bitField0_ & 0x00000001) != 0);
-      }
-      /**
-       *
-       *
-       * <pre>
-       * The actual percent difference.
-       * </pre>
-       *
-       * <code>optional double percent_difference = 1;</code>
-       *
-       * @return The percentDifference.
-       */
-      public double getPercentDifference() {
-        return percentDifference_;
-      }
-
-      public static final int DIFF_DATA_POINT_FIELD_NUMBER = 2;
-      private org.datacommons.proto.Debug.DataPoint diffDataPoint_;
-      /**
-       *
-       *
-       * <pre>
-       * The datapoint that caused the percent difference.
-       * </pre>
-       *
-       * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-       *
-       * @return Whether the diffDataPoint field is set.
-       */
-      public boolean hasDiffDataPoint() {
-        return ((bitField0_ & 0x00000002) != 0);
-      }
-      /**
-       *
-       *
-       * <pre>
-       * The datapoint that caused the percent difference.
-       * </pre>
-       *
-       * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-       *
-       * @return The diffDataPoint.
-       */
-      public org.datacommons.proto.Debug.DataPoint getDiffDataPoint() {
-        return diffDataPoint_ == null
-            ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
-            : diffDataPoint_;
-      }
-      /**
-       *
-       *
-       * <pre>
-       * The datapoint that caused the percent difference.
-       * </pre>
-       *
-       * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-       */
-      public org.datacommons.proto.Debug.DataPointOrBuilder getDiffDataPointOrBuilder() {
-        return diffDataPoint_ == null
-            ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
-            : diffDataPoint_;
-      }
-
-      public static final int BASE_DATA_POINT_FIELD_NUMBER = 3;
-      private org.datacommons.proto.Debug.DataPoint baseDataPoint_;
-      /**
-       *
-       *
-       * <pre>
-       * The datapoint with the starting value of the fluctuation.
-       * </pre>
-       *
-       * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-       *
-       * @return Whether the baseDataPoint field is set.
-       */
-      public boolean hasBaseDataPoint() {
-        return ((bitField0_ & 0x00000004) != 0);
-      }
-      /**
-       *
-       *
-       * <pre>
-       * The datapoint with the starting value of the fluctuation.
-       * </pre>
-       *
-       * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-       *
-       * @return The baseDataPoint.
-       */
-      public org.datacommons.proto.Debug.DataPoint getBaseDataPoint() {
-        return baseDataPoint_ == null
-            ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
-            : baseDataPoint_;
-      }
-      /**
-       *
-       *
-       * <pre>
-       * The datapoint with the starting value of the fluctuation.
-       * </pre>
-       *
-       * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-       */
-      public org.datacommons.proto.Debug.DataPointOrBuilder getBaseDataPointOrBuilder() {
-        return baseDataPoint_ == null
-            ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
-            : baseDataPoint_;
-      }
-
-      private byte memoizedIsInitialized = -1;
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        byte isInitialized = memoizedIsInitialized;
-        if (isInitialized == 1) return true;
-        if (isInitialized == 0) return false;
-
-        memoizedIsInitialized = 1;
-        return true;
-      }
-
-      @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-        if (((bitField0_ & 0x00000001) != 0)) {
-          output.writeDouble(1, percentDifference_);
-        }
-        if (((bitField0_ & 0x00000002) != 0)) {
-          output.writeMessage(2, getDiffDataPoint());
-        }
-        if (((bitField0_ & 0x00000004) != 0)) {
-          output.writeMessage(3, getBaseDataPoint());
-        }
-        unknownFields.writeTo(output);
-      }
-
-      @java.lang.Override
-      public int getSerializedSize() {
-        int size = memoizedSize;
-        if (size != -1) return size;
-
-        size = 0;
-        if (((bitField0_ & 0x00000001) != 0)) {
-          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(1, percentDifference_);
-        }
-        if (((bitField0_ & 0x00000002) != 0)) {
-          size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getDiffDataPoint());
-        }
-        if (((bitField0_ & 0x00000004) != 0)) {
-          size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, getBaseDataPoint());
-        }
-        size += unknownFields.getSerializedSize();
-        memoizedSize = size;
-        return size;
-      }
-
-      @java.lang.Override
-      public boolean equals(final java.lang.Object obj) {
-        if (obj == this) {
-          return true;
-        }
-        if (!(obj instanceof org.datacommons.proto.Debug.StatValidationResult.PercentDifference)) {
-          return super.equals(obj);
-        }
-        org.datacommons.proto.Debug.StatValidationResult.PercentDifference other =
-            (org.datacommons.proto.Debug.StatValidationResult.PercentDifference) obj;
-
-        if (hasPercentDifference() != other.hasPercentDifference()) return false;
-        if (hasPercentDifference()) {
-          if (java.lang.Double.doubleToLongBits(getPercentDifference())
-              != java.lang.Double.doubleToLongBits(other.getPercentDifference())) return false;
-        }
-        if (hasDiffDataPoint() != other.hasDiffDataPoint()) return false;
-        if (hasDiffDataPoint()) {
-          if (!getDiffDataPoint().equals(other.getDiffDataPoint())) return false;
-        }
-        if (hasBaseDataPoint() != other.hasBaseDataPoint()) return false;
-        if (hasBaseDataPoint()) {
-          if (!getBaseDataPoint().equals(other.getBaseDataPoint())) return false;
-        }
-        if (!unknownFields.equals(other.unknownFields)) return false;
-        return true;
-      }
-
-      @java.lang.Override
-      public int hashCode() {
-        if (memoizedHashCode != 0) {
-          return memoizedHashCode;
-        }
-        int hash = 41;
-        hash = (19 * hash) + getDescriptor().hashCode();
-        if (hasPercentDifference()) {
-          hash = (37 * hash) + PERCENT_DIFFERENCE_FIELD_NUMBER;
-          hash =
-              (53 * hash)
-                  + com.google.protobuf.Internal.hashLong(
-                      java.lang.Double.doubleToLongBits(getPercentDifference()));
-        }
-        if (hasDiffDataPoint()) {
-          hash = (37 * hash) + DIFF_DATA_POINT_FIELD_NUMBER;
-          hash = (53 * hash) + getDiffDataPoint().hashCode();
-        }
-        if (hasBaseDataPoint()) {
-          hash = (37 * hash) + BASE_DATA_POINT_FIELD_NUMBER;
-          hash = (53 * hash) + getBaseDataPoint().hashCode();
-        }
-        hash = (29 * hash) + unknownFields.hashCode();
-        memoizedHashCode = hash;
-        return hash;
-      }
-
-      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
-          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-
-      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
-          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-
-      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
-          com.google.protobuf.ByteString data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-
-      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
-          com.google.protobuf.ByteString data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-
-      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
-          byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-
-      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
-          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-
-      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
-          java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
-      }
-
-      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-          parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-          parseDelimitedFrom(
-              java.io.InputStream input,
-              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-              throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-            PARSER, input, extensionRegistry);
-      }
-
-      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
-          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference parseFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
-      }
-
-      @java.lang.Override
-      public Builder newBuilderForType() {
-        return newBuilder();
-      }
-
-      public static Builder newBuilder() {
-        return DEFAULT_INSTANCE.toBuilder();
-      }
-
-      public static Builder newBuilder(
-          org.datacommons.proto.Debug.StatValidationResult.PercentDifference prototype) {
-        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-      }
-
-      @java.lang.Override
-      public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
-      }
-
-      @java.lang.Override
-      protected Builder newBuilderForType(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        Builder builder = new Builder(parent);
-        return builder;
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Describes a fluctuation between DataPoints in a time series.
-       * </pre>
-       *
-       * Protobuf type {@code org.datacommons.proto.StatValidationResult.PercentDifference}
-       */
-      public static final class Builder
-          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-          implements
-          // @@protoc_insertion_point(builder_implements:org.datacommons.proto.StatValidationResult.PercentDifference)
-          org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-          return org.datacommons.proto.Debug
-              .internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_descriptor;
-        }
-
-        @java.lang.Override
-        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-            internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Debug
-              .internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_fieldAccessorTable
-              .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Debug.StatValidationResult.PercentDifference.class,
-                  org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder.class);
-        }
-
-        // Construct using
-        // org.datacommons.proto.Debug.StatValidationResult.PercentDifference.newBuilder()
-        private Builder() {
-          maybeForceBuilderInitialization();
-        }
-
-        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-          super(parent);
-          maybeForceBuilderInitialization();
-        }
-
-        private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
-            getDiffDataPointFieldBuilder();
-            getBaseDataPointFieldBuilder();
-          }
-        }
-
-        @java.lang.Override
-        public Builder clear() {
-          super.clear();
-          percentDifference_ = 0D;
-          bitField0_ = (bitField0_ & ~0x00000001);
-          if (diffDataPointBuilder_ == null) {
-            diffDataPoint_ = null;
-          } else {
-            diffDataPointBuilder_.clear();
-          }
-          bitField0_ = (bitField0_ & ~0x00000002);
-          if (baseDataPointBuilder_ == null) {
-            baseDataPoint_ = null;
-          } else {
-            baseDataPointBuilder_.clear();
-          }
-          bitField0_ = (bitField0_ & ~0x00000004);
-          return this;
-        }
-
-        @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-          return org.datacommons.proto.Debug
-              .internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_descriptor;
-        }
-
-        @java.lang.Override
-        public org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-            getDefaultInstanceForType() {
-          return org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-              .getDefaultInstance();
-        }
-
-        @java.lang.Override
-        public org.datacommons.proto.Debug.StatValidationResult.PercentDifference build() {
-          org.datacommons.proto.Debug.StatValidationResult.PercentDifference result =
-              buildPartial();
-          if (!result.isInitialized()) {
-            throw newUninitializedMessageException(result);
-          }
-          return result;
-        }
-
-        @java.lang.Override
-        public org.datacommons.proto.Debug.StatValidationResult.PercentDifference buildPartial() {
-          org.datacommons.proto.Debug.StatValidationResult.PercentDifference result =
-              new org.datacommons.proto.Debug.StatValidationResult.PercentDifference(this);
-          int from_bitField0_ = bitField0_;
-          int to_bitField0_ = 0;
-          if (((from_bitField0_ & 0x00000001) != 0)) {
-            result.percentDifference_ = percentDifference_;
-            to_bitField0_ |= 0x00000001;
-          }
-          if (((from_bitField0_ & 0x00000002) != 0)) {
-            if (diffDataPointBuilder_ == null) {
-              result.diffDataPoint_ = diffDataPoint_;
-            } else {
-              result.diffDataPoint_ = diffDataPointBuilder_.build();
-            }
-            to_bitField0_ |= 0x00000002;
-          }
-          if (((from_bitField0_ & 0x00000004) != 0)) {
-            if (baseDataPointBuilder_ == null) {
-              result.baseDataPoint_ = baseDataPoint_;
-            } else {
-              result.baseDataPoint_ = baseDataPointBuilder_.build();
-            }
-            to_bitField0_ |= 0x00000004;
-          }
-          result.bitField0_ = to_bitField0_;
-          onBuilt();
-          return result;
-        }
-
-        @java.lang.Override
-        public Builder clone() {
-          return super.clone();
-        }
-
-        @java.lang.Override
-        public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-          return super.setField(field, value);
-        }
-
-        @java.lang.Override
-        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-          return super.clearField(field);
-        }
-
-        @java.lang.Override
-        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-          return super.clearOneof(oneof);
-        }
-
-        @java.lang.Override
-        public Builder setRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index,
-            java.lang.Object value) {
-          return super.setRepeatedField(field, index, value);
-        }
-
-        @java.lang.Override
-        public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-          return super.addRepeatedField(field, value);
-        }
-
-        @java.lang.Override
-        public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof org.datacommons.proto.Debug.StatValidationResult.PercentDifference) {
-            return mergeFrom(
-                (org.datacommons.proto.Debug.StatValidationResult.PercentDifference) other);
-          } else {
-            super.mergeFrom(other);
-            return this;
-          }
-        }
-
-        public Builder mergeFrom(
-            org.datacommons.proto.Debug.StatValidationResult.PercentDifference other) {
-          if (other
-              == org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-                  .getDefaultInstance()) return this;
-          if (other.hasPercentDifference()) {
-            setPercentDifference(other.getPercentDifference());
-          }
-          if (other.hasDiffDataPoint()) {
-            mergeDiffDataPoint(other.getDiffDataPoint());
-          }
-          if (other.hasBaseDataPoint()) {
-            mergeBaseDataPoint(other.getBaseDataPoint());
-          }
-          this.mergeUnknownFields(other.unknownFields);
-          onChanged();
-          return this;
-        }
-
-        @java.lang.Override
-        public final boolean isInitialized() {
-          return true;
-        }
-
-        @java.lang.Override
-        public Builder mergeFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws java.io.IOException {
-          org.datacommons.proto.Debug.StatValidationResult.PercentDifference parsedMessage = null;
-          try {
-            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage =
-                (org.datacommons.proto.Debug.StatValidationResult.PercentDifference)
-                    e.getUnfinishedMessage();
-            throw e.unwrapIOException();
-          } finally {
-            if (parsedMessage != null) {
-              mergeFrom(parsedMessage);
-            }
-          }
-          return this;
-        }
-
-        private int bitField0_;
-
-        private double percentDifference_;
-        /**
-         *
-         *
-         * <pre>
-         * The actual percent difference.
-         * </pre>
-         *
-         * <code>optional double percent_difference = 1;</code>
-         *
-         * @return Whether the percentDifference field is set.
-         */
-        public boolean hasPercentDifference() {
-          return ((bitField0_ & 0x00000001) != 0);
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The actual percent difference.
-         * </pre>
-         *
-         * <code>optional double percent_difference = 1;</code>
-         *
-         * @return The percentDifference.
-         */
-        public double getPercentDifference() {
-          return percentDifference_;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The actual percent difference.
-         * </pre>
-         *
-         * <code>optional double percent_difference = 1;</code>
-         *
-         * @param value The percentDifference to set.
-         * @return This builder for chaining.
-         */
-        public Builder setPercentDifference(double value) {
-          bitField0_ |= 0x00000001;
-          percentDifference_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The actual percent difference.
-         * </pre>
-         *
-         * <code>optional double percent_difference = 1;</code>
-         *
-         * @return This builder for chaining.
-         */
-        public Builder clearPercentDifference() {
-          bitField0_ = (bitField0_ & ~0x00000001);
-          percentDifference_ = 0D;
-          onChanged();
-          return this;
-        }
-
-        private org.datacommons.proto.Debug.DataPoint diffDataPoint_;
-        private com.google.protobuf.SingleFieldBuilderV3<
-                org.datacommons.proto.Debug.DataPoint,
-                org.datacommons.proto.Debug.DataPoint.Builder,
-                org.datacommons.proto.Debug.DataPointOrBuilder>
-            diffDataPointBuilder_;
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint that caused the percent difference.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-         *
-         * @return Whether the diffDataPoint field is set.
-         */
-        public boolean hasDiffDataPoint() {
-          return ((bitField0_ & 0x00000002) != 0);
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint that caused the percent difference.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-         *
-         * @return The diffDataPoint.
-         */
-        public org.datacommons.proto.Debug.DataPoint getDiffDataPoint() {
-          if (diffDataPointBuilder_ == null) {
-            return diffDataPoint_ == null
-                ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
-                : diffDataPoint_;
-          } else {
-            return diffDataPointBuilder_.getMessage();
-          }
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint that caused the percent difference.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-         */
-        public Builder setDiffDataPoint(org.datacommons.proto.Debug.DataPoint value) {
-          if (diffDataPointBuilder_ == null) {
-            if (value == null) {
-              throw new NullPointerException();
-            }
-            diffDataPoint_ = value;
-            onChanged();
-          } else {
-            diffDataPointBuilder_.setMessage(value);
-          }
-          bitField0_ |= 0x00000002;
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint that caused the percent difference.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-         */
-        public Builder setDiffDataPoint(
-            org.datacommons.proto.Debug.DataPoint.Builder builderForValue) {
-          if (diffDataPointBuilder_ == null) {
-            diffDataPoint_ = builderForValue.build();
-            onChanged();
-          } else {
-            diffDataPointBuilder_.setMessage(builderForValue.build());
-          }
-          bitField0_ |= 0x00000002;
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint that caused the percent difference.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-         */
-        public Builder mergeDiffDataPoint(org.datacommons.proto.Debug.DataPoint value) {
-          if (diffDataPointBuilder_ == null) {
-            if (((bitField0_ & 0x00000002) != 0)
-                && diffDataPoint_ != null
-                && diffDataPoint_ != org.datacommons.proto.Debug.DataPoint.getDefaultInstance()) {
-              diffDataPoint_ =
-                  org.datacommons.proto.Debug.DataPoint.newBuilder(diffDataPoint_)
-                      .mergeFrom(value)
-                      .buildPartial();
-            } else {
-              diffDataPoint_ = value;
-            }
-            onChanged();
-          } else {
-            diffDataPointBuilder_.mergeFrom(value);
-          }
-          bitField0_ |= 0x00000002;
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint that caused the percent difference.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-         */
-        public Builder clearDiffDataPoint() {
-          if (diffDataPointBuilder_ == null) {
-            diffDataPoint_ = null;
-            onChanged();
-          } else {
-            diffDataPointBuilder_.clear();
-          }
-          bitField0_ = (bitField0_ & ~0x00000002);
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint that caused the percent difference.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-         */
-        public org.datacommons.proto.Debug.DataPoint.Builder getDiffDataPointBuilder() {
-          bitField0_ |= 0x00000002;
-          onChanged();
-          return getDiffDataPointFieldBuilder().getBuilder();
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint that caused the percent difference.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-         */
-        public org.datacommons.proto.Debug.DataPointOrBuilder getDiffDataPointOrBuilder() {
-          if (diffDataPointBuilder_ != null) {
-            return diffDataPointBuilder_.getMessageOrBuilder();
-          } else {
-            return diffDataPoint_ == null
-                ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
-                : diffDataPoint_;
-          }
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint that caused the percent difference.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint diff_data_point = 2;</code>
-         */
-        private com.google.protobuf.SingleFieldBuilderV3<
-                org.datacommons.proto.Debug.DataPoint,
-                org.datacommons.proto.Debug.DataPoint.Builder,
-                org.datacommons.proto.Debug.DataPointOrBuilder>
-            getDiffDataPointFieldBuilder() {
-          if (diffDataPointBuilder_ == null) {
-            diffDataPointBuilder_ =
-                new com.google.protobuf.SingleFieldBuilderV3<
-                    org.datacommons.proto.Debug.DataPoint,
-                    org.datacommons.proto.Debug.DataPoint.Builder,
-                    org.datacommons.proto.Debug.DataPointOrBuilder>(
-                    getDiffDataPoint(), getParentForChildren(), isClean());
-            diffDataPoint_ = null;
-          }
-          return diffDataPointBuilder_;
-        }
-
-        private org.datacommons.proto.Debug.DataPoint baseDataPoint_;
-        private com.google.protobuf.SingleFieldBuilderV3<
-                org.datacommons.proto.Debug.DataPoint,
-                org.datacommons.proto.Debug.DataPoint.Builder,
-                org.datacommons.proto.Debug.DataPointOrBuilder>
-            baseDataPointBuilder_;
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint with the starting value of the fluctuation.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-         *
-         * @return Whether the baseDataPoint field is set.
-         */
-        public boolean hasBaseDataPoint() {
-          return ((bitField0_ & 0x00000004) != 0);
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint with the starting value of the fluctuation.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-         *
-         * @return The baseDataPoint.
-         */
-        public org.datacommons.proto.Debug.DataPoint getBaseDataPoint() {
-          if (baseDataPointBuilder_ == null) {
-            return baseDataPoint_ == null
-                ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
-                : baseDataPoint_;
-          } else {
-            return baseDataPointBuilder_.getMessage();
-          }
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint with the starting value of the fluctuation.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-         */
-        public Builder setBaseDataPoint(org.datacommons.proto.Debug.DataPoint value) {
-          if (baseDataPointBuilder_ == null) {
-            if (value == null) {
-              throw new NullPointerException();
-            }
-            baseDataPoint_ = value;
-            onChanged();
-          } else {
-            baseDataPointBuilder_.setMessage(value);
-          }
-          bitField0_ |= 0x00000004;
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint with the starting value of the fluctuation.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-         */
-        public Builder setBaseDataPoint(
-            org.datacommons.proto.Debug.DataPoint.Builder builderForValue) {
-          if (baseDataPointBuilder_ == null) {
-            baseDataPoint_ = builderForValue.build();
-            onChanged();
-          } else {
-            baseDataPointBuilder_.setMessage(builderForValue.build());
-          }
-          bitField0_ |= 0x00000004;
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint with the starting value of the fluctuation.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-         */
-        public Builder mergeBaseDataPoint(org.datacommons.proto.Debug.DataPoint value) {
-          if (baseDataPointBuilder_ == null) {
-            if (((bitField0_ & 0x00000004) != 0)
-                && baseDataPoint_ != null
-                && baseDataPoint_ != org.datacommons.proto.Debug.DataPoint.getDefaultInstance()) {
-              baseDataPoint_ =
-                  org.datacommons.proto.Debug.DataPoint.newBuilder(baseDataPoint_)
-                      .mergeFrom(value)
-                      .buildPartial();
-            } else {
-              baseDataPoint_ = value;
-            }
-            onChanged();
-          } else {
-            baseDataPointBuilder_.mergeFrom(value);
-          }
-          bitField0_ |= 0x00000004;
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint with the starting value of the fluctuation.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-         */
-        public Builder clearBaseDataPoint() {
-          if (baseDataPointBuilder_ == null) {
-            baseDataPoint_ = null;
-            onChanged();
-          } else {
-            baseDataPointBuilder_.clear();
-          }
-          bitField0_ = (bitField0_ & ~0x00000004);
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint with the starting value of the fluctuation.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-         */
-        public org.datacommons.proto.Debug.DataPoint.Builder getBaseDataPointBuilder() {
-          bitField0_ |= 0x00000004;
-          onChanged();
-          return getBaseDataPointFieldBuilder().getBuilder();
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint with the starting value of the fluctuation.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-         */
-        public org.datacommons.proto.Debug.DataPointOrBuilder getBaseDataPointOrBuilder() {
-          if (baseDataPointBuilder_ != null) {
-            return baseDataPointBuilder_.getMessageOrBuilder();
-          } else {
-            return baseDataPoint_ == null
-                ? org.datacommons.proto.Debug.DataPoint.getDefaultInstance()
-                : baseDataPoint_;
-          }
-        }
-        /**
-         *
-         *
-         * <pre>
-         * The datapoint with the starting value of the fluctuation.
-         * </pre>
-         *
-         * <code>optional .org.datacommons.proto.DataPoint base_data_point = 3;</code>
-         */
-        private com.google.protobuf.SingleFieldBuilderV3<
-                org.datacommons.proto.Debug.DataPoint,
-                org.datacommons.proto.Debug.DataPoint.Builder,
-                org.datacommons.proto.Debug.DataPointOrBuilder>
-            getBaseDataPointFieldBuilder() {
-          if (baseDataPointBuilder_ == null) {
-            baseDataPointBuilder_ =
-                new com.google.protobuf.SingleFieldBuilderV3<
-                    org.datacommons.proto.Debug.DataPoint,
-                    org.datacommons.proto.Debug.DataPoint.Builder,
-                    org.datacommons.proto.Debug.DataPointOrBuilder>(
-                    getBaseDataPoint(), getParentForChildren(), isClean());
-            baseDataPoint_ = null;
-          }
-          return baseDataPointBuilder_;
-        }
-
-        @java.lang.Override
-        public final Builder setUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.setUnknownFields(unknownFields);
-        }
-
-        @java.lang.Override
-        public final Builder mergeUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.mergeUnknownFields(unknownFields);
-        }
-
-        // @@protoc_insertion_point(builder_scope:org.datacommons.proto.StatValidationResult.PercentDifference)
-      }
-
-      // @@protoc_insertion_point(class_scope:org.datacommons.proto.StatValidationResult.PercentDifference)
-      private static final org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-          DEFAULT_INSTANCE;
-
-      static {
-        DEFAULT_INSTANCE = new org.datacommons.proto.Debug.StatValidationResult.PercentDifference();
-      }
-
-      public static org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-          getDefaultInstance() {
-        return DEFAULT_INSTANCE;
-      }
-
-      @java.lang.Deprecated
-      public static final com.google.protobuf.Parser<PercentDifference> PARSER =
-          new com.google.protobuf.AbstractParser<PercentDifference>() {
-            @java.lang.Override
-            public PercentDifference parsePartialFrom(
-                com.google.protobuf.CodedInputStream input,
-                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                throws com.google.protobuf.InvalidProtocolBufferException {
-              return new PercentDifference(input, extensionRegistry);
-            }
-          };
-
-      public static com.google.protobuf.Parser<PercentDifference> parser() {
-        return PARSER;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Parser<PercentDifference> getParserForType() {
-        return PARSER;
-      }
-
-      @java.lang.Override
-      public org.datacommons.proto.Debug.StatValidationResult.PercentDifference
           getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
@@ -10808,65 +9639,6 @@ public final class Debug {
       return validationCounters_.get(index);
     }
 
-    public static final int SERIES_LARGEST_PERCENT_DIFF_FIELD_NUMBER = 8;
-    private org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-        seriesLargestPercentDiff_;
-    /**
-     *
-     *
-     * <pre>
-     * the largest % increase or decrease in time series. Remains as default
-     * values if sawtooth exists.
-     * </pre>
-     *
-     * <code>
-     * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-     * </code>
-     *
-     * @return Whether the seriesLargestPercentDiff field is set.
-     */
-    public boolean hasSeriesLargestPercentDiff() {
-      return ((bitField0_ & 0x00000040) != 0);
-    }
-    /**
-     *
-     *
-     * <pre>
-     * the largest % increase or decrease in time series. Remains as default
-     * values if sawtooth exists.
-     * </pre>
-     *
-     * <code>
-     * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-     * </code>
-     *
-     * @return The seriesLargestPercentDiff.
-     */
-    public org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-        getSeriesLargestPercentDiff() {
-      return seriesLargestPercentDiff_ == null
-          ? org.datacommons.proto.Debug.StatValidationResult.PercentDifference.getDefaultInstance()
-          : seriesLargestPercentDiff_;
-    }
-    /**
-     *
-     *
-     * <pre>
-     * the largest % increase or decrease in time series. Remains as default
-     * values if sawtooth exists.
-     * </pre>
-     *
-     * <code>
-     * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-     * </code>
-     */
-    public org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder
-        getSeriesLargestPercentDiffOrBuilder() {
-      return seriesLargestPercentDiff_ == null
-          ? org.datacommons.proto.Debug.StatValidationResult.PercentDifference.getDefaultInstance()
-          : seriesLargestPercentDiff_;
-    }
-
     private byte memoizedIsInitialized = -1;
 
     @java.lang.Override
@@ -10902,9 +9674,6 @@ public final class Debug {
       for (int i = 0; i < validationCounters_.size(); i++) {
         output.writeMessage(7, validationCounters_.get(i));
       }
-      if (((bitField0_ & 0x00000040) != 0)) {
-        output.writeMessage(8, getSeriesLargestPercentDiff());
-      }
       unknownFields.writeTo(output);
     }
 
@@ -10935,11 +9704,6 @@ public final class Debug {
       for (int i = 0; i < validationCounters_.size(); i++) {
         size +=
             com.google.protobuf.CodedOutputStream.computeMessageSize(7, validationCounters_.get(i));
-      }
-      if (((bitField0_ & 0x00000040) != 0)) {
-        size +=
-            com.google.protobuf.CodedOutputStream.computeMessageSize(
-                8, getSeriesLargestPercentDiff());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -10982,11 +9746,6 @@ public final class Debug {
         if (!getUnit().equals(other.getUnit())) return false;
       }
       if (!getValidationCountersList().equals(other.getValidationCountersList())) return false;
-      if (hasSeriesLargestPercentDiff() != other.hasSeriesLargestPercentDiff()) return false;
-      if (hasSeriesLargestPercentDiff()) {
-        if (!getSeriesLargestPercentDiff().equals(other.getSeriesLargestPercentDiff()))
-          return false;
-      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -11025,10 +9784,6 @@ public final class Debug {
       if (getValidationCountersCount() > 0) {
         hash = (37 * hash) + VALIDATION_COUNTERS_FIELD_NUMBER;
         hash = (53 * hash) + getValidationCountersList().hashCode();
-      }
-      if (hasSeriesLargestPercentDiff()) {
-        hash = (37 * hash) + SERIES_LARGEST_PERCENT_DIFF_FIELD_NUMBER;
-        hash = (53 * hash) + getSeriesLargestPercentDiff().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -11165,7 +9920,6 @@ public final class Debug {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getValidationCountersFieldBuilder();
-          getSeriesLargestPercentDiffFieldBuilder();
         }
       }
 
@@ -11190,12 +9944,6 @@ public final class Debug {
         } else {
           validationCountersBuilder_.clear();
         }
-        if (seriesLargestPercentDiffBuilder_ == null) {
-          seriesLargestPercentDiff_ = null;
-        } else {
-          seriesLargestPercentDiffBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -11257,14 +10005,6 @@ public final class Debug {
           result.validationCounters_ = validationCounters_;
         } else {
           result.validationCounters_ = validationCountersBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000080) != 0)) {
-          if (seriesLargestPercentDiffBuilder_ == null) {
-            result.seriesLargestPercentDiff_ = seriesLargestPercentDiff_;
-          } else {
-            result.seriesLargestPercentDiff_ = seriesLargestPercentDiffBuilder_.build();
-          }
-          to_bitField0_ |= 0x00000040;
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -11375,9 +10115,6 @@ public final class Debug {
               validationCountersBuilder_.addAllMessages(other.validationCounters_);
             }
           }
-        }
-        if (other.hasSeriesLargestPercentDiff()) {
-          mergeSeriesLargestPercentDiff(other.getSeriesLargestPercentDiff());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -12343,232 +11080,6 @@ public final class Debug {
         return validationCountersBuilder_;
       }
 
-      private org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-          seriesLargestPercentDiff_;
-      private com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Debug.StatValidationResult.PercentDifference,
-              org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder,
-              org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder>
-          seriesLargestPercentDiffBuilder_;
-      /**
-       *
-       *
-       * <pre>
-       * the largest % increase or decrease in time series. Remains as default
-       * values if sawtooth exists.
-       * </pre>
-       *
-       * <code>
-       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-       * </code>
-       *
-       * @return Whether the seriesLargestPercentDiff field is set.
-       */
-      public boolean hasSeriesLargestPercentDiff() {
-        return ((bitField0_ & 0x00000080) != 0);
-      }
-      /**
-       *
-       *
-       * <pre>
-       * the largest % increase or decrease in time series. Remains as default
-       * values if sawtooth exists.
-       * </pre>
-       *
-       * <code>
-       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-       * </code>
-       *
-       * @return The seriesLargestPercentDiff.
-       */
-      public org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-          getSeriesLargestPercentDiff() {
-        if (seriesLargestPercentDiffBuilder_ == null) {
-          return seriesLargestPercentDiff_ == null
-              ? org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-                  .getDefaultInstance()
-              : seriesLargestPercentDiff_;
-        } else {
-          return seriesLargestPercentDiffBuilder_.getMessage();
-        }
-      }
-      /**
-       *
-       *
-       * <pre>
-       * the largest % increase or decrease in time series. Remains as default
-       * values if sawtooth exists.
-       * </pre>
-       *
-       * <code>
-       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-       * </code>
-       */
-      public Builder setSeriesLargestPercentDiff(
-          org.datacommons.proto.Debug.StatValidationResult.PercentDifference value) {
-        if (seriesLargestPercentDiffBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          seriesLargestPercentDiff_ = value;
-          onChanged();
-        } else {
-          seriesLargestPercentDiffBuilder_.setMessage(value);
-        }
-        bitField0_ |= 0x00000080;
-        return this;
-      }
-      /**
-       *
-       *
-       * <pre>
-       * the largest % increase or decrease in time series. Remains as default
-       * values if sawtooth exists.
-       * </pre>
-       *
-       * <code>
-       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-       * </code>
-       */
-      public Builder setSeriesLargestPercentDiff(
-          org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder
-              builderForValue) {
-        if (seriesLargestPercentDiffBuilder_ == null) {
-          seriesLargestPercentDiff_ = builderForValue.build();
-          onChanged();
-        } else {
-          seriesLargestPercentDiffBuilder_.setMessage(builderForValue.build());
-        }
-        bitField0_ |= 0x00000080;
-        return this;
-      }
-      /**
-       *
-       *
-       * <pre>
-       * the largest % increase or decrease in time series. Remains as default
-       * values if sawtooth exists.
-       * </pre>
-       *
-       * <code>
-       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-       * </code>
-       */
-      public Builder mergeSeriesLargestPercentDiff(
-          org.datacommons.proto.Debug.StatValidationResult.PercentDifference value) {
-        if (seriesLargestPercentDiffBuilder_ == null) {
-          if (((bitField0_ & 0x00000080) != 0)
-              && seriesLargestPercentDiff_ != null
-              && seriesLargestPercentDiff_
-                  != org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-                      .getDefaultInstance()) {
-            seriesLargestPercentDiff_ =
-                org.datacommons.proto.Debug.StatValidationResult.PercentDifference.newBuilder(
-                        seriesLargestPercentDiff_)
-                    .mergeFrom(value)
-                    .buildPartial();
-          } else {
-            seriesLargestPercentDiff_ = value;
-          }
-          onChanged();
-        } else {
-          seriesLargestPercentDiffBuilder_.mergeFrom(value);
-        }
-        bitField0_ |= 0x00000080;
-        return this;
-      }
-      /**
-       *
-       *
-       * <pre>
-       * the largest % increase or decrease in time series. Remains as default
-       * values if sawtooth exists.
-       * </pre>
-       *
-       * <code>
-       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-       * </code>
-       */
-      public Builder clearSeriesLargestPercentDiff() {
-        if (seriesLargestPercentDiffBuilder_ == null) {
-          seriesLargestPercentDiff_ = null;
-          onChanged();
-        } else {
-          seriesLargestPercentDiffBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000080);
-        return this;
-      }
-      /**
-       *
-       *
-       * <pre>
-       * the largest % increase or decrease in time series. Remains as default
-       * values if sawtooth exists.
-       * </pre>
-       *
-       * <code>
-       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-       * </code>
-       */
-      public org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder
-          getSeriesLargestPercentDiffBuilder() {
-        bitField0_ |= 0x00000080;
-        onChanged();
-        return getSeriesLargestPercentDiffFieldBuilder().getBuilder();
-      }
-      /**
-       *
-       *
-       * <pre>
-       * the largest % increase or decrease in time series. Remains as default
-       * values if sawtooth exists.
-       * </pre>
-       *
-       * <code>
-       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-       * </code>
-       */
-      public org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder
-          getSeriesLargestPercentDiffOrBuilder() {
-        if (seriesLargestPercentDiffBuilder_ != null) {
-          return seriesLargestPercentDiffBuilder_.getMessageOrBuilder();
-        } else {
-          return seriesLargestPercentDiff_ == null
-              ? org.datacommons.proto.Debug.StatValidationResult.PercentDifference
-                  .getDefaultInstance()
-              : seriesLargestPercentDiff_;
-        }
-      }
-      /**
-       *
-       *
-       * <pre>
-       * the largest % increase or decrease in time series. Remains as default
-       * values if sawtooth exists.
-       * </pre>
-       *
-       * <code>
-       * optional .org.datacommons.proto.StatValidationResult.PercentDifference series_largest_percent_diff = 8;
-       * </code>
-       */
-      private com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Debug.StatValidationResult.PercentDifference,
-              org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder,
-              org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder>
-          getSeriesLargestPercentDiffFieldBuilder() {
-        if (seriesLargestPercentDiffBuilder_ == null) {
-          seriesLargestPercentDiffBuilder_ =
-              new com.google.protobuf.SingleFieldBuilderV3<
-                  org.datacommons.proto.Debug.StatValidationResult.PercentDifference,
-                  org.datacommons.proto.Debug.StatValidationResult.PercentDifference.Builder,
-                  org.datacommons.proto.Debug.StatValidationResult.PercentDifferenceOrBuilder>(
-                  getSeriesLargestPercentDiff(), getParentForChildren(), isClean());
-          seriesLargestPercentDiff_ = null;
-        }
-        return seriesLargestPercentDiffBuilder_;
-      }
-
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -12662,10 +11173,6 @@ public final class Debug {
       internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -12699,23 +11206,17 @@ public final class Debug {
           + "\0132*.org.datacommons.proto.DataPoint.Data"
           + "Value\032R\n\tDataValue\022\r\n\005value\030\001 \001(\001\0226\n\tloc"
           + "ations\030\002 \003(\0132#.org.datacommons.proto.Log"
-          + ".Location\"\214\005\n\024StatValidationResult\022\022\n\npl"
+          + ".Location\"\234\003\n\024StatValidationResult\022\022\n\npl"
           + "ace_dcid\030\001 \001(\t\022\025\n\rstat_var_dcid\030\002 \001(\t\022\032\n"
           + "\022measurement_method\030\003 \001(\t\022\032\n\022observation"
           + "_period\030\004 \001(\t\022\026\n\016scaling_factor\030\005 \001(\t\022\014\n"
           + "\004unit\030\006 \001(\t\022\\\n\023validation_counters\030\007 \003(\013"
           + "2?.org.datacommons.proto.StatValidationR"
-          + "esult.StatValidationEntry\022b\n\033series_larg"
-          + "est_percent_diff\030\010 \001(\0132=.org.datacommons"
-          + ".proto.StatValidationResult.PercentDiffe"
-          + "rence\032\200\001\n\023StatValidationEntry\022\023\n\013counter"
-          + "_key\030\001 \001(\t\0228\n\016problem_points\030\002 \003(\0132 .org"
-          + ".datacommons.proto.DataPoint\022\032\n\022addition"
-          + "al_details\030\003 \001(\t\032\245\001\n\021PercentDifference\022\032"
-          + "\n\022percent_difference\030\001 \001(\001\0229\n\017diff_data_"
-          + "point\030\002 \001(\0132 .org.datacommons.proto.Data"
-          + "Point\0229\n\017base_data_point\030\003 \001(\0132 .org.dat"
-          + "acommons.proto.DataPoint"
+          + "esult.StatValidationEntry\032\234\001\n\023StatValida"
+          + "tionEntry\022\023\n\013counter_key\030\001 \001(\t\0228\n\016proble"
+          + "m_points\030\002 \003(\0132 .org.datacommons.proto.D"
+          + "ataPoint\022\032\n\022additional_details\030\003 \001(\t\022\032\n\022"
+          + "percent_difference\030\004 \001(\001"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -12796,7 +11297,6 @@ public final class Debug {
               "ScalingFactor",
               "Unit",
               "ValidationCounters",
-              "SeriesLargestPercentDiff",
             });
     internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_descriptor =
         internal_static_org_datacommons_proto_StatValidationResult_descriptor
@@ -12806,17 +11306,7 @@ public final class Debug {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_StatValidationResult_StatValidationEntry_descriptor,
             new java.lang.String[] {
-              "CounterKey", "ProblemPoints", "AdditionalDetails",
-            });
-    internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_descriptor =
-        internal_static_org_datacommons_proto_StatValidationResult_descriptor
-            .getNestedTypes()
-            .get(1);
-    internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_StatValidationResult_PercentDifference_descriptor,
-            new java.lang.String[] {
-              "PercentDifference", "DiffDataPoint", "BaseDataPoint",
+              "CounterKey", "ProblemPoints", "AdditionalDetails", "PercentDifference",
             });
   }
 
