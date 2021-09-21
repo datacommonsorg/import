@@ -46,7 +46,6 @@ public class StatCheckerTest {
   public void testEndToEnd() throws IOException {
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(logCtx, testFolder.getRoot().toPath());
-    lw.setLocationFile("StatCheckerTest.mcf");
     String mcfPath = this.getClass().getResource("StatCheckerTest.mcf").getPath();
     Mcf.McfGraph graph = McfParser.parseInstanceMcfFile(mcfPath, false, lw);
     // create stat checker, extract series from the graph and check the series from the graph

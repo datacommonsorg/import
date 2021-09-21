@@ -149,14 +149,9 @@ public class McfChecker {
             continue;
           }
         } else if (tv.getType() == Mcf.ValueType.TABLE_COLUMN) {
-          // NOTE: If the MCF had parsed, the schema terms should be valid, thus
-          // the ValueOrDie().
-          long lineNum = -1;
-          if (!node.getLocationsList().isEmpty()) {
-            lineNum = node.getLocationsList().get(0).getLineNumber();
-          }
+          // NOTE: If the MCF had parsed, the schema terms should be valid.
           LogCb logCb =
-              new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNum)
+              new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, node)
                   .setDetail(LogCb.VALUE_KEY, tv.getValue())
                   .setDetail(LogCb.NODE_KEY, nodeId);
           McfParser.SchemaTerm term = McfParser.parseSchemaTerm(tv.getValue(), logCb);

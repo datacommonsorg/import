@@ -34,18 +34,19 @@ public class LogWrapperTest {
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
     // First use LogWrapper to update logCtx
     LogWrapper lw = new LogWrapper(logCtx, testFolder.getRoot().toPath());
-    lw.setLocationFile("TestInput.mcf");
-    lw.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_NoColonFound", "Missing Colon", 10);
-    lw.addEntry(Debug.Log.Level.LEVEL_WARNING, "MCF_EmptyValue", "Empty value", 20);
-    lw.setLocationFile("TestInput.csv");
-    lw.incrementCounterBy("CSV_GeneralStats", 42);
-    lw.addEntry(Debug.Log.Level.LEVEL_FATAL, "CSV_FoundABomb", "Found a Time Bomb", 30);
+    lw.addEntry(
+        Debug.Log.Level.LEVEL_ERROR, "MCF_NoColonFound", "Missing Colon", "TestInput.mcf", 10);
+    lw.addEntry(
+        Debug.Log.Level.LEVEL_WARNING, "MCF_EmptyValue", "Empty value", "TestInput.mcf", 20);
+    lw.incrementInfoCounterBy("CSV_GeneralStats", 42);
+    lw.addEntry(
+        Debug.Log.Level.LEVEL_FATAL, "CSV_FoundABomb", "Found a Time Bomb", "TestInput.csv", 30);
 
     assertEquals("1 fatal, 1 error(s), 1 warning(s)", lw.summaryString());
-    assertEquals(true, lw.loggedTooManyFailures());
+    assertEquals(false, lw.trackStatus(1, ""));
 
     File wantFile = new File(this.getClass().getResource("LogWrapperTest_result.json").getPath());
-    lw.persistLog(true);
+    lw.persistLog();
     File gotFile = new File(Paths.get(testFolder.getRoot().getPath(), "report.json").toString());
     assertEquals(
         FileUtils.readFileToString(gotFile, StandardCharsets.UTF_8),
@@ -57,17 +58,18 @@ public class LogWrapperTest {
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
     // First use LogWrapper to update logCtx
     LogWrapper lw = new LogWrapper(logCtx, testFolder.getRoot().toPath());
-    lw.setLocationFile("TestInput.mcf");
     for (int i = 1; i <= 50; i++) {
-      lw.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_ErrorCounter" + i, "Foo Error", i);
-      assertFalse(lw.loggedTooManyFailures());
+      lw.addEntry(
+          Debug.Log.Level.LEVEL_ERROR, "MCF_ErrorCounter" + i, "Foo Error", "TestInput.mcf", i);
+      assertTrue(lw.trackStatus(1, ""));
     }
     // One more with the same counter is fine.
-    lw.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_ErrorCounter1", "Foo Error", 1);
-    assertFalse(lw.loggedTooManyFailures());
+    lw.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_ErrorCounter1", "Foo Error", "TestInput.mcf", 1);
+    assertTrue(lw.trackStatus(1, ""));
 
     // One more with a new counter is not.
-    lw.addEntry(Debug.Log.Level.LEVEL_ERROR, "MCF_ErrorCounter51", "Foo Error", 51);
-    assertTrue(lw.loggedTooManyFailures());
+    lw.addEntry(
+        Debug.Log.Level.LEVEL_ERROR, "MCF_ErrorCounter51", "Foo Error", "TestInput.mcf", 51);
+    assertFalse(lw.trackStatus(1, ""));
   }
 }

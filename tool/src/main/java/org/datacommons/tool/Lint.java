@@ -59,6 +59,7 @@ class Lint implements Callable<Integer> {
     args.resolutionMode = parent.resolutionMode;
     args.doStatChecks = parent.doStatChecks;
     args.samplePlaces = parent.samplePlaces;
+    args.numThreads = parent.numThreads;
     if (args.samplePlaces != null && !args.doStatChecks) {
       logger.warn(
           "Sample places entered without stat checks being enabled. Sample places will be unused.");

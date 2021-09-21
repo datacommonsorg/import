@@ -14,7 +14,7 @@ public class LogCbTest {
   public void logErrorWithErrCb() {
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(logCtx, testFolder.getRoot().toPath());
-    LogCb logCb = new LogCb(lw, Debug.Log.Level.LEVEL_ERROR, 0);
+    LogCb logCb = new LogCb(lw, Debug.Log.Level.LEVEL_ERROR, "InMemory", 0);
     String testCounter = "test_counter";
     String testMessage = "test_message";
 

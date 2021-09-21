@@ -14,8 +14,7 @@
 
 package org.datacommons.util;
 
-import static org.datacommons.proto.Debug.Log.Level.LEVEL_FATAL;
-import static org.datacommons.proto.Debug.Log.Level.LEVEL_INFO;
+import static org.datacommons.proto.Debug.Log.Level.*;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.File;
@@ -34,7 +33,8 @@ import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Debug.StatValidationResult;
 
-// The class that provides logging functionality.
+// The class that provides logging functionality.  This class is Thread Safe.
+// TODO: Profile and maybe optimize incrementInfoCounterBy() and trackStatus() locking.
 public class LogWrapper {
   private static final Logger logger = LogManager.getLogger(LogWrapper.class);
 
@@ -45,48 +45,29 @@ public class LogWrapper {
 
   public static boolean TEST_MODE = false;
 
-  private final Debug.Log.Builder log;
-  private Path logPath;
-  private String locationFile;
-  private Instant lastStatusAt;
-  private long countAtLastStatus;
-  private final Set<String> countersWithErrors = new HashSet<>();
+  private final Path logPath;
   public final boolean persistLog;
+  private Debug.Log.Builder log;
+
+  private Instant lastStatusAt;
+  private long countAtLastStatus = 0;
+  private long currentCount = 0;
+  private final Set<String> countersWithErrors = new HashSet<>();
 
   public LogWrapper(Debug.Log.Builder log, Path outputDir) {
     this.log = log;
     this.persistLog = true;
-    init(log, outputDir);
+    this.logPath = Paths.get(outputDir.toString(), REPORT_JSON);
+    logger.info(
+        "Report written periodically to {}", logPath.toAbsolutePath().normalize().toString());
+    lastStatusAt = Instant.now();
   }
 
   public LogWrapper(Debug.Log.Builder log) {
     this.log = log;
     this.persistLog = false;
-    init(log, null);
-  }
-
-  private void init(Debug.Log.Builder log, Path outputDir) {
-    if (persistLog) {
-      logPath = Paths.get(outputDir.toString(), REPORT_JSON);
-      logger.info(
-          "Report written periodically to {}", logPath.toAbsolutePath().normalize().toString());
-    }
-    locationFile = "FileNotSet.idk";
+    this.logPath = null;
     lastStatusAt = Instant.now();
-    countAtLastStatus = 0;
-  }
-
-  public void setLocationFile(String locationFile) {
-    this.locationFile = Path.of(locationFile).getFileName().toString();
-  }
-
-  public String getLocationFile() {
-    return locationFile;
-  }
-
-  public void addEntry(Debug.Log.Level level, String counter, String message, long lno) {
-    if (log == null) return;
-    addEntry(level, counter, message, locationFile, lno);
   }
 
   public void addEntry(
@@ -100,31 +81,40 @@ public class LogWrapper {
     }
   }
 
-  public void addStatsCheckSummaryEntry(StatValidationResult statValidationResult) {
+  public synchronized void addStatsCheckSummaryEntry(StatValidationResult statValidationResult) {
     if (log == null) return;
     log.addStatsCheckSummary(statValidationResult);
   }
 
-  public void incrementCounterBy(String counter, int incr) {
+  public synchronized void incrementInfoCounterBy(String counter, int incr) {
     incrementCounterBy(LEVEL_INFO.name(), counter, incr);
   }
 
-  public void provideStatus(long count, String thing) throws IOException {
-    Instant now = Instant.now();
-    if (Duration.between(lastStatusAt, now).getSeconds() >= SECONDS_BETWEEN_STATUS) {
-      if (locationFile.isEmpty()) {
-        logger.info("{} {} [{}]", count - countAtLastStatus, thing, summaryString());
-      } else {
-        logger.info(
-            "{} {} of {} [{}]", count - countAtLastStatus, thing, locationFile, summaryString());
-      }
-      if (persistLog) persistLog(true);
-      lastStatusAt = now;
-      countAtLastStatus = count;
-    }
+  public synchronized void incrementWarningCounterBy(String counter, int incr) {
+    incrementCounterBy(LEVEL_WARNING.name(), counter, incr);
   }
 
-  public void persistLog(boolean silent) throws IOException {
+  // Updates status, provides message and return a boolean indicating if everything was successful.
+  // If this returns false, we should bail.
+  public synchronized boolean trackStatus(long incCount, String thing) throws IOException {
+    Instant now = Instant.now();
+    if (Duration.between(lastStatusAt, now).getSeconds() >= SECONDS_BETWEEN_STATUS) {
+      logger.info("{} {} [{}]", currentCount - countAtLastStatus, thing, summaryString());
+      if (persistLog) persistLog(true);
+      lastStatusAt = now;
+      currentCount += incCount;
+      countAtLastStatus = currentCount;
+    } else {
+      currentCount += incCount;
+    }
+    return !loggedTooManyFailures();
+  }
+
+  public synchronized void persistLog() throws IOException {
+    persistLog(false);
+  }
+
+  private void persistLog(boolean silent) throws IOException {
     File logFile = new File(logPath.toString());
     FileUtils.writeStringToFile(logFile, StringUtil.msgToJson(log.build()), StandardCharsets.UTF_8);
     if (!silent) {
@@ -135,11 +125,11 @@ public class LogWrapper {
     }
   }
 
-  public String dumpLog() throws InvalidProtocolBufferException {
+  public synchronized String dumpLog() throws InvalidProtocolBufferException {
     return StringUtil.msgToJson(log.build());
   }
 
-  public boolean loggedTooManyFailures() {
+  private boolean loggedTooManyFailures() {
     if (log.getLevelSummaryMap().containsKey(LEVEL_FATAL.name())) {
       logger.error("Found a fatal failure. Quitting!");
       return true;
@@ -169,7 +159,7 @@ public class LogWrapper {
         + " warning(s)";
   }
 
-  public void incrementCounterBy(String level, String counter, int incr) {
+  private void incrementCounterBy(String level, String counter, int incr) {
     long c = incr;
     var cset =
         log
@@ -183,7 +173,7 @@ public class LogWrapper {
     log.putLevelSummary(level, cset.build());
   }
 
-  private void addEntry(
+  public synchronized void addEntry(
       Debug.Log.Level level, String counter, String message, String file, long lno) {
     if (TEST_MODE) System.err.println(counter + " - " + message);
     String counterName = counter == null || counter.isEmpty() ? "MissingCounterName" : counter;

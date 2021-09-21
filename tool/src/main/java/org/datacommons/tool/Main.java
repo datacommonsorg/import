@@ -82,6 +82,13 @@ class Main {
               + "are picked for roughly each distinct place type.")
   public List<String> samplePlaces;
 
+  @CommandLine.Option(
+      names = {"-n", "--num-threads"},
+      defaultValue = "1",
+      scope = CommandLine.ScopeType.INHERIT,
+      description = "Number of concurrent threads used for processing CSVs.")
+  public int numThreads;
+
   public static void main(String... args) {
     System.exit(
         new CommandLine(new Main()).setCaseInsensitiveEnumValuesAllowed(true).execute(args));

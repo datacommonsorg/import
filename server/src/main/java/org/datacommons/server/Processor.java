@@ -52,7 +52,7 @@ public class Processor {
         // This will set counters/messages in logCtx.
         boolean success = McfChecker.check(g, null, null, logCtx);
         if (success) {
-          logCtx.incrementCounterBy("NumRowSuccesses", 1);
+          logCtx.incrementInfoCounterBy("NumRowSuccesses", 1);
         }
         numNodesProcessed++;
         for (String nodeId : g.getNodesMap().keySet()) {
