@@ -10,7 +10,8 @@
       "counters": {
         "StatsCheck_Inconsistent_Values": "1",
         "StatsCheck_Data_Holes": "1",
-        "StatsCheck_Inconsistent_Date_Granularity": "1"
+        "StatsCheck_Inconsistent_Date_Granularity": "1",
+        "StatsCheck_MaxPercentFluctuationGreaterThan100": "1"
       }
     }
   },
@@ -62,6 +63,36 @@
           }]
         }]
       }]
+    }]
+  }, {
+    "placeDcid": "geoId/07",
+    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "validationCounters": [{
+      "counterKey": "StatsCheck_MaxPercentFluctuationGreaterThan100",
+      "problemPoints": [{
+        "date": "2020-03-02",
+        "values": [{
+          "value": 3.0,
+          "locations": [{
+            "file": "covid.mcf",
+            "lineNumber": "49"
+          }]
+        }]
+      }, {
+        "date": "2020-03-03",
+        "values": [{
+          "value": 7.0,
+          "locations": [{
+            "file": "covid.mcf",
+            "lineNumber": "65"
+          }]
+        }]
+      }],
+      "percentDifference": 1.3333333333333333
     }]
   }]
 }

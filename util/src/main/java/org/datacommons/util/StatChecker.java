@@ -251,16 +251,10 @@ public class StatChecker {
   // for each bucket of fluctuations >50, >100, and >500.
   protected static void checkPercentFluctuations(
       List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder, LogWrapper logCtx) {
+    double maxDelta = 0;
+    DataPoint maxDeltaDP = null;
+    DataPoint maxDeltaBaseDP = null;
     DataPoint baseDataPoint = null;
-    String percent50CounterKey = "StatsCheck_PercentFluctuationGreaterThan50";
-    String percent100CounterKey = "StatsCheck_PercentFluctuationGreaterThan100";
-    String percent500CounterKey = "StatsCheck_PercentFluctuationGreaterThan500";
-    StatValidationEntry.Builder percent50Counter = StatValidationEntry.newBuilder();
-    percent50Counter.setCounterKey(percent50CounterKey);
-    StatValidationEntry.Builder percent100Counter = StatValidationEntry.newBuilder();
-    percent100Counter.setCounterKey(percent100CounterKey);
-    StatValidationEntry.Builder percent500Counter = StatValidationEntry.newBuilder();
-    percent500Counter.setCounterKey(percent500CounterKey);
     for (DataPoint dp : timeSeries) {
       // Don't try to compare between times because this is a Sawtooth
       if (dp.getValuesCount() > 1) return;
@@ -274,39 +268,30 @@ public class StatChecker {
         } else {
           currDelta = (currVal - baseVal) / Math.abs(baseVal);
         }
-        if (Math.abs(currDelta) > 500) {
-          // For these percent fluctuation counters, just show the details for the max fluctuation.
-          if (!percent500Counter.hasPercentDifference()
-              || Math.abs(currDelta) > Math.abs(percent500Counter.getPercentDifference())) {
-            percent500Counter.addProblemPoints(baseDataPoint);
-            percent500Counter.addProblemPoints(dp);
-            percent500Counter.setPercentDifference(currDelta);
-          }
-        } else if (Math.abs(currDelta) > 100) {
-          if (!percent100Counter.hasPercentDifference()
-              || Math.abs(currDelta) > Math.abs(percent100Counter.getPercentDifference())) {
-            percent100Counter.addProblemPoints(baseDataPoint);
-            percent100Counter.addProblemPoints(dp);
-            percent100Counter.setPercentDifference(currDelta);
-          }
-        } else if (Math.abs(currDelta) > 50) {
-          if (!percent50Counter.hasPercentDifference()
-              || Math.abs(currDelta) > Math.abs(percent50Counter.getPercentDifference())) {
-            percent50Counter.addProblemPoints(baseDataPoint);
-            percent50Counter.addProblemPoints(dp);
-            percent50Counter.setPercentDifference(currDelta);
-          }
+        if (Math.abs(maxDelta) < Math.abs(currDelta)) {
+          maxDelta = currDelta;
+          maxDeltaDP = dp;
+          maxDeltaBaseDP = baseDataPoint;
         }
       }
       baseDataPoint = dp;
     }
-    for (StatValidationEntry.Builder counter :
-        List.of(percent50Counter, percent100Counter, percent500Counter)) {
-      if (counter.hasPercentDifference()) {
-        resBuilder.addValidationCounters(counter.build());
-        logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), counter.getCounterKey(), 1);
-      }
+    String counterKey = "";
+    if (Math.abs(maxDelta) > 5) {
+      counterKey = "StatsCheck_MaxPercentFluctuationGreaterThan500";
+    } else if (Math.abs(maxDelta) > 1) {
+      counterKey = "StatsCheck_MaxPercentFluctuationGreaterThan100";
+    } else if (Math.abs(maxDelta) > 0.5) {
+      counterKey = "StatsCheck_MaxPercentFluctuationGreaterThan50";
     }
+    if (counterKey.isEmpty()) return;
+    StatValidationEntry.Builder maxPercentFluctuationCounter = StatValidationEntry.newBuilder();
+    maxPercentFluctuationCounter.setCounterKey(counterKey);
+    maxPercentFluctuationCounter.addProblemPoints(maxDeltaBaseDP);
+    maxPercentFluctuationCounter.addProblemPoints(maxDeltaDP);
+    maxPercentFluctuationCounter.setPercentDifference(maxDelta);
+    resBuilder.addValidationCounters(maxPercentFluctuationCounter.build());
+    logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), counterKey, 1);
   }
 
   // Check if there are holes in the dates by inferring based on whether the successive dates have

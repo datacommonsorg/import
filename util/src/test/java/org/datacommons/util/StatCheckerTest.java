@@ -192,103 +192,95 @@ public class StatCheckerTest {
 
     StatChecker.checkPercentFluctuations(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan50", new ArrayList<>(), 0));
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan50", new ArrayList<>()));
     assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan100", new ArrayList<>(), 0));
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan100", new ArrayList<>()));
     assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan500", new ArrayList<>(), 0));
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan500", new ArrayList<>()));
+
+    resBuilder.clear();
+    addDataPoint(timeSeries, "1993", -2.0);
+    StatChecker.checkPercentFluctuations(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
+    assertFalse(
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan50", new ArrayList<>()));
+    assertFalse(
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan100", new ArrayList<>()));
+    assertFalse(
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan500", new ArrayList<>()));
+
+    resBuilder.clear();
+    addDataPoint(timeSeries, "1992", -1.25);
+    StatChecker.checkPercentFluctuations(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
+    assertTrue(
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan50", List.of("1992", "1993")));
+    assertFalse(
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan100", new ArrayList<>()));
+    assertFalse(
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan500", new ArrayList<>()));
+    assertEquals(-0.6, resBuilder.getValidationCounters(0).getPercentDifference(), 0.0);
+    assertEquals(
+        1, TestUtil.getCounter(log.build(), "StatsCheck_MaxPercentFluctuationGreaterThan50"));
 
     resBuilder.clear();
     addDataPoint(timeSeries, "2001", -8.0);
     StatChecker.checkPercentFluctuations(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan50", new ArrayList<>(), 0));
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan50", new ArrayList<>()));
+    assertTrue(
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan100", List.of("1993", "2001")));
     assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan100", new ArrayList<>(), 0));
-    assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan500", new ArrayList<>(), 0));
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan500", new ArrayList<>()));
+    assertEquals(-3.0, resBuilder.getValidationCounters(0).getPercentDifference(), 0.0);
+    assertEquals(
+        1, TestUtil.getCounter(log.build(), "StatsCheck_MaxPercentFluctuationGreaterThan100"));
 
     resBuilder.clear();
     addDataPoint(timeSeries, "2002", 0.0);
     StatChecker.checkPercentFluctuations(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan50", new ArrayList<>(), 0));
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan50", new ArrayList<>()));
+    assertTrue(
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan100", List.of("1993", "2001")));
     assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan100", new ArrayList<>(), 0));
-    assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan500", new ArrayList<>(), 0));
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan500", new ArrayList<>()));
+    assertEquals(-3.0, resBuilder.getValidationCounters(0).getPercentDifference(), 0.0);
+    assertEquals(
+        2, TestUtil.getCounter(log.build(), "StatsCheck_MaxPercentFluctuationGreaterThan100"));
 
     resBuilder.clear();
     addDataPoint(timeSeries, "2003", 1.0);
     StatChecker.checkPercentFluctuations(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan50", new ArrayList<>(), 0));
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan50", new ArrayList<>()));
     assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan100", new ArrayList<>(), 0));
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan100", new ArrayList<>()));
     assertTrue(
-        checkHasPercentFluctuationCounter(
-            resBuilder,
-            "StatsCheck_PercentFluctuationGreaterThan500",
-            List.of("2002", "2003"),
-            1000000));
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan500", List.of("2002", "2003")));
+    assertEquals(1000000, resBuilder.getValidationCounters(0).getPercentDifference(), 0);
     assertEquals(
-        1, TestUtil.getCounter(log.build(), "StatsCheck_PercentFluctuationGreaterThan500"));
-
-    resBuilder.clear();
-    log.clear();
-    addDataPoint(timeSeries, "2004", 52);
-    StatChecker.checkPercentFluctuations(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
-    assertTrue(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan50", List.of("2003", "2004"), 51));
-    assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan100", new ArrayList<>(), 0));
-    assertTrue(
-        checkHasPercentFluctuationCounter(
-            resBuilder,
-            "StatsCheck_PercentFluctuationGreaterThan500",
-            List.of("2002", "2003"),
-            1000000));
+        1, TestUtil.getCounter(log.build(), "StatsCheck_MaxPercentFluctuationGreaterThan500"));
     assertEquals(
-        1, TestUtil.getCounter(log.build(), "StatsCheck_PercentFluctuationGreaterThan500"));
-    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_PercentFluctuationGreaterThan50"));
-
-    resBuilder.clear();
-    log.clear();
-    addDataPoint(timeSeries, "2005", 5304);
-    StatChecker.checkPercentFluctuations(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
-    assertTrue(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan50", List.of("2003", "2004"), 51));
-    assertTrue(
-        checkHasPercentFluctuationCounter(
-            resBuilder,
-            "StatsCheck_PercentFluctuationGreaterThan100",
-            List.of("2004", "2005"),
-            101));
-    assertTrue(
-        checkHasPercentFluctuationCounter(
-            resBuilder,
-            "StatsCheck_PercentFluctuationGreaterThan500",
-            List.of("2002", "2003"),
-            1000000));
+        2, TestUtil.getCounter(log.build(), "StatsCheck_MaxPercentFluctuationGreaterThan100"));
     assertEquals(
-        1, TestUtil.getCounter(log.build(), "StatsCheck_PercentFluctuationGreaterThan500"));
-    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_PercentFluctuationGreaterThan50"));
-    assertEquals(
-        1, TestUtil.getCounter(log.build(), "StatsCheck_PercentFluctuationGreaterThan100"));
+        1, TestUtil.getCounter(log.build(), "StatsCheck_MaxPercentFluctuationGreaterThan500"));
 
     // Check that % deltas are not flagged when sawtooth exists.
     resBuilder.clear();
@@ -296,14 +288,14 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2003", -2.0);
     StatChecker.checkPercentFluctuations(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan50", new ArrayList<>(), 0));
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan50", new ArrayList<>()));
     assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan100", new ArrayList<>(), 0));
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan100", new ArrayList<>()));
     assertFalse(
-        checkHasPercentFluctuationCounter(
-            resBuilder, "StatsCheck_PercentFluctuationGreaterThan500", new ArrayList<>(), 0));
+        checkHasCounter(
+            resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan500", new ArrayList<>()));
   }
 
   @Test
@@ -342,24 +334,6 @@ public class StatCheckerTest {
     StatChecker.checkSigmaDivergence(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_3_Sigma", List.of("2012")));
     assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_3_Sigma"));
-  }
-
-  private boolean checkHasPercentFluctuationCounter(
-      StatValidationResult.Builder resBuilder,
-      String counterName,
-      List<String> problemPointDates,
-      double percentDifference) {
-    boolean hasCounter = checkHasCounter(resBuilder, counterName, problemPointDates);
-    for (StatValidationEntry counter : resBuilder.getValidationCountersList()) {
-      if (counter.getCounterKey().equals(counterName) && counter.hasPercentDifference()) {
-        assertEquals(
-            "Incorrect percent difference for: " + counterName,
-            percentDifference,
-            counter.getPercentDifference(),
-            0);
-      }
-    }
-    return hasCounter;
   }
 
   private boolean checkHasCounter(

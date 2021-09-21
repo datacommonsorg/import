@@ -14,9 +14,7 @@
         "StatsCheck_Inconsistent_Values": "1",
         "StatsCheck_Data_Holes": "1",
         "StatsCheck_Inconsistent_Date_Granularity": "1",
-        "StatsCheck_PercentFluctuationGreaterThan50": "1",
-        "StatsCheck_PercentFluctuationGreaterThan100": "1",
-        "StatsCheck_PercentFluctuationGreaterThan500": "1"
+        "StatsCheck_MaxPercentFluctuationGreaterThan500": "1"
       }
     }
   },
@@ -77,51 +75,7 @@
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
-      "counterKey": "StatsCheck_PercentFluctuationGreaterThan50",
-      "problemPoints": [{
-        "date": "2020-05-02",
-        "values": [{
-          "value": 5.0,
-          "locations": [{
-            "file": "covid.csv",
-            "lineNumber": "21"
-          }]
-        }]
-      }, {
-        "date": "2020-06-02",
-        "values": [{
-          "value": 275.0,
-          "locations": [{
-            "file": "covid.csv",
-            "lineNumber": "22"
-          }]
-        }]
-      }],
-      "percentDifference": 54.0
-    }, {
-      "counterKey": "StatsCheck_PercentFluctuationGreaterThan100",
-      "problemPoints": [{
-        "date": "2020-03-02",
-        "values": [{
-          "value": 1.0,
-          "locations": [{
-            "file": "covid.csv",
-            "lineNumber": "10"
-          }]
-        }]
-      }, {
-        "date": "2020-04-02",
-        "values": [{
-          "value": 112.0,
-          "locations": [{
-            "file": "covid.csv",
-            "lineNumber": "20"
-          }]
-        }]
-      }],
-      "percentDifference": 111.0
-    }, {
-      "counterKey": "StatsCheck_PercentFluctuationGreaterThan500",
+      "counterKey": "StatsCheck_MaxPercentFluctuationGreaterThan500",
       "problemPoints": [{
         "date": "2020-02-02",
         "values": [{
