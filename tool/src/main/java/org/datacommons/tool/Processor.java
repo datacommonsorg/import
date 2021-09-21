@@ -240,8 +240,9 @@ public class Processor {
     if (parser == null) {
       throw new DCTooManyFailuresException("processTables encountered too many failures");
     }
-    BufferedWriter writer = getWriter(OutputFileType.TABLE_MCF_NODES, csvFile);
-    BufferedWriter failureWriter = getWriter(OutputFileType.FAILED_TABLE_MCF_NODES, csvFile);
+    WriterPair writerPair =
+        new WriterPair(
+            OutputFileType.TABLE_MCF_NODES, OutputFileType.FAILED_TABLE_MCF_NODES, csvFile);
     Mcf.McfGraph g;
     long numNodesProcessed = 0, numRowsProcessed = 0;
     while ((g = parser.parseNextRow()) != null) {
@@ -253,10 +254,10 @@ public class Processor {
         args.logCtx.incrementInfoCounterBy("NumRowSuccesses", 1);
       }
       if (args.resolutionMode != ResolutionMode.NONE) {
-        g = resolveCommon(g, writer, failureWriter);
+        g = resolveCommon(g, writerPair);
       } else {
         if (args.outputFiles != null) {
-          writer.write(McfUtil.serializeMcfGraph(g, false));
+          writerPair.writeSuccess(g);
         }
       }
 
@@ -279,19 +280,52 @@ public class Processor {
         csvFile.getName(),
         numRowsProcessed,
         numNodesProcessed);
-    if (writer != null) writer.close();
-    if (failureWriter != null) failureWriter.close();
+    writerPair.close();
   }
 
-  // Create a writer per type of file.
-  private BufferedWriter getWriter(OutputFileType type, File csvFile) throws IOException {
-    if (args.outputFiles == null) return null;
-    String filePath = args.outputFiles.get(type).toString();
-    if (csvFile != null) {
-      String fileSuffix = FilenameUtils.removeExtension(csvFile.getName()) + ".csv";
-      filePath = FilenameUtils.removeExtension(filePath) + "_" + fileSuffix;
+  // Encloses a pair of writers for success and corresponding failure types, and creates the file
+  // on-demand when a write comes in.
+  class WriterPair {
+    private final OutputFileType successType;
+    private final OutputFileType failureType;
+    private final File csvFile;
+    private BufferedWriter successWriter = null;
+    private BufferedWriter failureWriter = null;
+
+    public WriterPair(OutputFileType successType, OutputFileType failureType, File csvFile)
+        throws IOException {
+      this.successType = successType;
+      this.failureType = failureType;
+      this.csvFile = csvFile;
     }
-    return new BufferedWriter(new FileWriter(filePath));
+
+    public void writeSuccess(Mcf.McfGraph g) throws IOException {
+      if (successWriter == null) {
+        successWriter = newWriter(successType);
+      }
+      successWriter.write(McfUtil.serializeMcfGraph(g, false));
+    }
+
+    public void writeFailure(Mcf.McfGraph g) throws IOException {
+      if (failureWriter == null) {
+        failureWriter = newWriter(failureType);
+      }
+      failureWriter.write(McfUtil.serializeMcfGraph(g, false));
+    }
+
+    public void close() throws IOException {
+      if (failureWriter != null) failureWriter.close();
+      if (successWriter != null) successWriter.close();
+    }
+
+    private BufferedWriter newWriter(OutputFileType type) throws IOException {
+      String filePath = args.outputFiles.get(type).toString();
+      if (csvFile != null) {
+        String fileSuffix = FilenameUtils.removeExtension(csvFile.getName()) + ".csv";
+        filePath = FilenameUtils.removeExtension(filePath) + "_" + fileSuffix;
+      }
+      return new BufferedWriter(new FileWriter(filePath));
+    }
   }
 
   // Called only when existenceChecker is enabled.
@@ -310,27 +344,26 @@ public class Processor {
 
   // Called only when resolution is enabled.
   private Mcf.McfGraph resolveNodes() throws IOException {
-    BufferedWriter writer = getWriter(OutputFileType.INSTANCE_MCF_NODES, null);
-    BufferedWriter failureWriter = getWriter(OutputFileType.FAILED_INSTANCE_MCF_NODES, null);
-    var result = resolveCommon(McfUtil.mergeGraphs(nodesForVariousChecks), writer, failureWriter);
-    if (writer != null) writer.close();
-    if (failureWriter != null) failureWriter.close();
+    var writerPair =
+        new WriterPair(
+            OutputFileType.INSTANCE_MCF_NODES, OutputFileType.FAILED_INSTANCE_MCF_NODES, null);
+    var result = resolveCommon(McfUtil.mergeGraphs(nodesForVariousChecks), writerPair);
+    writerPair.close();
     return result;
   }
 
-  private Mcf.McfGraph resolveCommon(
-      Mcf.McfGraph mcfGraph, BufferedWriter writer, BufferedWriter failureWriter)
+  private Mcf.McfGraph resolveCommon(Mcf.McfGraph mcfGraph, WriterPair writerPair)
       throws IOException {
     McfResolver resolver = new McfResolver(mcfGraph, args.verbose, idResolver, args.logCtx);
     resolver.resolve();
-    if (writer != null && failureWriter != null) {
+    if (args.outputFiles != null) {
       var resolved = resolver.resolvedGraph();
       if (!resolved.getNodesMap().isEmpty()) {
-        writer.write(McfUtil.serializeMcfGraph(resolved, false));
+        writerPair.writeSuccess(resolved);
       }
       var failed = resolver.failedGraph();
       if (!failed.getNodesMap().isEmpty()) {
-        failureWriter.write(McfUtil.serializeMcfGraph(failed, false));
+        writerPair.writeFailure(failed);
       }
     }
     return resolver.resolvedGraph();
