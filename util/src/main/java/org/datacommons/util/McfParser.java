@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,6 +33,7 @@ import org.datacommons.proto.Mcf.McfGraph;
 // NOTE: Expects caller to set location file in LogWrapper.
 public class McfParser {
   private static final Logger logger = LogManager.getLogger(McfParser.class);
+  static String IN_MEMORY_FILE_NAME = "InMemory";
 
   private McfGraph.Builder graph;
   private LogWrapper logCtx;
@@ -41,6 +43,7 @@ public class McfParser {
   private int curEntityLineIdx = 0;
   private String prevEntity;
   private boolean finished = false;
+  private String fileName;
   private Iterator<String> lines;
 
   // Create an McfParser instance based on type and a bool indicating whether the MCF is resolved
@@ -51,6 +54,7 @@ public class McfParser {
     parser.logCtx = logCtx;
     parser.lines =
         Files.lines(FileSystems.getDefault().getPath(fileName), StandardCharsets.UTF_8).iterator();
+    parser.fileName = Path.of(fileName).getFileName().toString();
     return parser;
   }
 
@@ -120,6 +124,7 @@ public class McfParser {
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedColonLessLine",
           "Malformed line without a colon delimiter :: line: '" + line + "'",
+          fileName,
           lineNum);
       return;
     }
@@ -132,6 +137,7 @@ public class McfParser {
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_MalformedNodeName",
             "Found malformed Node value with a comma; must be a unary value :: node: '" + rhs + "'",
+            fileName,
             lineNum);
         return;
       }
@@ -142,6 +148,7 @@ public class McfParser {
             "Found malformed Node value with quotes; must be a non-quoted value :: node: '"
                 + rhs
                 + "'",
+            fileName,
             lineNum);
         return;
       }
@@ -155,6 +162,7 @@ public class McfParser {
               "Found malformed entity name that is not an entity prefix (E:) :: name: '"
                   + rhs
                   + "'",
+              fileName,
               lineNum);
           return;
         }
@@ -172,6 +180,7 @@ public class McfParser {
             Debug.Log.Level.LEVEL_ERROR,
             "MCF_UnexpectedProperty",
             "Property found without a preceding line with 'Node' :: line: '" + line + "'",
+            fileName,
             lineNum);
         return;
       }
@@ -190,7 +199,7 @@ public class McfParser {
             .getNodesOrDefault(curEntity, McfGraph.PropertyValues.getDefaultInstance())
             .toBuilder();
     Debug.Log.Location.Builder location = pvs.addLocationsBuilder();
-    location.setFile(logCtx.getLocationFile());
+    location.setFile(fileName);
     location.setLineNumber(lineNum);
     graph.putNodes(curEntity, pvs.build());
   }
@@ -235,6 +244,7 @@ public class McfParser {
           Debug.Log.Level.LEVEL_ERROR,
           "MCF_MalformedNode",
           "Found a 'Node' without properties :: node: '" + curEntity + "'",
+          fileName,
           lineNum);
     }
     return graph.build();
@@ -244,6 +254,7 @@ public class McfParser {
       String mcfString, Mcf.McfType type, boolean isResolved, LogWrapper logCtx)
       throws IOException {
     McfParser parser = McfParser.init(type, isResolved);
+    parser.fileName = IN_MEMORY_FILE_NAME;
     parser.logCtx = logCtx;
     parser.lines = Arrays.asList(mcfString.split("\\r?\\n")).iterator();
     return parser.parseLines();
@@ -319,7 +330,7 @@ public class McfParser {
   }
 
   private LogCb getLogCb() {
-    return new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNum);
+    return new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, fileName, lineNum);
   }
 
   public static McfGraph.TypedValue.Builder parseTypedValue(

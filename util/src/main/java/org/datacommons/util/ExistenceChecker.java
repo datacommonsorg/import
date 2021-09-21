@@ -21,6 +21,7 @@ import org.datacommons.proto.Mcf;
 // along with a logging callback (LogCb).  The implementation batches calls to DC, and on
 // completion invokes the callback to notify on existence failures.  At the very end, users
 // need to issue a final drain call (drainRemoteCalls).
+// This class is thread-safe.
 public class ExistenceChecker {
   private static final Logger logger = LogManager.getLogger(ExistenceChecker.class);
   // Use the staging end-point to not impact prod.
@@ -64,15 +65,16 @@ public class ExistenceChecker {
     remoteBatchMap = new HashMap<>();
   }
 
-  public void submitNodeCheck(String node, LogCb logCb) throws IOException, InterruptedException {
-    logCtx.incrementCounterBy("Existence_NumChecks", 1);
+  public synchronized void submitNodeCheck(String node, LogCb logCb)
+      throws IOException, InterruptedException {
+    logCtx.incrementInfoCounterBy("Existence_NumChecks", 1);
     if (checkLocal(node, Vocabulary.TYPE_OF, "", logCb)) {
       return;
     }
     batchRemoteCall(node, Vocabulary.TYPE_OF, "", logCb);
   }
 
-  public void submitTripleCheck(String sub, String pred, String obj, LogCb logCb)
+  public synchronized void submitTripleCheck(String sub, String pred, String obj, LogCb logCb)
       throws IOException, InterruptedException {
     if (pred.equals(Vocabulary.DOMAIN_INCLUDES) && (sub.contains("/") || sub.equals("count"))) {
       // Don't bother with domain checks for schema-less properties.
@@ -80,14 +82,14 @@ public class ExistenceChecker {
       // of a set.
       return;
     }
-    logCtx.incrementCounterBy("Existence_NumChecks", 1);
+    logCtx.incrementInfoCounterBy("Existence_NumChecks", 1);
     if (checkLocal(sub, pred, obj, logCb)) {
       return;
     }
     batchRemoteCall(sub, pred, obj, logCb);
   }
 
-  public void addLocalGraph(Mcf.McfGraph graph) {
+  public synchronized void addLocalGraph(Mcf.McfGraph graph) {
     for (Map.Entry<String, Mcf.McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
       // Skip doing anything with StatVarObs.
       String typeOf = McfUtil.getPropVal(node.getValue(), Vocabulary.TYPE_OF);
@@ -123,7 +125,7 @@ public class ExistenceChecker {
     }
   }
 
-  public void drainRemoteCalls() throws IOException, InterruptedException {
+  public synchronized void drainRemoteCalls() throws IOException, InterruptedException {
     // To avoid mutating map while iterating, get the keys first.
     List<String> preds = new ArrayList<>(remoteBatchMap.keySet());
     for (var pred : preds) {
@@ -192,7 +194,7 @@ public class ExistenceChecker {
   private void performDcCall(
       String pred, List<String> subs, Map<String, Map<String, List<LogCb>>> subMap)
       throws IOException, InterruptedException {
-    logCtx.incrementCounterBy("Existence_NumDcCalls", 1);
+    logCtx.incrementInfoCounterBy("Existence_NumDcCalls", 1);
 
     var dataJson = callDc(subs, pred);
 

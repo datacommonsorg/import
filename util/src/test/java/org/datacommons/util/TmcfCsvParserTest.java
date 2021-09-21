@@ -92,7 +92,6 @@ public class TmcfCsvParserTest {
   private String run(String mcfFile, String csvFile)
       throws IOException, URISyntaxException, InterruptedException {
     LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
-    logCtx.setLocationFile(csvFile);
     TmcfCsvParser parser =
         TmcfCsvParser.init(resourceFile(mcfFile), resourceFile(csvFile), ',', logCtx);
     List<McfGraph> result = new ArrayList<>();

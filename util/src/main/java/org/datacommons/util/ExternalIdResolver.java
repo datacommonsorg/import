@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
@@ -26,6 +28,7 @@ import org.datacommons.proto.Recon;
 // 3. Do N resolveNode calls (to resolve a dcid)
 //
 // If this order is not followed, errors will be thrown.
+// This class is thread-safe.
 public class ExternalIdResolver {
   private static final Logger logger = LogManager.getLogger(ExternalIdResolver.class);
 
@@ -47,6 +50,10 @@ public class ExternalIdResolver {
   // Key: ID property, Value: Map(Key: external ID, Value: DCID)
   private Map<String, Map<String, String>> mappedIds = new HashMap<>();
 
+  // First all the id maps are populated ("write" phase), and then used for resolution ("read"
+  // phase), so we use RW locks.
+  private final ReadWriteLock rwlock = new ReentrantReadWriteLock();
+
   public ExternalIdResolver(HttpClient httpClient, boolean verbose, LogWrapper logCtx) {
     this.httpClient = httpClient;
     this.verbose = verbose;
@@ -55,45 +62,55 @@ public class ExternalIdResolver {
 
   public void submitNode(Mcf.McfGraph.PropertyValues node)
       throws IOException, InterruptedException {
-    if (drained) {
-      throw new UnexpectedException("Cannot call submitMcf after drainRemoteCalls!");
-    }
-    // Nothing to do if this is not a resolvable type.
-    if (!isResolvableType(node)) return;
+    rwlock.writeLock().lock();
+    try {
+      if (drained) {
+        throw new UnexpectedException("Cannot call submitMcf after drainRemoteCalls!");
+      }
+      // Nothing to do if this is not a resolvable type.
+      if (!isResolvableType(node)) return;
 
-    for (var propIds : getExternalIds(node).entrySet()) {
-      var prop = propIds.getKey();
-      Set<String> batched = batchedIds.getOrDefault(prop, null);
-      Map<String, String> mapped = mappedIds.getOrDefault(prop, null);
-      int numOrig = batched != null ? batched.size() : 0;
-      for (var id : propIds.getValue()) {
-        if (mapped != null && mapped.containsKey(id)) {
-          // This ID is already mapped.
-          continue;
+      for (var propIds : getExternalIds(node).entrySet()) {
+        var prop = propIds.getKey();
+        Set<String> batched = batchedIds.getOrDefault(prop, null);
+        Map<String, String> mapped = mappedIds.getOrDefault(prop, null);
+        int numOrig = batched != null ? batched.size() : 0;
+        for (var id : propIds.getValue()) {
+          if (mapped != null && mapped.containsKey(id)) {
+            // This ID is already mapped.
+            continue;
+          }
+          if (batched == null) batched = new HashSet<>();
+          batched.add(id);
         }
-        if (batched == null) batched = new HashSet<>();
-        batched.add(id);
+        if (batched != null) {
+          numBatchedIds += (batched.size() - numOrig);
+          batchedIds.put(prop, batched);
+        }
       }
-      if (batched != null) {
-        numBatchedIds += (batched.size() - numOrig);
-        batchedIds.put(prop, batched);
-      }
-    }
 
-    if (numBatchedIds >= MAX_RESOLUTION_BATCH_IDS) {
-      if (verbose) {
-        logger.info("Processing batched external-IDs due to MAX_RESOLUTION_BATCH_IDS threshold");
+      if (numBatchedIds >= MAX_RESOLUTION_BATCH_IDS) {
+        if (verbose) {
+          logger.info("Processing batched external-IDs due to MAX_RESOLUTION_BATCH_IDS threshold");
+        }
+        drainRemoteCallsInternal();
       }
-      drainRemoteCallsInternal();
+    } finally {
+      rwlock.writeLock().unlock();
     }
   }
 
   public void drainRemoteCalls() throws IOException, InterruptedException {
-    if (drained) {
-      throw new UnexpectedException("drainRemoteCalls() can only be called once!");
+    rwlock.writeLock().lock();
+    try {
+      if (drained) {
+        throw new UnexpectedException("drainRemoteCalls() can only be called once!");
+      }
+      drainRemoteCallsInternal();
+      drained = true;
+    } finally {
+      rwlock.writeLock().unlock();
     }
-    drainRemoteCallsInternal();
-    drained = true;
   }
 
   // Resolves the given node, if possible, and returns the node's DCID if resolved. If not,
@@ -102,70 +119,75 @@ public class ExternalIdResolver {
   // REQUIRES: drainRemoteCalls() is called.
   public String resolveNode(String nodeId, Mcf.McfGraph.PropertyValues node)
       throws UnexpectedException {
-    if (!drained) {
-      throw new UnexpectedException("Cannot call resolveNode before drainRemoteCalls!");
-    }
-    String foundDcid = new String();
-
-    // Nothing to do if not resolvable.
-    if (!isResolvableType(node)) return foundDcid;
-
-    // If there are multiple external IDs, then they all must map to the same DCID!
-    String foundExternalProp = null;
-    String foundExternalId = null;
-    for (var propIds : getExternalIds(node).entrySet()) {
-      var prop = propIds.getKey();
-      for (var id : propIds.getValue()) {
-        if (mappedIds == null
-            || !mappedIds.containsKey(prop)
-            || !mappedIds.get(prop).containsKey(id)) {
-          logCtx.addEntry(
-              Debug.Log.Level.LEVEL_ERROR,
-              "Resolution_UnresolvedExternalId_" + prop,
-              "Unresolved external ID :: id: '"
-                  + id
-                  + "', property: '"
-                  + prop
-                  + "', node: '"
-                  + nodeId,
-              node.getLocationsList());
-          return "";
-        }
-        var newDcid = mappedIds.get(prop).get(id);
-        if (!foundDcid.isEmpty() && !foundDcid.equals(newDcid)) {
-          boolean foundFirst = foundExternalProp.compareTo(prop) < 0; // for deterministic order
-          logCtx.addEntry(
-              Debug.Log.Level.LEVEL_ERROR,
-              "Resolution_DivergingDcidsForExternalIds_"
-                  + (foundFirst ? foundExternalProp : prop)
-                  + "_"
-                  + (foundFirst ? prop : foundExternalProp),
-              "Found diverging DCIDs for external IDs :: extId1: '"
-                  + (foundFirst ? foundExternalId : id)
-                  + ", "
-                  + "dcid1: '"
-                  + (foundFirst ? foundDcid : newDcid)
-                  + "', property1: '"
-                  + (foundFirst ? foundExternalProp : prop)
-                  + ", "
-                  + "extId2: '"
-                  + (foundFirst ? id : foundExternalId)
-                  + "', dcid2:"
-                  + (foundFirst ? newDcid : foundDcid)
-                  + ", property2: '"
-                  + (foundFirst ? prop : foundExternalProp)
-                  + "', node: '"
-                  + nodeId
-                  + "'",
-              node.getLocationsList());
-          return "";
-        }
-        foundDcid = newDcid;
-        foundExternalProp = prop;
-        foundExternalId = id;
+    rwlock.readLock().lock();
+    try {
+      if (!drained) {
+        throw new UnexpectedException("Cannot call resolveNode before drainRemoteCalls!");
       }
+      String foundDcid = new String();
+
+      // Nothing to do if not resolvable.
+      if (!isResolvableType(node)) return foundDcid;
+
+      // If there are multiple external IDs, then they all must map to the same DCID!
+      String foundExternalProp = null;
+      String foundExternalId = null;
+      for (var propIds : getExternalIds(node).entrySet()) {
+        var prop = propIds.getKey();
+        for (var id : propIds.getValue()) {
+          if (mappedIds == null
+              || !mappedIds.containsKey(prop)
+              || !mappedIds.get(prop).containsKey(id)) {
+            logCtx.addEntry(
+                Debug.Log.Level.LEVEL_ERROR,
+                "Resolution_UnresolvedExternalId_" + prop,
+                "Unresolved external ID :: id: '"
+                    + id
+                    + "', property: '"
+                    + prop
+                    + "', node: '"
+                    + nodeId,
+                node.getLocationsList());
+            return "";
+          }
+          var newDcid = mappedIds.get(prop).get(id);
+          if (!foundDcid.isEmpty() && !foundDcid.equals(newDcid)) {
+            boolean foundFirst = foundExternalProp.compareTo(prop) < 0; // for deterministic order
+            logCtx.addEntry(
+                Debug.Log.Level.LEVEL_ERROR,
+                "Resolution_DivergingDcidsForExternalIds_"
+                    + (foundFirst ? foundExternalProp : prop)
+                    + "_"
+                    + (foundFirst ? prop : foundExternalProp),
+                "Found diverging DCIDs for external IDs :: extId1: '"
+                    + (foundFirst ? foundExternalId : id)
+                    + ", "
+                    + "dcid1: '"
+                    + (foundFirst ? foundDcid : newDcid)
+                    + "', property1: '"
+                    + (foundFirst ? foundExternalProp : prop)
+                    + ", "
+                    + "extId2: '"
+                    + (foundFirst ? id : foundExternalId)
+                    + "', dcid2:"
+                    + (foundFirst ? newDcid : foundDcid)
+                    + ", property2: '"
+                    + (foundFirst ? prop : foundExternalProp)
+                    + "', node: '"
+                    + nodeId
+                    + "'",
+                node.getLocationsList());
+            return "";
+          }
+          foundDcid = newDcid;
+          foundExternalProp = prop;
+          foundExternalId = id;
+        }
+      }
+      return foundDcid;
+    } finally {
+      rwlock.readLock().unlock();
     }
-    return foundDcid;
   }
 
   // Returns true if this node is of a type that is resolvable by the ID mapper.
@@ -240,7 +262,7 @@ public class ExternalIdResolver {
 
   private Recon.ResolveEntitiesResponse callDc(Recon.ResolveEntitiesRequest reconReq)
       throws IOException, InterruptedException {
-    logCtx.incrementCounterBy("Resolution_NumDcCalls", 1);
+    logCtx.incrementInfoCounterBy("Resolution_NumDcCalls", 1);
     var request =
         HttpRequest.newBuilder(URI.create(API_ROOT))
             .header("accept", "application/json")

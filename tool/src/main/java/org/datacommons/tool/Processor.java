@@ -20,12 +20,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
@@ -146,7 +141,7 @@ public class Processor {
       logger.error("Aborting prematurely, see report.json.");
       retVal = -1;
     }
-    args.logCtx.persistLog(false);
+    args.logCtx.persistLog();
     return retVal;
   }
 
@@ -188,7 +183,6 @@ public class Processor {
     long numNodesProcessed = 0;
     if (verbose) logger.info("Checking {}", file.getName());
     // TODO: isResolved is more allowing, be stricter.
-    logCtx.setLocationFile(file.getName());
     McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
     Mcf.McfGraph n;
     while ((n = parser.parseNextNode()) != null) {
@@ -208,9 +202,8 @@ public class Processor {
       }
 
       numNodesProcessed++;
-      logCtx.provideStatus(numNodesProcessed, "nodes processed");
-      if (logCtx.loggedTooManyFailures()) {
-        throw new DCTooManyFailuresException("processNodes encountered too many failures");
+      if (!logCtx.trackStatus(numNodesProcessed, file.getPath(), "nodes processed")) {
+        throw new DCTooManyFailuresException("encountered too many failures");
       }
     }
     logger.info("Checked {} with {} nodes", file.getName(), numNodesProcessed);
@@ -218,6 +211,7 @@ public class Processor {
 
   private void processTables()
       throws IOException, DCTooManyFailuresException, InterruptedException {
+    // Parallelize
     if (verbose) logger.info("TMCF " + fileGroup.getTmcf().getName());
     for (File csvFile : fileGroup.getCsvs()) {
       if (verbose) logger.info("Checking CSV " + csvFile.getPath());
@@ -226,7 +220,7 @@ public class Processor {
               fileGroup.getTmcf().getPath(), csvFile.getPath(), fileGroup.delimiter(), logCtx);
       // If there were too many failures when initializing the parser, parser will be null and we
       // don't want to continue processing.
-      if (logCtx.loggedTooManyFailures()) {
+      if (parser == null) {
         throw new DCTooManyFailuresException("processTables encountered too many failures");
       }
       Mcf.McfGraph g;
@@ -237,7 +231,7 @@ public class Processor {
         // This will set counters/messages in logCtx.
         boolean success = McfChecker.check(g, existenceChecker, statVarState, logCtx);
         if (success) {
-          logCtx.incrementCounterBy("NumRowSuccesses", 1);
+          logCtx.incrementInfoCounterBy("NumRowSuccesses", 1);
         }
         if (resolutionMode != ResolutionMode.NONE) {
           g =
@@ -256,9 +250,8 @@ public class Processor {
         }
         numNodesProcessed += g.getNodesCount();
         numRowsProcessed++;
-        logCtx.provideStatus(numRowsProcessed, "rows processed");
-        if (logCtx.loggedTooManyFailures()) {
-          throw new DCTooManyFailuresException("processTables encountered too many failures");
+        if (!logCtx.trackStatus(numRowsProcessed, csvFile.getPath(), "rows processed")) {
+          throw new DCTooManyFailuresException("encountered too many failures");
         }
       }
       logger.info(
@@ -276,13 +269,11 @@ public class Processor {
   // Called only when existenceChecker is enabled.
   private void checkNodes() throws IOException, InterruptedException, DCTooManyFailuresException {
     long numNodesChecked = 0;
-    logCtx.setLocationFile("");
     for (Mcf.McfGraph n : nodesForVariousChecks) {
       McfChecker.check(n, existenceChecker, statVarState, logCtx);
       numNodesChecked += n.getNodesCount();
       numNodesChecked++;
-      logCtx.provideStatus(numNodesChecked, "nodes checked");
-      if (logCtx.loggedTooManyFailures()) {
+      if (!logCtx.trackStatus(numNodesChecked, "", "nodes checked")) {
         throw new DCTooManyFailuresException("checkNodes encountered too many failures");
       }
     }
@@ -326,8 +317,7 @@ public class Processor {
         idResolver.submitNode(idAndNode.getValue());
       }
       numNodesProcessed += g.getNodesCount();
-      dummyLog.provideStatus(numNodesProcessed, "nodes processed");
-      if (dummyLog.loggedTooManyFailures()) {
+      if (!dummyLog.trackStatus(numNodesProcessed, "", "nodes processed")) {
         System.err.println("Too Many Errors ::\n" + dummyLog.dumpLog());
         throw new DCTooManyFailuresException("encountered too many failures");
       }
@@ -347,8 +337,7 @@ public class Processor {
           idResolver.submitNode(idAndNode.getValue());
         }
         numRowsProcessed++;
-        dummyLog.provideStatus(numRowsProcessed, "rows processed");
-        if (dummyLog.loggedTooManyFailures()) {
+        if (!dummyLog.trackStatus(numRowsProcessed, csvFile.getPath(), "rows processed")) {
           System.err.println("Too Many Errors ::\n" + dummyLog.dumpLog());
           throw new DCTooManyFailuresException("encountered too many failures");
         }

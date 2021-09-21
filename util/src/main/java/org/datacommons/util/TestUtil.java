@@ -26,10 +26,9 @@ import org.datacommons.proto.Mcf;
 
 // Common set of utils used in unit tests.
 public class TestUtil {
-  public static LogWrapper newLogCtx(String mcfFile) {
+  public static LogWrapper newLogCtx() {
     Debug.Log.Builder log = Debug.Log.newBuilder();
     LogWrapper logCtx = new LogWrapper(log);
-    logCtx.setLocationFile(mcfFile);
     return logCtx;
   }
 
@@ -40,12 +39,11 @@ public class TestUtil {
   }
 
   public static Mcf.McfGraph graphFromMcf(String mcfString) throws IOException {
-    return McfParser.parseInstanceMcfString(mcfString, false, TestUtil.newLogCtx("InMemory"));
+    return McfParser.parseInstanceMcfString(mcfString, false, TestUtil.newLogCtx());
   }
 
   public static String mcfFromFile(String filePath) throws IOException {
-    Mcf.McfGraph graph =
-        McfParser.parseInstanceMcfFile(filePath, false, TestUtil.newLogCtx(filePath));
+    Mcf.McfGraph graph = McfParser.parseInstanceMcfFile(filePath, false, TestUtil.newLogCtx());
     return McfUtil.serializeMcfGraph(graph, true);
   }
 

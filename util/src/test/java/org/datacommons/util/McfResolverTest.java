@@ -18,6 +18,7 @@ public class McfResolverTest {
   public void instanceMcf() throws IOException {
     Debug.Log.Builder log = Debug.Log.newBuilder();
     LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
+    McfParser.IN_MEMORY_FILE_NAME = "InMemory";
     McfResolver resolver =
         new McfResolver(
             TestUtil.graphFromMcf(getContent("McfResolverTest_Unresolved_Instance.mcf")),
@@ -51,7 +52,6 @@ public class McfResolverTest {
 
     Debug.Log.Builder log = Debug.Log.newBuilder();
     LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
-    logCtx.setLocationFile("McfResolverTest_TmcfCsv.csv");
     TmcfCsvParser parser =
         TmcfCsvParser.init(
             getFile("McfResolverTest_TmcfCsv.tmcf"),

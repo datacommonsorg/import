@@ -16,24 +16,16 @@ package org.datacommons.util;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 import org.datacommons.proto.Debug.DataPoint;
 import org.datacommons.proto.Debug.DataPoint.DataValue;
-import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.ValueType;
 
 // A checker that checks time-series for holes, variance in values, etc.
-//
+// This class is thread-safe.
 public class StatChecker {
   private static final class SeriesSummary {
     StatValidationResult.Builder validationResult;
@@ -71,7 +63,7 @@ public class StatChecker {
 
   // Given a graph, extract time series info (about the chosen sample places) from the
   // statVarObservation nodes and save it into seriesSummaryMap.
-  public void extractSeriesInfoFromGraph(McfGraph graph) {
+  public synchronized void extractSeriesInfoFromGraph(McfGraph graph) {
     for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
       if (shouldExtractSeriesInfo(node.getValue())) {
         extractSeriesInfoFromNode(node.getValue());
@@ -82,7 +74,7 @@ public class StatChecker {
   // Iterate through seriesSummaries, perform a list of checks (value inconsistencies, sigma
   // variance, percent fluctuations, holes in dates, invalid dates, etc) and add these results to
   // the logCtx.
-  public void check() {
+  public synchronized void check() {
     for (String hash : seriesSummaryMap.keySet()) {
       List<DataPoint> timeSeries = new ArrayList<>(seriesSummaryMap.get(hash).timeSeries.values());
       StatValidationResult.Builder resBuilder = seriesSummaryMap.get(hash).validationResult;
@@ -187,7 +179,7 @@ public class StatChecker {
       for (DataValue val : dp.getValuesList()) {
         if (vInitialized && val.getValue() != v) {
           inconsistentValueCounter.addProblemPoints(dp);
-          logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), counterKey, 1);
+          logCtx.incrementWarningCounterBy(counterKey, 1);
         }
         vInitialized = true;
         v = val.getValue();
@@ -213,7 +205,7 @@ public class StatChecker {
       double val = dp.getValues(0).getValue();
       if (Math.abs(val - meanAndStdDev.mean) > 3 * meanAndStdDev.stdDev) {
         sigma3Counter.addProblemPoints(dp);
-        logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), sigma3CounterKey, 1);
+        logCtx.incrementWarningCounterBy(sigma3CounterKey, 1);
       }
     }
     if (!sigma3Counter.getProblemPointsList().isEmpty()) {
@@ -314,7 +306,7 @@ public class StatChecker {
       LocalDateTime dateTime = StringUtil.getValidISO8601Date(date);
       if (dateTime == null) {
         invalidDateCounter.addProblemPoints(dp);
-        logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), invalidDateCounterKey, 1);
+        logCtx.incrementWarningCounterBy(invalidDateCounterKey, 1);
         continue;
       }
       if (!dateLen.containsKey(date.length())) {
@@ -335,7 +327,7 @@ public class StatChecker {
         dateLen.get(dateLenList.get(i)).forEach(inconsistentDateCounter::addProblemPoints);
       }
       // Increment counter for each series where there is an inconsistent date problem.
-      logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), inconsistentDateCounterKey, 1);
+      logCtx.incrementWarningCounterBy(inconsistentDateCounterKey, 1);
       resBuilder.addValidationCounters(inconsistentDateCounter.build());
       return;
     }
@@ -360,7 +352,7 @@ public class StatChecker {
           dataHoleCounter.setCounterKey(dataHoleCounterKey);
           dataHoleCounter.setAdditionalDetails(
               "Data hole found between the dates: " + prev.toString() + " and " + dt.toString());
-          logCtx.incrementCounterBy(Level.LEVEL_WARNING.name(), dataHoleCounterKey, 1);
+          logCtx.incrementWarningCounterBy(dataHoleCounterKey, 1);
           resBuilder.addValidationCounters(dataHoleCounter.build());
           return;
         }
