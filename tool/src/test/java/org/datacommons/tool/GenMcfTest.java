@@ -91,10 +91,7 @@ public class GenMcfTest {
           Path expected = TestUtil.getOutputFilePath(directory.getPath(), f);
           if (f.equals("report.json")) {
             TestUtil.assertReportFilesAreSimilar(
-                expect,
-                directory,
-                TestUtil.readStringFromPath(expected),
-                TestUtil.readStringFromPath(actual));
+                expect, TestUtil.readStringFromPath(expected), TestUtil.readStringFromPath(actual));
           } else {
             assertEquals(
                 org.datacommons.util.TestUtil.mcfFromFile(expected.toString()),

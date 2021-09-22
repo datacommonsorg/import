@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -56,8 +57,7 @@ public class LogWrapper {
   private long countAtLastStatus = 0;
   private AtomicLong currentCount = new AtomicLong();
   // A copy of the counters that are updated into the Log before persisting.
-  private final ConcurrentHashMap<String, ConcurrentHashMap<String, Long>> counterMap =
-      new ConcurrentHashMap<>();
+  private final List<ConcurrentHashMap<String, Long>> counterMaps = new ArrayList<>();
 
   public LogWrapper(Debug.Log.Builder log, Path outputDir) {
     this.log = log;
@@ -79,7 +79,7 @@ public class LogWrapper {
 
   private void initCounterMap() {
     for (var level : Debug.Log.Level.values()) {
-      counterMap.put(level.name(), new ConcurrentHashMap<>());
+      counterMaps.add(new ConcurrentHashMap<>());
     }
   }
 
@@ -101,11 +101,11 @@ public class LogWrapper {
   }
 
   public void incrementInfoCounterBy(String counter, int incr) {
-    incrementCounterBy(LEVEL_INFO.name(), counter, incr);
+    incrementCounterBy(LEVEL_INFO, counter, incr);
   }
 
   public void incrementWarningCounterBy(String counter, int incr) {
-    incrementCounterBy(LEVEL_WARNING.name(), counter, incr);
+    incrementCounterBy(LEVEL_WARNING, counter, incr);
   }
 
   // Updates status, provides message and return a boolean indicating if everything was successful.
@@ -164,11 +164,11 @@ public class LogWrapper {
   }
 
   private boolean loggedTooManyFailures() {
-    if (!counterMap.get(LEVEL_FATAL.name()).isEmpty()) {
+    if (!counterMaps.get(LEVEL_FATAL.getNumber()).isEmpty()) {
       logger.error("Found a fatal failure. Quitting!");
       return true;
     }
-    if (counterMap.get(LEVEL_ERROR.name()).size() > MAX_ERROR_COUNTERS_LIMIT) {
+    if (counterMaps.get(LEVEL_ERROR.getNumber()).size() > MAX_ERROR_COUNTERS_LIMIT) {
       logger.error("Found too many failure types. Quitting!");
       return true;
     }
@@ -176,40 +176,37 @@ public class LogWrapper {
   }
 
   public String summaryString() {
-    return counterMap.get(LEVEL_FATAL.name()).size()
+    return counterMaps.get(LEVEL_FATAL.getNumber()).size()
         + " fatal, "
-        + counterMap.get(LEVEL_ERROR.name()).size()
+        + counterMaps.get(LEVEL_ERROR.getNumber()).size()
         + " error(s), "
-        + counterMap.get(LEVEL_WARNING.name()).size()
+        + counterMaps.get(LEVEL_WARNING.getNumber()).size()
         + " warning(s)";
   }
 
-  private void incrementCounterBy(String level, String counter, int incr) {
-    counterMap.compute(
-        level,
-        (k1, v1) -> {
-          v1.compute(
-              counter,
-              (k2, v2) -> {
-                return v2 == null ? incr : v2 + incr;
-              });
-          return v1;
-        });
+  private void incrementCounterBy(Debug.Log.Level level, String counter, int incr) {
+    counterMaps
+        .get(level.getNumber())
+        .compute(
+            counter,
+            (k, v) -> {
+              return v == null ? incr : v + incr;
+            });
   }
 
   private void refreshCounters() {
     log.clearLevelSummary();
-    for (var kv1 : counterMap.entrySet()) {
-      if (kv1.getValue().isEmpty()) continue;
+    for (var level : Debug.Log.Level.values()) {
+      if (counterMaps.get(level.getNumber()).isEmpty()) continue;
       var cset =
           log
               .getLevelSummaryMap()
-              .getOrDefault(kv1.getKey(), Debug.Log.CounterSet.getDefaultInstance())
+              .getOrDefault(level.name(), Debug.Log.CounterSet.getDefaultInstance())
               .toBuilder();
-      for (var kv2 : kv1.getValue().entrySet()) {
-        cset.putCounters(kv2.getKey(), kv2.getValue());
+      for (var kv : counterMaps.get(level.getNumber()).entrySet()) {
+        cset.putCounters(kv.getKey(), kv.getValue());
       }
-      log.putLevelSummary(kv1.getKey(), cset.build());
+      log.putLevelSummary(level.name(), cset.build());
     }
   }
 
@@ -217,12 +214,11 @@ public class LogWrapper {
       Debug.Log.Level level, String counter, String message, String file, long lno) {
     if (TEST_MODE) System.err.println(counter + " - " + message);
     String counterName = counter == null || counter.isEmpty() ? "MissingCounterName" : counter;
-    var levelStr = level.name();
-    incrementCounterBy(levelStr, counterName, 1);
+    incrementCounterBy(level, counterName, 1);
 
     var counterValue =
-        counterMap
-            .get(levelStr)
+        counterMaps
+            .get(level.getNumber())
             .computeIfAbsent(
                 counterName,
                 v -> {

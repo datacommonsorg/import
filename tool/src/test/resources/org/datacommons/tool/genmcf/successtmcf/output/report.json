@@ -1,44 +1,43 @@
 {
   "levelSummary": {
-    "LEVEL_ERROR": {
-      "counters": {
-        "Sanity_InvalidChars_dcid": "1",
-        "Sanity_InvalidChars_observationAbout": "2",
-        "Sanity_InvalidObsDate": "2",
-        "Sanity_MultipleDcidValues": "1",
-        "Sanity_NonAsciiValueInNonText": "1",
-        "Sanity_InvalidChars_typeOf": "1",
-        "Sanity_MissingOrEmpty_typeOf": "1",
-        "CSV_InconsistentRows": "2",
-        "Sanity_MultipleVals_observationDate": "2",
-        "StrSplit_EmptyToken_location": "1",
-        "MCF_MalformedComplexValueParts": "1",
-        "MCF_MalformedComplexValue": "1",
-        "Sanity_MissingOrEmpty_observationAbout": "2",
-        "Sanity_VeryLongDcid": "1",
-        "MCF_QuantityMalformedValue": "1"
-      }
-    },
     "LEVEL_INFO": {
       "counters": {
         "NumRowSuccesses": "13",
-        "NumNodeSuccesses": "21",
-        "NumPVSuccesses": "115",
         "Existence_NumChecks": "173",
+        "NumNodeSuccesses": "24",
         "CSV_MalformedDCIDPVFailures": "4",
         "Existence_NumDcCalls": "1"
       }
     },
     "LEVEL_WARNING": {
       "counters": {
+        "CSV_EmptyDcidReferences": "2",
+        "Existence_MissingReference_measurementMethod": "16",
+        "Existence_MissingReference_location": "1",
         "StrSplit_EmptyToken_typeOf": "1",
         "CSV_MalformedDCIDFailures": "1",
-        "CSV_EmptyDcidReferences": "2",
-        "Existence_MissingReference_unit": "1",
         "Existence_MissingReference_variableMeasured": "16",
-        "Existence_MissingReference_measurementMethod": "16",
         "Existence_MissingReference_typeOf": "1",
-        "Existence_MissingReference_location": "1"
+        "Existence_MissingReference_unit": "1"
+      }
+    },
+    "LEVEL_ERROR": {
+      "counters": {
+        "MCF_MalformedComplexValue": "1",
+        "Sanity_VeryLongDcid": "1",
+        "Sanity_InvalidObsDate": "2",
+        "Sanity_InvalidChars_dcid": "1",
+        "CSV_InconsistentRows": "2",
+        "Sanity_InvalidChars_observationAbout": "2",
+        "MCF_MalformedComplexValueParts": "1",
+        "Sanity_MultipleDcidValues": "1",
+        "StrSplit_EmptyToken_location": "1",
+        "Sanity_MissingOrEmpty_typeOf": "1",
+        "Sanity_InvalidChars_typeOf": "1",
+        "Sanity_MultipleVals_observationDate": "2",
+        "Sanity_MissingOrEmpty_observationAbout": "2",
+        "MCF_QuantityMalformedValue": "1",
+        "Sanity_NonAsciiValueInNonText": "1"
       }
     }
   },

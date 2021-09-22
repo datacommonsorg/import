@@ -57,8 +57,6 @@ public class TmcfCsvParserTest {
             debugLog,
             "StrSplit_MultiToken_observationAbout",
             "property: 'observationAbout', node: 'E:FBI_Crime->E1'"));
-    assertTrue(TestUtil.checkCounter(debugLog, "NumPVSuccesses", 42));
-    assertTrue(TestUtil.checkCounter(debugLog, "NumNodeSuccesses", 7));
   }
 
   @Test
