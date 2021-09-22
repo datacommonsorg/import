@@ -89,7 +89,7 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2013", -20.3);
     StatChecker.checkValueInconsistencies(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Values", List.of("2013")));
-    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_Inconsistent_Values"));
+    assertEquals(1, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_Inconsistent_Values"));
   }
 
   @Test
@@ -136,7 +136,7 @@ public class StatCheckerTest {
     assertFalse(
         checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Date_Granularity", new ArrayList<>()));
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_Data_Holes", new ArrayList<>()));
-    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_Data_Holes"));
+    assertEquals(1, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_Data_Holes"));
 
     // Data hole, year + month.
     resBuilder.clear();
@@ -149,7 +149,7 @@ public class StatCheckerTest {
     assertFalse(
         checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Date_Granularity", new ArrayList<>()));
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_Data_Holes", new ArrayList<>()));
-    assertEquals(2, TestUtil.getCounter(log.build(), "StatsCheck_Data_Holes"));
+    assertEquals(2, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_Data_Holes"));
 
     // Inconsistent granularity.
     resBuilder.clear();
@@ -163,8 +163,9 @@ public class StatCheckerTest {
         checkHasCounter(
             resBuilder, "StatsCheck_Inconsistent_Date_Granularity", List.of("2015-01")));
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Data_Holes", new ArrayList<>()));
-    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_Inconsistent_Date_Granularity"));
-    assertEquals(2, TestUtil.getCounter(log.build(), "StatsCheck_Data_Holes"));
+    assertEquals(
+        1, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_Inconsistent_Date_Granularity"));
+    assertEquals(2, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_Data_Holes"));
 
     // Invalid date.
     resBuilder.clear();
@@ -177,9 +178,10 @@ public class StatCheckerTest {
     assertFalse(
         checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Date_Granularity", new ArrayList<>()));
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Data_Holes", new ArrayList<>()));
-    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_Invalid_Date"));
-    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_Inconsistent_Date_Granularity"));
-    assertEquals(2, TestUtil.getCounter(log.build(), "StatsCheck_Data_Holes"));
+    assertEquals(1, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_Invalid_Date"));
+    assertEquals(
+        1, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_Inconsistent_Date_Granularity"));
+    assertEquals(2, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_Data_Holes"));
   }
 
   @Test
@@ -227,7 +229,7 @@ public class StatCheckerTest {
             resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan500", new ArrayList<>()));
     assertEquals(-0.6, resBuilder.getValidationCounters(0).getPercentDifference(), 0.0);
     assertEquals(
-        1, TestUtil.getCounter(log.build(), "StatsCheck_MaxPercentFluctuationGreaterThan50"));
+        1, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_MaxPercentFluctuationGreaterThan50"));
 
     resBuilder.clear();
     addDataPoint(timeSeries, "2001", -8.0);
@@ -243,7 +245,7 @@ public class StatCheckerTest {
             resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan500", new ArrayList<>()));
     assertEquals(-3.0, resBuilder.getValidationCounters(0).getPercentDifference(), 0.0);
     assertEquals(
-        1, TestUtil.getCounter(log.build(), "StatsCheck_MaxPercentFluctuationGreaterThan100"));
+        1, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_MaxPercentFluctuationGreaterThan100"));
 
     resBuilder.clear();
     addDataPoint(timeSeries, "2002", 0.0);
@@ -259,7 +261,7 @@ public class StatCheckerTest {
             resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan500", new ArrayList<>()));
     assertEquals(-3.0, resBuilder.getValidationCounters(0).getPercentDifference(), 0.0);
     assertEquals(
-        2, TestUtil.getCounter(log.build(), "StatsCheck_MaxPercentFluctuationGreaterThan100"));
+        2, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_MaxPercentFluctuationGreaterThan100"));
 
     resBuilder.clear();
     addDataPoint(timeSeries, "2003", 1.0);
@@ -275,11 +277,11 @@ public class StatCheckerTest {
             resBuilder, "StatsCheck_MaxPercentFluctuationGreaterThan500", List.of("2002", "2003")));
     assertEquals(1000000, resBuilder.getValidationCounters(0).getPercentDifference(), 0);
     assertEquals(
-        1, TestUtil.getCounter(log.build(), "StatsCheck_MaxPercentFluctuationGreaterThan500"));
+        1, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_MaxPercentFluctuationGreaterThan500"));
     assertEquals(
-        2, TestUtil.getCounter(log.build(), "StatsCheck_MaxPercentFluctuationGreaterThan100"));
+        2, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_MaxPercentFluctuationGreaterThan100"));
     assertEquals(
-        1, TestUtil.getCounter(log.build(), "StatsCheck_MaxPercentFluctuationGreaterThan500"));
+        1, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_MaxPercentFluctuationGreaterThan500"));
 
     // Check that % deltas are not flagged when sawtooth exists.
     resBuilder.clear();
@@ -332,7 +334,7 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2019", 5.0);
     StatChecker.checkSigmaDivergence(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_3_Sigma", List.of("2012")));
-    assertEquals(1, TestUtil.getCounter(log.build(), "StatsCheck_3_Sigma"));
+    assertEquals(1, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_3_Sigma"));
   }
 
   private boolean checkHasCounter(

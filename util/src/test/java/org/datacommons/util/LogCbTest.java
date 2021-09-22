@@ -19,19 +19,19 @@ public class LogCbTest {
     String testMessage = "test_message";
 
     logCb.logError(testCounter, testMessage);
-    assertTrue(TestUtil.checkLog(logCtx.build(), "test_counter", "test_message"));
+    assertTrue(TestUtil.checkLog(lw.getLog(), "test_counter", "test_message"));
 
     logCb.setDetail(LogCb.VALUE_KEY, "test_value");
     logCb.logError(testCounter, testMessage);
-    assertTrue(TestUtil.checkLog(logCtx.build(), "test_counter", "value: 'test_value'"));
+    assertTrue(TestUtil.checkLog(lw.getLog(), "test_counter", "value: 'test_value'"));
 
     logCb.setCounterPrefix("MCF");
     logCb.logError(testCounter, testMessage);
-    assertTrue(TestUtil.checkLog(logCtx.build(), "MCF_test_counter", "test_message"));
+    assertTrue(TestUtil.checkLog(lw.getLog(), "MCF_test_counter", "test_message"));
 
     logCb.setCounterPrefix("");
     logCb.setCounterSuffix("Prop");
     logCb.logError(testCounter, testMessage);
-    assertTrue(TestUtil.checkLog(logCtx.build(), "test_counter_Prop", "test_message"));
+    assertTrue(TestUtil.checkLog(lw.getLog(), "test_counter_Prop", "test_message"));
   }
 }

@@ -24,9 +24,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,7 +34,8 @@ import org.datacommons.proto.Debug;
 import org.datacommons.proto.Debug.StatValidationResult;
 
 // The class that provides logging functionality.  This class is Thread Safe.
-// TODO: Profile and maybe optimize incrementInfoCounterBy() and trackStatus() locking.
+// This class can be heavily contended so it uses concurrent-hashmaps and atomic counters for
+// the fast-path functions, and the object lock for slow-path functions.
 public class LogWrapper {
   private static final Logger logger = LogManager.getLogger(LogWrapper.class);
 
@@ -49,10 +50,14 @@ public class LogWrapper {
   public final boolean persistLog;
   private Debug.Log.Builder log;
 
-  private Instant lastStatusAt;
+  // Update with lock, but read without object lock.
+  private volatile Instant lastStatusAt;
+  // Updated and read with object lock.
   private long countAtLastStatus = 0;
-  private long currentCount = 0;
-  private final Set<String> countersWithErrors = new HashSet<>();
+  private AtomicLong currentCount = new AtomicLong();
+  // A copy of the counters that are updated into the Log before persisting.
+  private final ConcurrentHashMap<String, ConcurrentHashMap<String, Long>> counterMap =
+      new ConcurrentHashMap<>();
 
   public LogWrapper(Debug.Log.Builder log, Path outputDir) {
     this.log = log;
@@ -61,6 +66,7 @@ public class LogWrapper {
     logger.info(
         "Report written periodically to {}", logPath.toAbsolutePath().normalize().toString());
     lastStatusAt = Instant.now();
+    initCounterMap();
   }
 
   public LogWrapper(Debug.Log.Builder log) {
@@ -68,6 +74,13 @@ public class LogWrapper {
     this.persistLog = false;
     this.logPath = null;
     lastStatusAt = Instant.now();
+    initCounterMap();
+  }
+
+  private void initCounterMap() {
+    for (var level : Debug.Log.Level.values()) {
+      counterMap.put(level.name(), new ConcurrentHashMap<>());
+    }
   }
 
   public void addEntry(
@@ -81,40 +94,59 @@ public class LogWrapper {
     }
   }
 
+  // Lock Note: This happens at the very end.
   public synchronized void addStatsCheckSummaryEntry(StatValidationResult statValidationResult) {
     if (log == null) return;
     log.addStatsCheckSummary(statValidationResult);
   }
 
-  public synchronized void incrementInfoCounterBy(String counter, int incr) {
+  public void incrementInfoCounterBy(String counter, int incr) {
     incrementCounterBy(LEVEL_INFO.name(), counter, incr);
   }
 
-  public synchronized void incrementWarningCounterBy(String counter, int incr) {
+  public void incrementWarningCounterBy(String counter, int incr) {
     incrementCounterBy(LEVEL_WARNING.name(), counter, incr);
   }
 
   // Updates status, provides message and return a boolean indicating if everything was successful.
   // If this returns false, we should bail.
-  public synchronized boolean trackStatus(long incCount, String thing) throws IOException {
+  public boolean trackStatus(long incCount, String thing) throws IOException {
     Instant now = Instant.now();
+    currentCount.addAndGet(incCount);
     if (Duration.between(lastStatusAt, now).getSeconds() >= SECONDS_BETWEEN_STATUS) {
-      logger.info("{} {} [{}]", currentCount - countAtLastStatus, thing, summaryString());
-      if (persistLog) persistLog(true);
-      lastStatusAt = now;
-      currentCount += incCount;
-      countAtLastStatus = currentCount;
-    } else {
-      currentCount += incCount;
+      trackStatusLocked(now, incCount, thing);
     }
     return !loggedTooManyFailures();
   }
 
+  // Lock Note: This should happen approx every SECONDS_BETWEEN_STATUS.
+  public synchronized void trackStatusLocked(Instant now, long incCount, String thing)
+      throws IOException {
+    // Check again with the lock held.
+    if (Duration.between(lastStatusAt, now).getSeconds() < SECONDS_BETWEEN_STATUS) {
+      // Lost the race.
+      return;
+    }
+
+    logger.info("{} {} [{}]", currentCount.get() - countAtLastStatus, thing, summaryString());
+    if (persistLog) persistLog(true);
+    lastStatusAt = now;
+    countAtLastStatus = currentCount.get();
+  }
+
+  // Lock Note: This should only happen at the very end.
   public synchronized void persistLog() throws IOException {
     persistLog(false);
   }
 
+  // Lock Note: Used only by tests.
+  public synchronized Debug.Log getLog() {
+    refreshCounters();
+    return log.build();
+  }
+
   private void persistLog(boolean silent) throws IOException {
+    refreshCounters();
     File logFile = new File(logPath.toString());
     FileUtils.writeStringToFile(logFile, StringUtil.msgToJson(log.build()), StandardCharsets.UTF_8);
     if (!silent) {
@@ -125,16 +157,18 @@ public class LogWrapper {
     }
   }
 
+  // Lock Note: This should happen only on fatal errors.
   public synchronized String dumpLog() throws InvalidProtocolBufferException {
+    refreshCounters();
     return StringUtil.msgToJson(log.build());
   }
 
   private boolean loggedTooManyFailures() {
-    if (log.getLevelSummaryMap().containsKey(LEVEL_FATAL.name())) {
+    if (!counterMap.get(LEVEL_FATAL.name()).isEmpty()) {
       logger.error("Found a fatal failure. Quitting!");
       return true;
     }
-    if (countersWithErrors.size() > MAX_ERROR_COUNTERS_LIMIT) {
+    if (counterMap.get(LEVEL_ERROR.name()).size() > MAX_ERROR_COUNTERS_LIMIT) {
       logger.error("Found too many failure types. Quitting!");
       return true;
     }
@@ -142,56 +176,75 @@ public class LogWrapper {
   }
 
   public String summaryString() {
-    return log.getLevelSummaryMap()
-            .getOrDefault("LEVEL_FATAL", Debug.Log.CounterSet.getDefaultInstance())
-            .getCountersMap()
-            .size()
+    return counterMap.get(LEVEL_FATAL.name()).size()
         + " fatal, "
-        + log.getLevelSummaryMap()
-            .getOrDefault("LEVEL_ERROR", Debug.Log.CounterSet.getDefaultInstance())
-            .getCountersMap()
-            .size()
+        + counterMap.get(LEVEL_ERROR.name()).size()
         + " error(s), "
-        + log.getLevelSummaryMap()
-            .getOrDefault("LEVEL_WARNING", Debug.Log.CounterSet.getDefaultInstance())
-            .getCountersMap()
-            .size()
+        + counterMap.get(LEVEL_WARNING.name()).size()
         + " warning(s)";
   }
 
   private void incrementCounterBy(String level, String counter, int incr) {
-    long c = incr;
-    var cset =
-        log
-            .getLevelSummaryMap()
-            .getOrDefault(level, Debug.Log.CounterSet.getDefaultInstance())
-            .toBuilder();
-    if (cset.getCountersMap().containsKey(counter)) {
-      c += cset.getCountersMap().get(counter);
-    }
-    cset.putCounters(counter, c);
-    log.putLevelSummary(level, cset.build());
+    counterMap.compute(
+        level,
+        (k1, v1) -> {
+          v1.compute(
+              counter,
+              (k2, v2) -> {
+                return v2 == null ? incr : v2 + incr;
+              });
+          return v1;
+        });
   }
 
-  public synchronized void addEntry(
+  private void refreshCounters() {
+    log.clearLevelSummary();
+    for (var kv1 : counterMap.entrySet()) {
+      if (kv1.getValue().isEmpty()) continue;
+      var cset =
+          log
+              .getLevelSummaryMap()
+              .getOrDefault(kv1.getKey(), Debug.Log.CounterSet.getDefaultInstance())
+              .toBuilder();
+      for (var kv2 : kv1.getValue().entrySet()) {
+        cset.putCounters(kv2.getKey(), kv2.getValue());
+      }
+      log.putLevelSummary(kv1.getKey(), cset.build());
+    }
+  }
+
+  public void addEntry(
       Debug.Log.Level level, String counter, String message, String file, long lno) {
     if (TEST_MODE) System.err.println(counter + " - " + message);
     String counterName = counter == null || counter.isEmpty() ? "MissingCounterName" : counter;
-    if (level == Debug.Log.Level.LEVEL_ERROR || level == LEVEL_FATAL) {
-      countersWithErrors.add(counterName);
-    }
-    incrementCounterBy(level.name(), counterName, 1);
-    var counterValue = log.getLevelSummaryMap().get(level.name()).getCountersMap().get(counterName);
+    var levelStr = level.name();
+    incrementCounterBy(levelStr, counterName, 1);
+
+    var counterValue =
+        counterMap
+            .get(levelStr)
+            .computeIfAbsent(
+                counterName,
+                v -> {
+                  return 0L;
+                });
     if (counterValue <= MAX_MESSAGES_PER_COUNTER) {
       // Log only up to certain full messages per counter. This can spam the log for WARNING msgs.
-      Debug.Log.Entry.Builder e = log.addEntriesBuilder();
-      e.setLevel(level);
-      e.setUserMessage(message);
-      e.setCounterKey(counterName);
-
-      Debug.Log.Location.Builder l = e.getLocationBuilder();
-      l.setFile(file);
-      l.setLineNumber(lno);
+      addEntryLocked(level, counterName, message, file, lno);
     }
+  }
+
+  // Lock Note: This should only happen for a total of MAX_MESSAGES_PER_COUNTER x
+  // MAX_ERROR_COUNTERS_LIMIT times.
+  private synchronized void addEntryLocked(
+      Debug.Log.Level level, String counter, String message, String file, long lno) {
+    Debug.Log.Entry.Builder e = log.addEntriesBuilder();
+    e.setLevel(level);
+    e.setUserMessage(message);
+    e.setCounterKey(counter);
+
+    Debug.Log.Location.Builder l = e.getLocationBuilder();
+    l.setFile(file);
+    l.setLineNumber(lno);
   }
 }
