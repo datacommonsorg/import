@@ -5,13 +5,13 @@
         "NumNodeSuccesses": "22",
         "NumPVSuccesses": "110",
         "Existence_NumChecks": "132",
-        "NumRowSuccesses": "20",
+        "NumRowSuccesses": "21",
         "Existence_NumDcCalls": "1"
       }
     },
     "LEVEL_ERROR": {
       "counters": {
-        "Sanity_DuplicateObservation": "2"
+        "Sanity_InconsistentSvObsValues": "1"
       }
     },
     "LEVEL_WARNING": {
@@ -29,16 +29,8 @@
       "file": "covid.csv",
       "lineNumber": "7"
     },
-    "userMessage": "Found multiple nodes for the same Stat Var Observation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive' observationDate: '2020-02-03'",
-    "counterKey": "Sanity_DuplicateObservation"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "9"
-    },
-    "userMessage": "Found multiple nodes for the same Stat Var Observation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive' observationDate: '2020-03-02'",
-    "counterKey": "Sanity_DuplicateObservation"
+    "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive' observationDate: '2020-02-03' value1: 3.0 value2: 8.0",
+    "counterKey": "Sanity_InconsistentSvObsValues"
   }],
   "statsCheckSummary": [{
     "placeDcid": "geoId/06",

@@ -38,7 +38,6 @@ public class Processor {
   private ExternalIdResolver idResolver;
   private StatChecker statChecker;
   private StatVarState statVarState;
-  private HashSet<Long> svObsState;
   private final List<Mcf.McfGraph> nodesForVariousChecks = new ArrayList<>();
   private final ExecutorService execService;
   private final LogWrapper logCtx;
@@ -64,6 +63,7 @@ public class Processor {
         processor.checkNodes();
       }
 
+      List<Mcf.McfGraph> nodesForStatProcessing = processor.nodesForVariousChecks;
       if (args.resolutionMode != Args.ResolutionMode.NONE) {
         if (args.resolutionMode == Args.ResolutionMode.FULL) {
           // Find external IDs from in-memory MCF nodes and CSVs, and map them to DCIDs.
@@ -72,16 +72,15 @@ public class Processor {
 
         // Having looked up the external IDs, resolve the instances.
         logger.info("Resolving Instance MCF nodes");
-        Mcf.McfGraph resolvedGraph = processor.resolveNodes();
-
-        // Add stats from resolved graph to statChecker.
-        processor.addStats(List.of(resolvedGraph));
+        nodesForStatProcessing = List.of(processor.resolveNodes());
 
         // Resolution for table nodes will happen inside processTables().
-      } else {
-        // Add stats from graphs from nodesForVariousChecks to statChecker.
-        processor.addStats(processor.nodesForVariousChecks);
       }
+
+      // Extract relevant nodes from instance MCFs and add to statChecker.
+      processor.addStats(nodesForStatProcessing);
+      // Check svObs nodes from instanceMCFs for value inconsistencies.
+      processor.checkSvObInconsistencies(nodesForStatProcessing);
 
       if (!args.fileGroup.getCsvs().isEmpty()) {
         String threadStr = "(with numThreads=" + args.numThreads + ")";
@@ -124,7 +123,6 @@ public class Processor {
       idResolver = new ExternalIdResolver(HttpClient.newHttpClient(), args.verbose, logCtx);
     }
     statVarState = new StatVarState(logCtx);
-    svObsState = new HashSet<>();
     if (args.doStatChecks) {
       Set<String> samplePlaces =
           args.samplePlaces == null ? null : new HashSet<>(args.samplePlaces);
@@ -161,7 +159,7 @@ public class Processor {
         // before we check them later in checkNodes().
         existenceChecker.addLocalGraph(n);
       } else {
-        McfChecker.check(n, existenceChecker, statVarState, svObsState, logCtx);
+        McfChecker.check(n, existenceChecker, statVarState, logCtx);
       }
       if (existenceChecker != null
           || args.resolutionMode != Args.ResolutionMode.NONE
@@ -225,10 +223,8 @@ public class Processor {
       g = McfMutator.mutate(g.toBuilder(), logCtx);
 
       // This will set counters/messages in logCtx.
-      boolean success = McfChecker.check(g, existenceChecker, statVarState, svObsState, logCtx);
-      if (success) {
-        logCtx.incrementInfoCounterBy("NumRowSuccesses", 1);
-      }
+      boolean success = McfChecker.check(g, existenceChecker, statVarState, logCtx);
+
       if (args.resolutionMode != Args.ResolutionMode.NONE) {
         g = resolveCommon(g, writerPair);
       } else {
@@ -237,10 +233,12 @@ public class Processor {
         }
       }
 
-      // This will extract and save time series info from the relevant nodes from g and save it
-      // to statChecker.
-      if (statChecker != null) {
-        statChecker.extractSeriesInfoFromGraph(g);
+      // Extract relevant nodes from graph and add to statChecker.
+      addStats(List.of(g));
+      // Check graph for StatVarObservation nodes with a value inconsistency.
+      success &= checkSvObInconsistencies(List.of(g));
+      if (success) {
+        logCtx.incrementInfoCounterBy("NumRowSuccesses", 1);
       }
       numNodesProcessed += g.getNodesCount();
       numRowsProcessed++;
@@ -263,7 +261,7 @@ public class Processor {
   private void checkNodes() throws IOException, InterruptedException, DCTooManyFailuresException {
     long numNodesChecked = 0;
     for (Mcf.McfGraph n : nodesForVariousChecks) {
-      McfChecker.check(n, existenceChecker, statVarState, svObsState, logCtx);
+      McfChecker.check(n, existenceChecker, statVarState, logCtx);
       numNodesChecked += n.getNodesCount();
       numNodesChecked++;
       if (!logCtx.trackStatus(n.getNodesCount(), "nodes checked")) {
@@ -368,6 +366,17 @@ public class Processor {
     for (Mcf.McfGraph g : graphs) {
       statChecker.extractSeriesInfoFromGraph(g);
     }
+  }
+
+  // Check StatVarObservations in the graph to see if there exists the same StatVarObservation with
+  // a different value. Return false if there are value inconsistencies found.
+  private boolean checkSvObInconsistencies(List<Mcf.McfGraph> graphs) {
+    if (statChecker == null) return true;
+    boolean errorFound = false;
+    for (Mcf.McfGraph g : graphs) {
+      errorFound |= statChecker.checkSvObsInGraph(g);
+    }
+    return errorFound;
   }
 
   private void checkStats() {
