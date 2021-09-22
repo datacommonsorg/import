@@ -239,21 +239,20 @@ public class McfChecker {
     String obsDate =
         checkRequiredSingleValueProp(
             nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.OBSERVATION_DATE);
-    if (graph.getType() != Mcf.McfType.TEMPLATE_MCF) {
-      if (!obsDate.isEmpty() && !StringUtil.isValidISO8601Date(obsDate)) {
-        addLog(
-            "Sanity_InvalidObsDate",
-            "Found a non-ISO8601 compliant date value :: value: '"
-                + obsDate
-                + "', property: '"
-                + Vocabulary.OBSERVATION_DATE
-                + "', node: '"
-                + nodeId
-                + "'",
-            node);
-      }
+    if (graph.getType() != Mcf.McfType.TEMPLATE_MCF
+        && !obsDate.isEmpty()
+        && !StringUtil.isValidISO8601Date(obsDate)) {
+      addLog(
+          "Sanity_InvalidObsDate",
+          "Found a non-ISO8601 compliant date value :: value: '"
+              + obsDate
+              + "', property: '"
+              + Vocabulary.OBSERVATION_DATE
+              + "', node: '"
+              + nodeId
+              + "'",
+          node);
     }
-
     checkRequiredSingleValueProp(
         Debug.Log.Level.LEVEL_WARNING,
         nodeId,

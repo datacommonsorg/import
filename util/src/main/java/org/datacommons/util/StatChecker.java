@@ -415,11 +415,11 @@ public class StatChecker {
               + placeDcid
               + "', variableMeasured: '"
               + statVarDcid
-              + "' observationDate: '"
+              + "', observationDate: '"
               + obsDate
-              + "' value1: "
+              + "', value1: "
               + this.svObValues.get(fp)
-              + " value2: "
+              + ", value2: "
               + val,
           node.getLocationsList());
       return false;

@@ -29,7 +29,7 @@
       "file": "covid.csv",
       "lineNumber": "7"
     },
-    "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive' observationDate: '2020-02-03' value1: 3.0 value2: 8.0",
+    "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive', observationDate: '2020-02-03', value1: 3.0, value2: 8.0",
     "counterKey": "Sanity_InconsistentSvObsValues"
   }],
   "statsCheckSummary": [{
