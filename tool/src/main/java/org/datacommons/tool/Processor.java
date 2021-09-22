@@ -14,18 +14,17 @@
 
 package org.datacommons.tool;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.http.HttpClient;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
@@ -41,49 +40,17 @@ public class Processor {
   private StatVarState statVarState;
   private final List<Mcf.McfGraph> nodesForVariousChecks = new ArrayList<>();
   private final ExecutorService execService;
-
-  // TODO: Produce output MCF files in files corresponding to the input (like prod).
-  // We separate output MCF based on *.mcf vs. TMCF/CSV inputs because they often represent
-  // different things.  Input MCFs have schema/StatVars while TMCF/CSVs have stats.
-  public enum OutputFileType {
-    // Output MCF where *.mcf inputs get resolved into.
-    INSTANCE_MCF_NODES,
-    // Output MCF where failed nodes from *.mcf inputs flow into.
-    FAILED_INSTANCE_MCF_NODES,
-    // Output MCF where TMCF/CSV inputs get resolved into.
-    TABLE_MCF_NODES,
-    // Output MCF where TMCF/CSV failed nodes flow into.
-    FAILED_TABLE_MCF_NODES,
-  };
-
-  public enum ResolutionMode {
-    NONE,
-    LOCAL,
-    FULL,
-  };
-
-  static class Args {
-    public boolean doExistenceChecks = false;
-    public ResolutionMode resolutionMode = ResolutionMode.NONE;
-    public boolean doStatChecks = false;
-    public List<String> samplePlaces = null;
-    public boolean verbose = false;
-    public FileGroup fileGroup = null;
-    public Map<OutputFileType, Path> outputFiles = null;
-    public int numThreads = 1;
-    LogWrapper logCtx = null;
-  }
+  private final LogWrapper logCtx;
 
   public static Integer process(Args args) throws IOException {
     Integer retVal = 0;
+    Processor processor = new Processor(args);
     try {
-      Processor processor = new Processor(args);
-
       // Load all the instance MCFs into memory, so we can do existence checks, resolution, etc.
       if (args.doExistenceChecks) {
         logger.info("Loading Instance MCF files into memory");
       } else {
-        logger.info("Loading and Checking Instance MCF files");
+        logger.info("Loading and Checking Instance MCF files (without Existence checks)");
       }
       processor.processNodes(Mcf.McfType.INSTANCE_MCF);
 
@@ -96,8 +63,8 @@ public class Processor {
         processor.checkNodes();
       }
 
-      if (args.resolutionMode != ResolutionMode.NONE) {
-        if (args.resolutionMode == ResolutionMode.FULL) {
+      if (args.resolutionMode != Args.ResolutionMode.NONE) {
+        if (args.resolutionMode == Args.ResolutionMode.FULL) {
           // Find external IDs from in-memory MCF nodes and CSVs, and map them to DCIDs.
           processor.lookupExternalIds();
         }
@@ -116,13 +83,14 @@ public class Processor {
       }
 
       if (!args.fileGroup.getCsvs().isEmpty()) {
+        String threadStr = "(with numThreads=" + args.numThreads + ")";
         // Process all the tables.
-        if (args.resolutionMode == ResolutionMode.FULL) {
-          logger.info("Re-loading, Checking and Resolving Table MCF files");
-        } else if (args.resolutionMode == ResolutionMode.LOCAL) {
-          logger.info("Loading, Checking and Resolving Table MCF files");
+        if (args.resolutionMode == Args.ResolutionMode.FULL) {
+          logger.info("Re-loading, Checking and Resolving Table MCF files " + threadStr);
+        } else if (args.resolutionMode == Args.ResolutionMode.LOCAL) {
+          logger.info("Loading, Checking and Resolving Table MCF files " + threadStr);
         } else {
-          logger.info("Loading and Checking Table MCF files");
+          logger.info("Loading and Checking Table MCF files " + threadStr);
         }
         processor.processTables();
       } else if (args.fileGroup.getTmcfs() != null) {
@@ -138,24 +106,27 @@ public class Processor {
       logger.error("Aborting prematurely, see report.json.");
       retVal = -1;
     }
-    args.logCtx.persistLog();
+    processor.logCtx.persistLog();
     return retVal;
   }
 
   private Processor(Args args) {
+    logger.info("Command options: " + args.toString());
+
     this.args = args;
+    this.logCtx =
+        new LogWrapper(Debug.Log.newBuilder().setCommandArgs(args.toProto()), args.outputDir);
     if (args.doExistenceChecks) {
-      existenceChecker =
-          new ExistenceChecker(HttpClient.newHttpClient(), args.verbose, args.logCtx);
+      existenceChecker = new ExistenceChecker(HttpClient.newHttpClient(), args.verbose, logCtx);
     }
-    if (args.resolutionMode == ResolutionMode.FULL) {
-      idResolver = new ExternalIdResolver(HttpClient.newHttpClient(), args.verbose, args.logCtx);
+    if (args.resolutionMode == Args.ResolutionMode.FULL) {
+      idResolver = new ExternalIdResolver(HttpClient.newHttpClient(), args.verbose, logCtx);
     }
-    statVarState = new StatVarState(args.logCtx);
+    statVarState = new StatVarState(logCtx);
     if (args.doStatChecks) {
       Set<String> samplePlaces =
           args.samplePlaces == null ? null : new HashSet<>(args.samplePlaces);
-      statChecker = new StatChecker(args.logCtx, samplePlaces, args.verbose);
+      statChecker = new StatChecker(logCtx, samplePlaces, args.verbose);
     }
     execService = Executors.newFixedThreadPool(args.numThreads);
   }
@@ -178,26 +149,26 @@ public class Processor {
     long numNodesProcessed = 0;
     if (args.verbose) logger.info("Checking {}", file.getName());
     // TODO: isResolved is more allowing, be stricter.
-    McfParser parser = McfParser.init(type, file.getPath(), false, args.logCtx);
+    McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
     Mcf.McfGraph n;
     while ((n = parser.parseNextNode()) != null) {
-      n = McfMutator.mutate(n.toBuilder(), args.logCtx);
+      n = McfMutator.mutate(n.toBuilder(), logCtx);
 
       if (existenceChecker != null && type == Mcf.McfType.INSTANCE_MCF) {
         // Add instance MCF nodes to ExistenceChecker.  We load all the nodes up first
         // before we check them later in checkNodes().
         existenceChecker.addLocalGraph(n);
       } else {
-        McfChecker.check(n, existenceChecker, statVarState, args.logCtx);
+        McfChecker.check(n, existenceChecker, statVarState, logCtx);
       }
       if (existenceChecker != null
-          || args.resolutionMode != ResolutionMode.NONE
+          || args.resolutionMode != Args.ResolutionMode.NONE
           || statChecker != null) {
         nodesForVariousChecks.add(n);
       }
 
       numNodesProcessed++;
-      if (!args.logCtx.trackStatus(1, "nodes processed")) {
+      if (!logCtx.trackStatus(1, "nodes processed")) {
         throw new DCTooManyFailuresException("encountered too many failures");
       }
     }
@@ -234,7 +205,7 @@ public class Processor {
             args.fileGroup.getTmcf().getPath(),
             csvFile.getPath(),
             args.fileGroup.delimiter(),
-            args.logCtx);
+            logCtx);
     // If there were too many failures when initializing the parser, parser will be null and we
     // don't want to continue processing.
     if (parser == null) {
@@ -242,18 +213,21 @@ public class Processor {
     }
     WriterPair writerPair =
         new WriterPair(
-            OutputFileType.TABLE_MCF_NODES, OutputFileType.FAILED_TABLE_MCF_NODES, csvFile);
+            args,
+            Args.OutputFileType.TABLE_MCF_NODES,
+            Args.OutputFileType.FAILED_TABLE_MCF_NODES,
+            csvFile);
     Mcf.McfGraph g;
     long numNodesProcessed = 0, numRowsProcessed = 0;
     while ((g = parser.parseNextRow()) != null) {
-      g = McfMutator.mutate(g.toBuilder(), args.logCtx);
+      g = McfMutator.mutate(g.toBuilder(), logCtx);
 
       // This will set counters/messages in logCtx.
-      boolean success = McfChecker.check(g, existenceChecker, statVarState, args.logCtx);
+      boolean success = McfChecker.check(g, existenceChecker, statVarState, logCtx);
       if (success) {
-        args.logCtx.incrementInfoCounterBy("NumRowSuccesses", 1);
+        logCtx.incrementInfoCounterBy("NumRowSuccesses", 1);
       }
-      if (args.resolutionMode != ResolutionMode.NONE) {
+      if (args.resolutionMode != Args.ResolutionMode.NONE) {
         g = resolveCommon(g, writerPair);
       } else {
         if (args.outputFiles != null) {
@@ -268,13 +242,13 @@ public class Processor {
       }
       numNodesProcessed += g.getNodesCount();
       numRowsProcessed++;
-      if (!args.logCtx.trackStatus(1, "rows processed")) {
+      if (!logCtx.trackStatus(1, "rows processed")) {
         throw new DCTooManyFailuresException("encountered too many failures");
       }
     }
     logger.info(
         "Checked "
-            + (args.resolutionMode != ResolutionMode.NONE ? "and Resolved " : "")
+            + (args.resolutionMode != Args.ResolutionMode.NONE ? "and Resolved " : "")
             + "CSV {} ({}"
             + " rows, {} nodes)",
         csvFile.getName(),
@@ -283,59 +257,14 @@ public class Processor {
     writerPair.close();
   }
 
-  // Encloses a pair of writers for success and corresponding failure types, and creates the file
-  // on-demand when a write comes in.
-  class WriterPair {
-    private final OutputFileType successType;
-    private final OutputFileType failureType;
-    private final File csvFile;
-    private BufferedWriter successWriter = null;
-    private BufferedWriter failureWriter = null;
-
-    public WriterPair(OutputFileType successType, OutputFileType failureType, File csvFile)
-        throws IOException {
-      this.successType = successType;
-      this.failureType = failureType;
-      this.csvFile = csvFile;
-    }
-
-    public void writeSuccess(Mcf.McfGraph g) throws IOException {
-      if (successWriter == null) {
-        successWriter = newWriter(successType);
-      }
-      successWriter.write(McfUtil.serializeMcfGraph(g, false));
-    }
-
-    public void writeFailure(Mcf.McfGraph g) throws IOException {
-      if (failureWriter == null) {
-        failureWriter = newWriter(failureType);
-      }
-      failureWriter.write(McfUtil.serializeMcfGraph(g, false));
-    }
-
-    public void close() throws IOException {
-      if (failureWriter != null) failureWriter.close();
-      if (successWriter != null) successWriter.close();
-    }
-
-    private BufferedWriter newWriter(OutputFileType type) throws IOException {
-      String filePath = args.outputFiles.get(type).toString();
-      if (csvFile != null) {
-        String fileSuffix = FilenameUtils.removeExtension(csvFile.getName()) + ".csv";
-        filePath = FilenameUtils.removeExtension(filePath) + "_" + fileSuffix;
-      }
-      return new BufferedWriter(new FileWriter(filePath));
-    }
-  }
-
   // Called only when existenceChecker is enabled.
   private void checkNodes() throws IOException, InterruptedException, DCTooManyFailuresException {
     long numNodesChecked = 0;
     for (Mcf.McfGraph n : nodesForVariousChecks) {
-      McfChecker.check(n, existenceChecker, statVarState, args.logCtx);
+      McfChecker.check(n, existenceChecker, statVarState, logCtx);
       numNodesChecked += n.getNodesCount();
       numNodesChecked++;
-      if (!args.logCtx.trackStatus(n.getNodesCount(), "nodes checked")) {
+      if (!logCtx.trackStatus(n.getNodesCount(), "nodes checked")) {
         throw new DCTooManyFailuresException("checkNodes encountered too many failures");
       }
     }
@@ -346,7 +275,10 @@ public class Processor {
   private Mcf.McfGraph resolveNodes() throws IOException {
     var writerPair =
         new WriterPair(
-            OutputFileType.INSTANCE_MCF_NODES, OutputFileType.FAILED_INSTANCE_MCF_NODES, null);
+            args,
+            Args.OutputFileType.INSTANCE_MCF_NODES,
+            Args.OutputFileType.FAILED_INSTANCE_MCF_NODES,
+            null);
     var result = resolveCommon(McfUtil.mergeGraphs(nodesForVariousChecks), writerPair);
     writerPair.close();
     return result;
@@ -354,7 +286,7 @@ public class Processor {
 
   private Mcf.McfGraph resolveCommon(Mcf.McfGraph mcfGraph, WriterPair writerPair)
       throws IOException {
-    McfResolver resolver = new McfResolver(mcfGraph, args.verbose, idResolver, args.logCtx);
+    McfResolver resolver = new McfResolver(mcfGraph, args.verbose, idResolver, logCtx);
     resolver.resolve();
     if (args.outputFiles != null) {
       var resolved = resolver.resolvedGraph();
@@ -384,7 +316,10 @@ public class Processor {
       }
     }
 
-    logger.info("Loading and Processing External IDs from Table MCF files");
+    logger.info(
+        "Loading and Processing External IDs from Table MCF files (with numThreads="
+            + args.numThreads
+            + ")");
 
     List<Callable<Void>> cbs = new ArrayList<Callable<Void>>(args.fileGroup.getCsvs().size());
     for (File csvFile : args.fileGroup.getCsvs()) {
@@ -434,8 +369,8 @@ public class Processor {
   }
 
   private void checkStats() {
-    if (args.verbose) logger.info("Performing stats checks");
     if (statChecker == null) return;
+    logger.info("Performing stats checks");
     statChecker.check();
   }
 

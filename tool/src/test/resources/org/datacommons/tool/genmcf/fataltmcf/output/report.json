@@ -189,5 +189,11 @@
     },
     "userMessage": "Found fatal sanity error in TMCF; check Sanity_ counter messages :: TMCF-file: FatalTmcf.tmcf",
     "counterKey": "CSV_TmcfCheckFailure"
-  }]
+  }],
+  "commandArgs": {
+    "existenceChecks": true,
+    "resolution": "RESOLUTION_MODE_FULL",
+    "numThreads": 1,
+    "statChecks": true
+  }
 }

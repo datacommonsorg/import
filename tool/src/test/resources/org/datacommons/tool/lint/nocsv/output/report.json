@@ -620,5 +620,11 @@
     },
     "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E1', property: 'dcid' node: 'E:SVTest->E4'",
     "counterKey": "Sanity_TmcfMissingEntityDef"
-  }]
+  }],
+  "commandArgs": {
+    "existenceChecks": true,
+    "resolution": "RESOLUTION_MODE_NONE",
+    "numThreads": 1,
+    "statChecks": true
+  }
 }
