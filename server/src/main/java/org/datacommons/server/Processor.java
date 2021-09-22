@@ -17,6 +17,7 @@ package org.datacommons.server;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,6 +29,7 @@ public class Processor {
 
   private static final Logger LOGGER = Logger.getLogger(Processor.class.getName());
   private LogWrapper logCtx;
+  private HashSet<Long> svObsState = new HashSet<>();
 
   public Processor(LogWrapper logCtx) {
     this.logCtx = logCtx;
@@ -50,7 +52,7 @@ public class Processor {
       while ((g = parser.parseNextRow()) != null) {
         g = McfMutator.mutate(g.toBuilder(), logCtx);
         // This will set counters/messages in logCtx.
-        boolean success = McfChecker.check(g, null, null, logCtx);
+        boolean success = McfChecker.check(g, null, null, svObsState, logCtx);
         if (success) {
           logCtx.incrementCounterBy("NumRowSuccesses", 1);
         }

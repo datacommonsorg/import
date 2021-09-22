@@ -18,6 +18,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -75,7 +76,11 @@ public class TmcfCsvParser {
     // Check TMCF.
     boolean success =
         McfChecker.checkTemplate(
-            tmcfCsvParser.tmcf, tmcfCsvParser.csvParser.getHeaderMap().keySet(), null, logCtx);
+            tmcfCsvParser.tmcf,
+            tmcfCsvParser.csvParser.getHeaderMap().keySet(),
+            null,
+            new HashSet<>(),
+            logCtx);
     if (!success) {
       // Set location file to make sure log entry refers to the tmcf file.
       tmcfCsvParser.logCtx.setLocationFile(tmcfFile);

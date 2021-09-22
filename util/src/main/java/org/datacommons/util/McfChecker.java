@@ -15,7 +15,10 @@
 package org.datacommons.util;
 
 import com.google.common.base.Charsets;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +42,7 @@ public class McfChecker {
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES);
   private final Set<String> PROP_REFS_IN_PROP =
       Set.of(Vocabulary.NAME, Vocabulary.LABEL, Vocabulary.DCID, Vocabulary.SUB_PROPERTY_OF);
+  private final String EMPTY_PROP_STRING = "EMPTY_PROP";
 
   // Includes: a-z A-Z 0-9 _ & + - % / . )( :
   private final Pattern VALID_DCID_PATTERN = Pattern.compile("^[\\w&/%\\)\\(+\\-\\.:]+$");
@@ -53,15 +57,17 @@ public class McfChecker {
   boolean nodeFailure = false; // Failure of a specific node being processed.
   private ExistenceChecker existenceChecker;
   private StatVarState svState;
+  private Set<Long> svObsState;
 
   // Argument |graph| may be Instance or Template MCF.
   public static boolean check(
       Mcf.McfGraph graph,
       ExistenceChecker existenceChecker,
       StatVarState svState,
+      Set<Long> svObsState,
       LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return new McfChecker(graph, null, existenceChecker, svState, logCtx).check();
+    return new McfChecker(graph, null, existenceChecker, svState, svObsState, logCtx).check();
   }
 
   // Used to check a single node from TMcfCsvParser.
@@ -71,14 +77,18 @@ public class McfChecker {
     Mcf.McfGraph.Builder nodeGraph = Mcf.McfGraph.newBuilder();
     nodeGraph.setType(mcfType);
     nodeGraph.putNodes(nodeId, node);
-    return new McfChecker(nodeGraph.build(), null, null, null, logCtx).check();
+    return new McfChecker(nodeGraph.build(), null, null, null, null, logCtx).check();
   }
 
   // Used with Template MCF when there are columns from CSV header.
   public static boolean checkTemplate(
-      Mcf.McfGraph graph, Set<String> columns, ExistenceChecker existenceChecker, LogWrapper logCtx)
+      Mcf.McfGraph graph,
+      Set<String> columns,
+      ExistenceChecker existenceChecker,
+      Set<Long> svObsState,
+      LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return new McfChecker(graph, columns, existenceChecker, null, logCtx).check();
+    return new McfChecker(graph, columns, existenceChecker, null, svObsState, logCtx).check();
   }
 
   private McfChecker(
@@ -86,12 +96,14 @@ public class McfChecker {
       Set<String> columns,
       ExistenceChecker existenceChecker,
       StatVarState svState,
+      Set<Long> svObsState,
       LogWrapper logCtx) {
     this.graph = graph;
     this.columns = columns;
     this.logCtx = logCtx;
     this.existenceChecker = existenceChecker;
     this.svState = svState;
+    this.svObsState = svObsState;
   }
 
   // Returns true if there was no sanity error found.
@@ -244,26 +256,31 @@ public class McfChecker {
     String obsDate =
         checkRequiredSingleValueProp(
             nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.OBSERVATION_DATE);
-    if (graph.getType() != Mcf.McfType.TEMPLATE_MCF
-        && !obsDate.isEmpty()
-        && !StringUtil.isValidISO8601Date(obsDate)) {
-      addLog(
-          "Sanity_InvalidObsDate",
-          "Found a non-ISO8601 compliant date value :: value: '"
-              + obsDate
-              + "', property: '"
-              + Vocabulary.OBSERVATION_DATE
-              + "', node: '"
-              + nodeId
-              + "'",
-          node);
+    if (graph.getType() != Mcf.McfType.TEMPLATE_MCF) {
+      if (!obsDate.isEmpty() && !StringUtil.isValidISO8601Date(obsDate)) {
+        addLog(
+            "Sanity_InvalidObsDate",
+            "Found a non-ISO8601 compliant date value :: value: '"
+                + obsDate
+                + "', property: '"
+                + Vocabulary.OBSERVATION_DATE
+                + "', node: '"
+                + nodeId
+                + "'",
+            node);
+      }
     }
+
     checkRequiredSingleValueProp(
         Debug.Log.Level.LEVEL_WARNING,
         nodeId,
         node,
         Vocabulary.STAT_VAR_OBSERVATION_TYPE,
         Vocabulary.GENERIC_VALUE);
+
+    if (svObsState != null && !nodeFailure) {
+      checkSvObsState(node);
+    }
   }
 
   private void checkLegacyPopulation(String nodeId, Mcf.McfGraph.PropertyValues node) {
@@ -676,7 +693,7 @@ public class McfChecker {
               + value
               + "', property: '"
               + prop
-              + ", node: '"
+              + "', node: '"
               + nodeId
               + "'",
           node);
@@ -687,7 +704,7 @@ public class McfChecker {
               + value
               + "', property: '"
               + prop
-              + ", node: '"
+              + "', node: '"
               + nodeId
               + "'",
           node);
@@ -702,5 +719,39 @@ public class McfChecker {
       Debug.Log.Level level, String counter, String message, Mcf.McfGraph.PropertyValues node) {
     nodeFailure = true;
     logCtx.addEntry(level, counter, message, node.getLocationsList());
+  }
+
+  private void checkSvObsState(Mcf.McfGraph.PropertyValues node) {
+    String placeDcid = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT);
+    String statVarDcid = McfUtil.getPropVal(node, Vocabulary.VARIABLE_MEASURED);
+    String mmethod = McfUtil.getPropVal(node, Vocabulary.MEASUREMENT_METHOD);
+    String obsPeriod = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_PERIOD);
+    String sFactor = McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR);
+    String unit = McfUtil.getPropVal(node, Vocabulary.UNIT);
+    String obsDate = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE);
+    Hasher hasher = Hashing.farmHashFingerprint64().newHasher();
+    for (String prop :
+        List.of(placeDcid, statVarDcid, mmethod, obsPeriod, sFactor, unit, obsDate)) {
+      if (prop.isEmpty()) {
+        hasher.putString(EMPTY_PROP_STRING, StandardCharsets.UTF_8);
+      } else {
+        hasher.putString(prop, StandardCharsets.UTF_8).putInt(prop.length());
+      }
+    }
+    Long fp = hasher.hash().asLong();
+    if (this.svObsState.contains(fp)) {
+      addLog(
+          "Sanity_DuplicateObservation",
+          "Found multiple nodes for the same Stat Var Observation :: observationAbout: '"
+              + placeDcid
+              + "', variableMeasured: '"
+              + statVarDcid
+              + "' observationDate: '"
+              + obsDate
+              + "'",
+          node);
+    } else {
+      this.svObsState.add(fp);
+    }
   }
 }

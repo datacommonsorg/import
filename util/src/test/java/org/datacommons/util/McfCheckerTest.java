@@ -19,6 +19,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.datacommons.proto.Debug;
@@ -322,6 +323,59 @@ public class McfCheckerTest {
             + "variableMeasured: dcid:WomenIncome\n"
             + "observationAbout: dcid:geoId/SF\n";
     assertTrue(failure(mcf, "Sanity_InvalidObsDate", "non-ISO8601 compliant"));
+
+    // Graph with a duplicate StatVarObs.
+    mcf =
+        "Node: SFWomenIncome2020\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:WomenIncome\n"
+            + "value: 10000000.0\n"
+            + "observationAbout: dcid:geoId/SF\n"
+            + "observationDate: \"2020\"\n"
+            + "\n"
+            + "Node: SFWomenIncome2021\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:WomenIncome\n"
+            + "value: 10000000.0\n"
+            + "observationAbout: dcid:geoId/SF\n"
+            + "observationDate: \"2020\"\n"
+            + "\n"
+            + "Node: SFWomenIncome2022\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:WomenIncome\n"
+            + "value: 10000000.0\n"
+            + "observationAbout: dcid:geoId/SF\n"
+            + "observationDate: \"2021\"\n";
+    assertTrue(
+        failure(
+            mcf,
+            "Sanity_DuplicateObservation",
+            "Found multiple nodes for the same Stat Var Observation :: observationAbout: 'geoId/SF', variableMeasured: 'WomenIncome' observationDate: '2020'"));
+
+    // Graph with StatVarObs that differ only in one property.
+    mcf =
+        "Node: SFWomenIncome2020\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:WomenIncome\n"
+            + "value: 10000000.0\n"
+            + "observationAbout: dcid:geoId/SF\n"
+            + "observationDate: \"2020\"\n"
+            + "\n"
+            + "Node: SFWomenIncome2021\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:WomenIncome\n"
+            + "value: 10000000.0\n"
+            + "observationAbout: dcid:geoId/SF\n"
+            + "observationDate: \"2020\"\n"
+            + "unit: \"cubicMeters\"\n"
+            + "\n"
+            + "Node: SFWomenIncome2022\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:WomenIncome\n"
+            + "value: 10000000.0\n"
+            + "observationAbout: dcid:geoId/SF\n"
+            + "observationDate: \"2021\"\n";
+    assertTrue(success(mcf));
   }
 
   @Test
@@ -578,6 +632,7 @@ public class McfCheckerTest {
     Debug.Log.Builder log = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(log, Path.of("InMemory"));
     ExistenceChecker ec = null;
+    Set<Long> svObsState = new HashSet<>();
     if (doExistenceCheck) {
       ec = new ExistenceChecker(HttpClient.newHttpClient(), true, lw);
     }
@@ -587,7 +642,7 @@ public class McfCheckerTest {
     } else {
       graph = McfParser.parseInstanceMcfString(mcfString, false, lw);
     }
-    if (McfChecker.checkTemplate(graph, columns, ec, lw) && !doExistenceCheck) {
+    if (McfChecker.checkTemplate(graph, columns, ec, svObsState, lw) && !doExistenceCheck) {
       System.err.println("Check unexpectedly passed for " + mcfString);
       return false;
     }
@@ -608,6 +663,7 @@ public class McfCheckerTest {
     Debug.Log.Builder log = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(log, Path.of("InMemory"));
     Mcf.McfGraph graph;
+    Set<Long> svObsState = new HashSet<>();
     if (isTemplate) {
       graph = McfParser.parseTemplateMcfString(mcfString, lw);
     } else {
@@ -617,7 +673,7 @@ public class McfCheckerTest {
     if (doExistenceCheck) {
       ec = new ExistenceChecker(HttpClient.newHttpClient(), false, lw);
     }
-    if (!McfChecker.checkTemplate(graph, columns, ec, lw)) {
+    if (!McfChecker.checkTemplate(graph, columns, ec, svObsState, lw)) {
       System.err.println("Check unexpectedly failed for \n" + mcfString + "\n :: \n" + log);
       return false;
     }

@@ -6,6 +6,11 @@
         "Existence_NumDcCalls": "1"
       }
     },
+    "LEVEL_ERROR": {
+      "counters": {
+        "Sanity_DuplicateObservation": "2"
+      }
+    },
     "LEVEL_WARNING": {
       "counters": {
         "StatsCheck_Inconsistent_Values": "1",
@@ -15,6 +20,23 @@
       }
     }
   },
+  "entries": [{
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "covid.mcf",
+      "lineNumber": "25"
+    },
+    "userMessage": "Found multiple nodes for the same Stat Var Observation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive' observationDate: '2020-02-03'",
+    "counterKey": "Sanity_DuplicateObservation"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "covid.mcf",
+      "lineNumber": "41"
+    },
+    "userMessage": "Found multiple nodes for the same Stat Var Observation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive' observationDate: '2020-03-02'",
+    "counterKey": "Sanity_DuplicateObservation"
+  }],
   "statsCheckSummary": [{
     "placeDcid": "geoId/06",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",

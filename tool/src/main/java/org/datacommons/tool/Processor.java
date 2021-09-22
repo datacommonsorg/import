@@ -44,6 +44,7 @@ public class Processor {
   private ExternalIdResolver idResolver;
   private StatChecker statChecker;
   private StatVarState statVarState;
+  private HashSet<Long> svObsState = new HashSet<>();
   private final Map<OutputFileType, BufferedWriter> writers = new HashMap<>();
   private final List<Mcf.McfGraph> nodesForVariousChecks = new ArrayList<>();
 
@@ -199,7 +200,7 @@ public class Processor {
         // before we check them later in checkNodes().
         existenceChecker.addLocalGraph(n);
       } else {
-        McfChecker.check(n, existenceChecker, statVarState, logCtx);
+        McfChecker.check(n, existenceChecker, statVarState, svObsState, logCtx);
       }
       if (existenceChecker != null
           || resolutionMode != ResolutionMode.NONE
@@ -235,7 +236,7 @@ public class Processor {
         g = McfMutator.mutate(g.toBuilder(), logCtx);
 
         // This will set counters/messages in logCtx.
-        boolean success = McfChecker.check(g, existenceChecker, statVarState, logCtx);
+        boolean success = McfChecker.check(g, existenceChecker, statVarState, svObsState, logCtx);
         if (success) {
           logCtx.incrementCounterBy("NumRowSuccesses", 1);
         }
@@ -278,7 +279,7 @@ public class Processor {
     long numNodesChecked = 0;
     logCtx.setLocationFile("");
     for (Mcf.McfGraph n : nodesForVariousChecks) {
-      McfChecker.check(n, existenceChecker, statVarState, logCtx);
+      McfChecker.check(n, existenceChecker, statVarState, svObsState, logCtx);
       numNodesChecked += n.getNodesCount();
       numNodesChecked++;
       logCtx.provideStatus(numNodesChecked, "nodes checked");
