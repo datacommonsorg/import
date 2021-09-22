@@ -140,5 +140,11 @@
       }],
       "percentDifference": 1.0
     }]
-  }]
+  }],
+  "commandArgs": {
+    "existenceChecks": true,
+    "resolution": "RESOLUTION_MODE_FULL",
+    "numThreads": 1,
+    "statChecks": true
+  }
 }

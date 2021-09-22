@@ -62,7 +62,7 @@ class Main {
               + "and generated DCIDs, set FULL.  To just resolve local references and generate "
               + "DCIDs, set LOCAL.  Note that FULL mode may be slower since it makes "
               + "(batched) DC Recon API calls and two passes over your CSV files. Default to NONE.")
-  public Processor.ResolutionMode resolutionMode = Processor.ResolutionMode.NONE;
+  public Args.ResolutionMode resolutionMode = Args.ResolutionMode.NONE;
 
   // TODO: Default to true after some trials.
   @CommandLine.Option(
@@ -81,6 +81,13 @@ class Main {
               + "--stat-checks is true. If --stat-checks is true and this is not set, 5 sample places "
               + "are picked for roughly each distinct place type.")
   public List<String> samplePlaces;
+
+  @CommandLine.Option(
+      names = {"-n", "--num-threads"},
+      defaultValue = "1",
+      scope = CommandLine.ScopeType.INHERIT,
+      description = "Number of concurrent threads used for processing CSVs.")
+  public int numThreads;
 
   public static void main(String... args) {
     System.exit(

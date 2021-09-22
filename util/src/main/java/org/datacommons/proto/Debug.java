@@ -107,6 +107,21 @@ public final class Debug {
      */
     org.datacommons.proto.Debug.StatValidationResultOrBuilder getStatsCheckSummaryOrBuilder(
         int index);
+
+    /**
+     * <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code>
+     *
+     * @return Whether the commandArgs field is set.
+     */
+    boolean hasCommandArgs();
+    /**
+     * <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code>
+     *
+     * @return The commandArgs.
+     */
+    org.datacommons.proto.Debug.CommandArgs getCommandArgs();
+    /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
+    org.datacommons.proto.Debug.CommandArgsOrBuilder getCommandArgsOrBuilder();
   }
   /**
    *
@@ -203,6 +218,22 @@ public final class Debug {
                     input.readMessage(
                         org.datacommons.proto.Debug.StatValidationResult.PARSER,
                         extensionRegistry));
+                break;
+              }
+            case 42:
+              {
+                org.datacommons.proto.Debug.CommandArgs.Builder subBuilder = null;
+                if (((bitField0_ & 0x00000001) != 0)) {
+                  subBuilder = commandArgs_.toBuilder();
+                }
+                commandArgs_ =
+                    input.readMessage(
+                        org.datacommons.proto.Debug.CommandArgs.PARSER, extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(commandArgs_);
+                  commandArgs_ = subBuilder.buildPartial();
+                }
+                bitField0_ |= 0x00000001;
                 break;
               }
             default:
@@ -3682,6 +3713,7 @@ public final class Debug {
       }
     }
 
+    private int bitField0_;
     public static final int LEVEL_SUMMARY_FIELD_NUMBER = 1;
 
     private static final class LevelSummaryDefaultEntryHolder {
@@ -3848,6 +3880,33 @@ public final class Debug {
       return statsCheckSummary_.get(index);
     }
 
+    public static final int COMMAND_ARGS_FIELD_NUMBER = 5;
+    private org.datacommons.proto.Debug.CommandArgs commandArgs_;
+    /**
+     * <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code>
+     *
+     * @return Whether the commandArgs field is set.
+     */
+    public boolean hasCommandArgs() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code>
+     *
+     * @return The commandArgs.
+     */
+    public org.datacommons.proto.Debug.CommandArgs getCommandArgs() {
+      return commandArgs_ == null
+          ? org.datacommons.proto.Debug.CommandArgs.getDefaultInstance()
+          : commandArgs_;
+    }
+    /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
+    public org.datacommons.proto.Debug.CommandArgsOrBuilder getCommandArgsOrBuilder() {
+      return commandArgs_ == null
+          ? org.datacommons.proto.Debug.CommandArgs.getDefaultInstance()
+          : commandArgs_;
+    }
+
     private byte memoizedIsInitialized = -1;
 
     @java.lang.Override
@@ -3869,6 +3928,9 @@ public final class Debug {
       }
       for (int i = 0; i < statsCheckSummary_.size(); i++) {
         output.writeMessage(4, statsCheckSummary_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeMessage(5, getCommandArgs());
       }
       unknownFields.writeTo(output);
     }
@@ -3897,6 +3959,9 @@ public final class Debug {
         size +=
             com.google.protobuf.CodedOutputStream.computeMessageSize(4, statsCheckSummary_.get(i));
       }
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(5, getCommandArgs());
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -3915,6 +3980,10 @@ public final class Debug {
       if (!internalGetLevelSummary().equals(other.internalGetLevelSummary())) return false;
       if (!getEntriesList().equals(other.getEntriesList())) return false;
       if (!getStatsCheckSummaryList().equals(other.getStatsCheckSummaryList())) return false;
+      if (hasCommandArgs() != other.hasCommandArgs()) return false;
+      if (hasCommandArgs()) {
+        if (!getCommandArgs().equals(other.getCommandArgs())) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -3937,6 +4006,10 @@ public final class Debug {
       if (getStatsCheckSummaryCount() > 0) {
         hash = (37 * hash) + STATS_CHECK_SUMMARY_FIELD_NUMBER;
         hash = (53 * hash) + getStatsCheckSummaryList().hashCode();
+      }
+      if (hasCommandArgs()) {
+        hash = (37 * hash) + COMMAND_ARGS_FIELD_NUMBER;
+        hash = (53 * hash) + getCommandArgs().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -4100,6 +4173,7 @@ public final class Debug {
         if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getEntriesFieldBuilder();
           getStatsCheckSummaryFieldBuilder();
+          getCommandArgsFieldBuilder();
         }
       }
 
@@ -4119,6 +4193,12 @@ public final class Debug {
         } else {
           statsCheckSummaryBuilder_.clear();
         }
+        if (commandArgsBuilder_ == null) {
+          commandArgs_ = null;
+        } else {
+          commandArgsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -4145,6 +4225,7 @@ public final class Debug {
       public org.datacommons.proto.Debug.Log buildPartial() {
         org.datacommons.proto.Debug.Log result = new org.datacommons.proto.Debug.Log(this);
         int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
         result.levelSummary_ = internalGetLevelSummary();
         result.levelSummary_.makeImmutable();
         if (entriesBuilder_ == null) {
@@ -4165,6 +4246,15 @@ public final class Debug {
         } else {
           result.statsCheckSummary_ = statsCheckSummaryBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          if (commandArgsBuilder_ == null) {
+            result.commandArgs_ = commandArgs_;
+          } else {
+            result.commandArgs_ = commandArgsBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000001;
+        }
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -4270,6 +4360,9 @@ public final class Debug {
               statsCheckSummaryBuilder_.addAllMessages(other.statsCheckSummary_);
             }
           }
+        }
+        if (other.hasCommandArgs()) {
+          mergeCommandArgs(other.getCommandArgs());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -4928,6 +5021,125 @@ public final class Debug {
         return statsCheckSummaryBuilder_;
       }
 
+      private org.datacommons.proto.Debug.CommandArgs commandArgs_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+              org.datacommons.proto.Debug.CommandArgs,
+              org.datacommons.proto.Debug.CommandArgs.Builder,
+              org.datacommons.proto.Debug.CommandArgsOrBuilder>
+          commandArgsBuilder_;
+      /**
+       * <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code>
+       *
+       * @return Whether the commandArgs field is set.
+       */
+      public boolean hasCommandArgs() {
+        return ((bitField0_ & 0x00000008) != 0);
+      }
+      /**
+       * <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code>
+       *
+       * @return The commandArgs.
+       */
+      public org.datacommons.proto.Debug.CommandArgs getCommandArgs() {
+        if (commandArgsBuilder_ == null) {
+          return commandArgs_ == null
+              ? org.datacommons.proto.Debug.CommandArgs.getDefaultInstance()
+              : commandArgs_;
+        } else {
+          return commandArgsBuilder_.getMessage();
+        }
+      }
+      /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
+      public Builder setCommandArgs(org.datacommons.proto.Debug.CommandArgs value) {
+        if (commandArgsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          commandArgs_ = value;
+          onChanged();
+        } else {
+          commandArgsBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
+      public Builder setCommandArgs(
+          org.datacommons.proto.Debug.CommandArgs.Builder builderForValue) {
+        if (commandArgsBuilder_ == null) {
+          commandArgs_ = builderForValue.build();
+          onChanged();
+        } else {
+          commandArgsBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
+      public Builder mergeCommandArgs(org.datacommons.proto.Debug.CommandArgs value) {
+        if (commandArgsBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) != 0)
+              && commandArgs_ != null
+              && commandArgs_ != org.datacommons.proto.Debug.CommandArgs.getDefaultInstance()) {
+            commandArgs_ =
+                org.datacommons.proto.Debug.CommandArgs.newBuilder(commandArgs_)
+                    .mergeFrom(value)
+                    .buildPartial();
+          } else {
+            commandArgs_ = value;
+          }
+          onChanged();
+        } else {
+          commandArgsBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
+      public Builder clearCommandArgs() {
+        if (commandArgsBuilder_ == null) {
+          commandArgs_ = null;
+          onChanged();
+        } else {
+          commandArgsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+      /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
+      public org.datacommons.proto.Debug.CommandArgs.Builder getCommandArgsBuilder() {
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return getCommandArgsFieldBuilder().getBuilder();
+      }
+      /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
+      public org.datacommons.proto.Debug.CommandArgsOrBuilder getCommandArgsOrBuilder() {
+        if (commandArgsBuilder_ != null) {
+          return commandArgsBuilder_.getMessageOrBuilder();
+        } else {
+          return commandArgs_ == null
+              ? org.datacommons.proto.Debug.CommandArgs.getDefaultInstance()
+              : commandArgs_;
+        }
+      }
+      /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
+      private com.google.protobuf.SingleFieldBuilderV3<
+              org.datacommons.proto.Debug.CommandArgs,
+              org.datacommons.proto.Debug.CommandArgs.Builder,
+              org.datacommons.proto.Debug.CommandArgsOrBuilder>
+          getCommandArgsFieldBuilder() {
+        if (commandArgsBuilder_ == null) {
+          commandArgsBuilder_ =
+              new com.google.protobuf.SingleFieldBuilderV3<
+                  org.datacommons.proto.Debug.CommandArgs,
+                  org.datacommons.proto.Debug.CommandArgs.Builder,
+                  org.datacommons.proto.Debug.CommandArgsOrBuilder>(
+                  getCommandArgs(), getParentForChildren(), isClean());
+          commandArgs_ = null;
+        }
+        return commandArgsBuilder_;
+      }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -4977,6 +5189,1244 @@ public final class Debug {
 
     @java.lang.Override
     public org.datacommons.proto.Debug.Log getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+  }
+
+  public interface CommandArgsOrBuilder
+      extends
+      // @@protoc_insertion_point(interface_extends:org.datacommons.proto.CommandArgs)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional bool existence_checks = 1;</code>
+     *
+     * @return Whether the existenceChecks field is set.
+     */
+    boolean hasExistenceChecks();
+    /**
+     * <code>optional bool existence_checks = 1;</code>
+     *
+     * @return The existenceChecks.
+     */
+    boolean getExistenceChecks();
+
+    /**
+     * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
+     *
+     * @return Whether the resolution field is set.
+     */
+    boolean hasResolution();
+    /**
+     * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
+     *
+     * @return The resolution.
+     */
+    org.datacommons.proto.Debug.CommandArgs.ResolutionMode getResolution();
+
+    /**
+     * <code>optional int32 num_threads = 3;</code>
+     *
+     * @return Whether the numThreads field is set.
+     */
+    boolean hasNumThreads();
+    /**
+     * <code>optional int32 num_threads = 3;</code>
+     *
+     * @return The numThreads.
+     */
+    int getNumThreads();
+
+    /**
+     * <code>optional bool stat_checks = 4;</code>
+     *
+     * @return Whether the statChecks field is set.
+     */
+    boolean hasStatChecks();
+    /**
+     * <code>optional bool stat_checks = 4;</code>
+     *
+     * @return The statChecks.
+     */
+    boolean getStatChecks();
+
+    /**
+     * <code>repeated string sample_places = 5;</code>
+     *
+     * @return A list containing the samplePlaces.
+     */
+    java.util.List<java.lang.String> getSamplePlacesList();
+    /**
+     * <code>repeated string sample_places = 5;</code>
+     *
+     * @return The count of samplePlaces.
+     */
+    int getSamplePlacesCount();
+    /**
+     * <code>repeated string sample_places = 5;</code>
+     *
+     * @param index The index of the element to return.
+     * @return The samplePlaces at the given index.
+     */
+    java.lang.String getSamplePlaces(int index);
+    /**
+     * <code>repeated string sample_places = 5;</code>
+     *
+     * @param index The index of the value to return.
+     * @return The bytes of the samplePlaces at the given index.
+     */
+    com.google.protobuf.ByteString getSamplePlacesBytes(int index);
+  }
+  /** Protobuf type {@code org.datacommons.proto.CommandArgs} */
+  public static final class CommandArgs extends com.google.protobuf.GeneratedMessageV3
+      implements
+      // @@protoc_insertion_point(message_implements:org.datacommons.proto.CommandArgs)
+      CommandArgsOrBuilder {
+    private static final long serialVersionUID = 0L;
+    // Use CommandArgs.newBuilder() to construct.
+    private CommandArgs(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+
+    private CommandArgs() {
+      resolution_ = 0;
+      samplePlaces_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+      return new CommandArgs();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+      return this.unknownFields;
+    }
+
+    private CommandArgs(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8:
+              {
+                bitField0_ |= 0x00000001;
+                existenceChecks_ = input.readBool();
+                break;
+              }
+            case 16:
+              {
+                int rawValue = input.readEnum();
+                @SuppressWarnings("deprecation")
+                org.datacommons.proto.Debug.CommandArgs.ResolutionMode value =
+                    org.datacommons.proto.Debug.CommandArgs.ResolutionMode.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(2, rawValue);
+                } else {
+                  bitField0_ |= 0x00000002;
+                  resolution_ = rawValue;
+                }
+                break;
+              }
+            case 24:
+              {
+                bitField0_ |= 0x00000004;
+                numThreads_ = input.readInt32();
+                break;
+              }
+            case 32:
+              {
+                bitField0_ |= 0x00000008;
+                statChecks_ = input.readBool();
+                break;
+              }
+            case 42:
+              {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                if (!((mutable_bitField0_ & 0x00000010) != 0)) {
+                  samplePlaces_ = new com.google.protobuf.LazyStringArrayList();
+                  mutable_bitField0_ |= 0x00000010;
+                }
+                samplePlaces_.add(bs);
+                break;
+              }
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000010) != 0)) {
+          samplePlaces_ = samplePlaces_.getUnmodifiableView();
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Debug
+          .internal_static_org_datacommons_proto_CommandArgs_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.datacommons.proto.Debug
+          .internal_static_org_datacommons_proto_CommandArgs_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.datacommons.proto.Debug.CommandArgs.class,
+              org.datacommons.proto.Debug.CommandArgs.Builder.class);
+    }
+
+    /** Protobuf enum {@code org.datacommons.proto.CommandArgs.ResolutionMode} */
+    public enum ResolutionMode implements com.google.protobuf.ProtocolMessageEnum {
+      /** <code>RESOLUTION_MODE_UNSPECIFIED = 0;</code> */
+      RESOLUTION_MODE_UNSPECIFIED(0),
+      /**
+       *
+       *
+       * <pre>
+       * No resolution necessary.
+       * </pre>
+       *
+       * <code>RESOLUTION_MODE_NONE = 1;</code>
+       */
+      RESOLUTION_MODE_NONE(1),
+      /**
+       *
+       *
+       * <pre>
+       * Perform local-ID resolution and DCID generation, but no external-ID resolution.
+       * This involves no DC Recon API calls.
+       * </pre>
+       *
+       * <code>RESOLUTION_MODE_LOCAL = 2;</code>
+       */
+      RESOLUTION_MODE_LOCAL(2),
+      /**
+       *
+       *
+       * <pre>
+       * Perform local-ID resolution, external-ID resolution and DCID generation.
+       * </pre>
+       *
+       * <code>RESOLUTION_MODE_FULL = 3;</code>
+       */
+      RESOLUTION_MODE_FULL(3),
+      ;
+
+      /** <code>RESOLUTION_MODE_UNSPECIFIED = 0;</code> */
+      public static final int RESOLUTION_MODE_UNSPECIFIED_VALUE = 0;
+      /**
+       *
+       *
+       * <pre>
+       * No resolution necessary.
+       * </pre>
+       *
+       * <code>RESOLUTION_MODE_NONE = 1;</code>
+       */
+      public static final int RESOLUTION_MODE_NONE_VALUE = 1;
+      /**
+       *
+       *
+       * <pre>
+       * Perform local-ID resolution and DCID generation, but no external-ID resolution.
+       * This involves no DC Recon API calls.
+       * </pre>
+       *
+       * <code>RESOLUTION_MODE_LOCAL = 2;</code>
+       */
+      public static final int RESOLUTION_MODE_LOCAL_VALUE = 2;
+      /**
+       *
+       *
+       * <pre>
+       * Perform local-ID resolution, external-ID resolution and DCID generation.
+       * </pre>
+       *
+       * <code>RESOLUTION_MODE_FULL = 3;</code>
+       */
+      public static final int RESOLUTION_MODE_FULL_VALUE = 3;
+
+      public final int getNumber() {
+        return value;
+      }
+
+      /**
+       * @param value The numeric wire value of the corresponding enum entry.
+       * @return The enum associated with the given numeric wire value.
+       * @deprecated Use {@link #forNumber(int)} instead.
+       */
+      @java.lang.Deprecated
+      public static ResolutionMode valueOf(int value) {
+        return forNumber(value);
+      }
+
+      /**
+       * @param value The numeric wire value of the corresponding enum entry.
+       * @return The enum associated with the given numeric wire value.
+       */
+      public static ResolutionMode forNumber(int value) {
+        switch (value) {
+          case 0:
+            return RESOLUTION_MODE_UNSPECIFIED;
+          case 1:
+            return RESOLUTION_MODE_NONE;
+          case 2:
+            return RESOLUTION_MODE_LOCAL;
+          case 3:
+            return RESOLUTION_MODE_FULL;
+          default:
+            return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<ResolutionMode> internalGetValueMap() {
+        return internalValueMap;
+      }
+
+      private static final com.google.protobuf.Internal.EnumLiteMap<ResolutionMode>
+          internalValueMap =
+              new com.google.protobuf.Internal.EnumLiteMap<ResolutionMode>() {
+                public ResolutionMode findValueByNumber(int number) {
+                  return ResolutionMode.forNumber(number);
+                }
+              };
+
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor getValueDescriptor() {
+        return getDescriptor().getValues().get(ordinal());
+      }
+
+      public final com.google.protobuf.Descriptors.EnumDescriptor getDescriptorForType() {
+        return getDescriptor();
+      }
+
+      public static final com.google.protobuf.Descriptors.EnumDescriptor getDescriptor() {
+        return org.datacommons.proto.Debug.CommandArgs.getDescriptor().getEnumTypes().get(0);
+      }
+
+      private static final ResolutionMode[] VALUES = values();
+
+      public static ResolutionMode valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException("EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+
+      private final int value;
+
+      private ResolutionMode(int value) {
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:org.datacommons.proto.CommandArgs.ResolutionMode)
+    }
+
+    private int bitField0_;
+    public static final int EXISTENCE_CHECKS_FIELD_NUMBER = 1;
+    private boolean existenceChecks_;
+    /**
+     * <code>optional bool existence_checks = 1;</code>
+     *
+     * @return Whether the existenceChecks field is set.
+     */
+    public boolean hasExistenceChecks() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>optional bool existence_checks = 1;</code>
+     *
+     * @return The existenceChecks.
+     */
+    public boolean getExistenceChecks() {
+      return existenceChecks_;
+    }
+
+    public static final int RESOLUTION_FIELD_NUMBER = 2;
+    private int resolution_;
+    /**
+     * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
+     *
+     * @return Whether the resolution field is set.
+     */
+    public boolean hasResolution() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
+     *
+     * @return The resolution.
+     */
+    public org.datacommons.proto.Debug.CommandArgs.ResolutionMode getResolution() {
+      @SuppressWarnings("deprecation")
+      org.datacommons.proto.Debug.CommandArgs.ResolutionMode result =
+          org.datacommons.proto.Debug.CommandArgs.ResolutionMode.valueOf(resolution_);
+      return result == null
+          ? org.datacommons.proto.Debug.CommandArgs.ResolutionMode.RESOLUTION_MODE_UNSPECIFIED
+          : result;
+    }
+
+    public static final int NUM_THREADS_FIELD_NUMBER = 3;
+    private int numThreads_;
+    /**
+     * <code>optional int32 num_threads = 3;</code>
+     *
+     * @return Whether the numThreads field is set.
+     */
+    public boolean hasNumThreads() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>optional int32 num_threads = 3;</code>
+     *
+     * @return The numThreads.
+     */
+    public int getNumThreads() {
+      return numThreads_;
+    }
+
+    public static final int STAT_CHECKS_FIELD_NUMBER = 4;
+    private boolean statChecks_;
+    /**
+     * <code>optional bool stat_checks = 4;</code>
+     *
+     * @return Whether the statChecks field is set.
+     */
+    public boolean hasStatChecks() {
+      return ((bitField0_ & 0x00000008) != 0);
+    }
+    /**
+     * <code>optional bool stat_checks = 4;</code>
+     *
+     * @return The statChecks.
+     */
+    public boolean getStatChecks() {
+      return statChecks_;
+    }
+
+    public static final int SAMPLE_PLACES_FIELD_NUMBER = 5;
+    private com.google.protobuf.LazyStringList samplePlaces_;
+    /**
+     * <code>repeated string sample_places = 5;</code>
+     *
+     * @return A list containing the samplePlaces.
+     */
+    public com.google.protobuf.ProtocolStringList getSamplePlacesList() {
+      return samplePlaces_;
+    }
+    /**
+     * <code>repeated string sample_places = 5;</code>
+     *
+     * @return The count of samplePlaces.
+     */
+    public int getSamplePlacesCount() {
+      return samplePlaces_.size();
+    }
+    /**
+     * <code>repeated string sample_places = 5;</code>
+     *
+     * @param index The index of the element to return.
+     * @return The samplePlaces at the given index.
+     */
+    public java.lang.String getSamplePlaces(int index) {
+      return samplePlaces_.get(index);
+    }
+    /**
+     * <code>repeated string sample_places = 5;</code>
+     *
+     * @param index The index of the value to return.
+     * @return The bytes of the samplePlaces at the given index.
+     */
+    public com.google.protobuf.ByteString getSamplePlacesBytes(int index) {
+      return samplePlaces_.getByteString(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeBool(1, existenceChecks_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeEnum(2, resolution_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        output.writeInt32(3, numThreads_);
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        output.writeBool(4, statChecks_);
+      }
+      for (int i = 0; i < samplePlaces_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, samplePlaces_.getRaw(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream.computeBoolSize(1, existenceChecks_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream.computeEnumSize(2, resolution_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.CodedOutputStream.computeInt32Size(3, numThreads_);
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        size += com.google.protobuf.CodedOutputStream.computeBoolSize(4, statChecks_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < samplePlaces_.size(); i++) {
+          dataSize += computeStringSizeNoTag(samplePlaces_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getSamplePlacesList().size();
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (!(obj instanceof org.datacommons.proto.Debug.CommandArgs)) {
+        return super.equals(obj);
+      }
+      org.datacommons.proto.Debug.CommandArgs other = (org.datacommons.proto.Debug.CommandArgs) obj;
+
+      if (hasExistenceChecks() != other.hasExistenceChecks()) return false;
+      if (hasExistenceChecks()) {
+        if (getExistenceChecks() != other.getExistenceChecks()) return false;
+      }
+      if (hasResolution() != other.hasResolution()) return false;
+      if (hasResolution()) {
+        if (resolution_ != other.resolution_) return false;
+      }
+      if (hasNumThreads() != other.hasNumThreads()) return false;
+      if (hasNumThreads()) {
+        if (getNumThreads() != other.getNumThreads()) return false;
+      }
+      if (hasStatChecks() != other.hasStatChecks()) return false;
+      if (hasStatChecks()) {
+        if (getStatChecks() != other.getStatChecks()) return false;
+      }
+      if (!getSamplePlacesList().equals(other.getSamplePlacesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasExistenceChecks()) {
+        hash = (37 * hash) + EXISTENCE_CHECKS_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getExistenceChecks());
+      }
+      if (hasResolution()) {
+        hash = (37 * hash) + RESOLUTION_FIELD_NUMBER;
+        hash = (53 * hash) + resolution_;
+      }
+      if (hasNumThreads()) {
+        hash = (37 * hash) + NUM_THREADS_FIELD_NUMBER;
+        hash = (53 * hash) + getNumThreads();
+      }
+      if (hasStatChecks()) {
+        hash = (37 * hash) + STAT_CHECKS_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getStatChecks());
+      }
+      if (getSamplePlacesCount() > 0) {
+        hash = (37 * hash) + SAMPLE_PLACES_FIELD_NUMBER;
+        hash = (53 * hash) + getSamplePlacesList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.datacommons.proto.Debug.CommandArgs parseFrom(java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Debug.CommandArgs parseFrom(
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.CommandArgs parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Debug.CommandArgs parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.CommandArgs parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Debug.CommandArgs parseFrom(
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.CommandArgs parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Debug.CommandArgs parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.CommandArgs parseDelimitedFrom(
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Debug.CommandArgs parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Debug.CommandArgs parseFrom(
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Debug.CommandArgs parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+
+    public static Builder newBuilder(org.datacommons.proto.Debug.CommandArgs prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /** Protobuf type {@code org.datacommons.proto.CommandArgs} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
+        // @@protoc_insertion_point(builder_implements:org.datacommons.proto.CommandArgs)
+        org.datacommons.proto.Debug.CommandArgsOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_CommandArgs_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_CommandArgs_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.datacommons.proto.Debug.CommandArgs.class,
+                org.datacommons.proto.Debug.CommandArgs.Builder.class);
+      }
+
+      // Construct using org.datacommons.proto.Debug.CommandArgs.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+      }
+
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        existenceChecks_ = false;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        resolution_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        numThreads_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        statChecks_ = false;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        samplePlaces_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Debug
+            .internal_static_org_datacommons_proto_CommandArgs_descriptor;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.CommandArgs getDefaultInstanceForType() {
+        return org.datacommons.proto.Debug.CommandArgs.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.CommandArgs build() {
+        org.datacommons.proto.Debug.CommandArgs result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.CommandArgs buildPartial() {
+        org.datacommons.proto.Debug.CommandArgs result =
+            new org.datacommons.proto.Debug.CommandArgs(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.existenceChecks_ = existenceChecks_;
+          to_bitField0_ |= 0x00000001;
+        }
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.resolution_ = resolution_;
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.numThreads_ = numThreads_;
+          to_bitField0_ |= 0x00000004;
+        }
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.statChecks_ = statChecks_;
+          to_bitField0_ |= 0x00000008;
+        }
+        if (((bitField0_ & 0x00000010) != 0)) {
+          samplePlaces_ = samplePlaces_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000010);
+        }
+        result.samplePlaces_ = samplePlaces_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.setField(field, value);
+      }
+
+      @java.lang.Override
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+
+      @java.lang.Override
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index,
+          java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.datacommons.proto.Debug.CommandArgs) {
+          return mergeFrom((org.datacommons.proto.Debug.CommandArgs) other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.datacommons.proto.Debug.CommandArgs other) {
+        if (other == org.datacommons.proto.Debug.CommandArgs.getDefaultInstance()) return this;
+        if (other.hasExistenceChecks()) {
+          setExistenceChecks(other.getExistenceChecks());
+        }
+        if (other.hasResolution()) {
+          setResolution(other.getResolution());
+        }
+        if (other.hasNumThreads()) {
+          setNumThreads(other.getNumThreads());
+        }
+        if (other.hasStatChecks()) {
+          setStatChecks(other.getStatChecks());
+        }
+        if (!other.samplePlaces_.isEmpty()) {
+          if (samplePlaces_.isEmpty()) {
+            samplePlaces_ = other.samplePlaces_;
+            bitField0_ = (bitField0_ & ~0x00000010);
+          } else {
+            ensureSamplePlacesIsMutable();
+            samplePlaces_.addAll(other.samplePlaces_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.datacommons.proto.Debug.CommandArgs parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.datacommons.proto.Debug.CommandArgs) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private int bitField0_;
+
+      private boolean existenceChecks_;
+      /**
+       * <code>optional bool existence_checks = 1;</code>
+       *
+       * @return Whether the existenceChecks field is set.
+       */
+      public boolean hasExistenceChecks() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <code>optional bool existence_checks = 1;</code>
+       *
+       * @return The existenceChecks.
+       */
+      public boolean getExistenceChecks() {
+        return existenceChecks_;
+      }
+      /**
+       * <code>optional bool existence_checks = 1;</code>
+       *
+       * @param value The existenceChecks to set.
+       * @return This builder for chaining.
+       */
+      public Builder setExistenceChecks(boolean value) {
+        bitField0_ |= 0x00000001;
+        existenceChecks_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool existence_checks = 1;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearExistenceChecks() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        existenceChecks_ = false;
+        onChanged();
+        return this;
+      }
+
+      private int resolution_ = 0;
+      /**
+       * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
+       *
+       * @return Whether the resolution field is set.
+       */
+      public boolean hasResolution() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
+       *
+       * @return The resolution.
+       */
+      public org.datacommons.proto.Debug.CommandArgs.ResolutionMode getResolution() {
+        @SuppressWarnings("deprecation")
+        org.datacommons.proto.Debug.CommandArgs.ResolutionMode result =
+            org.datacommons.proto.Debug.CommandArgs.ResolutionMode.valueOf(resolution_);
+        return result == null
+            ? org.datacommons.proto.Debug.CommandArgs.ResolutionMode.RESOLUTION_MODE_UNSPECIFIED
+            : result;
+      }
+      /**
+       * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
+       *
+       * @param value The resolution to set.
+       * @return This builder for chaining.
+       */
+      public Builder setResolution(org.datacommons.proto.Debug.CommandArgs.ResolutionMode value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000002;
+        resolution_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearResolution() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        resolution_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int numThreads_;
+      /**
+       * <code>optional int32 num_threads = 3;</code>
+       *
+       * @return Whether the numThreads field is set.
+       */
+      public boolean hasNumThreads() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <code>optional int32 num_threads = 3;</code>
+       *
+       * @return The numThreads.
+       */
+      public int getNumThreads() {
+        return numThreads_;
+      }
+      /**
+       * <code>optional int32 num_threads = 3;</code>
+       *
+       * @param value The numThreads to set.
+       * @return This builder for chaining.
+       */
+      public Builder setNumThreads(int value) {
+        bitField0_ |= 0x00000004;
+        numThreads_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 num_threads = 3;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearNumThreads() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        numThreads_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private boolean statChecks_;
+      /**
+       * <code>optional bool stat_checks = 4;</code>
+       *
+       * @return Whether the statChecks field is set.
+       */
+      public boolean hasStatChecks() {
+        return ((bitField0_ & 0x00000008) != 0);
+      }
+      /**
+       * <code>optional bool stat_checks = 4;</code>
+       *
+       * @return The statChecks.
+       */
+      public boolean getStatChecks() {
+        return statChecks_;
+      }
+      /**
+       * <code>optional bool stat_checks = 4;</code>
+       *
+       * @param value The statChecks to set.
+       * @return This builder for chaining.
+       */
+      public Builder setStatChecks(boolean value) {
+        bitField0_ |= 0x00000008;
+        statChecks_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool stat_checks = 4;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearStatChecks() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        statChecks_ = false;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList samplePlaces_ =
+          com.google.protobuf.LazyStringArrayList.EMPTY;
+
+      private void ensureSamplePlacesIsMutable() {
+        if (!((bitField0_ & 0x00000010) != 0)) {
+          samplePlaces_ = new com.google.protobuf.LazyStringArrayList(samplePlaces_);
+          bitField0_ |= 0x00000010;
+        }
+      }
+      /**
+       * <code>repeated string sample_places = 5;</code>
+       *
+       * @return A list containing the samplePlaces.
+       */
+      public com.google.protobuf.ProtocolStringList getSamplePlacesList() {
+        return samplePlaces_.getUnmodifiableView();
+      }
+      /**
+       * <code>repeated string sample_places = 5;</code>
+       *
+       * @return The count of samplePlaces.
+       */
+      public int getSamplePlacesCount() {
+        return samplePlaces_.size();
+      }
+      /**
+       * <code>repeated string sample_places = 5;</code>
+       *
+       * @param index The index of the element to return.
+       * @return The samplePlaces at the given index.
+       */
+      public java.lang.String getSamplePlaces(int index) {
+        return samplePlaces_.get(index);
+      }
+      /**
+       * <code>repeated string sample_places = 5;</code>
+       *
+       * @param index The index of the value to return.
+       * @return The bytes of the samplePlaces at the given index.
+       */
+      public com.google.protobuf.ByteString getSamplePlacesBytes(int index) {
+        return samplePlaces_.getByteString(index);
+      }
+      /**
+       * <code>repeated string sample_places = 5;</code>
+       *
+       * @param index The index to set the value at.
+       * @param value The samplePlaces to set.
+       * @return This builder for chaining.
+       */
+      public Builder setSamplePlaces(int index, java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureSamplePlacesIsMutable();
+        samplePlaces_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string sample_places = 5;</code>
+       *
+       * @param value The samplePlaces to add.
+       * @return This builder for chaining.
+       */
+      public Builder addSamplePlaces(java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureSamplePlacesIsMutable();
+        samplePlaces_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string sample_places = 5;</code>
+       *
+       * @param values The samplePlaces to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllSamplePlaces(java.lang.Iterable<java.lang.String> values) {
+        ensureSamplePlacesIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, samplePlaces_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string sample_places = 5;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearSamplePlaces() {
+        samplePlaces_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string sample_places = 5;</code>
+       *
+       * @param value The bytes of the samplePlaces to add.
+       * @return This builder for chaining.
+       */
+      public Builder addSamplePlacesBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureSamplePlacesIsMutable();
+        samplePlaces_.add(value);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+      // @@protoc_insertion_point(builder_scope:org.datacommons.proto.CommandArgs)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.datacommons.proto.CommandArgs)
+    private static final org.datacommons.proto.Debug.CommandArgs DEFAULT_INSTANCE;
+
+    static {
+      DEFAULT_INSTANCE = new org.datacommons.proto.Debug.CommandArgs();
+    }
+
+    public static org.datacommons.proto.Debug.CommandArgs getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated
+    public static final com.google.protobuf.Parser<CommandArgs> PARSER =
+        new com.google.protobuf.AbstractParser<CommandArgs>() {
+          @java.lang.Override
+          public CommandArgs parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new CommandArgs(input, extensionRegistry);
+          }
+        };
+
+    public static com.google.protobuf.Parser<CommandArgs> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CommandArgs> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.datacommons.proto.Debug.CommandArgs getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
   }
@@ -11158,6 +12608,10 @@ public final class Debug {
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_Log_LevelSummaryEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_org_datacommons_proto_CommandArgs_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_CommandArgs_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
       internal_static_org_datacommons_proto_DataPoint_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_DataPoint_fieldAccessorTable;
@@ -11182,41 +12636,50 @@ public final class Debug {
 
   static {
     java.lang.String[] descriptorData = {
-      "\n\013Debug.proto\022\025org.datacommons.proto\"\366\005\n"
+      "\n\013Debug.proto\022\025org.datacommons.proto\"\260\006\n"
           + "\003Log\022C\n\rlevel_summary\030\001 \003(\0132,.org.dataco"
           + "mmons.proto.Log.LevelSummaryEntry\0221\n\007ent"
           + "ries\030\003 \003(\0132 .org.datacommons.proto.Log.E"
           + "ntry\022H\n\023stats_check_summary\030\004 \003(\0132+.org."
-          + "datacommons.proto.StatValidationResult\032-"
-          + "\n\010Location\022\014\n\004file\030\001 \001(\t\022\023\n\013line_number\030"
-          + "\002 \001(\003\032\204\001\n\nCounterSet\022E\n\010counters\030\001 \003(\01323"
-          + ".org.datacommons.proto.Log.CounterSet.Co"
-          + "untersEntry\032/\n\rCountersEntry\022\013\n\003key\030\001 \001("
-          + "\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\257\001\n\005Entry\022/\n\005level\030"
-          + "\001 \001(\0162 .org.datacommons.proto.Log.Level\022"
-          + "5\n\010location\030\002 \001(\0132#.org.datacommons.prot"
-          + "o.Log.Location\022\024\n\014user_message\030\003 \001(\t\022\023\n\013"
-          + "counter_key\030\004 \001(\t\022\023\n\013column_name\030\005 \003(\t\032Z"
-          + "\n\021LevelSummaryEntry\022\013\n\003key\030\001 \001(\t\0224\n\005valu"
-          + "e\030\002 \001(\0132%.org.datacommons.proto.Log.Coun"
-          + "terSet:\0028\001\"c\n\005Level\022\025\n\021LEVEL_UNSPECIFIED"
-          + "\020\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n"
-          + "\013LEVEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010\002\020\003\"\251\001"
-          + "\n\tDataPoint\022\014\n\004date\030\001 \001(\t\022:\n\006values\030\002 \003("
-          + "\0132*.org.datacommons.proto.DataPoint.Data"
-          + "Value\032R\n\tDataValue\022\r\n\005value\030\001 \001(\001\0226\n\tloc"
-          + "ations\030\002 \003(\0132#.org.datacommons.proto.Log"
-          + ".Location\"\234\003\n\024StatValidationResult\022\022\n\npl"
-          + "ace_dcid\030\001 \001(\t\022\025\n\rstat_var_dcid\030\002 \001(\t\022\032\n"
-          + "\022measurement_method\030\003 \001(\t\022\032\n\022observation"
-          + "_period\030\004 \001(\t\022\026\n\016scaling_factor\030\005 \001(\t\022\014\n"
-          + "\004unit\030\006 \001(\t\022\\\n\023validation_counters\030\007 \003(\013"
-          + "2?.org.datacommons.proto.StatValidationR"
-          + "esult.StatValidationEntry\032\234\001\n\023StatValida"
-          + "tionEntry\022\023\n\013counter_key\030\001 \001(\t\0228\n\016proble"
-          + "m_points\030\002 \003(\0132 .org.datacommons.proto.D"
-          + "ataPoint\022\032\n\022additional_details\030\003 \001(\t\022\032\n\022"
-          + "percent_difference\030\004 \001(\001"
+          + "datacommons.proto.StatValidationResult\0228"
+          + "\n\014command_args\030\005 \001(\0132\".org.datacommons.p"
+          + "roto.CommandArgs\032-\n\010Location\022\014\n\004file\030\001 \001"
+          + "(\t\022\023\n\013line_number\030\002 \001(\003\032\204\001\n\nCounterSet\022E"
+          + "\n\010counters\030\001 \003(\01323.org.datacommons.proto"
+          + ".Log.CounterSet.CountersEntry\032/\n\rCounter"
+          + "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\257"
+          + "\001\n\005Entry\022/\n\005level\030\001 \001(\0162 .org.datacommon"
+          + "s.proto.Log.Level\0225\n\010location\030\002 \001(\0132#.or"
+          + "g.datacommons.proto.Log.Location\022\024\n\014user"
+          + "_message\030\003 \001(\t\022\023\n\013counter_key\030\004 \001(\t\022\023\n\013c"
+          + "olumn_name\030\005 \003(\t\032Z\n\021LevelSummaryEntry\022\013\n"
+          + "\003key\030\001 \001(\t\0224\n\005value\030\002 \001(\0132%.org.datacomm"
+          + "ons.proto.Log.CounterSet:\0028\001\"c\n\005Level\022\025\n"
+          + "\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\r"
+          + "LEVEL_WARNING\020\002\022\017\n\013LEVEL_ERROR\020\003\022\017\n\013LEVE"
+          + "L_FATAL\020\004J\004\010\002\020\003\"\262\002\n\013CommandArgs\022\030\n\020exist"
+          + "ence_checks\030\001 \001(\010\022E\n\nresolution\030\002 \001(\01621."
+          + "org.datacommons.proto.CommandArgs.Resolu"
+          + "tionMode\022\023\n\013num_threads\030\003 \001(\005\022\023\n\013stat_ch"
+          + "ecks\030\004 \001(\010\022\025\n\rsample_places\030\005 \003(\t\"\200\001\n\016Re"
+          + "solutionMode\022\037\n\033RESOLUTION_MODE_UNSPECIF"
+          + "IED\020\000\022\030\n\024RESOLUTION_MODE_NONE\020\001\022\031\n\025RESOL"
+          + "UTION_MODE_LOCAL\020\002\022\030\n\024RESOLUTION_MODE_FU"
+          + "LL\020\003\"\251\001\n\tDataPoint\022\014\n\004date\030\001 \001(\t\022:\n\006valu"
+          + "es\030\002 \003(\0132*.org.datacommons.proto.DataPoi"
+          + "nt.DataValue\032R\n\tDataValue\022\r\n\005value\030\001 \001(\001"
+          + "\0226\n\tlocations\030\002 \003(\0132#.org.datacommons.pr"
+          + "oto.Log.Location\"\234\003\n\024StatValidationResul"
+          + "t\022\022\n\nplace_dcid\030\001 \001(\t\022\025\n\rstat_var_dcid\030\002"
+          + " \001(\t\022\032\n\022measurement_method\030\003 \001(\t\022\032\n\022obse"
+          + "rvation_period\030\004 \001(\t\022\026\n\016scaling_factor\030\005"
+          + " \001(\t\022\014\n\004unit\030\006 \001(\t\022\\\n\023validation_counter"
+          + "s\030\007 \003(\0132?.org.datacommons.proto.StatVali"
+          + "dationResult.StatValidationEntry\032\234\001\n\023Sta"
+          + "tValidationEntry\022\023\n\013counter_key\030\001 \001(\t\0228\n"
+          + "\016problem_points\030\002 \003(\0132 .org.datacommons."
+          + "proto.DataPoint\022\032\n\022additional_details\030\003 "
+          + "\001(\t\022\032\n\022percent_difference\030\004 \001(\001"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -11226,7 +12689,7 @@ public final class Debug {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_descriptor,
             new java.lang.String[] {
-              "LevelSummary", "Entries", "StatsCheckSummary",
+              "LevelSummary", "Entries", "StatsCheckSummary", "CommandArgs",
             });
     internal_static_org_datacommons_proto_Log_Location_descriptor =
         internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(0);
@@ -11268,8 +12731,16 @@ public final class Debug {
             new java.lang.String[] {
               "Key", "Value",
             });
-    internal_static_org_datacommons_proto_DataPoint_descriptor =
+    internal_static_org_datacommons_proto_CommandArgs_descriptor =
         getDescriptor().getMessageTypes().get(1);
+    internal_static_org_datacommons_proto_CommandArgs_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_CommandArgs_descriptor,
+            new java.lang.String[] {
+              "ExistenceChecks", "Resolution", "NumThreads", "StatChecks", "SamplePlaces",
+            });
+    internal_static_org_datacommons_proto_DataPoint_descriptor =
+        getDescriptor().getMessageTypes().get(2);
     internal_static_org_datacommons_proto_DataPoint_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_DataPoint_descriptor,
@@ -11285,7 +12756,7 @@ public final class Debug {
               "Value", "Locations",
             });
     internal_static_org_datacommons_proto_StatValidationResult_descriptor =
-        getDescriptor().getMessageTypes().get(2);
+        getDescriptor().getMessageTypes().get(3);
     internal_static_org_datacommons_proto_StatValidationResult_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_StatValidationResult_descriptor,

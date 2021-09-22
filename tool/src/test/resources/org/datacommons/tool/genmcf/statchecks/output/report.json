@@ -119,5 +119,11 @@
       }],
       "percentDifference": 1000000.0
     }]
-  }]
+  }],
+  "commandArgs": {
+    "existenceChecks": true,
+    "resolution": "RESOLUTION_MODE_FULL",
+    "numThreads": 1,
+    "statChecks": true
+  }
 }

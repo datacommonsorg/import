@@ -87,12 +87,8 @@ public class ComplexValueParser {
     arg.delimiter = ' ';
     arg.includeEmpty = false;
     arg.stripEnclosingQuotes = false;
-    long lineNumber = -1;
-    if (!mainNode.getLocationsList().isEmpty()) {
-      lineNumber = mainNode.getLocationsList().get(0).getLineNumber();
-    }
     LogCb logCb =
-        new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNumber)
+        new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, mainNode)
             .setDetail(LogCb.VALUE_KEY, complexValue)
             .setDetail(LogCb.PROP_KEY, prop)
             .setDetail(LogCb.NODE_KEY, mainNodeId)

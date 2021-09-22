@@ -852,5 +852,11 @@
     },
     "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E1'",
     "counterKey": "Existence_MissingReference_measurementMethod"
-  }]
+  }],
+  "commandArgs": {
+    "existenceChecks": true,
+    "resolution": "RESOLUTION_MODE_NONE",
+    "numThreads": 1,
+    "statChecks": true
+  }
 }

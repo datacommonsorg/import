@@ -35,6 +35,7 @@ public class TestUtil {
     Debug.Log expectedLog = reportToProto(expected).build();
     Debug.Log actualLog = reportToProto(actual).build();
     expect.that(expectedLog.getLevelSummaryMap()).isEqualTo(actualLog.getLevelSummaryMap());
+    expect.that(expectedLog.getCommandArgs()).isEqualTo(actualLog.getCommandArgs());
     expect
         .about(ProtoTruth.protos())
         .that(actualLog.getEntriesList())

@@ -63,7 +63,26 @@ message Log {
     map<string, CounterSet> level_summary = 1;
     repeated Entry entries = 3;
     repeated StatValidationResult stats_check_summary = 4;
+    optional CommandArgs command_args = 5;
     reserved 2;
+}
+
+message CommandArgs {
+    enum ResolutionMode {
+        RESOLUTION_MODE_UNSPECIFIED = 0;
+        // No resolution necessary.
+        RESOLUTION_MODE_NONE = 1;
+        // Perform local-ID resolution and DCID generation, but no external-ID resolution.
+        // This involves no DC Recon API calls.
+        RESOLUTION_MODE_LOCAL = 2;
+        // Perform local-ID resolution, external-ID resolution and DCID generation.
+        RESOLUTION_MODE_FULL = 3;
+    }
+    optional bool existence_checks = 1;
+    optional ResolutionMode resolution = 2;
+    optional int32 num_threads = 3;
+    optional bool stat_checks = 4;
+    repeated string sample_places = 5;
 }
 
 message DataPoint {
