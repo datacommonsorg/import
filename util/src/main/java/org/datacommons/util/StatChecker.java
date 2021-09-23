@@ -32,6 +32,11 @@ import org.datacommons.proto.Mcf.ValueType;
 
 // A checker that checks time-series for holes, variance in values, etc.
 // This class is thread-safe.
+// Concurrency of map objects are handled by:
+// a. using a ConcurrentMap when methods that use the map are on a hot path and it is ok for access
+//    to the map to be race-y (samplePlaces and svObsValues).
+// b. making methods that access the map synchronized because when methods are not on a hot path and
+//    it is not ok for access to the map to be race-y (seriesSummaryMap).
 public class StatChecker {
   private static final class SeriesSummary {
     StatValidationResult.Builder validationResult;
