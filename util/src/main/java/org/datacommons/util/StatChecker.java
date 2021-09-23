@@ -32,6 +32,11 @@ import org.datacommons.proto.Mcf.ValueType;
 
 // A checker that checks time-series for holes, variance in values, etc.
 // This class is thread-safe.
+// Concurrency of map objects are handled by:
+// a. using a ConcurrentMap when methods that use the map are on a hot path and it is ok for access
+//    to the map to be race-y (samplePlaces and svObsValues).
+// b. making methods that access the map synchronized because when methods are not on a hot path and
+//    it is not ok for access to the map to be race-y (seriesSummaryMap).
 public class StatChecker {
   private static final class SeriesSummary {
     StatValidationResult.Builder validationResult;
@@ -57,7 +62,7 @@ public class StatChecker {
   // scaling factor, and unit of the stat var observations of the series summary.
   private final Map<String, SeriesSummary> seriesSummaryMap;
   // key is place namespace + length of place dcid, value is set of place dcids
-  private final Map<String, Set<String>> samplePlaces;
+  private final ConcurrentMap<String, Set<String>> samplePlaces;
   private final boolean shouldGenerateSamplePlaces;
   // Tracks global state on StatVarObservations to detect whether there are multiple of the
   // same StatVarObservation with inconsistent values. The key is a hash made up of a set of
@@ -73,7 +78,7 @@ public class StatChecker {
     this.logCtx = logCtx;
     this.verbose = verbose;
     this.seriesSummaryMap = new HashMap<>();
-    this.samplePlaces = new HashMap<>();
+    this.samplePlaces = new ConcurrentHashMap<>();
     this.svObValues = new ConcurrentHashMap<>();
     if (samplePlaces == null) {
       this.shouldGenerateSamplePlaces = true;
@@ -85,7 +90,7 @@ public class StatChecker {
 
   // Given a graph, extract time series info (about the chosen sample places) from the
   // statVarObservation nodes and save it into seriesSummaryMap.
-  public synchronized void extractSeriesInfoFromGraph(McfGraph graph) {
+  public void extractSeriesInfoFromGraph(McfGraph graph) {
     for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
       if (isSvObWithNumberValue(node.getValue()) && shouldExtractSeriesInfo(node.getValue())) {
         extractSeriesInfoFromNode(node.getValue());
@@ -164,7 +169,7 @@ public class StatChecker {
 
   // Given a statVarObservation node, extract time series info (if it is about the chosen sample
   // places) and save it into seriesSummaryMap.
-  private void extractSeriesInfoFromNode(McfGraph.PropertyValues node) {
+  private synchronized void extractSeriesInfoFromNode(McfGraph.PropertyValues node) {
     StatValidationResult.Builder vres = StatValidationResult.newBuilder();
     // Add information about the node to StatValidationResult
     vres.setPlaceDcid(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT));
