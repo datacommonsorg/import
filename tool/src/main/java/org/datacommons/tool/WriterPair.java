@@ -49,7 +49,7 @@ class WriterPair {
   private BufferedWriter newWriter(Args.OutputFileType type) throws IOException {
     String filePath = args.outputFiles.get(type).toString();
     if (csvFile != null) {
-      String fileSuffix = FilenameUtils.removeExtension(csvFile.getName()) + ".csv";
+      String fileSuffix = FilenameUtils.removeExtension(csvFile.getName()) + ".mcf";
       filePath = FilenameUtils.removeExtension(filePath) + "_" + fileSuffix;
     }
     return new BufferedWriter(new FileWriter(filePath));

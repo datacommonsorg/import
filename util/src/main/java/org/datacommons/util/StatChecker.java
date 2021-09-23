@@ -56,6 +56,16 @@ public class StatChecker {
           Vocabulary.SCALING_FACTOR,
           Vocabulary.UNIT,
           Vocabulary.OBSERVATION_DATE);
+  private static final List<String> COUNTER_KEYS =
+      List.of(
+          "StatsCheck_Inconsistent_Values",
+          "StatsCheck_3_Sigma",
+          "StatsCheck_MaxPercentFluctuationGreaterThan500",
+          "StatsCheck_MaxPercentFluctuationGreaterThan100",
+          "StatsCheck_Invalid_Date",
+          "StatsCheck_Inconsistent_Date_Granularity",
+          "StatsCheck_Data_Holes");
+  private static final int NUM_SUMMARY_ENTRIES_PER_COUNTER = 10;
   private final boolean verbose;
   private final LogWrapper logCtx;
   // key is a string made up of place dcid, stat var dcid, measurement method, observation period,
@@ -114,6 +124,10 @@ public class StatChecker {
   // variance, percent fluctuations, holes in dates, invalid dates, etc) and add these results to
   // the logCtx.
   public synchronized void check() {
+    Map<String, Integer> countersRemaining = new HashMap<>();
+    for (String counterKey : COUNTER_KEYS) {
+      countersRemaining.put(counterKey, NUM_SUMMARY_ENTRIES_PER_COUNTER);
+    }
     for (String hash : seriesSummaryMap.keySet()) {
       List<DataPoint> timeSeries = new ArrayList<>(seriesSummaryMap.get(hash).timeSeries.values());
       StatValidationResult.Builder resBuilder = seriesSummaryMap.get(hash).validationResult;
@@ -126,8 +140,19 @@ public class StatChecker {
       // Check for holes in dates, invalid dates, etc.
       checkDates(timeSeries, resBuilder, logCtx);
       // add result to log.
-      if (!resBuilder.getValidationCountersList().isEmpty()) {
-        logCtx.addStatsCheckSummaryEntry(resBuilder.build());
+      if (!resBuilder.getValidationCountersList().isEmpty() && !countersRemaining.isEmpty()) {
+        // only add entry if resBuilder contains a validation counter that we still want to add
+        // entries for.
+        boolean shouldAddEntry = false;
+        for (StatValidationEntry entry : resBuilder.getValidationCountersList()) {
+          String counterKey = entry.getCounterKey();
+          if (countersRemaining.containsKey(counterKey)) {
+            shouldAddEntry = true;
+            countersRemaining.compute(counterKey, (k, v) -> v != null ? v - 1 : 0);
+            if (countersRemaining.get(counterKey) < 1) countersRemaining.remove(counterKey);
+          }
+          if (shouldAddEntry) logCtx.addStatsCheckSummaryEntry(resBuilder.build());
+        }
       }
     }
   }
@@ -280,7 +305,7 @@ public class StatChecker {
   }
 
   // Goes through sorted (but possibly discontinuous) time series, saving the largest fluctuation
-  // for each bucket of fluctuations >50, >100, and >500.
+  // for each bucket of fluctuations >100, and >500.
   protected static void checkPercentFluctuations(
       List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder, LogWrapper logCtx) {
     double maxDelta = 0;
@@ -313,15 +338,15 @@ public class StatChecker {
       counterKey = "StatsCheck_MaxPercentFluctuationGreaterThan500";
     } else if (Math.abs(maxDelta) > 1) {
       counterKey = "StatsCheck_MaxPercentFluctuationGreaterThan100";
-    } else if (Math.abs(maxDelta) > 0.5) {
-      counterKey = "StatsCheck_MaxPercentFluctuationGreaterThan50";
     }
     if (counterKey.isEmpty()) return;
     StatValidationEntry.Builder maxPercentFluctuationCounter = StatValidationEntry.newBuilder();
     maxPercentFluctuationCounter.setCounterKey(counterKey);
     maxPercentFluctuationCounter.addProblemPoints(maxDeltaBaseDP);
     maxPercentFluctuationCounter.addProblemPoints(maxDeltaDP);
-    maxPercentFluctuationCounter.setPercentDifference(maxDelta);
+    // We want to format the percentDifference as the maxDelta multiplied by 100 to get the percent
+    // and truncated to 2 decimal points.
+    maxPercentFluctuationCounter.setPercentDifference(Math.round(maxDelta * 10000) / 100.0);
     resBuilder.addValidationCounters(maxPercentFluctuationCounter.build());
     logCtx.incrementWarningCounterBy(counterKey, 1);
   }
@@ -390,8 +415,12 @@ public class StatChecker {
           StatValidationEntry.Builder dataHoleCounter = StatValidationEntry.newBuilder();
           String dataHoleCounterKey = "StatsCheck_Data_Holes";
           dataHoleCounter.setCounterKey(dataHoleCounterKey);
+          List<String> dateList = new ArrayList<>();
+          for (DataPoint dp : timeSeries) {
+            dateList.add(dp.getDate());
+          }
           dataHoleCounter.setAdditionalDetails(
-              "Data hole found between the dates: " + prev.toString() + " and " + dt.toString());
+              "Possible data hole found. Dates in this series: " + String.join(",", dateList));
           logCtx.incrementWarningCounterBy(dataHoleCounterKey, 1);
           resBuilder.addValidationCounters(dataHoleCounter.build());
           return;
