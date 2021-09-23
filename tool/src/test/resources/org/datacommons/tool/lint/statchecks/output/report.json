@@ -6,17 +6,17 @@
         "Existence_NumDcCalls": "1"
       }
     },
-    "LEVEL_ERROR": {
-      "counters": {
-        "Sanity_InconsistentSvObsValues": "1"
-      }
-    },
     "LEVEL_WARNING": {
       "counters": {
         "StatsCheck_MaxPercentFluctuationGreaterThan100": "1",
         "StatsCheck_Inconsistent_Date_Granularity": "1",
         "StatsCheck_Inconsistent_Values": "1",
         "StatsCheck_Data_Holes": "1"
+      }
+    },
+    "LEVEL_ERROR": {
+      "counters": {
+        "Sanity_InconsistentSvObsValues": "1"
       }
     }
   },

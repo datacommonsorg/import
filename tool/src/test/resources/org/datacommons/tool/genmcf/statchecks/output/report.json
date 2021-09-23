@@ -2,10 +2,10 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "NumRowSuccesses": "22",
-        "NumPVSuccesses": "110",
+        "NumRowSuccesses": "21",
+        "NumPVSuccesses": "147",
         "Existence_NumChecks": "132",
-        "NumNodeSuccesses": "22",
+        "NumNodeSuccesses": "21",
         "Existence_NumDcCalls": "1"
       }
     },
@@ -15,6 +15,11 @@
         "StatsCheck_Inconsistent_Values": "1",
         "StatsCheck_MaxPercentFluctuationGreaterThan500": "1",
         "StatsCheck_Data_Holes": "1"
+      }
+    },
+    "LEVEL_ERROR": {
+      "counters": {
+        "Sanity_InconsistentSvObsValues": "1"
       }
     }
   },

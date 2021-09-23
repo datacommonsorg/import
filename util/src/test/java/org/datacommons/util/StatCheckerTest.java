@@ -120,7 +120,7 @@ public class StatCheckerTest {
     assertFalse(sc.checkSvObsInGraph(graph));
     assertTrue(
         TestUtil.checkLog(
-            log.build(),
+            lw.getLog(),
             "Sanity_InconsistentSvObsValues",
             "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/SF', variableMeasured: 'WomenIncome', observationDate: '2020', value1: 1.0E7, value2: 1.0000001E7"));
 
