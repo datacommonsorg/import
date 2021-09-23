@@ -78,26 +78,19 @@ public class McfUtil {
 
   public static List<String> getPropVals(Mcf.McfGraph.PropertyValues node, String property) {
     List<String> result = new ArrayList<>();
-    try {
-      Mcf.McfGraph.Values vals = node.getPvsOrThrow(property);
-      if (vals.getTypedValuesCount() > 0) {
-        for (Mcf.McfGraph.TypedValue tv : vals.getTypedValuesList()) {
-          result.add(stripNamespace(tv.getValue()));
-        }
+    Mcf.McfGraph.Values vals = node.getPvsOrDefault(property, null);
+    if (vals != null && vals.getTypedValuesCount() > 0) {
+      for (Mcf.McfGraph.TypedValue tv : vals.getTypedValuesList()) {
+        result.add(stripNamespace(tv.getValue()));
       }
-    } catch (IllegalArgumentException ex) {
-      // Not having a value is not an error.
     }
     return result;
   }
 
   public static List<Mcf.McfGraph.TypedValue> getPropTvs(
       Mcf.McfGraph.PropertyValues node, String property) {
-    try {
-      return node.getPvsOrThrow(property).getTypedValuesList();
-    } catch (IllegalArgumentException ex) {
-      // Not having a value is not an error.
-    }
+    var vals = node.getPvsOrDefault(property, null);
+    if (vals != null) return vals.getTypedValuesList();
     return null;
   }
 

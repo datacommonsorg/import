@@ -12,7 +12,8 @@ public class StatVarStateTest {
   @Test
   public void funcCheckDuplicateDcid() throws IOException {
     Debug.Log.Builder log = Debug.Log.newBuilder();
-    StatVarState svs = new StatVarState(new LogWrapper(log, Path.of(".")));
+    LogWrapper lw = new LogWrapper(log, Path.of("."));
+    StatVarState svs = new StatVarState(lw);
     check(
         svs,
         List.of(
@@ -28,13 +29,14 @@ public class StatVarStateTest {
                 + "    gender: schema:Male        \n"
                 + "    statType: dcs:measuredValue\n"));
     assertTrue(
-        TestUtil.checkLog(log.build(), "Sanity_SameDcidForDifferentStatVars", "Count_Person"));
+        TestUtil.checkLog(lw.getLog(), "Sanity_SameDcidForDifferentStatVars", "Count_Person"));
   }
 
   @Test
   public void funcCheckDuplicateSVContent() throws IOException {
     Debug.Log.Builder log = Debug.Log.newBuilder();
-    StatVarState svs = new StatVarState(new LogWrapper(log, Path.of(".")));
+    LogWrapper lw = new LogWrapper(log, Path.of("."));
+    StatVarState svs = new StatVarState(lw);
     check(
         svs,
         List.of(
@@ -50,7 +52,7 @@ public class StatVarStateTest {
                 + "    statType: dcs:measuredValue\n"));
     assertTrue(
         TestUtil.checkLog(
-            log.build(),
+            lw.getLog(),
             "Sanity_DifferentDcidsForSameStatVar",
             "dcid1: 'Count_Person', dcid2: 'Count_Person_Male'"));
   }

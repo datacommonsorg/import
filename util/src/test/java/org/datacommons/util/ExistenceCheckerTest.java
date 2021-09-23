@@ -39,38 +39,38 @@ public class ExistenceCheckerTest {
 
     var checker = new ExistenceChecker(mockHttp, false, lw);
 
-    assertFalse(TestUtil.checkCounter(lb.build(), "Existence_MissingReference", 1));
+    assertFalse(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 1));
 
     // Non-existing node, response from RPC.
     when(mockResp.body()).thenReturn(NONEXISTING_LAT);
     checker.submitNodeCheck("latitude", newLogCb(lw, PREF_KEY, "latitude1"));
     verify(mockHttp, times(1)).send(any(), any());
-    assertTrue(TestUtil.checkCounter(lb.build(), "Existence_MissingReference", 1));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 1));
 
     // Non-existing node must be cached. No further RPCs.
     checker.submitNodeCheck("latitude", newLogCb(lw, PREF_KEY, "latitude2"));
     verify(mockHttp, times(1)).send(any(), any());
     // Two missing-ref counts.
-    assertTrue(TestUtil.checkCounter(lb.build(), "Existence_MissingReference", 2));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 2));
 
     // Existing node, response from RPC.
     when(mockResp.body()).thenReturn(EXISTING_GENDER);
     checker.submitNodeCheck("gender", newLogCb(lw, PREF_KEY, "gender1"));
     verify(mockHttp, times(2)).send(any(), any());
-    assertTrue(TestUtil.checkCounter(lb.build(), "Existence_MissingReference", 2));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 2));
 
     // Existing node must be cached. No further RPCs.
     checker.submitNodeCheck("gender", newLogCb(lw, PREF_KEY, "gender2"));
     verify(mockHttp, times(2)).send(any(), any());
     // Same missing-ref count as before.
-    assertTrue(TestUtil.checkCounter(lb.build(), "Existence_MissingReference", 2));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 2));
 
     // Local KG hit. No further RPCs.
     checker.addLocalGraph(TestUtil.graphFromMcf(LOCAL_KG_NODE));
     checker.submitNodeCheck("latitude", newLogCb(lw, PREF_KEY, "latitude3"));
     verify(mockHttp, times(2)).send(any(), any());
     // Same missing-ref count as before.
-    assertTrue(TestUtil.checkCounter(lb.build(), "Existence_MissingReference", 2));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 2));
   }
 
   @Test
@@ -85,41 +85,41 @@ public class ExistenceCheckerTest {
 
     var checker = new ExistenceChecker(mockHttp, false, lw);
 
-    assertFalse(TestUtil.checkCounter(lb.build(), "Existence_MissingTriple", 0));
+    assertFalse(TestUtil.checkCounter(lw.getLog(), "Existence_MissingTriple", 0));
 
     // Non-existing triple, response from RPC.
     when(mockResp.body()).thenReturn(NONEXISTING_LAT);
     checker.submitTripleCheck(
         "latitude", "rangeIncludes", "Place", newLogCb(lw, SUB_KEY, "latitude"));
     verify(mockHttp, times(1)).send(any(), any());
-    assertTrue(TestUtil.checkCounter(lb.build(), "Existence_MissingTriple", 1));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingTriple", 1));
 
     // Non-existing triple response must be cached. No further RPCs.
     checker.submitTripleCheck(
         "latitude", "rangeIncludes", "Place", newLogCb(lw, SUB_KEY, "latitude"));
     verify(mockHttp, times(1)).send(any(), any());
-    assertTrue(TestUtil.checkCounter(lb.build(), "Existence_MissingTriple", 2));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingTriple", 2));
 
     // Existing triple, response from RPC.
     when(mockResp.body()).thenReturn(EXISTING_GENDER);
     checker.submitTripleCheck(
         "gender", "domainIncludes", "Person", newLogCb(lw, SUB_KEY, "gender"));
     verify(mockHttp, times(2)).send(any(), any());
-    assertTrue(TestUtil.checkCounter(lb.build(), "Existence_MissingTriple", 2));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingTriple", 2));
 
     // Existing triple again, must be cached.
     when(mockResp.body()).thenReturn(EXISTING_GENDER);
     checker.submitTripleCheck(
         "gender", "domainIncludes", "Person", newLogCb(lw, SUB_KEY, "gender"));
     verify(mockHttp, times(2)).send(any(), any());
-    assertTrue(TestUtil.checkCounter(lb.build(), "Existence_MissingTriple", 2));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingTriple", 2));
 
     // Local KG hit. Must be cached.
     checker.addLocalGraph(TestUtil.graphFromMcf(LOCAL_KG_NODE));
     checker.submitTripleCheck(
         "latitude", "rangeIncludes", "Place", newLogCb(lw, SUB_KEY, "latitude"));
     verify(mockHttp, times(2)).send(any(), any());
-    assertTrue(TestUtil.checkCounter(lb.build(), "Existence_MissingTriple", 2));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingTriple", 2));
   }
 
   @Test
@@ -150,24 +150,24 @@ public class ExistenceCheckerTest {
     checker.submitNodeCheck("minimumWage", newLogCb(lw, VREF_KEY, "minimumWage"));
 
     // Up till this point no call should have been made.
-    assertFalse(TestUtil.checkCounter(lb.build(), "Existence_MissingTriple", 1));
-    assertFalse(TestUtil.checkCounter(lb.build(), "Existence_MissingReference", 1));
+    assertFalse(TestUtil.checkCounter(lw.getLog(), "Existence_MissingTriple", 1));
+    assertFalse(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 1));
 
     // Ref 5. Missing
     checker.submitNodeCheck("UnemploymentRate", newLogCb(lw, VREF_KEY, "UnemploymentRate"));
 
     // Since we have issued 5 ref-checks (all, typeOf), we should now see 2 missing refs.
-    assertFalse(TestUtil.checkCounter(lb.build(), "Existence_MissingTriple", 1));
-    assertTrue(TestUtil.checkCounter(lb.build(), "Existence_MissingReference", 2));
+    assertFalse(TestUtil.checkCounter(lw.getLog(), "Existence_MissingTriple", 1));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingReference", 2));
 
     // After we drain all, we should see the one missing triple.
     checker.drainRemoteCalls();
-    assertTrue(TestUtil.checkCounter(lb.build(), "Existence_MissingTriple", 1));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Existence_MissingTriple", 1));
 
     // Lets also confirm the exact missing ones.
-    assertTrue(TestUtil.checkLog(lb.build(), "Existence_MissingReference", "Nope"));
-    assertTrue(TestUtil.checkLog(lb.build(), "Existence_MissingReference", "UnemploymentRate"));
-    assertTrue(TestUtil.checkLog(lb.build(), "Existence_MissingTriple", "subPropertyOf"));
+    assertTrue(TestUtil.checkLog(lw.getLog(), "Existence_MissingReference", "Nope"));
+    assertTrue(TestUtil.checkLog(lw.getLog(), "Existence_MissingReference", "UnemploymentRate"));
+    assertTrue(TestUtil.checkLog(lw.getLog(), "Existence_MissingTriple", "subPropertyOf"));
   }
 
   private static LogCb newLogCb(LogWrapper lw, String key, String value) {

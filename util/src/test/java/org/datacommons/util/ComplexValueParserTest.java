@@ -179,6 +179,6 @@ public class ComplexValueParserTest {
     Mcf.McfGraph.PropertyValues dummyNode = Mcf.McfGraph.PropertyValues.newBuilder().build();
     ComplexValueParser parser = new ComplexValueParser("n1", dummyNode, "p1", value, null, logCtx);
     assertFalse(parser.parse());
-    return log.build();
+    return logCtx.getLog();
   }
 }

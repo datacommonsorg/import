@@ -29,22 +29,22 @@ import org.datacommons.proto.Mcf;
 // TODO: Add more column information
 // TODO: Pass in associated SV nodes to validate SVObs better.
 public class McfChecker {
-  private final int MAX_DCID_LENGTH = 256;
-  private final List<String> PROPS_ONLY_IN_PROP =
+  private static int MAX_DCID_LENGTH = 256;
+  private static final List<String> PROPS_ONLY_IN_PROP =
       List.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES, Vocabulary.SUB_PROPERTY_OF);
-  private final List<String> PROPS_ONLY_IN_CLASS = List.of(Vocabulary.SUB_CLASS_OF);
-  private final Set<String> CLASS_REFS_IN_CLASS =
+  private static List<String> PROPS_ONLY_IN_CLASS = List.of(Vocabulary.SUB_CLASS_OF);
+  private static Set<String> CLASS_REFS_IN_CLASS =
       Set.of(Vocabulary.NAME, Vocabulary.LABEL, Vocabulary.DCID, Vocabulary.SUB_CLASS_OF);
-  private final Set<String> CLASS_REFS_IN_PROP =
+  private static Set<String> CLASS_REFS_IN_PROP =
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES);
-  private final Set<String> PROP_REFS_IN_PROP =
+  private static Set<String> PROP_REFS_IN_PROP =
       Set.of(Vocabulary.NAME, Vocabulary.LABEL, Vocabulary.DCID, Vocabulary.SUB_PROPERTY_OF);
 
   // Includes: a-z A-Z 0-9 _ & + - % / . )( :
-  private final Pattern VALID_DCID_PATTERN = Pattern.compile("^[\\w&/%\\)\\(+\\-\\.:]+$");
+  private static Pattern VALID_DCID_PATTERN = Pattern.compile("^[\\w&/%\\)\\(+\\-\\.:]+$");
   // Everything in VALID_DCID_PATTERN, and then: ' * >< ][ | ; <space>
   // TODO: Drop this after Bio DCIDs are fixed
-  private final Pattern VALID_BIO_DCID_PATTERN =
+  private static Pattern VALID_BIO_DCID_PATTERN =
       Pattern.compile("^[\\w&/%\\)\\(+\\-\\.'\\*><\\]\\[|:; ]+$");
 
   private Mcf.McfGraph graph;

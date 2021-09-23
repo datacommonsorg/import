@@ -218,14 +218,18 @@ public class Processor {
             Args.OutputFileType.FAILED_TABLE_MCF_NODES,
             csvFile);
     Mcf.McfGraph g;
-    long numNodesProcessed = 0, numRowsProcessed = 0;
+    int numNodeSuccesses = 0, numPVSuccesses = 0, numRowSuccesses = 0, numRowsProcessed = 0;
     while ((g = parser.parseNextRow()) != null) {
       g = McfMutator.mutate(g.toBuilder(), logCtx);
 
       // This will set counters/messages in logCtx.
       boolean success = McfChecker.check(g, existenceChecker, statVarState, logCtx);
       if (success) {
-        logCtx.incrementInfoCounterBy("NumRowSuccesses", 1);
+        numRowSuccesses++;
+        numNodeSuccesses += g.getNodesCount();
+        for (var kv : g.getNodesMap().entrySet()) {
+          numPVSuccesses += kv.getValue().getPvsCount();
+        }
       }
       if (args.resolutionMode != Args.ResolutionMode.NONE) {
         g = resolveCommon(g, writerPair);
@@ -240,12 +244,14 @@ public class Processor {
       if (statChecker != null) {
         statChecker.extractSeriesInfoFromGraph(g);
       }
-      numNodesProcessed += g.getNodesCount();
       numRowsProcessed++;
       if (!logCtx.trackStatus(1, "rows processed")) {
         throw new DCTooManyFailuresException("encountered too many failures");
       }
     }
+    logCtx.incrementInfoCounterBy("NumRowSuccesses", numRowSuccesses);
+    logCtx.incrementInfoCounterBy("NumNodeSuccesses", numNodeSuccesses);
+    logCtx.incrementInfoCounterBy("NumPVSuccesses", numPVSuccesses);
     logger.info(
         "Checked "
             + (args.resolutionMode != Args.ResolutionMode.NONE ? "and Resolved " : "")
@@ -253,7 +259,7 @@ public class Processor {
             + " rows, {} nodes)",
         csvFile.getName(),
         numRowsProcessed,
-        numNodesProcessed);
+        numNodeSuccesses);
     writerPair.close();
   }
 
