@@ -57,6 +57,7 @@ public class LogWrapper {
   private long countAtLastStatus = 0;
   private AtomicLong currentCount = new AtomicLong();
   // A copy of the counters that are updated into the Log before persisting.
+  // The list is indexed by the Log.Level enum value.
   private final List<ConcurrentHashMap<String, Long>> counterMaps = new ArrayList<>();
 
   public LogWrapper(Debug.Log.Builder log, Path outputDir) {

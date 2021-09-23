@@ -3,6 +3,7 @@
     "LEVEL_INFO": {
       "counters": {
         "NumRowSuccesses": "11",
+        "NumPVSuccesses": "83",
         "Existence_NumChecks": "249",
         "NumNodeSuccesses": "15",
         "CSV_MalformedDCIDPVFailures": "4",
