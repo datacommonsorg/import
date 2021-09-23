@@ -20,6 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import org.datacommons.proto.Debug.DataPoint;
 import org.datacommons.proto.Debug.DataPoint.DataValue;
 import org.datacommons.proto.Debug.Log.Level;
@@ -40,6 +42,15 @@ public class StatChecker {
   private static final double SMALL_NUMBER = 0.000001;
   private static final String RECEIVED_SAMPLE_PLACES_KEY = "Received_Sample_Places";
   private static final Character PLACE_NAMESPACE_DELIMITER = '/';
+  private static final List<String> SVOBS_VALUE_KEY_PROPS =
+      List.of(
+          Vocabulary.OBSERVATION_ABOUT,
+          Vocabulary.VARIABLE_MEASURED,
+          Vocabulary.MEASUREMENT_METHOD,
+          Vocabulary.OBSERVATION_PERIOD,
+          Vocabulary.SCALING_FACTOR,
+          Vocabulary.UNIT,
+          Vocabulary.OBSERVATION_DATE);
   private final boolean verbose;
   private final LogWrapper logCtx;
   // key is a string made up of place dcid, stat var dcid, measurement method, observation period,
@@ -52,7 +63,7 @@ public class StatChecker {
   // same StatVarObservation with inconsistent values. The key is a hash made up of a set of
   // properties that distinguish a StatVarObservation and the value is the first value seen of that
   // StatVarObservation.
-  private final Map<Long, Float> svObValues;
+  private final ConcurrentMap<Long, Float> svObValues;
   private final String EMPTY_PROP_STRING = "EMPTY_PROP";
 
   // Creates a StatChecker instance. If no samplePlaces are provided, for each pair of (place
@@ -63,7 +74,7 @@ public class StatChecker {
     this.verbose = verbose;
     this.seriesSummaryMap = new HashMap<>();
     this.samplePlaces = new HashMap<>();
-    this.svObValues = new HashMap<>();
+    this.svObValues = new ConcurrentHashMap<>();
     if (samplePlaces == null) {
       this.shouldGenerateSamplePlaces = true;
     } else {
@@ -84,7 +95,7 @@ public class StatChecker {
 
   // Given a graph, for each node that is a statVarObservation node with a number value, check for
   // any value inconsistencies. Return false if there are any svObsValueInconsistencies found.
-  public synchronized boolean checkSvObsInGraph(McfGraph graph) {
+  public boolean checkSvObsInGraph(McfGraph graph) {
     boolean success = true;
     for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
       if (isSvObWithNumberValue(node.getValue())) {
@@ -389,34 +400,32 @@ public class StatChecker {
   // Return false if we have already seen the same StatVarObservation node but with a different
   // value.
   private boolean checkSvObsValueInconsistency(McfGraph.PropertyValues node) {
-    String placeDcid = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT);
-    String statVarDcid = McfUtil.getPropVal(node, Vocabulary.VARIABLE_MEASURED);
-    String mmethod = McfUtil.getPropVal(node, Vocabulary.MEASUREMENT_METHOD);
-    String obsPeriod = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_PERIOD);
-    String sFactor = McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR);
-    String unit = McfUtil.getPropVal(node, Vocabulary.UNIT);
-    String obsDate = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE);
     Hasher hasher = Hashing.farmHashFingerprint64().newHasher();
-    for (String prop :
-        List.of(placeDcid, statVarDcid, mmethod, obsPeriod, sFactor, unit, obsDate)) {
+    for (String prop : SVOBS_VALUE_KEY_PROPS) {
+      String val = McfUtil.getPropVal(node, prop);
       if (prop.isEmpty()) {
         hasher.putString(EMPTY_PROP_STRING, StandardCharsets.UTF_8);
       } else {
-        hasher.putString(prop, StandardCharsets.UTF_8).putInt(prop.length());
+        hasher.putString(val, StandardCharsets.UTF_8).putInt(val.length());
       }
     }
     Long fp = hasher.hash().asLong();
-    Float val = Float.parseFloat(McfUtil.getPropVal(node, Vocabulary.VALUE));
+    Float val = null;
+    try {
+      val = Float.parseFloat(McfUtil.getPropVal(node, Vocabulary.VALUE));
+    } catch (NumberFormatException e) {
+      // If value is not a float, val will stay as null and this will be handled later.
+    }
     if (this.svObValues.containsKey(fp) && !this.svObValues.get(fp).equals(val)) {
       logCtx.addEntry(
           Level.LEVEL_ERROR,
           "Sanity_InconsistentSvObsValues",
           "Found nodes with different values for the same StatVarObservation :: observationAbout: '"
-              + placeDcid
+              + McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT)
               + "', variableMeasured: '"
-              + statVarDcid
+              + McfUtil.getPropVal(node, Vocabulary.VARIABLE_MEASURED)
               + "', observationDate: '"
-              + obsDate
+              + McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE)
               + "', value1: "
               + this.svObValues.get(fp)
               + ", value2: "

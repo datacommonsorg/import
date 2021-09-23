@@ -77,10 +77,8 @@ public class Processor {
         // Resolution for table nodes will happen inside processTables().
       }
 
-      // Extract relevant nodes from instance MCFs and add to statChecker.
-      processor.addStats(nodesForStatProcessing);
-      // Check svObs nodes from instanceMCFs for value inconsistencies.
-      processor.checkSvObInconsistencies(nodesForStatProcessing);
+      // Add relevant nodes from instance MCFs to statChecker and check for value inconsistencies.
+      processor.processStats(nodesForStatProcessing);
 
       if (!args.fileGroup.getCsvs().isEmpty()) {
         String threadStr = "(with numThreads=" + args.numThreads + ")";
@@ -233,10 +231,8 @@ public class Processor {
         }
       }
 
-      // Extract relevant nodes from graph and add to statChecker.
-      addStats(List.of(g));
-      // Check graph for StatVarObservation nodes with a value inconsistency.
-      success &= checkSvObInconsistencies(List.of(g));
+      // Add relevant nodes from graph to statChecker and check for value inconsistencies.
+      success &= processStats(List.of(g));
       if (success) {
         logCtx.incrementInfoCounterBy("NumRowSuccesses", 1);
       }
@@ -360,20 +356,14 @@ public class Processor {
     }
   }
 
-  // add stats from graphs to statChecker if statChecker is not null
-  private void addStats(List<Mcf.McfGraph> graphs) {
-    if (statChecker == null) return;
-    for (Mcf.McfGraph g : graphs) {
-      statChecker.extractSeriesInfoFromGraph(g);
-    }
-  }
-
-  // Check StatVarObservations in the graph to see if there exists the same StatVarObservation with
-  // a different value. Return false if there are value inconsistencies found.
-  private boolean checkSvObInconsistencies(List<Mcf.McfGraph> graphs) {
+  // If statCheck is not null, Add stats from graphs and check for any value inconsistencies. Return
+  // false if there are value inconsistencies found. All stats will still be added even if there are
+  // value inconsistencies.
+  private boolean processStats(List<Mcf.McfGraph> graphs) {
     if (statChecker == null) return true;
     boolean errorFound = false;
     for (Mcf.McfGraph g : graphs) {
+      statChecker.extractSeriesInfoFromGraph(g);
       errorFound |= statChecker.checkSvObsInGraph(g);
     }
     return errorFound;
