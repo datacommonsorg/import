@@ -2,10 +2,10 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "NumRowSuccesses": "22",
-        "NumPVSuccesses": "110",
+        "NumRowSuccesses": "21",
+        "NumPVSuccesses": "147",
         "Existence_NumChecks": "132",
-        "NumNodeSuccesses": "22",
+        "NumNodeSuccesses": "21",
         "Existence_NumDcCalls": "1"
       }
     },
@@ -16,8 +16,22 @@
         "StatsCheck_MaxPercentFluctuationGreaterThan500": "1",
         "StatsCheck_Data_Holes": "1"
       }
+    },
+    "LEVEL_ERROR": {
+      "counters": {
+        "Sanity_InconsistentSvObsValues": "1"
+      }
     }
   },
+  "entries": [{
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "covid.csv",
+      "lineNumber": "7"
+    },
+    "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive', observationDate: '2020-02-03', value1: 3.0, value2: 8.0",
+    "counterKey": "Sanity_InconsistentSvObsValues"
+  }],
   "statsCheckSummary": [{
     "placeDcid": "geoId/06",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",

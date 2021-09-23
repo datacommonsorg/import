@@ -66,28 +66,105 @@ public class StatCheckerTest {
   }
 
   @Test
+  public void testCheckSvObsInGraph() throws IOException {
+    Debug.Log.Builder log = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(log, Path.of("/tmp/statCheckerTest"));
+    StatChecker sc = new StatChecker(lw, null, false);
+
+    // Graph with no duplicate StatVarObs.
+    String mcf =
+        "Node: SFWomenIncome2020\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:WomenIncome\n"
+            + "value: 10000000.0\n"
+            + "observationAbout: dcid:geoId/SF\n"
+            + "observationDate: \"2020\"\n"
+            + "\n"
+            + "Node: SFWomenIncome2021\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:WomenIncome\n"
+            + "value: 10000000.0\n"
+            + "observationAbout: dcid:geoId/SF\n"
+            + "observationDate: \"2021\"\n"
+            + "\n"
+            + "Node: SFWomenIncome2022\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:WomenIncome\n"
+            + "value: 10000000.0\n"
+            + "observationAbout: dcid:geoId/SF\n"
+            + "observationDate: \"2022\"\n";
+    Mcf.McfGraph graph = McfParser.parseInstanceMcfString(mcf, false, lw);
+    assertTrue(sc.checkSvObsInGraph(graph));
+
+    // check node with duplicate StatVarObs but same value.
+    mcf =
+        "Node: SFWomenIncome2020\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:WomenIncome\n"
+            + "value: 10000000.0\n"
+            + "observationAbout: dcid:geoId/SF\n"
+            + "observationDate: \"2020\"\n";
+    graph = McfParser.parseInstanceMcfString(mcf, false, lw);
+    assertTrue(sc.checkSvObsInGraph(graph));
+
+    // check node with a duplicate StatVarObs but different value.
+    mcf =
+        "Node: SFWomenIncome2020\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:WomenIncome\n"
+            + "value: 10000001.0\n"
+            + "observationAbout: dcid:geoId/SF\n"
+            + "observationDate: \"2020\"\n"
+            + "\n";
+    graph = McfParser.parseInstanceMcfString(mcf, false, lw);
+    assertFalse(sc.checkSvObsInGraph(graph));
+    assertTrue(
+        TestUtil.checkLog(
+            lw.getLog(),
+            "Sanity_InconsistentSvObsValues",
+            "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/SF', variableMeasured: 'WomenIncome', observationDate: '2020', value1: 1.0E7, value2: 1.0000001E7"));
+
+    // check node that differs only in one property from an existing StatVarObservation node.
+    mcf =
+        "Node: SFWomenIncome2020\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "variableMeasured: dcid:WomenIncome\n"
+            + "value: 10000000.0\n"
+            + "observationAbout: dcid:geoId/SF\n"
+            + "observationDate: \"2020\"\n"
+            + "unit: \"cubicMeters\"\n"
+            + "\n";
+    graph = McfParser.parseInstanceMcfString(mcf, false, lw);
+    assertTrue(sc.checkSvObsInGraph(graph));
+  }
+
+  @Test
   public void testFuncCheckValueInconsistencies() {
     Debug.Log.Builder log = Debug.Log.newBuilder();
     LogWrapper logCtx = new LogWrapper(log, Path.of("/tmp/statCheckerTest"));
     StatValidationResult.Builder resBuilder = StatValidationResult.newBuilder();
     Map<String, DataPoint> timeSeries = new TreeMap<>();
 
-    StatChecker.checkValueInconsistencies(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
+    StatChecker.checkSeriesValueInconsistencies(
+        new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Value", new ArrayList<>()));
 
     resBuilder.clear();
     addDataPoint(timeSeries, "2011", 24.0);
-    StatChecker.checkValueInconsistencies(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
+    StatChecker.checkSeriesValueInconsistencies(
+        new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Value", new ArrayList<>()));
 
     resBuilder.clear();
     addDataPoint(timeSeries, "2012", 24.0);
     addDataPoint(timeSeries, "2013", 240.3);
-    StatChecker.checkValueInconsistencies(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
+    StatChecker.checkSeriesValueInconsistencies(
+        new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Value", new ArrayList<>()));
 
     addDataPoint(timeSeries, "2013", -20.3);
-    StatChecker.checkValueInconsistencies(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
+    StatChecker.checkSeriesValueInconsistencies(
+        new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Values", List.of("2013")));
     assertEquals(1, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_Inconsistent_Values"));
   }

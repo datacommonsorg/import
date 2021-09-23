@@ -671,7 +671,7 @@ public class McfChecker {
               + value
               + "', property: '"
               + prop
-              + ", node: '"
+              + "', node: '"
               + nodeId
               + "'",
           node);
@@ -682,7 +682,7 @@ public class McfChecker {
               + value
               + "', property: '"
               + prop
-              + ", node: '"
+              + "', node: '"
               + nodeId
               + "'",
           node);

@@ -14,11 +14,17 @@
 
 package org.datacommons.util;
 
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import org.datacommons.proto.Debug.DataPoint;
 import org.datacommons.proto.Debug.DataPoint.DataValue;
+import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
 import org.datacommons.proto.Mcf.McfGraph;
@@ -36,6 +42,15 @@ public class StatChecker {
   private static final double SMALL_NUMBER = 0.000001;
   private static final String RECEIVED_SAMPLE_PLACES_KEY = "Received_Sample_Places";
   private static final Character PLACE_NAMESPACE_DELIMITER = '/';
+  private static final List<String> SVOBS_VALUE_KEY_PROPS =
+      List.of(
+          Vocabulary.OBSERVATION_ABOUT,
+          Vocabulary.VARIABLE_MEASURED,
+          Vocabulary.MEASUREMENT_METHOD,
+          Vocabulary.OBSERVATION_PERIOD,
+          Vocabulary.SCALING_FACTOR,
+          Vocabulary.UNIT,
+          Vocabulary.OBSERVATION_DATE);
   private final boolean verbose;
   private final LogWrapper logCtx;
   // key is a string made up of place dcid, stat var dcid, measurement method, observation period,
@@ -44,6 +59,12 @@ public class StatChecker {
   // key is place namespace + length of place dcid, value is set of place dcids
   private final Map<String, Set<String>> samplePlaces;
   private final boolean shouldGenerateSamplePlaces;
+  // Tracks global state on StatVarObservations to detect whether there are multiple of the
+  // same StatVarObservation with inconsistent values. The key is a hash made up of a set of
+  // properties that distinguish a StatVarObservation and the value is the first value seen of that
+  // StatVarObservation.
+  private final ConcurrentMap<Long, Float> svObValues;
+  private final String EMPTY_PROP_STRING = "EMPTY_PROP";
 
   // Creates a StatChecker instance. If no samplePlaces are provided, for each pair of (place
   // namespace, place dcid length), we will use the first 5 places that stat var observations are
@@ -53,6 +74,7 @@ public class StatChecker {
     this.verbose = verbose;
     this.seriesSummaryMap = new HashMap<>();
     this.samplePlaces = new HashMap<>();
+    this.svObValues = new ConcurrentHashMap<>();
     if (samplePlaces == null) {
       this.shouldGenerateSamplePlaces = true;
     } else {
@@ -65,10 +87,22 @@ public class StatChecker {
   // statVarObservation nodes and save it into seriesSummaryMap.
   public synchronized void extractSeriesInfoFromGraph(McfGraph graph) {
     for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
-      if (shouldExtractSeriesInfo(node.getValue())) {
+      if (isSvObWithNumberValue(node.getValue()) && shouldExtractSeriesInfo(node.getValue())) {
         extractSeriesInfoFromNode(node.getValue());
       }
     }
+  }
+
+  // Given a graph, for each node that is a statVarObservation node with a number value, check for
+  // any value inconsistencies. Return false if there are any svObsValueInconsistencies found.
+  public boolean checkSvObsInGraph(McfGraph graph) {
+    boolean success = true;
+    for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
+      if (isSvObWithNumberValue(node.getValue())) {
+        success &= checkSvObsValueInconsistency(node.getValue());
+      }
+    }
+    return success;
   }
 
   // Iterate through seriesSummaries, perform a list of checks (value inconsistencies, sigma
@@ -79,7 +113,7 @@ public class StatChecker {
       List<DataPoint> timeSeries = new ArrayList<>(seriesSummaryMap.get(hash).timeSeries.values());
       StatValidationResult.Builder resBuilder = seriesSummaryMap.get(hash).validationResult;
       // Check inconsistent values (sawtooth).
-      checkValueInconsistencies(timeSeries, resBuilder, logCtx);
+      checkSeriesValueInconsistencies(timeSeries, resBuilder, logCtx);
       // Check N-Sigma variance.
       checkSigmaDivergence(timeSeries, resBuilder, logCtx);
       // Check N-Percent fluctuations.
@@ -93,19 +127,20 @@ public class StatChecker {
     }
   }
 
-  // Only extract series information for a statVarObservation node that is about a sample place and
-  // that has a value of number type.
-  private boolean shouldExtractSeriesInfo(McfGraph.PropertyValues node) {
-    String placeDcid = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT);
+  // Return whether the node is a statVarObservation node with value of type number.
+  private boolean isSvObWithNumberValue(McfGraph.PropertyValues node) {
     List<String> types = McfUtil.getPropVals(node, Vocabulary.TYPE_OF);
     McfGraph.Values nodeValues =
         node.getPvsOrDefault(Vocabulary.VALUE, McfGraph.Values.getDefaultInstance());
-    if (!types.contains(Vocabulary.STAT_VAR_OBSERVATION_TYPE)
-        || placeDcid.isEmpty()
-        || nodeValues.getTypedValuesCount() == 0
-        || nodeValues.getTypedValues(0).getType() != ValueType.NUMBER) {
-      return false;
-    }
+    return types.contains(Vocabulary.STAT_VAR_OBSERVATION_TYPE)
+        && nodeValues.getTypedValuesCount() != 0
+        && nodeValues.getTypedValues(0).getType() == ValueType.NUMBER;
+  }
+
+  // Only extract series information for a statVarObservation node that is about a sample place.
+  private boolean shouldExtractSeriesInfo(McfGraph.PropertyValues node) {
+    String placeDcid = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT);
+    if (placeDcid.isEmpty()) return false;
     if (shouldGenerateSamplePlaces) {
       int nameSpaceSplit = placeDcid.indexOf(PLACE_NAMESPACE_DELIMITER);
       String placeNameSpace = "";
@@ -168,7 +203,7 @@ public class StatChecker {
     seriesSummaryMap.put(hash, summary);
   }
 
-  protected static void checkValueInconsistencies(
+  protected static void checkSeriesValueInconsistencies(
       List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder, LogWrapper logCtx) {
     StatValidationEntry.Builder inconsistentValueCounter = StatValidationEntry.newBuilder();
     String counterKey = "StatsCheck_Inconsistent_Values";
@@ -359,6 +394,47 @@ public class StatChecker {
         window = delta;
       }
       prev = dt;
+    }
+  }
+
+  // Return false if we have already seen the same StatVarObservation node but with a different
+  // value.
+  private boolean checkSvObsValueInconsistency(McfGraph.PropertyValues node) {
+    Hasher hasher = Hashing.farmHashFingerprint64().newHasher();
+    for (String prop : SVOBS_VALUE_KEY_PROPS) {
+      String val = McfUtil.getPropVal(node, prop);
+      if (prop.isEmpty()) {
+        hasher.putString(EMPTY_PROP_STRING, StandardCharsets.UTF_8);
+      } else {
+        hasher.putString(val, StandardCharsets.UTF_8).putInt(val.length());
+      }
+    }
+    Long fp = hasher.hash().asLong();
+    Float val = null;
+    try {
+      val = Float.parseFloat(McfUtil.getPropVal(node, Vocabulary.VALUE));
+    } catch (NumberFormatException e) {
+      // If value is not a float, val will stay as null and this will be handled later.
+    }
+    if (this.svObValues.containsKey(fp) && !this.svObValues.get(fp).equals(val)) {
+      logCtx.addEntry(
+          Level.LEVEL_ERROR,
+          "Sanity_InconsistentSvObsValues",
+          "Found nodes with different values for the same StatVarObservation :: observationAbout: '"
+              + McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT)
+              + "', variableMeasured: '"
+              + McfUtil.getPropVal(node, Vocabulary.VARIABLE_MEASURED)
+              + "', observationDate: '"
+              + McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE)
+              + "', value1: "
+              + this.svObValues.get(fp)
+              + ", value2: "
+              + val,
+          node.getLocationsList());
+      return false;
+    } else {
+      this.svObValues.put(fp, val);
+      return true;
     }
   }
 }
