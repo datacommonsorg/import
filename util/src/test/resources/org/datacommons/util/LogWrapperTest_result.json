@@ -1,8 +1,8 @@
 {
   "levelSummary": {
-    "LEVEL_ERROR": {
+    "LEVEL_INFO": {
       "counters": {
-        "MCF_NoColonFound": "1"
+        "CSV_GeneralStats": "42"
       }
     },
     "LEVEL_WARNING": {
@@ -10,9 +10,9 @@
         "MCF_EmptyValue": "1"
       }
     },
-    "LEVEL_INFO": {
+    "LEVEL_ERROR": {
       "counters": {
-        "CSV_GeneralStats": "42"
+        "MCF_NoColonFound": "1"
       }
     },
     "LEVEL_FATAL": {

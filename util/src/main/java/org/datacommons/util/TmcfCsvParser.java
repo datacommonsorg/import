@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -118,10 +119,7 @@ public class TmcfCsvParser {
       instanceMcf = Mcf.McfGraph.newBuilder();
       instanceMcf.setType(Mcf.McfType.INSTANCE_MCF);
       entityToDcid = new HashMap<>();
-      rowId =
-          TEST_mode
-              ? String.valueOf(csvParser.getCurrentLineNumber() - 1)
-              : UUID.randomUUID().toString();
+      rowId = TEST_mode ? String.valueOf(csvParser.getCurrentLineNumber() - 1) : newUUID();
     }
 
     public Mcf.McfGraph instanceMcf() {
@@ -213,8 +211,6 @@ public class TmcfCsvParser {
         boolean success =
             McfChecker.checkNode(Mcf.McfType.INSTANCE_MCF, currentNodeId, newNode, logCtx);
         if (success) {
-          logCtx.incrementInfoCounterBy("NumNodeSuccesses", 1);
-          logCtx.incrementInfoCounterBy("NumPVSuccesses", newNode.getPvsCount());
           instanceMcf.putNodes(currentNodeId, newNode);
         }
       }
@@ -370,6 +366,12 @@ public class TmcfCsvParser {
 
       return term.table + "/" + term.value + "/" + rowId;
     }
+  }
+
+  // Use ThreadLocalRandom for a cheaper, less contended random number generator.
+  private String newUUID() {
+    return new UUID(ThreadLocalRandom.current().nextLong(), ThreadLocalRandom.current().nextLong())
+        .toString();
   }
 
   private void addLog(Debug.Log.Level level, String counter, String message) {

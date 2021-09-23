@@ -594,7 +594,7 @@ public class McfCheckerTest {
     if (doExistenceCheck) {
       ec.drainRemoteCalls();
     }
-    return TestUtil.checkLog(log.build(), counter, message);
+    return TestUtil.checkLog(lw.getLog(), counter, message);
   }
 
   private static boolean failure(String mcfString, String counter, String message)

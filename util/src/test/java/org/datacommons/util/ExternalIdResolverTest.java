@@ -46,7 +46,7 @@ public class ExternalIdResolverTest {
 
     // CA type is not valid. So its not an error, but we won't resolve.
     assertEquals("", resolver.resolveNode("ca", ca));
-    assertTrue(lb.build().getEntriesList().isEmpty());
+    assertTrue(lw.getLog().getEntriesList().isEmpty());
 
     // SF gets mapped.
     assertEquals("geoId/0667000", resolver.resolveNode("sf", sf));
@@ -56,7 +56,7 @@ public class ExternalIdResolverTest {
     assertEquals("", resolver.resolveNode("unk", unk));
     assertTrue(
         TestUtil.checkLog(
-            lb.build(),
+            lw.getLog(),
             "Resolution_UnresolvedExternalId_isoCode",
             "Unresolved external ID :: id: 'ZZZ'"));
 
@@ -64,12 +64,12 @@ public class ExternalIdResolverTest {
     assertEquals("", resolver.resolveNode("tn", tn));
     assertTrue(
         TestUtil.checkLog(
-            lb.build(),
+            lw.getLog(),
             "Resolution_DivergingDcidsForExternalIds_isoCode_wikidataId",
             "Found diverging DCIDs for external IDs"));
 
     // There are 7 IDs, and batch-size if 4, so we must have done 2 calls.
-    assertTrue(TestUtil.checkCounter(lb.build(), "Resolution_NumDcCalls", 2));
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumDcCalls", 2));
   }
 
   Mcf.McfGraph.PropertyValues buildNode(String typeOf, Map<String, String> extIds) {

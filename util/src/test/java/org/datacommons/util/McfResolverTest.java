@@ -35,7 +35,8 @@ public class McfResolverTest {
 
     // There was an orphan ref.
     assertTrue(
-        TestUtil.checkLog(log.build(), "Resolution_OrphanLocalReference_parent", "l:AlphabetId"));
+        TestUtil.checkLog(
+            logCtx.getLog(), "Resolution_OrphanLocalReference_parent", "l:AlphabetId"));
     // StatVars cannot be assigned a DCID
     assertTrue(
         TestUtil.checkLog(

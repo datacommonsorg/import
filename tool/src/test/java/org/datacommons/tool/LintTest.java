@@ -61,7 +61,6 @@ public class LintTest {
         Path expectedReportPath = TestUtil.getOutputFilePath(directory.getPath(), "report.json");
         TestUtil.assertReportFilesAreSimilar(
             expect,
-            directory,
             TestUtil.readStringFromPath(expectedReportPath),
             TestUtil.readStringFromPath(actualReportPath));
       }

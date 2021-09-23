@@ -2,30 +2,30 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "Existence_NumChecks": "145",
-        "Existence_NumDcCalls": "2",
-        "Resolution_NumDcCalls": "1",
-        "NumNodeSuccesses": "20",
+        "NumRowSuccesses": "10",
         "NumPVSuccesses": "70",
-        "NumRowSuccesses": "10"
-      }
-    },
-    "LEVEL_ERROR": {
-      "counters": {
-        "Sanity_MissingOrEmpty_statType": "1",
-        "Sanity_MissingOrEmpty_dcid": "1",
-        "Resolution_OrphanLocalReference_parent": "1",
-        "Resolution_DcidAssignmentFailure_Song": "1",
-        "Resolution_DcidAssignmentFailure_StatisticalVariable": "1",
-        "Resolution_DcidAssignmentFailure_MusicAlbum": "1",
-        "Resolution_ReferenceToFailedNode_variableMeasured": "1"
+        "Existence_NumChecks": "145",
+        "NumNodeSuccesses": "20",
+        "Resolution_NumDcCalls": "1",
+        "Existence_NumDcCalls": "2"
       }
     },
     "LEVEL_WARNING": {
       "counters": {
-        "Existence_MissingReference_typeOf": "1",
+        "StatsCheck_MaxPercentFluctuationGreaterThan50": "1",
         "Existence_MissingReference_Property": "2",
-        "StatsCheck_MaxPercentFluctuationGreaterThan50": "1"
+        "Existence_MissingReference_typeOf": "1"
+      }
+    },
+    "LEVEL_ERROR": {
+      "counters": {
+        "Resolution_DcidAssignmentFailure_Song": "1",
+        "Resolution_ReferenceToFailedNode_variableMeasured": "1",
+        "Resolution_OrphanLocalReference_parent": "1",
+        "Resolution_DcidAssignmentFailure_MusicAlbum": "1",
+        "Sanity_MissingOrEmpty_statType": "1",
+        "Sanity_MissingOrEmpty_dcid": "1",
+        "Resolution_DcidAssignmentFailure_StatisticalVariable": "1"
       }
     }
   },
