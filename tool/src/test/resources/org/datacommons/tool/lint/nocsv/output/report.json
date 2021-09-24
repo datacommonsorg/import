@@ -590,7 +590,7 @@
       "file": "NoCsv.tmcf",
       "lineNumber": "3"
     },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E3', property: 'observationAbout' node: 'E:SVTest->E0'",
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E30', property: 'observationAbout' node: 'E:SVTest->E0'",
     "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
@@ -598,7 +598,7 @@
       "file": "NoCsv.tmcf",
       "lineNumber": "3"
     },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E30', property: 'observationAbout' node: 'E:SVTest->E0'",
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E3', property: 'observationAbout' node: 'E:SVTest->E0'",
     "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
