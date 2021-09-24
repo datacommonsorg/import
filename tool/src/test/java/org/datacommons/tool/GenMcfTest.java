@@ -14,14 +14,11 @@
 
 package org.datacommons.tool;
 
-import com.google.common.truth.Expect;
-import org.apache.commons.io.FilenameUtils;
-import org.datacommons.util.TmcfCsvParser;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import picocli.CommandLine;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import com.google.common.truth.Expect;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,10 +27,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.commons.io.FilenameUtils;
+import org.datacommons.util.TmcfCsvParser;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import picocli.CommandLine;
 
 // To add a new test case, add a new directory in resources/org/datacommons/tool/lint. In that new
 // directory, add an input directory and an output directory. In the input directory, put the test
@@ -48,12 +47,12 @@ public class GenMcfTest {
   @Rule public final Expect expect = Expect.create();
   // To ensure we test the right number of files for every test, when you add a file, add the
   // count here.
-  private static Map<String, Integer> EXPECTED_FILES_TO_CHECK = Map.of(
+  private static Map<String, Integer> EXPECTED_FILES_TO_CHECK =
+      Map.of(
           "fataltmcf", 1,
           "resolution", 4,
           "statchecks", 2,
-          "successtmcf", 2
-  );
+          "successtmcf", 2);
 
   @Test
   public void GenMcfTest() throws IOException {
@@ -71,23 +70,22 @@ public class GenMcfTest {
       List<String> argsList = new ArrayList<>();
       argsList.add("genmcf");
       File[] inputFiles = new File(Path.of(directory.getPath(), "input").toString()).listFiles();
-      List<String> expectedOutputFiles = new ArrayList<>(List.of("report.json",
-              "instance_mcf_nodes.mcf",
-              "failed_instance_mcf_nodes.mcf"));
+      List<String> expectedOutputFiles =
+          new ArrayList<>(
+              List.of("report.json", "instance_mcf_nodes.mcf", "failed_instance_mcf_nodes.mcf"));
       for (File inputFile : inputFiles) {
         argsList.add(inputFile.getPath());
         String fName = inputFile.getName();
         if (fName.endsWith(".csv") || fName.endsWith(".tsv")) {
-          expectedOutputFiles.add("table_mcf_nodes_" + FilenameUtils.removeExtension(fName) +
-                  ".mcf");
-          expectedOutputFiles.add("failed_table_mcf_nodes_" + FilenameUtils.removeExtension(fName) +
-                  ".mcf");
+          expectedOutputFiles.add(
+              "table_mcf_nodes_" + FilenameUtils.removeExtension(fName) + ".mcf");
+          expectedOutputFiles.add(
+              "failed_table_mcf_nodes_" + FilenameUtils.removeExtension(fName) + ".mcf");
         }
       }
       argsList.add("--resolution=FULL");
       argsList.add("--stat-checks");
-      argsList.add(
-          "--output-dir=" + Paths.get(testFolder.getRoot().getPath(), testName));
+      argsList.add("--output-dir=" + Paths.get(testFolder.getRoot().getPath(), testName));
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
 
