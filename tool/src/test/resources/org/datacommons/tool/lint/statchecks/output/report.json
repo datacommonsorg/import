@@ -56,7 +56,7 @@
       }]
     }, {
       "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Data hole found between the dates: 2020-03-03T00:00 and 2020-05-03T00:00"
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-30, 2020-02-02, 2020-02-03, 2020-03-02, 2020-03-03, 2020-05-03"
     }]
   }, {
     "placeDcid": "geoId/0601",
@@ -106,7 +106,7 @@
           }]
         }]
       }],
-      "percentDifference": 1.3333333333333333
+      "percentDifference": 133.33
     }]
   }],
   "commandArgs": {
