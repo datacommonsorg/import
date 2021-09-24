@@ -10,8 +10,7 @@
       "counters": {
         "StatsCheck_MaxPercentFluctuationGreaterThan100": "1",
         "StatsCheck_Inconsistent_Date_Granularity": "1",
-        "StatsCheck_Inconsistent_Values": "1",
-        "StatsCheck_Data_Holes": "1"
+        "StatsCheck_Inconsistent_Values": "1"
       }
     },
     "LEVEL_ERROR": {
@@ -24,9 +23,9 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "covid.mcf",
-      "lineNumber": "25"
+      "lineNumber": "17"
     },
-    "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive', observationDate: '2020-02-03', value1: 3.0, value2: 8.0",
+    "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive', observationDate: '2020-02-03', value1: 8.0, value2: 3.0",
     "counterKey": "Sanity_InconsistentSvObsValues"
   }],
   "statsCheckSummary": [{
@@ -41,22 +40,19 @@
       "problemPoints": [{
         "date": "2020-02-03",
         "values": [{
-          "value": 3.0,
-          "locations": [{
-            "file": "covid.mcf",
-            "lineNumber": "17"
-          }]
-        }, {
           "value": 8.0,
           "locations": [{
             "file": "covid.mcf",
             "lineNumber": "25"
           }]
+        }, {
+          "value": 3.0,
+          "locations": [{
+            "file": "covid.mcf",
+            "lineNumber": "17"
+          }]
         }]
       }]
-    }, {
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-30, 2020-02-02, 2020-02-03, 2020-03-02, 2020-03-03, 2020-05-03"
     }]
   }, {
     "placeDcid": "geoId/0601",
@@ -111,7 +107,7 @@
   }],
   "commandArgs": {
     "existenceChecks": true,
-    "resolution": "RESOLUTION_MODE_NONE",
+    "resolution": "RESOLUTION_MODE_LOCAL",
     "numThreads": 1,
     "statChecks": true
   }

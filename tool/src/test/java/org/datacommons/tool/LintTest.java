@@ -1,8 +1,12 @@
 package org.datacommons.tool;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-
 import com.google.common.truth.Expect;
+import org.datacommons.util.TmcfCsvParser;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import picocli.CommandLine;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,11 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import org.datacommons.util.TmcfCsvParser;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import picocli.CommandLine;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 // To add a new test case, add a new directory in resources/org/datacommons/tool/lint. In that new
 // directory, add an input directory and an output directory. In the input directory, put the test
@@ -46,7 +47,6 @@ public class LintTest {
       for (File inputFile : inputFiles) {
         argsList.add(inputFile.getPath());
       }
-      argsList.add("--stat-checks");
       argsList.add(
           "--output-dir=" + Paths.get(testFolder.getRoot().getPath(), directory.getName()));
       String[] args = argsList.toArray(new String[argsList.size()]);

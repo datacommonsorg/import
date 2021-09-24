@@ -14,11 +14,14 @@
 
 package org.datacommons.tool;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import com.google.common.truth.Expect;
+import org.apache.commons.io.FilenameUtils;
+import org.datacommons.util.TmcfCsvParser;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import picocli.CommandLine;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,12 +30,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.io.FilenameUtils;
-import org.datacommons.util.TmcfCsvParser;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import picocli.CommandLine;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 // To add a new test case, add a new directory in resources/org/datacommons/tool/lint. In that new
 // directory, add an input directory and an output directory. In the input directory, put the test
@@ -84,7 +85,6 @@ public class GenMcfTest {
         }
       }
       argsList.add("--resolution=FULL");
-      argsList.add("--stat-checks");
       argsList.add("--output-dir=" + Paths.get(testFolder.getRoot().getPath(), testName));
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
@@ -102,7 +102,6 @@ public class GenMcfTest {
       } else {
         for (var f : expectedOutputFiles) {
           Path actual = TestUtil.getTestFilePath(testFolder, testName, f);
-          System.err.println("Checking for " + actual.toString());
           if (!f.equals("report.json") && !new File(actual.toString()).exists()) continue;
 
           Path expected = TestUtil.getOutputFilePath(directory.getPath(), f);

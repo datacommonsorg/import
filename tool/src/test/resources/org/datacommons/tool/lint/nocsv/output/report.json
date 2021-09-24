@@ -25,6 +25,7 @@
         "MCF_InvalidLongitude": "1",
         "TMCF_MalformedEntity": "2",
         "Sanity_InvalidObsDate": "1",
+        "Resolution_IrreplaceableLocalRef": "4",
         "TMCF_MalformedSchemaTerm": "1",
         "Mutator_MissingTypeOf": "2",
         "MCF_MalformedComplexValueParts": "1",
@@ -44,6 +45,7 @@
         "MCF_QuantityMalformedValue": "1",
         "Sanity_NonAsciiValueInNonText": "1",
         "Sanity_MissingOrEmpty_measuredProperty": "1",
+        "Resolution_UnassignableNodeDcid": "4",
         "MCF_InvalidLatitude": "1",
         "Sanity_UnexpectedPropInClass": "1",
         "Sanity_TmcfMissingEntityDef": "5",
@@ -52,9 +54,11 @@
         "Sanity_DcidNameMismatchInSchema": "2",
         "Sanity_MissingOrEmpty_statType": "1",
         "MCF_UnexpectedProperty": "2",
+        "Resolution_OrphanLocalReference_containedInPlace": "1",
         "Sanity_MultipleDcidValues": "2",
         "MCF_MalformedNodeName": "2",
         "Sanity_MissingOrEmpty_populationType": "2",
+        "Resolution_DcidAssignmentFailure_City": "1",
         "Sanity_DcidTableEntity": "1",
         "Sanity_NonDoubleObsValue": "1"
       }
@@ -463,6 +467,86 @@
   }, {
     "level": "LEVEL_ERROR",
     "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "59"
+    },
+    "userMessage": "Found orphan local ref :: ref: 'l:USACountry', property: 'containedInPlace', node: 'dcid:dc/mx44'",
+    "counterKey": "Resolution_OrphanLocalReference_containedInPlace"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "10"
+    },
+    "userMessage": "Failed to assign DCID :: type: 'City', node: 'CityStats/E2/2'",
+    "counterKey": "Resolution_DcidAssignmentFailure_City"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "41"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/4'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "32"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/3'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "23"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/2'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E2/2', node: 'CityStats/E3/2'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "41"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/4'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "32"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/3'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "23"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/2'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E2/2', node: 'CityStats/E3/2'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
       "file": "NoCsv.tmcf",
       "lineNumber": "1"
     },
@@ -623,7 +707,7 @@
   }],
   "commandArgs": {
     "existenceChecks": true,
-    "resolution": "RESOLUTION_MODE_NONE",
+    "resolution": "RESOLUTION_MODE_LOCAL",
     "numThreads": 1,
     "statChecks": true
   }
