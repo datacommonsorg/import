@@ -24,6 +24,7 @@
         "Sanity_DifferentDcidsForSameStatVar": "1",
         "MCF_InvalidLongitude": "1",
         "Sanity_InvalidObsDate": "1",
+        "Resolution_IrreplaceableLocalRef": "4",
         "Mutator_MissingTypeOf": "1",
         "MCF_MalformedComplexValueParts": "1",
         "Sanity_NonAsciiValueInSchema": "1",
@@ -40,6 +41,7 @@
         "MCF_QuantityMalformedValue": "1",
         "Sanity_NonAsciiValueInNonText": "1",
         "Sanity_MissingOrEmpty_measuredProperty": "1",
+        "Resolution_UnassignableNodeDcid": "4",
         "Sanity_SameDcidForDifferentStatVars": "1",
         "MCF_InvalidLatitude": "1",
         "Sanity_UnexpectedPropInClass": "1",
@@ -48,9 +50,11 @@
         "Sanity_DcidNameMismatchInSchema": "2",
         "Sanity_MissingOrEmpty_statType": "1",
         "MCF_UnexpectedProperty": "1",
+        "Resolution_OrphanLocalReference_containedInPlace": "1",
         "Sanity_MultipleDcidValues": "1",
         "MCF_MalformedNodeName": "1",
         "Sanity_MissingOrEmpty_populationType": "2",
+        "Resolution_DcidAssignmentFailure_City": "1",
         "Sanity_NonDoubleObsValue": "1"
       }
     }
@@ -479,10 +483,90 @@
     },
     "userMessage": "Failed reference existence check :: subject: '', predicate: 'domainIncludes', object: '', node: 'dcid:Count_Death_10To12'",
     "counterKey": "Existence_MissingReference_domainIncludes"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "59"
+    },
+    "userMessage": "Found orphan local ref :: ref: 'l:USACountry', property: 'containedInPlace', node: 'dcid:dc/mx44'",
+    "counterKey": "Resolution_OrphanLocalReference_containedInPlace"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "10"
+    },
+    "userMessage": "Failed to assign DCID :: type: 'City', node: 'CityStats/E2/2'",
+    "counterKey": "Resolution_DcidAssignmentFailure_City"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "41"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/4'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "32"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/3'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "23"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/2'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E2/2', node: 'CityStats/E3/2'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "41"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/4'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "32"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/3'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "23"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/2'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E2/2', node: 'CityStats/E3/2'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
   }],
   "commandArgs": {
     "existenceChecks": true,
-    "resolution": "RESOLUTION_MODE_NONE",
+    "resolution": "RESOLUTION_MODE_LOCAL",
     "numThreads": 1,
     "statChecks": true
   }

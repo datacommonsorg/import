@@ -51,26 +51,26 @@ class Main {
               + "loaded into memory. Defaults to true.")
   public boolean doExistenceChecks;
 
-  // TODO: Default to LOCAL after some trials.
   @CommandLine.Option(
       names = {"-r", "--resolution"},
-      defaultValue = "NONE",
+      defaultValue = "LOCAL",
       scope = CommandLine.ScopeType.INHERIT,
       description =
           "Specifies the mode of resolution to use: ${COMPLETION-CANDIDATES}.  For no resolution,"
               + " set NONE.  To lookup external IDs (like ISO) in DC, resolve local references "
               + "and generated DCIDs, set FULL.  To just resolve local references and generate "
               + "DCIDs, set LOCAL.  Note that FULL mode may be slower since it makes "
-              + "(batched) DC Recon API calls and two passes over your CSV files. Default to NONE.")
+              + "(batched) DC Recon API calls and two passes over your CSV files. Default to "
+              + "LOCAL.")
   public Args.ResolutionMode resolutionMode = Args.ResolutionMode.NONE;
 
-  // TODO: Default to true after some trials.
   @CommandLine.Option(
       names = {"-s", "--stat-checks"},
-      defaultValue = "false",
+      defaultValue = "true",
       scope = CommandLine.ScopeType.INHERIT,
       description =
-          "Checks integrity of time series by checking for holes, variance in values, etc.")
+          "Checks integrity of time series by checking for holes, variance in values, etc. "
+              + "Defaults to true.")
   public boolean doStatChecks;
 
   @CommandLine.Option(
@@ -86,7 +86,7 @@ class Main {
       names = {"-n", "--num-threads"},
       defaultValue = "1",
       scope = CommandLine.ScopeType.INHERIT,
-      description = "Number of concurrent threads used for processing CSVs.")
+      description = "Number of concurrent threads used for processing CSVs. Defaults to 1.")
   public int numThreads;
 
   public static void main(String... args) {

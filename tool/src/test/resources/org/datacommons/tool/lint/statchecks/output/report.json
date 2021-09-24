@@ -24,9 +24,9 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "covid.mcf",
-      "lineNumber": "25"
+      "lineNumber": "17"
     },
-    "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive', observationDate: '2020-02-03', value1: 3.0, value2: 8.0",
+    "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive', observationDate: '2020-02-03', value1: 8.0, value2: 3.0",
     "counterKey": "Sanity_InconsistentSvObsValues"
   }],
   "statsCheckSummary": [{
@@ -41,16 +41,16 @@
       "problemPoints": [{
         "date": "2020-02-03",
         "values": [{
-          "value": 3.0,
-          "locations": [{
-            "file": "covid.mcf",
-            "lineNumber": "17"
-          }]
-        }, {
           "value": 8.0,
           "locations": [{
             "file": "covid.mcf",
             "lineNumber": "25"
+          }]
+        }, {
+          "value": 3.0,
+          "locations": [{
+            "file": "covid.mcf",
+            "lineNumber": "17"
           }]
         }]
       }]
@@ -111,7 +111,7 @@
   }],
   "commandArgs": {
     "existenceChecks": true,
-    "resolution": "RESOLUTION_MODE_NONE",
+    "resolution": "RESOLUTION_MODE_LOCAL",
     "numThreads": 1,
     "statChecks": true
   }

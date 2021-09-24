@@ -3,7 +3,7 @@
     "LEVEL_INFO": {
       "counters": {
         "NumRowSuccesses": "11",
-        "NumPVSuccesses": "83",
+        "NumPVSuccesses": "107",
         "Existence_NumChecks": "249",
         "NumNodeSuccesses": "15",
         "CSV_MalformedDCIDPVFailures": "4",
@@ -33,6 +33,7 @@
         "MCF_InvalidLongitude": "1",
         "Sanity_VeryLongDcid": "1",
         "Sanity_InvalidObsDate": "3",
+        "Resolution_IrreplaceableLocalRef": "4",
         "Mutator_MissingTypeOf": "1",
         "MCF_MalformedComplexValueParts": "2",
         "Sanity_NonAsciiValueInSchema": "1",
@@ -51,6 +52,7 @@
         "MCF_QuantityMalformedValue": "2",
         "Sanity_NonAsciiValueInNonText": "2",
         "Sanity_MissingOrEmpty_measuredProperty": "1",
+        "Resolution_UnassignableNodeDcid": "4",
         "MCF_InvalidLatitude": "1",
         "Sanity_UnexpectedPropInClass": "1",
         "Sanity_NotInitUpper_nameInClass": "1",
@@ -60,9 +62,11 @@
         "Sanity_MissingOrEmpty_statType": "1",
         "MCF_UnexpectedProperty": "1",
         "Sanity_InvalidChars_observationAbout": "2",
+        "Resolution_OrphanLocalReference_containedInPlace": "1",
         "Sanity_MultipleDcidValues": "2",
         "MCF_MalformedNodeName": "1",
         "Sanity_MissingOrEmpty_populationType": "2",
+        "Resolution_DcidAssignmentFailure_City": "1",
         "Sanity_MissingOrEmpty_observationAbout": "2",
         "Sanity_NonDoubleObsValue": "1"
       }
@@ -471,6 +475,86 @@
   }, {
     "level": "LEVEL_ERROR",
     "location": {
+      "file": "AllFileTypes.mcf",
+      "lineNumber": "59"
+    },
+    "userMessage": "Found orphan local ref :: ref: 'l:USACountry', property: 'containedInPlace', node: 'dcid:dc/mx44'",
+    "counterKey": "Resolution_OrphanLocalReference_containedInPlace"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "AllFileTypes.mcf",
+      "lineNumber": "10"
+    },
+    "userMessage": "Failed to assign DCID :: type: 'City', node: 'CityStats/E2/2'",
+    "counterKey": "Resolution_DcidAssignmentFailure_City"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "AllFileTypes.mcf",
+      "lineNumber": "41"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/4'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "AllFileTypes.mcf",
+      "lineNumber": "32"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/3'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "AllFileTypes.mcf",
+      "lineNumber": "23"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/2'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "AllFileTypes.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E2/2', node: 'CityStats/E3/2'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "AllFileTypes.mcf",
+      "lineNumber": "41"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/4'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "AllFileTypes.mcf",
+      "lineNumber": "32"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/3'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "AllFileTypes.mcf",
+      "lineNumber": "23"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/2'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "AllFileTypes.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E2/2', node: 'CityStats/E3/2'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
       "file": "AllFileTypes.csv",
       "lineNumber": "2"
     },
@@ -855,7 +939,7 @@
   }],
   "commandArgs": {
     "existenceChecks": true,
-    "resolution": "RESOLUTION_MODE_NONE",
+    "resolution": "RESOLUTION_MODE_LOCAL",
     "numThreads": 1,
     "statChecks": true
   }

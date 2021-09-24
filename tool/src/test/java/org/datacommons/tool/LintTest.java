@@ -39,14 +39,14 @@ public class LintTest {
     CommandLine cmd = new CommandLine(app);
     File[] testDirectories = new File(resourceFile("lint")).listFiles(File::isDirectory);
     for (File directory : testDirectories) {
-      System.err.println("Processing " + directory.getName());
+      String testName = directory.getName();
+      System.err.println(testName + ": BEGIN");
       List<String> argsList = new ArrayList<>();
       argsList.add("lint");
       File[] inputFiles = new File(Path.of(directory.getPath(), "input").toString()).listFiles();
       for (File inputFile : inputFiles) {
         argsList.add(inputFile.getPath());
       }
-      argsList.add("--stat-checks");
       argsList.add(
           "--output-dir=" + Paths.get(testFolder.getRoot().getPath(), directory.getName()));
       String[] args = argsList.toArray(new String[argsList.size()]);
@@ -64,6 +64,7 @@ public class LintTest {
             TestUtil.readStringFromPath(expectedReportPath),
             TestUtil.readStringFromPath(actualReportPath));
       }
+      System.err.println(testName + ": PASSED");
     }
   }
 

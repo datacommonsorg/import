@@ -16,6 +16,7 @@ package org.datacommons.tool;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.truth.Expect;
 import java.io.File;
@@ -25,6 +26,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import org.apache.commons.io.FilenameUtils;
 import org.datacommons.util.TmcfCsvParser;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,6 +45,14 @@ import picocli.CommandLine;
 public class GenMcfTest {
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
   @Rule public final Expect expect = Expect.create();
+  // To ensure we test the right number of files for every test, when you add a file, add the
+  // count here.
+  private static Map<String, Integer> EXPECTED_FILES_TO_CHECK =
+      Map.of(
+          "fataltmcf", 1,
+          "resolution", 4,
+          "statchecks", 2,
+          "successtmcf", 2);
 
   @Test
   public void GenMcfTest() throws IOException {
@@ -53,39 +64,43 @@ public class GenMcfTest {
     CommandLine cmd = new CommandLine(app);
     File[] testDirectories = new File(resourceFile("genmcf")).listFiles(File::isDirectory);
     for (File directory : testDirectories) {
-      System.err.println("Processing " + directory.getName());
+      String testName = directory.getName();
+      System.err.println(testName + ": BEGIN");
+      assertTrue(EXPECTED_FILES_TO_CHECK.containsKey(testName));
       List<String> argsList = new ArrayList<>();
       argsList.add("genmcf");
       File[] inputFiles = new File(Path.of(directory.getPath(), "input").toString()).listFiles();
+      List<String> expectedOutputFiles =
+          new ArrayList<>(
+              List.of("report.json", "instance_mcf_nodes.mcf", "failed_instance_mcf_nodes.mcf"));
       for (File inputFile : inputFiles) {
         argsList.add(inputFile.getPath());
+        String fName = inputFile.getName();
+        if (fName.endsWith(".csv") || fName.endsWith(".tsv")) {
+          expectedOutputFiles.add(
+              "table_mcf_nodes_" + FilenameUtils.removeExtension(fName) + ".mcf");
+          expectedOutputFiles.add(
+              "failed_table_mcf_nodes_" + FilenameUtils.removeExtension(fName) + ".mcf");
+        }
       }
       argsList.add("--resolution=FULL");
-      argsList.add("--stat-checks");
-      argsList.add(
-          "--output-dir=" + Paths.get(testFolder.getRoot().getPath(), directory.getName()));
+      argsList.add("--output-dir=" + Paths.get(testFolder.getRoot().getPath(), testName));
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
 
-      List<String> files =
-          List.of(
-              "report.json",
-              "table_nodes.mcf",
-              "failed_table_nodes.mcf",
-              "nodes.mcf",
-              "failed_nodes.mcf");
-
+      Integer numChecked = 0;
       if (goldenFilesPrefix != null && !goldenFilesPrefix.isEmpty()) {
-        for (var f : files) {
-          Path actual = TestUtil.getTestFilePath(testFolder, directory.getName(), f);
+        for (var f : expectedOutputFiles) {
+          Path actual = TestUtil.getTestFilePath(testFolder, testName, f);
           if (!f.equals("report.json") && !new File(actual.toString()).exists()) continue;
 
-          Path golden = Path.of(goldenFilesPrefix, "genmcf", directory.getName(), "output", f);
+          Path golden = Path.of(goldenFilesPrefix, "genmcf", testName, "output", f);
           Files.copy(actual, golden, REPLACE_EXISTING);
+          numChecked++;
         }
       } else {
-        for (var f : files) {
-          Path actual = TestUtil.getTestFilePath(testFolder, directory.getName(), f);
+        for (var f : expectedOutputFiles) {
+          Path actual = TestUtil.getTestFilePath(testFolder, testName, f);
           if (!f.equals("report.json") && !new File(actual.toString()).exists()) continue;
 
           Path expected = TestUtil.getOutputFilePath(directory.getPath(), f);
@@ -97,8 +112,11 @@ public class GenMcfTest {
                 org.datacommons.util.TestUtil.mcfFromFile(expected.toString()),
                 org.datacommons.util.TestUtil.mcfFromFile(actual.toString()));
           }
+          numChecked++;
         }
       }
+      assertEquals(numChecked, EXPECTED_FILES_TO_CHECK.get(testName));
+      System.err.println(testName + ": PASSED");
     }
   }
 
