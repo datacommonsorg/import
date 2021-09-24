@@ -151,8 +151,8 @@ public class StatChecker {
             countersRemaining.compute(counterKey, (k, v) -> v != null ? v - 1 : 0);
             if (countersRemaining.get(counterKey) < 1) countersRemaining.remove(counterKey);
           }
-          if (shouldAddEntry) logCtx.addStatsCheckSummaryEntry(resBuilder.build());
         }
+        if (shouldAddEntry) logCtx.addStatsCheckSummaryEntry(resBuilder.build());
       }
     }
   }
@@ -420,7 +420,7 @@ public class StatChecker {
             dateList.add(dp.getDate());
           }
           dataHoleCounter.setAdditionalDetails(
-              "Possible data hole found. Dates in this series: " + String.join(",", dateList));
+              "Possible data hole found. Dates in this series: " + String.join(", ", dateList));
           logCtx.incrementWarningCounterBy(dataHoleCounterKey, 1);
           resBuilder.addValidationCounters(dataHoleCounter.build());
           return;

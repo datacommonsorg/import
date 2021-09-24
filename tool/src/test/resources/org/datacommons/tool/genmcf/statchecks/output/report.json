@@ -59,36 +59,7 @@
       }]
     }, {
       "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-30,2020-02-02,2020-02-03,2020-03-02,2020-03-03,2020-05-03"
-    }]
-  }, {
-    "placeDcid": "geoId/06",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_Inconsistent_Values",
-      "problemPoints": [{
-        "date": "2020-02-03",
-        "values": [{
-          "value": 3.0,
-          "locations": [{
-            "file": "covid.csv",
-            "lineNumber": "30"
-          }]
-        }, {
-          "value": 8.0,
-          "locations": [{
-            "file": "covid.csv",
-            "lineNumber": "31"
-          }]
-        }]
-      }]
-    }, {
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-30,2020-02-02,2020-02-03,2020-03-02,2020-03-03,2020-05-03"
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-30, 2020-02-02, 2020-02-03, 2020-03-02, 2020-03-03, 2020-05-03"
     }]
   }, {
     "placeDcid": "geoId/3111111",
@@ -99,7 +70,7 @@
     "unit": "",
     "validationCounters": [{
       "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02,2020-02-02,2020-06-02"
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }, {
     "placeDcid": "geoId/0601",
@@ -130,7 +101,7 @@
     "unit": "",
     "validationCounters": [{
       "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02,2020-02-02,2020-06-02"
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }, {
     "placeDcid": "geoId/28111",
@@ -141,7 +112,7 @@
     "unit": "",
     "validationCounters": [{
       "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02,2020-02-02,2020-06-02"
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }, {
     "placeDcid": "geoId/231",
@@ -152,7 +123,7 @@
     "unit": "",
     "validationCounters": [{
       "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02,2020-02-02,2020-06-02"
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }, {
     "placeDcid": "geoId/29111",
@@ -163,7 +134,7 @@
     "unit": "",
     "validationCounters": [{
       "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02,2020-02-02,2020-06-02"
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }, {
     "placeDcid": "geoId/221",
@@ -174,7 +145,7 @@
     "unit": "",
     "validationCounters": [{
       "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02,2020-02-02,2020-06-02"
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }, {
     "placeDcid": "geoId/241",
@@ -185,7 +156,7 @@
     "unit": "",
     "validationCounters": [{
       "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02,2020-02-02,2020-06-02"
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }, {
     "placeDcid": "geoId/211",
@@ -196,7 +167,7 @@
     "unit": "",
     "validationCounters": [{
       "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02,2020-02-02,2020-06-02"
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }, {
     "placeDcid": "geoId/26111",
@@ -207,7 +178,7 @@
     "unit": "",
     "validationCounters": [{
       "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02,2020-02-02,2020-06-02"
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }, {
     "placeDcid": "geoId/07",
