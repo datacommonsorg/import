@@ -134,7 +134,7 @@ value: 1
 typeOf: dcid:StatVarObservation
 dcid: "dc/o/x2fe937dfz44d"
 
-Node: COVID19_cases_india/E0/17
+Node: COVID19_cases_india/E0/18
 observationDate: "2020-05-03"
 observationAbout: dcid:geoId/06
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive

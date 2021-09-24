@@ -11,7 +11,7 @@
         "StatsCheck_MaxPercentFluctuationGreaterThan100": "1",
         "StatsCheck_Inconsistent_Date_Granularity": "1",
         "StatsCheck_Inconsistent_Values": "1",
-        "StatsCheck_MaxPercentFluctuationGreaterThan500": "1"
+        "StatsCheck_Data_Holes": "1"
       }
     },
     "LEVEL_ERROR": {
@@ -54,6 +54,9 @@
           }]
         }]
       }]
+    }, {
+      "counterKey": "StatsCheck_Data_Holes",
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-30, 2020-02-02, 2020-02-03, 2020-03-02, 2020-03-03, 2020-05-03"
     }]
   }, {
     "placeDcid": "geoId/0601",
@@ -63,31 +66,6 @@
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
-      "counterKey": "StatsCheck_MaxPercentFluctuationGreaterThan500",
-      "problemPoints": [{
-        "date": "2020-03-05",
-        "values": [{
-          "value": 1.0,
-          "locations": [{
-            "file": "covid.mcf",
-            "lineNumber": "121"
-          }]
-        }]
-      }, {
-        "date": "2020-05-03",
-        "values": [{
-          "value": 8.0,
-          "locations": [{
-            "file": "covid.mcf",
-            "lineNumber": "129"
-          }, {
-            "file": "covid.mcf",
-            "lineNumber": "137"
-          }]
-        }]
-      }],
-      "percentDifference": 700.0
-    }, {
       "counterKey": "StatsCheck_Inconsistent_Date_Granularity",
       "problemPoints": [{
         "date": "2020-03",
