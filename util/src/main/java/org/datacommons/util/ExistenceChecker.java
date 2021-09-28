@@ -24,8 +24,9 @@ import org.datacommons.proto.Mcf;
 // This class is thread-safe.
 public class ExistenceChecker {
   private static final Logger logger = LogManager.getLogger(ExistenceChecker.class);
-  // Use the staging end-point to not impact prod.
-  private static final String API_ROOT = "https://staging.api.datacommons.org/node/property-values";
+  // Use the autopush end-point so we get more recent schema additions that
+  // haven't rolled out.
+  private static final String API_ROOT = "https://autopush.api.datacommons.org/node/property-values";
   // For now we only need checks for certain Property/Class props.
   private static final Set<String> SCHEMA_PROPERTIES =
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES, Vocabulary.SUB_CLASS_OF);
