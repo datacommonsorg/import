@@ -49,10 +49,10 @@ public class GenMcfTest {
   // count here.
   private static Map<String, Integer> EXPECTED_FILES_TO_CHECK =
       Map.of(
-          "fataltmcf", 1,
-          "resolution", 4,
-          "statchecks", 2,
-          "successtmcf", 2);
+          "fataltmcf", 2,
+          "resolution", 5,
+          "statchecks", 3,
+          "successtmcf", 3);
 
   @Test
   public void GenMcfTest() throws IOException {
@@ -72,7 +72,11 @@ public class GenMcfTest {
       File[] inputFiles = new File(Path.of(directory.getPath(), "input").toString()).listFiles();
       List<String> expectedOutputFiles =
           new ArrayList<>(
-              List.of("report.json", "instance_mcf_nodes.mcf", "failed_instance_mcf_nodes.mcf"));
+              List.of(
+                  "report.json",
+                  "instance_mcf_nodes.mcf",
+                  "failed_instance_mcf_nodes.mcf",
+                  "summary_report.html"));
       for (File inputFile : inputFiles) {
         argsList.add(inputFile.getPath());
         String fName = inputFile.getName();
@@ -85,6 +89,7 @@ public class GenMcfTest {
       }
       argsList.add("--resolution=FULL");
       argsList.add("--output-dir=" + Paths.get(testFolder.getRoot().getPath(), testName));
+      argsList.add("--summary-report");
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
 
@@ -107,6 +112,9 @@ public class GenMcfTest {
           if (f.equals("report.json")) {
             TestUtil.assertReportFilesAreSimilar(
                 expect, TestUtil.readStringFromPath(expected), TestUtil.readStringFromPath(actual));
+          } else if (f.equals("summary_report.html")) {
+            assertEquals(
+                TestUtil.readStringFromPath(expected), TestUtil.readStringFromPath(actual));
           } else {
             assertEquals(
                 org.datacommons.util.TestUtil.mcfFromFile(expected.toString()),

@@ -14,6 +14,7 @@
 
 package org.datacommons.tool;
 
+import freemarker.template.TemplateException;
 import java.io.File;
 import java.io.IOException;
 import java.net.http.HttpClient;
@@ -42,7 +43,7 @@ public class Processor {
   private final ExecutorService execService;
   private final LogWrapper logCtx;
 
-  public static Integer process(Args args) throws IOException {
+  public static Integer process(Args args) throws IOException, TemplateException {
     Integer retVal = 0;
     Processor processor = new Processor(args);
     try {
@@ -105,6 +106,13 @@ public class Processor {
       retVal = -1;
     }
     processor.logCtx.persistLog();
+    if (args.generateSummaryReport) {
+      SummaryReportGenerator.generateReportSummary(
+          args.outputDir,
+          processor.logCtx.getLog(),
+          processor.statChecker.getSVSummaryMap(),
+          processor.statChecker.getPlaceSeriesSummaryMap());
+    }
     return retVal;
   }
 
@@ -369,7 +377,7 @@ public class Processor {
     if (statChecker == null) return true;
     boolean errorFound = false;
     for (Mcf.McfGraph g : graphs) {
-      statChecker.extractSeriesInfoFromGraph(g);
+      statChecker.extractStatsFromGraph(g);
       errorFound |= statChecker.checkSvObsInGraph(g);
     }
     return errorFound;

@@ -30,6 +30,36 @@
     "counterKey": "Sanity_InconsistentSvObsValues"
   }],
   "statsCheckSummary": [{
+    "placeDcid": "geoId/07",
+    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "validationCounters": [{
+      "counterKey": "StatsCheck_MaxPercentFluctuationGreaterThan100",
+      "problemPoints": [{
+        "date": "2020-03-02",
+        "values": [{
+          "value": 3.0,
+          "locations": [{
+            "file": "covid.mcf",
+            "lineNumber": "49"
+          }]
+        }]
+      }, {
+        "date": "2020-03-03",
+        "values": [{
+          "value": 7.0,
+          "locations": [{
+            "file": "covid.mcf",
+            "lineNumber": "65"
+          }]
+        }]
+      }],
+      "percentDifference": 133.33
+    }]
+  }, {
     "placeDcid": "geoId/06",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
@@ -77,36 +107,6 @@
           }]
         }]
       }]
-    }]
-  }, {
-    "placeDcid": "geoId/07",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_MaxPercentFluctuationGreaterThan100",
-      "problemPoints": [{
-        "date": "2020-03-02",
-        "values": [{
-          "value": 3.0,
-          "locations": [{
-            "file": "covid.mcf",
-            "lineNumber": "49"
-          }]
-        }]
-      }, {
-        "date": "2020-03-03",
-        "values": [{
-          "value": 7.0,
-          "locations": [{
-            "file": "covid.mcf",
-            "lineNumber": "65"
-          }]
-        }]
-      }],
-      "percentDifference": 133.33
     }]
   }],
   "commandArgs": {

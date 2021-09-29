@@ -50,7 +50,7 @@ public class StatCheckerTest {
     Mcf.McfGraph graph = McfParser.parseInstanceMcfFile(mcfPath, false, lw);
     // create stat checker, extract series from the graph and check the series from the graph
     StatChecker sc = new StatChecker(lw, null, false);
-    sc.extractSeriesInfoFromGraph(graph);
+    sc.extractStatsFromGraph(graph);
     sc.check();
     // check statsCheckSummary in logCtx is as expected
     File expectedReport =

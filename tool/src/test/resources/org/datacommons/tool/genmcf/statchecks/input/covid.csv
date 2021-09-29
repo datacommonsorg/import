@@ -9,9 +9,6 @@ DateTime,geoId,CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 2020-01-02,geoId/26111,1
 2020-01-02,geoId/27111,1
 2020-01-02,geoId/28111,1
-2020-01-02,geoId/29111,1
-2020-01-02,geoId/3011111,1
-2020-01-02,geoId/3111111,1
 2020-01-30,geoId/06,1
 2020-02-02,geoId/06,2
 2020-02-02,geoId/07,0
@@ -24,9 +21,6 @@ DateTime,geoId,CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 2020-02-02,geoId/26111,1
 2020-02-02,geoId/27111,1
 2020-02-02,geoId/28111,1
-2020-02-02,geoId/29111,1
-2020-02-02,geoId/3011111,1
-2020-02-02,geoId/3111111,1
 2020-02-03,geoId/06,3
 2020-02-03,geoId/06,8
 2020-03-02,geoId/06,1
@@ -54,6 +48,3 @@ DateTime,geoId,CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 2020-06-02,geoId/26111,1
 2020-06-02,geoId/27111,1
 2020-06-02,geoId/28111,1
-2020-06-02,geoId/29111,1
-2020-06-02,geoId/3011111,1
-2020-06-02,geoId/3111111,1

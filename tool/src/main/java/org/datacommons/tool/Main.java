@@ -89,6 +89,13 @@ class Main {
       description = "Number of concurrent threads used for processing CSVs. Defaults to 1.")
   public int numThreads;
 
+  @CommandLine.Option(
+      names = {"-sr", "--summary-report"},
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT,
+      description = "Generates a summary report in html format.")
+  public boolean generateSummaryReport;
+
   public static void main(String... args) {
     System.exit(
         new CommandLine(new Main()).setCaseInsensitiveEnumValuesAllowed(true).execute(args));

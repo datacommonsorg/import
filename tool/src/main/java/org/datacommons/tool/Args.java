@@ -18,6 +18,7 @@ class Args {
   public Map<OutputFileType, Path> outputFiles = null;
   public int numThreads = 1;
   public Path outputDir = null;
+  public boolean generateSummaryReport = true;
 
   public String toString() {
     StringBuilder argStr = new StringBuilder();
