@@ -19,13 +19,17 @@ import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
 public class PlaceSeriesSummary {
   public static class SeriesSummary {
     StatValidationResult.Builder validationResult;
+    // Key is date of each datapoint. Use treemap here to keep the dates sorted.
     TreeMap<String, DataPoint> timeSeries;
   }
 
+  // Key in svSeriesSummaryMap is stat var dcid & key in the Map<Long, SeriesSummary> is a hash
+  // constructed using place dcid, stat var dcid, measurement method, observation period,
+  // scaling factor, and unit of the stat var observations of the series summary
   private final Map<String, Map<Long, SeriesSummary>> svSeriesSummaryMap = new HashMap<>();
 
   // Given a statVarObservation node, extract time series info and save it into svSeriesSummaryMap.
-  public void extractSeriesFromNode(McfGraph.PropertyValues node) {
+  public synchronized void extractSeriesFromNode(McfGraph.PropertyValues node) {
     StatValidationResult.Builder vres = StatValidationResult.newBuilder();
     // Add information about the node to StatValidationResult
     vres.setPlaceDcid(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT));
@@ -40,8 +44,8 @@ public class PlaceSeriesSummary {
     Hasher hasher = Hashing.farmHashFingerprint64().newHasher();
     hasher.putString(vres.toString(), StandardCharsets.UTF_8);
     Long hash = hasher.hash().asLong();
-    Map<Long, SeriesSummary> seriesSummaryMap =
-        svSeriesSummaryMap.getOrDefault(vres.getStatVarDcid(), new HashMap<>());
+    svSeriesSummaryMap.computeIfAbsent(vres.getStatVarDcid(), k -> new HashMap<>());
+    Map<Long, SeriesSummary> seriesSummaryMap = svSeriesSummaryMap.get(vres.getStatVarDcid());
     SeriesSummary summary;
     if (seriesSummaryMap.containsKey(hash)) {
       summary = seriesSummaryMap.get(hash);

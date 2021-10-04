@@ -89,7 +89,7 @@ public class GenMcfTest {
       }
       argsList.add("--resolution=FULL");
       argsList.add("--output-dir=" + Paths.get(testFolder.getRoot().getPath(), testName));
-      argsList.add("--summary-report");
+      argsList.add("--summary-report=True");
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
 

@@ -65,8 +65,7 @@ public class StatChecker {
   private static final int NUM_SUMMARY_ENTRIES_PER_COUNTER = 10;
   private final boolean verbose;
   private final LogWrapper logCtx;
-  // key is a string made up of place dcid, stat var dcid, measurement method, observation period,
-  // scaling factor, and unit of the stat var observations of the series summary.
+  // key is place dcid
   private final Map<String, PlaceSeriesSummary> placeSeriesSummaryMap;
   private final Map<String, StatVarSummary> svSummaryMap;
   // key is place namespace + length of place dcid, value is set of place dcids
@@ -99,7 +98,9 @@ public class StatChecker {
 
   // Given a graph, extract stat var info and time series info (about the chosen sample places) from
   // the statVarObservation nodes.
-  public void extractStatsFromGraph(McfGraph graph) {
+  //
+  // TODO (chejennifer): Look into optimizing this so that there can be less contention
+  public synchronized void extractStatsFromGraph(McfGraph graph) {
     for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
       if (isSvObWithNumberValue(node.getValue())) {
         // We will extract basic stat var information from every StatVarObservation nodes
@@ -107,10 +108,8 @@ public class StatChecker {
         // We will only extract series information from StatVarObservation nodes about sample places
         if (shouldExtractSeriesInfo(node.getValue())) {
           String placeDcid = McfUtil.getPropVal(node.getValue(), Vocabulary.OBSERVATION_ABOUT);
-          PlaceSeriesSummary placeSeriesSummary =
-              placeSeriesSummaryMap.getOrDefault(placeDcid, new PlaceSeriesSummary());
-          placeSeriesSummary.extractSeriesFromNode(node.getValue());
-          placeSeriesSummaryMap.put(placeDcid, placeSeriesSummary);
+          placeSeriesSummaryMap.computeIfAbsent(placeDcid, k -> new PlaceSeriesSummary());
+          placeSeriesSummaryMap.get(placeDcid).extractSeriesFromNode(node.getValue());
         }
       }
     }
@@ -453,15 +452,17 @@ public class StatChecker {
   }
 
   private synchronized void extractStatVarInfoFromNode(McfGraph.PropertyValues node) {
+    // TODO (chejennifer): extract prop value into a struct and pass around instead of looking it up
+    // in multiple places
     String svDcid = McfUtil.getPropVal(node, Vocabulary.VARIABLE_MEASURED);
     if (svDcid.isEmpty()) return;
-    StatVarSummary svMap = svSummaryMap.getOrDefault(svDcid, new StatVarSummary());
+    svSummaryMap.computeIfAbsent(svDcid, k -> new StatVarSummary());
+    StatVarSummary svMap = svSummaryMap.get(svDcid);
     svMap.numObservations++;
     svMap.dates.add(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE));
     svMap.places.add(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT));
     svMap.mMethods.add(McfUtil.getPropVal(node, Vocabulary.MEASUREMENT_METHOD));
     svMap.units.add(McfUtil.getPropVal(node, Vocabulary.MEASUREMENT_METHOD));
     svMap.scalingFactors.add(McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR));
-    svSummaryMap.put(svDcid, svMap);
   }
 }
