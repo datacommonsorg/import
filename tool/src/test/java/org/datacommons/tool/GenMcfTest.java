@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.FilenameUtils;
+import org.datacommons.util.SummaryReportGenerator;
 import org.datacommons.util.TmcfCsvParser;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,6 +59,7 @@ public class GenMcfTest {
   public void GenMcfTest() throws IOException {
     // Set this so that the generated node IDs are deterministic
     TmcfCsvParser.TEST_mode = true;
+    SummaryReportGenerator.TEST_mode = true;
 
     String goldenFilesPrefix = System.getProperty("goldenFilesPrefix");
     Main app = new Main();
@@ -113,6 +115,7 @@ public class GenMcfTest {
             TestUtil.assertReportFilesAreSimilar(
                 expect, TestUtil.readStringFromPath(expected), TestUtil.readStringFromPath(actual));
           } else if (f.equals("summary_report.html")) {
+            // TestUtil.assertReportHtmlAreSimilar(expected, actual);
             assertEquals(
                 TestUtil.readStringFromPath(expected), TestUtil.readStringFromPath(actual));
           } else {

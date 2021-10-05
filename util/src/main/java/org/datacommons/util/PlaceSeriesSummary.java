@@ -17,12 +17,14 @@ import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
 
 // An object to hold all the series information for all the statistical variables for a place.
 public class PlaceSeriesSummary {
+
   public static class SeriesSummary {
     StatValidationResult.Builder validationResult;
     // Key is date of each datapoint. Use treemap here to keep the dates sorted.
     TreeMap<String, DataPoint> timeSeries;
   }
 
+  public static boolean TEST_mode = false;
   // Key in svSeriesSummaryMap is stat var dcid & key in the Map<Long, SeriesSummary> is a hash
   // constructed using place dcid, stat var dcid, measurement method, observation period,
   // scaling factor, and unit of the stat var observations of the series summary
@@ -108,6 +110,6 @@ public class PlaceSeriesSummary {
           });
       statVarSummaryMap.put(svSeriesSummary.getKey(), summary);
     }
-    return statVarSummaryMap;
+    return TEST_mode ? new TreeMap<>(statVarSummaryMap) : statVarSummaryMap;
   }
 }

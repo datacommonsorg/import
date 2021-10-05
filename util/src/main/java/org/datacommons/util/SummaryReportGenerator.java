@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import org.datacommons.proto.Debug;
 
@@ -43,19 +44,19 @@ public class SummaryReportGenerator {
     }
 
     public Set<String> getPlaces() {
-      return this.places;
+      return new TreeSet<>(this.places);
     }
 
     public Set<String> getMMethods() {
-      return this.mMethods;
+      return new TreeSet<>(this.mMethods);
     }
 
     public Set<String> getUnits() {
-      return this.units;
+      return new TreeSet<>(this.units);
     }
 
     public Set<String> getSFactors() {
-      return this.scalingFactors;
+      return new TreeSet<>(this.scalingFactors);
     }
 
     public Set<String> getUniqueDates() {
@@ -71,6 +72,7 @@ public class SummaryReportGenerator {
     }
   }
 
+  public static boolean TEST_mode = false;
   public static final String SUMMARY_REPORT_HTML = "summary_report.html";
 
   public static void generateReportSummary(
@@ -83,8 +85,13 @@ public class SummaryReportGenerator {
     Template template = cfg.getTemplate("SummaryReport.ftl");
     HashMap<String, Object> data = new HashMap<>();
     data.put("levelSummary", log.getLevelSummaryMap());
-    data.put("svSummaryMap", svSummaryMap);
     data.put("commandArgs", log.getCommandArgs());
+    if (TEST_mode) {
+      svSummaryMap = new TreeMap<>(svSummaryMap);
+      placeSeriesSummaryMap = new TreeMap<>(placeSeriesSummaryMap);
+      PlaceSeriesSummary.TEST_mode = true;
+    }
+    data.put("svSummaryMap", svSummaryMap);
     data.put("placeSeriesSummaryMap", placeSeriesSummaryMap);
     Writer file = new FileWriter(Paths.get(outputDir.toString(), SUMMARY_REPORT_HTML).toString());
     template.process(data, file);
