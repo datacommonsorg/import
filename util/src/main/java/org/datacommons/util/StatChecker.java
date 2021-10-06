@@ -29,6 +29,8 @@ import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.ValueType;
+import org.datacommons.util.PlaceSeriesSummary.SeriesSummary;
+import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
 
 // A checker that checks time-series for holes, variance in values, etc.
 // This class is thread-safe.
@@ -38,11 +40,6 @@ import org.datacommons.proto.Mcf.ValueType;
 // b. making methods that access the map synchronized because when methods are not on a hot path and
 //    it is not ok for access to the map to be race-y (seriesSummaryMap).
 public class StatChecker {
-  private static final class SeriesSummary {
-    StatValidationResult.Builder validationResult;
-    Map<String, DataPoint> timeSeries;
-  }
-
   private static final int MAX_NUM_PLACE_PER_TYPE = 5;
   private static final double SMALL_NUMBER = 0.000001;
   private static final String RECEIVED_SAMPLE_PLACES_KEY = "Received_Sample_Places";
@@ -68,9 +65,9 @@ public class StatChecker {
   private static final int NUM_SUMMARY_ENTRIES_PER_COUNTER = 10;
   private final boolean verbose;
   private final LogWrapper logCtx;
-  // key is a string made up of place dcid, stat var dcid, measurement method, observation period,
-  // scaling factor, and unit of the stat var observations of the series summary.
-  private final Map<String, SeriesSummary> seriesSummaryMap;
+  // key is place dcid
+  private final Map<String, PlaceSeriesSummary> placeSeriesSummaryMap;
+  private final Map<String, StatVarSummary> svSummaryMap;
   // key is place namespace + length of place dcid, value is set of place dcids
   private final ConcurrentMap<String, Set<String>> samplePlaces;
   private final boolean shouldGenerateSamplePlaces;
@@ -87,9 +84,10 @@ public class StatChecker {
   public StatChecker(LogWrapper logCtx, Set<String> samplePlaces, boolean verbose) {
     this.logCtx = logCtx;
     this.verbose = verbose;
-    this.seriesSummaryMap = new HashMap<>();
+    this.placeSeriesSummaryMap = new HashMap<>();
     this.samplePlaces = new ConcurrentHashMap<>();
     this.svObValues = new ConcurrentHashMap<>();
+    this.svSummaryMap = new HashMap<>();
     if (samplePlaces == null) {
       this.shouldGenerateSamplePlaces = true;
     } else {
@@ -98,12 +96,22 @@ public class StatChecker {
     }
   }
 
-  // Given a graph, extract time series info (about the chosen sample places) from the
-  // statVarObservation nodes and save it into seriesSummaryMap.
-  public void extractSeriesInfoFromGraph(McfGraph graph) {
+  // Given a graph, extract stat var info and time series info (about the chosen sample places) from
+  // the statVarObservation nodes.
+  //
+  // TODO (chejennifer): Look into optimizing this so that there can be less contention
+  public synchronized void extractStatsFromGraph(McfGraph graph) {
     for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
-      if (isSvObWithNumberValue(node.getValue()) && shouldExtractSeriesInfo(node.getValue())) {
-        extractSeriesInfoFromNode(node.getValue());
+      if (isSvObWithNumberValue(node.getValue())) {
+        // We will extract basic stat var information from every StatVarObservation nodes
+        extractStatVarInfoFromNode(node.getValue());
+        // We will only extract series information from StatVarObservation nodes about sample places
+        if (shouldExtractSeriesInfo(node.getValue())) {
+          String placeDcid = McfUtil.getPropVal(node.getValue(), Vocabulary.OBSERVATION_ABOUT);
+          placeSeriesSummaryMap
+              .computeIfAbsent(placeDcid, k -> new PlaceSeriesSummary())
+              .extractSeriesFromNode(node.getValue());
+        }
       }
     }
   }
@@ -128,33 +136,46 @@ public class StatChecker {
     for (String counterKey : COUNTER_KEYS) {
       countersRemaining.put(counterKey, NUM_SUMMARY_ENTRIES_PER_COUNTER);
     }
-    for (String hash : seriesSummaryMap.keySet()) {
-      List<DataPoint> timeSeries = new ArrayList<>(seriesSummaryMap.get(hash).timeSeries.values());
-      StatValidationResult.Builder resBuilder = seriesSummaryMap.get(hash).validationResult;
-      // Check inconsistent values (sawtooth).
-      checkSeriesValueInconsistencies(timeSeries, resBuilder, logCtx);
-      // Check N-Sigma variance.
-      checkSigmaDivergence(timeSeries, resBuilder, logCtx);
-      // Check N-Percent fluctuations.
-      checkPercentFluctuations(timeSeries, resBuilder, logCtx);
-      // Check for holes in dates, invalid dates, etc.
-      checkDates(timeSeries, resBuilder, logCtx);
-      // add result to log.
-      if (!resBuilder.getValidationCountersList().isEmpty() && !countersRemaining.isEmpty()) {
-        // only add entry if resBuilder contains a validation counter that we still want to add
-        // entries for.
-        boolean shouldAddEntry = false;
-        for (StatValidationEntry entry : resBuilder.getValidationCountersList()) {
-          String counterKey = entry.getCounterKey();
-          if (countersRemaining.containsKey(counterKey)) {
-            shouldAddEntry = true;
-            countersRemaining.compute(counterKey, (k, v) -> v != null ? v - 1 : 0);
-            if (countersRemaining.get(counterKey) < 1) countersRemaining.remove(counterKey);
+    for (PlaceSeriesSummary placeSeriesSummary : placeSeriesSummaryMap.values()) {
+      for (Map<Long, SeriesSummary> seriesSummaryMap :
+          placeSeriesSummary.getSvSeriesSummaryMap().values()) {
+        for (SeriesSummary seriesSummary : seriesSummaryMap.values()) {
+          List<DataPoint> timeSeries = new ArrayList<>(seriesSummary.timeSeries.values());
+          StatValidationResult.Builder resBuilder = seriesSummary.validationResult;
+          // Check inconsistent values (sawtooth).
+          checkSeriesValueInconsistencies(timeSeries, resBuilder, logCtx);
+          // Check N-Sigma variance.
+          checkSigmaDivergence(timeSeries, resBuilder, logCtx);
+          // Check N-Percent fluctuations.
+          checkPercentFluctuations(timeSeries, resBuilder, logCtx);
+          // Check for holes in dates, invalid dates, etc.
+          checkDates(timeSeries, resBuilder, logCtx);
+          // add result to log.
+          if (!resBuilder.getValidationCountersList().isEmpty() && !countersRemaining.isEmpty()) {
+            // only add entry if resBuilder contains a validation counter that we still want to add
+            // entries for.
+            boolean shouldAddEntry = false;
+            for (StatValidationEntry entry : resBuilder.getValidationCountersList()) {
+              String counterKey = entry.getCounterKey();
+              if (countersRemaining.containsKey(counterKey)) {
+                shouldAddEntry = true;
+                countersRemaining.compute(counterKey, (k, v) -> v != null ? v - 1 : 0);
+                if (countersRemaining.get(counterKey) < 1) countersRemaining.remove(counterKey);
+              }
+            }
+            if (shouldAddEntry) logCtx.addStatsCheckSummaryEntry(resBuilder.build());
           }
         }
-        if (shouldAddEntry) logCtx.addStatsCheckSummaryEntry(resBuilder.build());
       }
     }
+  }
+
+  public Map<String, PlaceSeriesSummary> getPlaceSeriesSummaryMap() {
+    return this.placeSeriesSummaryMap;
+  }
+
+  public Map<String, StatVarSummary> getSVSummaryMap() {
+    return this.svSummaryMap;
   }
 
   // Return whether the node is a statVarObservation node with value of type number.
@@ -190,47 +211,6 @@ public class StatChecker {
       return samplePlaces.get(RECEIVED_SAMPLE_PLACES_KEY).contains(placeDcid);
     }
     return true;
-  }
-
-  // Given a statVarObservation node, extract time series info (if it is about the chosen sample
-  // places) and save it into seriesSummaryMap.
-  private synchronized void extractSeriesInfoFromNode(McfGraph.PropertyValues node) {
-    StatValidationResult.Builder vres = StatValidationResult.newBuilder();
-    // Add information about the node to StatValidationResult
-    vres.setPlaceDcid(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT));
-    vres.setStatVarDcid(McfUtil.getPropVal(node, Vocabulary.VARIABLE_MEASURED));
-    vres.setMeasurementMethod(McfUtil.getPropVal(node, Vocabulary.MEASUREMENT_METHOD));
-    vres.setObservationPeriod(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_PERIOD));
-    vres.setScalingFactor(McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR));
-    vres.setUnit(McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR));
-
-    // Get the series summary for this node. If the series summary for this node is not already in
-    // in the seriesSummaryMap, add it to the seriesSummaryMap.
-    String hash = vres.toString();
-    SeriesSummary summary;
-    if (seriesSummaryMap.containsKey(hash)) {
-      summary = seriesSummaryMap.get(hash);
-    } else {
-      summary = new SeriesSummary();
-      summary.validationResult = vres;
-      summary.timeSeries = new TreeMap<>();
-    }
-
-    // Add the value of this StatVarObservation node to the timeseries of this node's SeriesSummary.
-    String obsDate = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE);
-    String value = McfUtil.getPropVal(node, Vocabulary.VALUE);
-    DataValue dataVal =
-        DataValue.newBuilder()
-            .setValue(Double.parseDouble(value))
-            .addAllLocations(node.getLocationsList())
-            .build();
-    DataPoint.Builder dataPoint = DataPoint.newBuilder().setDate(obsDate);
-    if (summary.timeSeries.containsKey(obsDate)) {
-      dataPoint = summary.timeSeries.get(obsDate).toBuilder();
-    }
-    dataPoint.addValues(dataVal);
-    summary.timeSeries.put(obsDate, dataPoint.build());
-    seriesSummaryMap.put(hash, summary);
   }
 
   protected static void checkSeriesValueInconsistencies(
@@ -470,5 +450,19 @@ public class StatChecker {
       this.svObValues.put(fp, val);
       return true;
     }
+  }
+
+  private synchronized void extractStatVarInfoFromNode(McfGraph.PropertyValues node) {
+    // TODO (chejennifer): extract prop value into a struct and pass around instead of looking it up
+    // in multiple places
+    String svDcid = McfUtil.getPropVal(node, Vocabulary.VARIABLE_MEASURED);
+    if (svDcid.isEmpty()) return;
+    StatVarSummary svMap = svSummaryMap.computeIfAbsent(svDcid, k -> new StatVarSummary());
+    svMap.numObservations++;
+    svMap.dates.add(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE));
+    svMap.places.add(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT));
+    svMap.mMethods.add(McfUtil.getPropVal(node, Vocabulary.MEASUREMENT_METHOD));
+    svMap.units.add(McfUtil.getPropVal(node, Vocabulary.MEASUREMENT_METHOD));
+    svMap.scalingFactors.add(McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR));
   }
 }

@@ -14,6 +14,7 @@
 
 package org.datacommons.tool;
 
+import freemarker.template.TemplateException;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Callable;
@@ -48,7 +49,7 @@ class Lint implements Callable<Integer> {
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
 
   @Override
-  public Integer call() throws IOException {
+  public Integer call() throws IOException, TemplateException {
     if (!parent.outputDir.exists()) {
       parent.outputDir.mkdirs();
     }
@@ -65,6 +66,7 @@ class Lint implements Callable<Integer> {
     args.verbose = parent.verbose;
     args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
     args.outputDir = parent.outputDir.toPath();
+    args.generateSummaryReport = parent.generateSummaryReport;
     return Processor.process(args);
   }
 }

@@ -1,6 +1,7 @@
 package org.datacommons.tool;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static org.junit.Assert.assertEquals;
 
 import com.google.common.truth.Expect;
 import java.io.File;
@@ -10,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import org.datacommons.util.SummaryReportGenerator;
 import org.datacommons.util.TmcfCsvParser;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,6 +35,7 @@ public class LintTest {
   public void LintTest() throws IOException {
     // Set this so that the generated node IDs are deterministic
     TmcfCsvParser.TEST_mode = true;
+    SummaryReportGenerator.TEST_mode = true;
 
     String goldenFilesPrefix = System.getProperty("goldenFilesPrefix");
     Main app = new Main();
@@ -44,25 +47,35 @@ public class LintTest {
       List<String> argsList = new ArrayList<>();
       argsList.add("lint");
       File[] inputFiles = new File(Path.of(directory.getPath(), "input").toString()).listFiles();
+      List<String> expectedOutputFiles =
+          new ArrayList<>(List.of("report.json", "summary_report.html"));
       for (File inputFile : inputFiles) {
         argsList.add(inputFile.getPath());
       }
       argsList.add(
           "--output-dir=" + Paths.get(testFolder.getRoot().getPath(), directory.getName()));
+      argsList.add("--summary-report=True");
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
-      Path actualReportPath =
-          TestUtil.getTestFilePath(testFolder, directory.getName(), "report.json");
+
       if (goldenFilesPrefix != null && !goldenFilesPrefix.isEmpty()) {
-        Path goldenPath =
-            Path.of(goldenFilesPrefix, "lint", directory.getName(), "output", "report.json");
-        Files.copy(actualReportPath, goldenPath, REPLACE_EXISTING);
+        for (var f : expectedOutputFiles) {
+          Path actual = TestUtil.getTestFilePath(testFolder, testName, f);
+          Path golden = Path.of(goldenFilesPrefix, "lint", testName, "output", f);
+          Files.copy(actual, golden, REPLACE_EXISTING);
+        }
       } else {
-        Path expectedReportPath = TestUtil.getOutputFilePath(directory.getPath(), "report.json");
-        TestUtil.assertReportFilesAreSimilar(
-            expect,
-            TestUtil.readStringFromPath(expectedReportPath),
-            TestUtil.readStringFromPath(actualReportPath));
+        for (var f : expectedOutputFiles) {
+          Path actual = TestUtil.getTestFilePath(testFolder, testName, f);
+          Path expected = TestUtil.getOutputFilePath(directory.getPath(), f);
+          if (f.equals("report.json")) {
+            TestUtil.assertReportFilesAreSimilar(
+                expect, TestUtil.readStringFromPath(expected), TestUtil.readStringFromPath(actual));
+          } else {
+            assertEquals(
+                TestUtil.readStringFromPath(expected), TestUtil.readStringFromPath(actual));
+          }
+        }
       }
       System.err.println(testName + ": PASSED");
     }

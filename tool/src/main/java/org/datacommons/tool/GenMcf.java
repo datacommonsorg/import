@@ -14,6 +14,7 @@
 
 package org.datacommons.tool;
 
+import freemarker.template.TemplateException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -50,7 +51,7 @@ class GenMcf implements Callable<Integer> {
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
 
   @Override
-  public Integer call() throws IOException {
+  public Integer call() throws IOException, TemplateException {
     if (!parent.outputDir.exists()) {
       parent.outputDir.mkdirs();
     }
@@ -72,6 +73,7 @@ class GenMcf implements Callable<Integer> {
       var fName = type.name().toLowerCase() + ".mcf";
       args.outputFiles.put(type, Paths.get(parent.outputDir.getPath(), fName));
     }
+    args.generateSummaryReport = parent.generateSummaryReport;
 
     // Process all the things.
     return Processor.process(args);
