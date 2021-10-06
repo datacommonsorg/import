@@ -115,7 +115,6 @@ public class GenMcfTest {
             TestUtil.assertReportFilesAreSimilar(
                 expect, TestUtil.readStringFromPath(expected), TestUtil.readStringFromPath(actual));
           } else if (f.equals("summary_report.html")) {
-            // TestUtil.assertReportHtmlAreSimilar(expected, actual);
             assertEquals(
                 TestUtil.readStringFromPath(expected), TestUtil.readStringFromPath(actual));
           } else {

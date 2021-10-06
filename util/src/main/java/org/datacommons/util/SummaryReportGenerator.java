@@ -86,6 +86,7 @@ public class SummaryReportGenerator {
     HashMap<String, Object> data = new HashMap<>();
     data.put("levelSummary", log.getLevelSummaryMap());
     data.put("commandArgs", log.getCommandArgs());
+    // When testing, we want the order of the sections in the html file to be deterministic
     if (TEST_mode) {
       svSummaryMap = new TreeMap<>(svSummaryMap);
       placeSeriesSummaryMap = new TreeMap<>(placeSeriesSummaryMap);

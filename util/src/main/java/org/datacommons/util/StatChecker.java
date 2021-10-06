@@ -108,8 +108,9 @@ public class StatChecker {
         // We will only extract series information from StatVarObservation nodes about sample places
         if (shouldExtractSeriesInfo(node.getValue())) {
           String placeDcid = McfUtil.getPropVal(node.getValue(), Vocabulary.OBSERVATION_ABOUT);
-          placeSeriesSummaryMap.computeIfAbsent(placeDcid, k -> new PlaceSeriesSummary());
-          placeSeriesSummaryMap.get(placeDcid).extractSeriesFromNode(node.getValue());
+          placeSeriesSummaryMap
+              .computeIfAbsent(placeDcid, k -> new PlaceSeriesSummary())
+              .extractSeriesFromNode(node.getValue());
         }
       }
     }
@@ -456,8 +457,7 @@ public class StatChecker {
     // in multiple places
     String svDcid = McfUtil.getPropVal(node, Vocabulary.VARIABLE_MEASURED);
     if (svDcid.isEmpty()) return;
-    svSummaryMap.computeIfAbsent(svDcid, k -> new StatVarSummary());
-    StatVarSummary svMap = svSummaryMap.get(svDcid);
+    StatVarSummary svMap = svSummaryMap.computeIfAbsent(svDcid, k -> new StatVarSummary());
     svMap.numObservations++;
     svMap.dates.add(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE));
     svMap.places.add(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT));

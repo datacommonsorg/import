@@ -46,8 +46,8 @@ public class PlaceSeriesSummary {
     Hasher hasher = Hashing.farmHashFingerprint64().newHasher();
     hasher.putString(vres.toString(), StandardCharsets.UTF_8);
     Long hash = hasher.hash().asLong();
-    svSeriesSummaryMap.computeIfAbsent(vres.getStatVarDcid(), k -> new HashMap<>());
-    Map<Long, SeriesSummary> seriesSummaryMap = svSeriesSummaryMap.get(vres.getStatVarDcid());
+    Map<Long, SeriesSummary> seriesSummaryMap =
+        svSeriesSummaryMap.computeIfAbsent(vres.getStatVarDcid(), k -> new HashMap<>());
     SeriesSummary summary;
     if (seriesSummaryMap.containsKey(hash)) {
       summary = seriesSummaryMap.get(hash);
@@ -110,6 +110,7 @@ public class PlaceSeriesSummary {
           });
       statVarSummaryMap.put(svSeriesSummary.getKey(), summary);
     }
+    // When testing, we want the order of sections in the html file to be deterministic
     return TEST_mode ? new TreeMap<>(statVarSummaryMap) : statVarSummaryMap;
   }
 }
