@@ -482,6 +482,7 @@ public class McfCheckerTest {
             + "variableMeasured: dcid:Count_Person_Male\n"
             + "observationAbout: dcid:country/IdontKnow\n"
             + "observationDate: \"2019\"\n"
+            + "measurementMethod: dcs:dcAggregate/WorldBankEstimate\n"
             + "value: 10000\n";
     assertTrue(success(mcf, null, true, false));
 
