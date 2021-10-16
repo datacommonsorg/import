@@ -474,7 +474,7 @@ public class McfChecker {
                     .setCounterSuffix(prop);
             String value = tv.getValue();
             if (prop.equals(Vocabulary.MEASUREMENT_METHOD)) {
-              value = value.replace("^dcAggregate/", "");
+              value = value.replace("dcAggregate/", "");
             }
             existenceChecker.submitNodeCheck(value, logCb);
           }
