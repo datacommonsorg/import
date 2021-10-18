@@ -39,7 +39,7 @@ public class PlaceSeriesSummary {
     vres.setMeasurementMethod(McfUtil.getPropVal(node, Vocabulary.MEASUREMENT_METHOD));
     vres.setObservationPeriod(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_PERIOD));
     vres.setScalingFactor(McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR));
-    vres.setUnit(McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR));
+    vres.setUnit(McfUtil.getPropVal(node, Vocabulary.UNIT));
 
     // Get the series summary for this node. If the series summary for this node is not already
     // in the seriesSummaryMap, add it to the seriesSummaryMap.
@@ -93,10 +93,10 @@ public class PlaceSeriesSummary {
           summary.mMethods.add(seriesSummary.validationResult.getMeasurementMethod());
         }
         if (!seriesSummary.validationResult.getUnit().isEmpty()) {
-          summary.mMethods.add(seriesSummary.validationResult.getUnit());
+          summary.units.add(seriesSummary.validationResult.getUnit());
         }
         if (!seriesSummary.validationResult.getScalingFactor().isEmpty()) {
-          summary.mMethods.add(seriesSummary.validationResult.getScalingFactor());
+          summary.scalingFactors.add(seriesSummary.validationResult.getScalingFactor());
         }
         seriesDataPoints.addAll(seriesSummary.timeSeries.values());
       }

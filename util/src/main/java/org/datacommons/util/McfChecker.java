@@ -472,7 +472,11 @@ public class McfChecker {
                     .setDetail(LogCb.PROP_KEY, prop)
                     .setDetail(LogCb.NODE_KEY, nodeId)
                     .setCounterSuffix(prop);
-            existenceChecker.submitNodeCheck(tv.getValue(), logCb);
+            String value = tv.getValue();
+            if (prop.equals(Vocabulary.MEASUREMENT_METHOD)) {
+              value = value.replace("dcAggregate/", "");
+            }
+            existenceChecker.submitNodeCheck(value, logCb);
           }
         }
       }
