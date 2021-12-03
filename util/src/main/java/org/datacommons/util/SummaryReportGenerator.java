@@ -3,28 +3,43 @@ package org.datacommons.util;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import org.datacommons.proto.Debug;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.util.ShapeUtils;
+import org.jfree.data.time.Day;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.graphics2d.svg.SVGGraphics2D;
 
 public class SummaryReportGenerator {
+
+  public static boolean TEST_mode = false;
+  public static final String SUMMARY_REPORT_HTML = "summary_report.html";
 
   // An object to save the information about a stat var. This contains all the necessary getters to
   // access the information in this object from SummaryReport.ftl
   // TODO(chejennifer): Look into a cleaner way to handle information about a stat var
   public static final class StatVarSummary {
+    private static final int CHART_WIDTH = 500;
+    private static final int CHART_HEIGHT = 250;
+
     int numObservations = 0;
     Set<String> places = new HashSet<>();
     Set<String> mMethods = new HashSet<>();
@@ -70,10 +85,51 @@ public class SummaryReportGenerator {
     public List<Double> getSeriesValues() {
       return this.seriesValues;
     }
-  }
 
-  public static boolean TEST_mode = false;
-  public static final String SUMMARY_REPORT_HTML = "summary_report.html";
+    public String getTimeSeriesChartSVG() {
+      TimeSeriesCollection dataset = new TimeSeriesCollection();
+      TimeSeries timeSeries = new TimeSeries("ts");
+      for (int i = 0; i < this.seriesDates.size(); i++) {
+        if (i >= this.seriesValues.size()) break;
+        LocalDateTime localDateTime = StringUtil.getValidISO8601Date(seriesDates.get(i));
+        if (localDateTime == null) continue;
+        Date date = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+        timeSeries.addOrUpdate(new Day(date), this.seriesValues.get(i));
+      }
+      if (timeSeries.isEmpty()) return "";
+      dataset.addSeries(timeSeries);
+      JFreeChart chart = ChartFactory.createTimeSeriesChart("", "", "", dataset);
+      XYItemRenderer renderer = new XYLineAndShapeRenderer(true, true);
+      renderer.setSeriesShape(0, ShapeUtils.createDiamond(5));
+      renderer.setSeriesVisibleInLegend(0, false);
+      XYPlot plot = chart.getXYPlot();
+      plot.setBackgroundPaint(Color.WHITE);
+      plot.setRenderer(renderer);
+      if (timeSeries.findValueRange().getLength() == 0) {
+        // Manually set the range when the values in the time series are all the same. Otherwise,
+        // the chart library will draw an axis with multiple ticks all labeled with that same value.
+        plot.getRangeAxis().setRange(0, this.seriesValues.get(0) * 2);
+      }
+      if (this.seriesDates.get(0).equals(this.seriesDates.get(this.seriesDates.size() - 1))) {
+        // Override the date formatter for the x axis when there is only one data point. Otherwise,
+        // the chart library will label the single date as 00:00:00.
+        DateAxis xAxis = (DateAxis) plot.getDomainAxis();
+        String datePattern = StringUtil.getValidISO8601DatePattern(this.seriesDates.get(0));
+        if (datePattern.isEmpty() || StringUtil.EXTRA_DATE_PATTERNS.contains(datePattern)) {
+          xAxis.setDateFormatOverride(new SimpleDateFormat("yyyy-MM-dd"));
+        } else {
+          xAxis.setDateFormatOverride(new SimpleDateFormat(datePattern));
+        }
+      }
+      SVGGraphics2D svg = new SVGGraphics2D(CHART_WIDTH, CHART_HEIGHT);
+      if (TEST_mode) {
+        // When testing, we want the svg clipPath id to be consistent.
+        svg.setDefsKeyPrefix("test");
+      }
+      chart.draw(svg, new Rectangle2D.Double(0, 0, CHART_WIDTH, CHART_HEIGHT));
+      return svg.getSVGElement();
+    }
+  }
 
   public static void generateReportSummary(
       Path outputDir,

@@ -241,7 +241,7 @@ public class McfChecker {
             nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.OBSERVATION_DATE);
     if (graph.getType() != Mcf.McfType.TEMPLATE_MCF
         && !obsDate.isEmpty()
-        && !StringUtil.isValidISO8601Date(obsDate)) {
+        && StringUtil.getValidISO8601DatePattern(obsDate).isEmpty()) {
       addLog(
           "Sanity_InvalidObsDate",
           "Found a non-ISO8601 compliant date value :: value: '"
@@ -288,7 +288,7 @@ public class McfChecker {
             nodeId, node, Vocabulary.LEGACY_OBSERVATION_TYPE_SUFFIX, Vocabulary.OBSERVATION_DATE);
     if (graph.getType() != Mcf.McfType.TEMPLATE_MCF
         && !obsDate.isEmpty()
-        && !StringUtil.isValidISO8601Date(obsDate)) {
+        && StringUtil.getValidISO8601DatePattern(obsDate).isEmpty()) {
       addLog(
           "Sanity_InvalidObsDate",
           "Found a non-ISO8601 compliant date value :: value: '"

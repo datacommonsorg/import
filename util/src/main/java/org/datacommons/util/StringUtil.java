@@ -47,7 +47,7 @@ public class StringUtil {
 
   // The Java API does not match 20071, 2007101, so add these for compatibility with CPP
   // implementation.
-  private static final List<String> EXTRA_DATE_PATTERNS = List.of("^\\d{5}$", "^\\d{7}$");
+  public static final List<String> EXTRA_DATE_PATTERNS = List.of("^\\d{5}$", "^\\d{7}$");
 
   // Splits a line using the given delimiter and places the columns into "columns". Delimiters
   // within an expression (within a pair of expressionSymbol). Characters can be escaped, but those
@@ -105,21 +105,21 @@ public class StringUtil {
     return v.equals("true") || v.equals("1") || v.equals("false") || v.equals("0");
   }
 
-  public static boolean isValidISO8601Date(String dateValue) {
+  public static String getValidISO8601DatePattern(String dateValue) {
     for (String pattern : DATE_PATTERNS) {
       try {
         DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH).parse(dateValue);
-        return true;
+        return pattern;
       } catch (DateTimeParseException ex) {
         // Pass through
       }
     }
     for (String pattern : EXTRA_DATE_PATTERNS) {
       if (Pattern.matches(pattern, dateValue)) {
-        return true;
+        return pattern;
       }
     }
-    return false;
+    return "";
   }
 
   public static LocalDateTime getValidISO8601Date(String dateValue) {

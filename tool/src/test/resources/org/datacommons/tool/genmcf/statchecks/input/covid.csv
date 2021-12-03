@@ -9,7 +9,7 @@ DateTime,geoId,CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 2020-01-02,geoId/26111,1
 2020-01-02,geoId/27111,1
 2020-01-02,geoId/28111,1
-2020-01-30,geoId/06,1
+2020-01-30,geoId/06,10
 2020-02-02,geoId/06,2
 2020-02-02,geoId/07,0
 2020-02-02,geoId/201,1

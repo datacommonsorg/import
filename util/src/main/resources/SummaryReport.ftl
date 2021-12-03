@@ -14,6 +14,15 @@
       tbody tr:hover {
         background-color: #ccc;
       }
+      summary {
+        cursor: pointer;
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding-bottom: 1rem;
+      }
+      details {
+        padding-bottom: 1rem;
+      }
     </style>
     <h1>Summary Report</h1>
     <div>
@@ -116,8 +125,8 @@
       <div>
         <h2>Series Summaries for Sample Places</h2>
           <#list placeSeriesSummaryMap as place, placeSeriesSummary>
-            <div>
-              <h3>${place}</h3>
+            <details open>
+              <summary>${place}</summary>
               <table width="80%">
                 <thead>
                   <tr>
@@ -128,6 +137,7 @@
                     <th>Measurement Methods</th>
                     <th>Units</th>
                     <th>Scaling Factors</th>
+                    <th>Time Series Chart</th>
                   </tr>
                 </thead>
                 <#list placeSeriesSummary.getStatVarSummaryMap() as sv, svSummary>
@@ -152,11 +162,12 @@
                       <div>${sFactor}</div>
                       </#list>
                     </td>
+                    <td>${svSummary.getTimeSeriesChartSVG()}</td>
                   </tr>
                   </tbody>
                   </#list>
               </table>
-            </div>
+            </details>
           </#list>
       </div>
     </#if>

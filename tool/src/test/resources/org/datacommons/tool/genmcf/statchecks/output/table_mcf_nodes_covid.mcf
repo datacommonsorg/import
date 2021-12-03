@@ -92,10 +92,10 @@ Node: COVID19_cases_india/E0/11
 observationDate: "2020-01-30"
 observationAbout: dcid:geoId/06
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
-value: 1
+value: 10
 typeOf: dcid:StatVarObservation
-keyString: "observationAbout=geoId/06variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-30value=1"
-dcid: "dc/o/by9xkhfh3trh7"
+keyString: "observationAbout=geoId/06variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-30value=10"
+dcid: "dc/o/y5dfrhm8g9yd1"
 
 Node: COVID19_cases_india/E0/12
 observationDate: "2020-02-02"
