@@ -14,19 +14,15 @@
 
 package org.datacommons.tool;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import java.io.BufferedWriter;
+import freemarker.template.TemplateException;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
 import org.datacommons.util.FileGroup;
-import org.datacommons.util.LogWrapper;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "genmcf", description = "Generate Instance MCF from TMCF/CSV files")
@@ -55,29 +51,31 @@ class GenMcf implements Callable<Integer> {
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
 
   @Override
-  public Integer call() throws IOException, InvalidProtocolBufferException {
-
-    FileGroup fg = FileGroup.Build(files, spec, logger);
-
-    if (delimiter == null) {
-      delimiter = fg.GetNumTsv() > 0 ? '\t' : ',';
+  public Integer call() throws IOException, TemplateException {
+    if (!parent.outputDir.exists()) {
+      parent.outputDir.mkdirs();
     }
-
-    Path outPath = Paths.get(parent.outputDir.getPath(), "generated.mcf");
-    logger.info("Writing generated MCF to {}", outPath.toAbsolutePath().normalize().toString());
-    BufferedWriter writer = new BufferedWriter(new FileWriter(outPath.toString()));
-
-    LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
-    Processor processor = new Processor(false, parent.verbose, logCtx);
-    Integer retVal = 0;
-    try {
-      processor.processTables(fg.GetTmcf(), fg.GetCsvs(), delimiter, writer);
-    } catch (DCTooManyFailuresException | InterruptedException ex) {
-      // Regardless of the failures, we will dump the logCtx and exit.
-      retVal = -1;
+    Args args = new Args();
+    args.doExistenceChecks = parent.doExistenceChecks;
+    args.resolutionMode = parent.resolutionMode;
+    args.doStatChecks = parent.doStatChecks;
+    args.samplePlaces = parent.samplePlaces;
+    args.numThreads = parent.numThreads;
+    if (args.samplePlaces != null && !args.doStatChecks) {
+      logger.warn(
+          "Sample places entered without stat checks being enabled. Sample places will be unused.");
     }
-    writer.close();
-    logCtx.persistLog(false);
-    return retVal;
+    args.verbose = parent.verbose;
+    args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
+    args.outputDir = parent.outputDir.toPath();
+    args.outputFiles = new HashMap<>();
+    for (Args.OutputFileType type : Args.OutputFileType.values()) {
+      var fName = type.name().toLowerCase() + ".mcf";
+      args.outputFiles.put(type, Paths.get(parent.outputDir.getPath(), fName));
+    }
+    args.generateSummaryReport = parent.generateSummaryReport;
+
+    // Process all the things.
+    return Processor.process(args);
   }
 }

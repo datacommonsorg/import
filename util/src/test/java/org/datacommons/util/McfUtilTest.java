@@ -63,7 +63,7 @@ public class McfUtilTest {
             + "typeOf: dcid:State\n"
             + "\n";
     Mcf.McfGraph graph =
-        McfParser.parseInstanceMcfString(SERIALIZE_INPUT, false, TestUtil.newLogCtx("InMemory"));
+        McfParser.parseInstanceMcfString(SERIALIZE_INPUT, false, TestUtil.newLogCtx());
     assertEquals(McfUtil.serializeMcfGraph(graph, true), output);
   }
 
@@ -71,42 +71,38 @@ public class McfUtilTest {
   public void funcMergeGraphs() throws IOException, AssertionError {
     List<Mcf.McfGraph> graphs =
         Arrays.asList(
-            McfParser.parseInstanceMcfString(
+            parseMcf(
                 "Node: MadCity\n"
                     + "typeOf: dcs:City\n"
                     + "dcid: dcid:dc/maa\n"
                     + "overlapsWith: dcid:dc/456, dcid:dc/134\n"
                     + "name: \"Madras\"\n",
-                true,
-                TestUtil.newLogCtx("f1.mcf")),
-            McfParser.parseInstanceMcfString(
+                "f1.mcf"),
+            parseMcf(
                 "Node: MadCity\n"
                     + "typeOf: dcs:Corporation\n"
                     + "dcid: dcid:dc/maa\n"
                     + "overlapsWith: dcid:dc/134\n"
                     + "containedInPlace: dcid:dc/tn\n"
                     + "name: \"Chennai\"\n",
-                true,
-                TestUtil.newLogCtx("f2.mcf")),
-            McfParser.parseInstanceMcfString(
+                "f2.mcf"),
+            parseMcf(
                 "Node: MadState\n"
                     + "typeOf: dcs:State\n"
                     + "dcid: dcid:dc/tn\n"
                     + "containedInPlace: dcid:country/india\n",
-                true,
-                TestUtil.newLogCtx("f3.mcf")),
-            McfParser.parseInstanceMcfString(
+                "f3.mcf"),
+            parseMcf(
                 "Node: MadState\n"
                     + "typeOf: dcs:State\n"
                     + "dcid: dcid:dc/tn\n"
                     + "capital: dcid:dc/maa\n"
                     + "containedInPlace: dcid:dc/southindia\n",
-                true,
-                TestUtil.newLogCtx("f4.mcf")));
+                "f4.mcf"));
     // Output should be the second node which is the largest, with other PVs
     // patched in, and all types included.
     Mcf.McfGraph want =
-        McfParser.parseInstanceMcfString(
+        parseMcf(
             "Node: MadCity\n"
                 + "typeOf: dcs:City, dcs:Corporation\n"
                 + "dcid: dcid:dc/maa\n"
@@ -119,8 +115,7 @@ public class McfUtilTest {
                 + "dcid: dcid:dc/tn\n"
                 + "capital: dcid:dc/maa\n"
                 + "containedInPlace: dcid:country/india, dcid:dc/southindia\n",
-            true,
-            TestUtil.newLogCtx("f5.mcf"));
+            "f5.mcf");
     Mcf.McfGraph act = mergeGraphs(graphs);
     assertThat(TestUtil.trimLocations(act))
         .ignoringRepeatedFieldOrder()
@@ -133,5 +128,12 @@ public class McfUtilTest {
                 this.getClass().getResourceAsStream("McfUtilTest_MergedLocations.textproto"),
                 StandardCharsets.UTF_8));
     assertThat(TestUtil.getLocations(act)).ignoringRepeatedFieldOrder().isEqualTo(expLoc);
+  }
+
+  private Mcf.McfGraph parseMcf(String mcfString, String fileName) throws IOException {
+    McfParser.IN_MEMORY_FILE_NAME = fileName;
+    var output = McfParser.parseInstanceMcfString(mcfString, true, TestUtil.newLogCtx());
+    McfParser.IN_MEMORY_FILE_NAME = "InMemory";
+    return output;
   }
 }

@@ -44,7 +44,7 @@ public class McfParserTest {
             + "description: \"Odd\"double\"quotes"
             + "\"fails\"\n";
     var graph = McfParser.parseInstanceMcfString(mcf, true, lw);
-    assertTrue(TestUtil.checkLog(logCtx.build(), "StrSplit_BadQuotesInToken_description", "US1"));
+    assertTrue(TestUtil.checkLog(lw.getLog(), "StrSplit_BadQuotesInToken_description", "US1"));
 
     // New-line in value.
     mcf = "Node: US2\n" + "typeOf: schema:State\n" + "description: \"Line with\nnewline\"\n";
@@ -72,9 +72,8 @@ public class McfParserTest {
         IOUtils.toString(
             this.getClass().getResourceAsStream("McfParserTest_ResolvedGraph.mcf"),
             StandardCharsets.UTF_8);
-    McfGraph act =
-        McfParser.parseInstanceMcfString(
-            mcfString, true, TestUtil.newLogCtx("McfParserTest_ResolvedGraph.mcf"));
+    McfParser.IN_MEMORY_FILE_NAME = "McfParserTest_ResolvedGraph.mcf";
+    McfGraph act = McfParser.parseInstanceMcfString(mcfString, true, TestUtil.newLogCtx());
     McfGraph exp = expected("McfParserTest_ResolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
@@ -82,7 +81,7 @@ public class McfParserTest {
   @Test
   public void funcParseResolvedGraphAsFile() throws IOException, URISyntaxException {
     String mcfFile = this.getClass().getResource("McfParserTest_ResolvedGraph.mcf").getPath();
-    McfGraph act = McfParser.parseInstanceMcfFile(mcfFile, true, TestUtil.newLogCtx(mcfFile));
+    McfGraph act = McfParser.parseInstanceMcfFile(mcfFile, true, TestUtil.newLogCtx());
     McfGraph exp = expected("McfParserTest_ResolvedGraph.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
@@ -93,9 +92,8 @@ public class McfParserTest {
         IOUtils.toString(
             this.getClass().getResourceAsStream("McfParserTest_Template.tmcf"),
             StandardCharsets.UTF_8);
-    McfGraph act =
-        McfParser.parseTemplateMcfString(
-            mcfString, TestUtil.newLogCtx("McfParserTest_Template.tmcf"));
+    McfParser.IN_MEMORY_FILE_NAME = "McfParserTest_Template.tmcf";
+    McfGraph act = McfParser.parseTemplateMcfString(mcfString, TestUtil.newLogCtx());
     McfGraph exp = expected("McfParserTest_Template.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
@@ -103,7 +101,7 @@ public class McfParserTest {
   @Test
   public void funcParseTemplateMcfAsFile() throws IOException, URISyntaxException {
     String mcfFile = this.getClass().getResource("McfParserTest_Template.tmcf").getPath();
-    McfGraph act = McfParser.parseTemplateMcfFile(mcfFile, TestUtil.newLogCtx(mcfFile));
+    McfGraph act = McfParser.parseTemplateMcfFile(mcfFile, TestUtil.newLogCtx());
     McfGraph exp = expected("McfParserTest_Template.textproto");
     assertThat(act).ignoringRepeatedFieldOrder().isEqualTo(exp);
   }
@@ -112,7 +110,7 @@ public class McfParserTest {
       throws IOException, URISyntaxException {
     String mcfFile = this.getClass().getResource(file_name).getPath();
     McfParser parser =
-        McfParser.init(McfType.INSTANCE_MCF, mcfFile, isResolved, TestUtil.newLogCtx(mcfFile));
+        McfParser.init(McfType.INSTANCE_MCF, mcfFile, isResolved, TestUtil.newLogCtx());
     McfGraph.Builder act = McfGraph.newBuilder();
     act.setType(McfType.INSTANCE_MCF);
     McfGraph n;
@@ -169,7 +167,7 @@ public class McfParserTest {
             false,
             regProp,
             "[",
-            new LogCb(TestUtil.newLogCtx("test"), Level.LEVEL_ERROR, 1));
+            new LogCb(TestUtil.newLogCtx(), Level.LEVEL_ERROR, "InMemory", 1));
     assertNull(actual);
 
     expected.clear();

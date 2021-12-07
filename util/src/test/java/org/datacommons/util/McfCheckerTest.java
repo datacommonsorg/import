@@ -482,6 +482,7 @@ public class McfCheckerTest {
             + "variableMeasured: dcid:Count_Person_Male\n"
             + "observationAbout: dcid:country/IdontKnow\n"
             + "observationDate: \"2019\"\n"
+            + "measurementMethod: dcs:dcAggregate/WorldBankEstimate\n"
             + "value: 10000\n";
     assertTrue(success(mcf, null, true, false));
 
@@ -594,7 +595,7 @@ public class McfCheckerTest {
     if (doExistenceCheck) {
       ec.drainRemoteCalls();
     }
-    return TestUtil.checkLog(log.build(), counter, message);
+    return TestUtil.checkLog(lw.getLog(), counter, message);
   }
 
   private static boolean failure(String mcfString, String counter, String message)

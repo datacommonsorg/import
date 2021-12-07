@@ -1,9 +1,12 @@
 package org.datacommons.util;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -120,6 +123,38 @@ public class StringUtilTest {
 
     // Year + Month + Day + Time.
     assertTrue(StringUtil.isValidISO8601Date("2017-11-09T22:00:01"));
+  }
+
+  @Test
+  public void funcGetISO8601Date() {
+    // Year.
+    LocalDateTime expected = LocalDateTime.of(2017, 1, 1, 0, 0);
+    assertEquals(expected, StringUtil.getValidISO8601Date("2017"));
+    assertNull(StringUtil.getValidISO8601Date("201"));
+
+    // Year + Month.
+    expected = LocalDateTime.of(2017, 2, 1, 0, 0);
+    assertEquals(expected, StringUtil.getValidISO8601Date("2017-02"));
+    assertEquals(expected, StringUtil.getValidISO8601Date("2017-2"));
+    assertEquals(expected, StringUtil.getValidISO8601Date("201702"));
+    assertNull(StringUtil.getValidISO8601Date("2017-Jan"));
+
+    // Year + Month + Day.
+    expected = LocalDateTime.of(2017, 2, 9, 0, 0);
+    assertEquals(expected, StringUtil.getValidISO8601Date("2017-2-9"));
+    expected = LocalDateTime.of(2017, 11, 9, 0, 0);
+    assertEquals(expected, StringUtil.getValidISO8601Date("2017-11-09"));
+    assertEquals(expected, StringUtil.getValidISO8601Date("20171109"));
+    assertNull(StringUtil.getValidISO8601Date("2017-Nov-09"));
+
+    // Year + Month + Day + Time.
+    expected = LocalDateTime.of(2017, 11, 9, 22, 2);
+    assertEquals(expected, StringUtil.getValidISO8601Date("2017-11-09T22:02"));
+    assertNull(StringUtil.getValidISO8601Date("2017-11-09D22:02"));
+
+    // Year + Month + Day + Time.
+    expected = LocalDateTime.of(2017, 11, 9, 22, 0, 1);
+    assertEquals(expected, StringUtil.getValidISO8601Date("2017-11-09T22:00:01"));
   }
 
   @Test

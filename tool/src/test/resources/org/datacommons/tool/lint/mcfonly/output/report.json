@@ -1,51 +1,62 @@
 {
   "levelSummary": {
-    "LEVEL_ERROR": "36",
-    "LEVEL_WARNING": "16"
-  },
-  "counterSet": {
-    "counters": {
-      "MCF_UnexpectedProperty": "1",
-      "MCF_MalformedColonLessLine": "1",
-      "Mutator_MissingTypeOf": "1",
-      "MCF_MalformedNodeName": "1",
-      "MCF_InvalidLatitude": "1",
-      "MCF_InvalidLongitude": "1",
-      "MCF_MalformedComplexValue": "1",
-      "MCF_MalformedComplexValueParts": "1",
-      "MCF_QuantityMalformedValue": "1",
-      "MCF_QuantityRangeMalformedValues": "3",
-      "Existence_NumChecks": "149",
-      "Sanity_MissingOrEmpty_typeOf": "1",
-      "Sanity_InvalidChars_typeOf": "1",
-      "Sanity_InvalidObsDate": "1",
-      "Sanity_NonDoubleObsValue": "1",
-      "Sanity_ObsMissingValueProp": "1",
-      "Sanity_InvalidChars_dcid": "1",
-      "Sanity_NonAsciiValueInNonText": "1",
-      "Sanity_InvalidChars_location": "1",
-      "Sanity_MultipleDcidValues": "1",
-      "Sanity_MissingOrEmpty_populationType": "2",
-      "Sanity_MissingOrEmpty_measuredProperty": "1",
-      "Sanity_MissingOrEmpty_statType": "1",
-      "Sanity_UnknownStatType": "1",
-      "Sanity_NotInitLowerPropName": "1",
-      "Sanity_InvalidChars_domainIncludes": "1",
-      "Sanity_UnexpectedPropInProperty": "1",
-      "Sanity_NonAsciiValueInSchema": "1",
-      "Sanity_NotInitLower_labelInProperty": "1",
-      "Sanity_EmptySchemaValue": "1",
-      "Sanity_DcidNameMismatchInSchema": "2",
-      "Sanity_UnexpectedPropInClass": "1",
-      "Sanity_NotInitUpper_nameInClass": "1",
-      "Sanity_MissingOrEmpty_subClassOf": "1",
-      "Existence_NumDcCalls": "2",
-      "Existence_MissingReference_containedIn": "1",
-      "Existence_MissingReference_statType": "6",
-      "Existence_MissingReference_domainIncludes": "2",
-      "Existence_MissingReference_containedInPlace": "1",
-      "Existence_MissingReference_Property": "4",
-      "Existence_MissingReference_subClassOf": "1"
+    "LEVEL_INFO": {
+      "counters": {
+        "Existence_NumChecks": "178",
+        "Existence_NumDcCalls": "2"
+      }
+    },
+    "LEVEL_WARNING": {
+      "counters": {
+        "Existence_MissingReference_statType": "6",
+        "Sanity_ObsMissingValueProp": "1",
+        "Existence_MissingReference_domainIncludes": "2",
+        "Existence_MissingReference_containedIn": "1",
+        "Existence_MissingReference_Property": "4",
+        "Existence_MissingReference_containedInPlace": "1",
+        "Existence_MissingReference_subClassOf": "1"
+      }
+    },
+    "LEVEL_ERROR": {
+      "counters": {
+        "MCF_MalformedComplexValue": "1",
+        "Sanity_InvalidChars_location": "1",
+        "Sanity_DifferentDcidsForSameStatVar": "1",
+        "MCF_InvalidLongitude": "1",
+        "Sanity_InvalidObsDate": "1",
+        "Resolution_IrreplaceableLocalRef": "4",
+        "Mutator_MissingTypeOf": "1",
+        "MCF_MalformedComplexValueParts": "1",
+        "Sanity_NonAsciiValueInSchema": "1",
+        "Sanity_NotInitLower_labelInProperty": "1",
+        "Sanity_InvalidChars_domainIncludes": "1",
+        "Sanity_MissingOrEmpty_subClassOf": "1",
+        "MCF_QuantityRangeMalformedValues": "3",
+        "Sanity_MissingOrEmpty_typeOf": "1",
+        "MCF_MalformedColonLessLine": "1",
+        "Sanity_NotInitLowerPropName": "1",
+        "Sanity_UnexpectedPropInProperty": "1",
+        "Sanity_InvalidChars_typeOf": "1",
+        "Sanity_EmptySchemaValue": "1",
+        "MCF_QuantityMalformedValue": "1",
+        "Sanity_NonAsciiValueInNonText": "1",
+        "Sanity_MissingOrEmpty_measuredProperty": "1",
+        "Resolution_UnassignableNodeDcid": "4",
+        "Sanity_SameDcidForDifferentStatVars": "1",
+        "MCF_InvalidLatitude": "1",
+        "Sanity_UnexpectedPropInClass": "1",
+        "Sanity_NotInitUpper_nameInClass": "1",
+        "Sanity_InvalidChars_dcid": "1",
+        "Sanity_DcidNameMismatchInSchema": "2",
+        "Sanity_MissingOrEmpty_statType": "1",
+        "MCF_UnexpectedProperty": "1",
+        "Resolution_OrphanLocalReference_containedInPlace": "1",
+        "Sanity_MultipleDcidValues": "1",
+        "MCF_MalformedNodeName": "1",
+        "Sanity_MissingOrEmpty_populationType": "2",
+        "Resolution_DcidAssignmentFailure_City": "1",
+        "Sanity_NonDoubleObsValue": "1"
+      }
     }
   },
   "entries": [{
@@ -244,14 +255,6 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "McfOnly.mcf",
-      "lineNumber": "77"
-    },
-    "userMessage": "Found an unknown statType value :: value: '', node: 'dcid:Count_Death_10To12'",
-    "counterKey": "Sanity_UnknownStatType"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "McfOnly.mcf",
       "lineNumber": "109"
     },
     "userMessage": "Found property name that does not start with a lower-case :: property: 'PopulationType', node: 'dcid:Count_Death_15YearsPlus'",
@@ -294,7 +297,7 @@
       "file": "McfOnly.mcf",
       "lineNumber": "116"
     },
-    "userMessage": "Found a property reference that does not start with a lower-case :: reference: 'BeverageType', property: 'label, node: 'dcid:beverageType'",
+    "userMessage": "Found a property reference that does not start with a lower-case :: reference: 'BeverageType', property: 'label', node: 'dcid:beverageType'",
     "counterKey": "Sanity_NotInitLower_labelInProperty"
   }, {
     "level": "LEVEL_ERROR",
@@ -326,7 +329,7 @@
       "file": "McfOnly.mcf",
       "lineNumber": "123"
     },
-    "userMessage": "Found a class reference that does not start with an upper-case :: reference: 'pop', property: 'name, node: 'dcid:Pop'",
+    "userMessage": "Found a class reference that does not start with an upper-case :: reference: 'pop', property: 'name', node: 'dcid:Pop'",
     "counterKey": "Sanity_NotInitUpper_nameInClass"
   }, {
     "level": "LEVEL_ERROR",
@@ -344,6 +347,22 @@
     },
     "userMessage": "Found a missing or empty property value :: property: 'subClassOf', node: 'dcid:Pop', type: 'Class'",
     "counterKey": "Sanity_MissingOrEmpty_subClassOf"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "145"
+    },
+    "userMessage": "Found same curated ID for different StatVars :: curatedDcid: 'Count_Person', node: 'Count_Person'",
+    "counterKey": "Sanity_SameDcidForDifferentStatVars"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "154"
+    },
+    "userMessage": "Found different curated IDs for same StatVar :: dcid1: 'Count_Person', dcid2: 'Count_Person_Female', node: 'dcid:Count_Person_Female'",
+    "counterKey": "Sanity_DifferentDcidsForSameStatVar"
   }, {
     "level": "LEVEL_WARNING",
     "location": {
@@ -464,5 +483,91 @@
     },
     "userMessage": "Failed reference existence check :: subject: '', predicate: 'domainIncludes', object: '', node: 'dcid:Count_Death_10To12'",
     "counterKey": "Existence_MissingReference_domainIncludes"
-  }]
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "59"
+    },
+    "userMessage": "Found orphan local ref :: ref: 'l:USACountry', property: 'containedInPlace', node: 'dcid:dc/mx44'",
+    "counterKey": "Resolution_OrphanLocalReference_containedInPlace"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "10"
+    },
+    "userMessage": "Failed to assign DCID :: type: 'City', node: 'CityStats/E2/2'",
+    "counterKey": "Resolution_DcidAssignmentFailure_City"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "41"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/4'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "32"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/3'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "23"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/2'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Unable to replace a local reference :: ref: 'CityStats/E2/2', node: 'CityStats/E3/2'",
+    "counterKey": "Resolution_IrreplaceableLocalRef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "41"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/4'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "32"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/3'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "23"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E3/2', node: 'CityStats/E4/2'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "McfOnly.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'CityStats/E2/2', node: 'CityStats/E3/2'",
+    "counterKey": "Resolution_UnassignableNodeDcid"
+  }],
+  "commandArgs": {
+    "existenceChecks": true,
+    "resolution": "RESOLUTION_MODE_LOCAL",
+    "numThreads": 1,
+    "statChecks": true
+  }
 }

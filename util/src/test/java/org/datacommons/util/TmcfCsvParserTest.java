@@ -32,6 +32,7 @@ import org.junit.Test;
 public class TmcfCsvParserTest {
   private static final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
   private Debug.Log.Builder log = Debug.Log.newBuilder();
+  private LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
 
   @Before
   public void setUp() {
@@ -44,7 +45,7 @@ public class TmcfCsvParserTest {
     String got = run("TmcfCsvParser_SVO.tmcf", "TmcfCsvParser_SVO.csv");
     assertEquals(want, got);
     // The third line has empty values.
-    Debug.Log debugLog = log.build();
+    Debug.Log debugLog = logCtx.getLog();
     assertTrue(TestUtil.checkLog(debugLog, "Sanity_MissingOrEmpty_value", "E:FBI_Crime->E1"));
     assertTrue(
         TestUtil.checkLog(
@@ -56,8 +57,6 @@ public class TmcfCsvParserTest {
             debugLog,
             "StrSplit_MultiToken_observationAbout",
             "property: 'observationAbout', node: 'E:FBI_Crime->E1'"));
-    assertTrue(TestUtil.checkCounter(debugLog, "NumPVSuccesses", 42));
-    assertTrue(TestUtil.checkCounter(debugLog, "NumNodeSuccesses", 7));
   }
 
   @Test
@@ -76,7 +75,6 @@ public class TmcfCsvParserTest {
 
   @Test
   public void tmcfFailure() throws IOException, URISyntaxException, InterruptedException {
-    LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
     TmcfCsvParser parser =
         TmcfCsvParser.init(
             resourceFile("TmcfCsvParser_SVO_Failure.tmcf"),
@@ -86,13 +84,11 @@ public class TmcfCsvParserTest {
     assertEquals(null, parser);
     assertTrue(
         TestUtil.checkLog(
-            log.build(), "Sanity_TmcfMissingColumn", "Count_CriminalActivities_Missing"));
+            logCtx.getLog(), "Sanity_TmcfMissingColumn", "Count_CriminalActivities_Missing"));
   }
 
   private String run(String mcfFile, String csvFile)
       throws IOException, URISyntaxException, InterruptedException {
-    LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
-    logCtx.setLocationFile(csvFile);
     TmcfCsvParser parser =
         TmcfCsvParser.init(resourceFile(mcfFile), resourceFile(csvFile), ',', logCtx);
     List<McfGraph> result = new ArrayList<>();

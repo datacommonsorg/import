@@ -1,14 +1,13 @@
 package org.datacommons.util;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,19 +21,19 @@ import org.datacommons.proto.Mcf;
 // along with a logging callback (LogCb).  The implementation batches calls to DC, and on
 // completion invokes the callback to notify on existence failures.  At the very end, users
 // need to issue a final drain call (drainRemoteCalls).
-//
-// TODO: Use POST instead of GET while calling DC so we're not limited by URI length and can
-//  batch even more.
+// This class is thread-safe.
 public class ExistenceChecker {
   private static final Logger logger = LogManager.getLogger(ExistenceChecker.class);
-  // Use the staging end-point to not impact prod.
-  private static final String API_ROOT = "https://staging.api.datacommons.org/node/property-values";
+  // Use the autopush end-point so we get more recent schema additions that
+  // haven't rolled out.
+  private static final String API_ROOT =
+      "https://autopush.api.datacommons.org/node/property-values";
   // For now we only need checks for certain Property/Class props.
   private static final Set<String> SCHEMA_PROPERTIES =
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES, Vocabulary.SUB_CLASS_OF);
 
   // Batching thresholds.  Allow tests to set this.
-  public static int DC_CALL_BATCH_LIMIT = 100;
+  public static int DC_CALL_BATCH_LIMIT = 1000;
   public static int MAX_PENDING_CALLS = 100000;
 
   // Useful for mocking.
@@ -68,15 +67,16 @@ public class ExistenceChecker {
     remoteBatchMap = new HashMap<>();
   }
 
-  public void submitNodeCheck(String node, LogCb logCb) throws IOException, InterruptedException {
-    logCtx.incrementCounterBy("Existence_NumChecks", 1);
+  public synchronized void submitNodeCheck(String node, LogCb logCb)
+      throws IOException, InterruptedException {
+    logCtx.incrementInfoCounterBy("Existence_NumChecks", 1);
     if (checkLocal(node, Vocabulary.TYPE_OF, "", logCb)) {
       return;
     }
     batchRemoteCall(node, Vocabulary.TYPE_OF, "", logCb);
   }
 
-  public void submitTripleCheck(String sub, String pred, String obj, LogCb logCb)
+  public synchronized void submitTripleCheck(String sub, String pred, String obj, LogCb logCb)
       throws IOException, InterruptedException {
     if (pred.equals(Vocabulary.DOMAIN_INCLUDES) && (sub.contains("/") || sub.equals("count"))) {
       // Don't bother with domain checks for schema-less properties.
@@ -84,14 +84,14 @@ public class ExistenceChecker {
       // of a set.
       return;
     }
-    logCtx.incrementCounterBy("Existence_NumChecks", 1);
+    logCtx.incrementInfoCounterBy("Existence_NumChecks", 1);
     if (checkLocal(sub, pred, obj, logCb)) {
       return;
     }
     batchRemoteCall(sub, pred, obj, logCb);
   }
 
-  public void addLocalGraph(Mcf.McfGraph graph) {
+  public synchronized void addLocalGraph(Mcf.McfGraph graph) {
     for (Map.Entry<String, Mcf.McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
       // Skip doing anything with StatVarObs.
       String typeOf = McfUtil.getPropVal(node.getValue(), Vocabulary.TYPE_OF);
@@ -127,7 +127,7 @@ public class ExistenceChecker {
     }
   }
 
-  public void drainRemoteCalls() throws IOException, InterruptedException {
+  public synchronized void drainRemoteCalls() throws IOException, InterruptedException {
     // To avoid mutating map while iterating, get the keys first.
     List<String> preds = new ArrayList<>(remoteBatchMap.keySet());
     for (var pred : preds) {
@@ -196,7 +196,7 @@ public class ExistenceChecker {
   private void performDcCall(
       String pred, List<String> subs, Map<String, Map<String, List<LogCb>>> subMap)
       throws IOException, InterruptedException {
-    logCtx.incrementCounterBy("Existence_NumDcCalls", 1);
+    logCtx.incrementInfoCounterBy("Existence_NumDcCalls", 1);
 
     var dataJson = callDc(subs, pred);
 
@@ -287,23 +287,23 @@ public class ExistenceChecker {
   private JsonObject callDc(List<String> nodes, String property)
       throws IOException, InterruptedException {
     List<String> args = new ArrayList<>();
+    JsonObject arg = new JsonObject();
+    JsonArray dcids = new JsonArray();
     for (var node : nodes) {
-      args.add("dcids=" + spaceHandlingUrlEncoder(node));
+      dcids.add(node);
     }
-    args.add("property=" + spaceHandlingUrlEncoder(property));
-    args.add("direction=out");
-    var url = API_ROOT + "?" + String.join("&", args);
+    arg.add("dcids", dcids);
+    arg.addProperty("property", property);
+    arg.addProperty("direction", "out");
     var request =
-        HttpRequest.newBuilder(URI.create(url)).header("accept", "application/json").build();
+        HttpRequest.newBuilder(URI.create(API_ROOT))
+            .header("accept", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(arg.toString()))
+            .build();
     var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     var payloadJson = new JsonParser().parse(response.body().trim()).getAsJsonObject();
     if (payloadJson == null || !payloadJson.has("payload")) return null;
     return new JsonParser().parse(payloadJson.get("payload").getAsString()).getAsJsonObject();
-  }
-
-  // See https://stackoverflow.com/a/4737967.  Mixer does not treat '+' in param value as space.
-  private String spaceHandlingUrlEncoder(String part) {
-    return URLEncoder.encode(part, StandardCharsets.UTF_8).replace("+", "%20");
   }
 
   private static void logEntry(LogCb logCb, String obj) {

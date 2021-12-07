@@ -29,20 +29,22 @@ import org.junit.rules.TemporaryFolder;
 
 // Common set of utils used in e2e tests.
 public class TestUtil {
-  public static void assertReportFilesAreSimilar(
-      Expect expect, File directory, String expected, String actual) throws IOException {
-    String testCase = directory.getName();
+  public static void assertReportFilesAreSimilar(Expect expect, String expected, String actual)
+      throws IOException {
     Debug.Log expectedLog = reportToProto(expected).build();
     Debug.Log actualLog = reportToProto(actual).build();
-    expect
-        .that(expectedLog.getCounterSet().getCountersMap())
-        .isEqualTo(actualLog.getCounterSet().getCountersMap());
     expect.that(expectedLog.getLevelSummaryMap()).isEqualTo(actualLog.getLevelSummaryMap());
+    expect.that(expectedLog.getCommandArgs()).isEqualTo(actualLog.getCommandArgs());
     expect
         .about(ProtoTruth.protos())
-        .that(expectedLog.getEntriesList())
+        .that(actualLog.getEntriesList())
         .ignoringRepeatedFieldOrder()
         .containsExactlyElementsIn(expectedLog.getEntriesList());
+    expect
+        .about(ProtoTruth.protos())
+        .that(actualLog.getStatsCheckSummaryList())
+        .ignoringRepeatedFieldOrder()
+        .containsExactlyElementsIn(expectedLog.getStatsCheckSummaryList());
   }
 
   private static Debug.Log.Builder reportToProto(String report)
@@ -52,9 +54,9 @@ public class TestUtil {
     return logBuilder;
   }
 
-  public static Path getTestFilePath(TemporaryFolder testFolder, String fileName)
+  public static Path getTestFilePath(TemporaryFolder testFolder, String directory, String fileName)
       throws IOException {
-    return Paths.get(testFolder.getRoot().getPath(), fileName);
+    return Paths.get(testFolder.getRoot().getPath(), directory, fileName);
   }
 
   public static Path getOutputFilePath(String parentDirectoryPath, String fileName)

@@ -1,0 +1,38 @@
+# From misc.mcf:57
+# Error: Found orphan local ref :: ref: 'l:AlphabetId', property: 'parent', node: 'GoogleId'
+Node: GoogleId
+parent: l:AlphabetId
+dcid: "org/goog"
+name: "Google Inc"
+typeOf: dcid:Organization
+
+# From misc.mcf:51
+# Error: Failed to assign DCID :: type: 'Song', node: 'SongLocalId'
+Node: SongLocalId
+albumOf: l:AlbumLocalId
+name: "Liberian Girl"
+typeOf: dcid:Song
+
+# From misc.mcf:15
+# Error: Failed to assign DCID :: type: 'StatisticalVariable', node: 'SVId'
+Node: SVId
+populationType: dcid:Person
+measuredProperty: dcid:count
+typeOf: dcid:StatisticalVariable
+
+# From misc.mcf:45
+# Error: Failed to assign DCID :: type: 'MusicAlbum', node: 'AlbumLocalId'
+Node: AlbumLocalId
+bestSong: l:SongLocalId
+name: "Bad"
+typeOf: dcid:MusicAlbum
+
+# From misc.mcf:21
+# Error: Found a local ref to an unresolvable node :: ref: 'l:SVId', property: 'variableMeasured', node: 'UnresSVObsId'
+Node: UnresSVObsId
+observationDate: "2017-01"
+observationAbout: dcid:geoId/0649670
+variableMeasured: l:SVId
+value: 1000
+typeOf: dcid:StatVarObservation
+

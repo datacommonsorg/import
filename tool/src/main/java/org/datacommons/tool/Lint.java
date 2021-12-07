@@ -14,16 +14,13 @@
 
 package org.datacommons.tool;
 
-import com.google.protobuf.InvalidProtocolBufferException;
+import freemarker.template.TemplateException;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
 import org.datacommons.util.FileGroup;
-import org.datacommons.util.LogWrapper;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "lint", description = "Run various checks on input MCF/TMCF/CSV files")
@@ -47,50 +44,29 @@ class Lint implements Callable<Integer> {
       scope = CommandLine.ScopeType.INHERIT)
   private Character delimiter;
 
-  @CommandLine.Option(
-      names = {"-e", "--existence_checks"},
-      defaultValue = "true",
-      description =
-          "Check DCID references to schema nodes against the KG and locally. If set, then "
-              + "calls will be made to the Staging API server, and instance MCFs get fully "
-              + "loaded into memory.")
-  private boolean doExistenceChecks;
-
   @CommandLine.ParentCommand private Main parent;
 
   @CommandLine.Spec CommandLine.Model.CommandSpec spec; // injected by picocli
 
   @Override
-  public Integer call() throws IOException, InvalidProtocolBufferException {
-
-    FileGroup fg = FileGroup.Build(files, spec, logger);
-
-    if (delimiter == null) {
-      delimiter = fg.GetNumTsv() > 0 ? '\t' : ',';
+  public Integer call() throws IOException, TemplateException {
+    if (!parent.outputDir.exists()) {
+      parent.outputDir.mkdirs();
     }
-    LogWrapper logCtx = new LogWrapper(Debug.Log.newBuilder(), parent.outputDir.toPath());
-    Processor processor = new Processor(doExistenceChecks, parent.verbose, logCtx);
-    Integer retVal = 0;
-    try {
-      // Process all the instance MCF first, so that we can add the nodes for Existence Check.
-      for (File f : fg.GetMcfs()) {
-        processor.processNodes(Mcf.McfType.INSTANCE_MCF, f);
-      }
-      if (doExistenceChecks) {
-        processor.checkAllNodes();
-      }
-      if (!fg.GetCsvs().isEmpty()) {
-        processor.processTables(fg.GetTmcf(), fg.GetCsvs(), delimiter, null);
-      } else if (fg.GetTmcfs() != null) {
-        for (File f : fg.GetTmcfs()) {
-          processor.processNodes(Mcf.McfType.TEMPLATE_MCF, f);
-        }
-      }
-    } catch (DCTooManyFailuresException | InterruptedException ex) {
-      // Regardless of the failures, we will dump the logCtx and exit.
-      retVal = -1;
+    Args args = new Args();
+    args.doExistenceChecks = parent.doExistenceChecks;
+    args.resolutionMode = parent.resolutionMode;
+    args.doStatChecks = parent.doStatChecks;
+    args.samplePlaces = parent.samplePlaces;
+    args.numThreads = parent.numThreads;
+    if (args.samplePlaces != null && !args.doStatChecks) {
+      logger.warn(
+          "Sample places entered without stat checks being enabled. Sample places will be unused.");
     }
-    logCtx.persistLog(false);
-    return retVal;
+    args.verbose = parent.verbose;
+    args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
+    args.outputDir = parent.outputDir.toPath();
+    args.generateSummaryReport = parent.generateSummaryReport;
+    return Processor.process(args);
   }
 }

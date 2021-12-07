@@ -28,6 +28,13 @@ public class McfUtil {
     if (sort) Collections.sort(keys);
     for (String key : keys) {
       Mcf.McfGraph.PropertyValues node = graph.getNodesMap().get(key);
+      if (node.hasErrorMessage()) {
+        // Print location and user-message.
+        for (var loc : node.getLocationsList()) {
+          result.append("# From " + loc.getFile() + ":" + loc.getLineNumber() + "\n");
+        }
+        result.append("# Error: " + node.getErrorMessage() + "\n");
+      }
       result.append(sentinel + ": " + key + "\n");
       List<String> lines = new ArrayList<>();
       for (Map.Entry<String, Mcf.McfGraph.Values> pv : node.getPvsMap().entrySet()) {
@@ -71,26 +78,19 @@ public class McfUtil {
 
   public static List<String> getPropVals(Mcf.McfGraph.PropertyValues node, String property) {
     List<String> result = new ArrayList<>();
-    try {
-      Mcf.McfGraph.Values vals = node.getPvsOrThrow(property);
-      if (vals.getTypedValuesCount() > 0) {
-        for (Mcf.McfGraph.TypedValue tv : vals.getTypedValuesList()) {
-          result.add(stripNamespace(tv.getValue()));
-        }
+    Mcf.McfGraph.Values vals = node.getPvsOrDefault(property, null);
+    if (vals != null && vals.getTypedValuesCount() > 0) {
+      for (Mcf.McfGraph.TypedValue tv : vals.getTypedValuesList()) {
+        result.add(stripNamespace(tv.getValue()));
       }
-    } catch (IllegalArgumentException ex) {
-      // Not having a value is not an error.
     }
     return result;
   }
 
   public static List<Mcf.McfGraph.TypedValue> getPropTvs(
       Mcf.McfGraph.PropertyValues node, String property) {
-    try {
-      return node.getPvsOrThrow(property).getTypedValuesList();
-    } catch (IllegalArgumentException ex) {
-      // Not having a value is not an error.
-    }
+    var vals = node.getPvsOrDefault(property, null);
+    if (vals != null) return vals.getTypedValuesList();
     return null;
   }
 

@@ -15,9 +15,9 @@
 package org.datacommons.tool;
 
 import java.io.File;
+import java.util.List;
 import picocli.CommandLine;
 
-// TODO: Add e2e tests once Debug.Log is fully plumbed in.
 @CommandLine.Command(
     name = "dc-import",
     mixinStandardHelpOptions = true,
@@ -27,8 +27,10 @@ import picocli.CommandLine;
 class Main {
   @CommandLine.Option(
       names = {"-o", "--output-dir"},
-      description = "Directory to write output files. Default is current working directory.",
-      defaultValue = ".",
+      description =
+          "Directory to write output files. Default is dc_generated/ within current"
+              + " working directory.",
+      defaultValue = "dc_generated",
       scope = CommandLine.ScopeType.INHERIT)
   public File outputDir;
 
@@ -39,7 +41,63 @@ class Main {
       scope = CommandLine.ScopeType.INHERIT)
   public boolean verbose;
 
+  @CommandLine.Option(
+      names = {"-e", "--existence-checks"},
+      defaultValue = "true",
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "Check DCID references to schema nodes against the KG and locally. If set, then "
+              + "calls will be made to the Staging API server, and instance MCFs get fully "
+              + "loaded into memory. Defaults to true.")
+  public boolean doExistenceChecks;
+
+  @CommandLine.Option(
+      names = {"-r", "--resolution"},
+      defaultValue = "LOCAL",
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "Specifies the mode of resolution to use: ${COMPLETION-CANDIDATES}.  For no resolution,"
+              + " set NONE.  To lookup external IDs (like ISO) in DC, resolve local references "
+              + "and generated DCIDs, set FULL.  To just resolve local references and generate "
+              + "DCIDs, set LOCAL.  Note that FULL mode may be slower since it makes "
+              + "(batched) DC Recon API calls and two passes over your CSV files. Default to "
+              + "LOCAL.")
+  public Args.ResolutionMode resolutionMode = Args.ResolutionMode.NONE;
+
+  @CommandLine.Option(
+      names = {"-s", "--stat-checks"},
+      defaultValue = "true",
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "Checks integrity of time series by checking for holes, variance in values, etc. "
+              + "Defaults to true.")
+  public boolean doStatChecks;
+
+  @CommandLine.Option(
+      names = {"-p", "--sample-places"},
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "List of place dcids to run stats check on. This should only be set if "
+              + "--stat-checks is true. If --stat-checks is true and this is not set, 5 sample places "
+              + "are picked for roughly each distinct place type.")
+  public List<String> samplePlaces;
+
+  @CommandLine.Option(
+      names = {"-n", "--num-threads"},
+      defaultValue = "1",
+      scope = CommandLine.ScopeType.INHERIT,
+      description = "Number of concurrent threads used for processing CSVs. Defaults to 1.")
+  public int numThreads;
+
+  @CommandLine.Option(
+      names = {"-sr", "--summary-report"},
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT,
+      description = "Generates a summary report in html format.")
+  public boolean generateSummaryReport;
+
   public static void main(String... args) {
-    System.exit(new CommandLine(new Main()).execute(args));
+    System.exit(
+        new CommandLine(new Main()).setCaseInsensitiveEnumValuesAllowed(true).execute(args));
   }
 }

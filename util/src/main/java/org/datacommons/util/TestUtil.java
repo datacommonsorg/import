@@ -17,17 +17,18 @@ package org.datacommons.util;
 import com.google.protobuf.TextFormat;
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.Map;
+import org.apache.commons.io.IOUtils;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 
 // Common set of utils used in unit tests.
 public class TestUtil {
-  public static LogWrapper newLogCtx(String mcfFile) {
+  public static LogWrapper newLogCtx() {
     Debug.Log.Builder log = Debug.Log.newBuilder();
-    LogWrapper logCtx = new LogWrapper(log, Path.of("/tmp/report.html"));
-    logCtx.setLocationFile(mcfFile);
+    LogWrapper logCtx = new LogWrapper(log);
     return logCtx;
   }
 
@@ -38,18 +39,30 @@ public class TestUtil {
   }
 
   public static Mcf.McfGraph graphFromMcf(String mcfString) throws IOException {
-    return McfParser.parseInstanceMcfString(mcfString, false, TestUtil.newLogCtx("InMemory"));
+    return McfParser.parseInstanceMcfString(mcfString, false, TestUtil.newLogCtx());
   }
 
   public static String mcfFromFile(String filePath) throws IOException {
-    Mcf.McfGraph graph =
-        McfParser.parseInstanceMcfFile(filePath, false, TestUtil.newLogCtx(filePath));
+    Mcf.McfGraph graph = McfParser.parseInstanceMcfFile(filePath, false, TestUtil.newLogCtx());
     return McfUtil.serializeMcfGraph(graph, true);
   }
 
+  public static String stringFromFile(String filePath) throws IOException {
+    return IOUtils.toString(Paths.get(filePath).toUri(), StandardCharsets.UTF_8);
+  }
+
+  public static long getCounter(Debug.Log log, String counter) {
+    for (Map.Entry<String, Debug.Log.CounterSet> kv : log.getLevelSummaryMap().entrySet()) {
+      if (kv.getValue().getCountersMap().containsKey(counter)) {
+        return kv.getValue().getCountersMap().get(counter);
+      }
+    }
+    return -1;
+  }
+
   public static boolean checkLog(Debug.Log log, String counter, String subMessage) {
-    if (!log.getCounterSet().getCountersMap().containsKey(counter)) {
-      System.err.println("Missing counter " + counter + " stat :: " + log.getCounterSet());
+    if (getCounter(log, counter) == -1) {
+      System.err.println("Missing counter " + counter + " stat :: " + log.getLevelSummaryMap());
       return false;
     }
     boolean foundCounter = false;
@@ -64,17 +77,18 @@ public class TestUtil {
     if (foundCounter) {
       System.err.println("Missing message fragment '" + subMessage + "' :: " + log);
     } else {
-      System.err.println("Missing counter " + counter + " in entries :: " + log.getCounterSet());
+      System.err.println(
+          "Missing counter " + counter + " in entries :: " + log.getLevelSummaryMap());
     }
     return false;
   }
 
   public static boolean checkCounter(Debug.Log log, String counter, long expectedCount) {
-    if (!log.getCounterSet().getCountersMap().containsKey(counter)) {
-      System.err.println("Missing counter " + counter + " stat :: " + log.getCounterSet());
+    long actualCount = getCounter(log, counter);
+    if (actualCount == -1) {
+      System.err.println("Missing counter " + counter + " stat :: " + log.getLevelSummaryMap());
       return false;
     }
-    long actualCount = log.getCounterSet().getCountersOrDefault(counter, -1);
     if (actualCount == expectedCount) {
       return true;
     }

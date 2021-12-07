@@ -47,6 +47,8 @@ message McfGraph {
 
     // Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
     optional string template_node = 3;
+    // Debug info. Error message for setting comments while serializing a node.
+    optional string error_message = 4;
   }
 
   // Type of the sub-graph.

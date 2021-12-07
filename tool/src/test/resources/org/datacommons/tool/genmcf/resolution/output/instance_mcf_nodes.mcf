@@ -1,0 +1,40 @@
+Node: ObsLocalId
+observationDate: "2017-01"
+measuredProperty: dcid:count
+typeOf: dcid:Observation
+measuredValue: 10000
+observedNode: dcid:dc/p/2cw8nf4qqhdtf
+keyString: "observedNode=dc/p/2cw8nf4qqhdtfobservationDate=2017-01measuredProperty=countmeasuredValue=10000"
+dcid: "dc/o/dxf8vk8k664nh"
+
+Node: PopLocalId
+populationType: dcid:Person
+gender: dcid:Male
+location: dcid:geoId/0649670
+typeOf: dcid:StatisticalPopulation
+age: dcid:Years18Onwards
+keyString: "PersongeoId/0649670ageYears18OnwardsgenderMale"
+dcid: "dc/p/2cw8nf4qqhdtf"
+
+Node: Years18Onwards
+unit: dcid:Years
+dcid: "Years18Onwards"
+endValue: "-"
+name: "Years 18 Onwards"
+startValue: 18
+typeOf: dcid:QuantityRange
+
+Node: SVObsId
+observationDate: "2017-01"
+observationAbout: dcid:geoId/0649670
+variableMeasured: dcid:Count_Person
+value: 1000
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/0649670variableMeasured=Count_PersonobservationDate=2017-01value=1000"
+dcid: "dc/o/j9pj9eg51geqf"
+
+Node: PlaceLocalId
+wikidataId: "Q486860"
+typeOf: dcid:City
+dcid: "geoId/0649670"
+

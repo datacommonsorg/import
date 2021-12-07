@@ -1,0 +1,62 @@
+Node: SVTest/E0/1
+typeOf: dcid:StatVarObservation
+observationDate: 2014
+observationAbout: dcid:geoId/06
+variableMeasured: dcid:Count_Person
+measurementMethod: dcid:CensusACS5YrSurvey
+value: 1000100
+
+Node: SVTest/E0/2
+typeOf: dcid:StatVarObservation
+observationDate: 2015
+observationAbout: dcid:geoId/06
+variableMeasured: dcid:Count_Person
+measurementMethod: dcid:CensusACS5YrSurvey
+value: 1000400
+
+Node: SVTest/E0/3
+typeOf: dcid:StatVarObservation
+observationDate: 2015
+observationAbout: dcid:geoId/06
+variableMeasured: dcid:Count_Person_Female
+measurementMethod: dcid:CensusACS5YrSurvey
+value: 500200
+
+Node: SVTest/E0/4
+typeOf: dcid:StatVarObservation
+observationDate: 2016
+observationAbout: dcid:geoId/06
+variableMeasured: dcid:Count_Person_Female
+measurementMethod: dcid:CensusACS5YrSurvey
+value: 500300
+
+Node: SVTest/E0/5
+typeOf: dcid:StatVarObservation
+observationDate: 2018
+observationAbout: dcid:geoId/06
+variableMeasured: dcid:Count_Person
+measurementMethod: dcid:CensusACS5YrSurvey
+value: 1000400
+
+Node: SVTest/E0/6
+typeOf: dcid:StatVarObservation
+observationDate: 2019
+observationAbout: dcid:geoId/06
+variableMeasured: dcid:Count_Person
+measurementMethod: dcid:CensusACS5YrSurvey
+value: 1000400
+
+Node: SVTest/E0/7
+typeOf: dcid:StatVarObservation
+observationDate: 2020
+observationAbout: dcid:geoId/06
+variableMeasured: dcid:Count_Person
+measurementMethod: dcid:CensusACS5YrSurvey
+value: 1000400
+
+Node: SVTest/E0/8
+typeOf: dcid:StatVarObservation
+observationDate: 2014
+observationAbout: dcid:geoId/06
+variableMeasured: dcid:Count_Person
+value: 1000101

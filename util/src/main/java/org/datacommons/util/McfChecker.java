@@ -29,35 +29,39 @@ import org.datacommons.proto.Mcf;
 // TODO: Add more column information
 // TODO: Pass in associated SV nodes to validate SVObs better.
 public class McfChecker {
-  private final int MAX_DCID_LENGTH = 256;
-  private final List<String> PROPS_ONLY_IN_PROP =
+  private static int MAX_DCID_LENGTH = 256;
+  private static final List<String> PROPS_ONLY_IN_PROP =
       List.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES, Vocabulary.SUB_PROPERTY_OF);
-  private final List<String> PROPS_ONLY_IN_CLASS = List.of(Vocabulary.SUB_CLASS_OF);
-  private final Set<String> CLASS_REFS_IN_CLASS =
+  private static List<String> PROPS_ONLY_IN_CLASS = List.of(Vocabulary.SUB_CLASS_OF);
+  private static Set<String> CLASS_REFS_IN_CLASS =
       Set.of(Vocabulary.NAME, Vocabulary.LABEL, Vocabulary.DCID, Vocabulary.SUB_CLASS_OF);
-  private final Set<String> CLASS_REFS_IN_PROP =
+  private static Set<String> CLASS_REFS_IN_PROP =
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES);
-  private final Set<String> PROP_REFS_IN_PROP =
+  private static Set<String> PROP_REFS_IN_PROP =
       Set.of(Vocabulary.NAME, Vocabulary.LABEL, Vocabulary.DCID, Vocabulary.SUB_PROPERTY_OF);
 
   // Includes: a-z A-Z 0-9 _ & + - % / . )( :
-  private final Pattern VALID_DCID_PATTERN = Pattern.compile("^[\\w&/%\\)\\(+\\-\\.:]+$");
+  private static Pattern VALID_DCID_PATTERN = Pattern.compile("^[\\w&/%\\)\\(+\\-\\.:]+$");
   // Everything in VALID_DCID_PATTERN, and then: ' * >< ][ | ; <space>
   // TODO: Drop this after Bio DCIDs are fixed
-  private final Pattern VALID_BIO_DCID_PATTERN =
+  private static Pattern VALID_BIO_DCID_PATTERN =
       Pattern.compile("^[\\w&/%\\)\\(+\\-\\.'\\*><\\]\\[|:; ]+$");
 
   private Mcf.McfGraph graph;
   private LogWrapper logCtx;
   private Set<String> columns; // Relevant only when graph.type() == TEMPLATE_MCF
-  boolean foundFailure = false;
+  boolean nodeFailure = false; // Failure of a specific node being processed.
   private ExistenceChecker existenceChecker;
+  private StatVarState svState;
 
   // Argument |graph| may be Instance or Template MCF.
   public static boolean check(
-      Mcf.McfGraph graph, ExistenceChecker existenceChecker, LogWrapper logCtx)
+      Mcf.McfGraph graph,
+      ExistenceChecker existenceChecker,
+      StatVarState svState,
+      LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return new McfChecker(graph, null, existenceChecker, logCtx).check();
+    return new McfChecker(graph, null, existenceChecker, svState, logCtx).check();
   }
 
   // Used to check a single node from TMcfCsvParser.
@@ -67,36 +71,40 @@ public class McfChecker {
     Mcf.McfGraph.Builder nodeGraph = Mcf.McfGraph.newBuilder();
     nodeGraph.setType(mcfType);
     nodeGraph.putNodes(nodeId, node);
-    return new McfChecker(nodeGraph.build(), null, null, logCtx).check();
+    return new McfChecker(nodeGraph.build(), null, null, null, logCtx).check();
   }
 
   // Used with Template MCF when there are columns from CSV header.
   public static boolean checkTemplate(
       Mcf.McfGraph graph, Set<String> columns, ExistenceChecker existenceChecker, LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return new McfChecker(graph, columns, existenceChecker, logCtx).check();
+    return new McfChecker(graph, columns, existenceChecker, null, logCtx).check();
   }
 
   private McfChecker(
       Mcf.McfGraph graph,
       Set<String> columns,
       ExistenceChecker existenceChecker,
+      StatVarState svState,
       LogWrapper logCtx) {
     this.graph = graph;
     this.columns = columns;
     this.logCtx = logCtx;
     this.existenceChecker = existenceChecker;
+    this.svState = svState;
   }
 
-  // Returns true if there was an sanity error found.
+  // Returns true if there was no sanity error found.
   private boolean check() throws IOException, InterruptedException {
-    foundFailure = false;
+    boolean foundFailure = false;
     for (String nodeId : graph.getNodesMap().keySet()) {
+      nodeFailure = false;
       Mcf.McfGraph.PropertyValues node = graph.toBuilder().getNodesOrThrow(nodeId);
       checkNode(nodeId, node);
       if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
         checkTemplateNode(nodeId, node);
       }
+      foundFailure |= nodeFailure;
     }
     return !foundFailure;
   }
@@ -141,14 +149,9 @@ public class McfChecker {
             continue;
           }
         } else if (tv.getType() == Mcf.ValueType.TABLE_COLUMN) {
-          // NOTE: If the MCF had parsed, the schema terms should be valid, thus
-          // the ValueOrDie().
-          long lineNum = -1;
-          if (!node.getLocationsList().isEmpty()) {
-            lineNum = node.getLocationsList().get(0).getLineNumber();
-          }
+          // NOTE: If the MCF had parsed, the schema terms should be valid.
           LogCb logCb =
-              new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, lineNum)
+              new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, node)
                   .setDetail(LogCb.VALUE_KEY, tv.getValue())
                   .setDetail(LogCb.NODE_KEY, nodeId);
           McfParser.SchemaTerm term = McfParser.parseSchemaTerm(tv.getValue(), logCb);
@@ -186,12 +189,16 @@ public class McfChecker {
     String popType =
         checkRequiredSingleValueProp(
             nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.POPULATION_TYPE);
-    checkInitCasing(nodeId, node, Vocabulary.POPULATION_TYPE, popType, "", true);
+    if (!popType.isEmpty()) {
+      checkInitCasing(nodeId, node, Vocabulary.POPULATION_TYPE, popType, "", true);
+    }
 
     String mProp =
         checkRequiredSingleValueProp(
             nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.MEASURED_PROP);
-    checkInitCasing(nodeId, node, Vocabulary.MEASURED_PROP, mProp, "", false);
+    if (!mProp.isEmpty()) {
+      checkInitCasing(nodeId, node, Vocabulary.MEASURED_PROP, mProp, "", false);
+    }
     // TODO: Do this check for all constraint properties too.
     if (existenceChecker != null) {
       LogCb logCb =
@@ -206,7 +213,8 @@ public class McfChecker {
 
     String statType =
         checkRequiredSingleValueProp(nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.STAT_TYPE);
-    if (!Vocabulary.isStatValueProperty(statType)
+    if (!statType.isEmpty()
+        && !Vocabulary.isStatValueProperty(statType)
         && !statType.equals(Vocabulary.MEASUREMENT_RESULT)) {
       addLog(
           "Sanity_UnknownStatType",
@@ -216,6 +224,10 @@ public class McfChecker {
 
     // Every SV must have DCID defined.
     checkRequiredSingleValueProp(nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.DCID);
+
+    if (svState != null && !nodeFailure) {
+      nodeFailure = !svState.check(nodeId, node);
+    }
   }
 
   private void checkSVObs(String nodeId, Mcf.McfGraph.PropertyValues node)
@@ -253,7 +265,9 @@ public class McfChecker {
     String popType =
         checkRequiredSingleValueProp(
             nodeId, node, "StatisticalPopulation", Vocabulary.POPULATION_TYPE);
-    checkInitCasing(nodeId, node, Vocabulary.POPULATION_TYPE, popType, "", true);
+    if (!popType.isEmpty()) {
+      checkInitCasing(nodeId, node, Vocabulary.POPULATION_TYPE, popType, "", true);
+    }
 
     checkRequiredSingleValueProp(nodeId, node, "StatisticalPopulation", Vocabulary.LOCATION);
   }
@@ -262,7 +276,9 @@ public class McfChecker {
     String mProp =
         checkRequiredSingleValueProp(
             nodeId, node, Vocabulary.LEGACY_OBSERVATION_TYPE_SUFFIX, Vocabulary.MEASURED_PROP);
-    checkInitCasing(nodeId, node, Vocabulary.MEASURED_PROP, mProp, "", false);
+    if (!mProp.isEmpty()) {
+      checkInitCasing(nodeId, node, Vocabulary.MEASURED_PROP, mProp, "", false);
+    }
 
     checkRequiredSingleValueProp(
         nodeId, node, Vocabulary.LEGACY_OBSERVATION_TYPE_SUFFIX, Vocabulary.OBSERVED_NODE);
@@ -456,7 +472,11 @@ public class McfChecker {
                     .setDetail(LogCb.PROP_KEY, prop)
                     .setDetail(LogCb.NODE_KEY, nodeId)
                     .setCounterSuffix(prop);
-            existenceChecker.submitNodeCheck(tv.getValue(), logCb);
+            String value = tv.getValue();
+            if (prop.equals(Vocabulary.MEASUREMENT_METHOD)) {
+              value = value.replace("dcAggregate/", "");
+            }
+            existenceChecker.submitNodeCheck(value, logCb);
           }
         }
       }
@@ -655,7 +675,7 @@ public class McfChecker {
               + value
               + "', property: '"
               + prop
-              + ", node: '"
+              + "', node: '"
               + nodeId
               + "'",
           node);
@@ -666,7 +686,7 @@ public class McfChecker {
               + value
               + "', property: '"
               + prop
-              + ", node: '"
+              + "', node: '"
               + nodeId
               + "'",
           node);
@@ -679,7 +699,7 @@ public class McfChecker {
 
   private void addLog(
       Debug.Log.Level level, String counter, String message, Mcf.McfGraph.PropertyValues node) {
-    foundFailure = true;
+    nodeFailure = true;
     logCtx.addEntry(level, counter, message, node.getLocationsList());
   }
 }

@@ -34,13 +34,15 @@ public class LogCb {
   private final Debug.Log.Level logLevel;
   private Mcf.McfGraph.PropertyValues node; // Optional
   private long lineNum;
+  private String fileName;
   private Map<String, String> messageDetails = new HashMap<>();
   private String counter_prefix = "";
   private String counter_suffix = "";
 
-  public LogCb(LogWrapper logCtx, Debug.Log.Level logLevel, long lineNum) {
+  public LogCb(LogWrapper logCtx, Debug.Log.Level logLevel, String fileName, long lineNum) {
     this.logCtx = logCtx;
     this.logLevel = logLevel;
+    this.fileName = fileName;
     this.lineNum = lineNum;
   }
 
@@ -76,7 +78,7 @@ public class LogCb {
     if (node != null) {
       logCtx.addEntry(logLevel, counter, finalMessage, node.getLocationsList());
     } else {
-      logCtx.addEntry(logLevel, counter, finalMessage, lineNum);
+      logCtx.addEntry(logLevel, counter, finalMessage, fileName, lineNum);
     }
   }
 

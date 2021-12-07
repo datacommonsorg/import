@@ -1,0 +1,601 @@
+<html>
+  <head>
+    <title>Summary Report</title>
+  </head>
+  <body>
+    <style>
+      table,
+      td,
+      th {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 5px;
+      }
+      tbody tr:hover {
+        background-color: #ccc;
+      }
+    </style>
+    <h1>Summary Report</h1>
+    <div>
+      <h2>Import Run Details</h2>
+      <table>
+        <tr>
+          <td>Existence Checks Enabled</td>
+          <td>yes</td>
+        </tr>
+        <tr>
+          <td>Resolution Mode</td>
+          <td>RESOLUTION_MODE_FULL</td>
+        </tr>
+        <tr>
+          <td>Num Threads</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>Stat Checks Enabled</td>
+          <td>yes</td>
+        </tr>
+        <tr>
+          <td>Sample Places Entered</td>
+          <td></td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h2>Counters</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Counter Name</th>
+              <th>Num Occurences</th>
+            </tr>
+          </thead>
+              <tbody>
+                <tr>
+                  <th colspan="2" align="left">LEVEL_INFO</th>
+                </tr>
+                  <tr>
+                    <td>NumRowSuccesses</td>
+                    <td>48</td>
+                  </tr>
+                  <tr>
+                    <td>NumPVSuccesses</td>
+                    <td>336</td>
+                  </tr>
+                  <tr>
+                    <td>Existence_NumChecks</td>
+                    <td>294</td>
+                  </tr>
+                  <tr>
+                    <td>NumNodeSuccesses</td>
+                    <td>48</td>
+                  </tr>
+                  <tr>
+                    <td>Existence_NumDcCalls</td>
+                    <td>1</td>
+                  </tr>
+              </tbody>
+              <tbody>
+                <tr>
+                  <th colspan="2" align="left">LEVEL_WARNING</th>
+                </tr>
+                  <tr>
+                    <td>StatsCheck_Inconsistent_Date_Granularity</td>
+                    <td>1</td>
+                  </tr>
+                  <tr>
+                    <td>StatsCheck_Inconsistent_Values</td>
+                    <td>1</td>
+                  </tr>
+                  <tr>
+                    <td>StatsCheck_MaxPercentFluctuationGreaterThan500</td>
+                    <td>1</td>
+                  </tr>
+                  <tr>
+                    <td>StatsCheck_Data_Holes</td>
+                    <td>10</td>
+                  </tr>
+              </tbody>
+              <tbody>
+                <tr>
+                  <th colspan="2" align="left">LEVEL_ERROR</th>
+                </tr>
+                  <tr>
+                    <td>Sanity_InconsistentSvObsValues</td>
+                    <td>1</td>
+                  </tr>
+              </tbody>
+        </table>
+    </div>
+      <div>
+        <h2>StatVarObservations by StatVar</h2>
+        <table width="80%">
+          <thead>
+            <tr>
+              <th>Stat Var</th>
+              <th>Num Places</th>
+              <th>Num Observations</th>
+              <th>Num Observation Dates</th>
+              <th>Min Date</th>
+              <th>Max Date</th>
+              <th>Measurement Methods</th>
+              <th>Units</th>
+              <th>Scaling Factors</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+              <td>16</td>
+              <td>49</td>
+              <td>14</td>
+              <td>2020-01-02</td>
+              <td>2020-06-02</td>
+              <td>
+                <div></div>
+              </td>
+              <td>
+                <div></div>
+              </td>
+              <td>
+                <div></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2>Series Summaries for Sample Places</h2>
+            <div>
+              <h3>geoId/06</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>6</td>
+                    <td>2020-01-30 | 2020-02-02 | 2020-02-03 | 2020-03-02 | 2020-03-03 | 2020-05-03</td>
+                    <td>1 | 2 | 3 | 1 | 1 | 8</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/0601</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>4</td>
+                    <td>2020-03 | 2020-03-04 | 2020-03-05 | 2020-03-06</td>
+                    <td>1 | 1 | 1 | 1</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/07</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>6</td>
+                    <td>2020-01-02 | 2020-02-02 | 2020-03-02 | 2020-04-02 | 2020-05-02 | 2020-06-02</td>
+                    <td>1 | 0 | 1 | 112 | 5 | 275</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/08</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>1</td>
+                    <td>2020-03-02</td>
+                    <td>1</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/09</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>1</td>
+                    <td>2020-03-03</td>
+                    <td>1</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/10</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>1</td>
+                    <td>2020-03-03</td>
+                    <td>3</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/201</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>3</td>
+                    <td>2020-01-02 | 2020-02-02 | 2020-06-02</td>
+                    <td>1 | 1 | 1</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/211</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>3</td>
+                    <td>2020-01-02 | 2020-02-02 | 2020-06-02</td>
+                    <td>1 | 1 | 1</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/221</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>3</td>
+                    <td>2020-01-02 | 2020-02-02 | 2020-06-02</td>
+                    <td>1 | 1 | 1</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/231</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>3</td>
+                    <td>2020-01-02 | 2020-02-02 | 2020-06-02</td>
+                    <td>1 | 1 | 1</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/241</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>3</td>
+                    <td>2020-01-02 | 2020-02-02 | 2020-06-02</td>
+                    <td>1 | 1 | 1</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/25111</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>3</td>
+                    <td>2020-01-02 | 2020-02-02 | 2020-06-02</td>
+                    <td>1 | 1 | 1</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/26111</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>3</td>
+                    <td>2020-01-02 | 2020-02-02 | 2020-06-02</td>
+                    <td>1 | 1 | 1</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/27111</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>3</td>
+                    <td>2020-01-02 | 2020-02-02 | 2020-06-02</td>
+                    <td>1 | 1 | 1</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>geoId/28111</h3>
+              <table width="80%">
+                <thead>
+                  <tr>
+                    <th>Stat Var</th>
+                    <th>Num Observations</th>
+                    <th>Dates</th>
+                    <th>Corresponding Values</th>
+                    <th>Measurement Methods</th>
+                    <th>Units</th>
+                    <th>Scaling Factors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive</td>
+                    <td>3</td>
+                    <td>2020-01-02 | 2020-02-02 | 2020-06-02</td>
+                    <td>1 | 1 | 1</td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                  </tr>
+                  </tbody>
+              </table>
+            </div>
+      </div>
+  </body>
+</html>

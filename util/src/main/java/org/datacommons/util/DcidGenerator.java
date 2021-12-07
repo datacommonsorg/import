@@ -1,8 +1,9 @@
 package org.datacommons.util;
 
+import static org.datacommons.util.Vocabulary.*;
+
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
-import java.nio.file.Path;
 import java.util.*;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
@@ -40,26 +41,26 @@ public class DcidGenerator {
   // external IDs (like geoId/06).
   private static final Set<String> TYPES_USING_SHORT_ID =
       Set.of(
-          "City",
-          "County",
-          "Province",
-          "State",
-          "Country",
-          "Continent",
-          "CollegeOrUniversity",
-          "Source",
-          "Curator",
-          "Provenance",
-          "AdministrativeArea",
-          "AdministrativeArea1",
-          "AdministrativeArea2",
-          "AdministrativeArea3",
-          "AdministrativeArea4",
-          "AdministrativeArea5",
-          "Place",
-          "Town",
-          "Village",
-          "Neighborhood");
+          SOURCE_TYPE,
+          CURATOR_TYPE,
+          PROVENANCE_TYPE,
+          CITY,
+          COUNTY,
+          PROVINCE,
+          STATE,
+          COUNTRY,
+          CONTINENT,
+          ADMIN_AREA,
+          ADMIN_AREA_1,
+          ADMIN_AREA_2,
+          ADMIN_AREA_3,
+          ADMIN_AREA_4,
+          ADMIN_AREA_5,
+          PLACE_TYPE,
+          TOWN,
+          VILLAGE,
+          NEIGHBORHOOD,
+          "CollegeOrUniversity");
 
   private static final Set<String> FIXED_STAT_VAR_PROPS =
       Set.of(
@@ -114,8 +115,7 @@ public class DcidGenerator {
   static final int LAST_REQUIRED_LEGACY_OBS_PROP_INDEX =
       ORDERED_LEGACY_OBS_KEY_PROPS.indexOf(Vocabulary.MEASURED_PROP);
 
-  private static final LogWrapper dummyLogCtx =
-      new LogWrapper(Debug.Log.newBuilder(), Path.of("/tmp/report.html"));
+  private static final LogWrapper dummyLogCtx = new LogWrapper(Debug.Log.newBuilder());
 
   public static class Result {
     // The dcid will be empty if there were any errors in the node. These should have been

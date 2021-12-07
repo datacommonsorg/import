@@ -86,33 +86,33 @@ public class ComplexValueParserTest {
   @Test
   public void testQuantityFailure() {
     Debug.Log log = toComplexValueFailure("[]");
-    assertTrue(log.getCounterSet().containsCounters("StrSplit_EmptyToken_p1"));
+    assertEquals(1, TestUtil.getCounter(log, "StrSplit_EmptyToken_p1"));
     assertTrue(log.getEntries(0).getUserMessage().contains("Empty value found"));
-    assertTrue(log.getCounterSet().containsCounters("MCF_MalformedComplexValueParts"));
+    assertEquals(1, TestUtil.getCounter(log, "MCF_MalformedComplexValueParts"));
     assertTrue(log.getEntries(1).getUserMessage().contains("value must have 2"));
 
     log = toComplexValueFailure("dcs:Years 10]");
-    assertTrue(log.getCounterSet().containsCounters("MCF_UnenclosedComplexValue"));
+    assertEquals(1, TestUtil.getCounter(log, "MCF_UnenclosedComplexValue"));
     assertTrue(log.getEntries(0).getUserMessage().contains("not enclosed in [] brackets"));
 
     log = toComplexValueFailure("[Years 10");
-    assertTrue(log.getCounterSet().containsCounters("MCF_UnenclosedComplexValue"));
+    assertEquals(1, TestUtil.getCounter(log, "MCF_UnenclosedComplexValue"));
     assertTrue(log.getEntries(0).getUserMessage().contains("not enclosed in [] brackets"));
 
     log = toComplexValueFailure("[Years 1 2 3]");
-    assertTrue(log.getCounterSet().containsCounters("MCF_MalformedComplexValueParts"));
+    assertEquals(1, TestUtil.getCounter(log, "MCF_MalformedComplexValueParts"));
     assertTrue(log.getEntries(0).getUserMessage().contains("value must have 2"));
 
     log = toComplexValueFailure("[dcs:Years -]");
-    assertTrue(log.getCounterSet().containsCounters("MCF_QuantityMalformedValue"));
+    assertEquals(1, TestUtil.getCounter(log, "MCF_QuantityMalformedValue"));
     assertTrue(log.getEntries(0).getUserMessage().contains("must be a number"));
 
     log = toComplexValueFailure("[dcs:Years - -]");
-    assertTrue(log.getCounterSet().containsCounters("MCF_QuantityRangeMalformedValues"));
+    assertEquals(1, TestUtil.getCounter(log, "MCF_QuantityRangeMalformedValues"));
     assertTrue(log.getEntries(0).getUserMessage().contains("must be a number"));
 
     log = toComplexValueFailure("[a b Years]");
-    assertTrue(log.getCounterSet().containsCounters("MCF_QuantityRangeMalformedValues"));
+    assertEquals(1, TestUtil.getCounter(log, "MCF_QuantityRangeMalformedValues"));
     assertTrue(log.getEntries(0).getUserMessage().contains("must be a number"));
   }
 
@@ -135,23 +135,23 @@ public class ComplexValueParserTest {
   @Test
   public void testLatLngFailure() {
     Debug.Log log = toComplexValueFailure("[LatLong a b]");
-    assertTrue(log.getCounterSet().containsCounters("MCF_InvalidLatitude"));
+    assertEquals(1, TestUtil.getCounter(log, "MCF_InvalidLatitude"));
     assertTrue(log.getEntries(0).getUserMessage().contains("Invalid latitude value"));
 
     log = toComplexValueFailure("[LatLong 91 -10.0]");
-    assertTrue(log.getCounterSet().containsCounters("MCF_InvalidLatitude"));
+    assertEquals(1, TestUtil.getCounter(log, "MCF_InvalidLatitude"));
     assertTrue(log.getEntries(0).getUserMessage().contains("Invalid latitude value"));
 
     log = toComplexValueFailure("[LatLong 90.0 -181.0]");
-    assertTrue(log.getCounterSet().containsCounters("MCF_InvalidLongitude"));
+    assertEquals(1, TestUtil.getCounter(log, "MCF_InvalidLongitude"));
     assertTrue(log.getEntries(0).getUserMessage().contains("Invalid longitude value"));
 
     log = toComplexValueFailure("[LatLong 37.3884812w 122.0834373]");
-    assertTrue(log.getCounterSet().containsCounters("MCF_InvalidLatitude"));
+    assertEquals(1, TestUtil.getCounter(log, "MCF_InvalidLatitude"));
     assertTrue(log.getEntries(0).getUserMessage().contains("Invalid latitude value"));
 
     log = toComplexValueFailure("[LatLong 37.3884812 122.0834373n]");
-    assertTrue(log.getCounterSet().containsCounters("MCF_InvalidLongitude"));
+    assertEquals(1, TestUtil.getCounter(log, "MCF_InvalidLongitude"));
     assertTrue(log.getEntries(0).getUserMessage().contains("Invalid longitude value"));
   }
 
@@ -179,6 +179,6 @@ public class ComplexValueParserTest {
     Mcf.McfGraph.PropertyValues dummyNode = Mcf.McfGraph.PropertyValues.newBuilder().build();
     ComplexValueParser parser = new ComplexValueParser("n1", dummyNode, "p1", value, null, logCtx);
     assertFalse(parser.parse());
-    return log.build();
+    return logCtx.getLog();
   }
 }

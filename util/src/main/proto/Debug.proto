@@ -60,7 +60,66 @@ message Log {
     }
 
     // Key: Level.name()
-    map<string, int64> level_summary = 1;
-    optional CounterSet counter_set = 2;
+    map<string, CounterSet> level_summary = 1;
     repeated Entry entries = 3;
+    repeated StatValidationResult stats_check_summary = 4;
+    optional CommandArgs command_args = 5;
+    reserved 2;
+}
+
+message CommandArgs {
+    enum ResolutionMode {
+        RESOLUTION_MODE_UNSPECIFIED = 0;
+        // No resolution necessary.
+        RESOLUTION_MODE_NONE = 1;
+        // Perform local-ID resolution and DCID generation, but no external-ID resolution.
+        // This involves no DC Recon API calls.
+        RESOLUTION_MODE_LOCAL = 2;
+        // Perform local-ID resolution, external-ID resolution and DCID generation.
+        RESOLUTION_MODE_FULL = 3;
+    }
+    optional bool existence_checks = 1;
+    optional ResolutionMode resolution = 2;
+    optional int32 num_threads = 3;
+    optional bool stat_checks = 4;
+    repeated string sample_places = 5;
+}
+
+message DataPoint {
+    message DataValue {
+        optional double value = 1;
+        // The location in the file where this value was read from.
+        repeated Log.Location locations = 2;
+    }
+
+    optional string date = 1;
+    // Multiple values for a single date only happens when there's a bug.
+    repeated DataValue values = 2;
+}
+
+message StatValidationResult {
+    // DCID of the place.
+    optional string place_dcid = 1;
+    // DCID of the stat var.
+    optional string stat_var_dcid = 2;
+    // Additional information that characterizes the time series that this
+    // StatValidationResult is validating.
+    optional string measurement_method = 3;
+    optional string observation_period = 4;
+    optional string scaling_factor = 5;
+    optional string unit = 6;
+
+    // Information about a single stat validation check that failed.
+    message StatValidationEntry {
+        // Key that describes the failed validation check.
+        optional string counter_key = 1;
+        // DataPoints that caused this validation error.
+        repeated DataPoint problem_points = 2;
+        // Additional details as a message that is user understandable.
+        optional string additional_details = 3;
+        // Only set for percent fluctuation counters.
+        optional double percent_difference = 4;
+    }
+
+    repeated StatValidationEntry validation_counters = 7;
 }

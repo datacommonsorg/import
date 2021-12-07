@@ -133,3 +133,26 @@ age: "[10]"
 populationType: dcs:Person
 measuredProperty: dcs:count
 statType: dcs:MeasuredValue
+
+# Correct Count_Person node.
+Node: dcid:Count_Person
+typeOf: dcs:StatisticalVariable
+populationType: dcs:Person
+measuredProperty: dcs:count
+statType: dcs:measuredValue
+
+# Actual Count_Person_Male node that has incorrect DCID.
+Node: Count_Person
+dcid: "Count_Person"
+typeOf: dcs:StatisticalVariable
+gender: schema:Male
+populationType: dcs:Person
+measuredProperty: dcs:count
+statType: dcs:measuredValue
+
+# Count_Person node with different DCID.
+Node: dcid:Count_Person_Female
+typeOf: dcs:StatisticalVariable
+populationType: dcs:Person
+measuredProperty: dcs:count
+statType: dcs:measuredValue
