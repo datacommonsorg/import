@@ -12,7 +12,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.List;
 import org.datacommons.proto.Debug;
@@ -89,28 +88,37 @@ public class SummaryReportGenerator {
     public String getTimeSeriesChartSVG() {
       TimeSeriesCollection dataset = new TimeSeriesCollection();
       TimeSeries timeSeries = new TimeSeries("ts");
+      // populate timeSeries with dates and values from this.seriesDates and this.seriesValues
       for (int i = 0; i < this.seriesDates.size(); i++) {
         if (i >= this.seriesValues.size()) break;
         LocalDateTime localDateTime = StringUtil.getValidISO8601Date(seriesDates.get(i));
         if (localDateTime == null) continue;
-        Date date = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
-        timeSeries.addOrUpdate(new Day(date), this.seriesValues.get(i));
+        timeSeries.addOrUpdate(
+            new Day(
+                localDateTime.getDayOfMonth(),
+                localDateTime.getMonthValue(),
+                localDateTime.getYear()),
+            this.seriesValues.get(i));
       }
       if (timeSeries.isEmpty()) return "";
       dataset.addSeries(timeSeries);
+      // create the time series chart with default settings
       JFreeChart chart = ChartFactory.createTimeSeriesChart("", "", "", dataset);
+      XYPlot plot = chart.getXYPlot();
+      // create and use a renderer to draw each data point on the time series chart as a diamond and
+      // remove the legend
       XYItemRenderer renderer = new XYLineAndShapeRenderer(true, true);
       renderer.setSeriesShape(0, ShapeUtils.createDiamond(5));
       renderer.setSeriesVisibleInLegend(0, false);
-      XYPlot plot = chart.getXYPlot();
-      plot.setBackgroundPaint(Color.WHITE);
       plot.setRenderer(renderer);
+      // change the background color of the chart to be white
+      plot.setBackgroundPaint(Color.WHITE);
       if (timeSeries.findValueRange().getLength() == 0) {
         // Manually set the range when the values in the time series are all the same. Otherwise,
         // the chart library will draw an axis with multiple ticks all labeled with that same value.
         plot.getRangeAxis().setRange(0, this.seriesValues.get(0) * 2);
       }
-      if (this.seriesDates.get(0).equals(this.seriesDates.get(this.seriesDates.size() - 1))) {
+      if (this.seriesDates.size() == 1) {
         // Override the date formatter for the x axis when there is only one data point. Otherwise,
         // the chart library will label the single date as 00:00:00.
         DateAxis xAxis = (DateAxis) plot.getDomainAxis();
@@ -126,6 +134,7 @@ public class SummaryReportGenerator {
         // When testing, we want the svg clipPath id to be consistent.
         svg.setDefsKeyPrefix("test");
       }
+      // draw the chart on the svg
       chart.draw(svg, new Rectangle2D.Double(0, 0, CHART_WIDTH, CHART_HEIGHT));
       return svg.getSVGElement();
     }
