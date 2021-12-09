@@ -67,7 +67,6 @@ public class GenMcfTest {
     File[] testDirectories = new File(resourceFile("genmcf")).listFiles(File::isDirectory);
     for (File directory : testDirectories) {
       String testName = directory.getName();
-      if (!testName.equals("resolution")) continue;
       System.err.println(testName + ": BEGIN");
       assertTrue(EXPECTED_FILES_TO_CHECK.containsKey(testName));
       List<String> argsList = new ArrayList<>();

@@ -17,7 +17,6 @@ import java.util.List;
 import org.datacommons.proto.Debug;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.AxisSpace;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
@@ -140,13 +139,6 @@ public class SummaryReportGenerator {
         Font tickLabelFont = new Font("SansSerif", 0, 10);
         yAxis.setTickLabelFont(tickLabelFont);
         xAxis.setTickLabelFont(tickLabelFont);
-        // When testing, we want to keep the sizes of the legends and data area consistent.
-        AxisSpace xAxisSpace = new AxisSpace();
-        xAxisSpace.setBottom(15);
-        plot.setFixedDomainAxisSpace(xAxisSpace);
-        AxisSpace yAxisSpace = new AxisSpace();
-        yAxisSpace.setLeft(40);
-        plot.setFixedRangeAxisSpace(yAxisSpace);
       }
       // draw the chart on the svg
       chart.draw(svg, new Rectangle2D.Double(0, 0, CHART_WIDTH, CHART_HEIGHT));
