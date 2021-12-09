@@ -1,7 +1,6 @@
 package org.datacommons.tool;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.truth.Expect;
 import java.io.File;
@@ -71,8 +70,8 @@ public class LintTest {
           if (f.equals("report.json")) {
             TestUtil.assertReportFilesAreSimilar(
                 expect, TestUtil.readStringFromPath(expected), TestUtil.readStringFromPath(actual));
-          } else {
-            assertEquals(
+          } else if (f.equals("summary_report.html")) {
+            TestUtil.assertHtmlFilesAreSimilar(
                 TestUtil.readStringFromPath(expected), TestUtil.readStringFromPath(actual));
           }
         }

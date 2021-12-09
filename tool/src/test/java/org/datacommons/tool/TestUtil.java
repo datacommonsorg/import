@@ -14,6 +14,8 @@
 
 package org.datacommons.tool;
 
+import static org.junit.Assert.*;
+
 import com.google.common.truth.Expect;
 import com.google.common.truth.extensions.proto.ProtoTruth;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -23,8 +25,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
 import org.apache.commons.io.FileUtils;
 import org.datacommons.proto.Debug;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.junit.rules.TemporaryFolder;
 
 // Common set of utils used in e2e tests.
@@ -67,5 +73,29 @@ public class TestUtil {
   public static String readStringFromPath(Path filePath) throws IOException {
     File file = new File(filePath.toString());
     return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+  }
+
+  public static void assertHtmlFilesAreSimilar(String expected, String actual) {
+    Parser htmlParser = Parser.htmlParser();
+    Document expectedHtml = htmlParser.parseInput(expected, "expected");
+    Document actualHtml = htmlParser.parseInput(actual, "actual");
+    LinkedList<Element> expectedElements = new LinkedList<>(expectedHtml.children());
+    LinkedList<Element> actualElements = new LinkedList<>(actualHtml.children());
+    while (!expectedElements.isEmpty() && !actualElements.isEmpty()) {
+      Element expectedElement = expectedElements.poll();
+      Element actualElement = actualElements.poll();
+      expectedElements.addAll(expectedElement.children());
+      actualElements.addAll(actualElement.children());
+      String expectedElementText = expectedElement.ownText();
+      String actualElementText = actualElement.ownText();
+      assertEquals(
+          "Actual HTML file has an element that differs in text content from what is expected",
+          expectedElementText,
+          actualElementText);
+    }
+    assertTrue(
+        "Actual HTML file contains additional elements that were not expected",
+        expectedElements.isEmpty());
+    assertTrue("Actual HTML file is missing some expected elements", actualElements.isEmpty());
   }
 }
