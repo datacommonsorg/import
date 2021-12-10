@@ -104,6 +104,7 @@ public final class Vocabulary {
   public static final String GEO_NAMES_ID = "geoNamesId";
   public static final String ISO_CODE = "isoCode";
   public static final String NUTS_CODE = "nutsCode";
+  public static final String INDIAN_CENSUS_AREA_CODE_2001 = "indianCensusAreaCode2001";
   public static final String INDIAN_CENSUS_AREA_CODE_2011 = "indianCensusAreaCode2011";
   public static final String LGD_CODE = "lgdCode";
   public static final String UDISE_CODE = "udiseCode";
@@ -126,6 +127,7 @@ public final class Vocabulary {
   public static final String OBSERVED_NODE = "observedNode"; // Deprecated
   public static final String LOCATION = "location"; // Deprecated
   public static final String POPULATION_GROUP = "populationGroup";
+  public static final String UTTERANCE_TEMPLATE = "utteranceTemplate";
 
   // Values taken by statType.
   public static final String MEDIAN_VALUE = "medianValue";
@@ -251,7 +253,8 @@ public final class Vocabulary {
           MEASUREMENT_METHOD,
           SCALING_FACTOR,
           UNIT,
-          CENSUS_ACS_TABLE_ID);
+          CENSUS_ACS_TABLE_ID,
+          UTTERANCE_TEMPLATE);
 
   // NOTE: This is an ordered list. When an entity has multiple properties in this
   // list, we prefer the one ordered first.
@@ -264,6 +267,7 @@ public final class Vocabulary {
           Vocabulary.GEO_NAMES_ID,
           Vocabulary.ISTAT_ID,
           Vocabulary.AUSTRIAN_MUNICIPALITY_KEY,
+          Vocabulary.INDIAN_CENSUS_AREA_CODE_2001,
           Vocabulary.INDIAN_CENSUS_AREA_CODE_2011,
           Vocabulary.LGD_CODE,
           Vocabulary.UDISE_CODE);
