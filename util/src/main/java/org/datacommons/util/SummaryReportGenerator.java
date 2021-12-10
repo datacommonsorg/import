@@ -123,7 +123,7 @@ public class SummaryReportGenerator {
         // the chart library will label the single date as 00:00:00.
         DateAxis xAxis = (DateAxis) plot.getDomainAxis();
         String datePattern = StringUtil.getValidISO8601DatePattern(this.seriesDates.get(0));
-        if (datePattern.isEmpty() || StringUtil.EXTRA_DATE_PATTERNS.contains(datePattern)) {
+        if (StringUtil.getValidISO8601DateTemplate(datePattern).isEmpty()) {
           xAxis.setDateFormatOverride(new SimpleDateFormat("yyyy-MM-dd"));
         } else {
           xAxis.setDateFormatOverride(new SimpleDateFormat(datePattern));

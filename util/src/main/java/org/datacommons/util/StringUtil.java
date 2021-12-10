@@ -47,7 +47,7 @@ public class StringUtil {
 
   // The Java API does not match 20071, 2007101, so add these for compatibility with CPP
   // implementation.
-  public static final List<String> EXTRA_DATE_PATTERNS = List.of("^\\d{5}$", "^\\d{7}$");
+  private static final List<String> EXTRA_DATE_PATTERNS = List.of("^\\d{5}$", "^\\d{7}$");
 
   // Splits a line using the given delimiter and places the columns into "columns". Delimiters
   // within an expression (within a pair of expressionSymbol). Characters can be escaped, but those
@@ -139,6 +139,14 @@ public class StringUtil {
       }
     }
     return null;
+  }
+
+  public static String getValidISO8601DateTemplate(String datePattern) {
+    if (DATE_PATTERNS.contains(datePattern)) {
+      return datePattern;
+    } else {
+      return "";
+    }
   }
 
   // Splits a string using the delimiter character. A field is not split if the delimiter is within
