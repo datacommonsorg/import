@@ -81,21 +81,23 @@ public class TestUtil {
     Document actualHtml = htmlParser.parseInput(actual, "actual");
     LinkedList<Element> expectedElements = new LinkedList<>(expectedHtml.children());
     LinkedList<Element> actualElements = new LinkedList<>(actualHtml.children());
+    StringBuilder expectedHtmlText = new StringBuilder();
+    StringBuilder actualHtmlText = new StringBuilder();
     while (!expectedElements.isEmpty() && !actualElements.isEmpty()) {
       Element expectedElement = expectedElements.poll();
       Element actualElement = actualElements.poll();
       expectedElements.addAll(expectedElement.children());
       actualElements.addAll(actualElement.children());
-      String expectedElementText = expectedElement.ownText();
-      String actualElementText = actualElement.ownText();
-      assertEquals(
-          "Actual HTML file has an element that differs in text content from what is expected",
-          expectedElementText,
-          actualElementText);
+      expectedHtmlText.append(expectedElement.ownText());
+      actualHtmlText.append(actualElement.ownText());
     }
     assertTrue(
         "Actual HTML file contains additional elements that were not expected",
         expectedElements.isEmpty());
     assertTrue("Actual HTML file is missing some expected elements", actualElements.isEmpty());
+    assertEquals(
+        "The text content of the actual HTML file differed from expected",
+        expectedHtmlText.toString(),
+        actualHtmlText.toString());
   }
 }
