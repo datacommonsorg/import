@@ -100,29 +100,30 @@ public class StringUtilTest {
   @Test
   public void funcISO8601Date() {
     // Year.
-    assertTrue(StringUtil.isValidISO8601Date("2017"));
-    assertFalse(StringUtil.isValidISO8601Date("201"));
+    assertEquals("yyyy", StringUtil.getValidISO8601DatePattern("2017"));
+    assertTrue(StringUtil.getValidISO8601DatePattern("201").isEmpty());
 
     // Year + Month.
-    assertTrue(StringUtil.isValidISO8601Date("2017-01"));
-    assertTrue(StringUtil.isValidISO8601Date("2017-1"));
-    assertTrue(StringUtil.isValidISO8601Date("201701"));
-    assertTrue(StringUtil.isValidISO8601Date("20171"));
-    assertFalse(StringUtil.isValidISO8601Date("2017-Jan"));
+    assertEquals("yyyy-MM", StringUtil.getValidISO8601DatePattern("2017-01"));
+    assertEquals("yyyy-M", StringUtil.getValidISO8601DatePattern("2017-1"));
+    assertEquals("yyyyMM", StringUtil.getValidISO8601DatePattern("201701"));
+    assertEquals("^\\d{5}$", StringUtil.getValidISO8601DatePattern("20171"));
+    assertTrue(StringUtil.getValidISO8601DatePattern("2017-Jan").isEmpty());
 
     // Year + Month + Day.
-    assertTrue(StringUtil.isValidISO8601Date("2017-1-1"));
-    assertTrue(StringUtil.isValidISO8601Date("2017-11-09"));
-    assertTrue(StringUtil.isValidISO8601Date("20171109"));
-    assertTrue(StringUtil.isValidISO8601Date("2017119"));
-    assertFalse(StringUtil.isValidISO8601Date("2017-Nov-09"));
+    assertEquals("yyyy-M-d", StringUtil.getValidISO8601DatePattern("2017-1-1"));
+    assertEquals("yyyy-MM-dd", StringUtil.getValidISO8601DatePattern("2017-11-09"));
+    assertEquals("yyyyMMdd", StringUtil.getValidISO8601DatePattern("20171109"));
+    assertEquals("^\\d{7}$", StringUtil.getValidISO8601DatePattern("2017119"));
+    assertTrue(StringUtil.getValidISO8601DatePattern("2017-Nov-09").isEmpty());
 
     // Year + Month + Day + Time.
-    assertTrue(StringUtil.isValidISO8601Date("2017-11-09T22:00"));
-    assertFalse(StringUtil.isValidISO8601Date("2017-11-09D22:00"));
+    assertEquals("yyyy-MM-dd'T'HH:mm", StringUtil.getValidISO8601DatePattern("2017-11-09T22:00"));
+    assertTrue(StringUtil.getValidISO8601DatePattern("2017-11-09D22:00").isEmpty());
 
     // Year + Month + Day + Time.
-    assertTrue(StringUtil.isValidISO8601Date("2017-11-09T22:00:01"));
+    assertEquals(
+        "yyyy-MM-dd'T'HH:mm:ss", StringUtil.getValidISO8601DatePattern("2017-11-09T22:00:01"));
   }
 
   @Test

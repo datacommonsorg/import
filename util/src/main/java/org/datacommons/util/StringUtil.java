@@ -105,21 +105,21 @@ public class StringUtil {
     return v.equals("true") || v.equals("1") || v.equals("false") || v.equals("0");
   }
 
-  public static boolean isValidISO8601Date(String dateValue) {
+  public static String getValidISO8601DatePattern(String dateValue) {
     for (String pattern : DATE_PATTERNS) {
       try {
         DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH).parse(dateValue);
-        return true;
+        return pattern;
       } catch (DateTimeParseException ex) {
         // Pass through
       }
     }
     for (String pattern : EXTRA_DATE_PATTERNS) {
       if (Pattern.matches(pattern, dateValue)) {
-        return true;
+        return pattern;
       }
     }
-    return false;
+    return "";
   }
 
   public static LocalDateTime getValidISO8601Date(String dateValue) {
@@ -139,6 +139,14 @@ public class StringUtil {
       }
     }
     return null;
+  }
+
+  public static String getValidISO8601DateTemplate(String datePattern) {
+    if (DATE_PATTERNS.contains(datePattern)) {
+      return datePattern;
+    } else {
+      return "";
+    }
   }
 
   // Splits a string using the delimiter character. A field is not split if the delimiter is within

@@ -2,10 +2,10 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "NumRowSuccesses": "13",
-        "NumPVSuccesses": "162",
-        "Existence_NumChecks": "173",
-        "NumNodeSuccesses": "24",
+        "NumRowSuccesses": "16",
+        "NumPVSuccesses": "210",
+        "Existence_NumChecks": "221",
+        "NumNodeSuccesses": "30",
         "CSV_MalformedDCIDPVFailures": "4",
         "Existence_NumDcCalls": "1"
       }
@@ -13,13 +13,15 @@
     "LEVEL_WARNING": {
       "counters": {
         "CSV_EmptyDcidReferences": "2",
-        "Existence_MissingReference_measurementMethod": "16",
+        "Existence_MissingReference_measurementMethod": "22",
         "Existence_MissingReference_location": "1",
         "StrSplit_EmptyToken_typeOf": "1",
         "CSV_MalformedDCIDFailures": "1",
-        "Existence_MissingReference_variableMeasured": "16",
+        "Existence_MissingReference_variableMeasured": "22",
         "Existence_MissingReference_typeOf": "1",
-        "Existence_MissingReference_unit": "1"
+        "StatsCheck_MaxPercentFluctuationGreaterThan500": "1",
+        "Existence_MissingReference_unit": "1",
+        "StatsCheck_Data_Holes": "2"
       }
     },
     "LEVEL_ERROR": {
@@ -34,11 +36,11 @@
         "Sanity_MultipleDcidValues": "1",
         "StrSplit_EmptyToken_location": "1",
         "Sanity_MissingOrEmpty_typeOf": "1",
-        "Sanity_InvalidChars_typeOf": "1",
+        "Sanity_InvalidChars_typeOf": "4",
         "Sanity_MultipleVals_observationDate": "2",
         "Sanity_MissingOrEmpty_observationAbout": "2",
         "MCF_QuantityMalformedValue": "1",
-        "Sanity_NonAsciiValueInNonText": "1"
+        "Sanity_NonAsciiValueInNonText": "4"
       }
     }
   },
@@ -235,6 +237,54 @@
     "userMessage": "Quantity value must be a number :: value: '[Lat Long]', property: 'location', node: 'dcid:CA-MN'",
     "counterKey": "MCF_QuantityMalformedValue"
   }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "15"
+    },
+    "userMessage": "Found non-ascii characters in a value that is not text :: value: 'Administrative–Area1', type: 'RESOLVED_REF', property: 'typeOf', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_NonAsciiValueInNonText"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "15"
+    },
+    "userMessage": "Found invalid chars in dcid value :: value: 'Administrative–Area1', invalid-chars: '–', property: 'typeOf', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_InvalidChars_typeOf"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Found non-ascii characters in a value that is not text :: value: 'Administrative–Area1', type: 'RESOLVED_REF', property: 'typeOf', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_NonAsciiValueInNonText"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Found invalid chars in dcid value :: value: 'Administrative–Area1', invalid-chars: '–', property: 'typeOf', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_InvalidChars_typeOf"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Found non-ascii characters in a value that is not text :: value: 'Administrative–Area1', type: 'RESOLVED_REF', property: 'typeOf', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_NonAsciiValueInNonText"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Found invalid chars in dcid value :: value: 'Administrative–Area1', invalid-chars: '–', property: 'typeOf', node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_InvalidChars_typeOf"
+  }, {
     "level": "LEVEL_WARNING",
     "location": {
       "file": "SuccessTmcf.csv",
@@ -302,7 +352,31 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "13"
+      "lineNumber": "14"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "15"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
     "counterKey": "Existence_MissingReference_variableMeasured"
@@ -366,7 +440,31 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "13"
+      "lineNumber": "14"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV2', property: 'variableMeasured', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "15"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV2', property: 'variableMeasured', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SV2', property: 'variableMeasured', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'SV2', property: 'variableMeasured', node: 'E:SVTest->E1'",
     "counterKey": "Existence_MissingReference_variableMeasured"
@@ -486,7 +584,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "13"
+      "lineNumber": "14"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
     "counterKey": "Existence_MissingReference_measurementMethod"
@@ -494,7 +592,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "13"
+      "lineNumber": "14"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E1'",
     "counterKey": "Existence_MissingReference_measurementMethod"
@@ -502,7 +600,55 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "13"
+      "lineNumber": "15"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "15"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E1'",
+    "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "14"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'Territory', property: 'typeOf', node: 'E:SVTest->E3'",
     "counterKey": "Existence_MissingReference_typeOf"
@@ -510,10 +656,55 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "13"
+      "lineNumber": "14"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'latLong/-4300000_11600000', property: 'location', node: 'E:SVTest->E3'",
     "counterKey": "Existence_MissingReference_location"
+  }],
+  "statsCheckSummary": [{
+    "placeDcid": "CA-AB",
+    "statVarDcid": "SV2",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "validationCounters": [{
+      "counterKey": "StatsCheck_Data_Holes",
+      "additionalDetails": "Possible data hole found. Dates in this series: 2011-01-01, 2017-06-01, 2017-09-01, 2019-06-01"
+    }]
+  }, {
+    "placeDcid": "CA-AB",
+    "statVarDcid": "SV1",
+    "measurementMethod": "SVTest",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "validationCounters": [{
+      "counterKey": "StatsCheck_MaxPercentFluctuationGreaterThan500",
+      "problemPoints": [{
+        "date": "2011-01-01",
+        "values": [{
+          "value": 0.0,
+          "locations": [{
+            "file": "SuccessTmcf.csv",
+            "lineNumber": "16"
+          }]
+        }]
+      }, {
+        "date": "2017-06-01",
+        "values": [{
+          "value": 2.0,
+          "locations": [{
+            "file": "SuccessTmcf.csv",
+            "lineNumber": "15"
+          }]
+        }]
+      }],
+      "percentDifference": 2.0E8
+    }, {
+      "counterKey": "StatsCheck_Data_Holes",
+      "additionalDetails": "Possible data hole found. Dates in this series: 2011-01-01, 2017-06-01, 2017-09-01, 2019-06-01"
+    }]
   }],
   "commandArgs": {
     "existenceChecks": true,
