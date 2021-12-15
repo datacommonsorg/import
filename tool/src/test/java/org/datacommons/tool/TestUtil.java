@@ -14,6 +14,8 @@
 
 package org.datacommons.tool;
 
+import static org.junit.Assert.*;
+
 import com.google.common.truth.Expect;
 import com.google.common.truth.extensions.proto.ProtoTruth;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -23,12 +25,18 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
 import org.apache.commons.io.FileUtils;
 import org.datacommons.proto.Debug;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.junit.rules.TemporaryFolder;
 
 // Common set of utils used in e2e tests.
 public class TestUtil {
+  private static String EMPTY_TEXT_HTML_ELEMENT_STRING = "<ELEMENT WITHOUT TEXT>";
+
   public static void assertReportFilesAreSimilar(Expect expect, String expected, String actual)
       throws IOException {
     Debug.Log expectedLog = reportToProto(expected).build();
@@ -67,5 +75,41 @@ public class TestUtil {
   public static String readStringFromPath(Path filePath) throws IOException {
     File file = new File(filePath.toString());
     return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+  }
+
+  public static void assertHtmlFilesAreSimilar(String expected, String actual) {
+    Parser htmlParser = Parser.htmlParser();
+    Document expectedHtml = htmlParser.parseInput(expected, "expected");
+    Document actualHtml = htmlParser.parseInput(actual, "actual");
+    LinkedList<Element> expectedElements = new LinkedList<>(expectedHtml.children());
+    LinkedList<Element> actualElements = new LinkedList<>(actualHtml.children());
+    // Create a string with all the text from all the elements in the expectedHtml file. If an
+    // element has no text, append a default string.
+    StringBuilder expectedHtmlText = new StringBuilder();
+    while (!expectedElements.isEmpty()) {
+      Element expectedElement = expectedElements.poll();
+      expectedElements.addAll(expectedElement.children());
+      if (expectedElement.ownText().isEmpty()) {
+        expectedHtmlText.append(EMPTY_TEXT_HTML_ELEMENT_STRING);
+      } else {
+        expectedHtmlText.append(expectedElement.ownText());
+      }
+    }
+    // Create a string with all the text from all the elements in the actualHtml file. If an element
+    // has no text, append a default string.
+    StringBuilder actualHtmlText = new StringBuilder();
+    while (!actualElements.isEmpty()) {
+      Element actualElement = actualElements.poll();
+      actualElements.addAll(actualElement.children());
+      if (actualElement.ownText().isEmpty()) {
+        actualHtmlText.append(EMPTY_TEXT_HTML_ELEMENT_STRING);
+      } else {
+        actualHtmlText.append(actualElement.ownText());
+      }
+    }
+    assertEquals(
+        "The text content of the actual HTML file differed from expected",
+        expectedHtmlText.toString(),
+        actualHtmlText.toString());
   }
 }
