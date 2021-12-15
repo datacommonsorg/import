@@ -11,6 +11,11 @@
         border-collapse: collapse;
         padding: 5px;
       }
+      td, th {
+        max-width: 25rem;
+        word-wrap: break-word;
+        vertical-align: top;
+      }
       tbody tr:hover {
         background-color: #ccc;
       }
@@ -77,7 +82,7 @@
     <#if svSummaryMap?has_content>
       <div>
         <h2>StatVarObservations by StatVar</h2>
-        <table width="80%">
+        <table width="95%">
           <thead>
             <tr>
               <th>Stat Var</th>
@@ -127,7 +132,7 @@
           <#list placeSeriesSummaryMap as place, placeSeriesSummary>
             <details open>
               <summary>${place}</summary>
-              <table width="80%">
+              <table width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -162,7 +167,7 @@
                       <div>${sFactor}</div>
                       </#list>
                     </td>
-                    <td>${svSummary.getTimeSeriesChartSVG()}</td>
+                    <td style="max-width:none;text-align: -webkit-center;">${svSummary.getTimeSeriesChartSVG()}</td>
                   </tr>
                   </tbody>
                   </#list>

@@ -13,6 +13,7 @@
     "LEVEL_WARNING": {
       "counters": {
         "Existence_MissingReference_Property": "2",
+        "Existence_MissingReference_variableMeasured": "10",
         "Existence_MissingReference_typeOf": "1"
       }
     },
@@ -108,6 +109,86 @@
     },
     "userMessage": "Found a local ref to an unresolvable node :: ref: 'l:SVId', property: 'variableMeasured', node: 'UnresSVObsId'",
     "counterKey": "Resolution_ReferenceToFailedNode_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "covid.csv",
+      "lineNumber": "2"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name', property: 'variableMeasured', node: 'E:COVID19_cases_india->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "covid.csv",
+      "lineNumber": "3"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name', property: 'variableMeasured', node: 'E:COVID19_cases_india->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "covid.csv",
+      "lineNumber": "4"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name', property: 'variableMeasured', node: 'E:COVID19_cases_india->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "covid.csv",
+      "lineNumber": "5"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name', property: 'variableMeasured', node: 'E:COVID19_cases_india->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "covid.csv",
+      "lineNumber": "6"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name', property: 'variableMeasured', node: 'E:COVID19_cases_india->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "covid.csv",
+      "lineNumber": "7"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name', property: 'variableMeasured', node: 'E:COVID19_cases_india->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "covid.csv",
+      "lineNumber": "8"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name', property: 'variableMeasured', node: 'E:COVID19_cases_india->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "covid.csv",
+      "lineNumber": "9"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name', property: 'variableMeasured', node: 'E:COVID19_cases_india->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "covid.csv",
+      "lineNumber": "10"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name', property: 'variableMeasured', node: 'E:COVID19_cases_india->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "covid.csv",
+      "lineNumber": "11"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name', property: 'variableMeasured', node: 'E:COVID19_cases_india->E0'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
   }],
   "commandArgs": {
     "existenceChecks": true,
