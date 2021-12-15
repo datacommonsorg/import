@@ -35,6 +35,8 @@ import org.junit.rules.TemporaryFolder;
 
 // Common set of utils used in e2e tests.
 public class TestUtil {
+  private static String EMPTY_TEXT_HTML_ELEMENT_STRING = "<ELEMENT WITHOUT TEXT>";
+
   public static void assertReportFilesAreSimilar(Expect expect, String expected, String actual)
       throws IOException {
     Debug.Log expectedLog = reportToProto(expected).build();
@@ -81,20 +83,30 @@ public class TestUtil {
     Document actualHtml = htmlParser.parseInput(actual, "actual");
     LinkedList<Element> expectedElements = new LinkedList<>(expectedHtml.children());
     LinkedList<Element> actualElements = new LinkedList<>(actualHtml.children());
+    // Create a string with all the text from all the elements in the expectedHtml file. If an
+    // element has no text, append a default string.
     StringBuilder expectedHtmlText = new StringBuilder();
-    StringBuilder actualHtmlText = new StringBuilder();
-    while (!expectedElements.isEmpty() && !actualElements.isEmpty()) {
+    while (!expectedElements.isEmpty()) {
       Element expectedElement = expectedElements.poll();
-      Element actualElement = actualElements.poll();
       expectedElements.addAll(expectedElement.children());
-      actualElements.addAll(actualElement.children());
-      expectedHtmlText.append(expectedElement.ownText());
-      actualHtmlText.append(actualElement.ownText());
+      if (expectedElement.ownText().isEmpty()) {
+        expectedHtmlText.append(EMPTY_TEXT_HTML_ELEMENT_STRING);
+      } else {
+        expectedHtmlText.append(expectedElement.ownText());
+      }
     }
-    assertTrue(
-        "Actual HTML file contains additional elements that were not expected",
-        expectedElements.isEmpty());
-    assertTrue("Actual HTML file is missing some expected elements", actualElements.isEmpty());
+    // Create a string with all the text from all the elements in the actualHtml file. If an element
+    // has no text, append a default string.
+    StringBuilder actualHtmlText = new StringBuilder();
+    while (!actualElements.isEmpty()) {
+      Element actualElement = actualElements.poll();
+      actualElements.addAll(actualElement.children());
+      if (actualElement.ownText().isEmpty()) {
+        actualHtmlText.append(EMPTY_TEXT_HTML_ELEMENT_STRING);
+      } else {
+        actualHtmlText.append(actualElement.ownText());
+      }
+    }
     assertEquals(
         "The text content of the actual HTML file differed from expected",
         expectedHtmlText.toString(),
