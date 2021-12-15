@@ -17,7 +17,9 @@ import java.util.List;
 import org.datacommons.proto.Debug;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.AxisSpace;
 import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
@@ -113,15 +115,16 @@ public class SummaryReportGenerator {
       plot.setRenderer(renderer);
       // change the background color of the chart to be white
       plot.setBackgroundPaint(Color.WHITE);
+      ValueAxis yAxis = plot.getRangeAxis();
       if (timeSeries.findValueRange().getLength() == 0) {
         // Manually set the range when the values in the time series are all the same. Otherwise,
         // the chart library will draw an axis with multiple ticks all labeled with that same value.
-        plot.getRangeAxis().setRange(0, this.seriesValues.get(0) * 2);
+        yAxis.setRange(0, this.seriesValues.get(0) * 2);
       }
+      DateAxis xAxis = (DateAxis) plot.getDomainAxis();
       if (this.seriesDates.size() == 1) {
-        // Override the date formatter for the x axis when there is only one data point. Otherwise,
+        // Override the date formatter for the x-axis when there is only one data point. Otherwise,
         // the chart library will label the single date as 00:00:00.
-        DateAxis xAxis = (DateAxis) plot.getDomainAxis();
         String datePattern = StringUtil.getValidISO8601DatePattern(this.seriesDates.get(0));
         if (StringUtil.getValidISO8601DateTemplate(datePattern).isEmpty()) {
           xAxis.setDateFormatOverride(new SimpleDateFormat("yyyy-MM-dd"));
@@ -133,6 +136,17 @@ public class SummaryReportGenerator {
       if (TEST_mode) {
         // When testing, we want the svg clipPath id to be consistent.
         svg.setDefsKeyPrefix("test");
+        // When testing, We want to keep the font of the labels consistent.
+        Font tickLabelFont = new Font("SansSerif", 0, 10);
+        yAxis.setTickLabelFont(tickLabelFont);
+        xAxis.setTickLabelFont(tickLabelFont);
+        // When testing, we want to keep the sizes of the legends and data area consistent.
+        AxisSpace xAxisSpace = new AxisSpace();
+        xAxisSpace.setBottom(15);
+        plot.setFixedDomainAxisSpace(xAxisSpace);
+        AxisSpace yAxisSpace = new AxisSpace();
+        yAxisSpace.setLeft(40);
+        plot.setFixedRangeAxisSpace(yAxisSpace);
       }
       // draw the chart on the svg
       chart.draw(svg, new Rectangle2D.Double(0, 0, CHART_WIDTH, CHART_HEIGHT));
