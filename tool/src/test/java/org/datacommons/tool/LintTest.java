@@ -53,7 +53,6 @@ public class LintTest {
       }
       argsList.add(
           "--output-dir=" + Paths.get(testFolder.getRoot().getPath(), directory.getName()));
-      argsList.add("--summary-report=True");
       String[] args = argsList.toArray(new String[argsList.size()]);
       cmd.execute(args);
 

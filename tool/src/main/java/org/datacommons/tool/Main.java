@@ -91,7 +91,7 @@ class Main {
 
   @CommandLine.Option(
       names = {"-sr", "--summary-report"},
-      defaultValue = "false",
+      defaultValue = "true",
       scope = CommandLine.ScopeType.INHERIT,
       description = "Generates a summary report in html format.")
   public boolean generateSummaryReport;
