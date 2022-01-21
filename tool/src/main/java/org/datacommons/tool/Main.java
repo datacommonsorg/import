@@ -36,7 +36,7 @@ class Main {
 
   @CommandLine.Option(
       names = {"--verbose"},
-      description = "Print verbose log.",
+      description = "Print verbose log. Defaults to false.",
       defaultValue = "false",
       scope = CommandLine.ScopeType.INHERIT)
   public boolean verbose;
@@ -93,7 +93,7 @@ class Main {
       names = {"-sr", "--summary-report"},
       defaultValue = "true",
       scope = CommandLine.ScopeType.INHERIT,
-      description = "Generates a summary report in html format.")
+      description = "Generates a summary report in html format. Defaults to true.")
   public boolean generateSummaryReport;
 
   public static void main(String... args) {

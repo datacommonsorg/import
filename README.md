@@ -40,6 +40,7 @@ joining.
 
     Another option is to copy/paste the JSON content in [jsongrid](https://jsongrid.com).
 
+- To see the list of flags that can be used and what the default values are: `dc-import --help`.
 ## Development
 
 ### Prerequisites
