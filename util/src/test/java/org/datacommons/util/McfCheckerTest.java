@@ -177,6 +177,8 @@ public class McfCheckerTest {
   @Test
   public void checkStatVar() throws IOException, InterruptedException {
     // Missing popType
+    // This should only result in a Warning (and not an error).
+    // The Warning vs Error is tested under org.datacommons.tool.LintTest.
     String mcf =
         "Node: SV\n"
             + "typeOf: schema:StatisticalVariable\n"

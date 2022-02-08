@@ -14,7 +14,8 @@
         "Existence_MissingReference_containedIn": "1",
         "Existence_MissingReference_Property": "4",
         "Existence_MissingReference_containedInPlace": "1",
-        "Existence_MissingReference_subClassOf": "1"
+        "Existence_MissingReference_subClassOf": "1",
+        "Sanity_MissingOrEmpty_populationType": "2"
       }
     },
     "LEVEL_ERROR": {
@@ -53,7 +54,6 @@
         "Resolution_OrphanLocalReference_containedInPlace": "1",
         "Sanity_MultipleDcidValues": "1",
         "MCF_MalformedNodeName": "1",
-        "Sanity_MissingOrEmpty_populationType": "2",
         "Resolution_DcidAssignmentFailure_City": "1",
         "Sanity_NonDoubleObsValue": "1"
       }
@@ -228,7 +228,7 @@
     "userMessage": "Found dcid with more than one value :: count: 2, node: '\"CANCountry\"'",
     "counterKey": "Sanity_MultipleDcidValues"
   }, {
-    "level": "LEVEL_ERROR",
+    "level": "LEVEL_WARNING",
     "location": {
       "file": "McfOnly.mcf",
       "lineNumber": "77"
@@ -260,7 +260,7 @@
     "userMessage": "Found property name that does not start with a lower-case :: property: 'PopulationType', node: 'dcid:Count_Death_15YearsPlus'",
     "counterKey": "Sanity_NotInitLowerPropName"
   }, {
-    "level": "LEVEL_ERROR",
+    "level": "LEVEL_WARNING",
     "location": {
       "file": "McfOnly.mcf",
       "lineNumber": "109"
