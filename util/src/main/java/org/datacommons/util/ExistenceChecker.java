@@ -24,7 +24,10 @@ import org.datacommons.proto.Mcf;
 // This class is thread-safe.
 public class ExistenceChecker {
   private static final Logger logger = LogManager.getLogger(ExistenceChecker.class);
-  private static final String API_ROOT = "https://api.datacommons.org/node/property-values";
+  // Use the autopush end-point so we get more recent schema additions that
+  // haven't rolled out.
+  private static final String API_ROOT =
+      "https://autopush.api.datacommons.org/node/property-values";
   // For now we only need checks for certain Property/Class props.
   private static final Set<String> SCHEMA_PROPERTIES =
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES, Vocabulary.SUB_CLASS_OF);
@@ -294,6 +297,7 @@ public class ExistenceChecker {
     arg.addProperty("direction", "out");
     var request =
         HttpRequest.newBuilder(URI.create(API_ROOT))
+            .version(HttpClient.Version.HTTP_1_1)
             .header("accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(arg.toString()))
             .build();

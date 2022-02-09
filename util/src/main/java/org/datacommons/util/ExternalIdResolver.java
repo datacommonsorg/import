@@ -265,6 +265,7 @@ public class ExternalIdResolver {
     logCtx.incrementInfoCounterBy("Resolution_NumDcCalls", 1);
     var request =
         HttpRequest.newBuilder(URI.create(API_ROOT))
+            .version(HttpClient.Version.HTTP_1_1)
             .header("accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(StringUtil.msgToJson(reconReq)))
             .build();
