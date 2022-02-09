@@ -32,7 +32,7 @@ import org.datacommons.proto.Recon;
 public class ExternalIdResolver {
   private static final Logger logger = LogManager.getLogger(ExternalIdResolver.class);
 
-  private static final String API_ROOT = "https://autopush.recon.datacommons.org/entity/resolve";
+  private static final String API_ROOT = "https://staging.recon.datacommons.org/entity/resolve";
   // Let tests modify it.
   static int MAX_RESOLUTION_BATCH_IDS = 500;
 
