@@ -187,8 +187,13 @@ public class McfChecker {
   private void checkStatVar(String nodeId, Mcf.McfGraph.PropertyValues node)
       throws IOException, InterruptedException {
     String popType =
+        // Only Warn if popType is not set. No need for an Error.
         checkRequiredSingleValueProp(
-            nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.POPULATION_TYPE);
+            Debug.Log.Level.LEVEL_WARNING,
+            nodeId,
+            node,
+            Vocabulary.STAT_VAR_TYPE,
+            Vocabulary.POPULATION_TYPE);
     if (!popType.isEmpty()) {
       checkInitCasing(nodeId, node, Vocabulary.POPULATION_TYPE, popType, "", true);
     }
