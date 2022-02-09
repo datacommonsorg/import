@@ -24,8 +24,7 @@ import org.datacommons.proto.Mcf;
 // This class is thread-safe.
 public class ExistenceChecker {
   private static final Logger logger = LogManager.getLogger(ExistenceChecker.class);
-  private static final String API_ROOT =
-      "https://api.datacommons.org/node/property-values";
+  private static final String API_ROOT = "https://api.datacommons.org/node/property-values";
   // For now we only need checks for certain Property/Class props.
   private static final Set<String> SCHEMA_PROPERTIES =
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES, Vocabulary.SUB_CLASS_OF);
