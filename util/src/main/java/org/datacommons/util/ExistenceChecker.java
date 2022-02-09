@@ -297,6 +297,7 @@ public class ExistenceChecker {
     arg.addProperty("direction", "out");
     var request =
         HttpRequest.newBuilder(URI.create(API_ROOT))
+            .version(HttpClient.Version.HTTP_1_1)
             .header("accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(arg.toString()))
             .build();
