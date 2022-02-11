@@ -315,7 +315,7 @@ public final class Vocabulary {
     String lcVal = val.toLowerCase();
     return lcVal.endsWith("value")
         || lcVal.endsWith("estimate")
-        || lcVal.endsWith("percentile")
+        || lcVal.startsWith("percentile")
         || lcVal.equals("marginoferror")
         || lcVal.endsWith("stderror")
         || lcVal.endsWith("samplesize")
