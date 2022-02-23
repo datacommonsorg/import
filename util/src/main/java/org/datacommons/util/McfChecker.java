@@ -202,7 +202,12 @@ public class McfChecker {
         checkRequiredSingleValueProp(
             nodeId, node, Vocabulary.STAT_VAR_TYPE, Vocabulary.MEASURED_PROP);
     if (!mProp.isEmpty()) {
-      checkInitCasing(nodeId, node, Vocabulary.MEASURED_PROP, mProp, "", false);
+      var dcid = McfUtil.getPropVal(node, Vocabulary.DCID);
+      if (!mProp.equals(dcid)) {
+        // Perform init-casing check for measuredProperty when it is not a schema-less SV
+        // (schema-less SVs have a self-referential measuredProperty that can have any casing).
+        checkInitCasing(nodeId, node, Vocabulary.MEASURED_PROP, mProp, "", false);
+      }
     }
     // TODO: Do this check for all constraint properties too.
     if (existenceChecker != null) {

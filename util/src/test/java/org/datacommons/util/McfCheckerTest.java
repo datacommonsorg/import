@@ -221,6 +221,16 @@ public class McfCheckerTest {
             + "measuredProperty: dcs:Income";
     assertTrue(failure(mcf, "Sanity_NotInitLower_measuredProperty", "Income"));
 
+    // Schema-less mprop with init-capital.
+    mcf =
+        "Node: SV\n"
+            + "typeOf: schema:StatisticalVariable\n"
+            + "populationType: schema:Person\n"
+            + "statType: dcs:measuredValue\n"
+            + "dcid: \"Income_Person\"\n"
+            + "measuredProperty: dcs:Income_Person";
+    assertTrue(success(mcf));
+
     // Unknown statType
     mcf =
         "Node: SV\n"
