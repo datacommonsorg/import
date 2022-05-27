@@ -2,20 +2,20 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "Existence_NumChecks": "178",
-        "Existence_NumDcCalls": "2"
+        "Existence_NumChecks": "177",
+        "Existence_NumDcCalls": "1"
       }
     },
     "LEVEL_WARNING": {
       "counters": {
         "Existence_MissingReference_statType": "6",
+        "Sanity_MissingOrEmpty_populationType": "2",
         "Sanity_ObsMissingValueProp": "1",
-        "Existence_MissingReference_domainIncludes": "2",
+        "Existence_MissingReference_domainIncludes": "1",
         "Existence_MissingReference_containedIn": "1",
         "Existence_MissingReference_Property": "4",
         "Existence_MissingReference_containedInPlace": "1",
-        "Existence_MissingReference_subClassOf": "1",
-        "Sanity_MissingOrEmpty_populationType": "2"
+        "Existence_MissingReference_subClassOf": "1"
       }
     },
     "LEVEL_ERROR": {
@@ -475,14 +475,6 @@
     },
     "userMessage": "Failed reference existence check :: value-ref: 'substanceType', property: 'subClassOf', node: 'dcid:beverageType'",
     "counterKey": "Existence_MissingReference_subClassOf"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "McfOnly.mcf",
-      "lineNumber": "77"
-    },
-    "userMessage": "Failed reference existence check :: subject: '', predicate: 'domainIncludes', object: '', node: 'dcid:Count_Death_10To12'",
-    "counterKey": "Existence_MissingReference_domainIncludes"
   }, {
     "level": "LEVEL_ERROR",
     "location": {

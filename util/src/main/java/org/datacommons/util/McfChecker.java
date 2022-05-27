@@ -210,7 +210,7 @@ public class McfChecker {
       }
     }
     // TODO: Do this check for all constraint properties too.
-    if (existenceChecker != null) {
+    if (existenceChecker != null && !mProp.isEmpty()) {
       LogCb logCb =
           new LogCb(logCtx, Debug.Log.Level.LEVEL_WARNING, node)
               .setDetail(LogCb.SUB_KEY, mProp)
@@ -432,7 +432,7 @@ public class McfChecker {
         }
       }
 
-      if (existenceChecker != null) {
+      if (existenceChecker != null && !prop.isEmpty()) {
         LogCb logCb =
             new LogCb(logCtx, Debug.Log.Level.LEVEL_WARNING, node)
                 .setDetail(LogCb.PREF_KEY, prop)
@@ -475,7 +475,9 @@ public class McfChecker {
         if (tv.getType() == Mcf.ValueType.RESOLVED_REF) {
           if (!checkDcid(tv.getValue(), prop, nodeId, node)) {
             // Failed. checkDcid would have updated logCtx, pass through...
-          } else if (shouldCheckExistence(prop, types) && existenceChecker != null) {
+          } else if (shouldCheckExistence(prop, types)
+              && existenceChecker != null
+              && !tv.getValue().isEmpty()) {
             LogCb logCb =
                 new LogCb(logCtx, Debug.Log.Level.LEVEL_WARNING, node)
                     .setDetail(LogCb.VREF_KEY, tv.getValue())
