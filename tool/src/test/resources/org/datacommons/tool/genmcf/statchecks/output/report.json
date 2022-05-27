@@ -123,7 +123,7 @@
       }]
     }]
   }, {
-    "placeDcid": "geoId/241",
+    "placeDcid": "geoId/25111",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
     "observationPeriod": "",
@@ -134,7 +134,7 @@
       "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }, {
-    "placeDcid": "geoId/25111",
+    "placeDcid": "geoId/241",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
     "observationPeriod": "",
@@ -178,7 +178,7 @@
       "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }, {
-    "placeDcid": "geoId/27111",
+    "placeDcid": "geoId/28111",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
     "observationPeriod": "",
@@ -189,7 +189,7 @@
       "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }, {
-    "placeDcid": "geoId/28111",
+    "placeDcid": "geoId/27111",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
     "observationPeriod": "",
