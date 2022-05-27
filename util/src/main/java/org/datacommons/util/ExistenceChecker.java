@@ -73,7 +73,7 @@ public class ExistenceChecker {
     if (checkLocal(node, Vocabulary.TYPE_OF, "", logCb)) {
       return;
     }
-    // assert !node.isEmpty();
+    assert !node.isEmpty();
     batchRemoteCall(node, Vocabulary.TYPE_OF, "", logCb);
   }
 
@@ -89,7 +89,7 @@ public class ExistenceChecker {
     if (checkLocal(sub, pred, obj, logCb)) {
       return;
     }
-    // assert !sub.isEmpty();
+    assert !sub.isEmpty();
     batchRemoteCall(sub, pred, obj, logCb);
   }
 
@@ -209,11 +209,12 @@ public class ExistenceChecker {
       // If this was an independent RPC call, don't want to re-issue the call.
       if (subs.size() == 1) {
         var sub = subs.get(0);
-        if (!subMap.containsKey(sub)) {
-          return;
-        }
+        assert subMap.containsKey(sub);
         var objMap = subMap.get(sub);
         for (var cbs : objMap.values()) {
+          for (var cb : cbs) {
+            cb.logError("Existence_FailedDcCall", "Failed DC Call");
+          }
           totalPendingCallCount -= cbs.size();
         }
         subMap.remove(subs.get(0));

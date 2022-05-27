@@ -210,7 +210,7 @@ public class McfChecker {
       }
     }
     // TODO: Do this check for all constraint properties too.
-    if (existenceChecker != null) {
+    if (existenceChecker != null && !mProp.isEmpty()) {
       LogCb logCb =
           new LogCb(logCtx, Debug.Log.Level.LEVEL_WARNING, node)
               .setDetail(LogCb.SUB_KEY, mProp)
@@ -218,9 +218,7 @@ public class McfChecker {
               .setDetail(LogCb.OBJ_KEY, popType)
               .setDetail(LogCb.NODE_KEY, nodeId)
               .setCounterSuffix(Vocabulary.DOMAIN_INCLUDES);
-      if (!mProp.isEmpty()) {
-        existenceChecker.submitTripleCheck(mProp, Vocabulary.DOMAIN_INCLUDES, popType, logCb);
-      }
+      existenceChecker.submitTripleCheck(mProp, Vocabulary.DOMAIN_INCLUDES, popType, logCb);
     }
 
     String statType =
@@ -434,15 +432,13 @@ public class McfChecker {
         }
       }
 
-      if (existenceChecker != null) {
+      if (existenceChecker != null && !prop.isEmpty()) {
         LogCb logCb =
             new LogCb(logCtx, Debug.Log.Level.LEVEL_WARNING, node)
                 .setDetail(LogCb.PREF_KEY, prop)
                 .setDetail(LogCb.NODE_KEY, nodeId)
                 .setCounterSuffix(Vocabulary.PROPERTY_TYPE);
-        if (!prop.isEmpty()) {
-          existenceChecker.submitNodeCheck(prop, logCb);
-        }
+        existenceChecker.submitNodeCheck(prop, logCb);
       }
 
       for (Mcf.McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
@@ -479,7 +475,9 @@ public class McfChecker {
         if (tv.getType() == Mcf.ValueType.RESOLVED_REF) {
           if (!checkDcid(tv.getValue(), prop, nodeId, node)) {
             // Failed. checkDcid would have updated logCtx, pass through...
-          } else if (shouldCheckExistence(prop, types) && existenceChecker != null) {
+          } else if (shouldCheckExistence(prop, types)
+              && existenceChecker != null
+              && !tv.getValue().isEmpty()) {
             LogCb logCb =
                 new LogCb(logCtx, Debug.Log.Level.LEVEL_WARNING, node)
                     .setDetail(LogCb.VREF_KEY, tv.getValue())
@@ -490,9 +488,7 @@ public class McfChecker {
             if (prop.equals(Vocabulary.MEASUREMENT_METHOD)) {
               value = value.replace("dcAggregate/", "");
             }
-            if (!value.isEmpty()) {
-              existenceChecker.submitNodeCheck(value, logCb);
-            }
+            existenceChecker.submitNodeCheck(value, logCb);
           }
         }
       }
