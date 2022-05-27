@@ -73,6 +73,7 @@ public class ExistenceChecker {
     if (checkLocal(node, Vocabulary.TYPE_OF, "", logCb)) {
       return;
     }
+    // assert !node.isEmpty();
     batchRemoteCall(node, Vocabulary.TYPE_OF, "", logCb);
   }
 
@@ -88,6 +89,7 @@ public class ExistenceChecker {
     if (checkLocal(sub, pred, obj, logCb)) {
       return;
     }
+    // assert !sub.isEmpty();
     batchRemoteCall(sub, pred, obj, logCb);
   }
 
@@ -203,6 +205,19 @@ public class ExistenceChecker {
     if (dataJson == null) {
       if (verbose) {
         logger.info("DC call failed for - " + Strings.join(subs, ',') + ", " + pred);
+      }
+      // If this was an independent RPC call, don't want to re-issue the call.
+      if (subs.size() == 1) {
+        var sub = subs.get(0);
+        if (!subMap.containsKey(sub)) {
+          return;
+        }
+        var objMap = subMap.get(sub);
+        for (var cbs : objMap.values()) {
+          totalPendingCallCount -= cbs.size();
+        }
+        subMap.remove(subs.get(0));
+        return;
       }
       // Important: If the dcid is malformed, Mixer can return failure. Also, if the URI is too
       // long, then too this happens. So issue independent RPCs now. If this happens often enough,

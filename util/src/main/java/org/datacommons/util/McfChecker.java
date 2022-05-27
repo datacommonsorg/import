@@ -218,7 +218,9 @@ public class McfChecker {
               .setDetail(LogCb.OBJ_KEY, popType)
               .setDetail(LogCb.NODE_KEY, nodeId)
               .setCounterSuffix(Vocabulary.DOMAIN_INCLUDES);
-      existenceChecker.submitTripleCheck(mProp, Vocabulary.DOMAIN_INCLUDES, popType, logCb);
+      if (!mProp.isEmpty()) {
+        existenceChecker.submitTripleCheck(mProp, Vocabulary.DOMAIN_INCLUDES, popType, logCb);
+      }
     }
 
     String statType =
@@ -438,7 +440,9 @@ public class McfChecker {
                 .setDetail(LogCb.PREF_KEY, prop)
                 .setDetail(LogCb.NODE_KEY, nodeId)
                 .setCounterSuffix(Vocabulary.PROPERTY_TYPE);
-        existenceChecker.submitNodeCheck(prop, logCb);
+        if (!prop.isEmpty()) {
+          existenceChecker.submitNodeCheck(prop, logCb);
+        }
       }
 
       for (Mcf.McfGraph.TypedValue tv : pv.getValue().getTypedValuesList()) {
@@ -486,7 +490,9 @@ public class McfChecker {
             if (prop.equals(Vocabulary.MEASUREMENT_METHOD)) {
               value = value.replace("dcAggregate/", "");
             }
-            existenceChecker.submitNodeCheck(value, logCb);
+            if (!value.isEmpty()) {
+              existenceChecker.submitNodeCheck(value, logCb);
+            }
           }
         }
       }
