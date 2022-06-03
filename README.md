@@ -13,6 +13,8 @@ joining.
 
 ## Using Import Tool
 
+Also see the [documentation for usage instructions](docs/usage.md).
+
 - Make sure Java 11+ is installed([download link](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk)).
 
 - [Download the tool](https://github.com/datacommonsorg/import/releases) and run it with:
