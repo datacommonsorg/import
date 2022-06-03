@@ -151,9 +151,183 @@
             "user_actions": []
         },
         {
-            "counter_name": "MCF_NoColonFound",
+            "counter_name": "Sanity_TmcfMissingEntityDef",
             "is_prefix":  false,
             "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_UnexpectedNonColumn",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_TmcfMissingColumn",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_UnknownStatType",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_InvalidObsDate",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_NonDoubleObsValue",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_ObsMissingValueProp",
+            "is_prefix":  false,
+            "level": "LEVEL_WARNING",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_EmptyProperty",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_NotInitLowerPropName",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_MultipleDcidValues",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_DcidTableEntity",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_VeryLongDcid",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_NonAsciiValueInNonText",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_RefPropHasNonRefValue",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_InvalidChars_",
+            "is_prefix":  true,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_UnexpectedPropIn",
+            "is_prefix":  true,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_EmptySchemaValue",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_NonAsciiValueInSchema",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_DcidNameMismatchInSchema",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_MissingOrEmpty_",
+            "is_prefix":  true,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_MultipleVals_",
+            "is_prefix":  true,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_NotInitUpper_",
+            "is_prefix":  true,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_NotInitLower_",
+            "is_prefix":  true,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "CSV_InconsistentRows",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "CSV_MalformedDCIDFailures",
+            "is_prefix":  false,
+            "level": "LEVEL_WARNING",
+            "user_actions": []
+        },
+        {
+            "counter_name": "TMCF_TmcfEntityAsDcid",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "CSV_EmptyDcidReferences",
+            "is_prefix":  false,
+            "level": "LEVEL_WARNING",
+            "user_actions": []
+        },
+        {
+            "counter_name": "TMCF_UnexpectedNonColumn",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "CSV_TmcfMissingColumn",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "CSV_UnexpectedRow",
+            "is_prefix":  false,
+            "level": "LEVEL_WARNING",
             "user_actions": []
         }
     ]
