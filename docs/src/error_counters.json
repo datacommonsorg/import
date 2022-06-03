@@ -34,7 +34,7 @@
             "counter_name": "MCF_QuantityRangeMalformedValues",
             "is_prefix":  false,
             "level": "LEVEL_ERROR",
-            "user_actions": ["Either the start or end components are wrong, or at least one of the components have to be a number. Check the error message you got."]
+            "user_actions": ["Either the start or end components are wrong, or at least one of the components have to be a number. Check the error message you get."]
         },
         {
             "counter_name": "Resolution_UnresolvedExternalId_",
