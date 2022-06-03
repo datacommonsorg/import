@@ -1,0 +1,160 @@
+{
+    "error_counters": [
+        {
+            "counter_name": "MCF_UnenclosedComplexValue",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "MCF_MalformedComplexValueParts",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "MCF_QuantityMalformedValue",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "MCF_InvalidLatitude",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "MCF_InvalidLongitude",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "MCF_QuantityRangeMalformedValues",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": ["Either the start or end components are wrong, or at least one of the components have to be a number. Check the error message you got."]
+        },
+        {
+            "counter_name": "Resolution_UnresolvedExternalId_",
+            "is_prefix":  true,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Resolution_DivergingDcidsForExternalIds_",
+            "is_prefix":  true,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Mutator_MissingTypeOf",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Mutator_InvalidObsValue",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "MCF_MalformedColonLessLine",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "MCF_MalformedNodeName",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": ["Check the error message for the specific of the malformation."]
+        },
+        {
+            "counter_name": "TMCF_MalformedEntity",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "MCF_UnexpectedProperty",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "MCF_MalformedNode",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Resolution_IrreplaceableLocalRef",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Resolution_UnassignableNodeDcid",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Resolution_DcidAssignmentFailure_",
+            "is_prefix":  true,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Resolution_OrphanLocalReference_",
+            "is_prefix":  true,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Resolution_ReferenceToFailedNode_",
+            "is_prefix":  true,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_InconsistentSvObsValues",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_SameDcidForDifferentStatVars",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "Sanity_DifferentDcidsForSameStatVar",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        },
+        {
+            "counter_name": "CSV_HeaderFailure",
+            "is_prefix":  false,
+            "level": "LEVEL_FATAL",
+            "user_actions": []
+        },
+        {
+            "counter_name": "CSV_TmcfCheckFailure",
+            "is_prefix":  false,
+            "level": "LEVEL_FATAL",
+            "user_actions": []
+        },
+        {
+            "counter_name": "MCF_NoColonFound",
+            "is_prefix":  false,
+            "level": "LEVEL_ERROR",
+            "user_actions": []
+        }
+    ]
+}
