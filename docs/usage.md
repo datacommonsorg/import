@@ -35,4 +35,52 @@ dc-import genmcf <list of csv/tmcf files>
 Note that in this mode, schema file(s) are optional to pass in.
 
 ## Flags
-To see a list of flags that can be used, run `dc-import --help`.
+Flags available for the tool are listed below.
+
+You can also run `dc-import --help` to see a list of flags in your terminal.
+### `-e`, `--existence-checks`
+Check DCID references to schema nodes against the KG and locally. If set, then
+calls will be made to the Staging API server, and instance MCFs get fully loaded
+into memory. 
+
+Defaults to true.
+
+### `-h`, `--help`
+Show a help message and exit.
+
+### `-n`, `--num-threads=<numThreads>`
+Number of concurrent threads used for processing CSVs.
+
+Defaults to 1.
+
+### `-o`, `--output-dir=<outputDir>`
+Directory to write output files.
+
+Default is `dc_generated/` within current working directory.
+
+### `-s`, `--stat-checks`
+Checks integrity of time series by checking for holes, variance in values, etc.
+
+Defaults to true.
+
+### `-p`, `--sample-places=<samplePlaces>`
+List of place dcids to run stats check on.
+
+This should only be set if `--stat-checks` is true. If `--stat-checks` is true and this is not set, 5 sample places are picked for roughly each distinct place type.
+
+### `-r`, `--resolution=<resolutionMode>`
+Specifies the mode of resolution to use: `NONE`, `LOCAL`, `FULL`.  For no resolution, set NONE.  To lookup external IDs (like ISO) in DC, resolve local references and generated DCIDs, set FULL. To just resolve local references and generate DCIDs, set LOCAL.  Note that FULL mode may be slower since it makes (batched) DC Recon API calls and two passes over your CSV files.
+
+Defaults to LOCAL.
+
+### `-sr`, `--summary-report`
+Generates a summary report in html format. 
+Defaults to true.
+
+### `-V`, `--version`
+Print version information and exit.
+
+### `--verbose`
+Print verbose log.
+
+Defaults to false.
