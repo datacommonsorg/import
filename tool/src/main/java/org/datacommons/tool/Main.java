@@ -23,7 +23,7 @@ import picocli.CommandLine;
     mixinStandardHelpOptions = true,
     version = "dc-import 0.1",
     description = "Tool for use in developing datasets for Data Commons.",
-    subcommands = {Lint.class, GenMcf.class})
+    subcommands = {Lint.class, GenMcf.class, GenDocs.class})
 class Main {
   @CommandLine.Option(
       names = {"-o", "--output-dir"},
