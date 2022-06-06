@@ -22,56 +22,67 @@
         },
         {
             "counter_name": "MCF_InvalidLatitude",
+            "description": "Invalid latitude value; must be decimal degrees with an optional N/S suffix",
             "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "MCF_InvalidLongitude",
+            "description": "Invalid longitude value; must be decimal degrees with an optional E/W suffix",
             "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "MCF_QuantityRangeMalformedValues",
+            "description": "Complex value in MCF, check the error message for the specific error",
             "is_prefix":  false,
             "user_actions": ["Either the start or end components are wrong, or at least one of the components have to be a number. Check the error message you get."]
         },
         {
             "counter_name": "Resolution_UnresolvedExternalId_",
+            "description": "External ID reference could not be resolved. The error counter will be appended with the prop that was not found",
             "is_prefix":  true,
             "user_actions": []
         },
         {
             "counter_name": "Resolution_DivergingDcidsForExternalIds_",
+            "description": "Resolving external IDs found different DCIDs.",
             "is_prefix":  true,
             "user_actions": []
         },
         {
             "counter_name": "Mutator_MissingTypeOf",
+            "description": "MCF node missing typeOf property",
             "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Mutator_InvalidObsValue",
+            "description": "Observation value must be either a number or text",
             "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "MCF_MalformedColonLessLine",
+            "description": "MCF line was missing a colon to separate the property and the value",
             "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "MCF_MalformedNodeName",
+            "description": "Value of `Node` prop either included a comma or started with a quote.",
             "is_prefix":  false,
             "user_actions": ["Check the error message for the specific of the malformation."]
         },
         {
             "counter_name": "TMCF_MalformedEntity",
+            "description": "Found an entity name without the required E: prefix",
             "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "MCF_UnexpectedProperty",
+            "description": "Property found without a preceding line with 'Node'",
             "is_prefix":  false,
             "user_actions": []
         },
