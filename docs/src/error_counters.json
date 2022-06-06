@@ -3,7 +3,6 @@
         {
             "counter_name": "MCF_UnenclosedComplexValue",
             "description": "Complex value was not enclosed in brackets `[]` in the MCF.",
-            "is_prefix":  false,
             "user_actions": [
                 "Check complex values in your MCF and make sure they are enclosed in brackets"
             ]
@@ -11,299 +10,262 @@
         {
             "counter_name": "MCF_MalformedComplexValueParts",
             "description": "Complex value had less than 2 or more than 3 parts",
-            "is_prefix":  false,
             "user_actions": ["Check that all of your complex values have either 2 or 3 parts"]
         },
         {
             "counter_name": "MCF_QuantityMalformedValue",
             "description": "In a complex value with 2 parts, the part that was expected to be a number was not a number",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "MCF_InvalidLatitude",
             "description": "Invalid latitude value; must be decimal degrees with an optional N/S suffix",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "MCF_InvalidLongitude",
             "description": "Invalid longitude value; must be decimal degrees with an optional E/W suffix",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "MCF_QuantityRangeMalformedValues",
             "description": "Complex value in MCF, check the error message for the specific error",
-            "is_prefix":  false,
             "user_actions": ["Either the start or end components are wrong, or at least one of the components have to be a number. Check the error message you get."]
         },
         {
             "counter_name": "Resolution_UnresolvedExternalId_",
-            "description": "External ID reference could not be resolved. The error counter will be appended with the prop that was not found",
-            "is_prefix":  true,
+            "description": "External ID reference could not be resolved.",
+            "suffix_description":  "Property for which the ID could not be resolved.",
             "user_actions": []
         },
         {
             "counter_name": "Resolution_DivergingDcidsForExternalIds_",
             "description": "Resolving external IDs found different DCIDs.",
-            "is_prefix":  true,
+            "suffix_description":  "The properties that were found, separated by an underscore `_`",
             "user_actions": []
         },
         {
             "counter_name": "Mutator_MissingTypeOf",
             "description": "MCF node missing typeOf property",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Mutator_InvalidObsValue",
             "description": "Observation value must be either a number or text",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "MCF_MalformedColonLessLine",
             "description": "MCF line was missing a colon to separate the property and the value",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "MCF_MalformedNodeName",
             "description": "Value of `Node` prop either included a comma or started with a quote.",
-            "is_prefix":  false,
             "user_actions": ["Check the error message for the specific of the malformation."]
         },
         {
             "counter_name": "TMCF_MalformedEntity",
             "description": "Found an entity name without the required E: prefix",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "MCF_UnexpectedProperty",
             "description": "Property found without a preceding line with 'Node'",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "MCF_MalformedNode",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Resolution_IrreplaceableLocalRef",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Resolution_UnassignableNodeDcid",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Resolution_DcidAssignmentFailure_",
-            "is_prefix":  true,
+            "description": "The node could not be assigned a DCID based on the data available",
+            "suffix_description":  "The typeOf value of the node (first value, if multiple)",
             "user_actions": []
         },
         {
             "counter_name": "Resolution_OrphanLocalReference_",
-            "is_prefix":  true,
+            "description": "The local ID of the node is missing from the entire sub-graph",
+            "suffix_description":  "The property this reference was found in",
             "user_actions": []
         },
         {
             "counter_name": "Resolution_ReferenceToFailedNode_",
-            "is_prefix":  true,
+            "description": "The reference was resolved, but to a failed node, therefore, this node was also failed to resolve",
+            "suffix_description": "The property this reference was found in",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_InconsistentSvObsValues",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_SameDcidForDifferentStatVars",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_DifferentDcidsForSameStatVar",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "CSV_HeaderFailure",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "CSV_TmcfCheckFailure",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_TmcfMissingEntityDef",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_UnexpectedNonColumn",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_TmcfMissingColumn",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_UnknownStatType",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_InvalidObsDate",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_NonDoubleObsValue",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_ObsMissingValueProp",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_EmptyProperty",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_NotInitLowerPropName",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_MultipleDcidValues",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_DcidTableEntity",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_VeryLongDcid",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_NonAsciiValueInNonText",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_RefPropHasNonRefValue",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_InvalidChars_",
-            "is_prefix":  true,
+            "description": "DCID included invalid characters.",
+            "suffix_description":  "The property whose value included invalid chars",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_UnexpectedPropIn",
-            "is_prefix":  true,
+            "description": "A property was found that was not expected for the type of the Node",
+            "suffix_description":  "The type of the node",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_EmptySchemaValue",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_NonAsciiValueInSchema",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_DcidNameMismatchInSchema",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Sanity_MissingOrEmpty_",
-            "is_prefix":  true,
+            "description": "Found a missing or empty property value",
+            "suffix_description":  "The missing property that was required.",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_MultipleVals_",
-            "is_prefix":  true,
+            "description": "Found multiple values for single-value property",
+            "suffix_description":  "The property with the multiple values",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_NotInitUpper_",
-            "is_prefix":  true,
+            "description": "Found a class reference that does not start with an upper-case",
+            "suffix_description":  "The property, and optionally, the type of the node separated with an underscore (`_`) from the property.",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_NotInitLower_",
-            "is_prefix":  true,
+            "description": "Found a property reference that does not start with a lower-case",
+            "suffix_description":  "The property, and optionally, the type of the node separated with an underscore (`_`) from the property.",
             "user_actions": []
         },
         {
             "counter_name": "CSV_InconsistentRows",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "CSV_MalformedDCIDFailures",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "TMCF_TmcfEntityAsDcid",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "CSV_EmptyDcidReferences",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "TMCF_UnexpectedNonColumn",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "CSV_TmcfMissingColumn",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "CSV_UnexpectedRow",
-            "is_prefix":  false,
             "user_actions": []
         },
         {
             "counter_name": "Existence_FailedDcCall",
-            "is_prefix": false,
             "user_actions": []
         },
         {
             "counter_name": "Existence_MissingReference",
-            "is_prefix": false,
             "user_actions": []
         },
         {
             "counter_name": "Existence_MissingTriple",
-            "is_prefix": false,
             "user_actions": []
         }
     ]
