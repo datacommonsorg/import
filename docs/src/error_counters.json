@@ -302,6 +302,26 @@
             "counter_name": "Existence_MissingTriple",
             "description": "External triple existence check with the DataCommons API returned no results",
             "user_actions": []
+        },
+        {
+            "counter_name": "TMCF_UnsupportedColumnNameInProperty",
+            "description": "TMCF properties as references to CSV columns are not supported yet",
+            "user_actions": []
+        },
+        {
+            "counter_name": "MCF_MalformedComplexValue",
+            "description": "Found malformed Complex value without a closing ] bracket",
+            "user_actions": []
+        },
+        {
+            "counter_name": "MCF_LocalReferenceInResolvedFile",
+            "description": "Found an internal 'l:' reference in resolved entity value",
+            "user_actions": []
+        },
+        {
+            "counter_name": "TMCF_MalformedSchemaTerm",
+            "description": "TMCF had a malformed entity/column; the value must have a '->' delimeter but this was not found",
+            "user_actions": []
         }
     ]
 }
