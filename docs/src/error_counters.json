@@ -274,6 +274,21 @@
             "counter_name": "CSV_UnexpectedRow",
             "is_prefix":  false,
             "user_actions": []
+        },
+        {
+            "counter_name": "Existence_FailedDcCall",
+            "is_prefix": false,
+            "user_actions": []
+        },
+        {
+            "counter_name": "Existence_MissingReference",
+            "is_prefix": false,
+            "user_actions": []
+        },
+        {
+            "counter_name": "Existence_MissingTriple",
+            "is_prefix": false,
+            "user_actions": []
         }
     ]
 }
