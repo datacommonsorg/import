@@ -76,15 +76,18 @@
         },
         {
             "counter_name": "MCF_MalformedNode",
+            "description": "Found a 'Node' without properties",
             "user_actions": []
         },
         {
             "counter_name": "Resolution_IrreplaceableLocalRef",
-            "user_actions": []
+            "description": "Unable to replace a local reference",
+            "user_actions": ["This is likely a cycle of local references, which the import tool is not able to resolve. Check your MCF files for potential cycles."]
         },
         {
             "counter_name": "Resolution_UnassignableNodeDcid",
-            "user_actions": []
+            "description": "Unable to assign DCID due to unresolved local reference",
+            "user_actions": ["See actions for `Resolution_IrreplaceableLocalRef`"]
         },
         {
             "counter_name": "Resolution_DcidAssignmentFailure_",
@@ -106,78 +109,97 @@
         },
         {
             "counter_name": "Sanity_InconsistentSvObsValues",
+            "description": "Found nodes with different values for the same StatVarObservation",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_SameDcidForDifferentStatVars",
+            "description": "Found nodes with different values for the same StatVarObservation",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_DifferentDcidsForSameStatVar",
+            "description": "Found different curated IDs for same StatVar",
             "user_actions": []
         },
         {
             "counter_name": "CSV_HeaderFailure",
+            "description": "Unable to parse header from CSV file",
             "user_actions": []
         },
         {
             "counter_name": "CSV_TmcfCheckFailure",
-            "user_actions": []
+            "description": "There was a fatal sanity error in TMCF",
+            "user_actions": ["Check counter messages that start with Sanity_ for FATAL error level"]
         },
         {
             "counter_name": "Sanity_TmcfMissingEntityDef",
+            "description": "No definition found for a referenced 'E:' value",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_UnexpectedNonColumn",
+            "description": "Expected value to be a TMCF column that starts with 'C:', but did not find a column.",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_TmcfMissingColumn",
+            "description": "Column referred to in TMCF is missing from CSV header",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_UnknownStatType",
+            "description": "Found an unknown statType value",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_InvalidObsDate",
-            "user_actions": []
+            "description": "Found a non-ISO8601 compliant date value",
+            "user_actions": ["ISO8601 is in the format YYYY-MM-DD (e.g. 2020-07-10), optionally with time of day appended."]
         },
         {
             "counter_name": "Sanity_NonDoubleObsValue",
+            "description": "Found an Observation value that was not a number.",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_ObsMissingValueProp",
+            "description": "Observation node missing value property",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_EmptyProperty",
+            "description": "An empty property (property with no text) was found",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_NotInitLowerPropName",
+            "description": "Found property name that does not start with a lower-case",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_MultipleDcidValues",
+            "description": "Found dcid with more than one value",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_DcidTableEntity",
+            "description": "Value of DCID property was an 'E:' reference in TMCF, which is invalid",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_VeryLongDcid",
+            "description": "Found a DCID that was too long",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_NonAsciiValueInNonText",
+            "description": "Found non-ASCII characters in a value which was not a text (a text value is a value surrounded by quotes)",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_RefPropHasNonRefValue",
+            "description": "Found text/numeric value in a property where the value is expected to be a reference",
             "user_actions": []
         },
         {
@@ -194,14 +216,17 @@
         },
         {
             "counter_name": "Sanity_EmptySchemaValue",
+            "description": "Found empty value for a property",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_NonAsciiValueInSchema",
+            "description": "Schema node has property values with non-ascii characters",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_DcidNameMismatchInSchema",
+            "description": "The name and the DCID of Schema nodes must match, but this node did not satisfy this requirement",
             "user_actions": []
         },
         {
@@ -230,42 +255,52 @@
         },
         {
             "counter_name": "CSV_InconsistentRows",
+            "description": "A CSV row had different number of columns from the rest of the file",
             "user_actions": []
         },
         {
             "counter_name": "CSV_MalformedDCIDFailures",
+            "description": "Malformed CSV value for dcid property; must be a text or reference",
             "user_actions": []
         },
         {
             "counter_name": "TMCF_TmcfEntityAsDcid",
+            "description": "In TMCF, value of DCID was an E: entity. Must be a C: column or a constant value instead.",
             "user_actions": []
         },
         {
             "counter_name": "CSV_EmptyDcidReferences",
+            "description": "A reference in the form of dcid:{entity} was detected, but {entity} was empty",
             "user_actions": []
         },
         {
             "counter_name": "TMCF_UnexpectedNonColumn",
+            "description": "Expected value to be a TMCF column that starts with 'C:' :: value, but it was not.",
             "user_actions": []
         },
         {
             "counter_name": "CSV_TmcfMissingColumn",
+            "description": "Column referred to in TMCF is missing from CSV header",
             "user_actions": []
         },
         {
             "counter_name": "CSV_UnexpectedRow",
+            "description": "Found row with fewer columns than expected",
             "user_actions": []
         },
         {
             "counter_name": "Existence_FailedDcCall",
+            "description": "Network request to DataCommons API failed",
             "user_actions": []
         },
         {
             "counter_name": "Existence_MissingReference",
+            "description": "External reference existence check with the DataCommons API returned no results",
             "user_actions": []
         },
         {
             "counter_name": "Existence_MissingTriple",
+            "description": "External triple existence check with the DataCommons API returned no results",
             "user_actions": []
         }
     ]
