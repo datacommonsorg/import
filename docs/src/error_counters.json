@@ -2,16 +2,21 @@
     "error_counters": [
         {
             "counter_name": "MCF_UnenclosedComplexValue",
+            "description": "Complex value was not enclosed in brackets `[]` in the MCF.",
             "is_prefix":  false,
-            "user_actions": []
+            "user_actions": [
+                "Check complex values in your MCF and make sure they are enclosed in brackets"
+            ]
         },
         {
             "counter_name": "MCF_MalformedComplexValueParts",
+            "description": "Complex value had less than 2 or more than 3 parts",
             "is_prefix":  false,
-            "user_actions": []
+            "user_actions": ["Check that all of your complex values have either 2 or 3 parts"]
         },
         {
             "counter_name": "MCF_QuantityMalformedValue",
+            "description": "In a complex value with 2 parts, the part that was expected to be a number was not a number",
             "is_prefix":  false,
             "user_actions": []
         },
