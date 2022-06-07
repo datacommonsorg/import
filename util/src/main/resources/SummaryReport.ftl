@@ -30,8 +30,21 @@
       }
     </style>
     <h1>Summary Report</h1>
+    <h3>Table of Contents</h3>
+    <ul>
+      <li><a href="#import-run-details">Import Run Details</a></li>
+      <li><a href="#counters">Counters</a></li>
+      <#if svSummaryMap?has_content>
+        <li><a href="#statvarobs-by-statvar"">StatVarObservations by StatVar</a></li>
+      </#if>
+      <#if placeSeriesSummaryMap?has_content>
+        <li><a href="#series-summaries-sample-places"">Series Summaries for Sample Places</a></li>
+      </#if>
+    </ul>
+
+    <a name="import-run-details"></a>
     <div>
-      <h2>Import Run Details</h2>
+      <h2>Import Run Details</h2>  
       <table>
         <tr>
           <td>Existence Checks Enabled</td>
@@ -55,6 +68,8 @@
         </tr>
       </table>
     </div>
+
+    <a name="counters"></a>
     <div>
       <h2>Counters</h2>
         <table>
@@ -80,6 +95,7 @@
         </table>
     </div>
     <#if svSummaryMap?has_content>
+      <a name="statvarobs-by-statvar"></a>
       <div>
         <h2>StatVarObservations by StatVar</h2>
         <table width="95%">
@@ -127,6 +143,7 @@
       </div>
     </#if>
     <#if placeSeriesSummaryMap?has_content>
+      <a name="series-summaries-sample-places"></a>
       <div>
         <h2>Series Summaries for Sample Places</h2>
           <#list placeSeriesSummaryMap as place, placeSeriesSummary>
