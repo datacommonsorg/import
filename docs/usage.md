@@ -34,8 +34,11 @@ Hint: to access a concise explanation of usage modes and flags, run
 
 ## Usage Modes
 
-The import tool can either lint StatVars and other schema files, or
-it can generate instance MCFs from a TMCF and CSV.
+In `lint` mode, the import tool validates the artifacts produced for addition to Data Commons. These artifacts include [instance MCF files](https://github.com/datacommonsorg/data/blob/master/docs/mcf_format.md#instance-mcf) and pairs of [template MCF (TMCF)](https://github.com/datacommonsorg/data/blob/master/docs/mcf_format.md#instance-mcf) and corresponding CSV files.
+
+In `genmcf` mode, the import tool produces instance MCF files from a pair of TMCF file, and its associated CSV files. This mode performs all validations that the  `lint` mode would have performed.
+
+All flags below apply to both the modes.
 
 ### Lint Mode (`lint`)
 To run the tool in lint mode, use:
