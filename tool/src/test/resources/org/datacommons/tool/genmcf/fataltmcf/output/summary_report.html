@@ -19,14 +19,18 @@
       tbody tr:hover {
         background-color: #ccc;
       }
-      summary {
+      .summary-em {
         cursor: pointer;
         font-size: 1.2rem;
         font-weight: bold;
         padding-bottom: 1rem;
       }
-      details {
+      .details-pad {
         padding-bottom: 1rem;
+      }
+      .toc-details-ul {
+        list-style: none;
+        padding-left: 0;
       }
     </style>
     <h1>Summary Report</h1>
@@ -34,7 +38,91 @@
     <ul>
       <li><a href="#import-run-details">Import Run Details</a></li>
       <li><a href="#counters">Counters</a></li>
-          </ul>
+      <ul class="toc-details-ul">
+                  <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_WARNING">
+                  LEVEL_WARNING
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--Sanity_MultipleVals_value">Sanity_MultipleVals_value</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+          <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_ERROR">
+                  LEVEL_ERROR
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_MalformedComplexValue">MCF_MalformedComplexValue</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_TmcfMissingEntityDef">Sanity_TmcfMissingEntityDef</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--TMCF_MalformedEntity">TMCF_MalformedEntity</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_TmcfMissingColumn">Sanity_TmcfMissingColumn</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--TMCF_MalformedSchemaTerm">TMCF_MalformedSchemaTerm</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_UnexpectedProperty">MCF_UnexpectedProperty</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--TMCF_UnsupportedColumnNameInProperty">TMCF_UnsupportedColumnNameInProperty</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_MalformedNodeName">MCF_MalformedNodeName</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_MultipleDcidValues">Sanity_MultipleDcidValues</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_MultipleVals_observationAbout">Sanity_MultipleVals_observationAbout</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_typeOf">Sanity_MissingOrEmpty_typeOf</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_NotInitLowerPropName">Sanity_NotInitLowerPropName</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_MalformedColonLessLine">MCF_MalformedColonLessLine</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_DcidTableEntity">Sanity_DcidTableEntity</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+          <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_FATAL">
+                  LEVEL_FATAL
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_FATAL--CSV_TmcfCheckFailure">CSV_TmcfCheckFailure</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+      </ul>
+      
+    </ul>
 
     <div>
       <h2>
@@ -80,80 +168,80 @@
         </thead>
             <tbody>
               <tr>
-                <th colspan="2" align="left">LEVEL_WARNING</th>
+                <th colspan="2" align="left">LEVEL_WARNING  <a href="#counters--LEVEL_WARNING" name="counters--LEVEL_WARNING">#</a></th>
               </tr>
                 <tr>
-                  <td>Sanity_MultipleVals_value</td>
+                  <td>Sanity_MultipleVals_value <a href="#counters--LEVEL_WARNING--Sanity_MultipleVals_value" name="counters--LEVEL_WARNING--Sanity_MultipleVals_value">#</a></td>
                   <td>1</td>
                 </tr>
             </tbody>
             <tbody>
               <tr>
-                <th colspan="2" align="left">LEVEL_ERROR</th>
+                <th colspan="2" align="left">LEVEL_ERROR  <a href="#counters--LEVEL_ERROR" name="counters--LEVEL_ERROR">#</a></th>
               </tr>
                 <tr>
-                  <td>MCF_MalformedComplexValue</td>
+                  <td>MCF_MalformedComplexValue <a href="#counters--LEVEL_ERROR--MCF_MalformedComplexValue" name="counters--LEVEL_ERROR--MCF_MalformedComplexValue">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>Sanity_TmcfMissingEntityDef</td>
+                  <td>Sanity_TmcfMissingEntityDef <a href="#counters--LEVEL_ERROR--Sanity_TmcfMissingEntityDef" name="counters--LEVEL_ERROR--Sanity_TmcfMissingEntityDef">#</a></td>
                   <td>4</td>
                 </tr>
                 <tr>
-                  <td>TMCF_MalformedEntity</td>
+                  <td>TMCF_MalformedEntity <a href="#counters--LEVEL_ERROR--TMCF_MalformedEntity" name="counters--LEVEL_ERROR--TMCF_MalformedEntity">#</a></td>
                   <td>2</td>
                 </tr>
                 <tr>
-                  <td>Sanity_TmcfMissingColumn</td>
+                  <td>Sanity_TmcfMissingColumn <a href="#counters--LEVEL_ERROR--Sanity_TmcfMissingColumn" name="counters--LEVEL_ERROR--Sanity_TmcfMissingColumn">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>TMCF_MalformedSchemaTerm</td>
+                  <td>TMCF_MalformedSchemaTerm <a href="#counters--LEVEL_ERROR--TMCF_MalformedSchemaTerm" name="counters--LEVEL_ERROR--TMCF_MalformedSchemaTerm">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>MCF_UnexpectedProperty</td>
+                  <td>MCF_UnexpectedProperty <a href="#counters--LEVEL_ERROR--MCF_UnexpectedProperty" name="counters--LEVEL_ERROR--MCF_UnexpectedProperty">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>TMCF_UnsupportedColumnNameInProperty</td>
+                  <td>TMCF_UnsupportedColumnNameInProperty <a href="#counters--LEVEL_ERROR--TMCF_UnsupportedColumnNameInProperty" name="counters--LEVEL_ERROR--TMCF_UnsupportedColumnNameInProperty">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>MCF_MalformedNodeName</td>
+                  <td>MCF_MalformedNodeName <a href="#counters--LEVEL_ERROR--MCF_MalformedNodeName" name="counters--LEVEL_ERROR--MCF_MalformedNodeName">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>Sanity_MultipleDcidValues</td>
+                  <td>Sanity_MultipleDcidValues <a href="#counters--LEVEL_ERROR--Sanity_MultipleDcidValues" name="counters--LEVEL_ERROR--Sanity_MultipleDcidValues">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>Sanity_MultipleVals_observationAbout</td>
+                  <td>Sanity_MultipleVals_observationAbout <a href="#counters--LEVEL_ERROR--Sanity_MultipleVals_observationAbout" name="counters--LEVEL_ERROR--Sanity_MultipleVals_observationAbout">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>Sanity_MissingOrEmpty_typeOf</td>
+                  <td>Sanity_MissingOrEmpty_typeOf <a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_typeOf" name="counters--LEVEL_ERROR--Sanity_MissingOrEmpty_typeOf">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>Sanity_NotInitLowerPropName</td>
+                  <td>Sanity_NotInitLowerPropName <a href="#counters--LEVEL_ERROR--Sanity_NotInitLowerPropName" name="counters--LEVEL_ERROR--Sanity_NotInitLowerPropName">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>MCF_MalformedColonLessLine</td>
+                  <td>MCF_MalformedColonLessLine <a href="#counters--LEVEL_ERROR--MCF_MalformedColonLessLine" name="counters--LEVEL_ERROR--MCF_MalformedColonLessLine">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>Sanity_DcidTableEntity</td>
+                  <td>Sanity_DcidTableEntity <a href="#counters--LEVEL_ERROR--Sanity_DcidTableEntity" name="counters--LEVEL_ERROR--Sanity_DcidTableEntity">#</a></td>
                   <td>1</td>
                 </tr>
             </tbody>
             <tbody>
               <tr>
-                <th colspan="2" align="left">LEVEL_FATAL</th>
+                <th colspan="2" align="left">LEVEL_FATAL  <a href="#counters--LEVEL_FATAL" name="counters--LEVEL_FATAL">#</a></th>
               </tr>
                 <tr>
-                  <td>CSV_TmcfCheckFailure</td>
+                  <td>CSV_TmcfCheckFailure <a href="#counters--LEVEL_FATAL--CSV_TmcfCheckFailure" name="counters--LEVEL_FATAL--CSV_TmcfCheckFailure">#</a></td>
                   <td>1</td>
                 </tr>
             </tbody>

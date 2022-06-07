@@ -19,14 +19,18 @@
       tbody tr:hover {
         background-color: #ccc;
       }
-      summary {
+      .summary-em {
         cursor: pointer;
         font-size: 1.2rem;
         font-weight: bold;
         padding-bottom: 1rem;
       }
-      details {
+      .details-pad {
         padding-bottom: 1rem;
+      }
+      .toc-details-ul {
+        list-style: none;
+        padding-left: 0;
       }
     </style>
     <h1>Summary Report</h1>
@@ -34,7 +38,73 @@
     <ul>
       <li><a href="#import-run-details">Import Run Details</a></li>
       <li><a href="#counters">Counters</a></li>
-              <li><a href="#statvarobs-by-statvar"">StatVarObservations by StatVar</a></li>
+      <ul class="toc-details-ul">
+                  <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_INFO">
+                  LEVEL_INFO
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_INFO--NumRowSuccesses">NumRowSuccesses</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_INFO--NumPVSuccesses">NumPVSuccesses</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_INFO--Existence_NumChecks">Existence_NumChecks</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_INFO--NumNodeSuccesses">NumNodeSuccesses</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_INFO--Existence_NumDcCalls">Existence_NumDcCalls</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+          <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_WARNING">
+                  LEVEL_WARNING
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--StatsCheck_Inconsistent_Date_Granularity">StatsCheck_Inconsistent_Date_Granularity</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--StatsCheck_Inconsistent_Values">StatsCheck_Inconsistent_Values</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--StatsCheck_MaxPercentFluctuationGreaterThan500">StatsCheck_MaxPercentFluctuationGreaterThan500</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--StatsCheck_Data_Holes">StatsCheck_Data_Holes</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+          <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_ERROR">
+                  LEVEL_ERROR
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_InconsistentSvObsValues">Sanity_InconsistentSvObsValues</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+      </ul>
+      
+        <li><a href="#statvarobs-by-statvar"">StatVarObservations by StatVar</a></li>
         <li><a href="#series-summaries-sample-places"">Series Summaries for Sample Places</a></li>
         <ul>
             <li><a href="#geoId/06">geoId/06</a></li>
@@ -99,56 +169,56 @@
         </thead>
             <tbody>
               <tr>
-                <th colspan="2" align="left">LEVEL_INFO</th>
+                <th colspan="2" align="left">LEVEL_INFO  <a href="#counters--LEVEL_INFO" name="counters--LEVEL_INFO">#</a></th>
               </tr>
                 <tr>
-                  <td>NumRowSuccesses</td>
+                  <td>NumRowSuccesses <a href="#counters--LEVEL_INFO--NumRowSuccesses" name="counters--LEVEL_INFO--NumRowSuccesses">#</a></td>
                   <td>48</td>
                 </tr>
                 <tr>
-                  <td>NumPVSuccesses</td>
+                  <td>NumPVSuccesses <a href="#counters--LEVEL_INFO--NumPVSuccesses" name="counters--LEVEL_INFO--NumPVSuccesses">#</a></td>
                   <td>336</td>
                 </tr>
                 <tr>
-                  <td>Existence_NumChecks</td>
+                  <td>Existence_NumChecks <a href="#counters--LEVEL_INFO--Existence_NumChecks" name="counters--LEVEL_INFO--Existence_NumChecks">#</a></td>
                   <td>294</td>
                 </tr>
                 <tr>
-                  <td>NumNodeSuccesses</td>
+                  <td>NumNodeSuccesses <a href="#counters--LEVEL_INFO--NumNodeSuccesses" name="counters--LEVEL_INFO--NumNodeSuccesses">#</a></td>
                   <td>48</td>
                 </tr>
                 <tr>
-                  <td>Existence_NumDcCalls</td>
+                  <td>Existence_NumDcCalls <a href="#counters--LEVEL_INFO--Existence_NumDcCalls" name="counters--LEVEL_INFO--Existence_NumDcCalls">#</a></td>
                   <td>1</td>
                 </tr>
             </tbody>
             <tbody>
               <tr>
-                <th colspan="2" align="left">LEVEL_WARNING</th>
+                <th colspan="2" align="left">LEVEL_WARNING  <a href="#counters--LEVEL_WARNING" name="counters--LEVEL_WARNING">#</a></th>
               </tr>
                 <tr>
-                  <td>StatsCheck_Inconsistent_Date_Granularity</td>
+                  <td>StatsCheck_Inconsistent_Date_Granularity <a href="#counters--LEVEL_WARNING--StatsCheck_Inconsistent_Date_Granularity" name="counters--LEVEL_WARNING--StatsCheck_Inconsistent_Date_Granularity">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>StatsCheck_Inconsistent_Values</td>
+                  <td>StatsCheck_Inconsistent_Values <a href="#counters--LEVEL_WARNING--StatsCheck_Inconsistent_Values" name="counters--LEVEL_WARNING--StatsCheck_Inconsistent_Values">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>StatsCheck_MaxPercentFluctuationGreaterThan500</td>
+                  <td>StatsCheck_MaxPercentFluctuationGreaterThan500 <a href="#counters--LEVEL_WARNING--StatsCheck_MaxPercentFluctuationGreaterThan500" name="counters--LEVEL_WARNING--StatsCheck_MaxPercentFluctuationGreaterThan500">#</a></td>
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td>StatsCheck_Data_Holes</td>
+                  <td>StatsCheck_Data_Holes <a href="#counters--LEVEL_WARNING--StatsCheck_Data_Holes" name="counters--LEVEL_WARNING--StatsCheck_Data_Holes">#</a></td>
                   <td>10</td>
                 </tr>
             </tbody>
             <tbody>
               <tr>
-                <th colspan="2" align="left">LEVEL_ERROR</th>
+                <th colspan="2" align="left">LEVEL_ERROR  <a href="#counters--LEVEL_ERROR" name="counters--LEVEL_ERROR">#</a></th>
               </tr>
                 <tr>
-                  <td>Sanity_InconsistentSvObsValues</td>
+                  <td>Sanity_InconsistentSvObsValues <a href="#counters--LEVEL_ERROR--Sanity_InconsistentSvObsValues" name="counters--LEVEL_ERROR--Sanity_InconsistentSvObsValues">#</a></td>
                   <td>1</td>
                 </tr>
             </tbody>
@@ -202,8 +272,8 @@
           <a name="series-summaries-sample-places" href="#series-summaries-sample-places">#</a>
         </h2>
           
-          <details open>
-            <summary>geoId/06 <a name="geoId/06" href="#geoId/06">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/06 <a name="geoId/06" href="#geoId/06">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -239,8 +309,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/0601 <a name="geoId/0601" href="#geoId/0601">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/0601 <a name="geoId/0601" href="#geoId/0601">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -276,8 +346,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/07 <a name="geoId/07" href="#geoId/07">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/07 <a name="geoId/07" href="#geoId/07">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -313,8 +383,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/08 <a name="geoId/08" href="#geoId/08">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/08 <a name="geoId/08" href="#geoId/08">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -350,8 +420,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/09 <a name="geoId/09" href="#geoId/09">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/09 <a name="geoId/09" href="#geoId/09">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -387,8 +457,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/10 <a name="geoId/10" href="#geoId/10">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/10 <a name="geoId/10" href="#geoId/10">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -424,8 +494,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/201 <a name="geoId/201" href="#geoId/201">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/201 <a name="geoId/201" href="#geoId/201">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -461,8 +531,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/211 <a name="geoId/211" href="#geoId/211">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/211 <a name="geoId/211" href="#geoId/211">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -498,8 +568,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/221 <a name="geoId/221" href="#geoId/221">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/221 <a name="geoId/221" href="#geoId/221">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -535,8 +605,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/231 <a name="geoId/231" href="#geoId/231">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/231 <a name="geoId/231" href="#geoId/231">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -572,8 +642,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/241 <a name="geoId/241" href="#geoId/241">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/241 <a name="geoId/241" href="#geoId/241">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -609,8 +679,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/25111 <a name="geoId/25111" href="#geoId/25111">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/25111 <a name="geoId/25111" href="#geoId/25111">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -646,8 +716,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/26111 <a name="geoId/26111" href="#geoId/26111">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/26111 <a name="geoId/26111" href="#geoId/26111">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -683,8 +753,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/27111 <a name="geoId/27111" href="#geoId/27111">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/27111 <a name="geoId/27111" href="#geoId/27111">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -720,8 +790,8 @@
             </table>
           </details>
           
-          <details open>
-            <summary>geoId/28111 <a name="geoId/28111" href="#geoId/28111">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">geoId/28111 <a name="geoId/28111" href="#geoId/28111">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>

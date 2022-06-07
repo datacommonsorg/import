@@ -19,14 +19,18 @@
       tbody tr:hover {
         background-color: #ccc;
       }
-      summary {
+      .summary-em {
         cursor: pointer;
         font-size: 1.2rem;
         font-weight: bold;
         padding-bottom: 1rem;
       }
-      details {
+      .details-pad {
         padding-bottom: 1rem;
+      }
+      .toc-details-ul {
+        list-style: none;
+        padding-left: 0;
       }
     </style>
     <h1>Summary Report</h1>
@@ -34,6 +38,27 @@
     <ul>
       <li><a href="#import-run-details">Import Run Details</a></li>
       <li><a href="#counters">Counters</a></li>
+      <ul class="toc-details-ul">
+        <#list levelSummary as severity, counterSet>
+          <li>
+            <details>
+              <summary>
+                <a href="#counters--${severity}">
+                  ${severity}
+                </a>
+              </summary>
+              <ul>
+                <#list counterSet.getCounters() as counterKey, numOccurences>
+                <li>
+                  <a href="#counters--${severity}--${counterKey}">${counterKey}</a>
+                </li>
+                </#list>
+              </ul>
+            </details>
+          </li>
+        </#list>
+      </ul>
+      
       <#if svSummaryMap?has_content>
         <li><a href="#statvarobs-by-statvar"">StatVarObservations by StatVar</a></li>
       </#if>
@@ -92,11 +117,11 @@
           <#list levelSummary as severity, counterSet>
             <tbody>
               <tr>
-                <th colspan="2" align="left">${severity}</th>
+                <th colspan="2" align="left">${severity}  <a href="#counters--${severity}" name="counters--${severity}">#</a></th>
               </tr>
               <#list counterSet.getCounters() as counterKey, numOccurences>
                 <tr>
-                  <td>${counterKey}</td>
+                  <td>${counterKey} <a href="#counters--${severity}--${counterKey}" name="counters--${severity}--${counterKey}">#</a></td>
                   <td>${numOccurences}</td>
                 </tr>
               </#list>
@@ -164,8 +189,8 @@
         </h2>
         <#list placeSeriesSummaryMap as place, placeSeriesSummary>
           
-          <details open>
-            <summary>${place} <a name="${place}" href="#${place}">#</a></summary>
+          <details open class="details-pad">
+            <summary class="summary-em">${place} <a name="${place}" href="#${place}">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
