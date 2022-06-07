@@ -39,6 +39,11 @@
       </#if>
       <#if placeSeriesSummaryMap?has_content>
         <li><a href="#series-summaries-sample-places"">Series Summaries for Sample Places</a></li>
+        <ul>
+          <#list placeSeriesSummaryMap as place, placeSeriesSummary>
+            <li><a href="#${place}">${place}</a></li>
+          </#list>
+        </ul>
       </#if>
     </ul>
 
@@ -147,6 +152,7 @@
       <div>
         <h2>Series Summaries for Sample Places</h2>
           <#list placeSeriesSummaryMap as place, placeSeriesSummary>
+            <a name="${place}"></a>
             <details open>
               <summary>${place}</summary>
               <table width="95%">
