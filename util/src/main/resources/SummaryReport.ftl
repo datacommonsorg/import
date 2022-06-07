@@ -47,9 +47,11 @@
       </#if>
     </ul>
 
-    <a name="import-run-details"></a>
     <div>
-      <h2>Import Run Details</h2>  
+      <h2>
+        Import Run Details
+        <a name="import-run-details" href="#import-run-details">#</a>
+      </h2>  
       <table>
         <tr>
           <td>Existence Checks Enabled</td>
@@ -74,35 +76,41 @@
       </table>
     </div>
 
-    <a name="counters"></a>
+    
     <div>
-      <h2>Counters</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Counter Name</th>
-              <th>Num Occurences</th>
-            </tr>
-          </thead>
-            <#list levelSummary as severity, counterSet>
-              <tbody>
+      <h2>
+        Counters
+        <a name="counters" href="#counters">#</a>
+      </h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Counter Name</th>
+            <th>Num Occurences</th>
+          </tr>
+        </thead>
+          <#list levelSummary as severity, counterSet>
+            <tbody>
+              <tr>
+                <th colspan="2" align="left">${severity}</th>
+              </tr>
+              <#list counterSet.getCounters() as counterKey, numOccurences>
                 <tr>
-                  <th colspan="2" align="left">${severity}</th>
+                  <td>${counterKey}</td>
+                  <td>${numOccurences}</td>
                 </tr>
-                <#list counterSet.getCounters() as counterKey, numOccurences>
-                  <tr>
-                    <td>${counterKey}</td>
-                    <td>${numOccurences}</td>
-                  </tr>
-                </#list>
-              </tbody>
-            </#list>
-        </table>
+              </#list>
+            </tbody>
+          </#list>
+      </table>
     </div>
     <#if svSummaryMap?has_content>
-      <a name="statvarobs-by-statvar"></a>
+      
       <div>
-        <h2>StatVarObservations by StatVar</h2>
+        <h2>
+          StatVarObservations by StatVar
+          <a name="statvarobs-by-statvar" hrew="#statvarobs-by-statvar">#</a>
+        </h2>
         <table width="95%">
           <thead>
             <tr>
@@ -148,55 +156,58 @@
       </div>
     </#if>
     <#if placeSeriesSummaryMap?has_content>
-      <a name="series-summaries-sample-places"></a>
+      
       <div>
-        <h2>Series Summaries for Sample Places</h2>
-          <#list placeSeriesSummaryMap as place, placeSeriesSummary>
-            <a name="${place}"></a>
-            <details open>
-              <summary>${place}</summary>
-              <table width="95%">
-                <thead>
-                  <tr>
-                    <th>Stat Var</th>
-                    <th>Num Observations</th>
-                    <th>Dates</th>
-                    <th>Corresponding Values</th>
-                    <th>Measurement Methods</th>
-                    <th>Units</th>
-                    <th>Scaling Factors</th>
-                    <th>Time Series Chart</th>
-                  </tr>
-                </thead>
-                <#list placeSeriesSummary.getStatVarSummaryMap() as sv, svSummary>
-                <tbody>
-                  <tr>
-                    <td>${sv}</td>
-                    <td>${svSummary.getNumObservations()}</td>
-                    <td>${svSummary.getSeriesDates()?join(" | ")}</td>
-                    <td>${svSummary.getSeriesValues()?join(" | ")}</td>
-                    <td>
-                      <#list svSummary.getMMethods() as method>
-                      <div>${method}</div>
-                      </#list>
-                    </td>
-                    <td>
-                      <#list svSummary.getUnits() as unit>
-                      <div>${unit}</div>
-                      </#list>
-                    </td>
-                    <td>
-                      <#list svSummary.getSFactors() as sFactor>
-                      <div>${sFactor}</div>
-                      </#list>
-                    </td>
-                    <td style="max-width:none;text-align: -webkit-center;">${svSummary.getTimeSeriesChartSVG()}</td>
-                  </tr>
-                  </tbody>
-                  </#list>
-              </table>
-            </details>
-          </#list>
+        <h2>
+          Series Summaries for Sample Places
+          <a name="series-summaries-sample-places" href="#series-summaries-sample-places">#</a>
+        </h2>
+        <#list placeSeriesSummaryMap as place, placeSeriesSummary>
+          
+          <details open>
+            <summary>${place} <a name="${place}" href="#${place}">#</a></summary>
+            <table width="95%">
+              <thead>
+                <tr>
+                  <th>Stat Var</th>
+                  <th>Num Observations</th>
+                  <th>Dates</th>
+                  <th>Corresponding Values</th>
+                  <th>Measurement Methods</th>
+                  <th>Units</th>
+                  <th>Scaling Factors</th>
+                  <th>Time Series Chart</th>
+                </tr>
+              </thead>
+              <#list placeSeriesSummary.getStatVarSummaryMap() as sv, svSummary>
+              <tbody>
+                <tr>
+                  <td>${sv}</td>
+                  <td>${svSummary.getNumObservations()}</td>
+                  <td>${svSummary.getSeriesDates()?join(" | ")}</td>
+                  <td>${svSummary.getSeriesValues()?join(" | ")}</td>
+                  <td>
+                    <#list svSummary.getMMethods() as method>
+                    <div>${method}</div>
+                    </#list>
+                  </td>
+                  <td>
+                    <#list svSummary.getUnits() as unit>
+                    <div>${unit}</div>
+                    </#list>
+                  </td>
+                  <td>
+                    <#list svSummary.getSFactors() as sFactor>
+                    <div>${sFactor}</div>
+                    </#list>
+                  </td>
+                  <td style="max-width:none;text-align: -webkit-center;">${svSummary.getTimeSeriesChartSVG()}</td>
+                </tr>
+                </tbody>
+                </#list>
+            </table>
+          </details>
+        </#list>
       </div>
     </#if>
   </body>
