@@ -46,13 +46,24 @@ To run the tool in lint mode, use:
   dc-import lint <list of mcf files>
   ```
 
+For example;
+  ```bash
+  dc-import lint auto_generated_stat_vars.mcf manual_schema.mcf
+  ```
+
 ### Instance MCF Generation Mode (`genmcf`)
 To run the tool in genmcf mode, use:
   ```bash
   dc-import genmcf <list of csv/tmcf files>
   ```
 
-Note that in this mode, schema file(s) are optional to pass in.
+Note that in this mode, schema file(s) can be optionally passed. This is required to resolve references to newly introduced schema nodes.
+
+  For example;
+  ```bash
+  dc-import lint my_dataset_mapping.tmcf my_dataset_table.csv  auto_generated_stat_vars.mcf manual_schema.mcf
+  ```
+
 
 ## Flags
 Flags available for the tool are listed below.
