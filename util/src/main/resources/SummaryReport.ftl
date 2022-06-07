@@ -60,13 +60,37 @@
       </ul>
       
       <#if svSummaryMap?has_content>
-        <li><a href="#statvarobs-by-statvar"">StatVarObservations by StatVar</a></li>
+        <li><a href="#statvars"">StatVarObservations by StatVar</a></li>
+          <details>
+            <summary>StatVars</summary>
+              <ul>
+                <#list svSummaryMap as sv, svSummary>
+                  <li>
+                    <a href="#statvars--${sv}">${sv}</a>
+                  </li>
+                </#list>
+              </ul>
+          </details>
       </#if>
+
       <#if placeSeriesSummaryMap?has_content>
-        <li><a href="#series-summaries-sample-places"">Series Summaries for Sample Places</a></li>
-        <ul>
+        <li><a href="#places"">Series Summaries for Sample Places</a></li>
+        <ul class="toc-details-ul">
           <#list placeSeriesSummaryMap as place, placeSeriesSummary>
-            <li><a href="#${place}">${place}</a></li>
+            <li>
+              <details>
+                <summary>
+                  <a href="#places--${place}">${place}</a>
+                </summary>
+                <ul>
+                  <#list placeSeriesSummary.getStatVarSummaryMap() as sv, svSummary>
+                  <li>
+                    <a href="#places--${place}--${sv}">${sv}</a>
+                  </li>
+                  </#list>
+                </ul>
+              </details>
+            </li>
           </#list>
         </ul>
       </#if>
@@ -134,7 +158,7 @@
       <div>
         <h2>
           StatVarObservations by StatVar
-          <a name="statvarobs-by-statvar" hrew="#statvarobs-by-statvar">#</a>
+          <a name="statvars" hrew="#statvars">#</a>
         </h2>
         <table width="95%">
           <thead>
@@ -153,7 +177,7 @@
           <tbody>
           <#list svSummaryMap as sv, svSummary>
             <tr>
-              <td>${sv}</td>
+              <td>${sv} <a name="statvars--${sv}" href="#statvars--${sv}">#</a></td>
               <td>${svSummary.getPlaces()?size}</td>
               <td>${svSummary.getNumObservations()}</td>
               <td>${svSummary.getUniqueDates()?size}</td>
@@ -181,16 +205,15 @@
       </div>
     </#if>
     <#if placeSeriesSummaryMap?has_content>
-      
       <div>
         <h2>
           Series Summaries for Sample Places
-          <a name="series-summaries-sample-places" href="#series-summaries-sample-places">#</a>
+          <a name="places" href="#places">#</a>
         </h2>
         <#list placeSeriesSummaryMap as place, placeSeriesSummary>
           
           <details open class="details-pad">
-            <summary class="summary-em">${place} <a name="${place}" href="#${place}">#</a></summary>
+            <summary class="summary-em">${place} <a name="places--${place}" href="#places--${place}">#</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -207,7 +230,7 @@
               <#list placeSeriesSummary.getStatVarSummaryMap() as sv, svSummary>
               <tbody>
                 <tr>
-                  <td>${sv}</td>
+                  <td>${sv} <a href="#places--${place}--${sv}" name="places--${place}--${sv}">#</a></td>
                   <td>${svSummary.getNumObservations()}</td>
                   <td>${svSummary.getSeriesDates()?join(" | ")}</td>
                   <td>${svSummary.getSeriesValues()?join(" | ")}</td>
