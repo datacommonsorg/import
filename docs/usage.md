@@ -70,48 +70,51 @@ Flags available for the tool are listed below.
 
 You can also run `dc-import --help` to see a list of flags in your terminal.
 ### `-e`, `--existence-checks`
-Check DCID references to schema nodes against the KG and locally. If set, then
-calls will be made to the Staging API server, and instance MCFs get fully loaded
-into memory. 
+Checks DCID references to schema nodes against the KG and locally. If this flag is set, then calls will be made to the Staging API server, and instance MCFs get fully loaded into memory. 
 
-Defaults to true.
+Defaults to `true`.
 
 ### `-h`, `--help`
-Show a help message and exit.
+Shows a help message and exit.
 
 ### `-n`, `--num-threads=<numThreads>`
-Number of concurrent threads used for processing CSVs.
+Specifies the number of concurrent threads used for processing CSVs.
 
-Defaults to 1.
+Defaults to `1`.
 
 ### `-o`, `--output-dir=<outputDir>`
-Directory to write output files.
+Specifies the directory to write output files.
 
 Default is `dc_generated/` within current working directory.
 
 ### `-s`, `--stat-checks`
 Checks integrity of time series by checking for holes, variance in values, etc.
 
-Defaults to true.
+Defaults to `true`.
 
 ### `-p`, `--sample-places=<samplePlaces>`
-List of place dcids to run stats check on.
+Specifies a list of place dcids to run stats check on.
 
-This should only be set if `--stat-checks` is true. If `--stat-checks` is true and this is not set, 5 sample places are picked for roughly each distinct place type.
+This flag should only be set if `--stat-checks` is `true`. If `--stat-checks` is `true` and this flag is not set, 5 sample places are picked for roughly each distinct place type.
 
 ### `-r`, `--resolution=<resolutionMode>`
-Specifies the mode of resolution to use: `NONE`, `LOCAL`, `FULL`.  For no resolution, set NONE.  To lookup external IDs (like ISO) in DC, resolve local references and generated DCIDs, set FULL. To just resolve local references and generate DCIDs, set LOCAL.  Note that FULL mode may be slower since it makes (batched) DC Recon API calls and two passes over your CSV files.
+Specifies the mode of resolution to use: `NONE`, `LOCAL`, `FULL`.
 
-Defaults to LOCAL.
+- `NONE`: Does not resolve references.
+- `LOCAL`: Only resolves local references and generates DCIDs
+- `FULL`: Resolves external IDs (such as ISO) in DC, local references, and generated DCIDs.Note that FULL mode may be slower since it makes (batched) DC Recon API calls and performs two passes over the provided CSV files.
+
+Defaults to `LOCAL`.
 
 ### `-sr`, `--summary-report`
 Generates a summary report in html format. 
-Defaults to true.
+
+Defaults to `true`.
 
 ### `-V`, `--version`
-Print version information and exit.
+Prints version information and exit.
 
 ### `--verbose`
-Print verbose log.
+Prints verbose log.
 
-Defaults to false.
+Defaults to `false`.
