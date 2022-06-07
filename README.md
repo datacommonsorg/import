@@ -13,7 +13,7 @@ joining.
 
 ## Using Import Tool
 
-Also see the [documentation for usage instructions](docs/usage.md).
+Detailed documentation on the Import Tool is available [here](docs/usage.md).
 
 - Make sure Java 11+ is installed([download link](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk)).
 
