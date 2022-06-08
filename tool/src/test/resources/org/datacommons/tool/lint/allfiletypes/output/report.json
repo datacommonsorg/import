@@ -4,27 +4,27 @@
       "counters": {
         "NumRowSuccesses": "11",
         "NumPVSuccesses": "107",
-        "Existence_NumChecks": "249",
+        "Existence_NumChecks": "248",
         "NumNodeSuccesses": "15",
         "CSV_MalformedDCIDPVFailures": "4",
-        "Existence_NumDcCalls": "3"
+        "Existence_NumDcCalls": "2"
       }
     },
     "LEVEL_WARNING": {
       "counters": {
         "Existence_MissingReference_statType": "5",
         "CSV_EmptyDcidReferences": "2",
-        "Existence_MissingReference_domainIncludes": "2",
+        "Existence_MissingReference_domainIncludes": "1",
         "Existence_MissingReference_containedIn": "1",
         "CSV_MalformedDCIDFailures": "1",
         "Existence_MissingReference_measurementMethod": "12",
+        "Sanity_MissingOrEmpty_populationType": "2",
         "Sanity_ObsMissingValueProp": "1",
         "StrSplit_EmptyToken_typeOf": "1",
         "Existence_MissingReference_Property": "4",
         "Existence_MissingReference_containedInPlace": "1",
         "Existence_MissingReference_variableMeasured": "12",
-        "Existence_MissingReference_subClassOf": "1",
-        "Sanity_MissingOrEmpty_populationType": "2"
+        "Existence_MissingReference_subClassOf": "1"
       }
     },
     "LEVEL_ERROR": {
@@ -464,14 +464,6 @@
     },
     "userMessage": "Failed reference existence check :: value-ref: 'substanceType', property: 'subClassOf', node: 'dcid:beverageType'",
     "counterKey": "Existence_MissingReference_subClassOf"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "AllFileTypes.mcf",
-      "lineNumber": "77"
-    },
-    "userMessage": "Failed reference existence check :: subject: '', predicate: 'domainIncludes', object: '', node: 'dcid:Count_Death_10To12'",
-    "counterKey": "Existence_MissingReference_domainIncludes"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
