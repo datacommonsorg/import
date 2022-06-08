@@ -1,4 +1,64 @@
 Node: COVID19_cases_india/E0/1
+observationDate: "2022-06-01"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+value: 1
+typeOf: dcid:StatVarObservation
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/01variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2022-06-01value=1observationPeriod=P1Y"
+dcid: "dc/o/vy57hzyld6kc7"
+
+Node: COVID19_cases_india/E0/2
+observationDate: "2022-06-01"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+value: 1
+typeOf: dcid:StatVarObservation
+observationPeriod: "P6M"
+keyString: "observationAbout=geoId/01variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2022-06-01value=1observationPeriod=P6M"
+dcid: "dc/o/0xdb7nf6mr5x5"
+
+Node: COVID19_cases_india/E0/3
+observationDate: "2022-06-01"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+value: 1
+typeOf: dcid:StatVarObservation
+observationPeriod: "P3M"
+keyString: "observationAbout=geoId/01variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2022-06-01value=1observationPeriod=P3M"
+dcid: "dc/o/5v0bj27s229cg"
+
+Node: COVID19_cases_india/E0/4
+observationDate: "2022-06-02"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+value: 2
+typeOf: dcid:StatVarObservation
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/01variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2022-06-02value=2observationPeriod=P1Y"
+dcid: "dc/o/jvs7ev9vpf8x5"
+
+Node: COVID19_cases_india/E0/5
+observationDate: "2022-06-02"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+value: 2
+typeOf: dcid:StatVarObservation
+observationPeriod: "P6M"
+keyString: "observationAbout=geoId/01variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2022-06-02value=2observationPeriod=P6M"
+dcid: "dc/o/vee9f9gee6lm2"
+
+Node: COVID19_cases_india/E0/6
+observationDate: "2022-06-02"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+value: 2
+typeOf: dcid:StatVarObservation
+observationPeriod: "P3M"
+keyString: "observationAbout=geoId/01variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2022-06-02value=2observationPeriod=P3M"
+dcid: "dc/o/ndywwclke9wp1"
+
+Node: COVID19_cases_india/E0/7
 observationDate: "2020-01-02"
 observationAbout: dcid:geoId/07
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -8,7 +68,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/07variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-02value=1observationPeriod=P1Y"
 dcid: "dc/o/wnfgs2edssth7"
 
-Node: COVID19_cases_india/E0/2
+Node: COVID19_cases_india/E0/8
 observationDate: "2020-01-02"
 observationAbout: dcid:geoId/201
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -18,7 +78,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/201variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-02value=1observationPeriod=P1Y"
 dcid: "dc/o/pqjv377qydebc"
 
-Node: COVID19_cases_india/E0/3
+Node: COVID19_cases_india/E0/9
 observationDate: "2020-01-02"
 observationAbout: dcid:geoId/211
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -28,7 +88,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/211variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-02value=1observationPeriod=P1Y"
 dcid: "dc/o/l6507fn2ksrk4"
 
-Node: COVID19_cases_india/E0/4
+Node: COVID19_cases_india/E0/10
 observationDate: "2020-01-02"
 observationAbout: dcid:geoId/221
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -38,7 +98,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/221variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-02value=1observationPeriod=P1Y"
 dcid: "dc/o/pd97xyn12x6k"
 
-Node: COVID19_cases_india/E0/5
+Node: COVID19_cases_india/E0/11
 observationDate: "2020-01-02"
 observationAbout: dcid:geoId/231
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -48,7 +108,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/231variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-02value=1observationPeriod=P1Y"
 dcid: "dc/o/c1pebjjxsp9yf"
 
-Node: COVID19_cases_india/E0/6
+Node: COVID19_cases_india/E0/12
 observationDate: "2020-01-02"
 observationAbout: dcid:geoId/241
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -58,7 +118,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/241variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-02value=1observationPeriod=P1Y"
 dcid: "dc/o/x3525nx2ez91d"
 
-Node: COVID19_cases_india/E0/7
+Node: COVID19_cases_india/E0/13
 observationDate: "2020-01-02"
 observationAbout: dcid:geoId/25111
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -68,7 +128,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/25111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-02value=1observationPeriod=P1Y"
 dcid: "dc/o/s9vvn21tml0j6"
 
-Node: COVID19_cases_india/E0/8
+Node: COVID19_cases_india/E0/14
 observationDate: "2020-01-02"
 observationAbout: dcid:geoId/26111
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -78,7 +138,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/26111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-02value=1observationPeriod=P1Y"
 dcid: "dc/o/4rehycsgvrm5c"
 
-Node: COVID19_cases_india/E0/9
+Node: COVID19_cases_india/E0/15
 observationDate: "2020-01-02"
 observationAbout: dcid:geoId/27111
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -88,7 +148,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/27111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-02value=1observationPeriod=P1Y"
 dcid: "dc/o/36q550fwckxy5"
 
-Node: COVID19_cases_india/E0/10
+Node: COVID19_cases_india/E0/16
 observationDate: "2020-01-02"
 observationAbout: dcid:geoId/28111
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -98,7 +158,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/28111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-02value=1observationPeriod=P1Y"
 dcid: "dc/o/ckc2jy3s0r502"
 
-Node: COVID19_cases_india/E0/11
+Node: COVID19_cases_india/E0/17
 observationDate: "2020-01-30"
 observationAbout: dcid:geoId/06
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -108,7 +168,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/06variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-30value=10observationPeriod=P1Y"
 dcid: "dc/o/mwghd8tbwz605"
 
-Node: COVID19_cases_india/E0/12
+Node: COVID19_cases_india/E0/18
 observationDate: "2020-02-02"
 observationAbout: dcid:geoId/06
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -118,107 +178,107 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/06variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=2observationPeriod=P1Y"
 dcid: "dc/o/83v2cgbd692fg"
 
-Node: COVID19_cases_india/E0/13
+Node: COVID19_cases_india/E0/19
 observationDate: "2020-02-02"
 observationAbout: dcid:geoId/07
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 0
 typeOf: dcid:StatVarObservation
-observationPeriod: "P3M"
-keyString: "observationAbout=geoId/07variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=0observationPeriod=P3M"
-dcid: "dc/o/6cnp8rc5b72m9"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/07variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=0observationPeriod=P1Y"
+dcid: "dc/o/mp4s0lgyqc5jd"
 
-Node: COVID19_cases_india/E0/14
+Node: COVID19_cases_india/E0/20
 observationDate: "2020-02-02"
 observationAbout: dcid:geoId/201
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P3M"
-keyString: "observationAbout=geoId/201variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P3M"
-dcid: "dc/o/pcjjb75mmbqp6"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/201variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P1Y"
+dcid: "dc/o/7qz8nx1kjbxc6"
 
-Node: COVID19_cases_india/E0/15
+Node: COVID19_cases_india/E0/21
 observationDate: "2020-02-02"
 observationAbout: dcid:geoId/211
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P3M"
-keyString: "observationAbout=geoId/211variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P3M"
-dcid: "dc/o/b708fv4yf660b"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/211variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P1Y"
+dcid: "dc/o/7eyhbzgmcts15"
 
-Node: COVID19_cases_india/E0/16
+Node: COVID19_cases_india/E0/22
 observationDate: "2020-02-02"
 observationAbout: dcid:geoId/221
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P3M"
-keyString: "observationAbout=geoId/221variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P3M"
-dcid: "dc/o/6ejbsbcb1pz62"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/221variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P1Y"
+dcid: "dc/o/bskjd9kt7gexc"
 
-Node: COVID19_cases_india/E0/17
+Node: COVID19_cases_india/E0/23
 observationDate: "2020-02-02"
 observationAbout: dcid:geoId/231
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P3M"
-keyString: "observationAbout=geoId/231variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P3M"
-dcid: "dc/o/km661d5hemj94"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/231variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P1Y"
+dcid: "dc/o/89nqqszmq79vh"
 
-Node: COVID19_cases_india/E0/18
+Node: COVID19_cases_india/E0/24
 observationDate: "2020-02-02"
 observationAbout: dcid:geoId/241
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P3M"
-keyString: "observationAbout=geoId/241variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P3M"
-dcid: "dc/o/fzeq0981yms9b"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/241variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P1Y"
+dcid: "dc/o/8bd7qb5507323"
 
-Node: COVID19_cases_india/E0/19
+Node: COVID19_cases_india/E0/25
 observationDate: "2020-02-02"
 observationAbout: dcid:geoId/25111
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P3M"
-keyString: "observationAbout=geoId/25111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P3M"
-dcid: "dc/o/wm32xz1tpk395"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/25111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P1Y"
+dcid: "dc/o/ztfnwd7nm3df2"
 
-Node: COVID19_cases_india/E0/20
+Node: COVID19_cases_india/E0/26
 observationDate: "2020-02-02"
 observationAbout: dcid:geoId/26111
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P3M"
-keyString: "observationAbout=geoId/26111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P3M"
-dcid: "dc/o/w3enyzw9mepnd"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/26111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P1Y"
+dcid: "dc/o/md6fzl9d3rd8"
 
-Node: COVID19_cases_india/E0/21
+Node: COVID19_cases_india/E0/27
 observationDate: "2020-02-02"
 observationAbout: dcid:geoId/27111
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P3M"
-keyString: "observationAbout=geoId/27111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P3M"
-dcid: "dc/o/eb645p30q7h2b"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/27111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P1Y"
+dcid: "dc/o/kqxls4807p8yg"
 
-Node: COVID19_cases_india/E0/22
+Node: COVID19_cases_india/E0/28
 observationDate: "2020-02-02"
 observationAbout: dcid:geoId/28111
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P3M"
-keyString: "observationAbout=geoId/28111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P3M"
-dcid: "dc/o/swn4g6f6g71b4"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/28111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-02value=1observationPeriod=P1Y"
+dcid: "dc/o/03q7kdr2mx5t5"
 
-Node: COVID19_cases_india/E0/23
+Node: COVID19_cases_india/E0/29
 observationDate: "2020-02-03"
 observationAbout: dcid:geoId/06
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -228,7 +288,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/06variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-03value=3observationPeriod=P1Y"
 dcid: "dc/o/f41xfn930by7b"
 
-Node: COVID19_cases_india/E0/24
+Node: COVID19_cases_india/E0/30
 observationDate: "2020-02-03"
 observationAbout: dcid:geoId/06
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -238,7 +298,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/06variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-02-03value=8observationPeriod=P1Y"
 dcid: "dc/o/gpk2ckh93ym4b"
 
-Node: COVID19_cases_india/E0/25
+Node: COVID19_cases_india/E0/31
 observationDate: "2020-03-02"
 observationAbout: dcid:geoId/06
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -248,7 +308,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/06variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-02value=1observationPeriod=P1Y"
 dcid: "dc/o/4jjkkcq6mkd3"
 
-Node: COVID19_cases_india/E0/26
+Node: COVID19_cases_india/E0/32
 observationDate: "2020-03-02"
 observationAbout: dcid:geoId/06
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -258,7 +318,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/06variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-02value=1observationPeriod=P1Y"
 dcid: "dc/o/4jjkkcq6mkd3"
 
-Node: COVID19_cases_india/E0/27
+Node: COVID19_cases_india/E0/33
 observationDate: "2020-03-02"
 observationAbout: dcid:geoId/07
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -268,7 +328,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/07variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-02value=1observationPeriod=P1Y"
 dcid: "dc/o/qsh1zj2zlp3zf"
 
-Node: COVID19_cases_india/E0/28
+Node: COVID19_cases_india/E0/34
 observationDate: "2020-03-02"
 observationAbout: dcid:geoId/08
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -278,7 +338,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/08variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-02value=1observationPeriod=P1Y"
 dcid: "dc/o/fqd0p25yjy0e9"
 
-Node: COVID19_cases_india/E0/29
+Node: COVID19_cases_india/E0/35
 observationDate: "2020-03-03"
 observationAbout: dcid:geoId/09
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -288,7 +348,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/09variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-03value=1observationPeriod=P1Y"
 dcid: "dc/o/jb5c2pqc6v41h"
 
-Node: COVID19_cases_india/E0/30
+Node: COVID19_cases_india/E0/36
 observationDate: "2020-03-03"
 observationAbout: dcid:geoId/10
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -298,7 +358,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/10variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-03value=3observationPeriod=P1Y"
 dcid: "dc/o/se8gl5r4f3eh4"
 
-Node: COVID19_cases_india/E0/31
+Node: COVID19_cases_india/E0/37
 observationDate: "2020-03-03"
 observationAbout: dcid:geoId/11
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -308,7 +368,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/11variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-03value=1observationPeriod=P1Y"
 dcid: "dc/o/e52b9f30mwmjd"
 
-Node: COVID19_cases_india/E0/32
+Node: COVID19_cases_india/E0/38
 observationDate: "2020-03-03"
 observationAbout: dcid:geoId/06
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -318,7 +378,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/06variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-03value=1observationPeriod=P1Y"
 dcid: "dc/o/5grbhhhj55gn3"
 
-Node: COVID19_cases_india/E0/33
+Node: COVID19_cases_india/E0/39
 observationDate: "2020-03"
 observationAbout: dcid:geoId/0601
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -328,7 +388,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/0601variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03value=1observationPeriod=P1Y"
 dcid: "dc/o/js7887n154zh3"
 
-Node: COVID19_cases_india/E0/34
+Node: COVID19_cases_india/E0/40
 observationDate: "2020-03-04"
 observationAbout: dcid:geoId/0601
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -338,7 +398,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/0601variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-04value=1observationPeriod=P1Y"
 dcid: "dc/o/g3507dxsb31mc"
 
-Node: COVID19_cases_india/E0/35
+Node: COVID19_cases_india/E0/41
 observationDate: "2020-03-05"
 observationAbout: dcid:geoId/0601
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -348,7 +408,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/0601variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-05value=1observationPeriod=P1Y"
 dcid: "dc/o/88ekssb2r6m7c"
 
-Node: COVID19_cases_india/E0/36
+Node: COVID19_cases_india/E0/42
 observationDate: "2020-03-06"
 observationAbout: dcid:geoId/0601
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -358,7 +418,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/0601variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-03-06value=1observationPeriod=P1Y"
 dcid: "dc/o/7tleb6kmwdzd"
 
-Node: COVID19_cases_india/E0/37
+Node: COVID19_cases_india/E0/43
 observationDate: "2020-04-02"
 observationAbout: dcid:geoId/07
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -368,7 +428,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/07variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-04-02value=112observationPeriod=P1Y"
 dcid: "dc/o/670ypncknxjx5"
 
-Node: COVID19_cases_india/E0/38
+Node: COVID19_cases_india/E0/44
 observationDate: "2020-05-02"
 observationAbout: dcid:geoId/07
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -378,7 +438,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/07variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-05-02value=5observationPeriod=P1Y"
 dcid: "dc/o/zw8c5qqrtx1pf"
 
-Node: COVID19_cases_india/E0/39
+Node: COVID19_cases_india/E0/45
 observationDate: "2020-05-03"
 observationAbout: dcid:geoId/06
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -388,7 +448,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/06variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-05-03value=8observationPeriod=P1Y"
 dcid: "dc/o/sl0m1zskrc6b9"
 
-Node: COVID19_cases_india/E0/40
+Node: COVID19_cases_india/E0/46
 observationDate: "2020-06-02"
 observationAbout: dcid:geoId/07
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
@@ -398,93 +458,93 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/07variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=275observationPeriod=P1Y"
 dcid: "dc/o/11cvkbklbb1l4"
 
-Node: COVID19_cases_india/E0/41
+Node: COVID19_cases_india/E0/47
 observationDate: "2020-06-02"
 observationAbout: dcid:geoId/201
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P6M"
-keyString: "observationAbout=geoId/201variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P6M"
-dcid: "dc/o/xgdt74pw7b6yd"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/201variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P1Y"
+dcid: "dc/o/v8mf5wg80dpz8"
 
-Node: COVID19_cases_india/E0/42
+Node: COVID19_cases_india/E0/48
 observationDate: "2020-06-02"
 observationAbout: dcid:geoId/211
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P6M"
-keyString: "observationAbout=geoId/211variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P6M"
-dcid: "dc/o/7n0y02vqj0lk4"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/211variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P1Y"
+dcid: "dc/o/tmw56dy3dd9"
 
-Node: COVID19_cases_india/E0/43
+Node: COVID19_cases_india/E0/49
 observationDate: "2020-06-02"
 observationAbout: dcid:geoId/221
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P6M"
-keyString: "observationAbout=geoId/221variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P6M"
-dcid: "dc/o/mhwwgr4w8rcn2"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/221variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P1Y"
+dcid: "dc/o/15bx7drwf3ywb"
 
-Node: COVID19_cases_india/E0/44
+Node: COVID19_cases_india/E0/50
 observationDate: "2020-06-02"
 observationAbout: dcid:geoId/231
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P6M"
-keyString: "observationAbout=geoId/231variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P6M"
-dcid: "dc/o/xq8ghs3h6tqf8"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/231variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P1Y"
+dcid: "dc/o/c2t16fw8ce11b"
 
-Node: COVID19_cases_india/E0/45
+Node: COVID19_cases_india/E0/51
 observationDate: "2020-06-02"
 observationAbout: dcid:geoId/241
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P6M"
-keyString: "observationAbout=geoId/241variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P6M"
-dcid: "dc/o/jkvx53kzhzr02"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/241variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P1Y"
+dcid: "dc/o/x928yb0wcg93h"
 
-Node: COVID19_cases_india/E0/46
+Node: COVID19_cases_india/E0/52
 observationDate: "2020-06-02"
 observationAbout: dcid:geoId/25111
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P6M"
-keyString: "observationAbout=geoId/25111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P6M"
-dcid: "dc/o/wsyrh3bqncp0b"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/25111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P1Y"
+dcid: "dc/o/v0tw1s6edkhxc"
 
-Node: COVID19_cases_india/E0/47
+Node: COVID19_cases_india/E0/53
 observationDate: "2020-06-02"
 observationAbout: dcid:geoId/26111
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P6M"
-keyString: "observationAbout=geoId/26111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P6M"
-dcid: "dc/o/zg4m8g1l3qc3h"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/26111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P1Y"
+dcid: "dc/o/mdgfwdjtgpsb8"
 
-Node: COVID19_cases_india/E0/48
+Node: COVID19_cases_india/E0/54
 observationDate: "2020-06-02"
 observationAbout: dcid:geoId/27111
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P6M"
-keyString: "observationAbout=geoId/27111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P6M"
-dcid: "dc/o/p51xncql6t8zc"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/27111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P1Y"
+dcid: "dc/o/2pyydweng49e2"
 
-Node: COVID19_cases_india/E0/48
+Node: COVID19_cases_india/E0/54
 observationDate: "2020-06-02"
 observationAbout: dcid:geoId/28111
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 value: 1
 typeOf: dcid:StatVarObservation
-observationPeriod: "P6M"
-keyString: "observationAbout=geoId/28111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P6M"
-dcid: "dc/o/z96qv0cpqh8f4"
+observationPeriod: "P1Y"
+keyString: "observationAbout=geoId/28111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P1Y"
+dcid: "dc/o/q3fgcdmzrqxd3"
 

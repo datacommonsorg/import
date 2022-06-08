@@ -1,4 +1,10 @@
 DateTime,geoId,CumulativeCount_MedicalTest_ConditionCOVID_19_Positive,Observation_Period
+2022-06-01,geoId/01,1, P1Y
+2022-06-01,geoId/01,1, P6M
+2022-06-01,geoId/01,1, P3M
+2022-06-02,geoId/01,2, P1Y
+2022-06-02,geoId/01,2, P6M
+2022-06-02,geoId/01,2, P3M
 2020-01-02,geoId/07,1, P1Y
 2020-01-02,geoId/201,1, P1Y
 2020-01-02,geoId/211,1, P1Y
