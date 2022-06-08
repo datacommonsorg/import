@@ -4,33 +4,45 @@
             "counter_name": "MCF_UnenclosedComplexValue",
             "description": "Complex value was not enclosed in brackets `[]` in the MCF.",
             "user_actions": [
-                "Check complex values in your MCF and make sure they are enclosed in brackets"
+                "Check complex values in your MCF and make sure they are enclosed in brackets",
+                "Refer to the [documentation of valid complex values](complex_values.md)"
             ]
         },
         {
             "counter_name": "MCF_MalformedComplexValueParts",
             "description": "Complex value had less than 2 or more than 3 parts",
-            "user_actions": ["Check that all of your complex values have either 2 or 3 parts"]
+            "user_actions": ["Check that all of your complex values have either 2 or 3 parts",
+                "Refer to the [documentation of valid complex values](complex_values.md)"
+            ]
         },
         {
             "counter_name": "MCF_QuantityMalformedValue",
             "description": "In a complex value with 2 parts, the part that was expected to be a number was not a number",
-            "user_actions": []
+            "user_actions": [
+                "Refer to the [documentation of valid complex values](complex_values.md)"
+            ]
         },
         {
             "counter_name": "MCF_InvalidLatitude",
             "description": "Invalid latitude value; must be decimal degrees with an optional N/S suffix",
-            "user_actions": []
+            "user_actions": [
+                "Refer to the [documentation of valid complex values](complex_values.md)"
+            ]
         },
         {
             "counter_name": "MCF_InvalidLongitude",
             "description": "Invalid longitude value; must be decimal degrees with an optional E/W suffix",
-            "user_actions": []
+            "user_actions": [
+                "Refer to the [documentation of valid complex values](complex_values.md)"
+            ]
         },
         {
             "counter_name": "MCF_QuantityRangeMalformedValues",
-            "description": "Complex value in MCF, check the error message for the specific error",
-            "user_actions": ["Either the start or end components are wrong, or at least one of the components have to be a number. Check the error message you get."]
+            "description": "An unexpected part was found in the complex value in MCF, error message will specify the type of issue",
+            "user_actions": [
+                "Either the start or end components are wrong, or at least one of the components have to be a number. Check the error message in `report.json`.",
+                "Refer to the [documentation of valid complex values](complex_values.md)"
+            ]
         },
         {
             "counter_name": "Resolution_UnresolvedExternalId_",

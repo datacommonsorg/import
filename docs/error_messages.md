@@ -16,6 +16,7 @@ suffix for these counters.
 ### Suggested User Actions
 
 1. Check complex values in your MCF and make sure they are enclosed in brackets
+1. Refer to the [documentation of valid complex values](complex_values.md)
 
 ## MCF_MalformedComplexValueParts
 
@@ -24,26 +25,40 @@ suffix for these counters.
 ### Suggested User Actions
 
 1. Check that all of your complex values have either 2 or 3 parts
+1. Refer to the [documentation of valid complex values](complex_values.md)
 
 ## MCF_QuantityMalformedValue
 
 **Description:** In a complex value with 2 parts, the part that was expected to be a number was not a number
 
+### Suggested User Actions
+
+1. Refer to the [documentation of valid complex values](complex_values.md)
+
 ## MCF_InvalidLatitude
 
 **Description:** Invalid latitude value; must be decimal degrees with an optional N/S suffix
+
+### Suggested User Actions
+
+1. Refer to the [documentation of valid complex values](complex_values.md)
 
 ## MCF_InvalidLongitude
 
 **Description:** Invalid longitude value; must be decimal degrees with an optional E/W suffix
 
+### Suggested User Actions
+
+1. Refer to the [documentation of valid complex values](complex_values.md)
+
 ## MCF_QuantityRangeMalformedValues
 
-**Description:** Complex value in MCF, check the error message for the specific error
+**Description:** An unexpected part was found in the complex value in MCF, error message will specify the type of issue
 
 ### Suggested User Actions
 
-1. Either the start or end components are wrong, or at least one of the components have to be a number. Check the error message you get.
+1. Either the start or end components are wrong, or at least one of the components have to be a number. Check the error message in `report.json`.
+1. Refer to the [documentation of valid complex values](complex_values.md)
 
 ## Resolution_UnresolvedExternalId_
 
