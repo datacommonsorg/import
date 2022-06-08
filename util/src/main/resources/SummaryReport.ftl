@@ -212,7 +212,7 @@
         </h2>
         <#list placeSeriesSummaryMap as place, placeSeriesSummary>
           
-          <details open class="details-pad">
+          <details class="details-pad">
             <summary class="summary-em">${place} <a name="places--${place}" href="#places--${place}">#</a></summary>
             <table width="95%">
               <thead>
