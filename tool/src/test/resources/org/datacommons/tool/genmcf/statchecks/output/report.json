@@ -3,8 +3,8 @@
     "LEVEL_INFO": {
       "counters": {
         "NumRowSuccesses": "48",
-        "NumPVSuccesses": "336",
-        "Existence_NumChecks": "294",
+        "NumPVSuccesses": "384",
+        "Existence_NumChecks": "343",
         "NumNodeSuccesses": "48",
         "Existence_NumDcCalls": "1"
       }
@@ -14,7 +14,7 @@
         "StatsCheck_Inconsistent_Date_Granularity": "1",
         "StatsCheck_Inconsistent_Values": "1",
         "StatsCheck_MaxPercentFluctuationGreaterThan500": "1",
-        "StatsCheck_Data_Holes": "10"
+        "StatsCheck_Data_Holes": "2"
       }
     },
     "LEVEL_ERROR": {
@@ -36,21 +36,12 @@
     "placeDcid": "geoId/07",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
       "counterKey": "StatsCheck_MaxPercentFluctuationGreaterThan500",
       "problemPoints": [{
-        "date": "2020-02-02",
-        "values": [{
-          "value": 0.0,
-          "locations": [{
-            "file": "covid.csv",
-            "lineNumber": "14"
-          }]
-        }]
-      }, {
         "date": "2020-03-02",
         "values": [{
           "value": 1.0,
@@ -59,14 +50,26 @@
             "lineNumber": "28"
           }]
         }]
+      }, {
+        "date": "2020-04-02",
+        "values": [{
+          "value": 112.0,
+          "locations": [{
+            "file": "covid.csv",
+            "lineNumber": "38"
+          }]
+        }]
       }],
-      "percentDifference": 1.0E8
+      "percentDifference": 11100.0
+    }, {
+      "counterKey": "StatsCheck_Data_Holes",
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-03-02, 2020-04-02, 2020-05-02, 2020-06-02"
     }]
   }, {
     "placeDcid": "geoId/06",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
@@ -92,21 +95,10 @@
       "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-30, 2020-02-02, 2020-02-03, 2020-03-02, 2020-03-03, 2020-05-03"
     }]
   }, {
-    "placeDcid": "geoId/201",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
-    }]
-  }, {
     "placeDcid": "geoId/0601",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
@@ -121,94 +113,6 @@
           }]
         }]
       }]
-    }]
-  }, {
-    "placeDcid": "geoId/25111",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
-    }]
-  }, {
-    "placeDcid": "geoId/241",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
-    }]
-  }, {
-    "placeDcid": "geoId/231",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
-    }]
-  }, {
-    "placeDcid": "geoId/221",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
-    }]
-  }, {
-    "placeDcid": "geoId/211",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
-    }]
-  }, {
-    "placeDcid": "geoId/28111",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
-    }]
-  }, {
-    "placeDcid": "geoId/27111",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
-    }]
-  }, {
-    "placeDcid": "geoId/26111",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }],
   "commandArgs": {
