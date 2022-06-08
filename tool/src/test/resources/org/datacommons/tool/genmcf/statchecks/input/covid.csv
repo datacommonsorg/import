@@ -1,4 +1,4 @@
-DateTime,geoId,CumulativeCount_MedicalTest_ConditionCOVID_19_Positive, Observation_Period
+DateTime,geoId,CumulativeCount_MedicalTest_ConditionCOVID_19_Positive,Observation_Period
 2020-01-02,geoId/07,1, P1Y
 2020-01-02,geoId/201,1, P1Y
 2020-01-02,geoId/211,1, P1Y
