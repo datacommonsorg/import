@@ -32,7 +32,16 @@
         list-style: none;
         padding-left: 0;
       }
+      #go-to-top{
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+      }
     </style>
+    <a name="top"></a>
+    <div id="go-to-top">
+      <a href="#top">Go to Top</a>
+    </div>
     <h1>Summary Report</h1>
     <h3>Table of Contents</h3>
     <ul>
