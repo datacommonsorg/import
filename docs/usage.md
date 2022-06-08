@@ -38,7 +38,15 @@ In `lint` mode, the import tool validates the artifacts produced for addition to
 
 In `genmcf` mode, the import tool produces instance MCF files from a pair of TMCF file, and its associated CSV files. This mode performs all validations that the  `lint` mode would have performed.
 
-All flags below apply to both the modes.
+Both modes generate two output files:
+- `report.json` is a machine-readable output of error/warning counters and details of those logs.
+  - In `genmcf` mode, also includes information on statistics from sample places.
+- `summary_report.html` is a version of `report.json` optimized for viewing in a web browser.
+  - In `genmcf` mode, includes time-series charts of the sample locations for all StatVars.
+
+The output files are placed under a new folder in the current working directory named `dc_generated` by default. See the `--output-dir` flag below for modifying output location.
+
+All flags below apply to both modes.
 
 ### Lint Mode (`lint`)
 To run the tool in lint mode, use:
