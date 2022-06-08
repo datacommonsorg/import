@@ -7,7 +7,7 @@ The tool:
 - Operates on two types of files: instance MCF (.mcf); Template MCF (.tmcf) and corresponding CSV files
 - Performs resolution and, syntax and statistics validations
 - Generates instance MCF from template MCF and corresponding CSV files
-- Performs stats validation, generates reports with error/warning counters and sample time-series charts
+- Generates reports on error/warning counters, stats validation and sample time-series charts
 
 The tool is actively used for all data imports that are included in the Data Commons Knowledge Graph.
 It is under active development, including feature additions and bug fixes.
