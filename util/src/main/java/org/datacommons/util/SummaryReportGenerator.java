@@ -119,7 +119,7 @@ public class SummaryReportGenerator {
       if (timeSeries.findValueRange().getLength() == 0) {
         // Manually set the range when the values in the time series are all the same. Otherwise,
         // the chart library will draw an axis with multiple ticks all labeled with that same value.
-        yAxis.setRange(this.seriesValues.get(0) - 1, this.seriesValues.get(0) * 2);
+        yAxis.setRange(this.seriesValues.get(0) - 1, this.seriesValues.get(0) + 1);
       }
       DateAxis xAxis = (DateAxis) plot.getDomainAxis();
       if (this.seriesDates.size() == 1) {
