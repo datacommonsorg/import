@@ -3,7 +3,7 @@
 The Data Commons import tool is used to analyze and debug files that are developed
 in the process of importing new datasets to the Data Commons Knowledge Graph.
 
-It can;
+It can:
 - debug schema (.mcf) files
 - generate instance MCF from template MCF (TMCF) and corresponding CSV tables
 - resolve references against the Data Commons API
