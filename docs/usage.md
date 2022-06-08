@@ -55,7 +55,7 @@ To run the tool in lint mode, use:
   dc-import lint <list of mcf files>
   ```
 
-For example, we can `lint` [a test MCF included in this repository](tool/src/test/resources/org/datacommons/tool/lint/mcfonly/input/McfOnly.mcf) at path `tool/src/test/resources/org/datacommons/tool/lint/mcfonly/input/McfOnly.mcf` like so:
+For example, we can use `lint` to perform syntax validation on [a test MCF included in this repository](tool/src/test/resources/org/datacommons/tool/lint/mcfonly/input/McfOnly.mcf) at path `tool/src/test/resources/org/datacommons/tool/lint/mcfonly/input/McfOnly.mcf` relative to the base of this repo.
   ```bash
   dc-import lint tool/src/test/resources/org/datacommons/tool/lint/mcfonly/input/McfOnly.mcf
   ```
@@ -71,10 +71,19 @@ To run the tool in genmcf mode, use:
 
 Note that in this mode, schema file(s) can be optionally passed. This is required to resolve references to newly introduced schema nodes.
 
-For example:
+For example, we can use `genmcf` to perform syntax and statistic validations, and generate instance MCF files from test files about COVID-19 cases in India.
+
+These files are:
+- [covid.csv](../tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/input/covid.csv) at path `tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/input/covid.csv` relative to the base of this repo.
+- [covid.tmcf](../tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/input/covid.tmcf) at path `tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/input/covid.tmcf` relative to the base of this repo.
+
   ```bash
-  dc-import lint my_dataset_mapping.tmcf my_dataset_table.csv  auto_generated_stat_vars.mcf manual_schema.mcf
+  dc-import lint tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/input/covid.csv tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/input/covid.tmcf
   ```
+
+This will output issues found in the input file to [`dc_generated/report.json`](../tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/output/report.json) and [`dc_generated/summary_report.html`](../tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/output/summary_report.html) in the current working directory.
+
+It also outputs the instance MCFs it generated from the template to [`dc_generated/table_mcf_nodes_covid.mcf`](../tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/output/table_mcf_nodes_covid.mcf). Note that instance MCF will not be generated if there are any fatal errors in the input files. These fatal errors will instead be logged to `report.json` and `summary_report.html`.
 
 
 ## Flags
