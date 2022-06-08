@@ -55,10 +55,12 @@ To run the tool in lint mode, use:
   dc-import lint <list of mcf files>
   ```
 
-For example;
+For example, we can `lint` [a test MCF included in this repository](tool/src/test/resources/org/datacommons/tool/lint/mcfonly/input/McfOnly.mcf) at path `tool/src/test/resources/org/datacommons/tool/lint/mcfonly/input/McfOnly.mcf` like so:
   ```bash
-  dc-import lint auto_generated_stat_vars.mcf manual_schema.mcf
+  dc-import lint tool/src/test/resources/org/datacommons/tool/lint/mcfonly/input/McfOnly.mcf
   ```
+
+This will output issues found in the input file to [`dc_generated/report.json`](../tool/src/test/resources/org/datacommons/tool/lint/mcfonly/output/report.json) and [`dc_generated/summary_report.html`](../tool/src/test/resources/org/datacommons/tool/lint/mcfonly/output/summary_report.html) in the current working directory.
 
 ### Instance MCF Generation Mode (`genmcf`)
 
