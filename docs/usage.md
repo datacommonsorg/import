@@ -67,7 +67,7 @@ To run the tool in genmcf mode, use:
 
 Note that in this mode, schema file(s) can be optionally passed. This is required to resolve references to newly introduced schema nodes.
 
-  For example;
+For example:
   ```bash
   dc-import lint my_dataset_mapping.tmcf my_dataset_table.csv  auto_generated_stat_vars.mcf manual_schema.mcf
   ```
