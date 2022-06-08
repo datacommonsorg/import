@@ -109,6 +109,10 @@ public class DcidGenerator {
           Vocabulary.MEAN_STD_ERROR,
           Vocabulary.GROWTH_RATE,
           Vocabulary.STD_DEVIATION_VALUE,
+          Vocabulary.CONFIDENCE_INTERVAL_LOWER_LIMIT,
+          Vocabulary.CONFIDENCE_INTERVAL_UPPER_LIMIT,
+          Vocabulary.KURTOSIS,
+          Vocabulary.SKEWNESS,
           Vocabulary.MEASUREMENT_DENOMINATOR,
           Vocabulary.MEASUREMENT_QUALIFIER,
           Vocabulary.SCALING_FACTOR);
