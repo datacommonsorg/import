@@ -14,4 +14,4 @@ A complex value may either be:
 
 3. a [GeoCoordinate](https://datacommons.org/browser/GeoCoordinates), coded as one of:
  - `[LatLong <lat_value> <long_value>]`, for example: [`[LatLong -10.136 161.173]`](https://datacommons.org/browser/latLong/-1013600_16117300)
- - `[<lat_value> <long_value> LatLong]`, for example: [`[-10.136 161.173 LatLong]`](https://datacommons.org/browser/latLong/-1013600_16117300)
+ - `[<lat_value> <long_value> LatLong]`, for example: [`[10.136S 161.173E LatLong]`](https://datacommons.org/browser/latLong/-1013600_16117300)
