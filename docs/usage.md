@@ -34,7 +34,7 @@ Hint: to access a concise explanation of usage modes and flags, run
 
 ## Usage Modes
 
-In `lint` mode, the import tool validates the artifacts produced for addition to Data Commons. These artifacts include [instance MCF files](https://github.com/datacommonsorg/data/blob/master/docs/mcf_format.md#instance-mcf) and pairs of [template MCF (TMCF)](https://github.com/datacommonsorg/data/blob/master/docs/mcf_format.md#instance-mcf) and corresponding CSV files.
+In `lint` mode, the import tool validates the artifacts produced for addition to Data Commons. These artifacts include [instance MCF files](https://github.com/datacommonsorg/data/blob/master/docs/mcf_format.md#instance-mcf) and pairs of [template MCF (TMCF)](https://github.com/datacommonsorg/data/blob/master/docs/mcf_format.md#template-mcf) and corresponding CSV files.
 
 In `genmcf` mode, the import tool produces instance MCF files from a pair of TMCF file, and its associated CSV files. This mode performs all validations that the  `lint` mode would have performed.
 
