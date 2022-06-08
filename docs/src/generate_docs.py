@@ -10,9 +10,6 @@ _DOCUMENTATION_HEAD = """# Error Counters
 Issues found in the input files are categorized under "counters". Counters
 aggregate the issues, and provide a high-level overview of what went wrong.
 
-This page is auto-generated from `error_counters.json` to provide an 
-overview of all error counters and suggested actions to remedy the issues.
-
 Error counters with **Is Prefix?: Yes** are generated with a suffix that gives
 some details on the subject of the error. For example,
 `Resolution_UnresolvedExternalId_` will be appended with the ID that is not 
