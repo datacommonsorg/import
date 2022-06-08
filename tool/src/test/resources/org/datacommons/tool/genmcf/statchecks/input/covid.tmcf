@@ -3,4 +3,5 @@ typeOf: dcs:StatVarObservation
 variableMeasured: dcs:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
 observationAbout: C:COVID19_cases_india->geoId
 observationDate: C:COVID19_cases_india->DateTime
+observationPeriod: C:COVID19_cases_india->Observation_Period
 value: C:COVID19_cases_india->CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
