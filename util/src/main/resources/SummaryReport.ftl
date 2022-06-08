@@ -1,6 +1,12 @@
 <html>
   <head>
     <title>Summary Report</title>
+    <!-- required by DataTables -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- DataTables documentation: https://datatables.net/ -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.12.1/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.12.1/datatables.min.js"></script>
   </head>
   <body>
     <style>
@@ -82,7 +88,7 @@
     <#if svSummaryMap?has_content>
       <div>
         <h2>StatVarObservations by StatVar</h2>
-        <table width="95%">
+        <table id="statvars-table" width="95%">
           <thead>
             <tr>
               <th>Stat Var</th>
@@ -177,4 +183,15 @@
       </div>
     </#if>
   </body>
+  <script>
+    $(document).ready(function () {
+      $('#statvars-table').DataTable({
+        paging: false,
+        searching: false,
+        info: false,
+        order: [] // don't apply initial ordering (which is turned on by default)
+    });
+  });
+
+  </script>
 </html>
