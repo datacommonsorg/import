@@ -24,14 +24,14 @@
         },
         {
             "counter_name": "MCF_InvalidLatitude",
-            "description": "Invalid latitude value; must be decimal degrees with an optional N/S suffix",
+            "description": "Invalid latitude part in complex value; latitude must be decimal degrees with an optional N/S suffix",
             "user_actions": [
                 "Refer to the [documentation of valid complex values](complex_values.md)"
             ]
         },
         {
             "counter_name": "MCF_InvalidLongitude",
-            "description": "Invalid longitude value; must be decimal degrees with an optional E/W suffix",
+            "description": "Invalid longitude part in complex value; longitude must be decimal degrees with an optional E/W suffix",
             "user_actions": [
                 "Refer to the [documentation of valid complex values](complex_values.md)"
             ]
@@ -48,17 +48,20 @@
             "counter_name": "Resolution_UnresolvedExternalId_",
             "description": "External ID reference could not be resolved.",
             "suffix_description":  "Property for which the ID could not be resolved.",
-            "user_actions": []
+            "user_actions": [
+                "Try searching for the ID on the [Data Commons Browser](https://datacommons.org/search)",
+                "Ensure you have added all new schema files as inputs to the import tool"
+            ]
         },
         {
             "counter_name": "Resolution_DivergingDcidsForExternalIds_",
             "description": "Resolving external IDs found different DCIDs.",
             "suffix_description":  "The properties that were found, separated by an underscore `_`",
-            "user_actions": []
+            "user_actions": ["Try searching for the DCIDs on the [Data Commons Browser](https://datacommons.org/search) and/or in your local schema (.mcf) files"]
         },
         {
             "counter_name": "Mutator_MissingTypeOf",
-            "description": "MCF node missing typeOf property",
+            "description": "MCF node missing required [typeOf](https://datacommons.org/browser/typeOf) property",
             "user_actions": []
         },
         {
@@ -69,26 +72,28 @@
         {
             "counter_name": "MCF_MalformedColonLessLine",
             "description": "MCF line was missing a colon to separate the property and the value",
-            "user_actions": []
+            "user_actions": [
+                "Ensure that the lines in your MCF are in the form `<property>: <value>"
+            ]
         },
         {
             "counter_name": "MCF_MalformedNodeName",
             "description": "Value of `Node` prop either included a comma or started with a quote.",
-            "user_actions": ["Check the error message for the specific of the malformation."]
+            "user_actions": ["Check the error message for the specifics of the malformation."]
         },
         {
             "counter_name": "TMCF_MalformedEntity",
-            "description": "Found an entity name without the required E: prefix",
+            "description": "When parsing the first (`Node: <value>`) line of a node in TMCF, the value did not have the required E: prefix to be an entity name",
             "user_actions": []
         },
         {
             "counter_name": "MCF_UnexpectedProperty",
-            "description": "Property found without a preceding line with 'Node'",
+            "description": "A regular `<property>: <value>` line was found without a preceding `Node` line to associate with",
             "user_actions": []
         },
         {
             "counter_name": "MCF_MalformedNode",
-            "description": "Found a 'Node' without properties",
+            "description": "Found a 'Node' without properties, or the value of the `Node` property was surrounded by quotes (must be non-quoted), or the value of the `Node` property included a comma (must be a unary value)",
             "user_actions": []
         },
         {

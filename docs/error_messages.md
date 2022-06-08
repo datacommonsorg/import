@@ -37,7 +37,7 @@ suffix for these counters.
 
 ## MCF_InvalidLatitude
 
-**Description:** Invalid latitude value; must be decimal degrees with an optional N/S suffix
+**Description:** Invalid latitude part in complex value; latitude must be decimal degrees with an optional N/S suffix
 
 ### Suggested User Actions
 
@@ -45,7 +45,7 @@ suffix for these counters.
 
 ## MCF_InvalidLongitude
 
-**Description:** Invalid longitude value; must be decimal degrees with an optional E/W suffix
+**Description:** Invalid longitude part in complex value; longitude must be decimal degrees with an optional E/W suffix
 
 ### Suggested User Actions
 
@@ -66,15 +66,24 @@ suffix for these counters.
 
 **Suffix Description:** External ID reference could not be resolved.
 
+### Suggested User Actions
+
+1. Try searching for the ID on the [Data Commons Browser](https://datacommons.org/search)
+1. Ensure you have added all new schema files as inputs to the import tool
+
 ## Resolution_DivergingDcidsForExternalIds_
 
 **Description:** Resolving external IDs found different DCIDs.
 
 **Suffix Description:** Resolving external IDs found different DCIDs.
 
+### Suggested User Actions
+
+1. Try searching for the DCIDs on the [Data Commons Browser](https://datacommons.org/search) and/or in your local schema (.mcf) files
+
 ## Mutator_MissingTypeOf
 
-**Description:** MCF node missing typeOf property
+**Description:** MCF node missing required [typeOf](https://datacommons.org/browser/typeOf) property
 
 ## Mutator_InvalidObsValue
 
@@ -84,25 +93,29 @@ suffix for these counters.
 
 **Description:** MCF line was missing a colon to separate the property and the value
 
+### Suggested User Actions
+
+1. Ensure that the lines in your MCF are in the form `<property>: <value>
+
 ## MCF_MalformedNodeName
 
 **Description:** Value of `Node` prop either included a comma or started with a quote.
 
 ### Suggested User Actions
 
-1. Check the error message for the specific of the malformation.
+1. Check the error message for the specifics of the malformation.
 
 ## TMCF_MalformedEntity
 
-**Description:** Found an entity name without the required E: prefix
+**Description:** When parsing the first (`Node: <value>`) line of a node in TMCF, the value did not have the required E: prefix to be an entity name
 
 ## MCF_UnexpectedProperty
 
-**Description:** Property found without a preceding line with 'Node'
+**Description:** A regular `<property>: <value>` line was found without a preceding `Node` line to associate with
 
 ## MCF_MalformedNode
 
-**Description:** Found a 'Node' without properties
+**Description:** Found a 'Node' without properties, or the value of the `Node` property was surrounded by quotes (must be non-quoted), or the value of the `Node` property included a comma (must be a unary value)
 
 ## Resolution_IrreplaceableLocalRef
 
