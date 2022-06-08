@@ -49,6 +49,7 @@ The output files are placed under a new folder in the current working directory 
 All flags below apply to both modes.
 
 ### Lint Mode (`lint`)
+
 To run the tool in lint mode, use:
   ```bash
   dc-import lint <list of mcf files>
@@ -60,6 +61,7 @@ For example;
   ```
 
 ### Instance MCF Generation Mode (`genmcf`)
+
 To run the tool in genmcf mode, use:
   ```bash
   dc-import genmcf <list of csv/tmcf files>
@@ -74,38 +76,47 @@ For example:
 
 
 ## Flags
+
 Flags available for the tool are listed below.
 
 You can also run `dc-import --help` to see a list of flags in your terminal.
+
 ### `-e`, `--existence-checks`
+
 Checks DCID references to schema nodes against the KG and locally. If this flag is set, then calls will be made to the Staging API server, and instance MCFs get fully loaded into memory. 
 
 Defaults to `true`.
 
 ### `-h`, `--help`
+
 Shows a help message and exit.
 
 ### `-n`, `--num-threads=<numThreads>`
+
 Specifies the number of concurrent threads used for processing CSVs.
 
 Defaults to `1`.
 
 ### `-o`, `--output-dir=<outputDir>`
+
 Specifies the directory to write output files.
 
 Default is `dc_generated/` within current working directory.
 
 ### `-s`, `--stat-checks`
+
 Checks integrity of time series by checking for holes, variance in values, etc.
 
 Defaults to `true`.
 
 ### `-p`, `--sample-places=<samplePlaces>`
+
 Specifies a list of place dcids to run stats check on.
 
 This flag should only be set if `--stat-checks` is `true`. If `--stat-checks` is `true` and this flag is not set, 5 sample places are picked for roughly each distinct place type.
 
 ### `-r`, `--resolution=<resolutionMode>`
+
 Specifies the mode of resolution to use: `NONE`, `LOCAL`, `FULL`.
 
 - `NONE`: Does not resolve references.
@@ -115,14 +126,17 @@ Specifies the mode of resolution to use: `NONE`, `LOCAL`, `FULL`.
 Defaults to `LOCAL`.
 
 ### `-sr`, `--summary-report`
+
 Generates a summary report in html format. 
 
 Defaults to `true`.
 
 ### `-V`, `--version`
+
 Prints version information and exit.
 
 ### `--verbose`
+
 Prints verbose log.
 
 Defaults to `false`.
