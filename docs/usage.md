@@ -67,7 +67,7 @@ To run the tool in genmcf mode, use:
   dc-import genmcf <list of csv/tmcf files>
   ```
 
-Note that in this mode, schema file(s) can be optionally passed. This is required to resolve references to newly introduced schema nodes.
+Optionally, schema file(s) may also be passed. This is required to resolve references to newly introduced schema nodes.
 
 For example, we can use `genmcf` to perform validations, and generate instance MCF from test files about COVID-19 cases in India.
 
