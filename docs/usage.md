@@ -40,13 +40,11 @@ In `genmcf` mode, the import tool produces instance MCF files from a pair of TMC
 
 Both modes generate two output files:
 - `report.json` is a machine-readable output of error/warning counters and details of those logs.
-  - In `genmcf` mode, also includes information on statistics from sample places.
 - `summary_report.html` is a version of `report.json` optimized for viewing in a web browser.
-  - In `genmcf` mode, includes time-series charts of the sample locations for all StatVars.
 
-The output files are placed under a new folder in the current working directory named `dc_generated` by default. See the `--output-dir` flag below for modifying output location.
+In `genmcf` mode, the reports will also include information on statistics from sample places and  time-series charts. If there were no fatal errors, generated instance MCF files will be written to `table_mcf_nodes_{CSV_FILE_NAME}.mcf`.
 
-All flags below apply to both modes.
+The output files are placed under a new folder in the current working directory named `dc_generated` by default.The `--output-dir` flag (documented below) can be specified to modify the name of this output folder.
 
 ### Lint Mode (`lint`)
 
@@ -77,18 +75,19 @@ These files are:
 - [covid.csv](../tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/input/covid.csv) at path `tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/input/covid.csv` relative to the base of this repo.
 - [covid.tmcf](../tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/input/covid.tmcf) at path `tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/input/covid.tmcf` relative to the base of this repo.
 
+From the base of the repo, we can issue the following command to have the import tool run validations and generate instance MCF files for these files:
   ```bash
   dc-import lint tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/input/covid.csv tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/input/covid.tmcf
   ```
 
-This will output issues found in the input file to [`dc_generated/report.json`](../tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/output/report.json) and [`dc_generated/summary_report.html`](../tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/output/summary_report.html) in the current working directory.
+This will output issues found in the input to [`dc_generated/report.json`](../tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/output/report.json) and [`dc_generated/summary_report.html`](../tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/output/summary_report.html) under the current working directory.
 
 It also outputs the instance MCFs it generated from the template to [`dc_generated/table_mcf_nodes_covid.mcf`](../tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/output/table_mcf_nodes_covid.mcf). Note that instance MCF will not be generated if there are any fatal errors in the input files. These fatal errors will instead be logged to `report.json` and `summary_report.html`.
 
 
 ## Flags
 
-Flags available for the tool are listed below.
+Flags available for the tool are listed below. All flags apply to both usage modes (`lint` and `genmcf`).
 
 You can also run `dc-import --help` to see a list of flags in your terminal.
 
