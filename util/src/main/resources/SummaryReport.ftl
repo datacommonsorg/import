@@ -94,6 +94,7 @@
               <th>Measurement Methods</th>
               <th>Units</th>
               <th>Scaling Factors</th>
+              <th>Observation Periods</th>
             </tr>
           </thead>
           <tbody>
@@ -120,6 +121,11 @@
                 <div>${sFactor}</div>
                 </#list>
               </td>
+              <td>
+                <#list svSummary.getObservationPeriods() as obsPeriod>
+                <div>${obsPeriod}</div>
+                </#list>
+              </td>
             </tr>
           </#list>
           </tbody>
@@ -142,6 +148,7 @@
                     <th>Measurement Methods</th>
                     <th>Units</th>
                     <th>Scaling Factors</th>
+                    <th>Observation Periods</th>
                     <th>Time Series Chart</th>
                   </tr>
                 </thead>
@@ -165,6 +172,11 @@
                     <td>
                       <#list svSummary.getSFactors() as sFactor>
                       <div>${sFactor}</div>
+                      </#list>
+                    </td>
+                    <td>
+                      <#list svSummary.getObservationPeriods() as obsPeriod>
+                      <div>${obsPeriod}</div>
                       </#list>
                     </td>
                     <td style="max-width:none;text-align: -webkit-center;">${svSummary.getTimeSeriesChartSVG()}</td>

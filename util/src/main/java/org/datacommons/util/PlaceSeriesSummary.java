@@ -98,6 +98,9 @@ public class PlaceSeriesSummary {
         if (!seriesSummary.validationResult.getScalingFactor().isEmpty()) {
           summary.scalingFactors.add(seriesSummary.validationResult.getScalingFactor());
         }
+        if (!seriesSummary.validationResult.getObservationPeriod().isEmpty()) {
+          summary.observationPeriods.add(seriesSummary.validationResult.getObservationPeriod());
+        }
         seriesDataPoints.addAll(seriesSummary.timeSeries.values());
       }
       seriesDataPoints.sort(Comparator.comparing(DataPoint::getDate));
