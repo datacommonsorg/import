@@ -176,12 +176,12 @@
         },
         {
             "counter_name": "Sanity_NonDoubleObsValue",
-            "description": "Found an Observation value that was not a number.",
+            "description": "Found an Observation value inthat was not a number.",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_ObsMissingValueProp",
-            "description": "Observation node missing value property",
+            "description": "Observation node is missing the required `value` property",
             "user_actions": []
         },
         {

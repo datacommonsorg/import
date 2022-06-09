@@ -229,11 +229,11 @@ suffix for these counters.
 
 ## Sanity_NonDoubleObsValue
 
-**Description:** Found an Observation value that was not a number.
+**Description:** Found an Observation value inthat was not a number.
 
 ## Sanity_ObsMissingValueProp
 
-**Description:** Observation node missing value property
+**Description:** Observation node is missing the required `value` property
 
 ## Sanity_EmptyProperty
 
