@@ -146,6 +146,10 @@ public final class Vocabulary {
   public static final String MEAN_STD_ERROR = "meanStdError";
   public static final String SAMPLE_SIZE = "sampleSize";
   public static final String GROWTH_RATE = "growthRate";
+  public static final String CONFIDENCE_INTERVAL_LOWER_LIMIT = "confidenceIntervalLowerLimit";
+  public static final String CONFIDENCE_INTERVAL_UPPER_LIMIT = "confidenceIntervalUpperLimit";
+  public static final String KURTOSIS = "kurtosisValue";
+  public static final String SKEWNESS = "skewnessValue";
   public static final String MEASUREMENT_RESULT = "measurementResult";
 
   // Quantity/QuantityRange props
@@ -319,7 +323,8 @@ public final class Vocabulary {
         || lcVal.equals("marginoferror")
         || lcVal.endsWith("stderror")
         || lcVal.endsWith("samplesize")
-        || lcVal.endsWith("growthrate");
+        || lcVal.endsWith("growthrate")
+        || lcVal.endsWith("limit");
   }
 
   public static boolean isStatVar(String type) {
