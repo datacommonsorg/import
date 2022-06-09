@@ -1106,5 +1106,29 @@
             </table>
           </details>
       </div>
+    <script>
+      function handle_hash_change(){
+        /*
+        When the hash part of the location has changed, open the <detail> tag
+        closest to the anchor that is being linked to.
+        */
+
+        const new_hash = CSS.escape( // we will use the location hash in a CSS selector, so we need to escape it
+          location.hash // get the hash
+          .substring(1) // drop the initial `#` character
+          );
+
+        const anchor_selector = "a[name=" + new_hash +"]";
+        const anchor_element = document.querySelectorAll(anchor_selector)[0];
+        const parent_details_tag = anchor_element.closest("details")
+
+        if (parent_details_tag !== null){ // if tag exists
+          parent_details_tag.open = true; // open it.
+        }
+      }
+
+      window.onhashchange = handle_hash_change; // dynamically react to hash changes
+      document.addEventListener('DOMContentLoaded', handle_hash_change, false); // if page loaded with a location hash, also react to that.
+    </script>
   </body>
 </html>
