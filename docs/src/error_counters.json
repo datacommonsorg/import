@@ -108,41 +108,41 @@
         },
         {
             "counter_name": "Resolution_DcidAssignmentFailure_",
-            "description": "The node could not be assigned a DCID based on the data available",
+            "description": "The node could not be assigned a DCID based on the data available. DCID can be generated for StatVarObs, a legacy population type (type ends with `Population`), a legacy observation type (type ends with `Observation` and is not `StatVarObservation`), or if there is an external ID resolver provided.",
             "suffix_description":  "The typeOf value of the node (first value, if multiple)",
-            "user_actions": []
+            "user_actions": ["If none of the conditions in the description apply to your node, provide a non-empty DCID for the node."]
         },
         {
             "counter_name": "Resolution_OrphanLocalReference_",
-            "description": "The local ID of the node is missing from the entire sub-graph",
+            "description": "The local ID of the node is missing from the entire sub-graph resolved by the import tool.",
             "suffix_description":  "The property this reference was found in",
             "user_actions": []
         },
         {
             "counter_name": "Resolution_ReferenceToFailedNode_",
-            "description": "The reference was resolved, but to a failed node, therefore, this node was also failed to resolve",
+            "description": "The reference was resolved, but to a failed node, therefore, this node also failed to resolve",
             "suffix_description": "The property this reference was found in",
-            "user_actions": []
+            "user_actions": ["Check the logs for the failure of the node identified the error message and address that issue."]
         },
         {
             "counter_name": "Sanity_InconsistentSvObsValues",
-            "description": "Found nodes with different values for the same StatVarObservation",
-            "user_actions": []
+            "description": "Found different values provided for the same StatVarObservation",
+            "user_actions": ["Check for any duplication in the input CSV."]
         },
         {
             "counter_name": "Sanity_SameDcidForDifferentStatVars",
-            "description": "Found nodes with different values for the same StatVarObservation",
-            "user_actions": []
+            "description": "The same curated DCID was found for different StatVars.",
+            "user_actions": ["Ensure that StatVars have distinct names."]
         },
         {
             "counter_name": "Sanity_DifferentDcidsForSameStatVar",
             "description": "Found different curated IDs for same StatVar",
-            "user_actions": []
+            "user_actions": ["Ensure that the StatVars have consistent DCIDs."]
         },
         {
             "counter_name": "CSV_HeaderFailure",
             "description": "Unable to parse header from CSV file",
-            "user_actions": []
+            "user_actions": ["Check for malformation in the headers of input CSV files."]
         },
         {
             "counter_name": "CSV_TmcfCheckFailure",
@@ -151,22 +151,22 @@
         },
         {
             "counter_name": "Sanity_TmcfMissingEntityDef",
-            "description": "No definition found for a referenced 'E:' value",
+            "description": "An node was references using an entity (E:) reference in TMCF, but this node was not found in the parsed graph.",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_UnexpectedNonColumn",
-            "description": "Expected value to be a TMCF column that starts with 'C:', but did not find a column.",
+            "description": "Expected value to be a TMCF column that starts with `C:`, but did not find such a value.",
             "user_actions": []
         },
         {
             "counter_name": "Sanity_TmcfMissingColumn",
             "description": "Column referred to in TMCF is missing from CSV header",
-            "user_actions": []
+            "user_actions": ["Check that the TMCF references with `C:` match the names of the columns in the header line in your CSV."]
         },
         {
             "counter_name": "Sanity_UnknownStatType",
-            "description": "Found an unknown statType value",
+            "description": "Found an unknown statType value. StatTypes values either end with one of {`value`, `estimate`, `stderror`, `samplesize`, `growthrate`}, or start with `percentile`, or equal any one of {`marginoferror`, `measurementResult`}",
             "user_actions": []
         },
         {

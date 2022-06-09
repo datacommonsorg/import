@@ -135,37 +135,61 @@ suffix for these counters.
 
 ## Resolution_DcidAssignmentFailure_
 
-**Description:** The node could not be assigned a DCID based on the data available
+**Description:** The node could not be assigned a DCID based on the data available. DCID can be generated for StatVarObs, a legacy population type (type ends with `Population`), a legacy observation type (type ends with `Observation` and is not `StatVarObservation`), or if there is an external ID resolver provided.
 
-**Suffix Description:** The node could not be assigned a DCID based on the data available
+**Suffix Description:** The node could not be assigned a DCID based on the data available. DCID can be generated for StatVarObs, a legacy population type (type ends with `Population`), a legacy observation type (type ends with `Observation` and is not `StatVarObservation`), or if there is an external ID resolver provided.
+
+### Suggested User Actions
+
+1. If none of the conditions in the description apply to your node, provide a non-empty DCID for the node.
 
 ## Resolution_OrphanLocalReference_
 
-**Description:** The local ID of the node is missing from the entire sub-graph
+**Description:** The local ID of the node is missing from the entire sub-graph resolved by the import tool.
 
-**Suffix Description:** The local ID of the node is missing from the entire sub-graph
+**Suffix Description:** The local ID of the node is missing from the entire sub-graph resolved by the import tool.
 
 ## Resolution_ReferenceToFailedNode_
 
-**Description:** The reference was resolved, but to a failed node, therefore, this node was also failed to resolve
+**Description:** The reference was resolved, but to a failed node, therefore, this node also failed to resolve
 
-**Suffix Description:** The reference was resolved, but to a failed node, therefore, this node was also failed to resolve
+**Suffix Description:** The reference was resolved, but to a failed node, therefore, this node also failed to resolve
+
+### Suggested User Actions
+
+1. Check the logs for the failure of the node identified the error message and address that issue.
 
 ## Sanity_InconsistentSvObsValues
 
-**Description:** Found nodes with different values for the same StatVarObservation
+**Description:** Found different values provided for the same StatVarObservation
+
+### Suggested User Actions
+
+1. Check for any duplication in the input CSV.
 
 ## Sanity_SameDcidForDifferentStatVars
 
-**Description:** Found nodes with different values for the same StatVarObservation
+**Description:** The same curated DCID was found for different StatVars.
+
+### Suggested User Actions
+
+1. Ensure that StatVars have distinct names.
 
 ## Sanity_DifferentDcidsForSameStatVar
 
 **Description:** Found different curated IDs for same StatVar
 
+### Suggested User Actions
+
+1. Ensure that the StatVars have consistent DCIDs.
+
 ## CSV_HeaderFailure
 
 **Description:** Unable to parse header from CSV file
+
+### Suggested User Actions
+
+1. Check for malformation in the headers of input CSV files.
 
 ## CSV_TmcfCheckFailure
 
@@ -177,19 +201,23 @@ suffix for these counters.
 
 ## Sanity_TmcfMissingEntityDef
 
-**Description:** No definition found for a referenced 'E:' value
+**Description:** An node was references using an entity (E:) reference in TMCF, but this node was not found in the parsed graph.
 
 ## Sanity_UnexpectedNonColumn
 
-**Description:** Expected value to be a TMCF column that starts with 'C:', but did not find a column.
+**Description:** Expected value to be a TMCF column that starts with `C:`, but did not find such a value.
 
 ## Sanity_TmcfMissingColumn
 
 **Description:** Column referred to in TMCF is missing from CSV header
 
+### Suggested User Actions
+
+1. Check that the TMCF references with `C:` match the names of the columns in the header line in your CSV.
+
 ## Sanity_UnknownStatType
 
-**Description:** Found an unknown statType value
+**Description:** Found an unknown statType value. StatTypes values either end with one of {`value`, `estimate`, `stderror`, `samplesize`, `growthrate`}, or start with `percentile`, or equal any one of {`marginoferror`, `measurementResult`}
 
 ## Sanity_InvalidObsDate
 
