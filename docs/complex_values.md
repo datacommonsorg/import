@@ -12,6 +12,6 @@ Examples of complex values include:
  - `[<unit> - <endval>]` represents `(-INF, Y]`, for example: [`[Celsius - -5]`](https://datacommons.org/browser/CelsiusUpto-5) represents Celsius quantities lesser than or equal to `-5` (inclusive)
  - `[<unit> <startval> -]` represents `[X, INF)`, for example: [`[Acre 1000 -]`](https://datacommons.org/browser/Acre1000Onwards) represents Acre quantities greater than or equal to `1000`.
 
-3. a [GeoCoordinate](https://datacommons.org/browser/GeoCoordinates), coded as one of:
+3. a [GeoCoordinate](https://datacommons.org/browser/GeoCoordinates) represents a point on Earth referenced by latitude/longitude coordinates, coded as one of:
  - `[LatLong <lat_value> <long_value>]`, for example: [`[LatLong -10.136 161.173]`](https://datacommons.org/browser/latLong/-1013600_16117300)
  - `[<lat_value> <long_value> LatLong]`, for example: [`[10.136S 161.173E LatLong]`](https://datacommons.org/browser/latLong/-1013600_16117300)
