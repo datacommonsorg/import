@@ -94,7 +94,9 @@ You can also run `dc-import --help` to see a list of flags in your terminal.
 
 ### `-e`, `--existence-checks`
 
-Checks DCID references to schema nodes against the KG and locally. If this flag is set, then calls will be made to the Staging API server, and instance MCFs get fully loaded into memory. 
+Checks DCID references to schema nodes against the KG and locally. If this flag is set, then calls will be made to the Staging API server, and instance MCFs get fully loaded into memory.
+
+Suppose the CSV file has a cell value like `dcid:Count_Person` indicating a reference to a DC entity. This check will ensure that such an entity is defined either in Data Commons KG (in this case [it does](https://datacommons.org/browser/Count_Person)), or in another instance MCF given as an input.
 
 Defaults to `true`.
 
