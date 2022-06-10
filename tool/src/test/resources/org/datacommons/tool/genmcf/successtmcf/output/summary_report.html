@@ -25,6 +25,9 @@
       tbody tr:hover {
         background-color: #ccc;
       }
+      #statvars-table{
+        border: 0;
+      }
       summary {
         cursor: pointer;
         font-size: 1.2rem;
@@ -213,7 +216,13 @@
     </div>
       <div>
         <h2>StatVarObservations by StatVar</h2>
-        <table id="statvars-table" width="95%">
+        <!-- 
+          classes here provide styling through DataTables.
+          documentation:
+          - hover: https://datatables.net/examples/styling/hover.html
+          - order-column: https://datatables.net/examples/styling/order-column.html
+        -->
+        <table id="statvars-table" class="hover order-column" width="95%">
           <thead>
             <tr>
               <th>Stat Var</th>
