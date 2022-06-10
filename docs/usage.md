@@ -86,9 +86,10 @@ This will output issues found in the input to [`dc_generated/report.json`](../to
 
 This will also output the instance MCFs generated from the template to [`dc_generated/table_mcf_nodes_covid.mcf`](../tool/src/test/resources/org/datacommons/tool/genmcf/statchecks/output/table_mcf_nodes_covid.mcf). Note that instance MCF will not be generated if there are any fatal errors in the input files. These fatal errors will instead be logged to `report.json` and `summary_report.html`.
 
-## Flags
+## Command Line Flags
 
-Flags available for the tool are listed below. All flags apply to both usage modes (`lint` and `genmcf`).
+Flags available to modify the behavior of the tool are listed below. All flags
+apply to both usage modes (`lint` and `genmcf`).
 
 You can also run `dc-import --help` to see a list of flags in your terminal.
 
@@ -121,6 +122,51 @@ Default is `dc_generated/` within current working directory.
 ### `-s`, `--stat-checks`
 
 Checks integrity of time series by checking for holes, variance in values, etc.
+
+A set of counters detailing the results of the checks will be logged in `report.json`. For every such counter, the tool will provide a few exemplar cases to help the user
+understand and resolve the issue(s).
+
+For example, in this test input [`covid.mcf`](../tool/src/test/resources/org/datacommons/tool/lint/statchecks/input/covid.mcf) file, the value of the `CumulativeCount_MedicalTest_ConditionCOVID_19_Positive` StatVar for place
+`geoId/07` is `3.0` one day, (2020-03-02;line 49), and `7.0` on the next day (2020-03-03; line 65).
+Because the fluctuation in the value is greater than 100%, the tool flags this as a
+potential statistical issue. This is logged in the resulting [`report.json`](../tool/src/test/resources/org/datacommons/tool/lint/statchecks/output/report.json) as follows: 
+  ```json
+  "statsCheckSummary": [{
+      "placeDcid": "geoId/07",
+      "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+      "measurementMethod": "",
+      "observationPeriod": "",
+      "scalingFactor": "",
+      "unit": "",
+      "validationCounters": [{
+        "counterKey": "StatsCheck_MaxPercentFluctuationGreaterThan100",
+        "problemPoints": [{
+          "date": "2020-03-02",
+          "values": [{
+            "value": 3.0,
+            "locations": [{
+              "file": "covid.mcf",
+              "lineNumber": "49"
+            }]
+          }]
+        }, {
+          "date": "2020-03-03",
+          "values": [{
+            "value": 7.0,
+            "locations": [{
+              "file": "covid.mcf",
+              "lineNumber": "65"
+            }]
+          }]
+        }],
+        "percentDifference": 133.33
+      }]
+    }
+  ```
+Note  that information relevant to this check (sample place, file and location of the issue,
+the values involved, and the exact percent fluctuation) are conveniently provided
+to assist the user in debugging issues.
+
 
 Defaults to `true`.
 
