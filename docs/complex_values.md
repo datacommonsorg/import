@@ -3,7 +3,7 @@
 Some values in MCF need refer to values that can not be represented by single
 numeric or text values. We represent these using "complex values".
 
-A complex value may either be:
+Examples of complex values include:
 1. a [Quantity](https://datacommons.org/browser/Quantity), coded as:
  - `[<unit> <val>]`, for example: [`[% 5]`](https://datacommons.org/browser/%5), or [`[Acre 128]`](https://datacommons.org/browser/Acre128)
 
