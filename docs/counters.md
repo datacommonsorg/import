@@ -50,7 +50,7 @@ suffixed with the ID property (like `isoCode`) that could not be resolved. The
 
 **Description:** External ID reference could not be resolved.
 
-**Suffix Description:** External ID reference could not be resolved.
+**Suffix Description:** Property for which the ID could not be resolved.
 
 ### Suggested User Actions
 
@@ -61,7 +61,7 @@ suffixed with the ID property (like `isoCode`) that could not be resolved. The
 
 **Description:** Resolving external IDs found different DCIDs.
 
-**Suffix Description:** Resolving external IDs found different DCIDs.
+**Suffix Description:** The properties that were found, separated by an underscore `_`
 
 ### Suggested User Actions
 
@@ -123,7 +123,7 @@ suffixed with the ID property (like `isoCode`) that could not be resolved. The
 
 **Description:** The node could not be assigned a DCID based on the data available. DCID can be generated for StatVarObs, a legacy population type (type ends with `Population`), a legacy observation type (type ends with `Observation` and is not `StatVarObservation`), or if there is an external ID resolver provided.
 
-**Suffix Description:** The node could not be assigned a DCID based on the data available. DCID can be generated for StatVarObs, a legacy population type (type ends with `Population`), a legacy observation type (type ends with `Observation` and is not `StatVarObservation`), or if there is an external ID resolver provided.
+**Suffix Description:** The typeOf value of the node (first value, if multiple)
 
 ### Suggested User Actions
 
@@ -133,13 +133,13 @@ suffixed with the ID property (like `isoCode`) that could not be resolved. The
 
 **Description:** The local ID of the node is missing from the entire sub-graph resolved by the import tool.
 
-**Suffix Description:** The local ID of the node is missing from the entire sub-graph resolved by the import tool.
+**Suffix Description:** The property this reference was found in
 
 ## Resolution_ReferenceToFailedNode_
 
 **Description:** The reference was resolved, but to a failed node, therefore, this node also failed to resolve
 
-**Suffix Description:** The reference was resolved, but to a failed node, therefore, this node also failed to resolve
+**Suffix Description:** The property this reference was found in
 
 ### Suggested User Actions
 
@@ -253,13 +253,13 @@ suffixed with the ID property (like `isoCode`) that could not be resolved. The
 
 **Description:** DCID included invalid characters.
 
-**Suffix Description:** DCID included invalid characters.
+**Suffix Description:** The property whose value included invalid chars
 
 ## Sanity_UnexpectedPropIn
 
 **Description:** A property was found that was not expected for the type of the Node
 
-**Suffix Description:** A property was found that was not expected for the type of the Node
+**Suffix Description:** The type of the node
 
 ## Sanity_EmptySchemaValue
 
@@ -277,25 +277,25 @@ suffixed with the ID property (like `isoCode`) that could not be resolved. The
 
 **Description:** Found a missing or empty property value
 
-**Suffix Description:** Found a missing or empty property value
+**Suffix Description:** The missing property that was required.
 
 ## Sanity_MultipleVals_
 
 **Description:** Found multiple values for single-value property
 
-**Suffix Description:** Found multiple values for single-value property
+**Suffix Description:** The property with the multiple values
 
 ## Sanity_NotInitUpper_
 
 **Description:** Found a class reference that does not start with an upper-case
 
-**Suffix Description:** Found a class reference that does not start with an upper-case
+**Suffix Description:** The property, and optionally, the type of the node separated with an underscore (`_`) from the property.
 
 ## Sanity_NotInitLower_
 
 **Description:** Found a property reference that does not start with a lower-case
 
-**Suffix Description:** Found a property reference that does not start with a lower-case
+**Suffix Description:** The property, and optionally, the type of the node separated with an underscore (`_`) from the property.
 
 ## CSV_InconsistentRows
 

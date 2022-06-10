@@ -43,7 +43,7 @@ def generate_counter_documentation(counter):
 
     suffix_description_str = ""
     if counter_suffix_description:
-        suffix_description_str = f"**Suffix Description:** {counter_description}"
+        suffix_description_str = f"**Suffix Description:** {counter_suffix_description}"
     
     user_actions_str = ""
     if counter_user_actions:
