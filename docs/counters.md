@@ -55,7 +55,6 @@ suffixed with the ID property (like `isoCode`) that could not be resolved. The
 ### Suggested User Actions
 
 1. Try searching for the ID on the [Data Commons Browser](https://datacommons.org/search)
-1. Ensure you have added all new schema files as inputs to the import tool
 
 ## Resolution_DivergingDcidsForExternalIds_
 

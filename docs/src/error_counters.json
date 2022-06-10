@@ -42,8 +42,7 @@
             "description": "External ID reference could not be resolved.",
             "suffix_description":  "Property for which the ID could not be resolved.",
             "user_actions": [
-                "Try searching for the ID on the [Data Commons Browser](https://datacommons.org/search)",
-                "Ensure you have added all new schema files as inputs to the import tool"
+                "Try searching for the ID on the [Data Commons Browser](https://datacommons.org/search)"
             ]
         },
         {
