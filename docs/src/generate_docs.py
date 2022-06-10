@@ -3,7 +3,7 @@ import json
 import pathlib
 
 _ERROR_COUNTERS_JSON_PATH = pathlib.Path(__file__).parent / "error_counters.json"
-_ERROR_COUNTERS_DOCS_PATH = pathlib.Path(__file__).parent / "../error_messages.md"
+_ERROR_COUNTERS_DOCS_PATH = pathlib.Path(__file__).parent / "../counters.md"
 
 _DOCUMENTATION_HEAD = """# Counters
 
