@@ -19,13 +19,13 @@
       tbody tr:hover {
         background-color: #ccc;
       }
-      .summary-em {
+      .place-series-summary {
         cursor: pointer;
         font-size: 1.2rem;
         font-weight: bold;
         padding-bottom: 1rem;
       }
-      .details-pad {
+      .place-series-details {
         padding-bottom: 1rem;
       }
       .toc-details-ul {
@@ -164,7 +164,7 @@
       
       <div>
         <h2>
-          <a name="statvars" hrew="#statvars">StatVarObservations by StatVar</a>
+          <a name="statvars" href="#statvars">StatVarObservations by StatVar</a>
         </h2>
         <table width="95%">
           <thead>
@@ -222,8 +222,8 @@
           <a name="places" href="#places">Series Summaries for Sample Places</a>
         </h2>
         <#list placeSeriesSummaryMap as place, placeSeriesSummary>
-          <details class="details-pad">
-            <summary class="summary-em"><a name="places--${place}" href="#places--${place}">${place}</a></summary>
+          <details class="place-series-details">
+            <summary class="place-series-summary"><a name="places--${place}" href="#places--${place}">${place}</a></summary>
             <table width="95%">
               <thead>
                 <tr>
