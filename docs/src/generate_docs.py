@@ -11,10 +11,9 @@ Issues found in the input files are categorized under "counters" in `report.json
 and `summary_report.html`. Counters aggregate the issues, and provide a
 high-level overview of what went wrong.
 
-Counters with "**Suffix Description:**" are prefix counters that are
-logged with a suffix detailing the subject of the issue. For example,
-`Resolution_UnresolvedExternalId_` will be suffixed with the ID that could not 
-be resolved. The "**Suffix Description:**" field describes the nature of the
+Counters with "Suffix Description" have an additional suffix that details the
+subject of the error. For example, `Resolution_UnresolvedExternalId_` will be suffixed with the ID that could not 
+be resolved. The "Suffix Description" field describes the nature of the
 suffix for these counters.
 
 """
