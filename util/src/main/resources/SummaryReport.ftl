@@ -107,8 +107,7 @@
 
     <div>
       <h2>
-        Import Run Details
-        <a name="import-run-details" href="#import-run-details">#</a>
+        <a name="import-run-details" href="#import-run-details">Import Run Details</a>
       </h2>  
       <table>
         <tr>
@@ -137,8 +136,7 @@
     
     <div>
       <h2>
-        Counters
-        <a name="counters" href="#counters">#</a>
+        <a name="counters" href="#counters">Counters</a>
       </h2>
       <table>
         <thead>
@@ -150,11 +148,11 @@
           <#list levelSummary as severity, counterSet>
             <tbody>
               <tr>
-                <th colspan="2" align="left">${severity}  <a href="#counters--${severity}" name="counters--${severity}">#</a></th>
+                <th colspan="2" align="left"><a href="#counters--${severity}" name="counters--${severity}">${severity}</a></th>
               </tr>
               <#list counterSet.getCounters() as counterKey, numOccurences>
                 <tr>
-                  <td>${counterKey} <a href="#counters--${severity}--${counterKey}" name="counters--${severity}--${counterKey}">#</a></td>
+                  <td><a href="#counters--${severity}--${counterKey}" name="counters--${severity}--${counterKey}">${counterKey}</a></td>
                   <td>${numOccurences}</td>
                 </tr>
               </#list>
@@ -166,8 +164,7 @@
       
       <div>
         <h2>
-          StatVarObservations by StatVar
-          <a name="statvars" hrew="#statvars">#</a>
+          <a name="statvars" hrew="#statvars">StatVarObservations by StatVar</a>
         </h2>
         <table width="95%">
           <thead>
@@ -187,7 +184,7 @@
           <tbody>
           <#list svSummaryMap as sv, svSummary>
             <tr>
-              <td>${sv} <a name="statvars--${sv}" href="#statvars--${sv}">#</a></td>
+              <td><a name="statvars--${sv}" href="#statvars--${sv}">${sv}</a></td>
               <td>${svSummary.getPlaces()?size}</td>
               <td>${svSummary.getNumObservations()}</td>
               <td>${svSummary.getUniqueDates()?size}</td>
@@ -222,12 +219,11 @@
     <#if placeSeriesSummaryMap?has_content>
       <div>
         <h2>
-          Series Summaries for Sample Places
-          <a name="places" href="#places">#</a>
+          <a name="places" href="#places">Series Summaries for Sample Places</a>
         </h2>
         <#list placeSeriesSummaryMap as place, placeSeriesSummary>
           <details class="details-pad">
-            <summary class="summary-em">${place} <a name="places--${place}" href="#places--${place}">#</a></summary>
+            <summary class="summary-em"><a name="places--${place}" href="#places--${place}">${place}</a></summary>
             <table width="95%">
               <thead>
                 <tr>
@@ -245,7 +241,7 @@
               <#list placeSeriesSummary.getStatVarSummaryMap() as sv, svSummary>
               <tbody>
                 <tr>
-                  <td>${sv} <a href="#places--${place}--${sv}" name="places--${place}--${sv}">#</a></td>
+                  <td><a href="#places--${place}--${sv}" name="places--${place}--${sv}">${sv}</a></td>
                   <td>${svSummary.getNumObservations()}</td>
                   <td>${svSummary.getSeriesDates()?join(" | ")}</td>
                   <td>${svSummary.getSeriesValues()?join(" | ")}</td>
