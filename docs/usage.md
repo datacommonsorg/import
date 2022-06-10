@@ -130,7 +130,17 @@ This flag should only be set if `--stat-checks` is `true`. If `--stat-checks` is
 
 ### `-r`, `--resolution=<resolutionMode>`
 
-Specifies the mode of resolution to use: `NONE`, `LOCAL`, `FULL`.
+Specifies the mode of resolution to use: `NONE`, `LOCAL`, or `FULL`.
+
+Resolution refers to the process of assigning DCIDs to every graph node in the input. For StatVarObservation nodes, new DCIDs are generated. For nodes of other types, either the DCIDs must be provided, or the tool will use the Data Commons KG to find the DCID based on an external ID.
+
+As an example of the latter, see the MCF node below where California is referenced using the `isoCode` property. This will resolve to the dcid of California in Data Commmons ([`geoId/06`](https://datacommons.org/browser/geoId/06)) when this flag is set to `FULL`.
+
+  ```
+  Node: CANode
+  typeOf: dcs:Place
+  isoCode: "US-CA"
+  ```
 
 - `LOCAL`: Only resolves local references and generates DCIDs. Notably, this mode does not resolve the external IDs against the DC KG.
 - `FULL`: Resolves external IDs (such as ISO) in DC, local references, and generated DCIDs. Note that FULL mode may be slower since it makes (batched) DC Recon API calls and performs two passes over the provided CSV files. You should only use this if you have to resolve location entities via external IDs.
