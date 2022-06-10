@@ -5,7 +5,7 @@ in the process of importing new datasets to the Data Commons Knowledge Graph.
 
 The tool:
 - Operates on two types of files: instance MCF (.mcf); Template MCF (.tmcf) and corresponding CSV files
-- Performs resolution and, syntax and statistics validations
+- Performs resolution, syntax and statistics validations
 - Generates instance MCF from template MCF and corresponding CSV files
 - Generates reports on error/warning counters, stats validation and sample time-series charts
 
