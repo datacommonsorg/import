@@ -130,9 +130,9 @@ This flag should only be set if `--stat-checks` is `true`. If `--stat-checks` is
 
 Specifies the mode of resolution to use: `NONE`, `LOCAL`, `FULL`.
 
-- `NONE`: Does not resolve references.
 - `LOCAL`: Only resolves local references and generates DCIDs
 - `FULL`: Resolves external IDs (such as ISO) in DC, local references, and generated DCIDs.Note that FULL mode may be slower since it makes (batched) DC Recon API calls and performs two passes over the provided CSV files.
+- `NONE`: Does not resolve references. Use this only if all inputs have DCIDs defined. You rarely want to use this mode.
 
 Defaults to `LOCAL`.
 
