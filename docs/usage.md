@@ -36,13 +36,13 @@ Hint: to access a concise explanation of usage modes and flags, run
 
 In `lint` mode, the import tool validates the artifacts produced for addition to Data Commons. These artifacts include [instance MCF files](https://github.com/datacommonsorg/data/blob/master/docs/mcf_format.md#instance-mcf) and pairs of [template MCF (TMCF)](https://github.com/datacommonsorg/data/blob/master/docs/mcf_format.md#template-mcf) and corresponding CSV files.
 
-In `genmcf` mode, the import tool produces instance MCF files from a pair of TMCF file, and its associated CSV files. This mode performs all validations that the  `lint` mode would have performed.
+In `genmcf` mode, the import tool produces instance MCF files from a pair of TMCF file, and its associated CSV files. If there are no fatal errors, generated instance MCF files are written to `table_mcf_nodes_{CSV_FILE_NAME}.mcf`. This mode performs all validations that the  `lint` mode would have performed.
 
 Both modes generate two output files:
-- `report.json` is a machine-readable output of error/warning counters and details of those logs.
-- `summary_report.html` is a version of `report.json` optimized for viewing in a web browser.
+- `report.json` is a detailed log of error/warning counters and associated messages to help locate the source of the counters.
+- `summary_report.html` includes a summary of the counters from `report.json`, followed by statistical summaries for sample places. It is meant to be viewed in a web browser.
 
-In `genmcf` mode, the reports will also include information on statistics from sample places and  time-series charts. If there were no fatal errors, generated instance MCF files will be written to `table_mcf_nodes_{CSV_FILE_NAME}.mcf`.
+If input CSV and TMCF files are provided, the reports will also include information on statistics from sample places and  time-series charts. 
 
 The output files are placed under a new folder in the current working directory named `dc_generated` by default.The `--output-dir` flag (documented below) can be specified to modify the name of this output folder.
 
