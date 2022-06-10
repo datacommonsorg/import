@@ -11,7 +11,7 @@ Issues found in the input files are categorized under "counters". Counters
 aggregate the issues, and provide a high-level overview of what went wrong.
 
 Error counters with "**Suffix Description:**" are prefix counters that are
-logged with a suffix detailing the subject of the error. The For example,
+logged with a suffix detailing the subject of the error. For example,
 `Resolution_UnresolvedExternalId_` will be suffixed with the ID that could not 
 be resolved. The "**Suffix Description:**" field describes the nature of the
 suffix for these counters.
