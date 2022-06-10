@@ -2,7 +2,7 @@
     "error_counters": [
         {
             "counter_name": "MCF_UnenclosedComplexValue",
-            "description": "Complex value was not enclosed in brackets `[]` in the MCF.",
+            "description": "[Complex value](complex_values.md) was not enclosed in brackets `[]` in the MCF.",
             "user_actions": [
                 "Check complex values in your MCF and make sure they are enclosed in brackets",
                 "Refer to the [documentation of valid complex values](complex_values.md)"
@@ -10,38 +10,31 @@
         },
         {
             "counter_name": "MCF_MalformedComplexValueParts",
-            "description": "Complex value had less than 2 or more than 3 parts",
-            "user_actions": ["Check that all of your complex values have either 2 or 3 parts",
-                "Refer to the [documentation of valid complex values](complex_values.md)"
+            "description": "[Complex value](complex_values.md) had less than 2 or more than 3 parts",
+            "user_actions": [
+                "Check that all of your complex values have either 2 or 3 parts"
             ]
         },
         {
             "counter_name": "MCF_QuantityMalformedValue",
-            "description": "In a complex value with 2 parts, the part that was expected to be a number was not a number",
-            "user_actions": [
-                "Refer to the [documentation of valid complex values](complex_values.md)"
-            ]
+            "description": "In a [complex value](complex_values.md) with 2 parts, the part that was expected to be a number was not a number",
+            "user_actions": []
         },
         {
             "counter_name": "MCF_InvalidLatitude",
-            "description": "Invalid latitude part in complex value; latitude must be decimal degrees with an optional N/S suffix",
-            "user_actions": [
-                "Refer to the [documentation of valid complex values](complex_values.md)"
-            ]
+            "description": "Invalid latitude part in [complex value](complex_values.md); latitude must be decimal degrees with an optional N/S suffix",
+            "user_actions": []
         },
         {
             "counter_name": "MCF_InvalidLongitude",
-            "description": "Invalid longitude part in complex value; longitude must be decimal degrees with an optional E/W suffix",
-            "user_actions": [
-                "Refer to the [documentation of valid complex values](complex_values.md)"
-            ]
+            "description": "Invalid longitude part in [complex value](complex_values.md); longitude must be decimal degrees with an optional E/W suffix",
+            "user_actions": []
         },
         {
             "counter_name": "MCF_QuantityRangeMalformedValues",
-            "description": "An unexpected part was found in the complex value in MCF, error message will specify the type of issue",
+            "description": "An unexpected part was found in the [complex value](complex_values.md) in MCF, error message will specify the type of issue",
             "user_actions": [
-                "Either the start or end components are wrong, or at least one of the components have to be a number. Check the error message in `report.json`.",
-                "Refer to the [documentation of valid complex values](complex_values.md)"
+                "Either the start or end components are wrong, or at least one of the components have to be a number. Check the error message in `report.json`."
             ]
         },
         {

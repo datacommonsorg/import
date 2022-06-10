@@ -5,12 +5,13 @@ and `summary_report.html`. Counters aggregate the issues, and provide a
 high-level overview of what went wrong.
 
 Counters with "Suffix Description" have an additional suffix that details the
-subject of the error. For example, `Resolution_UnresolvedExternalId_` will be suffixed with the ID property (like `isoCode`) that failed to resolve. The "Suffix Description" field describes the nature of the
-suffix for these counters.
+subject of the error. For example, `Resolution_UnresolvedExternalId_` will be
+suffixed with the ID property (like `isoCode`) that could not be resolved. The
+"Suffix Description" field describes the nature of the suffix for these counters.
 
 ## MCF_UnenclosedComplexValue
 
-**Description:** Complex value was not enclosed in brackets `[]` in the MCF.
+**Description:** [Complex value](complex_values.md) was not enclosed in brackets `[]` in the MCF.
 
 ### Suggested User Actions
 
@@ -19,45 +20,31 @@ suffix for these counters.
 
 ## MCF_MalformedComplexValueParts
 
-**Description:** Complex value had less than 2 or more than 3 parts
+**Description:** [Complex value](complex_values.md) had less than 2 or more than 3 parts
 
 ### Suggested User Actions
 
 1. Check that all of your complex values have either 2 or 3 parts
-1. Refer to the [documentation of valid complex values](complex_values.md)
 
 ## MCF_QuantityMalformedValue
 
-**Description:** In a complex value with 2 parts, the part that was expected to be a number was not a number
-
-### Suggested User Actions
-
-1. Refer to the [documentation of valid complex values](complex_values.md)
+**Description:** In a [complex value](complex_values.md) with 2 parts, the part that was expected to be a number was not a number
 
 ## MCF_InvalidLatitude
 
-**Description:** Invalid latitude part in complex value; latitude must be decimal degrees with an optional N/S suffix
-
-### Suggested User Actions
-
-1. Refer to the [documentation of valid complex values](complex_values.md)
+**Description:** Invalid latitude part in [complex value](complex_values.md); latitude must be decimal degrees with an optional N/S suffix
 
 ## MCF_InvalidLongitude
 
-**Description:** Invalid longitude part in complex value; longitude must be decimal degrees with an optional E/W suffix
-
-### Suggested User Actions
-
-1. Refer to the [documentation of valid complex values](complex_values.md)
+**Description:** Invalid longitude part in [complex value](complex_values.md); longitude must be decimal degrees with an optional E/W suffix
 
 ## MCF_QuantityRangeMalformedValues
 
-**Description:** An unexpected part was found in the complex value in MCF, error message will specify the type of issue
+**Description:** An unexpected part was found in the [complex value](complex_values.md) in MCF, error message will specify the type of issue
 
 ### Suggested User Actions
 
 1. Either the start or end components are wrong, or at least one of the components have to be a number. Check the error message in `report.json`.
-1. Refer to the [documentation of valid complex values](complex_values.md)
 
 ## Resolution_UnresolvedExternalId_
 
