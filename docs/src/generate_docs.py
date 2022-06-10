@@ -7,8 +7,9 @@ _ERROR_COUNTERS_DOCS_PATH = pathlib.Path(__file__).parent / "../error_messages.m
 
 _DOCUMENTATION_HEAD = """# Error Counters
 
-Issues found in the input files are categorized under "counters". Counters
-aggregate the issues, and provide a high-level overview of what went wrong.
+Issues found in the input files are categorized under "counters" in `report.json`
+and `summary_report.html`. Counters aggregate the issues, and provide a
+high-level overview of what went wrong.
 
 Error counters with "**Suffix Description:**" are prefix counters that are
 logged with a suffix detailing the subject of the error. For example,
