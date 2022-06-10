@@ -5,8 +5,7 @@ and `summary_report.html`. Counters aggregate the issues, and provide a
 high-level overview of what went wrong.
 
 Counters with "Suffix Description" have an additional suffix that details the
-subject of the error. For example, `Resolution_UnresolvedExternalId_` will be suffixed with the ID that could not 
-be resolved. The "Suffix Description" field describes the nature of the
+subject of the error. For example, `Resolution_UnresolvedExternalId_` will be suffixed with the ID property (like `isoCode`) that failed to resolve. The "Suffix Description" field describes the nature of the
 suffix for these counters.
 
 ## MCF_UnenclosedComplexValue
