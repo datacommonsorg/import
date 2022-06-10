@@ -15,3 +15,7 @@ Examples of complex values include:
 3. a [GeoCoordinate](https://datacommons.org/browser/GeoCoordinates) represents a point on Earth referenced by latitude/longitude coordinates, coded as one of:
  - `[LatLong <lat_value> <long_value>]`, for example: [`[LatLong -10.136 161.173]`](https://datacommons.org/browser/latLong/-1013600_16117300)
  - `[<lat_value> <long_value> LatLong]`, for example: [`[10.136S 161.173E LatLong]`](https://datacommons.org/browser/latLong/-1013600_16117300)
+
+    `GeoCoordinate` values for the latitude and longitude may either:
+    1. Use a `-` sign when they are on the South or West or,
+    2. Have a suffix of `N`, `E`, `S`, or `W` to indicate which hemisphere they belong to.
