@@ -135,57 +135,51 @@
     <#if placeSeriesSummaryMap?has_content>
       <div>
         <h2>Series Summaries for Sample Places</h2>
-          <#list placeSeriesSummaryMap as place, placeSeriesSummary>
-            <details open>
-              <summary>${place}</summary>
-              <table width="95%">
-                <thead>
-                  <tr>
-                    <th>Stat Var</th>
-                    <th>Num Observations</th>
-                    <th>Dates</th>
-                    <th>Corresponding Values</th>
-                    <th>Measurement Methods</th>
-                    <th>Units</th>
-                    <th>Scaling Factors</th>
-                    <th>Observation Periods</th>
-                    <th>Time Series Chart</th>
-                  </tr>
-                </thead>
-                <#list placeSeriesSummary.getStatVarSummaryMap() as sv, svSummary>
-                <tbody>
-                  <tr>
-                    <td>${sv}</td>
-                    <td>${svSummary.getNumObservations()}</td>
-                    <td>${svSummary.getSeriesDates()?join(" | ")}</td>
-                    <td>${svSummary.getSeriesValues()?join(" | ")}</td>
-                    <td>
-                      <#list svSummary.getMMethods() as method>
-                      <div>${method}</div>
-                      </#list>
-                    </td>
-                    <td>
-                      <#list svSummary.getUnits() as unit>
-                      <div>${unit}</div>
-                      </#list>
-                    </td>
-                    <td>
-                      <#list svSummary.getSFactors() as sFactor>
-                      <div>${sFactor}</div>
-                      </#list>
-                    </td>
-                    <td>
-                      <#list svSummary.getObservationPeriods() as obsPeriod>
-                      <div>${obsPeriod}</div>
-                      </#list>
-                    </td>
-                    <td style="max-width:none;text-align: -webkit-center;">${svSummary.getTimeSeriesChartSVG()}</td>
-                  </tr>
+        <#list placeSeriesSummaryMap as place, placeSeriesSummary>
+          <details open>
+            <summary>${place}</summary>
+            <table width="95%">
+              <thead>
+                <tr>
+                  <th>Series</th>
+                  <th>Num Observations</th>
+                  <th>Dates</th>
+                  <th>Corresponding Values</th>
+                  <th>Measurement Method</th>
+                  <th>Unit</th>
+                  <th>Scaling Factor</th>
+                  <th>Observation Period</th>
+                  <th>Time Series Chart</th>
+                </tr>
+              </thead>
+              <#list placeSeriesSummary.getSvSeriesSummaryMap() as sv, timeSeries>
+                <#list timeSeries as hash, seriesSummary>
+                  <tbody>
+                    <tr>
+                      <td>${sv}</td>
+                      <td>${seriesSummary.getTimeSeries()?size}</td>
+                      <td>${seriesSummary.getDatesString()}</td>
+                      <td>${seriesSummary.getValueString()}</td>
+                      <td>
+                        <div>${seriesSummary.getValidationResult().getMeasurementMethod()}</div>
+                      </td>
+                      <td>
+                        <div>${seriesSummary.getValidationResult().getUnit()}</div>
+                      </td>
+                      <td>
+                        <div>${seriesSummary.getValidationResult().getScalingFactor()}</div>
+                      </td>
+                      <td>
+                        <div>${seriesSummary.getValidationResult().getObservationPeriod()}</div>
+                      </td>
+                      <td style="max-width:none;text-align: -webkit-center;">${seriesSummary.getTimeSeriesSVGChart()}</td>
+                    </tr>
                   </tbody>
-                  </#list>
-              </table>
-            </details>
-          </#list>
+                </#list>
+              </#list>
+            </table>
+          </details>
+        </#list>
       </div>
     </#if>
   </body>
