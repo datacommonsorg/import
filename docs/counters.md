@@ -361,9 +361,45 @@ against Data Commons.
 
 **Description:** External triple existence check with the DataCommons API returned no results
 
+## Stats Check Counters
+These counters represent potential issues found in the statistical analysis of the input data for pitfalls such as extreme outliers, holes in dates that the data is available for, etc.
 
+### StatsCheck_Inconsistent_Values
 
+Two different values were found for the same StatVarObservation.
 
+### StatsCheck_3_Sigma
+
+A datapoint with a value farther than 3 standard deviations (sigma) to the mean of the series was found.
+
+### StatsCheck_MaxPercentFluctuationGreaterThan500 and StatsCheck_MaxPercentFluctuationGreaterThan100
+
+These two stat counters look at adjacent datapoints in each 
+timeseries, and reports a log if any two adjacent values are more 
+than 100% (or 500%) different.
+
+Note that only the largest difference
+in each bucket will be logged.
+
+### StatsCheck_Invalid_Date
+
+This counter will be logged if the date could not be parsed as an
+ISO8601 string.
+
+Please check that your dates are formatted according to the [ISO 8601 standard](https://en.wikipedia.org/wiki/ISO_8601).
+
+### StatsCheck_Inconsistent_Date_Granularity
+
+This stats check logs a counter when the timeseries have datapoints with varying date lenghts. For example, if 9 points in a timeseries are monthly (in the form `yyyy-MM`), but another point is a day (`yyyy-MM-dd`), this counter will be logged.
+
+The problematic datapoints that will be logged in `report.json` are those with the less common date length.
+
+### StatsCheck_Data_Holes
+
+This stats check considers the gaps between adjacent datapoint dates.
+If any two adjacent datapoints have a different gap than the rest of the dataset, this flag is raised.
+
+Currently, the tool only checks for inconsistent gaps in the unit of months.
 
 ## Mutator Counters
 
