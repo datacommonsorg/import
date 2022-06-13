@@ -262,6 +262,9 @@ public final class Vocabulary {
 
   // NOTE: This is an ordered list. When an entity has multiple properties in this
   // list, we prefer the one ordered first.
+  //
+  // NOTE: Needs to be kept in sync with `rankedIdProps` in Mixer repo
+  // (https://github.com/datacommonsorg/mixer/blob/master/internal/server/recon/resolve.go)
   public static final List<String> PLACE_RESOLVABLE_AND_ASSIGNABLE_IDS =
       List.of(
           Vocabulary.GEO_ID,
@@ -271,8 +274,8 @@ public final class Vocabulary {
           Vocabulary.GEO_NAMES_ID,
           Vocabulary.ISTAT_ID,
           Vocabulary.AUSTRIAN_MUNICIPALITY_KEY,
-          Vocabulary.INDIAN_CENSUS_AREA_CODE_2001,
           Vocabulary.INDIAN_CENSUS_AREA_CODE_2011,
+          Vocabulary.INDIAN_CENSUS_AREA_CODE_2001,
           Vocabulary.LGD_CODE,
           Vocabulary.UDISE_CODE);
 
