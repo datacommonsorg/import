@@ -25,7 +25,7 @@
       tbody tr:hover {
         background-color: #ccc;
       }
-      #statvars-table{
+      .datatables-table{
         border: 0;
       }
       summary {
@@ -162,7 +162,7 @@
           - hover: https://datatables.net/examples/styling/hover.html
           - order-column: https://datatables.net/examples/styling/order-column.html
         -->
-        <table id="statvars-table" class="hover order-column" width="95%">
+        <table id="statvars-table" class="datatables-table hover order-column" width="95%">
           <thead>
             <tr>
               <th>Stat Var</th>
@@ -225,7 +225,7 @@
         <h2>Series Summaries for Sample Places</h2>
             <details open>
               <summary>geoId/0649670</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--1" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -264,7 +264,7 @@
             </details>
             <details open>
               <summary>wikidataId/Q1186</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--2" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -303,7 +303,7 @@
             </details>
             <details open>
               <summary>wikidataId/Q1353</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--3" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -342,7 +342,7 @@
             </details>
             <details open>
               <summary>wikidataId/Q1437</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--4" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -381,7 +381,7 @@
             </details>
             <details open>
               <summary>wikidataId/Q677037</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--5" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -421,14 +421,32 @@
       </div>
   </body>
   <script>
-    $(document).ready(function () {
-      $('#statvars-table').DataTable({
+    function make_table_DataTable(id){
+      // given a CSS selector for a <table> element, adds DataTable to it
+      // with only sorting enabled, and with no default order column.
+      
+      $(id).DataTable({
         paging: false,
         searching: false,
         info: false,
         order: [] // don't apply initial ordering (which is turned on by default)
+      });
+    }
+
+    $(document).ready(function () {
+      const sampleplace_table_ids = [
+            "#sampleplaces-table--1",
+            "#sampleplaces-table--2",
+            "#sampleplaces-table--3",
+            "#sampleplaces-table--4",
+            "#sampleplaces-table--5",
+      ]
+
+      make_table_DataTable("#statvars-table");
+      sampleplace_table_ids.forEach(( id ) => {
+        make_table_DataTable(id)
+      })
     });
-  });
 
   </script>
 </html>

@@ -25,7 +25,7 @@
       tbody tr:hover {
         background-color: #ccc;
       }
-      #statvars-table{
+      .datatables-table{
         border: 0;
       }
       summary {
@@ -276,14 +276,27 @@
     </div>
   </body>
   <script>
-    $(document).ready(function () {
-      $('#statvars-table').DataTable({
+    function make_table_DataTable(id){
+      // given a CSS selector for a <table> element, adds DataTable to it
+      // with only sorting enabled, and with no default order column.
+      
+      $(id).DataTable({
         paging: false,
         searching: false,
         info: false,
         order: [] // don't apply initial ordering (which is turned on by default)
+      });
+    }
+
+    $(document).ready(function () {
+      const sampleplace_table_ids = [
+      ]
+
+      make_table_DataTable("#statvars-table");
+      sampleplace_table_ids.forEach(( id ) => {
+        make_table_DataTable(id)
+      })
     });
-  });
 
   </script>
 </html>

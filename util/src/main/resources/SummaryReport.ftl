@@ -25,7 +25,7 @@
       tbody tr:hover {
         background-color: #ccc;
       }
-      #statvars-table{
+      .datatables-table{
         border: 0;
       }
       summary {
@@ -97,7 +97,7 @@
           - hover: https://datatables.net/examples/styling/hover.html
           - order-column: https://datatables.net/examples/styling/order-column.html
         -->
-        <table id="statvars-table" class="hover order-column" width="95%">
+        <table id="statvars-table" class="datatables-table hover order-column" width="95%">
           <thead>
             <tr>
               <th>Stat Var</th>
@@ -153,7 +153,7 @@
           <#list placeSeriesSummaryMap as place, placeSeriesSummary>
             <details open>
               <summary>${place}</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--${place?counter}" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -205,14 +205,32 @@
     </#if>
   </body>
   <script>
-    $(document).ready(function () {
-      $('#statvars-table').DataTable({
+    function make_table_DataTable(id){
+      // given a CSS selector for a <table> element, adds DataTable to it
+      // with only sorting enabled, and with no default order column.
+      
+      $(id).DataTable({
         paging: false,
         searching: false,
         info: false,
         order: [] // don't apply initial ordering (which is turned on by default)
+      });
+    }
+
+    $(document).ready(function () {
+      const sampleplace_table_ids = [
+        <#if placeSeriesSummaryMap?has_content>
+            <#list placeSeriesSummaryMap as place, placeSeriesSummary>
+            "#sampleplaces-table--${place?counter}",
+            </#list>
+          </#if>
+      ]
+
+      make_table_DataTable("#statvars-table");
+      sampleplace_table_ids.forEach(( id ) => {
+        make_table_DataTable(id)
+      })
     });
-  });
 
   </script>
 </html>

@@ -25,7 +25,7 @@
       tbody tr:hover {
         background-color: #ccc;
       }
-      #statvars-table{
+      .datatables-table{
         border: 0;
       }
       summary {
@@ -138,7 +138,7 @@
           - hover: https://datatables.net/examples/styling/hover.html
           - order-column: https://datatables.net/examples/styling/order-column.html
         -->
-        <table id="statvars-table" class="hover order-column" width="95%">
+        <table id="statvars-table" class="datatables-table hover order-column" width="95%">
           <thead>
             <tr>
               <th>Stat Var</th>
@@ -183,7 +183,7 @@
         <h2>Series Summaries for Sample Places</h2>
             <details open>
               <summary>geoId/01</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--1" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -225,7 +225,7 @@
             </details>
             <details open>
               <summary>geoId/06</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--2" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -265,7 +265,7 @@
             </details>
             <details open>
               <summary>geoId/0601</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--3" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -305,7 +305,7 @@
             </details>
             <details open>
               <summary>geoId/07</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--4" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -345,7 +345,7 @@
             </details>
             <details open>
               <summary>geoId/08</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--5" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -385,7 +385,7 @@
             </details>
             <details open>
               <summary>geoId/09</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--6" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -425,7 +425,7 @@
             </details>
             <details open>
               <summary>geoId/201</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--7" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -465,7 +465,7 @@
             </details>
             <details open>
               <summary>geoId/211</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--8" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -505,7 +505,7 @@
             </details>
             <details open>
               <summary>geoId/221</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--9" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -545,7 +545,7 @@
             </details>
             <details open>
               <summary>geoId/231</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--10" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -585,7 +585,7 @@
             </details>
             <details open>
               <summary>geoId/241</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--11" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -625,7 +625,7 @@
             </details>
             <details open>
               <summary>geoId/25111</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--12" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -665,7 +665,7 @@
             </details>
             <details open>
               <summary>geoId/26111</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--13" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -705,7 +705,7 @@
             </details>
             <details open>
               <summary>geoId/27111</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--14" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -745,7 +745,7 @@
             </details>
             <details open>
               <summary>geoId/28111</summary>
-              <table width="95%">
+              <table id="sampleplaces-table--15" class="datatables-table hover order-column" width="95%">
                 <thead>
                   <tr>
                     <th>Stat Var</th>
@@ -786,14 +786,42 @@
       </div>
   </body>
   <script>
-    $(document).ready(function () {
-      $('#statvars-table').DataTable({
+    function make_table_DataTable(id){
+      // given a CSS selector for a <table> element, adds DataTable to it
+      // with only sorting enabled, and with no default order column.
+      
+      $(id).DataTable({
         paging: false,
         searching: false,
         info: false,
         order: [] // don't apply initial ordering (which is turned on by default)
+      });
+    }
+
+    $(document).ready(function () {
+      const sampleplace_table_ids = [
+            "#sampleplaces-table--1",
+            "#sampleplaces-table--2",
+            "#sampleplaces-table--3",
+            "#sampleplaces-table--4",
+            "#sampleplaces-table--5",
+            "#sampleplaces-table--6",
+            "#sampleplaces-table--7",
+            "#sampleplaces-table--8",
+            "#sampleplaces-table--9",
+            "#sampleplaces-table--10",
+            "#sampleplaces-table--11",
+            "#sampleplaces-table--12",
+            "#sampleplaces-table--13",
+            "#sampleplaces-table--14",
+            "#sampleplaces-table--15",
+      ]
+
+      make_table_DataTable("#statvars-table");
+      sampleplace_table_ids.forEach(( id ) => {
+        make_table_DataTable(id)
+      })
     });
-  });
 
   </script>
 </html>
