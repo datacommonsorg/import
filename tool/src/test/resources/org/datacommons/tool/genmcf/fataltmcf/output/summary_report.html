@@ -166,6 +166,13 @@
         info: false,
         order: [] // don't apply initial ordering (which is turned on by default)
       });
+
+      // DataTables seem to add a class "no-footer" to the tables managed by it,
+      // which has no behavior effects but adds a weird 1px gray bottom-border,
+      // so we remove that class after initializing the table as a DataTable.
+      // reference for another post mentioning this issue:
+      // https://datatables.net/forums/discussion/53837/class-no-footer-applied-to-table-despite-a-footer-is-present
+      $(id).removeClass("no-footer");
     }
 
     $(document).ready(function () {
