@@ -28,19 +28,215 @@
       .datatables-table{
         border: 0;
       }
-      summary {
+      .place-series-summary {
         cursor: pointer;
         font-size: 1.2rem;
         font-weight: bold;
         padding-bottom: 1rem;
       }
-      details {
+      .place-series-details {
         padding-bottom: 1rem;
       }
+      .toc-details-ul {
+        list-style: none;
+        padding-left: 0;
+      }
+      #go-to-top{
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+      }
     </style>
+    <a name="top"></a>
+    <div id="go-to-top">
+      <a href="#top">Go to Top</a>
+    </div>
     <h1>Summary Report</h1>
+    <h3>Table of Contents</h3>
+    <ul>
+      <li><a href="#import-run-details">Import Run Details</a></li>
+      <li><a href="#counters">Counters</a></li>
+      <ul class="toc-details-ul">
+                  <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_INFO">
+                  LEVEL_INFO
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_INFO--Existence_NumChecks">Existence_NumChecks</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_INFO--Existence_NumDcCalls">Existence_NumDcCalls</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+          <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_WARNING">
+                  LEVEL_WARNING
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--Existence_MissingReference_statType">Existence_MissingReference_statType</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--Sanity_MissingOrEmpty_populationType">Sanity_MissingOrEmpty_populationType</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--Sanity_ObsMissingValueProp">Sanity_ObsMissingValueProp</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--Existence_MissingReference_domainIncludes">Existence_MissingReference_domainIncludes</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--Existence_MissingReference_containedIn">Existence_MissingReference_containedIn</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--Existence_MissingReference_Property">Existence_MissingReference_Property</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--Existence_MissingReference_containedInPlace">Existence_MissingReference_containedInPlace</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--Existence_MissingReference_subClassOf">Existence_MissingReference_subClassOf</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+          <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_ERROR">
+                  LEVEL_ERROR
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_MalformedComplexValue">MCF_MalformedComplexValue</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_InvalidChars_location">Sanity_InvalidChars_location</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_DifferentDcidsForSameStatVar">Sanity_DifferentDcidsForSameStatVar</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_InvalidLongitude">MCF_InvalidLongitude</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_InvalidObsDate">Sanity_InvalidObsDate</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Resolution_IrreplaceableLocalRef">Resolution_IrreplaceableLocalRef</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Mutator_MissingTypeOf">Mutator_MissingTypeOf</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_MalformedComplexValueParts">MCF_MalformedComplexValueParts</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_NonAsciiValueInSchema">Sanity_NonAsciiValueInSchema</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_NotInitLower_labelInProperty">Sanity_NotInitLower_labelInProperty</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_InvalidChars_domainIncludes">Sanity_InvalidChars_domainIncludes</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_subClassOf">Sanity_MissingOrEmpty_subClassOf</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_QuantityRangeMalformedValues">MCF_QuantityRangeMalformedValues</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_typeOf">Sanity_MissingOrEmpty_typeOf</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_MalformedColonLessLine">MCF_MalformedColonLessLine</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_NotInitLowerPropName">Sanity_NotInitLowerPropName</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_UnexpectedPropInProperty">Sanity_UnexpectedPropInProperty</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_InvalidChars_typeOf">Sanity_InvalidChars_typeOf</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_EmptySchemaValue">Sanity_EmptySchemaValue</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_QuantityMalformedValue">MCF_QuantityMalformedValue</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_NonAsciiValueInNonText">Sanity_NonAsciiValueInNonText</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_measuredProperty">Sanity_MissingOrEmpty_measuredProperty</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Resolution_UnassignableNodeDcid">Resolution_UnassignableNodeDcid</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_SameDcidForDifferentStatVars">Sanity_SameDcidForDifferentStatVars</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_InvalidLatitude">MCF_InvalidLatitude</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_UnexpectedPropInClass">Sanity_UnexpectedPropInClass</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_NotInitUpper_nameInClass">Sanity_NotInitUpper_nameInClass</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_InvalidChars_dcid">Sanity_InvalidChars_dcid</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_DcidNameMismatchInSchema">Sanity_DcidNameMismatchInSchema</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_statType">Sanity_MissingOrEmpty_statType</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_UnexpectedProperty">MCF_UnexpectedProperty</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Resolution_OrphanLocalReference_containedInPlace">Resolution_OrphanLocalReference_containedInPlace</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_MultipleDcidValues">Sanity_MultipleDcidValues</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_MalformedNodeName">MCF_MalformedNodeName</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Resolution_DcidAssignmentFailure_City">Resolution_DcidAssignmentFailure_City</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_NonDoubleObsValue">Sanity_NonDoubleObsValue</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+      </ul>
+      
+
+    </ul>
+
     <div>
-      <h2>Import Run Details</h2>
+      <h2>
+        <a name="import-run-details" href="#import-run-details">Import Run Details</a>
+      </h2>  
       <table>
         <tr>
           <td>Existence Checks Enabled</td>
@@ -64,216 +260,244 @@
         </tr>
       </table>
     </div>
+
+    
     <div>
-      <h2>Counters</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Counter Name</th>
-              <th>Num Occurences</th>
-            </tr>
-          </thead>
-              <tbody>
+      <h2>
+        <a name="counters" href="#counters">Counters</a>
+      </h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Counter Name</th>
+            <th>Num Occurences</th>
+          </tr>
+        </thead>
+            <tbody>
+              <tr>
+                <th colspan="2" align="left"><a href="#counters--LEVEL_INFO" name="counters--LEVEL_INFO">LEVEL_INFO</a></th>
+              </tr>
                 <tr>
-                  <th colspan="2" align="left">LEVEL_INFO</th>
+                  <td><a href="#counters--LEVEL_INFO--Existence_NumChecks" name="counters--LEVEL_INFO--Existence_NumChecks">Existence_NumChecks</a></td>
+                  <td>177</td>
                 </tr>
-                  <tr>
-                    <td>Existence_NumChecks</td>
-                    <td>177</td>
-                  </tr>
-                  <tr>
-                    <td>Existence_NumDcCalls</td>
-                    <td>1</td>
-                  </tr>
-              </tbody>
-              <tbody>
                 <tr>
-                  <th colspan="2" align="left">LEVEL_WARNING</th>
+                  <td><a href="#counters--LEVEL_INFO--Existence_NumDcCalls" name="counters--LEVEL_INFO--Existence_NumDcCalls">Existence_NumDcCalls</a></td>
+                  <td>1</td>
                 </tr>
-                  <tr>
-                    <td>Existence_MissingReference_statType</td>
-                    <td>6</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_MissingOrEmpty_populationType</td>
-                    <td>2</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_ObsMissingValueProp</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Existence_MissingReference_domainIncludes</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Existence_MissingReference_containedIn</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Existence_MissingReference_Property</td>
-                    <td>4</td>
-                  </tr>
-                  <tr>
-                    <td>Existence_MissingReference_containedInPlace</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Existence_MissingReference_subClassOf</td>
-                    <td>1</td>
-                  </tr>
-              </tbody>
-              <tbody>
+            </tbody>
+            <tbody>
+              <tr>
+                <th colspan="2" align="left"><a href="#counters--LEVEL_WARNING" name="counters--LEVEL_WARNING">LEVEL_WARNING</a></th>
+              </tr>
                 <tr>
-                  <th colspan="2" align="left">LEVEL_ERROR</th>
+                  <td><a href="#counters--LEVEL_WARNING--Existence_MissingReference_statType" name="counters--LEVEL_WARNING--Existence_MissingReference_statType">Existence_MissingReference_statType</a></td>
+                  <td>6</td>
                 </tr>
-                  <tr>
-                    <td>MCF_MalformedComplexValue</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_InvalidChars_location</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_DifferentDcidsForSameStatVar</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>MCF_InvalidLongitude</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_InvalidObsDate</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Resolution_IrreplaceableLocalRef</td>
-                    <td>4</td>
-                  </tr>
-                  <tr>
-                    <td>Mutator_MissingTypeOf</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>MCF_MalformedComplexValueParts</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_NonAsciiValueInSchema</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_NotInitLower_labelInProperty</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_InvalidChars_domainIncludes</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_MissingOrEmpty_subClassOf</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>MCF_QuantityRangeMalformedValues</td>
-                    <td>3</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_MissingOrEmpty_typeOf</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>MCF_MalformedColonLessLine</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_NotInitLowerPropName</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_UnexpectedPropInProperty</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_InvalidChars_typeOf</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_EmptySchemaValue</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>MCF_QuantityMalformedValue</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_NonAsciiValueInNonText</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_MissingOrEmpty_measuredProperty</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Resolution_UnassignableNodeDcid</td>
-                    <td>4</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_SameDcidForDifferentStatVars</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>MCF_InvalidLatitude</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_UnexpectedPropInClass</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_NotInitUpper_nameInClass</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_InvalidChars_dcid</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_DcidNameMismatchInSchema</td>
-                    <td>2</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_MissingOrEmpty_statType</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>MCF_UnexpectedProperty</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Resolution_OrphanLocalReference_containedInPlace</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_MultipleDcidValues</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>MCF_MalformedNodeName</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Resolution_DcidAssignmentFailure_City</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_NonDoubleObsValue</td>
-                    <td>1</td>
-                  </tr>
-              </tbody>
-        </table>
+                <tr>
+                  <td><a href="#counters--LEVEL_WARNING--Sanity_MissingOrEmpty_populationType" name="counters--LEVEL_WARNING--Sanity_MissingOrEmpty_populationType">Sanity_MissingOrEmpty_populationType</a></td>
+                  <td>2</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_WARNING--Sanity_ObsMissingValueProp" name="counters--LEVEL_WARNING--Sanity_ObsMissingValueProp">Sanity_ObsMissingValueProp</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_WARNING--Existence_MissingReference_domainIncludes" name="counters--LEVEL_WARNING--Existence_MissingReference_domainIncludes">Existence_MissingReference_domainIncludes</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_WARNING--Existence_MissingReference_containedIn" name="counters--LEVEL_WARNING--Existence_MissingReference_containedIn">Existence_MissingReference_containedIn</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_WARNING--Existence_MissingReference_Property" name="counters--LEVEL_WARNING--Existence_MissingReference_Property">Existence_MissingReference_Property</a></td>
+                  <td>4</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_WARNING--Existence_MissingReference_containedInPlace" name="counters--LEVEL_WARNING--Existence_MissingReference_containedInPlace">Existence_MissingReference_containedInPlace</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_WARNING--Existence_MissingReference_subClassOf" name="counters--LEVEL_WARNING--Existence_MissingReference_subClassOf">Existence_MissingReference_subClassOf</a></td>
+                  <td>1</td>
+                </tr>
+            </tbody>
+            <tbody>
+              <tr>
+                <th colspan="2" align="left"><a href="#counters--LEVEL_ERROR" name="counters--LEVEL_ERROR">LEVEL_ERROR</a></th>
+              </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--MCF_MalformedComplexValue" name="counters--LEVEL_ERROR--MCF_MalformedComplexValue">MCF_MalformedComplexValue</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_InvalidChars_location" name="counters--LEVEL_ERROR--Sanity_InvalidChars_location">Sanity_InvalidChars_location</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_DifferentDcidsForSameStatVar" name="counters--LEVEL_ERROR--Sanity_DifferentDcidsForSameStatVar">Sanity_DifferentDcidsForSameStatVar</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--MCF_InvalidLongitude" name="counters--LEVEL_ERROR--MCF_InvalidLongitude">MCF_InvalidLongitude</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_InvalidObsDate" name="counters--LEVEL_ERROR--Sanity_InvalidObsDate">Sanity_InvalidObsDate</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Resolution_IrreplaceableLocalRef" name="counters--LEVEL_ERROR--Resolution_IrreplaceableLocalRef">Resolution_IrreplaceableLocalRef</a></td>
+                  <td>4</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Mutator_MissingTypeOf" name="counters--LEVEL_ERROR--Mutator_MissingTypeOf">Mutator_MissingTypeOf</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--MCF_MalformedComplexValueParts" name="counters--LEVEL_ERROR--MCF_MalformedComplexValueParts">MCF_MalformedComplexValueParts</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_NonAsciiValueInSchema" name="counters--LEVEL_ERROR--Sanity_NonAsciiValueInSchema">Sanity_NonAsciiValueInSchema</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_NotInitLower_labelInProperty" name="counters--LEVEL_ERROR--Sanity_NotInitLower_labelInProperty">Sanity_NotInitLower_labelInProperty</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_InvalidChars_domainIncludes" name="counters--LEVEL_ERROR--Sanity_InvalidChars_domainIncludes">Sanity_InvalidChars_domainIncludes</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_subClassOf" name="counters--LEVEL_ERROR--Sanity_MissingOrEmpty_subClassOf">Sanity_MissingOrEmpty_subClassOf</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--MCF_QuantityRangeMalformedValues" name="counters--LEVEL_ERROR--MCF_QuantityRangeMalformedValues">MCF_QuantityRangeMalformedValues</a></td>
+                  <td>3</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_typeOf" name="counters--LEVEL_ERROR--Sanity_MissingOrEmpty_typeOf">Sanity_MissingOrEmpty_typeOf</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--MCF_MalformedColonLessLine" name="counters--LEVEL_ERROR--MCF_MalformedColonLessLine">MCF_MalformedColonLessLine</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_NotInitLowerPropName" name="counters--LEVEL_ERROR--Sanity_NotInitLowerPropName">Sanity_NotInitLowerPropName</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_UnexpectedPropInProperty" name="counters--LEVEL_ERROR--Sanity_UnexpectedPropInProperty">Sanity_UnexpectedPropInProperty</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_InvalidChars_typeOf" name="counters--LEVEL_ERROR--Sanity_InvalidChars_typeOf">Sanity_InvalidChars_typeOf</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_EmptySchemaValue" name="counters--LEVEL_ERROR--Sanity_EmptySchemaValue">Sanity_EmptySchemaValue</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--MCF_QuantityMalformedValue" name="counters--LEVEL_ERROR--MCF_QuantityMalformedValue">MCF_QuantityMalformedValue</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_NonAsciiValueInNonText" name="counters--LEVEL_ERROR--Sanity_NonAsciiValueInNonText">Sanity_NonAsciiValueInNonText</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_measuredProperty" name="counters--LEVEL_ERROR--Sanity_MissingOrEmpty_measuredProperty">Sanity_MissingOrEmpty_measuredProperty</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Resolution_UnassignableNodeDcid" name="counters--LEVEL_ERROR--Resolution_UnassignableNodeDcid">Resolution_UnassignableNodeDcid</a></td>
+                  <td>4</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_SameDcidForDifferentStatVars" name="counters--LEVEL_ERROR--Sanity_SameDcidForDifferentStatVars">Sanity_SameDcidForDifferentStatVars</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--MCF_InvalidLatitude" name="counters--LEVEL_ERROR--MCF_InvalidLatitude">MCF_InvalidLatitude</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_UnexpectedPropInClass" name="counters--LEVEL_ERROR--Sanity_UnexpectedPropInClass">Sanity_UnexpectedPropInClass</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_NotInitUpper_nameInClass" name="counters--LEVEL_ERROR--Sanity_NotInitUpper_nameInClass">Sanity_NotInitUpper_nameInClass</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_InvalidChars_dcid" name="counters--LEVEL_ERROR--Sanity_InvalidChars_dcid">Sanity_InvalidChars_dcid</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_DcidNameMismatchInSchema" name="counters--LEVEL_ERROR--Sanity_DcidNameMismatchInSchema">Sanity_DcidNameMismatchInSchema</a></td>
+                  <td>2</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_statType" name="counters--LEVEL_ERROR--Sanity_MissingOrEmpty_statType">Sanity_MissingOrEmpty_statType</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--MCF_UnexpectedProperty" name="counters--LEVEL_ERROR--MCF_UnexpectedProperty">MCF_UnexpectedProperty</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Resolution_OrphanLocalReference_containedInPlace" name="counters--LEVEL_ERROR--Resolution_OrphanLocalReference_containedInPlace">Resolution_OrphanLocalReference_containedInPlace</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_MultipleDcidValues" name="counters--LEVEL_ERROR--Sanity_MultipleDcidValues">Sanity_MultipleDcidValues</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--MCF_MalformedNodeName" name="counters--LEVEL_ERROR--MCF_MalformedNodeName">MCF_MalformedNodeName</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Resolution_DcidAssignmentFailure_City" name="counters--LEVEL_ERROR--Resolution_DcidAssignmentFailure_City">Resolution_DcidAssignmentFailure_City</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_NonDoubleObsValue" name="counters--LEVEL_ERROR--Sanity_NonDoubleObsValue">Sanity_NonDoubleObsValue</a></td>
+                  <td>1</td>
+                </tr>
+            </tbody>
+      </table>
     </div>
+    <script>
+      function handle_hash_change(){
+        /*
+        When the hash part of the location has changed, open the <detail> tag
+        closest to the anchor that is being linked to.
+        */
+
+        const new_hash = CSS.escape( // we will use the location hash in a CSS selector, so we need to escape it
+          location.hash // get the hash
+          .substring(1) // drop the initial `#` character
+          );
+
+        const anchor_selector = "a[name=" + new_hash +"]";
+        const anchor_element = document.querySelectorAll(anchor_selector)[0];
+        const parent_details_tag = anchor_element.closest("details")
+
+        if (parent_details_tag !== null){ // if tag exists
+          parent_details_tag.open = true; // open it.
+        }
+      }
+
+      window.onhashchange = handle_hash_change; // dynamically react to hash changes
+      document.addEventListener('DOMContentLoaded', handle_hash_change, false); // if page loaded with a location hash, also react to that.
+    </script>
   </body>
   <script>
     function make_table_DataTable(id){
