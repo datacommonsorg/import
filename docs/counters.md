@@ -22,19 +22,35 @@ Malformed CSV value for dcid property; must be a text or reference
 
 ### CSV_EmptyDcidReferences
 
-A reference in the form of dcid:{entity} was detected, but {entity} was empty
+A reference in the form of `dcid:<entity>` was detected, but `<entity>` was empty.
+
+#### Suggested User Actions
+
+1. Look at the file location in the `report.json` to find a line that looks like:
+    ```
+    <property>: dcid:
+    ```
 
 ### CSV_TmcfMissingColumn
 
-Column referred to in TMCF is missing from CSV header
+Column referred to in TMCF is missing from CSV header. 
+
+Column references are TMCF values that look like `C:<table>-<CSVColumnName>`,
+please ensure that "`CSVColumnName`" exists in the input CSV. 
 
 ### CSV_UnexpectedRow
 
-Found row with fewer columns than expected
+Found a row in input CSV with fewer columns than expected.
+
+The number of columns to expect is the number of columns that exist in the header.
+
+#### Suggested User Actions
+
+1. Ensure that your CSV shape is uniform (every row has the same number of columns)
 
 ### CSV_HeaderFailure
 
-Unable to parse header from CSV file
+Unable to parse header from CSV file.
 
 #### Suggested User Actions
 
@@ -103,40 +119,44 @@ Value of `Node` prop either included a comma or started with a quote.
 
 ### MCF_UnexpectedProperty
 
-A regular `<property>: <value>` line was found without a preceding `Node` line to associate with
+A regular `<property>: <value>` line was found without a preceding `Node` line to associate with.
 
 ### MCF_MalformedNode
 
-Found a 'Node' without properties, or the value of the `Node` property was surrounded by quotes (must be non-quoted), or the value of the `Node` property included a comma (must be a unary value)
-
+Either;
+1. Found a 'Node' without properties, or
+1. The value of the `Node` property was surrounded by quotes (must be non-quoted), or
+1. The value of the `Node` property included a comma (must be a unary value)
 
 ### MCF_MalformedComplexValue
 
-Found malformed Complex value without a closing ] bracket
+Found malformed [complex value](complex_values.md) without a closing bracket (`]`)
 
 ### MCF_LocalReferenceInResolvedFile
 
-Found an internal 'l:' reference in resolved entity value
+Found an internal `l:` reference in resolved entity value
 
 ### TMCF_MalformedEntity
 
-When parsing the first (`Node: <value>`) line of a node in TMCF, the value did not have the required E: prefix to be an entity name
+When parsing the first (`Node: <value>`) line of a node in TMCF, the value did
+not have the required `E:` prefix to be an entity name
 
 ### TMCF_MalformedSchemaTerm
 
-TMCF had a malformed entity/column; the value must have a '->' delimeter but this was not found
+TMCF had a malformed entity/column; the value must have a `->` delimeter that was missing
 
 ### TMCF_UnsupportedColumnNameInProperty
 
-TMCF properties as references to CSV columns are not supported yet
+A TMCF property referencing a CSV column was found. This is not supported yet.
 
 ### TMCF_TmcfEntityAsDcid
 
-In TMCF, value of DCID was an E: entity. Must be a C: column or a constant value instead.
+In TMCF, value of DCID was an `E:` entity. However, this must instead be a `C:`
+column or a constant value.
 
 ### TMCF_UnexpectedNonColumn
 
-Expected value to be a TMCF column that starts with 'C:' :: value, but it was not.
+Expected value to be a TMCF column that starts with a `C:` value, but it was not.
 
 ## Resolution Counters
 These counters are logged when there are errors assigning DCIDs to each node in
@@ -154,33 +174,46 @@ External ID reference could not be resolved.
 
 ### Resolution_DivergingDcidsForExternalIds_
 
-Resolving external IDs found different DCIDs.
+External IDs resolved to different DCIDs, however, they must all map to the same DCID.
 
-**Suffix Description:** The properties that were found, separated by an underscore `_`
+**Suffix Description:** The properties that were found, separated by an underscore `_`.
+For example, a counter named `Resolution_DivergingDcidsForExternalIds_isoCode_wikidataId`
+means that the `isoCode` and `wikidataId` properties were both external IDs, but
+they resolved to different DCIDs (which is not permitted).
 
 #### Suggested User Actions
 
-1. Try searching for the DCIDs on the [Data Commons Browser](https://datacommons.org/search) and/or in your local schema (.mcf) files
+1. Try searching for the DCIDs on the [Data Commons Browser](https://datacommons.org/search) and/or in your local schema (.mcf) files, and making sure they resolve to the correct and identical entity as
+uniquely identified by its DCID.
 
 ### Resolution_IrreplaceableLocalRef
 
-Unable to replace a local reference
+Unable to replace a local reference.
+
+This is likely a cycle of local references, which the import tool is not able to resolve. 
 
 #### Suggested User Actions
 
-1. This is likely a cycle of local references, which the import tool is not able to resolve. Check your MCF files for potential cycles.
+1. Check your MCF files for potential cycles.
 
 ### Resolution_UnassignableNodeDcid
 
-Unable to assign DCID due to unresolved local reference
+Unable to assign DCID due to an unresolved local reference
 
 #### Suggested User Actions
 
-1. See actions for `Resolution_IrreplaceableLocalRef`
+1. See [`Resolution_IrreplaceableLocalRef`](#Resolution_IrreplaceableLocalRef)
 
 ### Resolution_DcidAssignmentFailure_
 
-The node could not be assigned a DCID based on the data available. DCID can be generated for StatVarObs, a legacy population type (type ends with `Population`), a legacy observation type (type ends with `Observation` and is not `StatVarObservation`), or if there is an external ID resolver provided.
+The node could not be assigned a DCID based on the data available.
+
+The tool can generate DCID for;
+- StatVarObs,
+- legacy population types (type ends with `Population`),
+- legacy observation types (type ends with `Observation` and is not `StatVarObservation`);
+
+or if there is an external ID resolver provided.
 
 **Suffix Description:** The typeOf value of the node (first value, if multiple)
 
@@ -188,15 +221,10 @@ The node could not be assigned a DCID based on the data available. DCID can be g
 
 1. If none of the conditions in the description apply to your node, provide a non-empty DCID for the node.
 
-### Resolution_OrphanLocalReference_
-
-The local ID of the node is missing from the entire sub-graph resolved by the import tool.
-
-**Suffix Description:** The property this reference was found in
-
 ### Resolution_ReferenceToFailedNode_
 
-The reference was resolved, but to a failed node, therefore, this node also failed to resolve
+The reference was resolved, but it was to a failed node, therefore, this node
+is also marked as a failure.
 
 **Suffix Description:** The property this reference was found in
 
@@ -204,13 +232,13 @@ The reference was resolved, but to a failed node, therefore, this node also fail
 
 1. Check the logs for the failure of the node identified the error message and address that issue.
 
-
 ## Sanity Counters
-Sanity counters log issues raised from simpler, sanity checks of nodes.
+These counters log issues raised from sanity checks of nodes against a simple
+set of assumptions expected of DC nodes.
 
 ### Sanity_InconsistentSvObsValues
 
-Found different values provided for the same StatVarObservation
+Found different values provided for the same `StatVarObservation`
 
 #### Suggested User Actions
 
@@ -234,7 +262,7 @@ Found different curated IDs for same StatVar
 
 ### Sanity_TmcfMissingEntityDef
 
-An node was references using an entity (E:) reference in TMCF, but this node was not found in the parsed graph.
+An node was references using an entity (`E:`) reference in TMCF, but this node was not found in the parsed graph.
 
 ### Sanity_UnexpectedNonColumn
 
@@ -250,7 +278,12 @@ Column referred to in TMCF is missing from CSV header
 
 ### Sanity_UnknownStatType
 
-Found an unknown statType value. StatTypes values either end with one of {`value`, `estimate`, `stderror`, `samplesize`, `growthrate`}, or start with `percentile`, or equal any one of {`marginoferror`, `measurementResult`}
+Found an unknown statType value.
+
+StatTypes values either:
+- end with one of {`value`, `estimate`, `stderror`, `samplesize`, `growthrate`}, or
+- start with `percentile`, or
+- equal any one of {`marginoferror`, `measurementResult`}
 
 ### Sanity_InvalidObsDate
 
@@ -258,39 +291,47 @@ Found a non-ISO8601 compliant date value
 
 #### Suggested User Actions
 
-1. ISO8601 is in the format YYYY-MM-DD (e.g. 2020-07-10), optionally with time of day appended.
+1. [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) is in the format YYYY-MM-DD (e.g. 2020-07-10), optionally with time of day appended.
 
 ### Sanity_NonDoubleObsValue
 
-Found an Observation value inthat was not a number.
+Found an `StatVarObservation` node with a value that was not a number.
 
 ### Sanity_ObsMissingValueProp
 
-Observation node is missing the required `value` property
+`StatVarObservation` node is missing the required `value` property
 
 ### Sanity_EmptyProperty
 
-An empty property (property with no text) was found
+An empty property (property with no text) was found.
+
+#### Suggested User Actions
+
+1. Try searching your input files for a line that starts with a colon (`:`)
 
 ### Sanity_NotInitLowerPropName
 
-Found property name that does not start with a lower-case
+Found property name that does not start with a lower-case. All property names
+must start with a lower-case letter.
 
 ### Sanity_MultipleDcidValues
 
-Found dcid with more than one value
+The value of the `dcid` property had more than one value
 
 ### Sanity_DcidTableEntity
 
-Value of DCID property was an 'E:' reference in TMCF, which is invalid
+Value of the `dcid` property was an `E:` reference in TMCF, which is invalid
 
 ### Sanity_VeryLongDcid
 
-Found a DCID that was too long
+Found a DCID that was too long. In the current configuration, the maximum allowed
+length of DCID is 256 characters.
 
 ### Sanity_NonAsciiValueInNonText
 
-Found non-ASCII characters in a value which was not a text (a text value is a value surrounded by quotes)
+Found non-ASCII characters in a value which was not a text.
+
+A text value is a value surrounded by quotes.
 
 ### Sanity_RefPropHasNonRefValue
 
@@ -298,7 +339,7 @@ Found text/numeric value in a property where the value is expected to be a refer
 
 ### Sanity_InvalidChars_
 
-DCID included invalid characters.
+DCID reference included invalid characters.
 
 **Suffix Description:** The property whose value included invalid chars
 
@@ -324,7 +365,7 @@ The name and the DCID of Schema nodes must match, but this node did not satisfy 
 
 Found a missing or empty property value
 
-**Suffix Description:** The missing property that was required.
+**Suffix Description:** The required property that was missing from this node
 
 ### Sanity_MultipleVals_
 
