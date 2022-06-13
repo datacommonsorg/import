@@ -167,8 +167,8 @@
                     <th>Time Series Chart</th>
                   </tr>
                 </thead>
-                <#list placeSeriesSummary.getStatVarSummaryMap() as sv, svSummary>
                 <tbody>
+                <#list placeSeriesSummary.getStatVarSummaryMap() as sv, svSummary>
                   <tr>
                     <td>${sv}</td>
                     <td>${svSummary.getNumObservations()}</td>
@@ -196,8 +196,8 @@
                     </td>
                     <td style="max-width:none;text-align: -webkit-center;">${svSummary.getTimeSeriesChartSVG()}</td>
                   </tr>
-                  </tbody>
                   </#list>
+                  </tbody>
               </table>
             </details>
           </#list>
