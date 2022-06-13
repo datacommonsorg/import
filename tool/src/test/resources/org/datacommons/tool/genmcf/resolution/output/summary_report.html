@@ -19,19 +19,200 @@
       tbody tr:hover {
         background-color: #ccc;
       }
-      summary {
+      .place-series-summary {
         cursor: pointer;
         font-size: 1.2rem;
         font-weight: bold;
         padding-bottom: 1rem;
       }
-      details {
+      .place-series-details {
         padding-bottom: 1rem;
       }
+      .toc-details-ul {
+        list-style: none;
+        padding-left: 0;
+      }
+      #go-to-top{
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+      }
     </style>
+    <a name="top"></a>
+    <div id="go-to-top">
+      <a href="#top">Go to Top</a>
+    </div>
     <h1>Summary Report</h1>
+    <h3>Table of Contents</h3>
+    <ul>
+      <li><a href="#import-run-details">Import Run Details</a></li>
+      <li><a href="#counters">Counters</a></li>
+      <ul class="toc-details-ul">
+                  <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_INFO">
+                  LEVEL_INFO
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_INFO--NumRowSuccesses">NumRowSuccesses</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_INFO--NumPVSuccesses">NumPVSuccesses</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_INFO--Existence_NumChecks">Existence_NumChecks</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_INFO--NumNodeSuccesses">NumNodeSuccesses</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_INFO--Resolution_NumDcCalls">Resolution_NumDcCalls</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_INFO--Existence_NumDcCalls">Existence_NumDcCalls</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+          <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_WARNING">
+                  LEVEL_WARNING
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--Existence_MissingReference_Property">Existence_MissingReference_Property</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--Existence_MissingReference_variableMeasured">Existence_MissingReference_variableMeasured</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--Existence_MissingReference_typeOf">Existence_MissingReference_typeOf</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+          <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_ERROR">
+                  LEVEL_ERROR
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Resolution_DcidAssignmentFailure_Song">Resolution_DcidAssignmentFailure_Song</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Resolution_ReferenceToFailedNode_variableMeasured">Resolution_ReferenceToFailedNode_variableMeasured</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Resolution_OrphanLocalReference_parent">Resolution_OrphanLocalReference_parent</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Resolution_DcidAssignmentFailure_MusicAlbum">Resolution_DcidAssignmentFailure_MusicAlbum</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_statType">Sanity_MissingOrEmpty_statType</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_dcid">Sanity_MissingOrEmpty_dcid</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Resolution_DcidAssignmentFailure_StatisticalVariable">Resolution_DcidAssignmentFailure_StatisticalVariable</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+      </ul>
+      
+        <li><a href="#statvars"">StatVarObservations by StatVar</a></li>
+          <details>
+            <summary>StatVars</summary>
+              <ul>
+                  <li>
+                    <a href="#statvars--Count_Person">Count_Person</a>
+                  </li>
+                  <li>
+                    <a href="#statvars--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name">CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</a>
+                  </li>
+              </ul>
+          </details>
+
+        <li><a href="#places"">Series Summaries for Sample Places</a></li>
+        <ul class="toc-details-ul">
+            <li>
+              <details>
+                <summary>
+                  <a href="#places--geoId/0649670">geoId/0649670</a>
+                </summary>
+                <ul>
+                  <li>
+                    <a href="#places--geoId/0649670--Count_Person">Count_Person</a>
+                  </li>
+                </ul>
+              </details>
+            </li>
+            <li>
+              <details>
+                <summary>
+                  <a href="#places--wikidataId/Q1186">wikidataId/Q1186</a>
+                </summary>
+                <ul>
+                  <li>
+                    <a href="#places--wikidataId/Q1186--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name">CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</a>
+                  </li>
+                </ul>
+              </details>
+            </li>
+            <li>
+              <details>
+                <summary>
+                  <a href="#places--wikidataId/Q1353">wikidataId/Q1353</a>
+                </summary>
+                <ul>
+                  <li>
+                    <a href="#places--wikidataId/Q1353--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name">CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</a>
+                  </li>
+                </ul>
+              </details>
+            </li>
+            <li>
+              <details>
+                <summary>
+                  <a href="#places--wikidataId/Q1437">wikidataId/Q1437</a>
+                </summary>
+                <ul>
+                  <li>
+                    <a href="#places--wikidataId/Q1437--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name">CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</a>
+                  </li>
+                </ul>
+              </details>
+            </li>
+            <li>
+              <details>
+                <summary>
+                  <a href="#places--wikidataId/Q677037">wikidataId/Q677037</a>
+                </summary>
+                <ul>
+                  <li>
+                    <a href="#places--wikidataId/Q677037--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name">CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</a>
+                  </li>
+                </ul>
+              </details>
+            </li>
+        </ul>
+    </ul>
+
     <div>
-      <h2>Import Run Details</h2>
+      <h2>
+        <a name="import-run-details" href="#import-run-details">Import Run Details</a>
+      </h2>  
       <table>
         <tr>
           <td>Existence Checks Enabled</td>
@@ -55,98 +236,105 @@
         </tr>
       </table>
     </div>
+
+    
     <div>
-      <h2>Counters</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Counter Name</th>
-              <th>Num Occurences</th>
-            </tr>
-          </thead>
-              <tbody>
+      <h2>
+        <a name="counters" href="#counters">Counters</a>
+      </h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Counter Name</th>
+            <th>Num Occurences</th>
+          </tr>
+        </thead>
+            <tbody>
+              <tr>
+                <th colspan="2" align="left"><a href="#counters--LEVEL_INFO" name="counters--LEVEL_INFO">LEVEL_INFO</a></th>
+              </tr>
                 <tr>
-                  <th colspan="2" align="left">LEVEL_INFO</th>
+                  <td><a href="#counters--LEVEL_INFO--NumRowSuccesses" name="counters--LEVEL_INFO--NumRowSuccesses">NumRowSuccesses</a></td>
+                  <td>10</td>
                 </tr>
-                  <tr>
-                    <td>NumRowSuccesses</td>
-                    <td>10</td>
-                  </tr>
-                  <tr>
-                    <td>NumPVSuccesses</td>
-                    <td>100</td>
-                  </tr>
-                  <tr>
-                    <td>Existence_NumChecks</td>
-                    <td>145</td>
-                  </tr>
-                  <tr>
-                    <td>NumNodeSuccesses</td>
-                    <td>20</td>
-                  </tr>
-                  <tr>
-                    <td>Resolution_NumDcCalls</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Existence_NumDcCalls</td>
-                    <td>2</td>
-                  </tr>
-              </tbody>
-              <tbody>
                 <tr>
-                  <th colspan="2" align="left">LEVEL_WARNING</th>
+                  <td><a href="#counters--LEVEL_INFO--NumPVSuccesses" name="counters--LEVEL_INFO--NumPVSuccesses">NumPVSuccesses</a></td>
+                  <td>100</td>
                 </tr>
-                  <tr>
-                    <td>Existence_MissingReference_Property</td>
-                    <td>2</td>
-                  </tr>
-                  <tr>
-                    <td>Existence_MissingReference_variableMeasured</td>
-                    <td>10</td>
-                  </tr>
-                  <tr>
-                    <td>Existence_MissingReference_typeOf</td>
-                    <td>1</td>
-                  </tr>
-              </tbody>
-              <tbody>
                 <tr>
-                  <th colspan="2" align="left">LEVEL_ERROR</th>
+                  <td><a href="#counters--LEVEL_INFO--Existence_NumChecks" name="counters--LEVEL_INFO--Existence_NumChecks">Existence_NumChecks</a></td>
+                  <td>145</td>
                 </tr>
-                  <tr>
-                    <td>Resolution_DcidAssignmentFailure_Song</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Resolution_ReferenceToFailedNode_variableMeasured</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Resolution_OrphanLocalReference_parent</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Resolution_DcidAssignmentFailure_MusicAlbum</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_MissingOrEmpty_statType</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_MissingOrEmpty_dcid</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Resolution_DcidAssignmentFailure_StatisticalVariable</td>
-                    <td>1</td>
-                  </tr>
-              </tbody>
-        </table>
+                <tr>
+                  <td><a href="#counters--LEVEL_INFO--NumNodeSuccesses" name="counters--LEVEL_INFO--NumNodeSuccesses">NumNodeSuccesses</a></td>
+                  <td>20</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_INFO--Resolution_NumDcCalls" name="counters--LEVEL_INFO--Resolution_NumDcCalls">Resolution_NumDcCalls</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_INFO--Existence_NumDcCalls" name="counters--LEVEL_INFO--Existence_NumDcCalls">Existence_NumDcCalls</a></td>
+                  <td>2</td>
+                </tr>
+            </tbody>
+            <tbody>
+              <tr>
+                <th colspan="2" align="left"><a href="#counters--LEVEL_WARNING" name="counters--LEVEL_WARNING">LEVEL_WARNING</a></th>
+              </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_WARNING--Existence_MissingReference_Property" name="counters--LEVEL_WARNING--Existence_MissingReference_Property">Existence_MissingReference_Property</a></td>
+                  <td>2</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_WARNING--Existence_MissingReference_variableMeasured" name="counters--LEVEL_WARNING--Existence_MissingReference_variableMeasured">Existence_MissingReference_variableMeasured</a></td>
+                  <td>10</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_WARNING--Existence_MissingReference_typeOf" name="counters--LEVEL_WARNING--Existence_MissingReference_typeOf">Existence_MissingReference_typeOf</a></td>
+                  <td>1</td>
+                </tr>
+            </tbody>
+            <tbody>
+              <tr>
+                <th colspan="2" align="left"><a href="#counters--LEVEL_ERROR" name="counters--LEVEL_ERROR">LEVEL_ERROR</a></th>
+              </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Resolution_DcidAssignmentFailure_Song" name="counters--LEVEL_ERROR--Resolution_DcidAssignmentFailure_Song">Resolution_DcidAssignmentFailure_Song</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Resolution_ReferenceToFailedNode_variableMeasured" name="counters--LEVEL_ERROR--Resolution_ReferenceToFailedNode_variableMeasured">Resolution_ReferenceToFailedNode_variableMeasured</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Resolution_OrphanLocalReference_parent" name="counters--LEVEL_ERROR--Resolution_OrphanLocalReference_parent">Resolution_OrphanLocalReference_parent</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Resolution_DcidAssignmentFailure_MusicAlbum" name="counters--LEVEL_ERROR--Resolution_DcidAssignmentFailure_MusicAlbum">Resolution_DcidAssignmentFailure_MusicAlbum</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_statType" name="counters--LEVEL_ERROR--Sanity_MissingOrEmpty_statType">Sanity_MissingOrEmpty_statType</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_dcid" name="counters--LEVEL_ERROR--Sanity_MissingOrEmpty_dcid">Sanity_MissingOrEmpty_dcid</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Resolution_DcidAssignmentFailure_StatisticalVariable" name="counters--LEVEL_ERROR--Resolution_DcidAssignmentFailure_StatisticalVariable">Resolution_DcidAssignmentFailure_StatisticalVariable</a></td>
+                  <td>1</td>
+                </tr>
+            </tbody>
+      </table>
     </div>
+      
       <div>
-        <h2>StatVarObservations by StatVar</h2>
+        <h2>
+          <a name="statvars" href="#statvars">StatVarObservations by StatVar</a>
+        </h2>
         <table width="95%">
           <thead>
             <tr>
@@ -164,7 +352,7 @@
           </thead>
           <tbody>
             <tr>
-              <td>Count_Person</td>
+              <td><a name="statvars--Count_Person" href="#statvars--Count_Person">Count_Person</a></td>
               <td>1</td>
               <td>1</td>
               <td>1</td>
@@ -184,7 +372,7 @@
               </td>
             </tr>
             <tr>
-              <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</td>
+              <td><a name="statvars--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name" href="#statvars--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name">CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</a></td>
               <td>4</td>
               <td>10</td>
               <td>5</td>
@@ -207,202 +395,228 @@
         </table>
       </div>
       <div>
-        <h2>Series Summaries for Sample Places</h2>
-            <details open>
-              <summary>geoId/0649670</summary>
-              <table width="95%">
-                <thead>
-                  <tr>
-                    <th>Stat Var</th>
-                    <th>Num Observations</th>
-                    <th>Dates</th>
-                    <th>Corresponding Values</th>
-                    <th>Measurement Methods</th>
-                    <th>Units</th>
-                    <th>Scaling Factors</th>
-                    <th>Observation Periods</th>
-                    <th>Time Series Chart</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Count_Person</td>
-                    <td>1</td>
-                    <td>2017-01</td>
-                    <td>1,000</td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td style="max-width:none;text-align: -webkit-center;"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:jfreesvg="http://www.jfree.org/jfreesvg/svg" width="500" height="250" text-rendering="auto" shape-rendering="auto">
+        <h2>
+          <a name="places" href="#places">Series Summaries for Sample Places</a>
+        </h2>
+          <details class="place-series-details">
+            <summary class="place-series-summary"><a name="places--geoId/0649670" href="#places--geoId/0649670">geoId/0649670</a></summary>
+            <table width="95%">
+              <thead>
+                <tr>
+                  <th>Stat Var</th>
+                  <th>Num Observations</th>
+                  <th>Dates</th>
+                  <th>Corresponding Values</th>
+                  <th>Measurement Methods</th>
+                  <th>Units</th>
+                  <th>Scaling Factors</th>
+                  <th>Observation Periods</th>
+                  <th>Time Series Chart</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><a href="#places--geoId/0649670--Count_Person" name="places--geoId/0649670--Count_Person">Count_Person</a></td>
+                  <td>1</td>
+                  <td>2017-01</td>
+                  <td>1,000</td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td style="max-width:none;text-align: -webkit-center;"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:jfreesvg="http://www.jfree.org/jfreesvg/svg" width="500" height="250" text-rendering="auto" shape-rendering="auto">
 <defs><clipPath id="testclip-0"><path d="M 0 0 L 500 0 L 500 250 L 0 250 L 0 0 Z "/></clipPath>
 <clipPath id="testclip-1"><path d="M 52 10 L 52 227 L 488 227 L 488 10 Z "/></clipPath>
 </defs>
 <rect x="0" y="0" width="500" height="250" style="fill: rgb(255,255,255); fill-opacity: 1.0" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><rect x="52" y="10" width="436" height="217" style="fill: rgb(255,255,255); fill-opacity: 1.0" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="52" y1="231" x2="488" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="31" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">2016-12</text></g><line x1="52" y1="233" x2="52" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="249" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">2017-01</text></g><line x1="270" y1="233" x2="270" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="48" y1="10" x2="48" y2="227" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="13" y="231.14" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">999.0</text></g><line x1="46" y1="227" x2="48" y2="227" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="13" y="209.44" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">999.2</text></g><line x1="46" y1="205.3" x2="48" y2="205.3" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="13" y="187.74" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">999.4</text></g><line x1="46" y1="183.6" x2="48" y2="183.6" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="13" y="166.04" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">999.6</text></g><line x1="46" y1="161.9" x2="48" y2="161.9" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="13" y="144.34" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">999.8</text></g><line x1="46" y1="140.2" x2="48" y2="140.2" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="7" y="122.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1000.0</text></g><line x1="46" y1="118.5" x2="48" y2="118.5" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="7" y="100.94" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1000.2</text></g><line x1="46" y1="96.8" x2="48" y2="96.8" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="7" y="79.24" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1000.4</text></g><line x1="46" y1="75.1" x2="48" y2="75.1" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="7" y="57.54" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1000.6</text></g><line x1="46" y1="53.4" x2="48" y2="53.4" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="7" y="35.84" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1000.8</text></g><line x1="46" y1="31.7" x2="48" y2="31.7" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="7" y="14.14" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1001.0</text></g><line x1="46" y1="10" x2="48" y2="10" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="52" y1="10" x2="52" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="270" y1="10" x2="270" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="227" x2="488" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="205.3" x2="488" y2="205.3" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="183.6" x2="488" y2="183.6" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="161.9" x2="488" y2="161.9" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="140.2" x2="488" y2="140.2" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="118.5" x2="488" y2="118.5" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="96.8" x2="488" y2="96.8" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="75.1" x2="488" y2="75.1" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="53.4" x2="488" y2="53.4" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="31.7" x2="488" y2="31.7" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="10" x2="488" y2="10" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><g style="fill: rgb(255,85,85); fill-opacity: 1.0; stroke: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 270 113.5 L 275 118.5 L 270 123.5 L 265 118.5 Z "/></g><g style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:geometricPrecision;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 270 113.5 L 275 118.5 L 270 123.5 L 265 118.5 Z "/></g><rect x="52" y="10" width="436" height="217" style="stroke-width: 0.5;stroke: rgb(0,0,0);stroke-opacity: 1.0;stroke-linecap: round;stroke-linejoin: round;shape-rendering:crispEdges;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/></svg></td>
-                  </tr>
-                  </tbody>
-              </table>
-            </details>
-            <details open>
-              <summary>wikidataId/Q1186</summary>
-              <table width="95%">
-                <thead>
-                  <tr>
-                    <th>Stat Var</th>
-                    <th>Num Observations</th>
-                    <th>Dates</th>
-                    <th>Corresponding Values</th>
-                    <th>Measurement Methods</th>
-                    <th>Units</th>
-                    <th>Scaling Factors</th>
-                    <th>Observation Periods</th>
-                    <th>Time Series Chart</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</td>
-                    <td>5</td>
-                    <td>2020-01-30 | 2020-02-02 | 2020-02-03 | 2020-03-02 | 2020-03-03</td>
-                    <td>1 | 2 | 3 | 3 | 3</td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td style="max-width:none;text-align: -webkit-center;"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:jfreesvg="http://www.jfree.org/jfreesvg/svg" width="500" height="250" text-rendering="auto" shape-rendering="auto">
+                </tr>
+                </tbody>
+            </table>
+          </details>
+          <details class="place-series-details">
+            <summary class="place-series-summary"><a name="places--wikidataId/Q1186" href="#places--wikidataId/Q1186">wikidataId/Q1186</a></summary>
+            <table width="95%">
+              <thead>
+                <tr>
+                  <th>Stat Var</th>
+                  <th>Num Observations</th>
+                  <th>Dates</th>
+                  <th>Corresponding Values</th>
+                  <th>Measurement Methods</th>
+                  <th>Units</th>
+                  <th>Scaling Factors</th>
+                  <th>Observation Periods</th>
+                  <th>Time Series Chart</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><a href="#places--wikidataId/Q1186--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name" name="places--wikidataId/Q1186--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name">CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</a></td>
+                  <td>5</td>
+                  <td>2020-01-30 | 2020-02-02 | 2020-02-03 | 2020-03-02 | 2020-03-03</td>
+                  <td>1 | 2 | 3 | 3 | 3</td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td style="max-width:none;text-align: -webkit-center;"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:jfreesvg="http://www.jfree.org/jfreesvg/svg" width="500" height="250" text-rendering="auto" shape-rendering="auto">
 <defs><clipPath id="testclip-0"><path d="M 0 0 L 500 0 L 500 250 L 0 250 L 0 0 Z "/></clipPath>
 <clipPath id="testclip-1"><path d="M 52 10 L 52 227 L 488 227 L 488 10 Z "/></clipPath>
 </defs>
 <rect x="0" y="0" width="500" height="250" style="fill: rgb(255,255,255); fill-opacity: 1.0" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><rect x="52" y="10" width="436" height="217" style="fill: rgb(255,255,255); fill-opacity: 1.0" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="52" y1="231" x2="488" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="44.38" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">30-Jan</text></g><line x1="60.38" y1="233" x2="60.38" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="233.44" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">14-Feb</text></g><line x1="250.94" y1="233" x2="250.94" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="424" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">29-Feb</text></g><line x1="441.5" y1="233" x2="441.5" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="48" y1="10" x2="48" y2="227" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="221.28" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.0</text></g><line x1="46" y1="217.14" x2="48" y2="217.14" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="201.55" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.2</text></g><line x1="46" y1="197.41" x2="48" y2="197.41" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="181.82" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.4</text></g><line x1="46" y1="177.68" x2="48" y2="177.68" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="162.1" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.6</text></g><line x1="46" y1="157.95" x2="48" y2="157.95" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="142.37" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.8</text></g><line x1="46" y1="138.23" x2="48" y2="138.23" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="122.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">2.0</text></g><line x1="46" y1="118.5" x2="48" y2="118.5" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="102.91" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">2.2</text></g><line x1="46" y1="98.77" x2="48" y2="98.77" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="83.19" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">2.4</text></g><line x1="46" y1="79.05" x2="48" y2="79.05" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="63.46" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">2.6</text></g><line x1="46" y1="59.32" x2="48" y2="59.32" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="43.73" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">2.8</text></g><line x1="46" y1="39.59" x2="48" y2="39.59" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="24.01" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">3.0</text></g><line x1="46" y1="19.86" x2="48" y2="19.86" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="60.38" y1="10" x2="60.38" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="250.94" y1="10" x2="250.94" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="441.5" y1="10" x2="441.5" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="217.14" x2="488" y2="217.14" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="197.41" x2="488" y2="197.41" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="177.68" x2="488" y2="177.68" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="157.95" x2="488" y2="157.95" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="138.23" x2="488" y2="138.23" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="118.5" x2="488" y2="118.5" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="98.77" x2="488" y2="98.77" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="79.05" x2="488" y2="79.05" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="59.32" x2="488" y2="59.32" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="39.59" x2="488" y2="39.59" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="19.86" x2="488" y2="19.86" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="60.38" y1="217.14" x2="98.5" y2="118.5" style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;stroke-linejoin: bevel;shape-rendering:geometricPrecision;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="98.5" y1="118.5" x2="111.2" y2="19.86" style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;stroke-linejoin: bevel;shape-rendering:geometricPrecision;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="111.2" y1="19.86" x2="466.91" y2="19.86" style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;stroke-linejoin: bevel;shape-rendering:geometricPrecision;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="466.91" y1="19.86" x2="479.62" y2="19.86" style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;stroke-linejoin: bevel;shape-rendering:geometricPrecision;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><g style="fill: rgb(255,85,85); fill-opacity: 1.0; stroke: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 60.38 212.14 L 65.38 217.14 L 60.38 222.14 L 55.38 217.14 Z "/></g><g style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:geometricPrecision;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 60.38 212.14 L 65.38 217.14 L 60.38 222.14 L 55.38 217.14 Z "/></g><g style="fill: rgb(255,85,85); fill-opacity: 1.0; stroke: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 98.5 113.5 L 103.5 118.5 L 98.5 123.5 L 93.5 118.5 Z "/></g><g style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:geometricPrecision;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 98.5 113.5 L 103.5 118.5 L 98.5 123.5 L 93.5 118.5 Z "/></g><g style="fill: rgb(255,85,85); fill-opacity: 1.0; stroke: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 111.2 14.86 L 116.2 19.86 L 111.2 24.86 L 106.2 19.86 Z "/></g><g style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:geometricPrecision;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 111.2 14.86 L 116.2 19.86 L 111.2 24.86 L 106.2 19.86 Z "/></g><g style="fill: rgb(255,85,85); fill-opacity: 1.0; stroke: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 466.91 14.86 L 471.91 19.86 L 466.91 24.86 L 461.91 19.86 Z "/></g><g style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:geometricPrecision;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 466.91 14.86 L 471.91 19.86 L 466.91 24.86 L 461.91 19.86 Z "/></g><g style="fill: rgb(255,85,85); fill-opacity: 1.0; stroke: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 479.62 14.86 L 484.62 19.86 L 479.62 24.86 L 474.62 19.86 Z "/></g><g style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:geometricPrecision;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 479.62 14.86 L 484.62 19.86 L 479.62 24.86 L 474.62 19.86 Z "/></g><rect x="52" y="10" width="436" height="217" style="stroke-width: 0.5;stroke: rgb(0,0,0);stroke-opacity: 1.0;stroke-linecap: round;stroke-linejoin: round;shape-rendering:crispEdges;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/></svg></td>
-                  </tr>
-                  </tbody>
-              </table>
-            </details>
-            <details open>
-              <summary>wikidataId/Q1353</summary>
-              <table width="95%">
-                <thead>
-                  <tr>
-                    <th>Stat Var</th>
-                    <th>Num Observations</th>
-                    <th>Dates</th>
-                    <th>Corresponding Values</th>
-                    <th>Measurement Methods</th>
-                    <th>Units</th>
-                    <th>Scaling Factors</th>
-                    <th>Observation Periods</th>
-                    <th>Time Series Chart</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</td>
-                    <td>2</td>
-                    <td>2020-03-02 | 2020-03-03</td>
-                    <td>1 | 1</td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td style="max-width:none;text-align: -webkit-center;"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:jfreesvg="http://www.jfree.org/jfreesvg/svg" width="500" height="250" text-rendering="auto" shape-rendering="auto">
+                </tr>
+                </tbody>
+            </table>
+          </details>
+          <details class="place-series-details">
+            <summary class="place-series-summary"><a name="places--wikidataId/Q1353" href="#places--wikidataId/Q1353">wikidataId/Q1353</a></summary>
+            <table width="95%">
+              <thead>
+                <tr>
+                  <th>Stat Var</th>
+                  <th>Num Observations</th>
+                  <th>Dates</th>
+                  <th>Corresponding Values</th>
+                  <th>Measurement Methods</th>
+                  <th>Units</th>
+                  <th>Scaling Factors</th>
+                  <th>Observation Periods</th>
+                  <th>Time Series Chart</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><a href="#places--wikidataId/Q1353--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name" name="places--wikidataId/Q1353--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name">CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</a></td>
+                  <td>2</td>
+                  <td>2020-03-02 | 2020-03-03</td>
+                  <td>1 | 1</td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td style="max-width:none;text-align: -webkit-center;"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:jfreesvg="http://www.jfree.org/jfreesvg/svg" width="500" height="250" text-rendering="auto" shape-rendering="auto">
 <defs><clipPath id="testclip-0"><path d="M 0 0 L 500 0 L 500 250 L 0 250 L 0 0 Z "/></clipPath>
 <clipPath id="testclip-1"><path d="M 52 10 L 52 227 L 488 227 L 488 10 Z "/></clipPath>
 </defs>
 <rect x="0" y="0" width="500" height="250" style="fill: rgb(255,255,255); fill-opacity: 1.0" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><rect x="52" y="10" width="436" height="217" style="fill: rgb(255,255,255); fill-opacity: 1.0" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="52" y1="231" x2="488" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="45.88" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">00:00</text></g><line x1="60.38" y1="233" x2="60.38" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="150.69" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">06:00</text></g><line x1="165.19" y1="233" x2="165.19" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="255.5" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">12:00</text></g><line x1="270" y1="233" x2="270" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="360.31" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">18:00</text></g><line x1="374.81" y1="233" x2="374.81" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="465.12" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">00:00</text></g><line x1="479.62" y1="233" x2="479.62" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="48" y1="10" x2="48" y2="227" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="231.14" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.0</text></g><line x1="46" y1="227" x2="48" y2="227" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="209.44" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.2</text></g><line x1="46" y1="205.3" x2="48" y2="205.3" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="187.74" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.4</text></g><line x1="46" y1="183.6" x2="48" y2="183.6" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="166.04" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.6</text></g><line x1="46" y1="161.9" x2="48" y2="161.9" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="144.34" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.8</text></g><line x1="46" y1="140.2" x2="48" y2="140.2" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="122.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.0</text></g><line x1="46" y1="118.5" x2="48" y2="118.5" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="100.94" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.2</text></g><line x1="46" y1="96.8" x2="48" y2="96.8" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="79.24" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.4</text></g><line x1="46" y1="75.1" x2="48" y2="75.1" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="57.54" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.6</text></g><line x1="46" y1="53.4" x2="48" y2="53.4" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="35.84" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.8</text></g><line x1="46" y1="31.7" x2="48" y2="31.7" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="14.14" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">2.0</text></g><line x1="46" y1="10" x2="48" y2="10" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="60.38" y1="10" x2="60.38" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="165.19" y1="10" x2="165.19" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="270" y1="10" x2="270" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="374.81" y1="10" x2="374.81" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="479.62" y1="10" x2="479.62" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="227" x2="488" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="205.3" x2="488" y2="205.3" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="183.6" x2="488" y2="183.6" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="161.9" x2="488" y2="161.9" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="140.2" x2="488" y2="140.2" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="118.5" x2="488" y2="118.5" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="96.8" x2="488" y2="96.8" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="75.1" x2="488" y2="75.1" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="53.4" x2="488" y2="53.4" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="31.7" x2="488" y2="31.7" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="10" x2="488" y2="10" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="60.38" y1="118.5" x2="479.62" y2="118.5" style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;stroke-linejoin: bevel;shape-rendering:geometricPrecision;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><g style="fill: rgb(255,85,85); fill-opacity: 1.0; stroke: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 60.38 113.5 L 65.38 118.5 L 60.38 123.5 L 55.38 118.5 Z "/></g><g style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:geometricPrecision;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 60.38 113.5 L 65.38 118.5 L 60.38 123.5 L 55.38 118.5 Z "/></g><g style="fill: rgb(255,85,85); fill-opacity: 1.0; stroke: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 479.62 113.5 L 484.62 118.5 L 479.62 123.5 L 474.62 118.5 Z "/></g><g style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:geometricPrecision;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 479.62 113.5 L 484.62 118.5 L 479.62 123.5 L 474.62 118.5 Z "/></g><rect x="52" y="10" width="436" height="217" style="stroke-width: 0.5;stroke: rgb(0,0,0);stroke-opacity: 1.0;stroke-linecap: round;stroke-linejoin: round;shape-rendering:crispEdges;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/></svg></td>
-                  </tr>
-                  </tbody>
-              </table>
-            </details>
-            <details open>
-              <summary>wikidataId/Q1437</summary>
-              <table width="95%">
-                <thead>
-                  <tr>
-                    <th>Stat Var</th>
-                    <th>Num Observations</th>
-                    <th>Dates</th>
-                    <th>Corresponding Values</th>
-                    <th>Measurement Methods</th>
-                    <th>Units</th>
-                    <th>Scaling Factors</th>
-                    <th>Observation Periods</th>
-                    <th>Time Series Chart</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</td>
-                    <td>1</td>
-                    <td>2020-03-03</td>
-                    <td>1</td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td style="max-width:none;text-align: -webkit-center;"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:jfreesvg="http://www.jfree.org/jfreesvg/svg" width="500" height="250" text-rendering="auto" shape-rendering="auto">
+                </tr>
+                </tbody>
+            </table>
+          </details>
+          <details class="place-series-details">
+            <summary class="place-series-summary"><a name="places--wikidataId/Q1437" href="#places--wikidataId/Q1437">wikidataId/Q1437</a></summary>
+            <table width="95%">
+              <thead>
+                <tr>
+                  <th>Stat Var</th>
+                  <th>Num Observations</th>
+                  <th>Dates</th>
+                  <th>Corresponding Values</th>
+                  <th>Measurement Methods</th>
+                  <th>Units</th>
+                  <th>Scaling Factors</th>
+                  <th>Observation Periods</th>
+                  <th>Time Series Chart</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><a href="#places--wikidataId/Q1437--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name" name="places--wikidataId/Q1437--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name">CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</a></td>
+                  <td>1</td>
+                  <td>2020-03-03</td>
+                  <td>1</td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td style="max-width:none;text-align: -webkit-center;"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:jfreesvg="http://www.jfree.org/jfreesvg/svg" width="500" height="250" text-rendering="auto" shape-rendering="auto">
 <defs><clipPath id="testclip-0"><path d="M 0 0 L 500 0 L 500 250 L 0 250 L 0 0 Z "/></clipPath>
 <clipPath id="testclip-1"><path d="M 52 10 L 52 227 L 488 227 L 488 10 Z "/></clipPath>
 </defs>
 <rect x="0" y="0" width="500" height="250" style="fill: rgb(255,255,255); fill-opacity: 1.0" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><rect x="52" y="10" width="436" height="217" style="fill: rgb(255,255,255); fill-opacity: 1.0" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="52" y1="231" x2="488" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="23" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">2020-03-02</text></g><line x1="52" y1="233" x2="52" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="241" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">2020-03-03</text></g><line x1="270" y1="233" x2="270" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="48" y1="10" x2="48" y2="227" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="231.14" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.0</text></g><line x1="46" y1="227" x2="48" y2="227" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="209.44" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.2</text></g><line x1="46" y1="205.3" x2="48" y2="205.3" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="187.74" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.4</text></g><line x1="46" y1="183.6" x2="48" y2="183.6" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="166.04" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.6</text></g><line x1="46" y1="161.9" x2="48" y2="161.9" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="144.34" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.8</text></g><line x1="46" y1="140.2" x2="48" y2="140.2" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="122.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.0</text></g><line x1="46" y1="118.5" x2="48" y2="118.5" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="100.94" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.2</text></g><line x1="46" y1="96.8" x2="48" y2="96.8" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="79.24" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.4</text></g><line x1="46" y1="75.1" x2="48" y2="75.1" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="57.54" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.6</text></g><line x1="46" y1="53.4" x2="48" y2="53.4" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="35.84" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.8</text></g><line x1="46" y1="31.7" x2="48" y2="31.7" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="14.14" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">2.0</text></g><line x1="46" y1="10" x2="48" y2="10" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="52" y1="10" x2="52" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="270" y1="10" x2="270" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="227" x2="488" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="205.3" x2="488" y2="205.3" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="183.6" x2="488" y2="183.6" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="161.9" x2="488" y2="161.9" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="140.2" x2="488" y2="140.2" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="118.5" x2="488" y2="118.5" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="96.8" x2="488" y2="96.8" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="75.1" x2="488" y2="75.1" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="53.4" x2="488" y2="53.4" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="31.7" x2="488" y2="31.7" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="10" x2="488" y2="10" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><g style="fill: rgb(255,85,85); fill-opacity: 1.0; stroke: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 270 113.5 L 275 118.5 L 270 123.5 L 265 118.5 Z "/></g><g style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:geometricPrecision;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 270 113.5 L 275 118.5 L 270 123.5 L 265 118.5 Z "/></g><rect x="52" y="10" width="436" height="217" style="stroke-width: 0.5;stroke: rgb(0,0,0);stroke-opacity: 1.0;stroke-linecap: round;stroke-linejoin: round;shape-rendering:crispEdges;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/></svg></td>
-                  </tr>
-                  </tbody>
-              </table>
-            </details>
-            <details open>
-              <summary>wikidataId/Q677037</summary>
-              <table width="95%">
-                <thead>
-                  <tr>
-                    <th>Stat Var</th>
-                    <th>Num Observations</th>
-                    <th>Dates</th>
-                    <th>Corresponding Values</th>
-                    <th>Measurement Methods</th>
-                    <th>Units</th>
-                    <th>Scaling Factors</th>
-                    <th>Observation Periods</th>
-                    <th>Time Series Chart</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</td>
-                    <td>2</td>
-                    <td>2020-03-02 | 2020-03-03</td>
-                    <td>1 | 1</td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td>
-                    </td>
-                    <td style="max-width:none;text-align: -webkit-center;"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:jfreesvg="http://www.jfree.org/jfreesvg/svg" width="500" height="250" text-rendering="auto" shape-rendering="auto">
+                </tr>
+                </tbody>
+            </table>
+          </details>
+          <details class="place-series-details">
+            <summary class="place-series-summary"><a name="places--wikidataId/Q677037" href="#places--wikidataId/Q677037">wikidataId/Q677037</a></summary>
+            <table width="95%">
+              <thead>
+                <tr>
+                  <th>Stat Var</th>
+                  <th>Num Observations</th>
+                  <th>Dates</th>
+                  <th>Corresponding Values</th>
+                  <th>Measurement Methods</th>
+                  <th>Units</th>
+                  <th>Scaling Factors</th>
+                  <th>Observation Periods</th>
+                  <th>Time Series Chart</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><a href="#places--wikidataId/Q677037--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name" name="places--wikidataId/Q677037--CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name">CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name</a></td>
+                  <td>2</td>
+                  <td>2020-03-02 | 2020-03-03</td>
+                  <td>1 | 1</td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td>
+                  </td>
+                  <td style="max-width:none;text-align: -webkit-center;"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:jfreesvg="http://www.jfree.org/jfreesvg/svg" width="500" height="250" text-rendering="auto" shape-rendering="auto">
 <defs><clipPath id="testclip-0"><path d="M 0 0 L 500 0 L 500 250 L 0 250 L 0 0 Z "/></clipPath>
 <clipPath id="testclip-1"><path d="M 52 10 L 52 227 L 488 227 L 488 10 Z "/></clipPath>
 </defs>
 <rect x="0" y="0" width="500" height="250" style="fill: rgb(255,255,255); fill-opacity: 1.0" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><rect x="52" y="10" width="436" height="217" style="fill: rgb(255,255,255); fill-opacity: 1.0" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="52" y1="231" x2="488" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="45.88" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">00:00</text></g><line x1="60.38" y1="233" x2="60.38" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="150.69" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">06:00</text></g><line x1="165.19" y1="233" x2="165.19" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="255.5" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">12:00</text></g><line x1="270" y1="233" x2="270" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="360.31" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">18:00</text></g><line x1="374.81" y1="233" x2="374.81" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="465.12" y="245.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">00:00</text></g><line x1="479.62" y1="233" x2="479.62" y2="231" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="48" y1="10" x2="48" y2="227" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="231.14" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.0</text></g><line x1="46" y1="227" x2="48" y2="227" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="209.44" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.2</text></g><line x1="46" y1="205.3" x2="48" y2="205.3" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="187.74" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.4</text></g><line x1="46" y1="183.6" x2="48" y2="183.6" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="166.04" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.6</text></g><line x1="46" y1="161.9" x2="48" y2="161.9" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="144.34" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">0.8</text></g><line x1="46" y1="140.2" x2="48" y2="140.2" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="122.64" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.0</text></g><line x1="46" y1="118.5" x2="48" y2="118.5" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="100.94" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.2</text></g><line x1="46" y1="96.8" x2="48" y2="96.8" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="79.24" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.4</text></g><line x1="46" y1="75.1" x2="48" y2="75.1" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="57.54" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.6</text></g><line x1="46" y1="53.4" x2="48" y2="53.4" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="35.84" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">1.8</text></g><line x1="46" y1="31.7" x2="48" y2="31.7" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><g transform="matrix(1,0,0,1,0,0)"><text x="26" y="14.14" style="fill: rgb(64,64,64); fill-opacity: 1.0; font-family: sans-serif; font-size: 10px;" clip-path="url(#testclip-0)">2.0</text></g><line x1="46" y1="10" x2="48" y2="10" style="stroke-width: 0.5;stroke: rgb(128,128,128);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/><line x1="60.38" y1="10" x2="60.38" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="165.19" y1="10" x2="165.19" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="270" y1="10" x2="270" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="374.81" y1="10" x2="374.81" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="479.62" y1="10" x2="479.62" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="227" x2="488" y2="227" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="205.3" x2="488" y2="205.3" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="183.6" x2="488" y2="183.6" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="161.9" x2="488" y2="161.9" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="140.2" x2="488" y2="140.2" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="118.5" x2="488" y2="118.5" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="96.8" x2="488" y2="96.8" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="75.1" x2="488" y2="75.1" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="53.4" x2="488" y2="53.4" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="31.7" x2="488" y2="31.7" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="52" y1="10" x2="488" y2="10" style="stroke-width: 0.5;stroke: rgb(255,255,255);stroke-opacity: 1.0;stroke-linejoin: bevel;stroke-dasharray: 2.0, 2.0;shape-rendering:crispEdges;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><line x1="60.38" y1="118.5" x2="479.62" y2="118.5" style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;stroke-linejoin: bevel;shape-rendering:geometricPrecision;" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"/><g style="fill: rgb(255,85,85); fill-opacity: 1.0; stroke: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 60.38 113.5 L 65.38 118.5 L 60.38 123.5 L 55.38 118.5 Z "/></g><g style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:geometricPrecision;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 60.38 113.5 L 65.38 118.5 L 60.38 123.5 L 55.38 118.5 Z "/></g><g style="fill: rgb(255,85,85); fill-opacity: 1.0; stroke: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 479.62 113.5 L 484.62 118.5 L 479.62 123.5 L 474.62 118.5 Z "/></g><g style="stroke-width: 1.0;stroke: rgb(255,85,85);stroke-opacity: 1.0;stroke-linecap: square;shape-rendering:geometricPrecision;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-1)"><path d="M 479.62 113.5 L 484.62 118.5 L 479.62 123.5 L 474.62 118.5 Z "/></g><rect x="52" y="10" width="436" height="217" style="stroke-width: 0.5;stroke: rgb(0,0,0);stroke-opacity: 1.0;stroke-linecap: round;stroke-linejoin: round;shape-rendering:crispEdges;; fill: none" transform="matrix(1,0,0,1,0,0)" clip-path="url(#testclip-0)"/></svg></td>
-                  </tr>
-                  </tbody>
-              </table>
-            </details>
+                </tr>
+                </tbody>
+            </table>
+          </details>
       </div>
+    <script>
+      function handle_hash_change(){
+        /*
+        When the hash part of the location has changed, open the <detail> tag
+        closest to the anchor that is being linked to.
+        */
+
+        const new_hash = CSS.escape( // we will use the location hash in a CSS selector, so we need to escape it
+          location.hash // get the hash
+          .substring(1) // drop the initial `#` character
+          );
+
+        const anchor_selector = "a[name=" + new_hash +"]";
+        const anchor_element = document.querySelectorAll(anchor_selector)[0];
+        const parent_details_tag = anchor_element.closest("details")
+
+        if (parent_details_tag !== null){ // if tag exists
+          parent_details_tag.open = true; // open it.
+        }
+      }
+
+      window.onhashchange = handle_hash_change; // dynamically react to hash changes
+      document.addEventListener('DOMContentLoaded', handle_hash_change, false); // if page loaded with a location hash, also react to that.
+    </script>
   </body>
 </html>
