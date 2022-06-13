@@ -14,11 +14,11 @@ These counters are logged from parsing the corresponding types of files.
 
 ### CSV_InconsistentRows
 
-A CSV row had different number of columns from the rest of the file
+A CSV row had different number of columns from the rest of the file.
 
 ### CSV_MalformedDCIDFailures
 
-Malformed CSV value for dcid property; must be a text or reference
+Malformed CSV value for dcid property; must be a text or reference.
 
 ### CSV_EmptyDcidReferences
 
@@ -46,7 +46,7 @@ The number of columns to expect is the number of columns that exist in the heade
 
 #### Suggested User Actions
 
-1. Ensure that your CSV shape is uniform (every row has the same number of columns)
+1. Ensure that your CSV shape is uniform (every row has the same number of columns).
 
 ### CSV_HeaderFailure
 
@@ -58,11 +58,11 @@ Unable to parse header from CSV file.
 
 ### CSV_TmcfCheckFailure
 
-There was a fatal sanity error in TMCF
+There was a fatal sanity error in TMCF.
 
 #### Suggested User Actions
 
-1. Check counter messages that start with Sanity_ for FATAL error level
+1. Check counter messages that start with Sanity_ for FATAL error level.
 
 ### MCF_UnenclosedComplexValue
 
@@ -70,32 +70,32 @@ There was a fatal sanity error in TMCF
 
 #### Suggested User Actions
 
-1. Check complex values in your MCF and make sure they are enclosed in brackets
-1. Refer to the [documentation of valid complex values](complex_values.md)
+1. Check complex values in your MCF and make sure they are enclosed in brackets.
+1. Refer to the [documentation of valid complex values](complex_values.md).
 
 ### MCF_MalformedComplexValueParts
 
-[Complex value](complex_values.md) had less than 2 or more than 3 parts
+[Complex value](complex_values.md) had less than 2 or more than 3 parts.
 
 #### Suggested User Actions
 
-1. Check that all of your complex values have either 2 or 3 parts
+1. Check that all of your complex values have either 2 or 3 parts.
 
 ### MCF_QuantityMalformedValue
 
-In a [complex value](complex_values.md) with 2 parts, the part that was expected to be a number was not a number
+In a [complex value](complex_values.md) with 2 parts, the part that was expected to be a number was not a number.
 
 ### MCF_InvalidLatitude
 
-Invalid latitude part in [complex value](complex_values.md); latitude must be decimal degrees with an optional N/S suffix
+Invalid latitude part in [complex value](complex_values.md); latitude must be decimal degrees with an optional N/S suffix.
 
 ### MCF_InvalidLongitude
 
-Invalid longitude part in [complex value](complex_values.md); longitude must be decimal degrees with an optional E/W suffix
+Invalid longitude part in [complex value](complex_values.md); longitude must be decimal degrees with an optional E/W suffix.
 
 ### MCF_QuantityRangeMalformedValues
 
-An unexpected part was found in the [complex value](complex_values.md) in MCF, error message will specify the type of issue
+An unexpected part was found in the [complex value](complex_values.md) in MCF, error message will specify the type of issue.
 
 #### Suggested User Actions
 
@@ -103,11 +103,11 @@ An unexpected part was found in the [complex value](complex_values.md) in MCF, e
 
 ### MCF_MalformedColonLessLine
 
-MCF line was missing a colon to separate the property and the value
+MCF line was missing a colon to separate the property and the value.
 
 #### Suggested User Actions
 
-1. Ensure that the lines in your MCF are in the form `<property>: <value>
+1. Ensure that the lines in your MCF are in the form `<property>: <value>`.
 
 ### MCF_MalformedNodeName
 
@@ -126,24 +126,24 @@ A regular `<property>: <value>` line was found without a preceding `Node` line t
 Either;
 1. Found a 'Node' without properties, or
 1. The value of the `Node` property was surrounded by quotes (must be non-quoted), or
-1. The value of the `Node` property included a comma (must be a unary value)
+1. The value of the `Node` property included a comma (must be a unary value).
 
 ### MCF_MalformedComplexValue
 
-Found malformed [complex value](complex_values.md) without a closing bracket (`]`)
+Found malformed [complex value](complex_values.md) without a closing bracket (`]`).
 
 ### MCF_LocalReferenceInResolvedFile
 
-Found an internal `l:` reference in resolved entity value
+Found an internal `l:` reference in resolved entity value.
 
 ### TMCF_MalformedEntity
 
 When parsing the first (`Node: <value>`) line of a node in TMCF, the value did
-not have the required `E:` prefix to be an entity name
+not have the required `E:` prefix to be an entity name.
 
 ### TMCF_MalformedSchemaTerm
 
-TMCF had a malformed entity/column; the value must have a `->` delimeter that was missing
+TMCF had a malformed entity/column; the value must have a `->` delimeter that was missing.
 
 ### TMCF_UnsupportedColumnNameInProperty
 
@@ -170,7 +170,7 @@ External ID reference could not be resolved.
 
 #### Suggested User Actions
 
-1. Try searching for the ID on the [Data Commons Browser](https://datacommons.org/search)
+1. Try searching for the ID on the [Data Commons Browser](https://datacommons.org/search).
 
 ### Resolution_DivergingDcidsForExternalIds_
 
@@ -198,11 +198,11 @@ This is likely a cycle of local references, which the import tool is not able to
 
 ### Resolution_UnassignableNodeDcid
 
-Unable to assign DCID due to an unresolved local reference
+Unable to assign DCID due to an unresolved local reference.
 
 #### Suggested User Actions
 
-1. See [`Resolution_IrreplaceableLocalRef`](#Resolution_IrreplaceableLocalRef)
+1. See [`Resolution_IrreplaceableLocalRef`](#Resolution_IrreplaceableLocalRef).
 
 ### Resolution_DcidAssignmentFailure_
 
@@ -215,7 +215,7 @@ The tool can generate DCID for;
 
 or if there is an external ID resolver provided.
 
-**Suffix Description:** The typeOf value of the node (first value, if multiple)
+**Suffix Description:** The typeOf value of the node (first value, if multiple).
 
 #### Suggested User Actions
 
@@ -226,7 +226,7 @@ or if there is an external ID resolver provided.
 The reference was resolved, but it was to a failed node, therefore, this node
 is also marked as a failure.
 
-**Suffix Description:** The property this reference was found in
+**Suffix Description:** The property this reference was found in.
 
 #### Suggested User Actions
 
@@ -238,7 +238,7 @@ set of assumptions expected of DC nodes.
 
 ### Sanity_InconsistentSvObsValues
 
-Found different values provided for the same `StatVarObservation`
+Found different values provided for the same `StatVarObservation`.
 
 #### Suggested User Actions
 
@@ -254,7 +254,7 @@ The same curated DCID was found for different StatVars.
 
 ### Sanity_DifferentDcidsForSameStatVar
 
-Found different curated IDs for same StatVar
+Found different curated IDs for same StatVar.
 
 #### Suggested User Actions
 
@@ -270,7 +270,7 @@ Expected value to be a TMCF column that starts with `C:`, but did not find such 
 
 ### Sanity_TmcfMissingColumn
 
-Column referred to in TMCF is missing from CSV header
+Column referred to in TMCF is missing from CSV header.
 
 #### Suggested User Actions
 
@@ -283,11 +283,11 @@ Found an unknown statType value.
 StatTypes values either:
 - end with one of {`value`, `estimate`, `stderror`, `samplesize`, `growthrate`}, or
 - start with `percentile`, or
-- equal any one of {`marginoferror`, `measurementResult`}
+- equal any one of {`marginoferror`, `measurementResult`}.
 
 ### Sanity_InvalidObsDate
 
-Found a non-ISO8601 compliant date value
+Found a non-ISO8601 compliant date value.
 
 #### Suggested User Actions
 
@@ -299,7 +299,7 @@ Found an `StatVarObservation` node with a value that was not a number.
 
 ### Sanity_ObsMissingValueProp
 
-`StatVarObservation` node is missing the required `value` property
+`StatVarObservation` node is missing the required `value` property.
 
 ### Sanity_EmptyProperty
 
@@ -307,7 +307,7 @@ An empty property (property with no text) was found.
 
 #### Suggested User Actions
 
-1. Try searching your input files for a line that starts with a colon (`:`)
+1. Try searching your input files for a line that starts with a colon (`:`).
 
 ### Sanity_NotInitLowerPropName
 
@@ -316,11 +316,11 @@ must start with a lower-case letter.
 
 ### Sanity_MultipleDcidValues
 
-The value of the `dcid` property had more than one value
+The value of the `dcid` property had more than one value.
 
 ### Sanity_DcidTableEntity
 
-Value of the `dcid` property was an `E:` reference in TMCF, which is invalid
+Value of the `dcid` property was an `E:` reference in TMCF, which is invalid.
 
 ### Sanity_VeryLongDcid
 
@@ -335,53 +335,53 @@ A text value is a value surrounded by quotes.
 
 ### Sanity_RefPropHasNonRefValue
 
-Found text/numeric value in a property where the value is expected to be a reference
+Found text/numeric value in a property where the value is expected to be a reference.
 
 ### Sanity_InvalidChars_
 
 DCID reference included invalid characters.
 
-**Suffix Description:** The property whose value included invalid chars
+**Suffix Description:** The property whose value included invalid chars.
 
 ### Sanity_UnexpectedPropIn
 
-A property was found that was not expected for the type of the Node
+A property was found that was not expected for the type of the Node.
 
-**Suffix Description:** The type of the node
+**Suffix Description:** The type of the node.
 
 ### Sanity_EmptySchemaValue
 
-Found empty value for a property
+Found empty value for a property.
 
 ### Sanity_NonAsciiValueInSchema
 
-Schema node has property values with non-ascii characters
+Schema node has property values with non-ascii characters.
 
 ### Sanity_DcidNameMismatchInSchema
 
-The name and the DCID of Schema nodes must match, but this node did not satisfy this requirement
+The name and the DCID of Schema nodes must match, but this node did not satisfy this requirement.
 
 ### Sanity_MissingOrEmpty_
 
-Found a missing or empty property value
+Found a missing or empty property value.
 
-**Suffix Description:** The required property that was missing from this node
+**Suffix Description:** The required property that was missing from this node.
 
 ### Sanity_MultipleVals_
 
-Found multiple values for single-value property
+Found multiple values for single-value property.
 
-**Suffix Description:** The property with the multiple values
+**Suffix Description:** The property with the multiple values.
 
 ### Sanity_NotInitUpper_
 
-Found a class reference that does not start with an upper-case
+Found a class reference that does not start with an upper-case.
 
 **Suffix Description:** The property, and optionally, the type of the node separated with an underscore (`_`) from the property.
 
 ### Sanity_NotInitLower_
 
-Found a property reference that does not start with a lower-case
+Found a property reference that does not start with a lower-case.
 
 **Suffix Description:** The property, and optionally, the type of the node separated with an underscore (`_`) from the property.
 
@@ -392,15 +392,15 @@ against Data Commons.
 
 ### Existence_FailedDcCall
 
-Network request to DataCommons API failed
+Network request to DataCommons API failed.
 
 ### Existence_MissingReference
 
-External reference existence check with the DataCommons API returned no results
+External reference existence check with the DataCommons API returned no results.
 
 ### Existence_MissingTriple
 
-External triple existence check with the DataCommons API returned no results
+External triple existence check with the DataCommons API returned no results.
 
 ## Stats Check Counters
 These counters represent potential issues found in the statistical analysis of the input data for pitfalls such as extreme outliers, holes in dates that the data is available for, etc.
@@ -448,7 +448,7 @@ Mutation is a step of MCF parsing where e.g. complex values are expanded.
 
 ### Mutator_MissingTypeOf
 
-MCF node missing required [typeOf](https://datacommons.org/browser/typeOf) property
+MCF node missing required [typeOf](https://datacommons.org/browser/typeOf) property.
 
 ### Mutator_InvalidObsValue
 
