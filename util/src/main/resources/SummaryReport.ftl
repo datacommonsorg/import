@@ -141,7 +141,7 @@
             <table width="95%">
               <thead>
                 <tr>
-                  <th>Series</th>
+                  <th>StatVar</th>
                   <th>Num Observations</th>
                   <th>Dates</th>
                   <th>Corresponding Values</th>
