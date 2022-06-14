@@ -1,6 +1,12 @@
 <html>
   <head>
     <title>Summary Report</title>
+    <!-- required by DataTables -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js" type="text/javascript"></script>
+
+    <!-- DataTables documentation: https://datatables.net/ -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.12.1/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.12.1/datatables.min.js"></script>
   </head>
   <body>
     <style>
@@ -18,6 +24,9 @@
       }
       tbody tr:hover {
         background-color: #ccc;
+      }
+      .datatables-table{
+        border: 0;
       }
       .place-series-summary {
         cursor: pointer;
@@ -166,7 +175,13 @@
         <h2>
           <a name="statvars" href="#statvars">StatVarObservations by StatVar</a>
         </h2>
-        <table width="95%">
+        <!-- 
+          classes here provide styling through DataTables.
+          documentation:
+          - hover: https://datatables.net/examples/styling/hover.html
+          - order-column: https://datatables.net/examples/styling/order-column.html
+        -->
+        <table id="statvars-table" class="datatables-table hover order-column" width="95%">
           <thead>
             <tr>
               <th>Stat Var</th>
@@ -224,7 +239,7 @@
         <#list placeSeriesSummaryMap as place, placeSeriesSummary>
           <details class="place-series-details">
             <summary class="place-series-summary"><a name="places--${place}" href="#places--${place}">${place}</a></summary>
-            <table width="95%">
+            <table id="sampleplaces-table--${place?counter}" class="datatables-table hover order-column" width="95%">
               <thead>
                 <tr>
                   <th>Stat Var</th>
@@ -238,37 +253,37 @@
                   <th>Time Series Chart</th>
                 </tr>
               </thead>
-              <#list placeSeriesSummary.getStatVarSummaryMap() as sv, svSummary>
               <tbody>
-                <tr>
-                  <td><a href="#places--${place}--${sv}" name="places--${place}--${sv}">${sv}</a></td>
-                  <td>${svSummary.getNumObservations()}</td>
-                  <td>${svSummary.getSeriesDates()?join(" | ")}</td>
-                  <td>${svSummary.getSeriesValues()?join(" | ")}</td>
-                  <td>
-                    <#list svSummary.getMMethods() as method>
-                    <div>${method}</div>
-                    </#list>
-                  </td>
-                  <td>
-                    <#list svSummary.getUnits() as unit>
-                    <div>${unit}</div>
-                    </#list>
-                  </td>
-                  <td>
-                    <#list svSummary.getSFactors() as sFactor>
-                    <div>${sFactor}</div>
-                    </#list>
-                  </td>
-                  <td>
-                    <#list svSummary.getObservationPeriods() as obsPeriod>
-                    <div>${obsPeriod}</div>
-                    </#list>
-                  </td>
-                  <td style="max-width:none;text-align: -webkit-center;">${svSummary.getTimeSeriesChartSVG()}</td>
-                </tr>
-                </tbody>
+                <#list placeSeriesSummary.getStatVarSummaryMap() as sv, svSummary>
+                  <tr>
+                    <td><a href="#places--${place}--${sv}" name="places--${place}--${sv}">${sv}</a></td>
+                    <td>${svSummary.getNumObservations()}</td>
+                    <td>${svSummary.getSeriesDates()?join(" | ")}</td>
+                    <td>${svSummary.getSeriesValues()?join(" | ")}</td>
+                    <td>
+                      <#list svSummary.getMMethods() as method>
+                      <div>${method}</div>
+                      </#list>
+                    </td>
+                    <td>
+                      <#list svSummary.getUnits() as unit>
+                      <div>${unit}</div>
+                      </#list>
+                    </td>
+                    <td>
+                      <#list svSummary.getSFactors() as sFactor>
+                      <div>${sFactor}</div>
+                      </#list>
+                    </td>
+                    <td>
+                      <#list svSummary.getObservationPeriods() as obsPeriod>
+                      <div>${obsPeriod}</div>
+                      </#list>
+                    </td>
+                    <td style="max-width:none;text-align: -webkit-center;">${svSummary.getTimeSeriesChartSVG()}</td>
+                  </tr>
                 </#list>
+              </tbody>
             </table>
           </details>
         </#list>
@@ -299,4 +314,40 @@
       document.addEventListener('DOMContentLoaded', handle_hash_change, false); // if page loaded with a location hash, also react to that.
     </script>
   </body>
+  <script>
+    function make_table_DataTable(id){
+      // given a CSS selector for a <table> element, adds DataTable to it
+      // with only sorting enabled, and with no default order column.
+      
+      $(id).DataTable({
+        paging: false,
+        searching: false,
+        info: false,
+        order: [] // don't apply initial ordering (which is turned on by default)
+      });
+
+      // DataTables seem to add a class "no-footer" to the tables managed by it,
+      // which has no behavior effects but adds a weird 1px gray bottom-border,
+      // so we remove that class after initializing the table as a DataTable.
+      // reference for another post mentioning this issue:
+      // https://datatables.net/forums/discussion/53837/class-no-footer-applied-to-table-despite-a-footer-is-present
+      $(id).removeClass("no-footer");
+    }
+
+    $(document).ready(function () {
+      const sampleplace_table_ids = [
+        <#if placeSeriesSummaryMap?has_content>
+            <#list placeSeriesSummaryMap as place, placeSeriesSummary>
+            "#sampleplaces-table--${place?counter}",
+            </#list>
+          </#if>
+      ]
+
+      make_table_DataTable("#statvars-table");
+      sampleplace_table_ids.forEach(( id ) => {
+        make_table_DataTable(id)
+      })
+    });
+
+  </script>
 </html>
