@@ -52,7 +52,7 @@ public class PlaceSeriesSummary {
       TimeSeries timeSeries = new TimeSeries("ts");
 
       // this.timeSeries is kept sorted with a TreeMap, so we simply add the
-      // datapoints in the order they are retrieved from .entrySet() and they 
+      // datapoints in the order they are retrieved from .entrySet() and they
       // are in the correct sorted order
       for (Map.Entry<String, DataPoint> timeSeriesDataPoint : this.timeSeries.entrySet()) {
 
