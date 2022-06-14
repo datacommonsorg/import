@@ -147,23 +147,6 @@ public class SummaryReportGenerator {
       chart.draw(svg, new Rectangle2D.Double(0, 0, CHART_WIDTH, CHART_HEIGHT));
       return svg.getSVGElement();
     }
-
-    public String getTimeSeriesChartSVG() {
-      TimeSeries timeSeries = new TimeSeries("ts");
-      // populate timeSeries with dates and values from this.seriesDates and this.seriesValues
-      for (int i = 0; i < this.seriesDates.size(); i++) {
-        if (i >= this.seriesValues.size()) break;
-        LocalDateTime localDateTime = StringUtil.getValidISO8601Date(seriesDates.get(i));
-        if (localDateTime == null) continue;
-        timeSeries.addOrUpdate(
-            new Day(
-                localDateTime.getDayOfMonth(),
-                localDateTime.getMonthValue(),
-                localDateTime.getYear()),
-            this.seriesValues.get(i));
-      }
-      return constructSVGChartFromTimeSeries(timeSeries);
-    }
   }
 
   public static void generateReportSummary(
