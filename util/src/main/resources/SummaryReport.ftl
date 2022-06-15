@@ -184,7 +184,7 @@
         <table id="statvars-table" class="datatables-table hover order-column" width="95%">
           <thead>
             <tr>
-              <th>Stat Var</th>
+              <th>StatVar</th>
               <th>Num Places</th>
               <th>Num Observations</th>
               <th>Num Observation Dates</th>
@@ -242,46 +242,40 @@
             <table id="sampleplaces-table--${place?counter}" class="datatables-table hover order-column" width="95%">
               <thead>
                 <tr>
-                  <th>Stat Var</th>
+                  <th>StatVar</th>
                   <th>Num Observations</th>
                   <th>Dates</th>
                   <th>Corresponding Values</th>
-                  <th>Measurement Methods</th>
-                  <th>Units</th>
-                  <th>Scaling Factors</th>
-                  <th>Observation Periods</th>
+                  <th>Measurement Method</th>
+                  <th>Unit</th>
+                  <th>Scaling Factor</th>
+                  <th>Observation Period</th>
                   <th>Time Series Chart</th>
                 </tr>
               </thead>
               <tbody>
-                <#list placeSeriesSummary.getStatVarSummaryMap() as sv, svSummary>
-                  <tr>
-                    <td><a href="#places--${place}--${sv}" name="places--${place}--${sv}">${sv}</a></td>
-                    <td>${svSummary.getNumObservations()}</td>
-                    <td>${svSummary.getSeriesDates()?join(" | ")}</td>
-                    <td>${svSummary.getSeriesValues()?join(" | ")}</td>
-                    <td>
-                      <#list svSummary.getMMethods() as method>
-                      <div>${method}</div>
-                      </#list>
-                    </td>
-                    <td>
-                      <#list svSummary.getUnits() as unit>
-                      <div>${unit}</div>
-                      </#list>
-                    </td>
-                    <td>
-                      <#list svSummary.getSFactors() as sFactor>
-                      <div>${sFactor}</div>
-                      </#list>
-                    </td>
-                    <td>
-                      <#list svSummary.getObservationPeriods() as obsPeriod>
-                      <div>${obsPeriod}</div>
-                      </#list>
-                    </td>
-                    <td style="max-width:none;text-align: -webkit-center;">${svSummary.getTimeSeriesChartSVG()}</td>
-                  </tr>
+                <#list placeSeriesSummary.getSvSeriesSummaryMap() as sv, timeSeries>
+                  <#list timeSeries as hash, seriesSummary>
+                    <tr>
+                      <td><a href="#places--${place}--${sv}" name="places--${place}--${sv}">${sv}</a></td>
+                      <td>${seriesSummary.getTimeSeries()?size}</td>
+                      <td>${seriesSummary.getDatesString()}</td>
+                      <td>${seriesSummary.getValueString()}</td>
+                      <td>
+                        <div>${seriesSummary.getValidationResult().getMeasurementMethod()}</div>
+                      </td>
+                      <td>
+                        <div>${seriesSummary.getValidationResult().getUnit()}</div>
+                      </td>
+                      <td>
+                        <div>${seriesSummary.getValidationResult().getScalingFactor()}</div>
+                      </td>
+                      <td>
+                        <div>${seriesSummary.getValidationResult().getObservationPeriod()}</div>
+                      </td>
+                      <td style="max-width:none;text-align: -webkit-center;">${seriesSummary.getTimeSeriesSVGChart()}</td>
+                    </tr>
+                  </#list>
                 </#list>
               </tbody>
             </table>
@@ -337,10 +331,10 @@
     $(document).ready(function () {
       const sampleplace_table_ids = [
         <#if placeSeriesSummaryMap?has_content>
-            <#list placeSeriesSummaryMap as place, placeSeriesSummary>
-            "#sampleplaces-table--${place?counter}",
-            </#list>
-          </#if>
+          <#list placeSeriesSummaryMap as place, placeSeriesSummary>
+          "#sampleplaces-table--${place?counter}",
+          </#list>
+        </#if>
       ]
 
       make_table_DataTable("#statvars-table");

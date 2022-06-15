@@ -3,6 +3,7 @@ package org.datacommons.util;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -14,6 +15,8 @@ import org.datacommons.proto.Debug.DataPoint.DataValue;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
+import org.jfree.data.time.Day;
+import org.jfree.data.time.TimeSeries;
 
 // An object to hold all the series information for all the statistical variables for a place.
 public class PlaceSeriesSummary {
@@ -22,6 +25,49 @@ public class PlaceSeriesSummary {
     StatValidationResult.Builder validationResult;
     // Key is date of each datapoint. Use treemap here to keep the dates sorted.
     TreeMap<String, DataPoint> timeSeries;
+
+    public StatValidationResult.Builder getValidationResult() {
+      return this.validationResult;
+    }
+
+    public TreeMap<String, DataPoint> getTimeSeries() {
+      return this.timeSeries;
+    }
+
+    public String getDatesString() {
+      return String.join(" | ", this.timeSeries.keySet());
+    }
+
+    public String getValueString() {
+      List<String> valueStrings = new ArrayList<String>();
+
+      for (DataPoint dv : this.timeSeries.values()) {
+        valueStrings.add(Double.toString(dv.getValues(0).getValue()));
+      }
+      return String.join(" | ", valueStrings);
+    }
+
+    public String getTimeSeriesSVGChart() {
+
+      TimeSeries timeSeries = new TimeSeries("ts");
+
+      // this.timeSeries is kept sorted with a TreeMap, so we simply add the
+      // datapoints in the order they are retrieved from .entrySet() and they
+      // are in the correct sorted order
+      for (Map.Entry<String, DataPoint> timeSeriesDataPoint : this.timeSeries.entrySet()) {
+
+        LocalDateTime localDateTime = StringUtil.getValidISO8601Date(timeSeriesDataPoint.getKey());
+        if (localDateTime == null) continue;
+        timeSeries.addOrUpdate(
+            new Day(
+                localDateTime.getDayOfMonth(),
+                localDateTime.getMonthValue(),
+                localDateTime.getYear()),
+            timeSeriesDataPoint.getValue().getValues(0).getValue());
+      }
+
+      return StatVarSummary.constructSVGChartFromTimeSeries(timeSeries);
+    }
   }
 
   public static boolean TEST_mode = false;

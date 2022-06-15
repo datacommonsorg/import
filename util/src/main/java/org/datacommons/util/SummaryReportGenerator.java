@@ -11,7 +11,6 @@ import java.io.Writer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.List;
 import org.datacommons.proto.Debug;
@@ -24,7 +23,6 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.util.ShapeUtils;
-import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.graphics2d.svg.SVGGraphics2D;
@@ -92,21 +90,8 @@ public class SummaryReportGenerator {
       return this.seriesValues;
     }
 
-    public String getTimeSeriesChartSVG() {
+    public static String constructSVGChartFromTimeSeries(TimeSeries timeSeries) {
       TimeSeriesCollection dataset = new TimeSeriesCollection();
-      TimeSeries timeSeries = new TimeSeries("ts");
-      // populate timeSeries with dates and values from this.seriesDates and this.seriesValues
-      for (int i = 0; i < this.seriesDates.size(); i++) {
-        if (i >= this.seriesValues.size()) break;
-        LocalDateTime localDateTime = StringUtil.getValidISO8601Date(seriesDates.get(i));
-        if (localDateTime == null) continue;
-        timeSeries.addOrUpdate(
-            new Day(
-                localDateTime.getDayOfMonth(),
-                localDateTime.getMonthValue(),
-                localDateTime.getYear()),
-            this.seriesValues.get(i));
-      }
       if (timeSeries.isEmpty()) return "";
       dataset.addSeries(timeSeries);
       // create the time series chart with default settings
@@ -124,13 +109,16 @@ public class SummaryReportGenerator {
       if (timeSeries.findValueRange().getLength() == 0) {
         // Manually set the range when the values in the time series are all the same. Otherwise,
         // the chart library will draw an axis with multiple ticks all labeled with that same value.
-        yAxis.setRange(this.seriesValues.get(0) - 1, this.seriesValues.get(0) + 1);
+        double singleValue = timeSeries.getValue(0).doubleValue();
+        yAxis.setRange(singleValue - 1, singleValue + 1);
       }
       DateAxis xAxis = (DateAxis) plot.getDomainAxis();
-      if (this.seriesDates.size() == 1) {
+      if (timeSeries.getTimePeriods().size() == 1) {
         // Override the date formatter for the x-axis when there is only one data point. Otherwise,
         // the chart library will label the single date as 00:00:00.
-        String datePattern = StringUtil.getValidISO8601DatePattern(this.seriesDates.get(0));
+        String datePattern =
+            StringUtil.getValidISO8601DatePattern(
+                timeSeries.getTimePeriods().iterator().next().toString());
         if (StringUtil.getValidISO8601DateTemplate(datePattern).isEmpty()) {
           xAxis.setDateFormatOverride(new SimpleDateFormat("yyyy-MM-dd"));
         } else {
