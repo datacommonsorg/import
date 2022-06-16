@@ -163,7 +163,7 @@ potential statistical issue (counter:  `StatsCheck_MaxPercentFluctuationGreaterT
         }],
         "percentDifference": 133.33
       }]
-    }
+    }]
   ```
 Note  that information relevant to this check (sample place, file and location of the issue,
 the values involved, and the exact percent fluctuation) are conveniently provided
