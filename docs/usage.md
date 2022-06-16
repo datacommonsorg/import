@@ -200,7 +200,7 @@ Defaults to `LOCAL`.
 
 ### `-sr`, `--summary-report`
 
-Generates a summary report in HTML format. See the [output section above](#output) for more details on what is included in the summary report. 
+Generates an HTML summary report named `summary_report.html` in the output folder. See the [output section above](#output) for more details on what is included in the summary report.
 
 Defaults to `true`.
 
