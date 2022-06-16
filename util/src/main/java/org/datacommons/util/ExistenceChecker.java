@@ -1,13 +1,8 @@
 package org.datacommons.util;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,10 +19,7 @@ import org.datacommons.proto.Mcf;
 // This class is thread-safe.
 public class ExistenceChecker {
   private static final Logger logger = LogManager.getLogger(ExistenceChecker.class);
-  // Use the autopush end-point so we get more recent schema additions that
-  // haven't rolled out.
-  private static final String API_ROOT =
-      "https://autopush.api.datacommons.org/node/property-values";
+
   // For now we only need checks for certain Property/Class props.
   private static final Set<String> SCHEMA_PROPERTIES =
       Set.of(Vocabulary.DOMAIN_INCLUDES, Vocabulary.RANGE_INCLUDES, Vocabulary.SUB_CLASS_OF);
@@ -200,7 +192,7 @@ public class ExistenceChecker {
       throws IOException, InterruptedException {
     logCtx.incrementInfoCounterBy("Existence_NumDcCalls", 1);
 
-    var dataJson = callDc(subs, pred);
+    var dataJson = ApiHelper.callDc(httpClient, subs, pred);
 
     if (dataJson == null) {
       if (verbose) {
@@ -298,29 +290,6 @@ public class ExistenceChecker {
       return true;
     }
     return false;
-  }
-
-  private JsonObject callDc(List<String> nodes, String property)
-      throws IOException, InterruptedException {
-    List<String> args = new ArrayList<>();
-    JsonObject arg = new JsonObject();
-    JsonArray dcids = new JsonArray();
-    for (var node : nodes) {
-      dcids.add(node);
-    }
-    arg.add("dcids", dcids);
-    arg.addProperty("property", property);
-    arg.addProperty("direction", "out");
-    var request =
-        HttpRequest.newBuilder(URI.create(API_ROOT))
-            .version(HttpClient.Version.HTTP_1_1)
-            .header("accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(arg.toString()))
-            .build();
-    var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-    var payloadJson = new JsonParser().parse(response.body().trim()).getAsJsonObject();
-    if (payloadJson == null || !payloadJson.has("payload")) return null;
-    return new JsonParser().parse(payloadJson.get("payload").getAsString()).getAsJsonObject();
   }
 
   private static void logEntry(LogCb logCb, String obj) {
