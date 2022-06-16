@@ -129,7 +129,7 @@ understand and resolve the issue(s).
 For example, in this test input [`covid.mcf`](../tool/src/test/resources/org/datacommons/tool/lint/statchecks/input/covid.mcf) file, the value of the `CumulativeCount_MedicalTest_ConditionCOVID_19_Positive` StatVar for place
 `geoId/07` is `3.0` one day, (2020-03-02;line 49), and `7.0` on the next day (2020-03-03; line 65).
 Because the fluctuation in the value is greater than 100%, the tool flags this as a
-potential statistical issue. This is logged in the resulting [`report.json`](../tool/src/test/resources/org/datacommons/tool/lint/statchecks/output/report.json) as follows: 
+potential statistical issue (counter:  `StatsCheck_MaxPercentFluctuationGreaterThan100`). This is logged in the resulting [`report.json`](../tool/src/test/resources/org/datacommons/tool/lint/statchecks/output/report.json) as follows:
   ```json
   "statsCheckSummary": [{
       "placeDcid": "geoId/07",
