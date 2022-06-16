@@ -44,7 +44,7 @@ Both modes generate two output files:
 - `report.json` is a detailed log of error/warning counters and associated messages to help locate the source of the counters.
 - `summary_report.html` includes a summary of the counters from `report.json`, followed by statistical summaries for sample places. It is meant to be viewed in a web browser.
 
-If input CSV and TMCF files are provided, the reports will also include information on statistics from sample places and  time-series charts. In `genmcf` node, generated instance MCF files are written to `table_mcf_nodes_{CSV_FILE_NAME}.mcf` (if there were no fatal errors).
+If input includes statistics (CSV and TMCF files, or MCF files with [`StatVarObservation`](https://github.com/datacommonsorg/data/blob/master/docs/representing_statistics.md#statvarobservation) nodes are provided), the reports will also include information on statistics from sample places and  time-series charts. In `genmcf` node, generated instance MCF files are written to `table_mcf_nodes_{CSV_FILE_NAME}.mcf` (if there were no fatal errors).
 
 The output files are placed under a new folder in the current working directory named `dc_generated` by default.The `--output-dir` flag (documented below) can be specified to modify the name of this output folder.
 
