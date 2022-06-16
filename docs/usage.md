@@ -109,7 +109,9 @@ Shows a help message and exit.
 
 Specifies the number of concurrent threads used for processing CSVs.
 
-You need multiple CSVs to take advantage of concurrent processing. TIP: In case your generated CSV is very large, you can use [the split_csv tool](https://github.com/datacommonsorg/data/tree/master/tools#csv-splitter) to shard it into multiple files.
+You need multiple CSVs to take advantage of concurrent processing.
+
+**TIP:** In case your generated CSV is very large, you can use [the split_csv tool](https://github.com/datacommonsorg/data/tree/master/tools#csv-splitter) to shard it into multiple files.
 
 Defaults to `1`.
 
