@@ -131,7 +131,8 @@
         <h2>Series Summaries for Sample Places</h2>
           <#list placeSeriesSummaryMap as place, placeSeriesSummary>
             <details open>
-              <summary>${place}</summary>
+              <summary>${(placeSeriesSummary.getPlaceName())!place} | (dcid:${place})</summary>
+              <a href="https://datacommons.org/browser/${place}">Open this place (dcid:${place}) in Data Commons browser.</a>
               <table width="95%">
                 <thead>
                   <tr>

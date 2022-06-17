@@ -452,6 +452,22 @@ public class StatChecker {
     }
   }
 
+  public List<String> getSamplePlaces() {
+    List<String> places = new ArrayList<String>();
+
+    for (Set<String> placesOfType : samplePlaces.values()) {
+      places.addAll(placesOfType);
+    }
+
+    return places;
+  }
+
+  public void setNameForSamplePlace(String place_dcid, String name) {
+    if (placeSeriesSummaryMap.containsKey(place_dcid)) {
+      placeSeriesSummaryMap.get(place_dcid).setPlaceName(name);
+    }
+  }
+
   private synchronized void extractStatVarInfoFromNode(McfGraph.PropertyValues node) {
     // TODO (chejennifer): extract prop value into a struct and pass around instead of looking it up
     // in multiple places

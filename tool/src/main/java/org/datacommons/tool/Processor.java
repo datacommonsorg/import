@@ -14,6 +14,8 @@
 
 package org.datacommons.tool;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import freemarker.template.TemplateException;
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +44,7 @@ public class Processor {
   private final List<Mcf.McfGraph> nodesForVariousChecks = new ArrayList<>();
   private final ExecutorService execService;
   private final LogWrapper logCtx;
+  private HttpClient httpClient;
 
   public static Integer process(Args args) throws IOException, TemplateException {
     Integer retVal = 0;
@@ -100,6 +103,9 @@ public class Processor {
 
       // We've been adding stats to statChecker all along, now do the actual check.
       processor.checkStats();
+      // Makes API requests to get the names of the sample places from the DC
+      // API, and puts that information to StatChecker.
+      processor.fetchNamesforSamplePlaces(args.verbose);
     } catch (DCTooManyFailuresException | InterruptedException ex) {
       // Only for DCTooManyFailuresException, we will dump the logCtx and exit.
       logger.error("Aborting prematurely, see report.json.");
@@ -116,14 +122,41 @@ public class Processor {
     return retVal;
   }
 
+  private void fetchNamesforSamplePlaces(Boolean verbose) throws IOException, InterruptedException {
+    JsonObject apiResponse = ApiHelper.callDc(httpClient, statChecker.getSamplePlaces(), "name");
+    if (apiResponse != null) {
+      for (var entry : apiResponse.entrySet()) {
+        String placeDcid = entry.getKey();
+        JsonObject nodeJson = entry.getValue().getAsJsonObject();
+
+        if (nodeJson.has("out")) {
+          JsonArray receivedNamesForPlace = nodeJson.getAsJsonArray("out");
+          // in case there are multiple names, simply use the first.
+          // for example, Ivory Coast has multiple names:
+          // https://datacommons.org/browser/country/CIV
+          String placeName =
+              receivedNamesForPlace.get(0).getAsJsonObject().get("value").getAsString();
+          statChecker.setNameForSamplePlace(placeDcid, placeName);
+        }
+      }
+    } else {
+      // could not get sample place names, fail silently because this is not a
+      // critical feature.
+    }
+  }
+
   private Processor(Args args) {
     logger.info("Command options: " + args.toString());
 
     this.args = args;
     this.logCtx =
         new LogWrapper(Debug.Log.newBuilder().setCommandArgs(args.toProto()), args.outputDir);
+
+    // we initialize an httpClient regardless of args.doExistenceChecks
+    // because other features might still make API calls
+    httpClient = HttpClient.newHttpClient();
     if (args.doExistenceChecks) {
-      existenceChecker = new ExistenceChecker(HttpClient.newHttpClient(), args.verbose, logCtx);
+      existenceChecker = new ExistenceChecker(httpClient, args.verbose, logCtx);
     }
     if (args.resolutionMode == Args.ResolutionMode.FULL) {
       idResolver = new ExternalIdResolver(HttpClient.newHttpClient(), args.verbose, logCtx);
