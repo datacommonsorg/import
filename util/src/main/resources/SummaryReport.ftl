@@ -239,7 +239,7 @@
         <#list placeSeriesSummaryMap as place, placeSeriesSummary>
           <details class="place-series-details">
             <summary class="place-series-summary"><a name="places--${place}" href="#places--${place}">${(placeSeriesSummary.getPlaceName())!place} | (dcid:${place})</a></summary>
-            <a href="https://datacommons.org/browser/${place}">Open this place (dcid:${place}) in Data Commons browser.</a>
+            <a href="https://datacommons.org/browser/${place}" target="_blank">Open this place (dcid:${place}) in Data Commons browser.</a>
             <table id="sampleplaces-table--${place?counter}" class="datatables-table hover order-column" width="95%">
               <thead>
                 <tr>
