@@ -480,5 +480,6 @@ public class StatChecker {
     svMap.mMethods.add(McfUtil.getPropVal(node, Vocabulary.MEASUREMENT_METHOD));
     svMap.units.add(McfUtil.getPropVal(node, Vocabulary.UNIT));
     svMap.scalingFactors.add(McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR));
+    svMap.observationPeriods.add(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_PERIOD));
   }
 }
