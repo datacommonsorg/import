@@ -2,10 +2,10 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "NumRowSuccesses": "48",
-        "NumPVSuccesses": "336",
-        "Existence_NumChecks": "294",
-        "NumNodeSuccesses": "48",
+        "NumRowSuccesses": "54",
+        "NumPVSuccesses": "432",
+        "Existence_NumChecks": "385",
+        "NumNodeSuccesses": "54",
         "Existence_NumDcCalls": "1"
       }
     },
@@ -27,7 +27,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "covid.csv",
-      "lineNumber": "25"
+      "lineNumber": "31"
     },
     "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive', observationDate: '2020-02-03', value1: 3.0, value2: 8.0",
     "counterKey": "Sanity_InconsistentSvObsValues"
@@ -36,7 +36,7 @@
     "placeDcid": "geoId/07",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
@@ -47,7 +47,7 @@
           "value": 0.0,
           "locations": [{
             "file": "covid.csv",
-            "lineNumber": "14"
+            "lineNumber": "20"
           }]
         }]
       }, {
@@ -56,7 +56,7 @@
           "value": 1.0,
           "locations": [{
             "file": "covid.csv",
-            "lineNumber": "28"
+            "lineNumber": "34"
           }]
         }]
       }],
@@ -66,7 +66,7 @@
     "placeDcid": "geoId/06",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
@@ -77,13 +77,13 @@
           "value": 3.0,
           "locations": [{
             "file": "covid.csv",
-            "lineNumber": "24"
+            "lineNumber": "30"
           }]
         }, {
           "value": 8.0,
           "locations": [{
             "file": "covid.csv",
-            "lineNumber": "25"
+            "lineNumber": "31"
           }]
         }]
       }]
@@ -95,7 +95,7 @@
     "placeDcid": "geoId/201",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
@@ -106,7 +106,7 @@
     "placeDcid": "geoId/0601",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
@@ -117,16 +117,16 @@
           "value": 1.0,
           "locations": [{
             "file": "covid.csv",
-            "lineNumber": "34"
+            "lineNumber": "40"
           }]
         }]
       }]
     }]
   }, {
-    "placeDcid": "geoId/241",
+    "placeDcid": "geoId/25111",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
@@ -134,10 +134,10 @@
       "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
     }]
   }, {
-    "placeDcid": "geoId/25111",
+    "placeDcid": "geoId/241",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
@@ -148,7 +148,7 @@
     "placeDcid": "geoId/231",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
@@ -159,7 +159,7 @@
     "placeDcid": "geoId/221",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
@@ -170,18 +170,7 @@
     "placeDcid": "geoId/211",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
-    "scalingFactor": "",
-    "unit": "",
-    "validationCounters": [{
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
-    }]
-  }, {
-    "placeDcid": "geoId/27111",
-    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
-    "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
@@ -192,7 +181,18 @@
     "placeDcid": "geoId/28111",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
+    "scalingFactor": "",
+    "unit": "",
+    "validationCounters": [{
+      "counterKey": "StatsCheck_Data_Holes",
+      "additionalDetails": "Possible data hole found. Dates in this series: 2020-01-02, 2020-02-02, 2020-06-02"
+    }]
+  }, {
+    "placeDcid": "geoId/27111",
+    "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
+    "measurementMethod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
@@ -203,7 +203,7 @@
     "placeDcid": "geoId/26111",
     "statVarDcid": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive",
     "measurementMethod": "",
-    "observationPeriod": "",
+    "observationPeriod": "P1Y",
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
