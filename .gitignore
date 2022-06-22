@@ -12,3 +12,6 @@ target/
 .classpath
 .factorypath
 .project
+
+# static files
+**/node_modules/**
