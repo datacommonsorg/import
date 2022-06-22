@@ -123,7 +123,8 @@ public class Processor {
   }
 
   private void fetchNamesforSamplePlaces(Boolean verbose) throws IOException, InterruptedException {
-    JsonObject apiResponse = ApiHelper.callDc(httpClient, statChecker.getSamplePlaces(), "name");
+    JsonObject apiResponse =
+        ApiHelper.fetchPropertyValues(httpClient, statChecker.getSamplePlaces(), "name");
     if (apiResponse != null) {
       for (var entry : apiResponse.entrySet()) {
         String placeDcid = entry.getKey();

@@ -192,7 +192,7 @@ public class ExistenceChecker {
       throws IOException, InterruptedException {
     logCtx.incrementInfoCounterBy("Existence_NumDcCalls", 1);
 
-    var dataJson = ApiHelper.callDc(httpClient, subs, pred);
+    var dataJson = ApiHelper.fetchPropertyValues(httpClient, subs, pred);
 
     if (dataJson == null) {
       if (verbose) {
