@@ -490,7 +490,6 @@ public class StatChecker {
   // Makes API requests to get the names of the sample places from the DC
   // API, and puts that information to StatChecker.
   public void fetchSamplePlaceNames(Boolean verbose, HttpClient httpClient) {
-    boolean callFailed = false;
     try {
       JsonObject apiResponse = ApiHelper.fetchPropertyValues(httpClient, getSamplePlaces(), "name");
       if (apiResponse != null) {
@@ -509,16 +508,10 @@ public class StatChecker {
           }
         }
       } else {
-        callFailed = true;
+        logCtx.incrementWarningCounterBy("API_EmptyDcCallResponse", 1);
       }
     } catch (IOException | InterruptedException e) {
-      callFailed = true;
-    }
-
-    if (callFailed) {
-      // could not get sample place names, log this failure as a counter
-      // only issue a warning and continue silently because this is not a
-      // critical feature.
+      logCtx.incrementWarningCounterBy("API_FailedDcCall", 1);
     }
   }
 }
