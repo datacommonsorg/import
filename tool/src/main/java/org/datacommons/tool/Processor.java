@@ -154,7 +154,7 @@ public class Processor {
 
     // we initialize an httpClient regardless of args.doExistenceChecks
     // because other features might still make API calls
-    httpClient = HttpClient.newHttpClient();
+    this.httpClient = HttpClient.newHttpClient();
     if (args.doExistenceChecks) {
       existenceChecker = new ExistenceChecker(httpClient, args.verbose, logCtx);
     }
