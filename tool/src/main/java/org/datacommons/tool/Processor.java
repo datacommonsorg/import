@@ -159,7 +159,7 @@ public class Processor {
       existenceChecker = new ExistenceChecker(httpClient, args.verbose, logCtx);
     }
     if (args.resolutionMode == Args.ResolutionMode.FULL) {
-      idResolver = new ExternalIdResolver(HttpClient.newHttpClient(), args.verbose, logCtx);
+      idResolver = new ExternalIdResolver(httpClient, args.verbose, logCtx);
     }
     statVarState = new StatVarState(logCtx);
     if (args.doStatChecks) {
