@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Mapping } from "../types";
+import { CsvData, Mapping } from "../types";
 
 /**
  * Generates the cleaned csv given the original csv and the correct mappings
@@ -22,7 +22,7 @@ import { Mapping } from "../types";
  * @param mappings
  * @returns 
  */
-export function generateCleanedCSV(csv: string[][], mappings: Mapping): string {
+export function generateCleanedCSV(csv: CsvData, mappings: Mapping): string {
   return "";
 }
 
@@ -32,7 +32,7 @@ export function generateCleanedCSV(csv: string[][], mappings: Mapping): string {
  * @param mappings 
  * @returns 
  */
-export function generateSvMCF(csv: string[][], mappings: Mapping): string {
+export function generateSvMCF(csv: CsvData, mappings: Mapping): string {
   return "";
 }
 
