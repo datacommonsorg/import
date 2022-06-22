@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import { Mapping } from "../types";
+import { CsvData, Mapping, MappedThing } from "../types";
 
 /**
  * Given a csv, returns the predicted mapping
  * 
  * @param csv array of csv rows where each row is an array of strings
  */
-export function getPredictions(csv: string[][]): Mapping {
+export function getPredictions(csv: CsvData): Mapping {
   return null;
 } 

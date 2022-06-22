@@ -15,9 +15,16 @@
  */
 
 export enum MappingType {
-  COLUMN,
-  COLUMN_HEADERS,
-  CONSTANT
+  COLUMN = "column",
+  COLUMN_HEADER = "columnHeader",
+  CONSTANT = "constant"
+}
+
+export enum MappedThing {
+  PLACE = "place",
+  STAT_VAR = "statVar",
+  DATE = "date",
+  UNIT = "unit"
 }
 
 interface Column {
@@ -43,9 +50,6 @@ export interface MappingVal {
   constant?: string;
 }
 
-export interface Mapping {
-  place: MappingVal,
-  statVars: MappingVal,
-  dates: MappingVal,
-  units?: MappingVal
-}
+export type Mapping = Record<MappedThing, MappingVal>;
+
+export interface CsvData {}
