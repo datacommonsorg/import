@@ -1,8 +1,8 @@
 {
   "name": "wizard",
   "version": "1.0.0",
-  "description": "",
-  "homepage": "https://datacommonsorg.github.io/import/",
+  "description": "Package for datacommons.org import wizard static files",
+  "homepage": "https://datacommonsorg.github.io/import/wizard",
   "main": "index.js",
   "scripts": {
     "build": "webpack --mode=production --progress --config webpack.config.js",
@@ -11,9 +11,7 @@
     "deploy": "gh-pages -d build",
     "test": "jest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "css-loader": "^6.7.1",
     "file-loader": "^6.2.0",
