@@ -195,7 +195,7 @@ public class StatChecker {
     String placeDcid = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT);
     if (placeDcid.isEmpty()) return false;
 
-    // if shouldGenerateSamplePlaces is true, and the bucket that the placekey
+    // If shouldGenerateSamplePlaces is true, and the bucket that the placekey
     // belongs has empty space, the sample place will be added to the
     // samplePlaces map
     attemptAddingPlaceToSamplePlaces(placeDcid);
@@ -216,14 +216,14 @@ public class StatChecker {
     }
   }
 
-  // returns true if the bucket for this places key is not full.
+  // Returns true if the bucket for this places key is not full.
   private boolean samplePlacesBucketHasSpace(String placeDcid) {
     String placekey = getSamplePlacesKey(placeDcid);
     boolean bucketNotFull = samplePlaces.get(placekey).size() < getSamplePlaceBucketSize(placeDcid);
     return bucketNotFull;
   }
 
-  // given a place dcid, returns the namespace of the place
+  // Given a place dcid, returns the namespace of the place
   private String getNamespaceOfPlaceName(String placeDcid) {
     String namespace = "";
 
@@ -234,13 +234,13 @@ public class StatChecker {
     return namespace;
   }
 
-  // given a place dcid, returns whether we want to bucket it by its length
+  // Given a place dcid, returns whether we want to bucket it by its length
   private boolean isPlaceBucketedByLength(String placeDcid) {
     String namespace = getNamespaceOfPlaceName(placeDcid);
     return TYPE_INFERRED_PLACE_NAMESPACES.contains(namespace);
   }
 
-  // given a place dcid, returns the key in the samplePlaces map
+  // Given a place dcid, returns the key in the samplePlaces map
   // if should not generate sample places, simply returns RECEIVED_SAMPLE_PLACES_KEY
   // otherwise, checks if it is to be bucketed by length and returns
   // the appropriate samplePlaces map key.
@@ -259,7 +259,7 @@ public class StatChecker {
     }
   }
 
-  // given a place dcid, returns the size of the bucket it should hold in
+  // Given a place dcid, returns the size of the bucket it should hold in
   // the samplePlaces map.
   private int getSamplePlaceBucketSize(String placeDcid) {
     boolean bucketByLength = isPlaceBucketedByLength(placeDcid);
