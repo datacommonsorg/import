@@ -101,8 +101,8 @@ class Main {
       defaultValue = "true",
       scope = CommandLine.ScopeType.INHERIT,
       description =
-          "Specificies whether the observationAbout value of StatVarObservation "
-              + "nodes should be checked against the Data Commons API for existence. "
+          "Specifies whether to perform existence checks for places found in "
+              + "the `observationAbout` property in StatVarObservation nodes."
               + "Defaults to true.")
   public boolean checkObservationAbout;
 
