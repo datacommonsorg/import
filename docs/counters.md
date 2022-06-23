@@ -9,7 +9,7 @@ subject of the error. For example, `Resolution_UnresolvedExternalId_` will be
 suffixed with the ID property (like `isoCode`) that could not be resolved. The
 "Suffix Description" field describes the nature of the suffix for these counters.
 
-## CSV, MCF, and TMCF Counters
+## CSV, MCF and TMCF Parsing
 These counters are logged from processing the corresponding types of files.
 
 ### CSV_InconsistentRows
@@ -158,7 +158,7 @@ column or a constant value.
 
 Expected value to be a TMCF column that starts with a `C:` value, but it was not.
 
-## Resolution Counters
+## Entity Resolution
 These counters are logged when there are errors assigning DCIDs to each node in
 the graph.
 
@@ -232,7 +232,7 @@ is also marked as a failure.
 
 1. Check the logs for the failure of the node identified the error message and address that issue.
 
-## Sanity Counters
+## Syntax and Semantic Sanity Checks
 These counters log issues raised from sanity checks of nodes against a simple
 set of assumptions expected of DC nodes.
 
@@ -385,7 +385,7 @@ Found a property reference that does not start with a lower-case.
 
 **Suffix Description:** The property, and optionally, the type of the node separated with an underscore (`_`) from the property.
 
-## Existence Counters
+## Existence Checks
 
 Existence counters are logged for issues relating to the existence check of references
 against Data Commons.
@@ -402,7 +402,7 @@ External reference existence check with the DataCommons API returned no results.
 
 External triple existence check with the DataCommons API returned no results.
 
-## Stats Check Counters
+## Statistics Checks
 These counters represent potential issues found in the statistical analysis of the input data for pitfalls such as extreme outliers, holes in dates that the data is available for, etc.
 
 ### StatsCheck_Inconsistent_Values
@@ -441,7 +441,7 @@ If any two adjacent datapoints have a different gap than the rest of the dataset
 
 Currently, the tool only checks for inconsistent gaps in the unit of months.
 
-## Mutator Counters
+## MCF Mutations or Transformations
 
 Mutation is a step of MCF processing where e.g. complex values are expanded.
 
