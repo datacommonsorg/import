@@ -193,14 +193,19 @@ public class StatChecker {
   // Only extract series information for a statVarObservation node that is about a sample place.
   private boolean shouldExtractSeriesInfo(McfGraph.PropertyValues node) {
     String placeDcid = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT);
+    return shouldExtractSeriesInfo(placeDcid);
+  }
+
+  public boolean shouldExtractSeriesInfo(String placeDcid) {
     if (placeDcid.isEmpty()) return false;
+
+    String placekey = getSamplePlacesKey(placeDcid);
 
     // If shouldGenerateSamplePlaces is true, and the bucket that the placekey
     // belongs has empty space, the sample place will be added to the
     // samplePlaces map
-    String placekey = getSamplePlacesKey(placeDcid);
     attemptAddingPlaceToSamplePlaces(placeDcid, placekey);
-    
+
     return samplePlaces.get(placekey).contains(placeDcid);
   }
 
