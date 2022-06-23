@@ -60,11 +60,11 @@ public class McfChecker {
       Mcf.McfGraph graph,
       ExistenceChecker existenceChecker,
       StatVarState svState,
-      LogWrapper logCtx,
-      boolean shouldCheckObservationAbout)
+      boolean shouldCheckObservationAbout,
+      LogWrapper logCtx)
       throws IOException, InterruptedException {
     return new McfChecker(
-            graph, null, existenceChecker, svState, logCtx, shouldCheckObservationAbout)
+            graph, null, existenceChecker, svState, shouldCheckObservationAbout, logCtx)
         .check();
   }
 
@@ -74,7 +74,7 @@ public class McfChecker {
       StatVarState svState,
       LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return check(graph, existenceChecker, svState, logCtx, false);
+    return check(graph, existenceChecker, svState, false, logCtx);
   }
 
   // Used to check a single node from TMcfCsvParser.
@@ -84,14 +84,14 @@ public class McfChecker {
     Mcf.McfGraph.Builder nodeGraph = Mcf.McfGraph.newBuilder();
     nodeGraph.setType(mcfType);
     nodeGraph.putNodes(nodeId, node);
-    return new McfChecker(nodeGraph.build(), null, null, null, logCtx, false).check();
+    return new McfChecker(nodeGraph.build(), null, null, null, false, logCtx).check();
   }
 
   // Used with Template MCF when there are columns from CSV header.
   public static boolean checkTemplate(
       Mcf.McfGraph graph, Set<String> columns, ExistenceChecker existenceChecker, LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return new McfChecker(graph, columns, existenceChecker, null, logCtx, false).check();
+    return new McfChecker(graph, columns, existenceChecker, null, false, logCtx).check();
   }
 
   private McfChecker(
@@ -99,8 +99,8 @@ public class McfChecker {
       Set<String> columns,
       ExistenceChecker existenceChecker,
       StatVarState svState,
-      LogWrapper logCtx,
-      boolean shouldCheckObservationAbout) {
+      boolean shouldCheckObservationAbout,
+      LogWrapper logCtx) {
     this.graph = graph;
     this.columns = columns;
     this.logCtx = logCtx;

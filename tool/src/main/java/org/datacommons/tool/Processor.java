@@ -230,7 +230,7 @@ public class Processor {
 
       // This will set counters/messages in logCtx.
       boolean success =
-          McfChecker.check(g, existenceChecker, statVarState, logCtx, args.checkObservationAbout);
+          McfChecker.check(g, existenceChecker, statVarState, args.checkObservationAbout, logCtx);
 
       if (args.resolutionMode != Args.ResolutionMode.NONE) {
         g = resolveCommon(g, writerPair);
