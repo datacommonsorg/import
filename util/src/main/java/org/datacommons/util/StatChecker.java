@@ -63,7 +63,7 @@ public class StatChecker {
           "StatsCheck_Invalid_Date",
           "StatsCheck_Inconsistent_Date_Granularity",
           "StatsCheck_Data_Holes");
-  private static final Set<String> PLACE_NAMESPACES_BUCKETED_BY_LENGTH = Set.of("geoId", "nuts");
+  private static final Set<String> TYPE_INFERRED_PLACE_NAMESPACES = Set.of("geoId", "nuts");
   private static final int NUM_SUMMARY_ENTRIES_PER_COUNTER = 10;
   private final boolean verbose;
   private final LogWrapper logCtx;
@@ -237,7 +237,7 @@ public class StatChecker {
   // given a place dcid, returns whether we want to bucket it by its length
   private boolean isPlaceBucketedByLength(String placeDcid) {
     String namespace = getNamespaceOfPlaceName(placeDcid);
-    return PLACE_NAMESPACES_BUCKETED_BY_LENGTH.contains(namespace);
+    return TYPE_INFERRED_PLACE_NAMESPACES.contains(namespace);
   }
 
   // given a place dcid, returns the key in the samplePlaces map
