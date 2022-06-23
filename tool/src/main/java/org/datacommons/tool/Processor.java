@@ -128,10 +128,10 @@ public class Processor {
     // because other features might still make API calls
     this.httpClient = HttpClient.newHttpClient();
     if (args.doExistenceChecks) {
-      existenceChecker = new ExistenceChecker(httpClient, args.verbose, logCtx);
+      existenceChecker = new ExistenceChecker(this.httpClient, args.verbose, logCtx);
     }
     if (args.resolutionMode == Args.ResolutionMode.FULL) {
-      idResolver = new ExternalIdResolver(httpClient, args.verbose, logCtx);
+      idResolver = new ExternalIdResolver(this.httpClient, args.verbose, logCtx);
     }
     statVarState = new StatVarState(logCtx);
     if (args.doStatChecks) {
