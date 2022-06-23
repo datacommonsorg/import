@@ -286,15 +286,13 @@ public class McfChecker {
         Vocabulary.STAT_VAR_OBSERVATION_TYPE,
         Vocabulary.GENERIC_VALUE);
 
-    if (shouldCheckObservationAbout) {
-      if (existenceChecker != null) {
-        LogCb logCb =
-            new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, node)
-                .setDetail(LogCb.PREF_KEY, Vocabulary.OBSERVATION_ABOUT)
-                .setDetail(LogCb.NODE_KEY, observationAbout)
-                .setCounterSuffix(Vocabulary.OBSERVATION_ABOUT);
-        existenceChecker.submitNodeCheck(observationAbout, logCb);
-      }
+    if (shouldCheckObservationAbout && existenceChecker != null) {
+      LogCb logCb =
+          new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, node)
+              .setDetail(LogCb.PREF_KEY, Vocabulary.OBSERVATION_ABOUT)
+              .setDetail(LogCb.NODE_KEY, observationAbout)
+              .setCounterSuffix(Vocabulary.OBSERVATION_ABOUT);
+      existenceChecker.submitNodeCheck(observationAbout, logCb);
     }
   }
 
