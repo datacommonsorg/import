@@ -1,0 +1,272 @@
+id,name,iso_code,country_alpha_3_code,country_numeric_code
+country/ABW,Aruba,AW,ABW,533
+country/AFG,Afghanistan,AF,AFG,4
+country/AFI,French Afars and Issas,,,
+country/AGO,Angola,AO,AGO,24
+country/AIA,Anguilla,AI,AIA,660
+country/ALB,Albania,AL,ALB,8
+country/AND,Andorra,AD,AND,20
+country/ANT,Netherlands Antilles,AN,ANT,51
+country/ARE,United Arab Emirates,AE,ARE,784
+country/ARG,Argentina,AR,ARG,32
+country/ARM,Armenia,AM,ARM,51
+country/ASM,American Samoa,AS,ASM,16
+country/ATA,Antarctica,AQ,ATA,10
+country/ATB,British Antarctic Territory,,,
+country/ATF,French Southern Territories,FR-TF,ATF,260
+country/ATG,Antigua and Barbuda,AG,ATG,28
+country/ATN,Dronning Maud Land,,,
+country/AUS,Australia,AU,AUS,36
+country/AUT,Austria,AT,AUT,40
+country/AZE,Azerbaijan,AZ,AZE,31
+country/BDI,Burundi,BI,BDI,108
+country/BEL,Belgium,BE,BEL,56
+country/BEN,Benin,BJ,BEN,204
+country/BES,"Bonaire, Sint Eustatius and Saba",,,
+country/BFA,Burkina Faso,BF,BFA,854
+country/BGD,Bangladesh,BD,BGD,50
+country/BGR,Bulgaria,BG,BGR,100
+country/BHR,Bahrain,BH,BHR,48
+country/BHS,Bahamas,BS,BHS,44
+country/BIH,Bosnia and Herzegovina,BA,BIH,70
+country/BLM,Saint Barthélemy,BL,BLM,652
+country/BLR,Belarus,BY,BLR,112
+country/BLZ,Belize,BZ,BLZ,84
+country/BMU,Bermuda,BM,BMU,60
+country/BOL,Bolivia,BO,BOL,68
+country/BRA,Brazil,BR,BRA,76
+country/BRB,Barbados,BB,BRB,52
+country/BRN,Brunei,BN,BRN,96
+country/BTN,Bhutan,BT,BTN,64
+country/BVT,Bouvet Island,BV,BVT,74
+country/BWA,Botswana,BW,BWA,72
+country/BYS,Byelorussian SSR,,,
+country/CAF,Central African Republic,CF,CAF,140
+country/CAN,Canada,CA,CAN,124
+country/CCK,Cocos (Keeling) Islands,CC,CCK,166
+country/CHE,Switzerland,CH,CHE,756
+country/CHL,Chile,CL,CHL,152
+country/CHN,China,CN,CHN,156
+country/CIV,Côte d'Ivoire,CI,CIV,384
+country/CMR,Cameroon,CM,CMR,120
+country/COD,Congo [DRC],CD,COD,180
+country/COG,Congo [Republic],CG,COG,178
+country/COK,Cook Islands,CK,COK,184
+country/COL,Colombia,CO,COL,170
+country/COM,Comoros,KM,COM,174
+country/CPV,Cape Verde,CV,CPV,132
+country/CRI,Costa Rica,CR,CRI,188
+country/CSK,Czechoslovakia,,,
+country/CTE,Canton and Enderbury Islands,,,
+country/CUB,Cuba,CU,CUB,192
+country/CUW,Curaçao,NL-CW,,
+country/CXR,Christmas Island,CX,CXR,162
+country/CYM,Cayman Islands,KY,CYM,136
+country/CYP,Cyprus,CY,CYP,196
+country/CZE,Czech Republic,CZ,CZE,203
+country/DDR,German Democratic Republic,,,
+country/DEU,Germany,DE,DEU,276
+country/DHY,Dahomey,,,
+country/DJI,Djibouti,DJ,DJI,262
+country/DMA,Dominica,DM,DMA,212
+country/DNK,Denmark,DK,DNK,208
+country/DOM,Dominican Republic,DO,DOM,214
+country/DZA,Algeria,DZ,DZA,12
+country/ECU,Ecuador,EC,ECU,218
+country/EGY,Egypt,EG,EGY,818
+country/ERI,Eritrea,ER,ERI,232
+country/ESH,Western Sahara,EH,ESH,732
+country/ESP,Spain,ES,ESP,724
+country/EST,Estonia,EE,EST,233
+country/ETH,Ethiopia,ET,ETH,231
+country/FIN,Finland,FI,FIN,246
+country/FJI,Fiji,FJ,FJI,242
+country/FLK,Falkland Islands,FK,FLK,238
+country/FRA,France,FR,FRA,250
+country/FRO,Faroe Islands,FO,FRO,234
+country/FSM,Federated States of Micronesia,FM,FSM,583
+country/FXX,Metropolitan France,,,
+country/GAB,Gabon,GA,GAB,266
+country/GBR,United Kingdom,GB,GBR,826
+country/GEL,Gilbert and Ellice Islands,,,
+country/GEO,Georgia,GE,GEO,268
+country/GGY,Guernsey,GG,GGY,831
+country/GHA,Ghana,GH,GHA,288
+country/GIB,Gibraltar,GI,GIB,292
+country/GIN,Guinea,GN,GIN,324
+country/GLP,Guadeloupe,FR-GP,GLP,312
+country/GMB,Gambia,GM,GMB,270
+country/GNB,Guinea-Bissau,GW,GNB,624
+country/GNQ,Equatorial Guinea,GQ,GNQ,226
+country/GRC,Greece,GR,GRC,300
+country/GRD,Grenada,GD,GRD,308
+country/GRL,Greenland,GL,GRL,304
+country/GTM,Guatemala,GT,GTM,320
+country/GUF,French Guiana,FR-GF,GUF,254
+country/GUM,Guam,GU,GUM,316
+country/GUY,Guyana,GY,GUY,328
+country/HKG,Hong Kong,CN-HK,HKG,344
+country/HMD,Heard Island and McDonald Islands,HM,HMD,334
+country/HND,Honduras,HN,HND,340
+country/HRV,Croatia,HR,HRV,191
+country/HTI,Haiti,HT,HTI,332
+country/HUN,Hungary,HU,HUN,348
+country/HVO,Upper Volta,,,
+country/IDN,Indonesia,ID,IDN,360
+country/IMN,Isle of Man,IM,IMN,833
+country/IND,India,IN,IND,356
+country/IOT,British Indian Ocean Territory,IO,IOT,86
+country/IRL,Ireland,IE,IRL,372
+country/IRN,Iran,IR,IRN,364
+country/IRQ,Iraq,IQ,IRQ,368
+country/ISL,Iceland,IS,ISL,352
+country/ISR,Israel,IL,ISR,376
+country/ITA,Italy,IT,ITA,380
+country/JAM,Jamaica,JM,JAM,388
+country/JEY,Jersey,GB-JSY,JEY,832
+country/JOR,Jordan,JO,JOR,400
+country/JPN,Japan,JP,JPN,392
+country/KAZ,Kazakhstan,KZ,KAZ,398
+country/KEN,Kenya,KE,KEN,404
+country/KGZ,Kyrgyzstan,KG,KGZ,417
+country/KHM,Cambodia,KH,KHM,116
+country/KIR,Kiribati,KI,KIR,296
+country/KNA,Saint Kitts and Nevis,KN,KNA,659
+country/KOR,South Korea,KR,KOR,410
+country/KWT,Kuwait,KW,KWT,414
+country/LAO,Laos,LA,LAO,418
+country/LBN,Lebanon,LB,LBN,422
+country/LBR,Liberia,LR,LBR,430
+country/LBY,Libya,LY,LBY,434
+country/LCA,Saint Lucia,LC,LCA,662
+country/LIE,Liechtenstein,LI,LIE,438
+country/LKA,Sri Lanka,LK,LKA,144
+country/LSO,Lesotho,LS,LSO,426
+country/LTU,Lithuania,LT,LTU,440
+country/LUX,Luxembourg,LU,LUX,442
+country/LVA,Latvia,LV,LVA,428
+country/MAC,Macau,CN-MO,MAC,446
+country/MAF,Saint Martin,FR-MF,MAF,663
+country/MAR,Morocco,MA,MAR,504
+country/MCO,Monaco,MC,MCO,492
+country/MDA,Moldova,MD,MDA,498
+country/MDG,Madagascar,MG,MDG,450
+country/MDV,Maldives,MV,MDV,462
+country/MEX,Mexico,MX,MEX,484
+country/MHL,Marshall Islands,MH,MHL,584
+country/MKD,Macedonia [FYROM],MK,MKD,807
+country/MLI,Mali,ML,MLI,466
+country/MLT,Malta,MT,MLT,470
+country/MMR,Myanmar,MM,MMR,104
+country/MNE,Montenegro,ME,MNE,499
+country/MNG,Mongolia,MN,MNG,496
+country/MNP,Northern Mariana Islands,MP,MNP,580
+country/MOZ,Mozambique,MZ,MOZ,508
+country/MRT,Mauritania,MR,MRT,478
+country/MSR,Montserrat,MS,MSR,500
+country/MTQ,Martinique,FR-MQ,MTQ,474
+country/MUS,Mauritius,MU,MUS,480
+country/MWI,Malawi,MW,MWI,454
+country/MYS,Malaysia,MY,MYS,458
+country/MYT,Mayotte,FR-YT,MYT,175
+country/NAM,Namibia,NA,NAM,516
+country/NCL,New Caledonia,FR-NC,NCL,540
+country/NER,Niger,NE,NER,562
+country/NFK,Norfolk Island,NF,NFK,574
+country/NGA,Nigeria,NG,NGA,566
+country/NHB,New Hebrides,,,
+country/NIC,Nicaragua,NI,NIC,558
+country/NIU,Niue,NU,NIU,570
+country/NLD,Netherlands,NL,NLD,528
+country/NOR,Norway,NO,NOR,578
+country/NPL,Nepal,NP,NPL,524
+country/NRU,Nauru,NR,NRU,520
+country/NZL,New Zealand,NZ,NZL,554
+country/OMN,Oman,OM,OMN,512
+country/PAK,Pakistan,PK,PAK,586
+country/PAN,Panama,PA,PAN,591
+country/PCN,Pitcairn Islands,PN,PCN,612
+country/PER,Peru,PE,PER,604
+country/PHL,Philippines,PH,PHL,608
+country/PLW,Palau,PW,PLW,585
+country/PNG,Papua New Guinea,PG,PNG,598
+country/POL,Poland,PL,POL,616
+country/PRI,Puerto Rico,PR,PRI,630
+country/PRK,North Korea,KP,PRK,408
+country/PRT,Portugal,PT,PRT,620
+country/PRY,Paraguay,PY,PRY,600
+country/PSE,Palestinian Territories,PS,PSE,275
+country/PYF,French Polynesia,FR-PF,PYF,258
+country/QAT,Qatar,QA,QAT,634
+country/REU,Réunion,FR-RE,REU,638
+country/ROU,Romania,RO,ROU,642
+country/RUS,Russia,RU,RUS,643
+country/RWA,Rwanda,RW,RWA,646
+country/SAU,Saudi Arabia,SA,SAU,682
+country/SCG,Serbia and Montenegro,,,
+country/SDN,Sudan,SD,SDN,729
+country/SEN,Senegal,SN,SEN,686
+country/SGP,Singapore,SG,SGP,702
+country/SGS,South Georgia and the South Sandwich Islands,GS,SGS,239
+country/SHN,Saint Helena,SH,SHN,654
+country/SJM,Svalbard and Jan Mayen,SJ,SJM,744
+country/SLB,Solomon Islands,SB,SLB,90
+country/SLE,Sierra Leone,SL,SLE,694
+country/SLV,El Salvador,SV,SLV,222
+country/SMR,San Marino,SM,SMR,674
+country/SOM,Somalia,SO,SOM,706
+country/SPM,Saint Pierre and Miquelon,FR-PM,SPM,666
+country/SRB,Serbia,RS,SRB,688
+country/SSD,South Sudan,,,
+country/STP,São Tomé and Príncipe,ST,STP,678
+country/SUN,Union of Soviet Socialist Republics,,,
+country/SUR,Suriname,SR,SUR,740
+country/SVK,Slovakia,SK,SVK,703
+country/SVN,Slovenia,SI,SVN,705
+country/SWE,Sweden,SE,SWE,752
+country/SWZ,Eswatini,SZ,SWZ,748
+country/SXM,Sint Maarten,NL-SX,SXM,534
+country/SYC,Seychelles,SC,SYC,690
+country/SYR,Syria,SY,SYR,760
+country/TCA,Turks and Caicos Islands,TC,TCA,796
+country/TCD,Chad,TD,TCD,148
+country/TGO,Togo,TG,TGO,768
+country/THA,Thailand,TH,THA,764
+country/TJK,Tajikistan,TJ,TJK,762
+country/TKL,Tokelau,TK,TKL,772
+country/TKM,Turkmenistan,TM,TKM,795
+country/TLS,East Timor,TL,TLS,626
+country/TON,Tonga,TO,TON,776
+country/TTO,Trinidad and Tobago,TT,TTO,780
+country/TUN,Tunisia,TN,TUN,788
+country/TUR,Turkey,TR,TUR,792
+country/TUV,Tuvalu,TV,TUV,798
+country/TWN,Taiwan,TW,TWN,158
+country/TZA,Tanzania,TZ,TZA,834
+country/UGA,Uganda,UG,UGA,800
+country/UKR,Ukraine,UA,UKR,804
+country/UMI,U.S. Minor Outlying Islands,UM,UMI,581
+country/URY,Uruguay,UY,URY,858
+country/USA,United States,US,USA,840
+country/UZB,Uzbekistan,UZ,UZB,860
+country/VAT,Vatican City,VA,VAT,336
+country/VCT,Saint Vincent and the Grenadines,VC,VCT,670
+country/VEN,Venezuela,VE,VEN,862
+country/VGB,British Virgin Islands,VG,VGB,92
+country/VIR,U.S. Virgin Islands,US-VI,VIR,850
+country/VNM,Vietnam,VN,VNM,704
+country/VUT,Vanuatu,VU,VUT,548
+country/WLF,Wallis and Futuna,FR-WF,WLF,876
+country/WSM,Samoa,WS,WSM,882
+country/XKS,Kosovo,,,
+country/YEM,Yemen,YE,YEM,887
+country/YUG,Yugoslavia,,,
+country/ZAF,South Africa,ZA,ZAF,710
+country/ZMB,Zambia,ZM,ZMB,894
+country/ZWE,Zimbabwe,ZW,ZWE,716
+wikidataId/Q23681,Turkish Republic of Northern Cyprus,,,
+wikidataId/Q244165,Artsakh,,,
+wikidataId/Q29999,Kingdom of the Netherlands,,,
+wikidataId/Q31354462,Republic of Abkhazia,,,
+wikidataId/Q40362,Sahrawi Arab Democratic Republic,,,
+wikidataId/Q756617,Kingdom of Denmark,,,

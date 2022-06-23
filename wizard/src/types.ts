@@ -53,3 +53,26 @@ export interface MappingVal {
 export type Mapping = Record<MappedThing, MappingVal>;
 
 export interface CsvData {}
+
+
+// Types used for Detection.
+
+// Denotes a level of confidence in the detection.
+// It can be associated with any detected type.
+export enum ConfidenceLevel {
+  Uncertain,
+  Low,
+  High,
+}
+
+export interface DetectedDetails {
+
+  // The type detected.
+  detectedType: string;
+
+  // (Optional) The format detected.
+  detectedFormat?: string;
+
+  // The level of confidence associated with the detection.
+  confidence: ConfidenceLevel;
+}
