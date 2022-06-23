@@ -40,8 +40,8 @@ import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
 // b. making methods that access the map synchronized because when methods are not on a hot path and
 //    it is not ok for access to the map to be race-y (seriesSummaryMap).
 public class StatChecker {
-  private static final int LENGTH_BASED_SAMPLE_PLACE_BUCKET_MAX_NUM_PLACE_PER_BUCKET = 5;
-  private static final int SINGLE_SAMPLE_PLACE_BUCKET_MAX_NUM_PLACE_PER_BUCKET = 25;
+  private static final int MAX_PLACES_FOR_TYPE_INFERRED_NS = 5;
+  private static final int MAX_PLACES_FOR_TYPELESS_NS = 25;
   private static final double SMALL_NUMBER = 0.000001;
   private static final String RECEIVED_SAMPLE_PLACES_KEY = "Received_Sample_Places";
   private static final Character PLACE_NAMESPACE_DELIMITER = '/';
@@ -264,9 +264,9 @@ public class StatChecker {
   private int getSamplePlaceBucketSize(String placeDcid) {
     boolean bucketByLength = isPlaceBucketedByLength(placeDcid);
     if (bucketByLength) {
-      return LENGTH_BASED_SAMPLE_PLACE_BUCKET_MAX_NUM_PLACE_PER_BUCKET;
+      return MAX_PLACES_FOR_TYPE_INFERRED_NS;
     } else {
-      return SINGLE_SAMPLE_PLACE_BUCKET_MAX_NUM_PLACE_PER_BUCKET;
+      return MAX_PLACES_FOR_TYPELESS_NS;
     }
   }
 
