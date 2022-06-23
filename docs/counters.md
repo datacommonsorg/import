@@ -10,7 +10,7 @@ suffixed with the ID property (like `isoCode`) that could not be resolved. The
 "Suffix Description" field describes the nature of the suffix for these counters.
 
 ## CSV, MCF, and TMCF Counters
-These counters are logged from parsing the corresponding types of files.
+These counters are logged from processing the corresponding types of files.
 
 ### CSV_InconsistentRows
 
@@ -138,7 +138,7 @@ Found an internal `l:` reference in resolved entity value.
 
 ### TMCF_MalformedEntity
 
-When parsing the first (`Node: <value>`) line of a node in TMCF, the value did
+When processing the first (`Node: <value>`) line of a node in TMCF, the value did
 not have the required `E:` prefix to be an entity name.
 
 ### TMCF_MalformedSchemaTerm
@@ -262,7 +262,7 @@ Found different curated IDs for same StatVar.
 
 ### Sanity_TmcfMissingEntityDef
 
-An node was references using an entity (`E:`) reference in TMCF, but this node was not found in the parsed graph.
+An node was references using an entity (`E:`) reference in TMCF, but this node was not found in the processed graph.
 
 ### Sanity_UnexpectedNonColumn
 
@@ -424,8 +424,7 @@ in each bucket will be logged.
 
 ### StatsCheck_Invalid_Date
 
-This counter will be logged if the date could not be parsed as an
-ISO8601 string.
+This counter will be logged if the date could not be parsed as an ISO8601 string.
 
 Please check that your dates are formatted according to the [ISO 8601 standard](https://en.wikipedia.org/wiki/ISO_8601).
 
@@ -444,7 +443,7 @@ Currently, the tool only checks for inconsistent gaps in the unit of months.
 
 ## Mutator Counters
 
-Mutation is a step of MCF parsing where e.g. complex values are expanded.
+Mutation is a step of MCF processing where e.g. complex values are expanded.
 
 ### Mutator_MissingTypeOf
 
