@@ -24,7 +24,7 @@ Malformed CSV value for dcid property; must be a text or reference.
 
 A reference in the form of `dcid:<entity>` was detected, but `<entity>` was empty.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Look at the file location in the `report.json` to find a line that looks like:
     ```
@@ -44,7 +44,7 @@ Found a row in input CSV with fewer columns than expected.
 
 The number of columns to expect is the number of columns that exist in the header.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Ensure that your CSV shape is uniform (every row has the same number of columns).
 
@@ -52,7 +52,7 @@ The number of columns to expect is the number of columns that exist in the heade
 
 Unable to parse header from CSV file.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Check for malformation in the headers of input CSV files.
 
@@ -60,7 +60,7 @@ Unable to parse header from CSV file.
 
 There was a fatal sanity error in TMCF.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Check counter messages that start with Sanity_ for FATAL error level.
 
@@ -68,7 +68,7 @@ There was a fatal sanity error in TMCF.
 
 [Complex value](complex_values.md) was not enclosed in brackets `[]` in the MCF.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Check complex values in your MCF and make sure they are enclosed in brackets.
 1. Refer to the [documentation of valid complex values](complex_values.md).
@@ -77,7 +77,7 @@ There was a fatal sanity error in TMCF.
 
 [Complex value](complex_values.md) had less than 2 or more than 3 parts.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Check that all of your complex values have either 2 or 3 parts.
 
@@ -97,7 +97,7 @@ Invalid longitude part in [complex value](complex_values.md); longitude must be 
 
 An unexpected part was found in the [complex value](complex_values.md) in MCF, error message will specify the type of issue.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Either the start or end components are wrong, or at least one of the components have to be a number. Check the error message in `report.json`.
 
@@ -105,7 +105,7 @@ An unexpected part was found in the [complex value](complex_values.md) in MCF, e
 
 MCF line was missing a colon to separate the property and the value.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Ensure that the lines in your MCF are in the form `<property>: <value>`.
 
@@ -113,7 +113,7 @@ MCF line was missing a colon to separate the property and the value.
 
 Value of `Node` prop either included a comma or started with a quote.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Check the error message for the specifics of the malformation.
 
@@ -168,7 +168,7 @@ External ID reference could not be resolved.
 
 **Suffix Description:** Property for which the ID could not be resolved.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Try searching for the ID on the [Data Commons Browser](https://datacommons.org/search).
 
@@ -181,7 +181,7 @@ For example, a counter named `Resolution_DivergingDcidsForExternalIds_isoCode_wi
 means that the `isoCode` and `wikidataId` properties were both external IDs, but
 they resolved to different DCIDs (which is not permitted).
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Try searching for the DCIDs on the [Data Commons Browser](https://datacommons.org/search) and/or in your local schema (.mcf) files, and making sure they resolve to the correct and identical entity as
 uniquely identified by its DCID.
@@ -192,7 +192,7 @@ Unable to replace a local reference.
 
 This is likely a cycle of local references, which the import tool is not able to resolve. 
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Check your MCF files for potential cycles.
 
@@ -200,7 +200,7 @@ This is likely a cycle of local references, which the import tool is not able to
 
 Unable to assign DCID due to an unresolved local reference.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. See [`Resolution_IrreplaceableLocalRef`](#Resolution_IrreplaceableLocalRef).
 
@@ -217,7 +217,7 @@ or if there is an external ID resolver provided.
 
 **Suffix Description:** The typeOf value of the node (first value, if multiple).
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. If none of the conditions in the description apply to your node, provide a non-empty DCID for the node.
 
@@ -228,7 +228,7 @@ is also marked as a failure.
 
 **Suffix Description:** The property this reference was found in.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Check the logs for the failure of the node identified the error message and address that issue.
 
@@ -240,7 +240,7 @@ set of assumptions expected of DC nodes.
 
 Found different values provided for the same `StatVarObservation`.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Check for any duplication in the input CSV.
 
@@ -248,7 +248,7 @@ Found different values provided for the same `StatVarObservation`.
 
 The same curated DCID was found for different StatVars.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Ensure that StatVars have distinct names.
 
@@ -256,7 +256,7 @@ The same curated DCID was found for different StatVars.
 
 Found different curated IDs for same StatVar.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Ensure that the StatVars have consistent DCIDs.
 
@@ -272,7 +272,7 @@ Expected value to be a TMCF column that starts with `C:`, but did not find such 
 
 Column referred to in TMCF is missing from CSV header.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Check that the TMCF references with `C:` match the names of the columns in the header line in your CSV.
 
@@ -289,7 +289,7 @@ StatTypes values either:
 
 Found a non-ISO8601 compliant date value.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) is in the format YYYY-MM-DD (e.g. 2020-07-10), optionally with time of day appended.
 
@@ -305,7 +305,7 @@ Found an `StatVarObservation` node with a value that was not a number.
 
 An empty property (property with no text) was found.
 
-#### Suggested User Actions
+**Suggested User Actions:**
 
 1. Try searching your input files for a line that starts with a colon (`:`).
 
