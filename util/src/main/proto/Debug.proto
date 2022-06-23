@@ -83,6 +83,7 @@ message CommandArgs {
     optional int32 num_threads = 3;
     optional bool stat_checks = 4;
     repeated string sample_places = 5;
+    optional bool observation_about = 6;
 }
 
 message DataPoint {

@@ -113,6 +113,7 @@
     "existenceChecks": true,
     "resolution": "RESOLUTION_MODE_LOCAL",
     "numThreads": 1,
-    "statChecks": true
+    "statChecks": true,
+    "observationAbout": true
   }
 }

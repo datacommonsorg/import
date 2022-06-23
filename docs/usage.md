@@ -121,6 +121,12 @@ Specifies the directory to write output files.
 
 Default is `dc_generated/` within current working directory.
 
+### `-oa`, `--observation-about`
+
+Specificies whether the observationAbout value of StatVarObservation nodes should be checked against the Data Commons API for existence. 
+
+Defaults to `true`.
+
 ### `-s`, `--stat-checks`
 
 Checks integrity of time series by checking for holes, variance in values, etc.

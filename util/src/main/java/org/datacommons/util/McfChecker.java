@@ -53,15 +53,28 @@ public class McfChecker {
   boolean nodeFailure = false; // Failure of a specific node being processed.
   private ExistenceChecker existenceChecker;
   private StatVarState svState;
+  boolean shouldCheckObservationAbout; // Should check for observationAbout existence on SVObs
 
   // Argument |graph| may be Instance or Template MCF.
   public static boolean check(
       Mcf.McfGraph graph,
       ExistenceChecker existenceChecker,
       StatVarState svState,
+      LogWrapper logCtx,
+      boolean shouldCheckObservationAbout)
+      throws IOException, InterruptedException {
+    return new McfChecker(
+            graph, null, existenceChecker, svState, logCtx, shouldCheckObservationAbout)
+        .check();
+  }
+
+  public static boolean check(
+      Mcf.McfGraph graph,
+      ExistenceChecker existenceChecker,
+      StatVarState svState,
       LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return new McfChecker(graph, null, existenceChecker, svState, logCtx).check();
+    return check(graph, existenceChecker, svState, logCtx, false);
   }
 
   // Used to check a single node from TMcfCsvParser.
@@ -71,14 +84,14 @@ public class McfChecker {
     Mcf.McfGraph.Builder nodeGraph = Mcf.McfGraph.newBuilder();
     nodeGraph.setType(mcfType);
     nodeGraph.putNodes(nodeId, node);
-    return new McfChecker(nodeGraph.build(), null, null, null, logCtx).check();
+    return new McfChecker(nodeGraph.build(), null, null, null, logCtx, false).check();
   }
 
   // Used with Template MCF when there are columns from CSV header.
   public static boolean checkTemplate(
       Mcf.McfGraph graph, Set<String> columns, ExistenceChecker existenceChecker, LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return new McfChecker(graph, columns, existenceChecker, null, logCtx).check();
+    return new McfChecker(graph, columns, existenceChecker, null, logCtx, false).check();
   }
 
   private McfChecker(
@@ -86,12 +99,14 @@ public class McfChecker {
       Set<String> columns,
       ExistenceChecker existenceChecker,
       StatVarState svState,
-      LogWrapper logCtx) {
+      LogWrapper logCtx,
+      boolean shouldCheckObservationAbout) {
     this.graph = graph;
     this.columns = columns;
     this.logCtx = logCtx;
     this.existenceChecker = existenceChecker;
     this.svState = svState;
+    this.shouldCheckObservationAbout = shouldCheckObservationAbout;
   }
 
   // Returns true if there was no sanity error found.
@@ -244,8 +259,9 @@ public class McfChecker {
       throws IOException, InterruptedException {
     checkRequiredSingleValueProp(
         nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.VARIABLE_MEASURED);
-    checkRequiredSingleValueProp(
-        nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.OBSERVATION_ABOUT);
+    String observationAbout =
+        checkRequiredSingleValueProp(
+            nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.OBSERVATION_ABOUT);
     String obsDate =
         checkRequiredSingleValueProp(
             nodeId, node, Vocabulary.STAT_VAR_OBSERVATION_TYPE, Vocabulary.OBSERVATION_DATE);
@@ -269,6 +285,17 @@ public class McfChecker {
         node,
         Vocabulary.STAT_VAR_OBSERVATION_TYPE,
         Vocabulary.GENERIC_VALUE);
+
+    if (shouldCheckObservationAbout) {
+      if (existenceChecker != null) {
+        LogCb logCb =
+            new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, node)
+                .setDetail(LogCb.PREF_KEY, Vocabulary.OBSERVATION_ABOUT)
+                .setDetail(LogCb.NODE_KEY, observationAbout)
+                .setCounterSuffix(Vocabulary.OBSERVATION_ABOUT);
+        existenceChecker.submitNodeCheck(observationAbout, logCb);
+      }
+    }
   }
 
   private void checkLegacyPopulation(String nodeId, Mcf.McfGraph.PropertyValues node) {

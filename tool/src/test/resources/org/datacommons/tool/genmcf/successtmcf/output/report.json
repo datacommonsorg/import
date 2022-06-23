@@ -4,7 +4,7 @@
       "counters": {
         "NumRowSuccesses": "16",
         "NumPVSuccesses": "210",
-        "Existence_NumChecks": "221",
+        "Existence_NumChecks": "243",
         "NumNodeSuccesses": "30",
         "CSV_MalformedDCIDPVFailures": "4",
         "Existence_NumDcCalls": "1"
@@ -27,6 +27,7 @@
     "LEVEL_ERROR": {
       "counters": {
         "MCF_MalformedComplexValue": "1",
+        "Existence_MissingReference_observationAbout": "22",
         "Sanity_VeryLongDcid": "1",
         "Sanity_InvalidObsDate": "2",
         "Sanity_InvalidChars_dcid": "1",
@@ -292,6 +293,150 @@
     },
     "userMessage": "Failed reference existence check :: value-ref: '6', property: 'unit', node: '65'",
     "counterKey": "Existence_MissingReference_unit"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "4"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-AB'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "4"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-AB'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "15"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-AB'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "15"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-AB'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-AB'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-AB'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-AB'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "16"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-AB'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "3"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-BC'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "3"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-BC'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "12"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-MN'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "12"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-MN'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "13"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-SK'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "13"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-SK'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "14"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-YU'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "14"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-YU'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "9"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CH-SH'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "9"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CH-SH'",
+    "counterKey": "Existence_MissingReference_observationAbout"
   }, {
     "level": "LEVEL_WARNING",
     "location": {
@@ -653,6 +798,22 @@
     "userMessage": "Failed reference existence check :: value-ref: 'Territory', property: 'typeOf', node: 'E:SVTest->E3'",
     "counterKey": "Existence_MissingReference_typeOf"
   }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "5"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'US-SF'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "5"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'US-SF'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
     "level": "LEVEL_WARNING",
     "location": {
       "file": "SuccessTmcf.csv",
@@ -660,6 +821,22 @@
     },
     "userMessage": "Failed reference existence check :: value-ref: 'latLong/-4300000_11600000', property: 'location', node: 'E:SVTest->E3'",
     "counterKey": "Existence_MissingReference_location"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "11"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcid'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "SuccessTmcf.csv",
+      "lineNumber": "11"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcid'",
+    "counterKey": "Existence_MissingReference_observationAbout"
   }],
   "statsCheckSummary": [{
     "placeDcid": "CA-AB",
@@ -710,6 +887,7 @@
     "existenceChecks": true,
     "resolution": "RESOLUTION_MODE_FULL",
     "numThreads": 1,
-    "statChecks": true
+    "statChecks": true,
+    "observationAbout": true
   }
 }

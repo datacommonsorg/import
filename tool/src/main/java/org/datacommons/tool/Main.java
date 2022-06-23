@@ -96,6 +96,16 @@ class Main {
       description = "Generates a summary report in html format. Defaults to true.")
   public boolean generateSummaryReport;
 
+  @CommandLine.Option(
+      names = {"-oa", "--observation-about"},
+      defaultValue = "true",
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "Specificies whether the observationAbout value of StatVarObservation "
+              + "nodes should be checked against the Data Commons API for existence. "
+              + "Defaults to true.")
+  public boolean checkObservationAbout;
+
   public static void main(String... args) {
     System.exit(
         new CommandLine(new Main()).setCaseInsensitiveEnumValuesAllowed(true).execute(args));
