@@ -10,31 +10,36 @@ import java.util.List;
 import java.util.Map;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
+import org.datacommons.proto.Mcf.McfGraph;
 import org.junit.Test;
 
 public class ExternalIdResolverTest {
+
+  // This includes 7 external IDs.
+  // India using isoCode
+  McfGraph.PropertyValues in = buildNode("Place", Map.of("isoCode", "IN"));
+  // CA, but the type is not a valid place type.
+  McfGraph.PropertyValues ca = buildNode("USState", Map.of("geoId", "06"));
+  // SF using wikidataId
+  McfGraph.PropertyValues sf = buildNode("City", Map.of("wikidataId", "Q62"));
+  // Venezia using nuts
+  McfGraph.PropertyValues vz = buildNode("Place", Map.of("nutsCode", "ITH35"));
+  // Unknown country
+  McfGraph.PropertyValues unk = buildNode("Country", Map.of("isoCode", "ZZZ"));
+  // Tamil Nadu / Karnataka using diverging IDs
+  McfGraph.PropertyValues tn =
+      buildNode("Place", Map.of("isoCode", "IN-KA", "wikidataId", "Q1445"));
+
+  List<McfGraph.PropertyValues> testPlaceNodes = List.of(in, ca, sf, vz, unk, tn);
+
   @Test
   public void endToEnd() throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
     ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 4;
 
-    // This includes 7 external IDs.
-    // India using isoCode
-    var in = buildNode("Place", Map.of("isoCode", "IN"));
-    // CA, but the type is not a valid place type.
-    var ca = buildNode("USState", Map.of("geoId", "06"));
-    // SF using wikidataId
-    var sf = buildNode("City", Map.of("wikidataId", "Q62"));
-    // Venezia using nuts
-    var vz = buildNode("Place", Map.of("nutsCode", "ITH35"));
-    // Unknown country
-    var unk = buildNode("Country", Map.of("isoCode", "ZZZ"));
-    // Tamil Nadu / Karnataka using diverging IDs
-    var tn = buildNode("Place", Map.of("isoCode", "IN-KA", "wikidataId", "Q1445"));
-
     var resolver = new ExternalIdResolver(HttpClient.newHttpClient(), true, lw);
-    for (var node : List.of(in, ca, sf, vz, unk, tn)) {
+    for (var node : testPlaceNodes) {
       resolver.submitNode(node);
     }
     // Issue 20 more SF calls, which should all be batched.
