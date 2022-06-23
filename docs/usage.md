@@ -121,7 +121,7 @@ Specifies the directory to write output files.
 
 Default is `dc_generated/` within current working directory.
 
-### `-oa`, `--observation-about`
+### `-ep`, `--existence-checks-place`
 
 Specificies whether the observationAbout value of StatVarObservation nodes should be checked against the Data Commons API for existence. 
 

@@ -97,7 +97,7 @@ class Main {
   public boolean generateSummaryReport;
 
   @CommandLine.Option(
-      names = {"-oa", "--observation-about"},
+      names = {"-ep", "--existence-checks-place"},
       defaultValue = "true",
       scope = CommandLine.ScopeType.INHERIT,
       description =
