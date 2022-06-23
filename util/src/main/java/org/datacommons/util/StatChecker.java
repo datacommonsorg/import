@@ -198,27 +198,25 @@ public class StatChecker {
     // If shouldGenerateSamplePlaces is true, and the bucket that the placekey
     // belongs has empty space, the sample place will be added to the
     // samplePlaces map
-    attemptAddingPlaceToSamplePlaces(placeDcid);
-
     String placekey = getSamplePlacesKey(placeDcid);
+    attemptAddingPlaceToSamplePlaces(placeDcid, placekey);
+    
     return samplePlaces.get(placekey).contains(placeDcid);
   }
 
-  private void attemptAddingPlaceToSamplePlaces(String placeDcid) {
-    String placekey = getSamplePlacesKey(placeDcid);
+  private void attemptAddingPlaceToSamplePlaces(String placeDcid, String placekey) {
     if (shouldGenerateSamplePlaces) {
       samplePlaces.computeIfAbsent(placekey, k -> new HashSet<>());
 
       // If the the bucket has space, add the sample place
-      if (samplePlacesBucketHasSpace(placeDcid)) {
+      if (samplePlacesBucketHasSpace(placeDcid, placekey)) {
         samplePlaces.get(placekey).add(placeDcid);
       }
     }
   }
 
   // Returns true if the bucket for this places key is not full.
-  private boolean samplePlacesBucketHasSpace(String placeDcid) {
-    String placekey = getSamplePlacesKey(placeDcid);
+  private boolean samplePlacesBucketHasSpace(String placeDcid, String placekey) {
     boolean bucketNotFull = samplePlaces.get(placekey).size() < getSamplePlaceBucketSize(placeDcid);
     return bucketNotFull;
   }
