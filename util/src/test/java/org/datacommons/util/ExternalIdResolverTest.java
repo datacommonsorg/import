@@ -52,11 +52,15 @@ public class ExternalIdResolverTest {
     resolver.drainRemoteCalls();
 
     testAssertionSuiteOnResolverInstance(resolver, lw);
+
+    // There are 7 IDs, and batch-size if 4, so we must have done 2 calls.
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumDcCalls", 2));
   }
 
   // Runs assertions on the place constants as defined in the class constants.
   // These assertions are factored out of individual tests to allow testing different
-  // input methods (API, addLocalGraph) have complying behavior with the same input
+  // input methods (API, addLocalGraph) have the same local behavior with the same input
+  // Does NOT test I/O related assertions, which are left to the individual test functions.
   private void testAssertionSuiteOnResolverInstance(ExternalIdResolver resolver, LogWrapper lw)
       throws IOException, InterruptedException {
     assertEquals(inDcid, resolver.resolveNode("in", in));
@@ -84,9 +88,6 @@ public class ExternalIdResolverTest {
             lw.getLog(),
             "Resolution_DivergingDcidsForExternalIds_isoCode_wikidataId",
             "Found diverging DCIDs for external IDs"));
-
-    // There are 7 IDs, and batch-size if 4, so we must have done 2 calls.
-    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumDcCalls", 2));
   }
 
   @Test
@@ -96,52 +97,27 @@ public class ExternalIdResolverTest {
 
     var resolver = new ExternalIdResolver(null, true, lw);
 
-    // construct input side MCF where we also provide the DCIDs of the nodes
+    // Construct input side MCF where we also provide the DCIDs of the nodes
     var inWithDcid = addDcidToNode(in, inDcid);
     var sfWithDcid = addDcidToNode(sf, sfDcid);
     var vzWithDcid = addDcidToNode(vz, vzDcid);
 
+    // Used for test where resolving an input node with diverging "external"
+    // (loaded from local graph) throws an error
+    var tamilNaduWithDcid =
+        addDcidToNode(buildNode("Place", Map.of("isoCode", "IN-KA")), "wikidataId/Q1445");
+    var karnatakaWithDcid =
+        addDcidToNode(buildNode("Place", Map.of("wikidataId", "Q1445")), "wikidataId/Q1185");
+
     resolver.addLocalGraph(inWithDcid);
     resolver.addLocalGraph(sfWithDcid);
     resolver.addLocalGraph(vzWithDcid);
+    resolver.addLocalGraph(tamilNaduWithDcid);
+    resolver.addLocalGraph(karnatakaWithDcid);
 
     resolver.drainRemoteCalls();
 
-    assertEquals(inDcid, resolver.resolveNode("in", in));
-    assertEquals(sfDcid, resolver.resolveNode("sf", sf));
-    assertEquals(vzDcid, resolver.resolveNode("vz", vz));
-
-    /* TODO(snny): look at the rest of this and see which tests should be
-    uncommented for local tests.
-
-
-    // CA type is not valid. So its not an error, but we won't resolve.
-    assertEquals("", resolver.resolveNode("ca", ca));
-    assertTrue(lw.getLog().getEntriesList().isEmpty());
-
-    // SF gets mapped.
-    assertEquals("geoId/0667000", resolver.resolveNode("sf", sf));
-    assertEquals("nuts/ITH35", resolver.resolveNode("vz", vz));
-
-    // This cannot be resolved.
-    assertEquals("", resolver.resolveNode("unk", unk));
-    assertTrue(
-        TestUtil.checkLog(
-            lw.getLog(),
-            "Resolution_UnresolvedExternalId_isoCode",
-            "Unresolved external ID :: id: 'ZZZ'"));
-
-    // We provided external IDs that map to diverging DCIDs.
-    assertEquals("", resolver.resolveNode("tn", tn));
-    assertTrue(
-        TestUtil.checkLog(
-            lw.getLog(),
-            "Resolution_DivergingDcidsForExternalIds_isoCode_wikidataId",
-            "Found diverging DCIDs for external IDs"));
-
-    // There are 7 IDs, and batch-size if 4, so we must have done 2 calls.
-    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumDcCalls", 2));
-    */
+    testAssertionSuiteOnResolverInstance(resolver, lw);
   }
 
   Mcf.McfGraph.PropertyValues buildNode(String typeOf, Map<String, String> extIds) {
