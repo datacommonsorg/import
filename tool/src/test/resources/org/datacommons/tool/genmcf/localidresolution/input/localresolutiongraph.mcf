@@ -1,0 +1,16 @@
+# 1. Simple local resolution of external isoCode of type Place
+Node: dcid:pseudoPlaceSimple
+typeOf: schema:Place
+isoCode: pseudoIsoCodeSimple
+wikidataId: pseudoWikidataIdSimple
+
+# 2. Local resolution that should give an error due to diverging external IDs
+## isoCode
+Node: dcid:pseudoPlaceDivergent_AAA
+typeOf: schema:Place
+isoCode: pseudoIsoCodeDiverging
+
+## wikidataId
+Node: dcid:pseudoPlaceDivergent_BBB
+typeOf: schema:Place
+wikidataId: pseudoWikidataIdDiverging

@@ -1,0 +1,5 @@
+Node: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+typeOf: dcs:StatisticalVariable
+populationType: schema:Person
+measuredProperty: dcs:count
+statType: dcs:measuredValue
