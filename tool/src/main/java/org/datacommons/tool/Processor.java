@@ -160,6 +160,9 @@ public class Processor {
     while ((n = parser.parseNextNode()) != null) {
       n = McfMutator.mutate(n.toBuilder(), logCtx);
 
+      if (idResolver != null && type == Mcf.McfType.INSTANCE_MCF) {
+        idResolver.addLocalGraph(n);
+      }
       if (existenceChecker != null && type == Mcf.McfType.INSTANCE_MCF) {
         // Add instance MCF nodes to ExistenceChecker.  We load all the nodes up first
         // before we check them later in checkNodes().
