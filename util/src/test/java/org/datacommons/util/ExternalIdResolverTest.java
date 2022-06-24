@@ -36,7 +36,7 @@ public class ExternalIdResolverTest {
   List<McfGraph.PropertyValues> testPlaceNodes = List.of(in, ca, sf, vz, unk, tn);
 
   @Test
-  public void endToEnd() throws IOException, InterruptedException {
+  public void endToEndWithApiCalls() throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
     ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 4;
@@ -55,6 +55,36 @@ public class ExternalIdResolverTest {
 
     // There are 7 IDs, and batch-size if 4, so we must have done 2 calls.
     assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumDcCalls", 2));
+  }
+
+  @Test
+  public void endToEndWithLocalSideMcf() throws IOException, InterruptedException {
+    Debug.Log.Builder lb = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
+
+    var resolver = new ExternalIdResolver(null, true, lw);
+
+    // Construct input side MCF where we also provide the DCIDs of the nodes
+    var inWithDcid = addDcidToNode(in, inDcid);
+    var sfWithDcid = addDcidToNode(sf, sfDcid);
+    var vzWithDcid = addDcidToNode(vz, vzDcid);
+
+    // Used for test where resolving an input node with diverging "external"
+    // (loaded from local graph) throws an error
+    var tamilNaduWithDcid =
+        addDcidToNode(buildNode("Place", Map.of("isoCode", "IN-KA")), "wikidataId/Q1445");
+    var karnatakaWithDcid =
+        addDcidToNode(buildNode("Place", Map.of("wikidataId", "Q1445")), "wikidataId/Q1185");
+
+    resolver.addLocalGraph(inWithDcid);
+    resolver.addLocalGraph(sfWithDcid);
+    resolver.addLocalGraph(vzWithDcid);
+    resolver.addLocalGraph(tamilNaduWithDcid);
+    resolver.addLocalGraph(karnatakaWithDcid);
+
+    resolver.drainRemoteCalls();
+
+    testAssertionSuiteOnResolverInstance(resolver, lw);
   }
 
   // Runs assertions on the place constants as defined in the class constants.
@@ -88,36 +118,6 @@ public class ExternalIdResolverTest {
             lw.getLog(),
             "Resolution_DivergingDcidsForExternalIds_isoCode_wikidataId",
             "Found diverging DCIDs for external IDs"));
-  }
-
-  @Test
-  public void testLocalGraph() throws IOException, InterruptedException {
-    Debug.Log.Builder lb = Debug.Log.newBuilder();
-    LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
-
-    var resolver = new ExternalIdResolver(null, true, lw);
-
-    // Construct input side MCF where we also provide the DCIDs of the nodes
-    var inWithDcid = addDcidToNode(in, inDcid);
-    var sfWithDcid = addDcidToNode(sf, sfDcid);
-    var vzWithDcid = addDcidToNode(vz, vzDcid);
-
-    // Used for test where resolving an input node with diverging "external"
-    // (loaded from local graph) throws an error
-    var tamilNaduWithDcid =
-        addDcidToNode(buildNode("Place", Map.of("isoCode", "IN-KA")), "wikidataId/Q1445");
-    var karnatakaWithDcid =
-        addDcidToNode(buildNode("Place", Map.of("wikidataId", "Q1445")), "wikidataId/Q1185");
-
-    resolver.addLocalGraph(inWithDcid);
-    resolver.addLocalGraph(sfWithDcid);
-    resolver.addLocalGraph(vzWithDcid);
-    resolver.addLocalGraph(tamilNaduWithDcid);
-    resolver.addLocalGraph(karnatakaWithDcid);
-
-    resolver.drainRemoteCalls();
-
-    testAssertionSuiteOnResolverInstance(resolver, lw);
   }
 
   Mcf.McfGraph.PropertyValues buildNode(String typeOf, Map<String, String> extIds) {
