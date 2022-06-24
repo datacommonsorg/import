@@ -25,7 +25,7 @@ import org.datacommons.proto.Recon;
 // This class is used as follows:
 // 1. Do N submitNode calls (which may batch up RPCs)
 // 2. Call drainRemoteCalls() (to drain all RPCs)
-// 3. Do N resolveNode calls (to resolve a dcid)
+// 3. Do M resolveNode calls (to resolve a dcid)
 //
 // If this order is not followed, errors will be thrown.
 // This class is thread-safe.
