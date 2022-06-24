@@ -191,29 +191,30 @@ public class ExternalIdResolver {
   }
 
   public synchronized void addLocalGraph(Mcf.McfGraph.PropertyValues node) {
-      // Skip doing anything with unresolvable types.
-      if (!isResolvableType(node)) {
-        return;
-      }
+    // Skip doing anything with unresolvable types.
+    if (!isResolvableType(node)) {
+      return;
+    }
 
-      String dcid = McfUtil.getPropVal(node, Vocabulary.DCID);
-      if (dcid.isEmpty()) {
-        return;
-      }
+    String dcid = McfUtil.getPropVal(node, Vocabulary.DCID);
+    if (dcid.isEmpty()) {
+      return;
+    }
 
-      Map<String, Set<String>> externalIds = getExternalIds(node);
-      for (Map.Entry<String, Set<String>> externalId : externalIds.entrySet()) {
-        String externalIdProp = externalId.getKey();
-        Set<String> externalIdValues = externalId.getValue();
-        for (String externalIdValue : externalIdValues) {
-          addToMappedIds(externalIdProp, externalIdValue, dcid);
-        }
+    Map<String, Set<String>> externalIds = getExternalIds(node);
+    for (Map.Entry<String, Set<String>> externalId : externalIds.entrySet()) {
+      String externalIdProp = externalId.getKey();
+      Set<String> externalIdValues = externalId.getValue();
+      for (String externalIdValue : externalIdValues) {
+        addToMappedIds(externalIdProp, externalIdValue, dcid);
       }
+    }
   }
+
   public synchronized void addLocalGraph(Mcf.McfGraph graph) {
     for (Map.Entry<String, Mcf.McfGraph.PropertyValues> nodeEntry :
         graph.getNodesMap().entrySet()) {
-          addLocalGraph(nodeEntry.getValue());
+      addLocalGraph(nodeEntry.getValue());
     }
   }
 

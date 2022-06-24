@@ -18,12 +18,15 @@ public class ExternalIdResolverTest {
   // This includes 7 external IDs.
   // India using isoCode
   McfGraph.PropertyValues in = buildNode("Place", Map.of("isoCode", "IN"));
+  String inDcid = "country/IND";
   // CA, but the type is not a valid place type.
   McfGraph.PropertyValues ca = buildNode("USState", Map.of("geoId", "06"));
   // SF using wikidataId
   McfGraph.PropertyValues sf = buildNode("City", Map.of("wikidataId", "Q62"));
+  String sfDcid = "geoId/0667000";
   // Venezia using nuts
   McfGraph.PropertyValues vz = buildNode("Place", Map.of("nutsCode", "ITH35"));
+  String vzDcid = "nuts/ITH35";
   // Unknown country
   McfGraph.PropertyValues unk = buildNode("Country", Map.of("isoCode", "ZZZ"));
   // Tamil Nadu / Karnataka using diverging IDs
@@ -47,15 +50,15 @@ public class ExternalIdResolverTest {
       resolver.submitNode(sf);
     }
     resolver.drainRemoteCalls();
-    assertEquals("country/IND", resolver.resolveNode("in", in));
+    assertEquals(inDcid, resolver.resolveNode("in", in));
 
     // CA type is not valid. So its not an error, but we won't resolve.
     assertEquals("", resolver.resolveNode("ca", ca));
     assertTrue(lw.getLog().getEntriesList().isEmpty());
 
-    // SF gets mapped.
-    assertEquals("geoId/0667000", resolver.resolveNode("sf", sf));
-    assertEquals("nuts/ITH35", resolver.resolveNode("vz", vz));
+    // SF and Venezia get mapped.
+    assertEquals(sfDcid, resolver.resolveNode("sf", sf));
+    assertEquals(vzDcid, resolver.resolveNode("vz", vz));
 
     // This cannot be resolved.
     assertEquals("", resolver.resolveNode("unk", unk));
@@ -84,11 +87,6 @@ public class ExternalIdResolverTest {
 
     var resolver = new ExternalIdResolver(null, true, lw);
 
-    // TODO(snny): refactor these to class constants
-    String inDcid = "country/IND";
-    String sfDcid = "geoId/0667000";
-    String vzDcid = "nuts/ITH35";
-
     // construct input side MCF where we also provide the DCIDs of the nodes
     var inWithDcid = addDcidToNode(in, inDcid);
     var sfWithDcid = addDcidToNode(sf, sfDcid);
@@ -104,10 +102,9 @@ public class ExternalIdResolverTest {
     assertEquals(sfDcid, resolver.resolveNode("sf", sf));
     assertEquals(vzDcid, resolver.resolveNode("vz", vz));
 
-    
     /* TODO(snny): look at the rest of this and see which tests should be
     uncommented for local tests.
-    assertEquals("country/IND", resolver.resolveNode("in", in));
+
 
     // CA type is not valid. So its not an error, but we won't resolve.
     assertEquals("", resolver.resolveNode("ca", ca));
@@ -148,11 +145,12 @@ public class ExternalIdResolverTest {
   }
 
   // Given a node, returns a copy of the node with the given dcid added as a PV
-  Mcf.McfGraph.PropertyValues addDcidToNode(Mcf.McfGraph.PropertyValues node, String dcid){
-    Mcf.McfGraph.PropertyValues.Builder nodeWithDcidBuilder = Mcf.McfGraph.PropertyValues.newBuilder(node);
+  Mcf.McfGraph.PropertyValues addDcidToNode(Mcf.McfGraph.PropertyValues node, String dcid) {
+    Mcf.McfGraph.PropertyValues.Builder nodeWithDcidBuilder =
+        Mcf.McfGraph.PropertyValues.newBuilder(node);
     nodeWithDcidBuilder.putPvs("dcid", McfUtil.newValues(Mcf.ValueType.TEXT, dcid));
     Mcf.McfGraph.PropertyValues nodeWithDcid = nodeWithDcidBuilder.build();
-    
+
     return nodeWithDcid;
   }
 }
