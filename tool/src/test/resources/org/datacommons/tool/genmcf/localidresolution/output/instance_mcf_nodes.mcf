@@ -1,0 +1,23 @@
+Node: dcid:pseudoPlaceSimple
+dcid: "pseudoPlaceSimple"
+isoCode: "pseudoIsoCodeSimple"
+wikidataId: "pseudoWikidataIdSimple"
+typeOf: dcid:Place
+
+Node: dcid:pseudoPlaceDivergent_BBB
+dcid: "pseudoPlaceDivergent_BBB"
+wikidataId: "pseudoWikidataIdDiverging"
+typeOf: dcid:Place
+
+Node: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+populationType: dcid:Person
+dcid: "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive"
+statType: dcid:measuredValue
+measuredProperty: dcid:count
+typeOf: dcid:StatisticalVariable
+
+Node: dcid:pseudoPlaceDivergent_AAA
+dcid: "pseudoPlaceDivergent_AAA"
+isoCode: "pseudoIsoCodeDiverging"
+typeOf: dcid:Place
+
