@@ -50,6 +50,15 @@ public class ExternalIdResolverTest {
       resolver.submitNode(sf);
     }
     resolver.drainRemoteCalls();
+
+    testAssertionSuiteOnResolverInstance(resolver, lw);
+  }
+
+  // Runs assertions on the place constants as defined in the class constants.
+  // These assertions are factored out of individual tests to allow testing different
+  // input methods (API, addLocalGraph) have complying behavior with the same input
+  private void testAssertionSuiteOnResolverInstance(ExternalIdResolver resolver, LogWrapper lw)
+      throws IOException, InterruptedException {
     assertEquals(inDcid, resolver.resolveNode("in", in));
 
     // CA type is not valid. So its not an error, but we won't resolve.
