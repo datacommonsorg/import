@@ -61,8 +61,9 @@ public class ExternalIdResolverTest {
   public void endToEndWithLocalSideMcf() throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
-
-    var resolver = new ExternalIdResolver(null, true, lw);
+    ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS =
+        1; // This allows us to count the number of DC calls exactly
+    var resolver = new ExternalIdResolver(HttpClient.newHttpClient(), true, lw);
 
     // Construct input side MCF where we also provide the DCIDs of the nodes
     var inWithDcid = addDcidToNode(in, inDcid);
@@ -82,9 +83,21 @@ public class ExternalIdResolverTest {
     resolver.addLocalGraph(tamilNaduWithDcid);
     resolver.addLocalGraph(karnatakaWithDcid);
 
+    for (var node : testPlaceNodes) {
+      resolver.submitNode(node);
+    }
+    // Issue 20 more SF calls, which should all be caught in local memory.
+    for (int i = 0; i < 20; i++) {
+      resolver.submitNode(sf);
+    }
+
     resolver.drainRemoteCalls();
 
     testAssertionSuiteOnResolverInstance(resolver, lw);
+
+    // There should have been exactly one API call for the node "unk" for which no
+    // local data was available
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumDcCalls", 1));
   }
 
   // Runs assertions on the place constants as defined in the class constants.
