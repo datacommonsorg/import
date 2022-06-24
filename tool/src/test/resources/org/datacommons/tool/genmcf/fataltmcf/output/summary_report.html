@@ -1,6 +1,12 @@
 <html>
   <head>
     <title>Summary Report</title>
+    <!-- required by DataTables -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js" type="text/javascript"></script>
+
+    <!-- DataTables documentation: https://datatables.net/ -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.12.1/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.12.1/datatables.min.js"></script>
   </head>
   <body>
     <style>
@@ -19,19 +25,128 @@
       tbody tr:hover {
         background-color: #ccc;
       }
-      summary {
+      .datatables-table{
+        border: 0;
+      }
+      .place-series-summary {
         cursor: pointer;
         font-size: 1.2rem;
         font-weight: bold;
         padding-bottom: 1rem;
       }
-      details {
+      .place-series-details {
         padding-bottom: 1rem;
       }
+      .toc-details-ul {
+        list-style: none;
+        padding-left: 0;
+      }
+      #go-to-top{
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+      }
     </style>
+    <a name="top"></a>
+    <div id="go-to-top">
+      <a href="#top">Go to Top</a>
+    </div>
     <h1>Summary Report</h1>
+    <h3>Table of Contents</h3>
+    <ul>
+      <li><a href="#import-run-details">Import Run Details</a></li>
+      <li><a href="#counters">Counters</a></li>
+      <ul class="toc-details-ul">
+                  <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_WARNING">
+                  LEVEL_WARNING
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_WARNING--Sanity_MultipleVals_value">Sanity_MultipleVals_value</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+          <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_ERROR">
+                  LEVEL_ERROR
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_MalformedComplexValue">MCF_MalformedComplexValue</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_TmcfMissingEntityDef">Sanity_TmcfMissingEntityDef</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--TMCF_MalformedEntity">TMCF_MalformedEntity</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_TmcfMissingColumn">Sanity_TmcfMissingColumn</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--TMCF_MalformedSchemaTerm">TMCF_MalformedSchemaTerm</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_UnexpectedProperty">MCF_UnexpectedProperty</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--TMCF_UnsupportedColumnNameInProperty">TMCF_UnsupportedColumnNameInProperty</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_MalformedNodeName">MCF_MalformedNodeName</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_MultipleDcidValues">Sanity_MultipleDcidValues</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_MultipleVals_observationAbout">Sanity_MultipleVals_observationAbout</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_typeOf">Sanity_MissingOrEmpty_typeOf</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_NotInitLowerPropName">Sanity_NotInitLowerPropName</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--MCF_MalformedColonLessLine">MCF_MalformedColonLessLine</a>
+                </li>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Sanity_DcidTableEntity">Sanity_DcidTableEntity</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+          <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_FATAL">
+                  LEVEL_FATAL
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_FATAL--CSV_TmcfCheckFailure">CSV_TmcfCheckFailure</a>
+                </li>
+              </ul>
+            </details>
+          </li>
+      </ul>
+      
+
+    </ul>
+
     <div>
-      <h2>Import Run Details</h2>
+      <h2>
+        <a name="import-run-details" href="#import-run-details">Import Run Details</a>
+      </h2>  
       <table>
         <tr>
           <td>Existence Checks Enabled</td>
@@ -55,95 +170,154 @@
         </tr>
       </table>
     </div>
+
+    
     <div>
-      <h2>Counters</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Counter Name</th>
-              <th>Num Occurences</th>
-            </tr>
-          </thead>
-              <tbody>
+      <h2>
+        <a name="counters" href="#counters">Counters</a>
+      </h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Counter Name</th>
+            <th>Num Occurences</th>
+          </tr>
+        </thead>
+            <tbody>
+              <tr>
+                <th colspan="2" align="left"><a href="#counters--LEVEL_WARNING" name="counters--LEVEL_WARNING">LEVEL_WARNING</a></th>
+              </tr>
                 <tr>
-                  <th colspan="2" align="left">LEVEL_WARNING</th>
+                  <td><a href="#counters--LEVEL_WARNING--Sanity_MultipleVals_value" name="counters--LEVEL_WARNING--Sanity_MultipleVals_value">Sanity_MultipleVals_value</a></td>
+                  <td>1</td>
                 </tr>
-                  <tr>
-                    <td>Sanity_MultipleVals_value</td>
-                    <td>1</td>
-                  </tr>
-              </tbody>
-              <tbody>
+            </tbody>
+            <tbody>
+              <tr>
+                <th colspan="2" align="left"><a href="#counters--LEVEL_ERROR" name="counters--LEVEL_ERROR">LEVEL_ERROR</a></th>
+              </tr>
                 <tr>
-                  <th colspan="2" align="left">LEVEL_ERROR</th>
+                  <td><a href="#counters--LEVEL_ERROR--MCF_MalformedComplexValue" name="counters--LEVEL_ERROR--MCF_MalformedComplexValue">MCF_MalformedComplexValue</a></td>
+                  <td>1</td>
                 </tr>
-                  <tr>
-                    <td>MCF_MalformedComplexValue</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_TmcfMissingEntityDef</td>
-                    <td>4</td>
-                  </tr>
-                  <tr>
-                    <td>TMCF_MalformedEntity</td>
-                    <td>2</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_TmcfMissingColumn</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>TMCF_MalformedSchemaTerm</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>MCF_UnexpectedProperty</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>TMCF_UnsupportedColumnNameInProperty</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>MCF_MalformedNodeName</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_MultipleDcidValues</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_MultipleVals_observationAbout</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_MissingOrEmpty_typeOf</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_NotInitLowerPropName</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>MCF_MalformedColonLessLine</td>
-                    <td>1</td>
-                  </tr>
-                  <tr>
-                    <td>Sanity_DcidTableEntity</td>
-                    <td>1</td>
-                  </tr>
-              </tbody>
-              <tbody>
                 <tr>
-                  <th colspan="2" align="left">LEVEL_FATAL</th>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_TmcfMissingEntityDef" name="counters--LEVEL_ERROR--Sanity_TmcfMissingEntityDef">Sanity_TmcfMissingEntityDef</a></td>
+                  <td>4</td>
                 </tr>
-                  <tr>
-                    <td>CSV_TmcfCheckFailure</td>
-                    <td>1</td>
-                  </tr>
-              </tbody>
-        </table>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--TMCF_MalformedEntity" name="counters--LEVEL_ERROR--TMCF_MalformedEntity">TMCF_MalformedEntity</a></td>
+                  <td>2</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_TmcfMissingColumn" name="counters--LEVEL_ERROR--Sanity_TmcfMissingColumn">Sanity_TmcfMissingColumn</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--TMCF_MalformedSchemaTerm" name="counters--LEVEL_ERROR--TMCF_MalformedSchemaTerm">TMCF_MalformedSchemaTerm</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--MCF_UnexpectedProperty" name="counters--LEVEL_ERROR--MCF_UnexpectedProperty">MCF_UnexpectedProperty</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--TMCF_UnsupportedColumnNameInProperty" name="counters--LEVEL_ERROR--TMCF_UnsupportedColumnNameInProperty">TMCF_UnsupportedColumnNameInProperty</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--MCF_MalformedNodeName" name="counters--LEVEL_ERROR--MCF_MalformedNodeName">MCF_MalformedNodeName</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_MultipleDcidValues" name="counters--LEVEL_ERROR--Sanity_MultipleDcidValues">Sanity_MultipleDcidValues</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_MultipleVals_observationAbout" name="counters--LEVEL_ERROR--Sanity_MultipleVals_observationAbout">Sanity_MultipleVals_observationAbout</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_MissingOrEmpty_typeOf" name="counters--LEVEL_ERROR--Sanity_MissingOrEmpty_typeOf">Sanity_MissingOrEmpty_typeOf</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_NotInitLowerPropName" name="counters--LEVEL_ERROR--Sanity_NotInitLowerPropName">Sanity_NotInitLowerPropName</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--MCF_MalformedColonLessLine" name="counters--LEVEL_ERROR--MCF_MalformedColonLessLine">MCF_MalformedColonLessLine</a></td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Sanity_DcidTableEntity" name="counters--LEVEL_ERROR--Sanity_DcidTableEntity">Sanity_DcidTableEntity</a></td>
+                  <td>1</td>
+                </tr>
+            </tbody>
+            <tbody>
+              <tr>
+                <th colspan="2" align="left"><a href="#counters--LEVEL_FATAL" name="counters--LEVEL_FATAL">LEVEL_FATAL</a></th>
+              </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_FATAL--CSV_TmcfCheckFailure" name="counters--LEVEL_FATAL--CSV_TmcfCheckFailure">CSV_TmcfCheckFailure</a></td>
+                  <td>1</td>
+                </tr>
+            </tbody>
+      </table>
     </div>
+    <script>
+      function handle_hash_change(){
+        /*
+        When the hash part of the location has changed, open the <detail> tag
+        closest to the anchor that is being linked to.
+        */
+
+        const new_hash = CSS.escape( // we will use the location hash in a CSS selector, so we need to escape it
+          location.hash // get the hash
+          .substring(1) // drop the initial `#` character
+          );
+
+        const anchor_selector = "a[name=" + new_hash +"]";
+        const anchor_element = document.querySelectorAll(anchor_selector)[0];
+        const parent_details_tag = anchor_element.closest("details")
+
+        if (parent_details_tag !== null){ // if tag exists
+          parent_details_tag.open = true; // open it.
+        }
+      }
+
+      window.onhashchange = handle_hash_change; // dynamically react to hash changes
+      document.addEventListener('DOMContentLoaded', handle_hash_change, false); // if page loaded with a location hash, also react to that.
+    </script>
   </body>
+  <script>
+    function make_table_DataTable(id){
+      // given a CSS selector for a <table> element, adds DataTable to it
+      // with only sorting enabled, and with no default order column.
+      
+      $(id).DataTable({
+        paging: false,
+        searching: false,
+        info: false,
+        order: [] // don't apply initial ordering (which is turned on by default)
+      });
+
+      // DataTables seem to add a class "no-footer" to the tables managed by it,
+      // which has no behavior effects but adds a weird 1px gray bottom-border,
+      // so we remove that class after initializing the table as a DataTable.
+      // reference for another post mentioning this issue:
+      // https://datatables.net/forums/discussion/53837/class-no-footer-applied-to-table-despite-a-footer-is-present
+      $(id).removeClass("no-footer");
+    }
+
+    $(document).ready(function () {
+      const sampleplace_table_ids = [
+      ]
+
+      make_table_DataTable("#statvars-table");
+      sampleplace_table_ids.forEach(( id ) => {
+        make_table_DataTable(id)
+      })
+    });
+
+  </script>
 </html>
