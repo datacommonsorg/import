@@ -1,0 +1,16 @@
+# From covid.csv:2
+# Error: Failed to assign DCID :: type: 'Place', node: 'COVID19_cases_india/E1/1'
+Node: COVID19_cases_india/E1/1
+isoCode: "pseudoIsoCodeDiverging"
+wikidataId: "pseudoWikidataIdDiverging"
+typeOf: dcid:Place
+
+# From covid.csv:2
+# Error: Unable to assign DCID due to unresolved local reference :: ref: 'COVID19_cases_india/E1/1', node: 'COVID19_cases_india/E0/1'
+Node: COVID19_cases_india/E0/1
+observationDate: "2020-01-02"
+observationAbout: l:COVID19_cases_india/E1/1
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+value: 2
+typeOf: dcid:StatVarObservation
+
