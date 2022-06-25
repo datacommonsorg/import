@@ -57,6 +57,12 @@ export interface CsvData {}
 
 // Types used for Detection.
 
+// LocationFormat denotes the format type associated with a location.
+export interface LocationFormat {
+  propertyName: string,
+  displayName: string,
+}
+
 // Denotes a level of confidence in the detection.
 // It can be associated with any detected type.
 export enum ConfidenceLevel {
@@ -66,12 +72,11 @@ export enum ConfidenceLevel {
 }
 
 export interface DetectedDetails {
-
   // The type detected.
   detectedType: string;
 
   // (Optional) The format detected.
-  detectedFormat?: string;
+  detectedFormat?: LocationFormat;
 
   // The level of confidence associated with the detection.
   confidence: ConfidenceLevel;

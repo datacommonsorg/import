@@ -13,20 +13,64 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { LocationFormat } from "../types";
 import { LocationDetector } from "./detect_location";
 
-test("locationTypes", () => {
+test("locationTypesAndFormats", () => {
   var det = new LocationDetector();
-  var expected = new Map<string, Array<string>>(
+  var expected = new Map<string, Array<LocationFormat>>(
     [
-      ['None',[]],
-      ['LatLon',[]],
-      ['Country',[ 'Full Name', 'ISO Code', 'Alpha 2 Code', 'Alpha 3 Code', 'Number' ]],
-      ['State',[]],
-      ['Province',[]],
-      ['Municipality',[]],
-      ['County',[]],
-      ['City',[]]
+      ['None',    [ {propertyName: "name", displayName: "Full Name"},]],
+      ['LatLon',  [ {propertyName: "name", displayName: "Full Name"},]],
+      ['Country', [ {propertyName: "name", displayName: "Full Name"},
+                    {propertyName: "iso", displayName: "ISO Code"},
+                    {propertyName: "abbrv3", displayName: "Alpha 3 Code"},
+                    {propertyName: "numeric", displayName: "Numeric Code"},
+                  ]],
+      ['State',   [ {propertyName: "name", displayName: "Full Name"},]],
+      ['Province',[ {propertyName: "name", displayName: "Full Name"},]],
+      ['Municipality',[ {propertyName: "name", displayName: "Full Name"},]],
+      ['County',  [ {propertyName: "name", displayName: "Full Name"},]],
+      ['City',    [ {propertyName: "name", displayName: "Full Name"},]],
     ]);
-  expect(det.validLocationTypes()).toEqual(expected);
+  expect(det.validLocationTypesAndFormats()).toEqual(expected);
+})
+
+test("countries", () => {
+  var det = new LocationDetector();
+  var numCountriesExpected = 271;
+  var numIsoCodes = 247;      // 24 countries without ISO codes.
+  var numAbbrv3Codes = 246;   // 25 countries without 3-letter abbreviations.
+  var numNumeric = 246;       // 25 countries without numeric codes.
+  expect(det.countryNames.size).toEqual(numCountriesExpected);
+  expect(det.countryISO.size).toEqual(numIsoCodes);
+  expect(det.countryAbbrv3.size).toEqual(numAbbrv3Codes);
+  expect(det.countryNumeric.size).toEqual(numNumeric);
+
+  // Some other random spot checks.
+  // Norway.
+  expect(det.countryNames).toContain("Norway");
+  expect(det.countryISO).toContain("NO");
+  expect(det.countryAbbrv3).toContain("NOR");
+  expect(det.countryNumeric).toContain("578");
+
+  // Senegal.
+  expect(det.countryNames).toContain("Senegal");
+  expect(det.countryISO).toContain("SN");
+  expect(det.countryAbbrv3).toContain("SEN");
+  expect(det.countryNumeric).toContain("686");
+
+  // Other checks.
+  expect(det.countryNames).not.toContain("");
+  expect(det.countryNames).not.toContain(null);
+
+  expect(det.countryISO).not.toContain("");
+  expect(det.countryISO).not.toContain(null);
+
+  expect(det.countryAbbrv3).not.toContain("");
+  expect(det.countryAbbrv3).not.toContain(null);
+
+  expect(det.countryNumeric).not.toContain("");
+  expect(det.countryNumeric).not.toContain(null);
+  expect(det.countryNumeric).not.toContain(0);
 })

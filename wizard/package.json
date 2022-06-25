@@ -39,7 +39,6 @@
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "gh-pages": "^4.0.0",
     "jest": "^28.1.1",
-    "regenerator-runtime": "^0.13.9",
     "ts-jest": "^28.0.5",
     "webpack-dev-server": "^4.9.2"
   }

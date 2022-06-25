@@ -13,44 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DetectedDetails, ConfidenceLevel } from "../types";
-
-enum LocationType {
-  // None indicates a non-Location Type.
-  None = "None",
-  LatLon = "LatLon",
-  Country = "Country",
-  State = "State",
-  Province = "Province",
-  Municipality = "Municipality",
-  County = "County",
-  City = "City",
-}
-
-enum CountryFormat {
-  Name =  "Full Name",
-  ISO =  "ISO Code",
-  Alpha2 = "Alpha 2 Code",
-  Alpha3 = "Alpha 3 Code",
-  Number = "Number",
-}
-
-class DetectedLocationDetails implements DetectedDetails {
-  // The type detected.
-  detectedType: string;
-
-  // (Optional) The format detected.
-  detectedFormat?: string;
-
-  // The level of confidence associated with the detection.
-  confidence: ConfidenceLevel;
-
-  constructor(t : string, f: string, c: ConfidenceLevel) {
-    this.detectedType = t;
-    this.detectedFormat = f;
-    this.confidence = c;
-  }
-}
+import { DetectedDetails, LocationFormat, ConfidenceLevel } from "../types";
+import countriesJSON from './country_mappings.json';
 
 // A LocationDetector objected is meant to be initialized once. It provides
 // convenience access to all location types and their supported formats. It also
@@ -58,28 +22,56 @@ class DetectedLocationDetails implements DetectedDetails {
 // a list of string values).
 export class LocationDetector {
   countryNames: Set<string>;
-  countryISO2: Set<string>;
-  countryISO3: Set<string>;
+  countryISO: Set<string>;
+  countryAbbrv3: Set<string>;
+  countryNumeric: Set<string>;
+
+  static typeFormatMappings = new Map<string, Array<LocationFormat>>(
+    [
+      ['None',        [ {propertyName: "name", displayName: "Full Name"},]],
+      ['LatLon',      [ {propertyName: "name", displayName: "Full Name"},]],
+      ['Country',     [ {propertyName: "name", displayName: "Full Name"},
+                        {propertyName: "iso", displayName: "ISO Code"},
+                        {propertyName: "abbrv3", displayName: "Alpha 3 Code"},
+                        {propertyName: "numeric", displayName: "Numeric Code"},
+                      ]],
+      ['State',       [ {propertyName: "name", displayName: "Full Name"},]],
+      ['Province',    [ {propertyName: "name", displayName: "Full Name"},]],
+      ['Municipality',[ {propertyName: "name", displayName: "Full Name"},]],
+      ['County',      [ {propertyName: "name", displayName: "Full Name"},]],
+      ['City',        [ {propertyName: "name", displayName: "Full Name"},]],
+    ]);
 
   constructor() {
     // Placeholder implementation below. These should be read from the CSV file.
-    this.countryNames = new Set<string>();
-    this.countryISO2 = new Set<string>();
-    this.countryISO3 = new Set<string>();
+    this.preProcessCountries();
   }
 
   // Returns a Map of all location types and their supported formats.
-  validLocationTypes(): Map<string, Array<string>> {
-    var m = new Map<string, Array<string>>();
+  validLocationTypesAndFormats(): Map<string, Array<LocationFormat>> {
+    return LocationDetector.typeFormatMappings;
+  }
 
-    const types = Object.values(LocationType);
-    for (var t of types) {
-      m.set(t, []);
-      if (t == LocationType.Country) {
-        m.set(t, Object.values(CountryFormat));
+  // Process the countriesJSON object to generate the required sets.
+  preProcessCountries() {
+    this.countryNames = new Set<string>();
+    this.countryISO = new Set<string>();
+    this.countryAbbrv3 = new Set<string>();
+    this.countryNumeric = new Set<string>();
+
+    for(let country of countriesJSON) {
+      this.countryNames.add(country.name);
+
+      if (country.iso_code != null) {
+        this.countryISO.add(country.iso_code);
+      }
+      if (country.country_alpha_3_code != null) {
+        this.countryAbbrv3.add(country.country_alpha_3_code);
+      }
+      if (country.country_numeric_code != null) {
+        this.countryNumeric.add(country.country_numeric_code);
       }
     }
-    return m;
   }
 
   // Detecting Location.
@@ -87,8 +79,8 @@ export class LocationDetector {
   // column: an array of string values.
   detect(header: string, column: Array<string>): DetectedDetails {
     // Placeholder implementation below.
-    return new DetectedLocationDetails(LocationType.None,
-                                    CountryFormat.Name,
-                                    ConfidenceLevel.Uncertain);
+    return {detectedType: "None",
+            detectedFormat: {propertyName: "", displayName: ""},
+            confidence: ConfidenceLevel.Uncertain};
   }
 }
