@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { DetectedDetails, DetectedFormat, ConfidenceLevel } from "../types";
-import countriesJSON from './country_mappings.json';
+import countriesJSON from "./country_mappings.json";
 
 // A PlaceDetector objected is meant to be initialized once. It provides
 // convenience access to all place types and their supported formats. It also
@@ -28,18 +28,18 @@ export class PlaceDetector {
 
   static typeFormatMappings = new Map<string, Array<DetectedFormat>>(
     [
-      ['None',        [ {propertyName: "name", displayName: "Full Name"},]],
-      ['LatLon',      [ {propertyName: "name", displayName: "Full Name"},]],
-      ['Country',     [ {propertyName: "name", displayName: "Full Name"},
-                        {propertyName: "iso", displayName: "ISO Code"},
-                        {propertyName: "abbrv3", displayName: "Alpha 3 Code"},
-                        {propertyName: "numeric", displayName: "Numeric Code"},
+      ["None",        [ {propertyName: "name", displayName: "Full Name"},]],
+      ["LatLon",      [ {propertyName: "name", displayName: "Full Name"},]],
+      ["Country",     [ {propertyName: "name", displayName: "Full Name"},
+                        {propertyName: "isoCode", displayName: "ISO Code"},
+                        {propertyName: "countryAlpha3Code", displayName: "Alpha 3 Code"},
+                        {propertyName: "countryNumericCode", displayName: "Numeric Code"},
                       ]],
-      ['State',       [ {propertyName: "name", displayName: "Full Name"},]],
-      ['Province',    [ {propertyName: "name", displayName: "Full Name"},]],
-      ['Municipality',[ {propertyName: "name", displayName: "Full Name"},]],
-      ['County',      [ {propertyName: "name", displayName: "Full Name"},]],
-      ['City',        [ {propertyName: "name", displayName: "Full Name"},]],
+      ["State",       [ {propertyName: "name", displayName: "Full Name"},]],
+      ["Province",    [ {propertyName: "name", displayName: "Full Name"},]],
+      ["Municipality",[ {propertyName: "name", displayName: "Full Name"},]],
+      ["County",      [ {propertyName: "name", displayName: "Full Name"},]],
+      ["City",        [ {propertyName: "name", displayName: "Full Name"},]],
     ]);
 
   constructor() {

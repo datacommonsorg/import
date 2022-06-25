@@ -20,18 +20,18 @@ test("placeTypesAndFormats", () => {
   var det = new PlaceDetector();
   var expected = new Map<string, Array<DetectedFormat>>(
     [
-      ['None',    [ {propertyName: "name", displayName: "Full Name"},]],
-      ['LatLon',  [ {propertyName: "name", displayName: "Full Name"},]],
-      ['Country', [ {propertyName: "name", displayName: "Full Name"},
-                    {propertyName: "iso", displayName: "ISO Code"},
-                    {propertyName: "abbrv3", displayName: "Alpha 3 Code"},
-                    {propertyName: "numeric", displayName: "Numeric Code"},
-                  ]],
-      ['State',   [ {propertyName: "name", displayName: "Full Name"},]],
-      ['Province',[ {propertyName: "name", displayName: "Full Name"},]],
-      ['Municipality',[ {propertyName: "name", displayName: "Full Name"},]],
-      ['County',  [ {propertyName: "name", displayName: "Full Name"},]],
-      ['City',    [ {propertyName: "name", displayName: "Full Name"},]],
+      ["None",        [ {propertyName: "name", displayName: "Full Name"},]],
+      ["LatLon",      [ {propertyName: "name", displayName: "Full Name"},]],
+      ["Country",     [ {propertyName: "name", displayName: "Full Name"},
+                        {propertyName: "isoCode", displayName: "ISO Code"},
+                        {propertyName: "countryAlpha3Code", displayName: "Alpha 3 Code"},
+                        {propertyName: "countryNumericCode", displayName: "Numeric Code"},
+                      ]],
+      ["State",       [ {propertyName: "name", displayName: "Full Name"},]],
+      ["Province",    [ {propertyName: "name", displayName: "Full Name"},]],
+      ["Municipality",[ {propertyName: "name", displayName: "Full Name"},]],
+      ["County",      [ {propertyName: "name", displayName: "Full Name"},]],
+      ["City",        [ {propertyName: "name", displayName: "Full Name"},]],
     ]);
   expect(det.validPlaceTypesAndFormats()).toEqual(expected);
 })
