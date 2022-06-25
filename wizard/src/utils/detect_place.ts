@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DetectedDetails, LocationFormat, ConfidenceLevel } from "../types";
+import { DetectedDetails, DetectedFormat, ConfidenceLevel } from "../types";
 import countriesJSON from './country_mappings.json';
 
-// A LocationDetector objected is meant to be initialized once. It provides
-// convenience access to all location types and their supported formats. It also
-// supports detecting the location type for each individual column (a header and
+// A PlaceDetector objected is meant to be initialized once. It provides
+// convenience access to all place types and their supported formats. It also
+// supports detecting the place type for each individual column (a header and
 // a list of string values).
-export class LocationDetector {
+export class PlaceDetector {
   countryNames: Set<string>;
   countryISO: Set<string>;
   countryAbbrv3: Set<string>;
   countryNumeric: Set<string>;
 
-  static typeFormatMappings = new Map<string, Array<LocationFormat>>(
+  static typeFormatMappings = new Map<string, Array<DetectedFormat>>(
     [
       ['None',        [ {propertyName: "name", displayName: "Full Name"},]],
       ['LatLon',      [ {propertyName: "name", displayName: "Full Name"},]],
@@ -47,9 +47,9 @@ export class LocationDetector {
     this.preProcessCountries();
   }
 
-  // Returns a Map of all location types and their supported formats.
-  validLocationTypesAndFormats(): Map<string, Array<LocationFormat>> {
-    return LocationDetector.typeFormatMappings;
+  // Returns a Map of all place types and their supported formats.
+  validPlaceTypesAndFormats(): Map<string, Array<DetectedFormat>> {
+    return PlaceDetector.typeFormatMappings;
   }
 
   // Process the countriesJSON object to generate the required sets.
@@ -74,7 +74,7 @@ export class LocationDetector {
     }
   }
 
-  // Detecting Location.
+  // Detecting Place.
   // header: the column header string.
   // column: an array of string values.
   detect(header: string, column: Array<string>): DetectedDetails {

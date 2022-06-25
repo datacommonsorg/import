@@ -57,8 +57,8 @@ export interface CsvData {}
 
 // Types used for Detection.
 
-// LocationFormat denotes the format type associated with a location.
-export interface LocationFormat {
+// DetectedFormat denotes the format type associated with some detected type..
+export interface DetectedFormat {
   propertyName: string,
   displayName: string,
 }
@@ -76,7 +76,7 @@ export interface DetectedDetails {
   detectedType: string;
 
   // (Optional) The format detected.
-  detectedFormat?: LocationFormat;
+  detectedFormat?: DetectedFormat;
 
   // The level of confidence associated with the detection.
   confidence: ConfidenceLevel;

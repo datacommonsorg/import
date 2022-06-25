@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { LocationFormat } from "../types";
-import { LocationDetector } from "./detect_location";
+import { DetectedFormat } from "../types";
+import { PlaceDetector } from "./detect_place";
 
-test("locationTypesAndFormats", () => {
-  var det = new LocationDetector();
-  var expected = new Map<string, Array<LocationFormat>>(
+test("placeTypesAndFormats", () => {
+  var det = new PlaceDetector();
+  var expected = new Map<string, Array<DetectedFormat>>(
     [
       ['None',    [ {propertyName: "name", displayName: "Full Name"},]],
       ['LatLon',  [ {propertyName: "name", displayName: "Full Name"},]],
@@ -33,11 +33,11 @@ test("locationTypesAndFormats", () => {
       ['County',  [ {propertyName: "name", displayName: "Full Name"},]],
       ['City',    [ {propertyName: "name", displayName: "Full Name"},]],
     ]);
-  expect(det.validLocationTypesAndFormats()).toEqual(expected);
+  expect(det.validPlaceTypesAndFormats()).toEqual(expected);
 })
 
 test("countries", () => {
-  var det = new LocationDetector();
+  var det = new PlaceDetector();
   var numCountriesExpected = 271;
   var numIsoCodes = 247;      // 24 countries without ISO codes.
   var numAbbrv3Codes = 246;   // 25 countries without 3-letter abbreviations.
