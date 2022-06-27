@@ -72,7 +72,9 @@ export interface CsvData {
   columnValuesSampled: Map<string, Array<string>>,
 
   // rowsForDisplay is a mapping from the row index in the original csv file to
-  // the contents of the row.
+  // the contents of the row. This is a convenience structure to assist with
+  // previews etc. It is not expected to contain the entire csv data, i.e. there
+  // is no expectation that this structure contains all rows.
   // It is also assumed that order of values in the array will correspond to
   // the orderedColumnNames.
   rowsForDisplay: Map<BigInt, Array<string>>,
