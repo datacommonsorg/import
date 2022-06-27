@@ -75,7 +75,7 @@ export interface CsvData {
   // the contents of the row.
   // It is also assumed that order of values in the array will correspond to
   // the orderedColumnNames.
-  rowsForDisplay: Map<string, Array<string>>,
+  rowsForDisplay: Map<number, Array<string>>,
 }
 
 
