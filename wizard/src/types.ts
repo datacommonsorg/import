@@ -52,7 +52,33 @@ export interface MappingVal {
 
 export type Mapping = Record<MappedThing, MappingVal>;
 
-export interface CsvData {}
+// CvsData should contain the minimum sufficient data from the
+// data csv file which will be used for all processing, e.g. column detection,
+// and display/rendering.
+export interface CsvData {
+  // This field should dictate the fixed (internal) order of all csv columns.
+  // Each value in this array is the column header.
+  orderedColumnNames: Array<string>,
+
+  // columnValuesSampled is a map from column name (header) to an extract of the
+  // values in the column. This extract could be all of the column's values or
+  // a sample. This is the structure that should be used for detection
+  // heuristics and other advanced processing.
+  // It is assumed that all columns present in the original csv data file will
+  // be represented in this structure. All values in the orderedColumnNames
+  // array should be present as keys of columnValuesSampled.
+  // Note that the length of all column-values need not be the same, e.g. due to
+  // the removal of duplicate values.
+  columnValuesSampled: Map<string, Array<string>>,
+
+  // rowsForDisplay is a mapping from the row index in the original csv file to
+  // the contents of the row. This is a convenience structure to assist with
+  // previews etc. It is not expected to contain the entire csv data, i.e. there
+  // is no expectation that this structure contains all rows.
+  // It is also assumed that order of values in the array will correspond to
+  // the orderedColumnNames.
+  rowsForDisplay: Map<BigInt, Array<string>>,
+}
 
 
 // Types used for Detection.
