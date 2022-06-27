@@ -13,14 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DetectedFormat } from "../types";
+import { ConfidenceLevel, DetectedDetails, DetectedFormat } from "../types";
 import { PlaceDetector } from "./detect_place";
+
+// Helper function to determine if two DetectedDetails objects are equal.
+function detectedDetailsDeepEquality(
+  a: DetectedDetails, b: DetectedDetails): boolean {
+  return (
+    (a.detectedType == b.detectedType) &&
+    (a.confidence == b.confidence) &&
+    (a.detectedFormat.propertyName ==  b.detectedFormat.propertyName) &&
+    (a.detectedFormat.displayName == b.detectedFormat.displayName)
+  );
+}
 
 test("placeTypesAndFormats", () => {
   var det = new PlaceDetector();
   var expected = new Map<string, Array<DetectedFormat>>(
     [
-      ["None",        [ {propertyName: "name", displayName: "Full Name"},]],
+      ["Longitude",   [ {propertyName: "name", displayName: "Full Name"},]],
+      ["Latitude",    [ {propertyName: "name", displayName: "Full Name"},]],
       ["LatLon",      [ {propertyName: "name", displayName: "Full Name"},]],
       ["Country",     [ {propertyName: "name", displayName: "Full Name"},
                         {propertyName: "isoCode", displayName: "ISO Code"},
@@ -35,6 +47,63 @@ test("placeTypesAndFormats", () => {
     ]);
   expect(det.validPlaceTypesAndFormats()).toEqual(expected);
 })
+
+test("placeTypesLower", () => {
+  var det = new PlaceDetector();
+  var expected = new Set<string>(
+      ["longitude", "latitude", "latlon", "country", "state", "province",
+        "municipality", "county", "city"]
+    );
+  expect(det.placeTypes).toEqual(expected);
+})
+
+test("placeLowConfidenceDetection", () => {
+  var det = new PlaceDetector();
+
+  expect(det.detectLowConfidence("")).toBe(null);
+  expect(det.detectLowConfidence(" ")).toBe(null);
+  expect(det.detectLowConfidence("continent")).toBe(null);
+
+  expect(det.detectLowConfidence("Country..")).toBe("Country");
+  expect(det.detectLowConfidence("Country")).toBe("Country");
+  expect(det.detectLowConfidence("cOuntry")).toBe("Country");
+  expect(det.detectLowConfidence("COUNTRY")).toBe("Country");
+  expect(det.detectLowConfidence("State  ")).toBe("State");
+  expect(det.detectLowConfidence("County---")).toBe("County");
+  expect(det.detectLowConfidence("city")).toBe("City");
+
+  expect(det.detectLowConfidence("Lat-Lon")).toBe("LatLon");
+  expect(det.detectLowConfidence("Lat,Lon")).toBe("LatLon");
+  expect(det.detectLowConfidence("Lat Lon")).toBe("LatLon");
+  expect(det.detectLowConfidence("LatLon")).toBe("LatLon");
+  expect(det.detectLowConfidence("longitude()()")).toBe("Longitude");
+  expect(det.detectLowConfidence("Latitude=#$#$%")).toBe("Latitude");
+})
+
+test("detectionLowConf", () => {
+  var det = new PlaceDetector();
+
+  expect(det.detect("randomColName", ["1", "2", "3"])).toBe(null);
+  expect(det.detect("", [])).toBe(null);
+
+  var expected: DetectedDetails = {
+          detectedType: "City",
+          detectedFormat: {propertyName: "name", displayName: "Full Name"},
+          confidence: ConfidenceLevel.Low
+        };
+  var notExpected: DetectedDetails = {
+          detectedType: "City",
+          detectedFormat: {propertyName: "name", displayName: "Full Name"},
+          confidence: ConfidenceLevel.High // should be Low.
+        };
+
+  var got = det.detect("city", ["a", "b", "c"]);
+
+  expect(detectedDetailsDeepEquality(expected, got)).toBe(true);
+  expect(detectedDetailsDeepEquality(notExpected, got)).toBe(false);
+
+})
+
 
 test("countries", () => {
   var det = new PlaceDetector();
