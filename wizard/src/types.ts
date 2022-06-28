@@ -17,21 +17,23 @@
 export enum MappingType {
   COLUMN = "column",
   COLUMN_HEADER = "columnHeader",
-  CONSTANT = "constant"
+  CONSTANT = "constant",
 }
 
 export enum MappedThing {
   PLACE = "place",
   STAT_VAR = "statVar",
   DATE = "date",
-  UNIT = "unit"
+  UNIT = "unit",
 }
 
 interface Column {
-  // header title
+  // id of the column
+  id: string;
+  // original column header
   header: string;
-  // the column number (leftmost column will be 1)
-  columnNum: number;
+  // column index (leftmost column will be 0)
+  columnIdx: number;
 }
 
 export interface MappingVal {
@@ -57,10 +59,9 @@ export type Mapping = Record<MappedThing, MappingVal>;
 // and display/rendering.
 export interface CsvData {
   // This field should dictate the fixed (internal) order of all csv columns.
-  // Each value in this array is the column header.
-  orderedColumnNames: Array<string>,
+  orderedColumns: Array<Column>;
 
-  // columnValuesSampled is a map from column name (header) to an extract of the
+  // columnValuesSampled is a map from column id to an extract of the
   // values in the column. This extract could be all of the column's values or
   // a sample. This is the structure that should be used for detection
   // heuristics and other advanced processing.
@@ -69,7 +70,7 @@ export interface CsvData {
   // array should be present as keys of columnValuesSampled.
   // Note that the length of all column-values need not be the same, e.g. due to
   // the removal of duplicate values.
-  columnValuesSampled: Map<string, Array<string>>,
+  columnValuesSampled: Map<string, Array<string>>;
 
   // rowsForDisplay is a mapping from the row index in the original csv file to
   // the contents of the row. This is a convenience structure to assist with
@@ -77,16 +78,21 @@ export interface CsvData {
   // is no expectation that this structure contains all rows.
   // It is also assumed that order of values in the array will correspond to
   // the orderedColumnNames.
-  rowsForDisplay: Map<BigInt, Array<string>>,
-}
+  rowsForDisplay: Map<BigInt, Array<string>>;
 
+  // if csv input was a user uploaded file, the uploaded csv file.
+  rawCsvFile?: File;
+
+  // if csv input was a user entered url, the url to get the csv file.
+  rawCsvUrl?: string;
+}
 
 // Types used for Detection.
 
 // DetectedFormat denotes the format type associated with some detected type..
 export interface DetectedFormat {
-  propertyName: string,
-  displayName: string,
+  propertyName: string;
+  displayName: string;
 }
 
 // Denotes a level of confidence in the detection.
