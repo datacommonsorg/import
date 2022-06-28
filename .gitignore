@@ -12,3 +12,8 @@ target/
 .classpath
 .factorypath
 .project
+
+# static files
+**/node_modules/**
+/wizard/build/**
+!wizard/build/.empty
