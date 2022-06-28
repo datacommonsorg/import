@@ -76,6 +76,9 @@ public class PlaceSeriesSummary {
   // scaling factor, and unit of the stat var observations of the series summary
   private final Map<String, Map<Long, SeriesSummary>> svSeriesSummaryMap = new HashMap<>();
 
+  // name of the place in English
+  private String placeName;
+
   // Given a statVarObservation node, extract time series info and save it into svSeriesSummaryMap.
   public synchronized void extractSeriesFromNode(McfGraph.PropertyValues node) {
     StatValidationResult.Builder vres = StatValidationResult.newBuilder();
@@ -161,5 +164,13 @@ public class PlaceSeriesSummary {
     }
     // When testing, we want the order of sections in the html file to be deterministic
     return TEST_mode ? new TreeMap<>(statVarSummaryMap) : statVarSummaryMap;
+  }
+
+  public void setPlaceName(String name) {
+    placeName = name;
+  }
+
+  public String getPlaceName() {
+    return placeName;
   }
 }
