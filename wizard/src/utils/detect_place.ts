@@ -16,6 +16,13 @@
 import { DetectedDetails, DetectedFormat, ConfidenceLevel } from "../types";
 import countriesJSON from "./country_mappings.json";
 
+var MIN_HIGH_CONF_DETECT = 0.9;
+
+
+function toAlphaNumeric(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/gi,'');
+}
+
 // A PlaceDetector objected is meant to be initialized once. It provides
 // convenience access to all place types and their supported formats. It also
 // supports detecting the place type for each individual column (a header and
@@ -68,16 +75,16 @@ export class PlaceDetector {
     this.countryNumeric = new Set<string>();
 
     for(let country of countriesJSON) {
-      this.countryNames.add(country.name);
+      this.countryNames.add(toAlphaNumeric(country.name));
 
       if (country.iso_code != null) {
-        this.countryISO.add(country.iso_code);
+        this.countryISO.add(toAlphaNumeric(country.iso_code));
       }
       if (country.country_alpha_3_code != null) {
-        this.countryAbbrv3.add(country.country_alpha_3_code);
+        this.countryAbbrv3.add(toAlphaNumeric(country.country_alpha_3_code));
       }
       if (country.country_numeric_code != null) {
-        this.countryNumeric.add(country.country_numeric_code);
+        this.countryNumeric.add(toAlphaNumeric(country.country_numeric_code));
       }
     }
   }
@@ -87,7 +94,7 @@ export class PlaceDetector {
   // The header is converted to lower case and only alphanumeric chars are used.
   // If there is no match, the return value is null.
   detectLowConfidence(header: string): string {
-    var h = header.toLowerCase().replace(/[^a-z0-9]/gi,'')
+    var h = toAlphaNumeric(header);
 
     if (this.placeTypes.has(h)) {
       var place = h.charAt(0).toUpperCase() + h.substr(1);
@@ -99,6 +106,51 @@ export class PlaceDetector {
       return place;
     }
     return null;
+  }
+
+  // Country is detected with high confidence if > 90% of the non-null column
+  // values match one of the country formats.
+  // If country is not detected, null is returned.
+  // If country is detected, the DetectedFormat is returned.
+  detectCountryHighConf(column: Array<string>): DetectedFormat {
+      var nameCounter = 0;
+      var isoCounter = 0;
+      var alphaNum3Counter = 0;
+      var numberCounter = 0;
+      var N = column.length;
+
+      for(let cVal of column) {
+        var v = toAlphaNumeric(cVal);
+        if (this.countryNames.has(v)) {
+          nameCounter++;
+        }
+        else if (this.countryISO.has(v)) {
+          isoCounter++;
+        }
+        else if (this.countryAbbrv3.has(v)) {
+          alphaNum3Counter++;
+        }
+        else if (this.countryNumeric.has(v)) {
+          numberCounter++;
+        }
+      }
+
+      // Return the detected format.
+      if (nameCounter > N * MIN_HIGH_CONF_DETECT) {
+        return {propertyName: "name", displayName: "Full Name"};
+      }
+      else if (isoCounter > N * MIN_HIGH_CONF_DETECT) {
+        return {propertyName: "isoCode", displayName: "ISO Code"};
+      }
+      else if (alphaNum3Counter > N * MIN_HIGH_CONF_DETECT) {
+        return {propertyName: "countryAlpha3Code", displayName: "Alpha 3 Code"};
+      }
+      else if (numberCounter > N * MIN_HIGH_CONF_DETECT) {
+        return {propertyName: "countryNumericCode", displayName: "Numeric Code"};
+      }
+      else {
+        return null;
+      }
   }
 
   // Detecting Place.

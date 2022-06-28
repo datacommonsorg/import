@@ -104,6 +104,85 @@ test("detectionLowConf", () => {
 
 })
 
+test("countryHighConf", () => {
+  var det = new PlaceDetector();
+  const cases: {
+    name: string,
+    colArray: Array<string>;
+    expected: DetectedFormat;
+  }[] = [
+    {
+      name: "name-detection",
+      colArray: ["United states", "Norway", "sri lanka", "new zealand",
+                  "south africa", "australia", "Pakistan", "India",
+                  "bangladesh", "french Afars and Issas"],
+      expected: {propertyName: "name", displayName: "Full Name"},
+    },
+    {
+      name: "iso-detection",
+      colArray: ["us", "no", "lk", "nz",
+                  "sa", "au", "pk", "in",
+                  "bd", "it"],
+      expected: {propertyName: "isoCode", displayName: "ISO Code"},
+    },
+    {
+      name: "alpha3-detection",
+      colArray: ["usa", "NOR", "lka", "nzl",
+                  "zaf", "aus", "pak", "ind",
+                  "bgd", "ita"],
+      expected: {propertyName: "countryAlpha3Code", displayName: "Alpha 3 Code"},
+    },
+    {
+      name: "numeric-detection",
+      colArray: ["840", "578", "144", "554",
+                  "710", "36", "586", "356",
+                  "50", "380"],
+      expected: {propertyName: "countryNumericCode", displayName: "Numeric Code"},
+    },
+    {
+      name: "name-no-detection",
+      //No detection due to: united statesssss, norwayyyy and north africa.
+      colArray: ["United statesssss", "Norwayyyy", "sri lanka", "new zealand",
+                        "north africa", "australia", "Pakistan", "India",
+                        "bangladesh", "french Afars and Issas"],
+      expected: null,
+    },
+    {
+      name: "iso-no-detection",
+      // No detection due to: aa, bb and cc.
+      colArray: ["aa", "bb", "cc", "nz",
+                "za", "au", "pk", "in",
+                "bd", "it"],
+      expected: null,
+    },
+    {
+      name: "alpha3-no-detection",
+      // No detection due to: aaa, bbb and ccc.
+      colArray: ["aaa", "bbb", "ccc", "nzl",
+                    "zaf", "aus", "pak", "ind",
+                    "bgd", "ita"],
+      expected: null,
+    },
+    {
+      name: "numeric-no-detection",
+      // No detection due to: 0, 1, 2.
+      colArray: ["0", "1", "2", "554",
+                    "710", "36", "586", "356",
+                    "50", "380"],
+      expected: null,
+    },
+  ];
+  for (const c of cases) {
+    if (c.expected == null) {
+      expect(det.detectCountryHighConf(c.colArray)).toBe(null);
+      continue;
+    }
+    expect(det.detectCountryHighConf(c.colArray).propertyName).toBe(
+      c.expected.propertyName);
+  }
+});
+
+
 
 test("countries", () => {
   var det = new PlaceDetector();
@@ -118,15 +197,15 @@ test("countries", () => {
 
   // Some other random spot checks.
   // Norway.
-  expect(det.countryNames).toContain("Norway");
-  expect(det.countryISO).toContain("NO");
-  expect(det.countryAbbrv3).toContain("NOR");
+  expect(det.countryNames).toContain("norway");
+  expect(det.countryISO).toContain("no");
+  expect(det.countryAbbrv3).toContain("nor");
   expect(det.countryNumeric).toContain("578");
 
   // Senegal.
-  expect(det.countryNames).toContain("Senegal");
-  expect(det.countryISO).toContain("SN");
-  expect(det.countryAbbrv3).toContain("SEN");
+  expect(det.countryNames).toContain("senegal");
+  expect(det.countryISO).toContain("sn");
+  expect(det.countryAbbrv3).toContain("sen");
   expect(det.countryNumeric).toContain("686");
 
   // Other checks.
