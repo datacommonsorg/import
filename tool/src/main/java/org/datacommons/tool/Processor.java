@@ -42,6 +42,7 @@ public class Processor {
   private final List<Mcf.McfGraph> nodesForVariousChecks = new ArrayList<>();
   private final ExecutorService execService;
   private final LogWrapper logCtx;
+  private HttpClient httpClient;
 
   public static Integer process(Args args) throws IOException, TemplateException {
     Integer retVal = 0;
@@ -122,11 +123,15 @@ public class Processor {
     this.args = args;
     this.logCtx =
         new LogWrapper(Debug.Log.newBuilder().setCommandArgs(args.toProto()), args.outputDir);
+
+    // we initialize an httpClient regardless of args.doExistenceChecks
+    // because other features might still make API calls
+    this.httpClient = HttpClient.newHttpClient();
     if (args.doExistenceChecks) {
-      existenceChecker = new ExistenceChecker(HttpClient.newHttpClient(), args.verbose, logCtx);
+      existenceChecker = new ExistenceChecker(this.httpClient, args.verbose, logCtx);
     }
     if (args.resolutionMode == Args.ResolutionMode.FULL) {
-      idResolver = new ExternalIdResolver(HttpClient.newHttpClient(), args.verbose, logCtx);
+      idResolver = new ExternalIdResolver(this.httpClient, args.verbose, logCtx);
     }
     statVarState = new StatVarState(logCtx);
     if (args.doStatChecks) {
@@ -388,6 +393,7 @@ public class Processor {
     if (statChecker == null) return;
     logger.info("Performing stats checks");
     statChecker.check();
+    statChecker.fetchSamplePlaceNames(args.verbose, httpClient);
   }
 
   private static class DCTooManyFailuresException extends Exception {

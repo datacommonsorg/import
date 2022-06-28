@@ -2,6 +2,7 @@
   "levelSummary": {
     "LEVEL_WARNING": {
       "counters": {
+        "API_EmptyDcCallResponse": "1",
         "Sanity_MultipleVals_value": "1"
       }
     },
@@ -115,6 +116,14 @@
       "file": "FatalTmcf.tmcf",
       "lineNumber": "19"
     },
+    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E13', property: 'dcid' node: 'E:SVTest->E3'",
+    "counterKey": "Sanity_TmcfMissingEntityDef"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "FatalTmcf.tmcf",
+      "lineNumber": "19"
+    },
     "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E10', property: 'dcid' node: 'E:SVTest->E3'",
     "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
@@ -125,14 +134,6 @@
     },
     "userMessage": "Column referred to in TMCF is missing from CSV header :: column: 'dcid1', node: 'E:SVTest->E3'",
     "counterKey": "Sanity_TmcfMissingColumn"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "FatalTmcf.tmcf",
-      "lineNumber": "19"
-    },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E13', property: 'dcid' node: 'E:SVTest->E3'",
-    "counterKey": "Sanity_TmcfMissingEntityDef"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
