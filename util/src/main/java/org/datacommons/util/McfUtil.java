@@ -65,12 +65,12 @@ public class McfUtil {
 
   public static String getPropVal(Mcf.McfGraph.PropertyValues node, String property) {
     String val = "";
-    try {
-      Mcf.McfGraph.Values vals = node.getPvsOrThrow(property);
+    Mcf.McfGraph.Values vals = node.getPvsOrDefault(property, null);
+    if (vals != null) {
       if (vals.getTypedValuesCount() > 0) {
         val = stripNamespace(vals.getTypedValues(0).getValue());
       }
-    } catch (IllegalArgumentException ex) {
+    } else {
       // Not having a value is not an error.
     }
     return val;
