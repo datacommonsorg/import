@@ -103,16 +103,17 @@ public class StatChecker {
   //
   // TODO (chejennifer): Look into optimizing this so that there can be less contention
   public synchronized void extractStatsFromGraph(McfGraph graph) {
-    for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
-      if (isSvObWithNumberValue(node.getValue())) {
+    for (Map.Entry<String, McfGraph.PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
+      McfGraph.PropertyValues node = nodeEntry.getValue();
+      if (isSvObWithNumberValue(node)) {
         // We will extract basic stat var information from every StatVarObservation nodes
-        extractStatVarInfoFromNode(node.getValue());
+        extractStatVarInfoFromNode(node);
         // We will only extract series information from StatVarObservation nodes about sample places
-        String placeDcid = McfUtil.getPropVal(node.getValue(), Vocabulary.OBSERVATION_ABOUT);
+        String placeDcid = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT);
         if (shouldExtractSeriesInfo(placeDcid)) {
           placeSeriesSummaryMap
               .computeIfAbsent(placeDcid, k -> new PlaceSeriesSummary())
-              .extractSeriesFromNode(node.getValue());
+              .extractSeriesFromNode(node);
         }
       }
     }
