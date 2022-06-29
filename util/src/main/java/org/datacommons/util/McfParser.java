@@ -22,8 +22,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
@@ -32,7 +30,6 @@ import org.datacommons.proto.Mcf.McfGraph;
 //
 // NOTE: Expects caller to set location file in LogWrapper.
 public class McfParser {
-  private static final Logger logger = LogManager.getLogger(McfParser.class);
   static String IN_MEMORY_FILE_NAME = "InMemory";
 
   private McfGraph.Builder graph;
