@@ -136,7 +136,7 @@ public class Processor {
     if (args.doStatChecks) {
       Set<String> samplePlaces =
           args.samplePlaces == null ? null : new HashSet<>(args.samplePlaces);
-      statChecker = new StatChecker(logCtx, samplePlaces, args.verbose);
+      statChecker = new StatChecker(logCtx, samplePlaces);
     }
     execService = Executors.newFixedThreadPool(args.numThreads);
   }
@@ -388,7 +388,7 @@ public class Processor {
     if (statChecker == null) return;
     logger.info("Performing stats checks");
     statChecker.check();
-    statChecker.fetchSamplePlaceNames(args.verbose, httpClient);
+    statChecker.fetchSamplePlaceNames(httpClient);
   }
 
   private static class DCTooManyFailuresException extends Exception {
