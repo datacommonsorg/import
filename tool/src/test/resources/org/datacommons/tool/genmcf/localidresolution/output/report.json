@@ -4,7 +4,7 @@
       "counters": {
         "NumRowSuccesses": "2",
         "NumPVSuccesses": "11",
-        "Existence_NumChecks": "42",
+        "Existence_NumChecks": "33",
         "NumNodeSuccesses": "2",
         "Existence_NumDcCalls": "2"
       }
