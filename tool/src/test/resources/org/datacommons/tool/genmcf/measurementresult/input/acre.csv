@@ -1,0 +1,4 @@
+DateTime,geoId,Acre_MeasurementResult_StatVar
+2020-01-01,geoId/01,dcid:Acre1.0
+2020-01-01,geoId/01,dcid:Acre10.0
+2020-01-01,geoId/01,dcid:Acre100.0

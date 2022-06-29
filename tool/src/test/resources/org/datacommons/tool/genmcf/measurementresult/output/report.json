@@ -1,0 +1,34 @@
+{
+  "levelSummary": {
+    "LEVEL_INFO": {
+      "counters": {
+        "NumRowSuccesses": "3",
+        "NumPVSuccesses": "21",
+        "Existence_NumChecks": "28",
+        "NumNodeSuccesses": "3",
+        "Existence_NumDcCalls": "3"
+      }
+    },
+    "LEVEL_WARNING": {
+      "counters": {
+        "Existence_MissingTriple_domainIncludes": "1",
+        "API_EmptyDcCallResponse": "1"
+      }
+    }
+  },
+  "entries": [{
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "acre.mcf",
+      "lineNumber": "1"
+    },
+    "userMessage": "Failed triple existence check :: subject: 'area', predicate: 'domainIncludes', object: 'Place', node: 'dcid:Acre_MeasurementResult_StatVar'",
+    "counterKey": "Existence_MissingTriple_domainIncludes"
+  }],
+  "commandArgs": {
+    "existenceChecks": true,
+    "resolution": "RESOLUTION_MODE_FULL",
+    "numThreads": 1,
+    "statChecks": true
+  }
+}
