@@ -16,6 +16,10 @@ package org.datacommons.util;
 
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import java.io.IOException;
+import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -211,7 +215,7 @@ public class StatChecker {
 
     return samplePlaces.get(placekey).contains(placeDcid);
   }
-  
+
   // Returns true if the bucket for this places key is not full.
   private boolean samplePlacesBucketHasSpace(String placeDcid, String placekey) {
     boolean bucketNotFull = samplePlaces.get(placekey).size() < getSamplePlaceBucketSize(placeDcid);
@@ -504,6 +508,22 @@ public class StatChecker {
     }
   }
 
+  public List<String> getSamplePlaces() {
+    List<String> places = new ArrayList<String>();
+
+    for (Set<String> placesOfType : samplePlaces.values()) {
+      places.addAll(placesOfType);
+    }
+
+    return places;
+  }
+
+  public void setNameForSamplePlace(String place_dcid, String name) {
+    if (placeSeriesSummaryMap.containsKey(place_dcid)) {
+      placeSeriesSummaryMap.get(place_dcid).setPlaceName(name);
+    }
+  }
+
   private synchronized void extractStatVarInfoFromNode(McfGraph.PropertyValues node) {
     // TODO (chejennifer): extract prop value into a struct and pass around instead of looking it up
     // in multiple places
@@ -517,5 +537,33 @@ public class StatChecker {
     svMap.units.add(McfUtil.getPropVal(node, Vocabulary.UNIT));
     svMap.scalingFactors.add(McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR));
     svMap.observationPeriods.add(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_PERIOD));
+  }
+
+  // Makes API requests to get the names of the sample places from the DC
+  // API, and puts that information to StatChecker.
+  public void fetchSamplePlaceNames(Boolean verbose, HttpClient httpClient) {
+    try {
+      JsonObject apiResponse = ApiHelper.fetchPropertyValues(httpClient, getSamplePlaces(), "name");
+      if (apiResponse != null) {
+        for (var entry : apiResponse.entrySet()) {
+          String placeDcid = entry.getKey();
+          JsonObject nodeJson = entry.getValue().getAsJsonObject();
+
+          if (nodeJson.has("out")) {
+            JsonArray receivedNamesForPlace = nodeJson.getAsJsonArray("out");
+            // in case there are multiple names, simply use the first.
+            // for example, Ivory Coast has multiple names:
+            // https://datacommons.org/browser/country/CIV
+            String placeName =
+                receivedNamesForPlace.get(0).getAsJsonObject().get("value").getAsString();
+            this.setNameForSamplePlace(placeDcid, placeName);
+          }
+        }
+      } else {
+        logCtx.incrementWarningCounterBy("API_EmptyDcCallResponse", 1);
+      }
+    } catch (IOException | InterruptedException e) {
+      logCtx.incrementWarningCounterBy("API_FailedDcCall", 1);
+    }
   }
 }
