@@ -15,25 +15,16 @@
  */
 import { ConfidenceLevel, DetectedDetails, DetectedFormat } from "../types";
 import { PlaceDetector } from "./detect_place";
-
-// Helper function to determine if two DetectedDetails objects are equal.
-function detectedDetailsDeepEquality(
-  a: DetectedDetails, b: DetectedDetails): boolean {
-  return (
-    (a.detectedType == b.detectedType) &&
-    (a.confidence == b.confidence) &&
-    (a.detectedFormat.propertyName ==  b.detectedFormat.propertyName) &&
-    (a.detectedFormat.displayName == b.detectedFormat.displayName)
-  );
-}
+import _ from "lodash";
 
 test("placeTypesAndFormats", () => {
-  var det = new PlaceDetector();
-  var expected = new Map<string, Array<DetectedFormat>>(
+  const det = new PlaceDetector();
+  const expected = new Map<string, Array<DetectedFormat>>(
     [
-      ["Longitude",   [ {propertyName: "name", displayName: "Full Name"},]],
-      ["Latitude",    [ {propertyName: "name", displayName: "Full Name"},]],
-      ["LatLon",      [ {propertyName: "name", displayName: "Full Name"},]],
+      ["Longitude",   [ {propertyName: "longitude", displayName: "Longitude"},]],
+      ["Latitude",    [ {propertyName: "latitude", displayName: "Latitude"},]],
+      ["LatLon",      [ {propertyName: "GeoCoordinates", displayName: "Geo Coordinates"},]],
+      ["GeoCoordinates",[ {propertyName: "GeoCoordinates", displayName: "Geo Coordinates"},]],
       ["Country",     [ {propertyName: "name", displayName: "Full Name"},
                         {propertyName: "isoCode", displayName: "ISO Code"},
                         {propertyName: "countryAlpha3Code", displayName: "Alpha 3 Code"},
@@ -49,16 +40,25 @@ test("placeTypesAndFormats", () => {
 })
 
 test("placeTypesLower", () => {
-  var det = new PlaceDetector();
-  var expected = new Set<string>(
-      ["longitude", "latitude", "latlon", "country", "state", "province",
-        "municipality", "county", "city"]
+  const det = new PlaceDetector();
+  const expected = new Map<string, string>(
+    [
+      ["longitude", "Longitude"],
+      ["latitude", "Latitude"],
+      ["latlon", "LatLon"],
+      ["geocoordinates", "GeoCoordinates"],
+      ["country", "Country"],
+      ["state", "State"],
+      ["province", "Province"],
+      ["municipality", "Municipality"],
+      ["county", "County"],
+      ["city", "City"]]
     );
   expect(det.placeTypes).toEqual(expected);
 })
 
 test("placeLowConfidenceDetection", () => {
-  var det = new PlaceDetector();
+  const det = new PlaceDetector();
 
   expect(det.detectLowConfidence("")).toBe(null);
   expect(det.detectLowConfidence(" ")).toBe(null);
@@ -74,34 +74,35 @@ test("placeLowConfidenceDetection", () => {
 
   expect(det.detectLowConfidence("Lat-Lon")).toBe("LatLon");
   expect(det.detectLowConfidence("Lat,Lon")).toBe("LatLon");
-  expect(det.detectLowConfidence("Lat Lon")).toBe("LatLon");
   expect(det.detectLowConfidence("LatLon")).toBe("LatLon");
+  expect(det.detectLowConfidence("Geo-coordinates")).toBe("GeoCoordinates");
+  expect(det.detectLowConfidence("Geo Coordinates")).toBe("GeoCoordinates");
+  expect(det.detectLowConfidence("GeoCoordinates")).toBe("GeoCoordinates");
   expect(det.detectLowConfidence("longitude()()")).toBe("Longitude");
   expect(det.detectLowConfidence("Latitude=#$#$%")).toBe("Latitude");
 })
 
 test("detectionLowConf", () => {
-  var det = new PlaceDetector();
+  const det = new PlaceDetector();
 
   expect(det.detect("randomColName", ["1", "2", "3"])).toBe(null);
   expect(det.detect("", [])).toBe(null);
 
-  var expected: DetectedDetails = {
+  const expected: DetectedDetails = {
           detectedType: "City",
           detectedFormat: {propertyName: "name", displayName: "Full Name"},
           confidence: ConfidenceLevel.Low
         };
-  var notExpected: DetectedDetails = {
+  const notExpected: DetectedDetails = {
           detectedType: "City",
           detectedFormat: {propertyName: "name", displayName: "Full Name"},
           confidence: ConfidenceLevel.High // should be Low.
         };
 
-  var got = det.detect("city", ["a", "b", "c"]);
+  const got = det.detect("city", ["a", "b", "c"]);
 
-  expect(detectedDetailsDeepEquality(expected, got)).toBe(true);
-  expect(detectedDetailsDeepEquality(notExpected, got)).toBe(false);
-
+  expect(_.isEqual(expected, got)).toBe(true);
+  expect(_.isEqual(notExpected, got)).toBe(false);
 })
 
 test("countryHighConf", () => {
@@ -185,11 +186,11 @@ test("countryHighConf", () => {
 
 
 test("countries", () => {
-  var det = new PlaceDetector();
-  var numCountriesExpected = 271;
-  var numIsoCodes = 247;      // 24 countries without ISO codes.
-  var numAbbrv3Codes = 246;   // 25 countries without 3-letter abbreviations.
-  var numNumeric = 246;       // 25 countries without numeric codes.
+  const det = new PlaceDetector();
+  const numCountriesExpected = 271;
+  const numIsoCodes = 247;      // 24 countries without ISO codes.
+  const numAbbrv3Codes = 246;   // 25 countries without 3-letter abbreviations.
+  const numNumeric = 246;       // 25 countries without numeric codes.
   expect(det.countryNames.size).toEqual(numCountriesExpected);
   expect(det.countryISO.size).toEqual(numIsoCodes);
   expect(det.countryAbbrv3.size).toEqual(numAbbrv3Codes);
