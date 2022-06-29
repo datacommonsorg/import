@@ -8,8 +8,9 @@
     "build": "webpack --mode=production --progress --config webpack.config.js",
     "start": "webpack serve --port 8080 --mode=development",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
-    "test": "jest"
+    "deploy": "gh-pages -d build -e wizard",
+    "test": "jest",
+    "lint": "eslint --fix ."
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -21,7 +22,7 @@
     "react-dom": "^18.2.0",
     "style-loader": "^3.3.1",
     "ts-loader": "^9.3.0",
-    "typescript": "^3.9.7",
+    "typescript": "^4.7.4",
     "webpack": "^5.73.0",
     "webpack-cli": "^4.10.0"
   },

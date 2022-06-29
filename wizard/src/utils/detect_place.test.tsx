@@ -17,31 +17,34 @@ import { DetectedFormat } from "../types";
 import { PlaceDetector } from "./detect_place";
 
 test("placeTypesAndFormats", () => {
-  var det = new PlaceDetector();
-  var expected = new Map<string, Array<DetectedFormat>>(
+  const det = new PlaceDetector();
+  const expected = new Map<string, Array<DetectedFormat>>([
+    ["None", [{ propertyName: "name", displayName: "Full Name" }]],
+    ["LatLon", [{ propertyName: "name", displayName: "Full Name" }]],
     [
-      ["None",        [ {propertyName: "name", displayName: "Full Name"},]],
-      ["LatLon",      [ {propertyName: "name", displayName: "Full Name"},]],
-      ["Country",     [ {propertyName: "name", displayName: "Full Name"},
-                        {propertyName: "isoCode", displayName: "ISO Code"},
-                        {propertyName: "countryAlpha3Code", displayName: "Alpha 3 Code"},
-                        {propertyName: "countryNumericCode", displayName: "Numeric Code"},
-                      ]],
-      ["State",       [ {propertyName: "name", displayName: "Full Name"},]],
-      ["Province",    [ {propertyName: "name", displayName: "Full Name"},]],
-      ["Municipality",[ {propertyName: "name", displayName: "Full Name"},]],
-      ["County",      [ {propertyName: "name", displayName: "Full Name"},]],
-      ["City",        [ {propertyName: "name", displayName: "Full Name"},]],
-    ]);
+      "Country",
+      [
+        { propertyName: "name", displayName: "Full Name" },
+        { propertyName: "isoCode", displayName: "ISO Code" },
+        { propertyName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
+        { propertyName: "countryNumericCode", displayName: "Numeric Code" },
+      ],
+    ],
+    ["State", [{ propertyName: "name", displayName: "Full Name" }]],
+    ["Province", [{ propertyName: "name", displayName: "Full Name" }]],
+    ["Municipality", [{ propertyName: "name", displayName: "Full Name" }]],
+    ["County", [{ propertyName: "name", displayName: "Full Name" }]],
+    ["City", [{ propertyName: "name", displayName: "Full Name" }]],
+  ]);
   expect(det.validPlaceTypesAndFormats()).toEqual(expected);
-})
+});
 
 test("countries", () => {
-  var det = new PlaceDetector();
-  var numCountriesExpected = 271;
-  var numIsoCodes = 247;      // 24 countries without ISO codes.
-  var numAbbrv3Codes = 246;   // 25 countries without 3-letter abbreviations.
-  var numNumeric = 246;       // 25 countries without numeric codes.
+  const det = new PlaceDetector();
+  const numCountriesExpected = 271;
+  const numIsoCodes = 247; // 24 countries without ISO codes.
+  const numAbbrv3Codes = 246; // 25 countries without 3-letter abbreviations.
+  const numNumeric = 246; // 25 countries without numeric codes.
   expect(det.countryNames.size).toEqual(numCountriesExpected);
   expect(det.countryISO.size).toEqual(numIsoCodes);
   expect(det.countryAbbrv3.size).toEqual(numAbbrv3Codes);
@@ -73,4 +76,4 @@ test("countries", () => {
   expect(det.countryNumeric).not.toContain("");
   expect(det.countryNumeric).not.toContain(null);
   expect(det.countryNumeric).not.toContain(0);
-})
+});
