@@ -19,7 +19,7 @@
 # Run Python tests, lint, etc.
 steps:
   - id: npm_test
-    name: npm:3.7
+    name: node:16
     entrypoint: /bin/sh
     args:
       - -c

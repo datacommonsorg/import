@@ -80,9 +80,11 @@ export interface CsvData {
   // the orderedColumnNames.
   rowsForDisplay: Map<BigInt, Array<string>>;
 
+  // The raw csv data can be either in the form of a file or a URL. One of the
+  // following fields must be set:
+  
   // if csv input was a user uploaded file, the uploaded csv file.
   rawCsvFile?: File;
-
   // if csv input was a user entered url, the url to get the csv file.
   rawCsvUrl?: string;
 }
