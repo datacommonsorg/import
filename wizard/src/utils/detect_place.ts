@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DetectedDetails, DetectedFormat, ConfidenceLevel } from "../types";
+import { ConfidenceLevel, DetectedDetails, DetectedFormat } from "../types";
 import countriesJSON from "./country_mappings.json";
 
 /**
@@ -28,25 +28,24 @@ export class PlaceDetector {
   countryAbbrv3: Set<string>;
   countryNumeric: Set<string>;
 
-  placeTypes: Map<string, string>;
-
-  static typeFormatMappings = new Map<string, Array<DetectedFormat>>(
+  static typeFormatMappings = new Map<string, Array<DetectedFormat>>([
+    ["None", [{ propertyName: "name", displayName: "Full Name" }]],
+    ["LatLon", [{ propertyName: "name", displayName: "Full Name" }]],
     [
-      ["Longitude",   [ {propertyName: "longitude", displayName: "Longitude"},]],
-      ["Latitude",    [ {propertyName: "latitude", displayName: "Latitude"},]],
-      ["LatLon",      [ {propertyName: "GeoCoordinates", displayName: "Geo Coordinates"},]],
-      ["GeoCoordinates",[ {propertyName: "GeoCoordinates", displayName: "Geo Coordinates"},]],
-      ["Country",     [ {propertyName: "name", displayName: "Full Name"},
-                        {propertyName: "isoCode", displayName: "ISO Code"},
-                        {propertyName: "countryAlpha3Code", displayName: "Alpha 3 Code"},
-                        {propertyName: "countryNumericCode", displayName: "Numeric Code"},
-                      ]],
-      ["State",       [ {propertyName: "name", displayName: "Full Name"},]],
-      ["Province",    [ {propertyName: "name", displayName: "Full Name"},]],
-      ["Municipality",[ {propertyName: "name", displayName: "Full Name"},]],
-      ["County",      [ {propertyName: "name", displayName: "Full Name"},]],
-      ["City",        [ {propertyName: "name", displayName: "Full Name"},]],
-    ]);
+      "Country",
+      [
+        { propertyName: "name", displayName: "Full Name" },
+        { propertyName: "isoCode", displayName: "ISO Code" },
+        { propertyName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
+        { propertyName: "countryNumericCode", displayName: "Numeric Code" },
+      ],
+    ],
+    ["State", [{ propertyName: "name", displayName: "Full Name" }]],
+    ["Province", [{ propertyName: "name", displayName: "Full Name" }]],
+    ["Municipality", [{ propertyName: "name", displayName: "Full Name" }]],
+    ["County", [{ propertyName: "name", displayName: "Full Name" }]],
+    ["City", [{ propertyName: "name", displayName: "Full Name" }]],
+  ]);
 
   constructor() {
     // Set the various class attributes.
@@ -76,7 +75,7 @@ export class PlaceDetector {
     this.countryAbbrv3 = new Set<string>();
     this.countryNumeric = new Set<string>();
 
-    for(let country of countriesJSON) {
+    for (const country of countriesJSON) {
       this.countryNames.add(country.name);
 
       if (country.iso_code != null) {

@@ -11,3 +11,7 @@ Run all tests:
 Run specific test file:
 
 ```npm run test <filename without .test.ts>```
+
+Run and fix lint errors:
+
+```npm run lint```
