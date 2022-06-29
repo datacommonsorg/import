@@ -108,8 +108,8 @@ public class StatChecker {
         // We will extract basic stat var information from every StatVarObservation nodes
         extractStatVarInfoFromNode(node.getValue());
         // We will only extract series information from StatVarObservation nodes about sample places
-        if (shouldExtractSeriesInfo(node.getValue())) {
-          String placeDcid = McfUtil.getPropVal(node.getValue(), Vocabulary.OBSERVATION_ABOUT);
+        String placeDcid = McfUtil.getPropVal(node.getValue(), Vocabulary.OBSERVATION_ABOUT);
+        if (shouldExtractSeriesInfo(placeDcid)) {
           placeSeriesSummaryMap
               .computeIfAbsent(placeDcid, k -> new PlaceSeriesSummary())
               .extractSeriesFromNode(node.getValue());
@@ -191,11 +191,6 @@ public class StatChecker {
   }
 
   // Only extract series information for a statVarObservation node that is about a sample place.
-  private boolean shouldExtractSeriesInfo(McfGraph.PropertyValues node) {
-    String placeDcid = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT);
-    return shouldExtractSeriesInfo(placeDcid);
-  }
-
   public boolean shouldExtractSeriesInfo(String placeDcid) {
     if (placeDcid.isEmpty()) return false;
 
