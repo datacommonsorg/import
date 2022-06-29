@@ -98,7 +98,7 @@
             <li>
               <details>
                 <summary>
-                  <a href="#places--${place}">${place}</a>
+                  <a href="#places--${place}">${(placeSeriesSummary.getPlaceName())!place} (${place})</a>
                 </summary>
                 <ul>
                   <#list placeSeriesSummary.getStatVarSummaryMap() as sv, svSummary>
@@ -238,7 +238,8 @@
         </h2>
         <#list placeSeriesSummaryMap as place, placeSeriesSummary>
           <details class="place-series-details">
-            <summary class="place-series-summary"><a name="places--${place}" href="#places--${place}">${place}</a></summary>
+            <summary class="place-series-summary"><a name="places--${place}" href="#places--${place}">${(placeSeriesSummary.getPlaceName())!place} (${place})</a></summary>
+            <a href="https://datacommons.org/browser/${place}" target="_blank">Open this place (${place}) in Data Commons browser.</a>
             <table id="sampleplaces-table--${place?counter}" class="datatables-table hover order-column" width="95%">
               <thead>
                 <tr>
