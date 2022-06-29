@@ -28,8 +28,8 @@ class Main {
   @CommandLine.Option(
       names = {"-o", "--output-dir"},
       description =
-          "Directory to write output files. Default is dc_generated/ within current"
-              + " working directory.",
+          "Specifies the directory to write output files."
+              + "Default is dc_generated/ within current working directory.",
       defaultValue = "dc_generated",
       scope = CommandLine.ScopeType.INHERIT)
   public File outputDir;
@@ -46,9 +46,9 @@ class Main {
       defaultValue = "true",
       scope = CommandLine.ScopeType.INHERIT,
       description =
-          "Check DCID references to schema nodes against the KG and locally. If set, then "
-              + "calls will be made to the Staging API server, and instance MCFs get fully "
-              + "loaded into memory. Defaults to true.")
+          "Checks DCID references to schema nodes against the KG and locally. "
+              + "If this flag is set, then calls will be made to the Staging API server, "
+              + "and instance MCFs get fully loaded into memory. Defaults to true.")
   public boolean doExistenceChecks;
 
   @CommandLine.Option(
@@ -56,12 +56,15 @@ class Main {
       defaultValue = "LOCAL",
       scope = CommandLine.ScopeType.INHERIT,
       description =
-          "Specifies the mode of resolution to use: ${COMPLETION-CANDIDATES}.  For no resolution,"
-              + " set NONE.  To lookup external IDs (like ISO) in DC, resolve local references "
-              + "and generated DCIDs, set FULL.  To just resolve local references and generate "
-              + "DCIDs, set LOCAL.  Note that FULL mode may be slower since it makes "
-              + "(batched) DC Recon API calls and two passes over your CSV files. Default to "
-              + "LOCAL.")
+          "Specifies the mode of resolution to use: ${COMPLETION-CANDIDATES}. "
+              + "\n\nLOCAL only resolves local references and generates DCIDs. "
+              + "Notably, this mode does not resolve the external IDs against the DC KG. "
+              + "\n\nFULL resolves external IDs (such as ISO) in DC, local references, "
+              + "and generated DCIDs. Note that FULL mode may be slower since it makes (batched) "
+              + "DC Recon API calls and performs two passes over the provided CSV files. "
+              + "You should only use this if you have to resolve location entities via external IDs. "
+              + "\n\nNONE does not resolve references. Use this only if all inputs have DCIDs defined. "
+              + "You rarely want to use this mode.")
   public Args.ResolutionMode resolutionMode = Args.ResolutionMode.NONE;
 
   @CommandLine.Option(
@@ -70,6 +73,9 @@ class Main {
       scope = CommandLine.ScopeType.INHERIT,
       description =
           "Checks integrity of time series by checking for holes, variance in values, etc. "
+              + "A set of counters detailing the results of the checks will be logged in report.json. "
+              + "For every such counter, the tool will provide a few exemplar cases to help the user "
+              + "understand and resolve the issue(s). "
               + "Defaults to true.")
   public boolean doStatChecks;
 
@@ -77,16 +83,20 @@ class Main {
       names = {"-p", "--sample-places"},
       scope = CommandLine.ScopeType.INHERIT,
       description =
-          "List of place dcids to run stats check on. This should only be set if "
-              + "--stat-checks is true. If --stat-checks is true and this is not set, 5 sample places "
-              + "are picked for roughly each distinct place type.")
+          "Specifies a list of place dcids to run stats check on."
+              + "This flag should only be set if --stat-checks is true. "
+              + "If --stat-checks is true and this flag is not set, 5 sample "
+              + "places are picked for roughly each distinct place type.")
   public List<String> samplePlaces;
 
   @CommandLine.Option(
       names = {"-n", "--num-threads"},
       defaultValue = "1",
       scope = CommandLine.ScopeType.INHERIT,
-      description = "Number of concurrent threads used for processing CSVs. Defaults to 1.")
+      description =
+          "Specifies the number of concurrent threads used for processing CSVs. "
+              + "You need multiple CSVs to take advantage of concurrent processing. "
+              + "Defaults to true.")
   public int numThreads;
 
   @CommandLine.Option(

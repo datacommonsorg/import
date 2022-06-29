@@ -20,7 +20,7 @@ import { CsvData, Mapping } from "../types";
  * Generates the cleaned csv given the original csv and the correct mappings
  * @param csv
  * @param mappings
- * @returns 
+ * @returns
  */
 export function generateCleanedCSV(csv: CsvData, mappings: Mapping): string {
   return "";
@@ -29,8 +29,8 @@ export function generateCleanedCSV(csv: CsvData, mappings: Mapping): string {
 /**
  * Generates the stat vars mcf given the original csv and the correct mappings
  * @param csv
- * @param mappings 
- * @returns 
+ * @param mappings
+ * @returns
  */
 export function generateSvMCF(csv: CsvData, mappings: Mapping): string {
   return "";
@@ -38,8 +38,8 @@ export function generateSvMCF(csv: CsvData, mappings: Mapping): string {
 
 /**
  * Generates the tmcf file given the correct mappings
- * @param mappings 
- * @returns 
+ * @param mappings
+ * @returns
  */
 export function generateTMCF(mappings: Mapping): string {
   return "";
@@ -48,10 +48,13 @@ export function generateTMCF(mappings: Mapping): string {
 /**
  * Generates the translation metadata given the predicted mappings and correct
  * mappings
- * @param predictions 
- * @param corrections 
- * @returns 
+ * @param predictions
+ * @param corrections
+ * @returns
  */
-export function generateTranslationMetadata(predictions: Mapping, corrections: Mapping): string {
+export function generateTranslationMetadata(
+  predictions: Mapping,
+  corrections: Mapping
+): string {
   return "";
 }
