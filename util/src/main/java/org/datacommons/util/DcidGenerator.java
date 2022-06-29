@@ -32,8 +32,6 @@ public class DcidGenerator {
   };
   // Max length of a base 32 encoded version of a 64-bit string: ceil(64 / 5)
   private static final int MAX_LONG_ID_LEN = 13;
-  // Max length of a base 32 encoded version of a 32-bit string: ceil(32 / 5)
-  private static final int MAX_SHORT_ID_LEN = 7;
   // Max number of bits of a 32-bit encoding
   private static final int MAX_NUM_BITS = 5;
 
@@ -365,7 +363,7 @@ public class DcidGenerator {
       id = id >>> MAX_NUM_BITS;
       if (id == 0) return i + 1;
     }
-    throw new ArithmeticException("Unexpected base32Encoding error: '" + id_buf + "' : " + i);
+    throw new ArithmeticException("Unexpected base32Encoding error: '" + new String(id_buf) + "' : " + i);
   }
 
   private static String getLongId(String input) {
