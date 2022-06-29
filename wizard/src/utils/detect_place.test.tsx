@@ -13,14 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DetectedFormat } from "../types";
+import _ from "lodash";
+
+import { ConfidenceLevel, DetectedDetails, DetectedFormat } from "../types";
 import { PlaceDetector } from "./detect_place";
 
 test("placeTypesAndFormats", () => {
   const det = new PlaceDetector();
   const expected = new Map<string, Array<DetectedFormat>>([
-    ["None", [{ propertyName: "name", displayName: "Full Name" }]],
-    ["LatLon", [{ propertyName: "name", displayName: "Full Name" }]],
+    ["Longitude", [{ propertyName: "longitude", displayName: "Longitude" }]],
+    ["Latitude", [{ propertyName: "latitude", displayName: "Latitude" }]],
+    [
+      "LatLon",
+      [{ propertyName: "GeoCoordinates", displayName: "Geo Coordinates" }],
+    ],
+    [
+      "GeoCoordinates",
+      [{ propertyName: "GeoCoordinates", displayName: "Geo Coordinates" }],
+    ],
     [
       "Country",
       [
@@ -37,6 +47,71 @@ test("placeTypesAndFormats", () => {
     ["City", [{ propertyName: "name", displayName: "Full Name" }]],
   ]);
   expect(det.validPlaceTypesAndFormats()).toEqual(expected);
+});
+
+test("placeTypesLower", () => {
+  const det = new PlaceDetector();
+  const expected = new Map<string, string>([
+    ["longitude", "Longitude"],
+    ["latitude", "Latitude"],
+    ["latlon", "LatLon"],
+    ["geocoordinates", "GeoCoordinates"],
+    ["country", "Country"],
+    ["state", "State"],
+    ["province", "Province"],
+    ["municipality", "Municipality"],
+    ["county", "County"],
+    ["city", "City"],
+  ]);
+  expect(det.placeTypes).toEqual(expected);
+});
+
+test("placeLowConfidenceDetection", () => {
+  const det = new PlaceDetector();
+
+  expect(det.detectLowConfidence("")).toBe(null);
+  expect(det.detectLowConfidence(" ")).toBe(null);
+  expect(det.detectLowConfidence("continent")).toBe(null);
+
+  expect(det.detectLowConfidence("Country..")).toBe("Country");
+  expect(det.detectLowConfidence("Country")).toBe("Country");
+  expect(det.detectLowConfidence("cOuntry")).toBe("Country");
+  expect(det.detectLowConfidence("COUNTRY")).toBe("Country");
+  expect(det.detectLowConfidence("State  ")).toBe("State");
+  expect(det.detectLowConfidence("County---")).toBe("County");
+  expect(det.detectLowConfidence("city")).toBe("City");
+
+  expect(det.detectLowConfidence("Lat-Lon")).toBe("LatLon");
+  expect(det.detectLowConfidence("Lat,Lon")).toBe("LatLon");
+  expect(det.detectLowConfidence("LatLon")).toBe("LatLon");
+  expect(det.detectLowConfidence("Geo-coordinates")).toBe("GeoCoordinates");
+  expect(det.detectLowConfidence("Geo Coordinates")).toBe("GeoCoordinates");
+  expect(det.detectLowConfidence("GeoCoordinates")).toBe("GeoCoordinates");
+  expect(det.detectLowConfidence("longitude()()")).toBe("Longitude");
+  expect(det.detectLowConfidence("Latitude=#$#$%")).toBe("Latitude");
+});
+
+test("detectionLowConf", () => {
+  const det = new PlaceDetector();
+
+  expect(det.detect("randomColName", ["1", "2", "3"])).toBe(null);
+  expect(det.detect("", [])).toBe(null);
+
+  const expected: DetectedDetails = {
+    detectedType: "City",
+    detectedFormat: { propertyName: "name", displayName: "Full Name" },
+    confidence: ConfidenceLevel.Low,
+  };
+  const notExpected: DetectedDetails = {
+    detectedType: "City",
+    detectedFormat: { propertyName: "name", displayName: "Full Name" },
+    confidence: ConfidenceLevel.High, // should be Low.
+  };
+
+  const got = det.detect("city", ["a", "b", "c"]);
+
+  expect(_.isEqual(expected, got)).toBe(true);
+  expect(_.isEqual(notExpected, got)).toBe(false);
 });
 
 test("countries", () => {
