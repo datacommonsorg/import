@@ -23,15 +23,16 @@ import {
 } from "../types";
 
 const FIXED_CSV_TABLE = "CSVTable";
-const DCID_PROP = "dcid";
 const SVOBS_TYPE = "StatVarObservation";
 const PLACE_TYPE = "Place";
+const DCID_PROP = "dcid";
+const VALUE_PROP = "value";
 const MAPPED_THING_TO_SVOBS_PROP = new Map<MappedThing, string>([
   [MappedThing.PLACE, "observationAbout"],
   [MappedThing.STAT_VAR, "variableMeasured"],
   [MappedThing.DATE, "observationDate"],
   [MappedThing.UNIT, "unit"],
-  [MappedThing.VALUE, "value"],
+  [MappedThing.VALUE, VALUE_PROP],
 ]);
 
 //
@@ -117,7 +118,7 @@ export function generateTMCF(mappings: Mapping): string {
     mappings.get(colHdrThing).headers.forEach((hdr) => {
       const node = initNode(idx, SVOBS_TYPE);
       // Each column contains numerical values of SVObs.
-      node.push(getColPV(MappedThing.VALUE, hdr.id));
+      node.push(getColPV(VALUE_PROP, hdr.id));
       node.push(getConstPV(mappedProp, hdr.id));
       tmcfNodes.push(node);
       idx++;
