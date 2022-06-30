@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { MappedThing, Mapping, MappingType } from "../types";
+import { MappedThing, Mapping, MappingType, MappingVal } from "../types";
 
 /*
  * Checks the provided mapping and returns an array of errors found in it.
- * On successful check, the returned array is empty.
+ * On a successful check, the returned array is empty.
  *
  * List of checks:
  * (1) MappingVal should have the right field set depending on MappingType
@@ -32,7 +32,7 @@ import { MappedThing, Mapping, MappingType } from "../types";
 export function checkMappings(mappings: Mapping): Array<string> {
   var errors = Array<string>();
   for (const mthing of [MappedThing.PLACE, MappedThing.STAT_VAR, MappedThing.DATE]) {
-    if (!(mthing in mappings)) {
+    if (!mappings.has(mthing)) {
       // Check #2
       errors.push('Missing required mapping for ' + mthing);
     }
@@ -40,7 +40,7 @@ export function checkMappings(mappings: Mapping): Array<string> {
 
   var colHdrThings = Array<string>();
   var numNonConsts = 0;
-  for (const [mthing, mval] of Object.entries(mappings)) {
+  mappings.forEach((mval: MappingVal, mthing: MappedThing) => {
     if (mval.type == MappingType.COLUMN) {
       if (mval.column == null || mval.column.id == '') {
         // Check #1
@@ -66,20 +66,20 @@ export function checkMappings(mappings: Mapping): Array<string> {
         errors.push(mthing + ': missing value for CONSTANT type');
       }
     }
-  }
+  });
   if (numNonConsts == 0) {
     // Check #5
     errors.push('Atleast one mapping should identify a column');
   }
   if (colHdrThings.length == 0) {
-    if (!(MappedThing.VALUE in mappings)) {
+    if (!mappings.has(MappedThing.VALUE)) {
       // Check #4
-      errors.push('Unable to detect "value" column');
+      errors.push('Unable to detect \'value\' column');
     }
   } else if (colHdrThings.length == 1) {
-    if (MappedThing.VALUE in mappings) {
+    if (mappings.has(MappedThing.VALUE)) {
       // Check #4a
-      errors.push('Found multiple confusing "value" columns');
+      errors.push('Found multiple confusing \'value\' columns');
     }
   } else {
     // Check #3

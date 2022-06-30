@@ -53,7 +53,7 @@ export interface MappingVal {
   constant?: string;
 }
 
-export type Mapping = Record<MappedThing, MappingVal>;
+export type Mapping = Map<MappedThing, MappingVal>;
 
 // CvsData should contain the minimum sufficient data from the
 // data csv file which will be used for all processing, e.g. column detection,

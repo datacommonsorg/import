@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { CsvData, MappedThing, Mapping, MappingType } from "../types";
+import { CsvData, MappedThing, Mapping, MappingType, MappingVal } from "../types";
 
 const FIXED_CSV_TABLE = 'CSVTable';
 const DCID_PROP = 'dcid';
@@ -23,7 +23,7 @@ const PLACE_TYPE = 'Place';
 
 function initNode(idx: number, type: string): Array<string> {
   var pvs = Array<string>();
-  pvs.push('Node: E:' + FIXED_CSV_TABLE + '->' + idx.toString());
+  pvs.push('Node: E:' + FIXED_CSV_TABLE + '->E' + idx.toString());
   pvs.push('typeOf: dcs:' + type);  
   return pvs;
 }
@@ -33,25 +33,25 @@ function getColPV(prop: string, col: string): string {
 }
 
 function getEntPV(prop: string, idx: number): string {
-  return prop + ': E:' + FIXED_CSV_TABLE + '->' + idx.toString();
+  return prop + ': E:' + FIXED_CSV_TABLE + '->E' + idx.toString();
 }
 
 /**
  * Generates the tmcf file given the correct mappings.
- * REQUIRES: |mappings| passes checkMappings().
+ * ASSUMES: checkMappings() returns success on |mappings|
  * 
  * @param mappings
  * @returns
  */
 export function generateTMCF(mappings: Mapping): string {
+  var commonPVs = Array<string>();
+  var colHdrProp:MappedThing = null;
   var tmcfNodes = Array<Array<string>>();
   var idx = 0;
 
-  // Do one pass over the mappings to compute the common PVs in every TMCF node. Everything
-  // other than COLUMN_HEADER mappings get repeated in every node.
-  var commonPVs = Array<string>();
-  var colHdrProp:string = null;
-  for (const [mthing, mval] of Object.entries(mappings)) {
+  // Do one pass over the mappings building the common PVs in all TMCF nodes.
+  // Everything other than COLUMN_HEADER mappings get repeated in every node.
+  mappings.forEach((mval: MappingVal, mthing: MappedThing) => {
     if (mval.type == MappingType.CONSTANT) {
       // Constants are references.
       commonPVs.push(mthing + ': dcid:' + mval.constant);
@@ -75,36 +75,41 @@ export function generateTMCF(mappings: Mapping): string {
         commonPVs.push(getColPV(mthing, mval.column.id));
       }
     } else if (mval.type == MappingType.COLUMN_HEADER) {
-      // Remember which thing has the column header for next pass.
+      // Remember which mapped thing has the column header for next pass.
+      // Validation has ensured there can be no more than one.
       colHdrProp = mthing;
     }
-  }
+  });
+
+  // Track the beginning of SVObs nodes.
+  var beginObsIdx = idx;
 
   if (colHdrProp != null) {
-    // Compute one node per COLUMN_HEADER entry.
-    for (const hdr of mappings[colHdrProp].headers) {
+    // Build one node per header entry.
+    mappings.get(colHdrProp).headers.forEach((hdr) => {
       var node = initNode(idx, SVOBS_TYPE);
       // Each column contains numerical values of SVObs.
       node.push(getColPV(MappedThing.VALUE, hdr.id));
-      // TODO: double check the use of id vs. header here.
       node.push(colHdrProp + ': dcid:' + hdr.id);
       tmcfNodes.push(node);
       idx++;
-    }
+    });
   } else {
     // There is only one node in this case.
     tmcfNodes.push(initNode(idx, SVOBS_TYPE));
     idx++;
   }
 
-  // Add the common PVs.
-  for (var node of tmcfNodes) {
-    node.concat(commonPVs);
+  // Add the common PVs to Obs TMCF nodes.
+  for (let i = beginObsIdx; i < idx; i++) {
+    tmcfNodes[i] = tmcfNodes[i].concat(commonPVs);
   }
-
+  
+  // Build newline delimited strings.
   var nodeStrings = Array<string>();
-  for (const pvs of tmcfNodes) {
-    nodeStrings.push(pvs.join('\n'));
-  }
-  return nodeStrings.join('\n\n');
+  tmcfNodes.forEach((pvs) => {
+    nodeStrings.push(pvs.join("\n"));
+    nodeStrings.push("");
+  });
+  return nodeStrings.join("\n");
 }
