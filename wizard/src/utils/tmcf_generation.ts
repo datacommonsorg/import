@@ -20,6 +20,13 @@ const FIXED_CSV_TABLE = 'CSVTable';
 const DCID_PROP = 'dcid';
 const SVOBS_TYPE = 'StatVarObservation';
 const PLACE_TYPE = 'Place';
+const MAPPED_THING_TO_SVOBS_PROP = new Map<MappedThing, string>([
+  [MappedThing.PLACE, 'observationAbout'],
+  [MappedThing.STAT_VAR, 'variableMeasured'],
+  [MappedThing.DATE, 'observationDate'],
+  [MappedThing.UNIT, 'unit'],
+  [MappedThing.VALUE, 'value'],
+]);
 
 function initNode(idx: number, type: string): Array<string> {
   var pvs = Array<string>();
@@ -45,52 +52,54 @@ function getEntPV(prop: string, idx: number): string {
  */
 export function generateTMCF(mappings: Mapping): string {
   var commonPVs = Array<string>();
-  var colHdrProp:MappedThing = null;
+  var colHdrThing:MappedThing = null;
   var tmcfNodes = Array<Array<string>>();
   var idx = 0;
 
   // Do one pass over the mappings building the common PVs in all TMCF nodes.
   // Everything other than COLUMN_HEADER mappings get repeated in every node.
   mappings.forEach((mval: MappingVal, mthing: MappedThing) => {
+    const mappedProp = MAPPED_THING_TO_SVOBS_PROP.get(mthing);
     if (mval.type == MappingType.CONSTANT) {
       // Constants are references.
-      commonPVs.push(mthing + ': dcid:' + mval.constant);
+      commonPVs.push(mappedProp + ': dcid:' + mval.constant);
     } else if (mval.type == MappingType.COLUMN) {
       if (mthing == MappedThing.PLACE) {
         if (mval.placeProperty == DCID_PROP) {
           // Place with DCID property can be a column ref.
-          commonPVs.push(getColPV(mthing, mval.column.id));
+          commonPVs.push(getColPV(mappedProp, mval.column.id));
         } else {
           // For place with non-DCID property, we should introduce a place node,
           // and use entity reference.
           var node = initNode(idx, PLACE_TYPE);
           node.push(getColPV(mval.placeProperty, mval.column.id));
           tmcfNodes.push(node);
-          commonPVs.push(getEntPV(mthing, idx));
+          commonPVs.push(getEntPV(mappedProp, idx));
 
           idx++;
         }
       } else {
         // For non-place types, column directly contains the corresponding values.
-        commonPVs.push(getColPV(mthing, mval.column.id));
+        commonPVs.push(getColPV(mappedProp, mval.column.id));
       }
     } else if (mval.type == MappingType.COLUMN_HEADER) {
       // Remember which mapped thing has the column header for next pass.
       // Validation has ensured there can be no more than one.
-      colHdrProp = mthing;
+      colHdrThing = mthing;
     }
   });
 
   // Track the beginning of SVObs nodes.
   var beginObsIdx = idx;
 
-  if (colHdrProp != null) {
+  if (colHdrThing != null) {
+    const mappedProp = MAPPED_THING_TO_SVOBS_PROP.get(colHdrThing);
     // Build one node per header entry.
-    mappings.get(colHdrProp).headers.forEach((hdr) => {
+    mappings.get(colHdrThing).headers.forEach((hdr) => {
       var node = initNode(idx, SVOBS_TYPE);
       // Each column contains numerical values of SVObs.
       node.push(getColPV(MappedThing.VALUE, hdr.id));
-      node.push(colHdrProp + ': dcid:' + hdr.id);
+      node.push(mappedProp + ': dcid:' + hdr.id);
       tmcfNodes.push(node);
       idx++;
     });

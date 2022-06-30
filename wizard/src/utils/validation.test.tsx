@@ -33,10 +33,10 @@ test("Fail_MalformedMappingVal", () => {
     }],
   ]);
   const expected = [
-    "observationAbout: missing value for COLUMN type ",
+    "place: missing value for COLUMN type ",
     "Place mapped as COLUMN type is missing placeProperty",
-    "variableMeasured: missing value for COLUMN_HEADER type",
-    "observationDate: missing value for CONSTANT type",
+    "statvar: missing value for COLUMN_HEADER type",
+    "date: missing value for CONSTANT type",
   ];
   expect(checkMappings(input)).toEqual(expected);
 });
@@ -53,9 +53,9 @@ test("Fail_MissingRequiredPropsAndMultipleColumnHeaders", () => {
     }],
   ]);
   const expected = [
-    "Missing required mapping for observationAbout",
-    "Missing required mapping for variableMeasured",
-    "Missing required mapping for observationDate",
+    "Missing required mapping for place",
+    "Missing required mapping for statvar",
+    "Missing required mapping for date",
     "Multiple columnHeader mappings found: unit, value"
   ];
   expect(checkMappings(input)).toEqual(expected);

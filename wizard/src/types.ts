@@ -21,9 +21,9 @@ export enum MappingType {
 }
 
 export enum MappedThing {
-  PLACE = "observationAbout",
-  STAT_VAR = "variableMeasured",
-  DATE = "observationDate",
+  PLACE = "place",
+  STAT_VAR = "statvar",
+  DATE = "date",
   UNIT = "unit",
   VALUE = "value",
 }
