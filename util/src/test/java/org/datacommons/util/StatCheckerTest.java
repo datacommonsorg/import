@@ -49,7 +49,7 @@ public class StatCheckerTest {
     String mcfPath = this.getClass().getResource("StatCheckerTest.mcf").getPath();
     Mcf.McfGraph graph = McfParser.parseInstanceMcfFile(mcfPath, false, lw);
     // create stat checker, extract series from the graph and check the series from the graph
-    StatChecker sc = new StatChecker(lw, null, false);
+    StatChecker sc = new StatChecker(lw, null);
     sc.extractStatsFromGraph(graph);
     sc.check();
     // check statsCheckSummary in logCtx is as expected
@@ -69,7 +69,7 @@ public class StatCheckerTest {
   public void testCheckSvObsInGraph() throws IOException {
     Debug.Log.Builder log = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(log, Path.of("/tmp/statCheckerTest"));
-    StatChecker sc = new StatChecker(lw, null, false);
+    StatChecker sc = new StatChecker(lw, null);
 
     // Graph with no duplicate StatVarObs.
     String mcf =
