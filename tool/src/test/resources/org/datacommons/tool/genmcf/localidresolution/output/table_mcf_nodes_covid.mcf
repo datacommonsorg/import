@@ -1,0 +1,15 @@
+Node: COVID19_cases_india/E1/1
+isoCode: "pseudoIsoCodeSimple"
+wikidataId: "pseudoWikidataIdSimple"
+typeOf: dcid:Place
+dcid: "pseudoPlaceSimple"
+
+Node: COVID19_cases_india/E0/1
+observationDate: "2020-01-01"
+observationAbout: dcid:pseudoPlaceSimple
+variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+value: 1
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=pseudoPlaceSimplevariableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-01-01value=1"
+dcid: "dc/o/2cmgck3lvbdh1"
+

@@ -1,0 +1,12 @@
+Node: E:COVID19_cases_india->E0
+typeOf: dcs:StatVarObservation
+variableMeasured: dcs:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+observationAbout: E:COVID19_cases_india->E1
+observationDate: C:COVID19_cases_india->DateTime
+value: C:COVID19_cases_india->CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+
+Node: E:COVID19_cases_india->E1
+typeOf: schema:Place
+isoCode: C:COVID19_cases_india->isoCode
+wikidataId: C:COVID19_cases_india->wikidataId
+
