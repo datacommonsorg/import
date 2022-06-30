@@ -195,10 +195,83 @@ export class PlaceDetector {
   }
 
   /**
+   * Country is detected with high confidence if > 90% of the non-null column
+   * values match one of the country format (property) arrays.
+   * If country is not detected, null is returned.
+   * If country is detected, the TypeProperty is returned.
+   *
+   * @param column: an array of strings representing the column values.
+   *
+   * @return the TypeProperty object or null if nothing can be determined with
+   *  high confidence.
+   */
+  detectCountryHighConf(column: Array<string>): TypeProperty {
+    let numValid = 0;
+    let nameCounter = 0;
+    let isoCounter = 0;
+    let alphaNum3Counter = 0;
+    let numberCounter = 0;
+
+    for (const cVal of column) {
+      if (cVal == null) {
+        continue;
+      }
+      const v = toAlphaNumeric(cVal);
+      numValid++;
+
+      if (this.countryNames.has(v)) {
+        nameCounter++;
+      } else if (this.countryISO.has(v)) {
+        isoCounter++;
+      } else if (this.countryAbbrv3.has(v)) {
+        alphaNum3Counter++;
+      } else if (this.countryNumeric.has(v)) {
+        numberCounter++;
+      }
+    }
+
+    // Determine the detected property.
+    let p: DCProperty;
+    if (nameCounter > numValid * MIN_HIGH_CONF_DETECT) {
+      p = this.placeProperties.get("name");
+    } else if (isoCounter > numValid * MIN_HIGH_CONF_DETECT) {
+      p = this.placeProperties.get("isoCode");
+    } else if (alphaNum3Counter > numValid * MIN_HIGH_CONF_DETECT) {
+      p = this.placeProperties.get("countryAlpha3Code");
+    } else if (numberCounter > numValid * MIN_HIGH_CONF_DETECT) {
+      p = this.placeProperties.get("countryNumericCode");
+    } else {
+      p = null;
+    }
+    if (p != null) {
+      return { dcType: this.placeTypes.get("country"), dcProperty: p };
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * Detects with high confidence the type and property for a Place.
+   * If a place cannot be detected, returns null.
+   * Currently only supports detecting country (place type).
+   *
+   * @param header the name of the column.
+   * @param column: an array of strings representing the column values.
+   *
+   * @return the TypeProperty object or null if nothing can be determined with
+   * high confidence.
+   */
+  detectHighConfidence(header: string, column: Array<string>): TypeProperty {
+    // For now, only supports detecting country with high confidence.
+    // In the future, this should be modified to run through a list of detailed
+    // high confidence place detectors.
+    return this.detectCountryHighConf(column);
+  }
+
+  /**
    * Detecting Place.
    * If nothing is detected, null is returned.
-   * Otherwise, the detectedType, the detectedFormat and and confidence level
-   * are returned.
+   * Otherwise, the detectedTypeProperty is returned.
    * It is up to the consumer, e.g. in heuristics.ts, to decide whether to
    * pass the low confidence detection back to the user (or not).
    *
@@ -208,16 +281,22 @@ export class PlaceDetector {
    * @return the DetectedDetails object (or null).
    */
   detect(header: string, column: Array<string>): DetectedDetails {
-    // High Confidence detection is TBD. For now, only doing Low Confidence
-    // detection.
     const lcDetected = this.detectLowConfidence(header);
-    if (lcDetected == null) {
+    const hcDetected = this.detectHighConfidence(header, column);
+
+    if (hcDetected != null) {
+      // High Confidence detection is given higher priority.
+      return {
+        detectedTypeProperty: hcDetected,
+        confidence: ConfidenceLevel.High,
+      };
+    } else if (lcDetected != null) {
+      return {
+        detectedTypeProperty: lcDetected,
+        confidence: ConfidenceLevel.Low,
+      };
+    } else {
       return null;
     }
-
-    return {
-      detectedTypeProperty: lcDetected,
-      confidence: ConfidenceLevel.Low,
-    };
   }
 }
