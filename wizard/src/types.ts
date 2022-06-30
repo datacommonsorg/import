@@ -42,9 +42,9 @@ export interface MappingVal {
   // Column that holds the mapping values. Should be set if type is
   // MappingType.COLUMN
   column?: Column;
-  // If column is set, the values in the column correspond to this property in
-  // the KG. Only set when MappedThing is PLACE.
-  placeProperty?: string;
+  // When MappedThing is PLACE, the values correspond to this type and property
+  // in the KG.
+  placeTypeProperty?: TypeProperty;
   // List of column headers that act as the mapping values. Should be set if
   // type is MappingType.COLUMN_HEADERS
   headers?: Column[];
@@ -92,11 +92,17 @@ export interface CsvData {
 
 // Types used for Detection.
 
-// DetectedFormat denotes the format type associated with some detected type..
-export interface DetectedFormat {
-  propertyName: string;
+// An abstraction for a Data Commons entity, e.g. a place type or property.
+interface Entity {
+  dcName: string;
   displayName: string;
 }
+
+// A Data Commons entity type, e.g. Country (which a type of Place).
+export type DCType = Entity;
+
+// A Data Commons property, e.g. longitude.
+export type DCProperty = Entity;
 
 // Denotes a level of confidence in the detection.
 // It can be associated with any detected type.
@@ -106,12 +112,17 @@ export enum ConfidenceLevel {
   High,
 }
 
-export interface DetectedDetails {
-  // The type detected.
-  detectedType: string;
+export interface TypeProperty {
+  // The Data Commons type.
+  dcType: DCType;
 
-  // (Optional) The format detected.
-  detectedFormat?: DetectedFormat;
+  // (Optional) The Data Commons property.
+  dcProperty?: DCProperty;
+}
+
+export interface DetectedDetails {
+  // The detected Type and (optional) Property.
+  detectedTypeProperty: TypeProperty;
 
   // The level of confidence associated with the detection.
   confidence: ConfidenceLevel;
