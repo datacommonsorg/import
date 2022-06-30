@@ -14,47 +14,38 @@
  * limitations under the License.
  */
 
-import { CsvData, Mapping } from "../types";
+ import { CsvData, Mapping } from "../types";
 
-/**
- * Generates the cleaned csv given the original csv and the correct mappings
- * @param csv
- * @param mappings
- * @returns
- */
-export function generateCleanedCSV(csv: CsvData, mappings: Mapping): string {
-  return "";
-}
-
-/**
- * Generates the stat vars mcf given the original csv and the correct mappings
- * @param csv
- * @param mappings
- * @returns
- */
-export function generateSvMCF(csv: CsvData, mappings: Mapping): string {
-  return "";
-}
-
-/**
- * Generates the tmcf file given the correct mappings
- * @param mappings
- * @returns
- */
-export function generateTMCF(mappings: Mapping): string {
-  return "";
-}
-
-/**
- * Generates the translation metadata given the predicted mappings and correct
- * mappings
- * @param predictions
- * @param corrections
- * @returns
- */
-export function generateTranslationMetadata(
-  predictions: Mapping,
-  corrections: Mapping
-): string {
-  return "";
-}
+ /**
+  * Generates the cleaned csv given the original csv and the correct mappings
+  * @param csv
+  * @param mappings
+  * @returns
+  */
+ export function generateCleanedCSV(csv: CsvData, mappings: Mapping): string {
+   return "";
+ }
+ 
+ /**
+  * Generates the stat vars mcf given the original csv and the correct mappings
+  * @param csv
+  * @param mappings
+  * @returns
+  */
+ export function generateSvMCF(csv: CsvData, mappings: Mapping): string {
+   return "";
+ }
+ 
+ /**
+  * Generates the translation metadata given the predicted mappings and correct
+  * mappings
+  * @param predictions
+  * @param corrections
+  * @returns
+  */
+ export function generateTranslationMetadata(
+   predictions: Mapping,
+   corrections: Mapping
+ ): string {
+   return "";
+ }

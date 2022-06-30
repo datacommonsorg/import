@@ -21,10 +21,11 @@ export enum MappingType {
 }
 
 export enum MappedThing {
-  PLACE = "place",
-  STAT_VAR = "statVar",
-  DATE = "date",
+  PLACE = "observationAbout",
+  STAT_VAR = "variableMeasured",
+  DATE = "observationDate",
   UNIT = "unit",
+  VALUE = "value",
 }
 
 interface Column {
@@ -42,8 +43,8 @@ export interface MappingVal {
   // MappingType.COLUMN
   column?: Column;
   // If column is set, the values in the column correspond to this property in
-  // the KG
-  valueProperty?: string;
+  // the KG. Only set when MappedThing is PLACE.
+  placeProperty?: string;
   // List of column headers that act as the mapping values. Should be set if
   // type is MappingType.COLUMN_HEADERS
   headers?: Column[];
