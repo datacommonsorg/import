@@ -15,55 +15,79 @@
  */
 import _ from "lodash";
 
-import { ConfidenceLevel, DetectedDetails, DetectedFormat } from "../types";
+import { ConfidenceLevel, DetectedDetails, TypeProperty } from "../types";
 import { PlaceDetector } from "./detect_place";
 
-test("placeTypesAndFormats", () => {
+test("placeTypesAndProperties", () => {
   const det = new PlaceDetector();
-  const expected = new Map<string, Array<DetectedFormat>>([
-    ["Longitude", [{ propertyName: "longitude", displayName: "Longitude" }]],
-    ["Latitude", [{ propertyName: "latitude", displayName: "Latitude" }]],
-    [
-      "LatLon",
-      [{ propertyName: "GeoCoordinates", displayName: "Geo Coordinates" }],
-    ],
-    [
-      "GeoCoordinates",
-      [{ propertyName: "GeoCoordinates", displayName: "Geo Coordinates" }],
-    ],
-    [
-      "Country",
-      [
-        { propertyName: "name", displayName: "Full Name" },
-        { propertyName: "isoCode", displayName: "ISO Code" },
-        { propertyName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
-        { propertyName: "countryNumericCode", displayName: "Numeric Code" },
-      ],
-    ],
-    ["State", [{ propertyName: "name", displayName: "Full Name" }]],
-    ["Province", [{ propertyName: "name", displayName: "Full Name" }]],
-    ["Municipality", [{ propertyName: "name", displayName: "Full Name" }]],
-    ["County", [{ propertyName: "name", displayName: "Full Name" }]],
-    ["City", [{ propertyName: "name", displayName: "Full Name" }]],
+  const expected = new Set<TypeProperty>([
+    {
+      dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
+      dcProperty: { dcName: "longitude", displayName: "Longitude" },
+    },
+    {
+      dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
+      dcProperty: { dcName: "latitude", displayName: "Latitude" },
+    },
+    {
+      dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
+      dcProperty: { dcName: "name", displayName: "Name" },
+    },
+    {
+      dcType: { dcName: "country", displayName: "Country" },
+      dcProperty: { dcName: "name", displayName: "Name" },
+    },
+    {
+      dcType: { dcName: "country", displayName: "Country" },
+      dcProperty: { dcName: "isoCode", displayName: "ISO Code" },
+    },
+    {
+      dcType: { dcName: "country", displayName: "Country" },
+      dcProperty: { dcName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
+    },
+    {
+      dcType: { dcName: "country", displayName: "Country" },
+      dcProperty: { dcName: "countryNumericCode", displayName: "Numeric Code" },
+    },
+    {
+      dcType: { dcName: "state", displayName: "State" },
+      dcProperty: { dcName: "name", displayName: "Name" },
+    },
+    {
+      dcType: { dcName: "province", displayName: "Province" },
+      dcProperty: { dcName: "name", displayName: "Name" },
+    },
+    {
+      dcType: { dcName: "municipality", displayName: "Municipality" },
+      dcProperty: { dcName: "name", displayName: "Name" },
+    },
+    {
+      dcType: { dcName: "county", displayName: "County" },
+      dcProperty: { dcName: "name", displayName: "Name" },
+    },
+    {
+      dcType: { dcName: "city", displayName: "City" },
+      dcProperty: { dcName: "name", displayName: "Name" },
+    },
   ]);
-  expect(det.validPlaceTypesAndFormats()).toEqual(expected);
+  expect(det.placeTypesAndProperties).toEqual(expected);
 });
 
-test("placeTypesLower", () => {
-  const det = new PlaceDetector();
-  const expected = new Map<string, string>([
-    ["longitude", "Longitude"],
-    ["latitude", "Latitude"],
-    ["latlon", "LatLon"],
-    ["geocoordinates", "GeoCoordinates"],
-    ["country", "Country"],
-    ["state", "State"],
-    ["province", "Province"],
-    ["municipality", "Municipality"],
-    ["county", "County"],
-    ["city", "City"],
+test("placeDetectionKeys", () => {
+  const expected = new Set<string>([
+    "longitude",
+    "latitude",
+    "latlon",
+    "geocoordinates",
+    "country",
+    "state",
+    "province",
+    "municipality",
+    "county",
+    "city",
   ]);
-  expect(det.placeTypes).toEqual(expected);
+  const got = new Set(PlaceDetector.columnToTypePropertyMapping.keys());
+  expect(got).toEqual(expected);
 });
 
 test("placeLowConfidenceDetection", () => {
@@ -73,22 +97,44 @@ test("placeLowConfidenceDetection", () => {
   expect(det.detectLowConfidence(" ")).toBe(null);
   expect(det.detectLowConfidence("continent")).toBe(null);
 
-  expect(det.detectLowConfidence("Country..")).toBe("Country");
-  expect(det.detectLowConfidence("Country")).toBe("Country");
-  expect(det.detectLowConfidence("cOuntry")).toBe("Country");
-  expect(det.detectLowConfidence("COUNTRY")).toBe("Country");
-  expect(det.detectLowConfidence("State  ")).toBe("State");
-  expect(det.detectLowConfidence("County---")).toBe("County");
-  expect(det.detectLowConfidence("city")).toBe("City");
+  const countryType = { dcType: { dcName: "country", displayName: "Country" } };
+  const stateType = { dcType: { dcName: "state", displayName: "State" } };
+  const countyType = { dcType: { dcName: "county", displayName: "County" } };
+  const cityType = { dcType: { dcName: "city", displayName: "City" } };
 
-  expect(det.detectLowConfidence("Lat-Lon")).toBe("LatLon");
-  expect(det.detectLowConfidence("Lat,Lon")).toBe("LatLon");
-  expect(det.detectLowConfidence("LatLon")).toBe("LatLon");
-  expect(det.detectLowConfidence("Geo-coordinates")).toBe("GeoCoordinates");
-  expect(det.detectLowConfidence("Geo Coordinates")).toBe("GeoCoordinates");
-  expect(det.detectLowConfidence("GeoCoordinates")).toBe("GeoCoordinates");
-  expect(det.detectLowConfidence("longitude()()")).toBe("Longitude");
-  expect(det.detectLowConfidence("Latitude=#$#$%")).toBe("Latitude");
+  expect(_.isEqual(det.detectLowConfidence("Country.."), countryType)).toBe(
+    true
+  );
+  expect(_.isEqual(det.detectLowConfidence("Country"), countryType)).toBe(true);
+  expect(_.isEqual(det.detectLowConfidence("cOuntry"), countryType)).toBe(true);
+  expect(_.isEqual(det.detectLowConfidence("COUNTRY"), countryType)).toBe(true);
+  expect(_.isEqual(det.detectLowConfidence("State  "), stateType)).toBe(true);
+  expect(_.isEqual(det.detectLowConfidence("County---"), countyType)).toBe(
+    true
+  );
+  expect(_.isEqual(det.detectLowConfidence("city"), cityType)).toBe(true);
+
+  const geoType = {
+    dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
+  };
+  expect(_.isEqual(det.detectLowConfidence("Lat-Lon"), geoType)).toBe(true);
+  expect(_.isEqual(det.detectLowConfidence("Lat,Lon"), geoType)).toBe(true);
+  expect(_.isEqual(det.detectLowConfidence("LatLon"), geoType)).toBe(true);
+  expect(_.isEqual(det.detectLowConfidence("Geo-coordinates"), geoType)).toBe(
+    true
+  );
+  expect(_.isEqual(det.detectLowConfidence("Geo Coordinates"), geoType)).toBe(
+    true
+  );
+  expect(_.isEqual(det.detectLowConfidence("GeoCoordinates"), geoType)).toBe(
+    true
+  );
+  expect(_.isEqual(det.detectLowConfidence("longitude()()"), geoType)).toBe(
+    true
+  );
+  expect(_.isEqual(det.detectLowConfidence("Latitude=#$#$%"), geoType)).toBe(
+    true
+  );
 });
 
 test("detectionLowConf", () => {
@@ -98,13 +144,11 @@ test("detectionLowConf", () => {
   expect(det.detect("", [])).toBe(null);
 
   const expected: DetectedDetails = {
-    detectedType: "City",
-    detectedFormat: { propertyName: "name", displayName: "Full Name" },
+    detectedTypeProperty: { dcType: { dcName: "city", displayName: "City" } },
     confidence: ConfidenceLevel.Low,
   };
   const notExpected: DetectedDetails = {
-    detectedType: "City",
-    detectedFormat: { propertyName: "name", displayName: "Full Name" },
+    detectedTypeProperty: { dcType: { dcName: "city", displayName: "City" } },
     confidence: ConfidenceLevel.High, // should be Low.
   };
 
@@ -112,43 +156,4 @@ test("detectionLowConf", () => {
 
   expect(_.isEqual(expected, got)).toBe(true);
   expect(_.isEqual(notExpected, got)).toBe(false);
-});
-
-test("countries", () => {
-  const det = new PlaceDetector();
-  const numCountriesExpected = 271;
-  const numIsoCodes = 247; // 24 countries without ISO codes.
-  const numAbbrv3Codes = 246; // 25 countries without 3-letter abbreviations.
-  const numNumeric = 246; // 25 countries without numeric codes.
-  expect(det.countryNames.size).toEqual(numCountriesExpected);
-  expect(det.countryISO.size).toEqual(numIsoCodes);
-  expect(det.countryAbbrv3.size).toEqual(numAbbrv3Codes);
-  expect(det.countryNumeric.size).toEqual(numNumeric);
-
-  // Some other random spot checks.
-  // Norway.
-  expect(det.countryNames).toContain("Norway");
-  expect(det.countryISO).toContain("NO");
-  expect(det.countryAbbrv3).toContain("NOR");
-  expect(det.countryNumeric).toContain("578");
-
-  // Senegal.
-  expect(det.countryNames).toContain("Senegal");
-  expect(det.countryISO).toContain("SN");
-  expect(det.countryAbbrv3).toContain("SEN");
-  expect(det.countryNumeric).toContain("686");
-
-  // Other checks.
-  expect(det.countryNames).not.toContain("");
-  expect(det.countryNames).not.toContain(null);
-
-  expect(det.countryISO).not.toContain("");
-  expect(det.countryISO).not.toContain(null);
-
-  expect(det.countryAbbrv3).not.toContain("");
-  expect(det.countryAbbrv3).not.toContain(null);
-
-  expect(det.countryNumeric).not.toContain("");
-  expect(det.countryNumeric).not.toContain(null);
-  expect(det.countryNumeric).not.toContain(0);
 });
