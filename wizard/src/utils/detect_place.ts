@@ -76,7 +76,10 @@ export class PlaceDetector {
   placeTypesAndProperties: Set<TypeProperty>;
 
   // Mapping between Place types and supported properties associated with each
-  // type.
+  // type. The keys of keyTypePropertyMappings are matched against the column
+  // headers in the user csv files. If a column header matches a key in
+  // keyTypePropertyMappings then the associated value in
+  // keyTypePropertyMappings is the inferred location type and property.
   static keyTypePropertyMappings = new Map<string, Array<TPName>>([
     ["longitude", [{ tName: "GeoCoordinates", pName: "longitude" }]],
     ["latitude", [{ tName: "GeoCoordinates", pName: "latitude" }]],
