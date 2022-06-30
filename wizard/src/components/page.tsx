@@ -17,5 +17,5 @@
 import React from "react";
 
 export function Page(): JSX.Element {
-      return <div>Import Wizard</div>;
+  return <div>Import Wizard</div>;
 }
