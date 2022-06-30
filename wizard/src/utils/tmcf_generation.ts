@@ -66,6 +66,7 @@ function getConstPV(prop: string, val: string): string {
 /**
  * Generates the tmcf file given the correct mappings.
  * ASSUMES: checkMappings() returns success on |mappings|
+ * TODO: Allow placeProperty for all mapping types of PLACE
  *
  * @param mappings
  * @returns

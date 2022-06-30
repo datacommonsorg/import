@@ -29,6 +29,7 @@ import { MappedThing, Mapping, MappingType, MappingVal } from "../types";
  * (5) At least one of the mappings must specify a COLUMN or a COLUMN_HEADER
  * (6) PLACE, when mapped as a COLUMN, must specify placeProperty
  * (7) VALUE, if it appears, has to be COLUMN
+ * TODO: Allow placeProperty for all mapping types of PLACE
  */
 export function checkMappings(mappings: Mapping): Array<string> {
   const errors = Array<string>();
