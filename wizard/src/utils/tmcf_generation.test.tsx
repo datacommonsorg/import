@@ -111,7 +111,7 @@ test("MultiNodeTMCF", () => {
     "Node: E:CSVTable->E0\n" +
     "typeOf: dcs:StatVarObservation\n" +
     "value: C:CSVTable->2018\n" +
-    "observationDate: dcid:2018\n" +
+    'observationDate: "2018"\n' +
     "observationAbout: C:CSVTable->id\n" +
     "variableMeasured: C:CSVTable->indicators\n" +
     "unit: dcid:USDollar\n" +
@@ -119,7 +119,7 @@ test("MultiNodeTMCF", () => {
     "Node: E:CSVTable->E1\n" +
     "typeOf: dcs:StatVarObservation\n" +
     "value: C:CSVTable->2019\n" +
-    "observationDate: dcid:2019\n" +
+    'observationDate: "2019"\n' +
     "observationAbout: C:CSVTable->id\n" +
     "variableMeasured: C:CSVTable->indicators\n" +
     "unit: dcid:USDollar\n";

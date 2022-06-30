@@ -71,6 +71,7 @@ test("Fail_MissingRequiredPropsAndMultipleColumnHeaders", () => {
     "Missing required mapping for place",
     "Missing required mapping for statVar",
     "Missing required mapping for date",
+    "value: must be a COLUMN type",
     "Multiple columnHeader mappings found: unit, value",
   ];
   expect(checkMappings(input)).toEqual(expected);

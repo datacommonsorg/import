@@ -28,6 +28,7 @@ import { MappedThing, Mapping, MappingType, MappingVal } from "../types";
  *     (a) Conversely, if COLUMN_HEADER mapping exists, VALUE must not be mapped
  * (5) At least one of the mappings must specify a COLUMN or a COLUMN_HEADER
  * (6) PLACE, when mapped as a COLUMN, must specify placeProperty
+ * (7) VALUE, if it appears, has to be COLUMN
  */
 export function checkMappings(mappings: Mapping): Array<string> {
   const errors = Array<string>();
@@ -69,6 +70,10 @@ export function checkMappings(mappings: Mapping): Array<string> {
         // Check #1
         errors.push(mthing + ": missing value for CONSTANT type");
       }
+    }
+    if (mthing == MappedThing.VALUE && mval.type != MappingType.COLUMN) {
+      // Check #7
+      errors.push(mthing + ": must be a COLUMN type");
     }
   });
   if (numNonConsts == 0) {

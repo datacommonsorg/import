@@ -34,6 +34,10 @@ const MAPPED_THING_TO_SVOBS_PROP = new Map<MappedThing, string>([
   [MappedThing.VALUE, "value"],
 ]);
 
+//
+// A set of node/pv generation helpers
+//
+
 function initNode(idx: number, type: string): Array<string> {
   const pvs = Array<string>();
   pvs.push("Node: E:" + FIXED_CSV_TABLE + "->E" + idx.toString());
@@ -47,6 +51,15 @@ function getColPV(prop: string, col: string): string {
 
 function getEntPV(prop: string, idx: number): string {
   return prop + ": E:" + FIXED_CSV_TABLE + "->E" + idx.toString();
+}
+
+function getConstPV(prop: string, val: string): string {
+  // Constants are references except when it is a date.
+  if (prop == "observationDate") {
+    return prop + ': "' + val + '"';
+  } else {
+    return prop + ": dcid:" + val;
+  }
 }
 
 /**
@@ -67,8 +80,8 @@ export function generateTMCF(mappings: Mapping): string {
   mappings.forEach((mval: MappingVal, mthing: MappedThing) => {
     const mappedProp = MAPPED_THING_TO_SVOBS_PROP.get(mthing);
     if (mval.type == MappingType.CONSTANT) {
-      // Constants are references.
-      commonPVs.push(mappedProp + ": dcid:" + mval.constant);
+      // Constants are references except when it is a date.
+      commonPVs.push(getConstPV(mappedProp, mval.constant));
     } else if (mval.type == MappingType.COLUMN) {
       if (mthing == MappedThing.PLACE) {
         if (mval.placeProperty == DCID_PROP) {
@@ -105,7 +118,7 @@ export function generateTMCF(mappings: Mapping): string {
       const node = initNode(idx, SVOBS_TYPE);
       // Each column contains numerical values of SVObs.
       node.push(getColPV(MappedThing.VALUE, hdr.id));
-      node.push(mappedProp + ": dcid:" + hdr.id);
+      node.push(getConstPV(mappedProp, hdr.id));
       tmcfNodes.push(node);
       idx++;
     });
