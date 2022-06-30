@@ -18,87 +18,56 @@ import _ from "lodash";
 import { ConfidenceLevel, DetectedDetails, TypeProperty } from "../types";
 import { PlaceDetector } from "./detect_place";
 
-function lowConfType(tName: string, tDisplay: string): TypeProperty {
-  return {
-    typeName: tName,
-    typeDisplayName: tDisplay,
-  };
-}
-
 test("placeTypesAndProperties", () => {
   const det = new PlaceDetector();
   const expected = new Set<TypeProperty>([
     {
-      typeName: "GeoCoordinates",
-      typeDisplayName: "Geo Coordinates",
-      propertyName: "longitude",
-      propertyDisplayName: "Longitude",
+      dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
+      dcProperty: { dcName: "longitude", displayName: "Longitude" },
     },
     {
-      typeName: "GeoCoordinates",
-      typeDisplayName: "Geo Coordinates",
-      propertyName: "latitude",
-      propertyDisplayName: "Latitude",
+      dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
+      dcProperty: { dcName: "latitude", displayName: "Latitude" },
     },
     {
-      typeName: "GeoCoordinates",
-      typeDisplayName: "Geo Coordinates",
-      propertyName: "name",
-      propertyDisplayName: "Name",
+      dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
     {
-      typeName: "country",
-      typeDisplayName: "Country",
-      propertyName: "name",
-      propertyDisplayName: "Name",
+      dcType: { dcName: "country", displayName: "Country" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
     {
-      typeName: "country",
-      typeDisplayName: "Country",
-      propertyName: "isoCode",
-      propertyDisplayName: "ISO Code",
+      dcType: { dcName: "country", displayName: "Country" },
+      dcProperty: { dcName: "isoCode", displayName: "ISO Code" },
     },
     {
-      typeName: "country",
-      typeDisplayName: "Country",
-      propertyName: "countryAlpha3Code",
-      propertyDisplayName: "Alpha 3 Code",
+      dcType: { dcName: "country", displayName: "Country" },
+      dcProperty: { dcName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
     },
     {
-      typeName: "country",
-      typeDisplayName: "Country",
-      propertyName: "countryNumericCode",
-      propertyDisplayName: "Numeric Code",
+      dcType: { dcName: "country", displayName: "Country" },
+      dcProperty: { dcName: "countryNumericCode", displayName: "Numeric Code" },
     },
     {
-      typeName: "state",
-      typeDisplayName: "State",
-      propertyName: "name",
-      propertyDisplayName: "Name",
+      dcType: { dcName: "state", displayName: "State" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
     {
-      typeName: "province",
-      typeDisplayName: "Province",
-      propertyName: "name",
-      propertyDisplayName: "Name",
+      dcType: { dcName: "province", displayName: "Province" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
     {
-      typeName: "municipality",
-      typeDisplayName: "Municipality",
-      propertyName: "name",
-      propertyDisplayName: "Name",
+      dcType: { dcName: "municipality", displayName: "Municipality" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
     {
-      typeName: "county",
-      typeDisplayName: "County",
-      propertyName: "name",
-      propertyDisplayName: "Name",
+      dcType: { dcName: "county", displayName: "County" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
     {
-      typeName: "city",
-      typeDisplayName: "City",
-      propertyName: "name",
-      propertyDisplayName: "Name",
+      dcType: { dcName: "city", displayName: "City" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
   ]);
   expect(det.placeTypesAndProperties).toEqual(expected);
@@ -128,27 +97,26 @@ test("placeLowConfidenceDetection", () => {
   expect(det.detectLowConfidence(" ")).toBe(null);
   expect(det.detectLowConfidence("continent")).toBe(null);
 
-  const countryType = lowConfType("country", "Country");
+  const countryType = { dcType: { dcName: "country", displayName: "Country" } };
+  const stateType = { dcType: { dcName: "state", displayName: "State" } };
+  const countyType = { dcType: { dcName: "county", displayName: "County" } };
+  const cityType = { dcType: { dcName: "city", displayName: "City" } };
+
   expect(_.isEqual(det.detectLowConfidence("Country.."), countryType)).toBe(
     true
   );
   expect(_.isEqual(det.detectLowConfidence("Country"), countryType)).toBe(true);
   expect(_.isEqual(det.detectLowConfidence("cOuntry"), countryType)).toBe(true);
   expect(_.isEqual(det.detectLowConfidence("COUNTRY"), countryType)).toBe(true);
-  expect(
-    _.isEqual(det.detectLowConfidence("State  "), lowConfType("state", "State"))
-  ).toBe(true);
-  expect(
-    _.isEqual(
-      det.detectLowConfidence("County---"),
-      lowConfType("county", "County")
-    )
-  ).toBe(true);
-  expect(
-    _.isEqual(det.detectLowConfidence("city"), lowConfType("city", "City"))
-  ).toBe(true);
+  expect(_.isEqual(det.detectLowConfidence("State  "), stateType)).toBe(true);
+  expect(_.isEqual(det.detectLowConfidence("County---"), countyType)).toBe(
+    true
+  );
+  expect(_.isEqual(det.detectLowConfidence("city"), cityType)).toBe(true);
 
-  const geoType = lowConfType("GeoCoordinates", "Geo Coordinates");
+  const geoType = {
+    dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
+  };
   expect(_.isEqual(det.detectLowConfidence("Lat-Lon"), geoType)).toBe(true);
   expect(_.isEqual(det.detectLowConfidence("Lat,Lon"), geoType)).toBe(true);
   expect(_.isEqual(det.detectLowConfidence("LatLon"), geoType)).toBe(true);
@@ -176,11 +144,11 @@ test("detectionLowConf", () => {
   expect(det.detect("", [])).toBe(null);
 
   const expected: DetectedDetails = {
-    detectedTypeProperty: lowConfType("city", "City"),
+    detectedTypeProperty: { dcType: { dcName: "city", displayName: "City" } },
     confidence: ConfidenceLevel.Low,
   };
   const notExpected: DetectedDetails = {
-    detectedTypeProperty: lowConfType("city", "City"),
+    detectedTypeProperty: { dcType: { dcName: "city", displayName: "City" } },
     confidence: ConfidenceLevel.High, // should be Low.
   };
 

@@ -91,17 +91,17 @@ export interface CsvData {
 
 // Types used for Detection.
 
-// The type of place, e.g. country.
-export interface PlaceType {
-  typeName: string;
+// An abstraction for a Data Commons entity, e.g. a place type or property.
+interface Entity {
+  dcName: string;
   displayName: string;
 }
 
-// The Data Commons property of a place, e.g. longitude.
-export interface PlaceProperty {
-  propertyName: string;
-  displayName: string;
-}
+// A Data Commons entity type, e.g. Country (which a type of Place).
+export type DCType = Entity;
+
+// A Data Commons property, e.g. longitude.
+export type DCProperty = Entity;
 
 // Denotes a level of confidence in the detection.
 // It can be associated with any detected type.
@@ -113,12 +113,10 @@ export enum ConfidenceLevel {
 
 export interface TypeProperty {
   // The Data Commons type.
-  typeName: string;
-  typeDisplayName: string;
+  dcType: DCType;
 
   // (Optional) The Data Commons property.
-  propertyName?: string;
-  propertyDisplayName?: string;
+  dcProperty?: DCProperty;
 }
 
 export interface DetectedDetails {
