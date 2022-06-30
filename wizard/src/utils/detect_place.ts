@@ -13,8 +13,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ConfidenceLevel, DetectedDetails, DetectedFormat } from "../types";
+import {
+  ConfidenceLevel,
+  DCProperty,
+  DCType,
+  DetectedDetails,
+  TypeProperty,
+} from "../types";
 import countriesJSON from "./country_mappings.json";
+
+const MIN_HIGH_CONF_DETECT = 0.9;
+
+// All supported Place types must be encoded below.
+const PLACE_TYPES: DCType[] = [
+  { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
+  { dcName: "state", displayName: "State" },
+  { dcName: "country", displayName: "Country" },
+  { dcName: "province", displayName: "Province" },
+  { dcName: "municipality", displayName: "Municipality" },
+  { dcName: "county", displayName: "County" },
+  { dcName: "city", displayName: "City" },
+];
+
+// All supported Place properties must be encoded below.
+const PLACE_PROPERTIES: DCProperty[] = [
+  { dcName: "name", displayName: "Name" },
+  { dcName: "longitude", displayName: "Longitude" },
+  { dcName: "latitude", displayName: "Latitude" },
+  { dcName: "isoCode", displayName: "ISO Code" },
+  { dcName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
+  { dcName: "countryNumericCode", displayName: "Numeric Code" },
+];
+
+// Helper interface to refer to the place types and place properties.
+interface TPName {
+  tName: string;
+  pName: string;
+}
+
+function toAlphaNumeric(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/gi, "");
+}
 
 /**
  * A PlaceDetector objected is meant to be initialized once. It provides
@@ -28,52 +67,80 @@ export class PlaceDetector {
   countryAbbrv3: Set<string>;
   countryNumeric: Set<string>;
 
-  placeTypes: Map<string, string>;
+  // Convenience in-memory maps of types and properties where the keys are their
+  // respective DC Names.
+  placeTypes: Map<string, DCType>;
+  placeProperties: Map<string, DCProperty>;
 
-  static typeFormatMappings = new Map<string, Array<DetectedFormat>>([
-    ["Longitude", [{ propertyName: "longitude", displayName: "Longitude" }]],
-    ["Latitude", [{ propertyName: "latitude", displayName: "Latitude" }]],
+  // A set of all place types and their associated properties.
+  placeTypesAndProperties: Set<TypeProperty>;
+
+  // Mapping between Place types and supported properties associated with each
+  // type. The keys of columnToTypePropertyMapping are matched against the column
+  // headers in the user csv files. If a column header matches a key in
+  // columnToTypePropertyMapping then the associated value in
+  // columnToTypePropertyMapping is the inferred location type and property.
+  static columnToTypePropertyMapping = new Map<string, Array<TPName>>([
+    ["longitude", [{ tName: "GeoCoordinates", pName: "longitude" }]],
+    ["latitude", [{ tName: "GeoCoordinates", pName: "latitude" }]],
+    ["latlon", [{ tName: "GeoCoordinates", pName: "name" }]],
+    ["geocoordinates", [{ tName: "GeoCoordinates", pName: "name" }]],
     [
-      "LatLon",
-      [{ propertyName: "GeoCoordinates", displayName: "Geo Coordinates" }],
-    ],
-    [
-      "GeoCoordinates",
-      [{ propertyName: "GeoCoordinates", displayName: "Geo Coordinates" }],
-    ],
-    [
-      "Country",
+      "country",
       [
-        { propertyName: "name", displayName: "Full Name" },
-        { propertyName: "isoCode", displayName: "ISO Code" },
-        { propertyName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
-        { propertyName: "countryNumericCode", displayName: "Numeric Code" },
+        { tName: "country", pName: "name" },
+        { tName: "country", pName: "isoCode" },
+        { tName: "country", pName: "countryAlpha3Code" },
+        { tName: "country", pName: "countryNumericCode" },
       ],
     ],
-    ["State", [{ propertyName: "name", displayName: "Full Name" }]],
-    ["Province", [{ propertyName: "name", displayName: "Full Name" }]],
-    ["Municipality", [{ propertyName: "name", displayName: "Full Name" }]],
-    ["County", [{ propertyName: "name", displayName: "Full Name" }]],
-    ["City", [{ propertyName: "name", displayName: "Full Name" }]],
+    ["state", [{ tName: "state", pName: "name" }]],
+    ["province", [{ tName: "province", pName: "name" }]],
+    ["municipality", [{ tName: "municipality", pName: "name" }]],
+    ["county", [{ tName: "county", pName: "name" }]],
+    ["city", [{ tName: "city", pName: "name" }]],
   ]);
 
   constructor() {
     // Set the various class attributes.
     this.preProcessCountries();
-
-    this.placeTypes = new Map<string, string>();
-    for (const key of Array.from(PlaceDetector.typeFormatMappings.keys())) {
-      this.placeTypes.set(key.toLowerCase(), key);
-    }
+    this.setValidPlaceTypesAndProperties();
   }
 
   /**
-   * Returns a Map of all place types and their supported formats.
-   *
-   * @return a map of place types (string) to the supported formats (array).
+   * Processes columnToTypePropertyMapping to set the placeTypesAndProperties attribute.
    */
-  validPlaceTypesAndFormats(): Map<string, Array<DetectedFormat>> {
-    return PlaceDetector.typeFormatMappings;
+  setValidPlaceTypesAndProperties() {
+    // Process the PLACE_TYPES.
+    this.placeTypes = new Map<string, DCType>();
+    for (const t of PLACE_TYPES) {
+      this.placeTypes.set(t.dcName, t);
+    }
+    // Process the PLACE_PROPERTIES.
+    this.placeProperties = new Map<string, DCProperty>();
+    for (const p of PLACE_PROPERTIES) {
+      this.placeProperties.set(p.dcName, p);
+    }
+
+    // Process the columnToTypePropertyMapping.
+    const tpMap = new Map<string, TypeProperty>();
+    const valArray = Array.from(
+      PlaceDetector.columnToTypePropertyMapping.values()
+    );
+    for (const tpNames of valArray) {
+      for (const tp of tpNames) {
+        // Create unique keys using a combination of the type and property.
+        const key = tp.tName + tp.pName;
+        if (tpMap.has(key)) {
+          continue;
+        }
+        tpMap.set(key, {
+          dcType: this.placeTypes.get(tp.tName),
+          dcProperty: this.placeProperties.get(tp.pName),
+        });
+      }
+    }
+    this.placeTypesAndProperties = new Set(tpMap.values());
   }
 
   /**
@@ -86,33 +153,45 @@ export class PlaceDetector {
     this.countryNumeric = new Set<string>();
 
     for (const country of countriesJSON) {
-      this.countryNames.add(country.name);
+      this.countryNames.add(toAlphaNumeric(country.name));
 
       if (country.iso_code != null) {
-        this.countryISO.add(country.iso_code);
+        this.countryISO.add(toAlphaNumeric(country.iso_code));
       }
       if (country.country_alpha_3_code != null) {
-        this.countryAbbrv3.add(country.country_alpha_3_code);
+        this.countryAbbrv3.add(toAlphaNumeric(country.country_alpha_3_code));
       }
       if (country.country_numeric_code != null) {
-        this.countryNumeric.add(country.country_numeric_code);
+        this.countryNumeric.add(toAlphaNumeric(country.country_numeric_code));
       }
     }
   }
 
   /**
    * The low confidence column detector simply checks if the column header
-   * (string) matches one of the supported place strings in this.placeTypes.
+   * (string) matches one of the keys in columnToTypePropertyMapping.
    * The header is converted to lower case and only alphanumeric chars are used.
    * If there is no match, the return value is null.
    *
    * @param header the name of the column.
    *
-   * @return the place type string (or null).
+   * @return the TypeProperty object (with no PlaceProperty) or null if nothing
+   *  can be determined with low confidence.
    */
-  detectLowConfidence(header: string): string {
+  detectLowConfidence(header: string): TypeProperty {
     const h = header.toLowerCase().replace(/[^a-z0-9]/gi, "");
-    return this.placeTypes.has(h) ? this.placeTypes.get(h) : null;
+    if (PlaceDetector.columnToTypePropertyMapping.has(h)) {
+      // Use any of the TPNames in the Array<TPName> associated with the
+      // value associated with 'h'. All the TPNames associated with 'h' are
+      // expected to have the same place type (tName).
+      const typeName =
+        PlaceDetector.columnToTypePropertyMapping.get(h)[0].tName;
+
+      // Use null for the PlaceProperty because we are only matching types
+      // for the low confidence cases.
+      return { dcType: this.placeTypes.get(typeName) };
+    }
+    return null;
   }
 
   /**
@@ -137,8 +216,7 @@ export class PlaceDetector {
     }
 
     return {
-      detectedType: lcDetected,
-      detectedFormat: PlaceDetector.typeFormatMappings.get(lcDetected)[0],
+      detectedTypeProperty: lcDetected,
       confidence: ConfidenceLevel.Low,
     };
   }
