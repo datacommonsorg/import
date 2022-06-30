@@ -41,9 +41,9 @@ export interface MappingVal {
   // Column that holds the mapping values. Should be set if type is
   // MappingType.COLUMN
   column?: Column;
-  // If column is set, the values in the column correspond to this property in
-  // the KG
-  valueProperty?: string;
+  // When MappedThing is PLACE, the values correspond to this type and property
+  // in the KG.
+  placeTypeProperty?: TypeProperty;
   // List of column headers that act as the mapping values. Should be set if
   // type is MappingType.COLUMN_HEADERS
   headers?: Column[];
