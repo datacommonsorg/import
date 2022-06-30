@@ -68,8 +68,8 @@ function getConstPV(prop: string, val: string): string {
  * ASSUMES: checkMappings() returns success on |mappings|
  * TODO: Allow placeProperty for all mapping types of PLACE
  *
- * @param mappings
- * @returns
+ * @param {mappings} finalized CSV mappings
+ * @returns {string} generated TMCF string
  */
 export function generateTMCF(mappings: Mapping): string {
   const commonPVs = Array<string>();
