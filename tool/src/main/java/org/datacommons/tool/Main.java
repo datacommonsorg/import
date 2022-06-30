@@ -106,6 +106,16 @@ class Main {
       description = "Generates a summary report in html format. Defaults to true.")
   public boolean generateSummaryReport;
 
+  @CommandLine.Option(
+      names = {"-ep", "--existence-checks-place"},
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "Specifies whether to perform existence checks for places found in "
+              + "the `observationAbout` property in StatVarObservation nodes."
+              + "Defaults to true.")
+  public boolean checkObservationAbout;
+
   public static void main(String... args) {
     System.exit(
         new CommandLine(new Main()).setCaseInsensitiveEnumValuesAllowed(true).execute(args));

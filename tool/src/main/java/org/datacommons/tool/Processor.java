@@ -237,7 +237,8 @@ public class Processor {
       g = McfMutator.mutate(g.toBuilder(), logCtx);
 
       // This will set counters/messages in logCtx.
-      boolean success = McfChecker.check(g, existenceChecker, statVarState, logCtx);
+      boolean success =
+          McfChecker.check(g, existenceChecker, statVarState, args.checkObservationAbout, logCtx);
 
       if (args.resolutionMode != Args.ResolutionMode.NONE) {
         g = resolveCommon(g, writerPair);
