@@ -108,7 +108,7 @@ class Main {
 
   @CommandLine.Option(
       names = {"-ep", "--existence-checks-place"},
-      defaultValue = "true",
+      defaultValue = "false",
       scope = CommandLine.ScopeType.INHERIT,
       description =
           "Specifies whether to perform existence checks for places found in "

@@ -125,7 +125,7 @@ Default is `dc_generated/` within current working directory.
 
 Specifies whether to perform existence checks for places found in the `observationAbout` property in StatVarObservation nodes.
 
-Defaults to `true`.
+Defaults to `false`.
 
 ### `-s`, `--stat-checks`
 

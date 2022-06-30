@@ -4,7 +4,7 @@
       "counters": {
         "NumRowSuccesses": "10",
         "NumPVSuccesses": "100",
-        "Existence_NumChecks": "155",
+        "Existence_NumChecks": "145",
         "NumNodeSuccesses": "20",
         "Resolution_NumDcCalls": "1",
         "Existence_NumDcCalls": "2"
@@ -20,7 +20,6 @@
     "LEVEL_ERROR": {
       "counters": {
         "Resolution_DcidAssignmentFailure_Song": "1",
-        "Existence_MissingReference_observationAbout": "10",
         "Resolution_ReferenceToFailedNode_variableMeasured": "1",
         "Resolution_OrphanLocalReference_parent": "1",
         "Resolution_DcidAssignmentFailure_MusicAlbum": "1",
@@ -190,92 +189,12 @@
     },
     "userMessage": "Failed reference existence check :: value-ref: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name', property: 'variableMeasured', node: 'E:COVID19_cases_india->E0'",
     "counterKey": "Existence_MissingReference_variableMeasured"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "2"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:COVID19_cases_india/E1/1'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "11"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:COVID19_cases_india/E1/10'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "3"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:COVID19_cases_india/E1/2'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "4"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:COVID19_cases_india/E1/3'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "5"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:COVID19_cases_india/E1/4'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "6"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:COVID19_cases_india/E1/5'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "7"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:COVID19_cases_india/E1/6'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "8"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:COVID19_cases_india/E1/7'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "9"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:COVID19_cases_india/E1/8'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "10"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:COVID19_cases_india/E1/9'",
-    "counterKey": "Existence_MissingReference_observationAbout"
   }],
   "commandArgs": {
     "existenceChecks": true,
     "resolution": "RESOLUTION_MODE_FULL",
     "numThreads": 1,
     "statChecks": true,
-    "observationAbout": true
+    "observationAbout": false
   }
 }

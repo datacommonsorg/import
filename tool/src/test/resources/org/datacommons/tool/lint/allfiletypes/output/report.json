@@ -4,7 +4,7 @@
       "counters": {
         "NumRowSuccesses": "11",
         "NumPVSuccesses": "107",
-        "Existence_NumChecks": "260",
+        "Existence_NumChecks": "248",
         "NumNodeSuccesses": "15",
         "CSV_MalformedDCIDPVFailures": "4",
         "Existence_NumDcCalls": "2"
@@ -31,7 +31,6 @@
       "counters": {
         "MCF_MalformedComplexValue": "2",
         "Sanity_InvalidChars_location": "1",
-        "Existence_MissingReference_observationAbout": "12",
         "MCF_InvalidLongitude": "1",
         "Sanity_VeryLongDcid": "1",
         "Sanity_InvalidObsDate": "3",
@@ -738,70 +737,6 @@
     "userMessage": "Quantity value must be a number :: value: '[Lat Long]', property: 'location', node: 'dcid:CA-MN'",
     "counterKey": "MCF_QuantityMalformedValue"
   }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "4"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-AB'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "4"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-AB'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "3"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-BC'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "3"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-BC'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "11"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-MN'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "11"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CA-MN'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "9"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CH-SH'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "9"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'CH-SH'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
     "level": "LEVEL_WARNING",
     "location": {
       "file": "AllFileTypes.csv",
@@ -993,44 +928,12 @@
     },
     "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E1'",
     "counterKey": "Existence_MissingReference_measurementMethod"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "5"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'US-SF'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "5"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'US-SF'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "11"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcid'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "AllFileTypes.csv",
-      "lineNumber": "11"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcid'",
-    "counterKey": "Existence_MissingReference_observationAbout"
   }],
   "commandArgs": {
     "existenceChecks": true,
     "resolution": "RESOLUTION_MODE_LOCAL",
     "numThreads": 1,
     "statChecks": true,
-    "observationAbout": true
+    "observationAbout": false
   }
 }

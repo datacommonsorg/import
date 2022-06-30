@@ -4,7 +4,7 @@
       "counters": {
         "NumRowSuccesses": "54",
         "NumPVSuccesses": "432",
-        "Existence_NumChecks": "440",
+        "Existence_NumChecks": "385",
         "NumNodeSuccesses": "54",
         "Existence_NumDcCalls": "1"
       }
@@ -19,7 +19,6 @@
     },
     "LEVEL_ERROR": {
       "counters": {
-        "Existence_MissingReference_observationAbout": "24",
         "Sanity_InconsistentSvObsValues": "1"
       }
     }
@@ -32,198 +31,6 @@
     },
     "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/06', variableMeasured: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive', observationDate: '2020-02-03', value1: 3.0, value2: 8.0",
     "counterKey": "Sanity_InconsistentSvObsValues"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "8"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/07'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "20"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/07'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "34"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/07'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "44"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/07'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "45"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/07'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "47"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/07'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "9"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/201'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "21"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/201'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "48"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/201'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "10"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/211'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "22"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/211'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "49"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/211'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "11"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/221'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "23"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/221'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "50"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/221'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "12"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/231'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "24"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/231'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "51"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/231'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "13"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/241'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "25"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/241'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "52"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/241'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "14"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/25111'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "26"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/25111'",
-    "counterKey": "Existence_MissingReference_observationAbout"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "covid.csv",
-      "lineNumber": "53"
-    },
-    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'geoId/25111'",
-    "counterKey": "Existence_MissingReference_observationAbout"
   }],
   "statsCheckSummary": [{
     "placeDcid": "geoId/07",
@@ -409,6 +216,6 @@
     "resolution": "RESOLUTION_MODE_FULL",
     "numThreads": 1,
     "statChecks": true,
-    "observationAbout": true
+    "observationAbout": false
   }
 }
