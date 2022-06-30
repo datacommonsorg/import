@@ -76,11 +76,11 @@ export class PlaceDetector {
   placeTypesAndProperties: Set<TypeProperty>;
 
   // Mapping between Place types and supported properties associated with each
-  // type. The keys of keyTypePropertyMappings are matched against the column
+  // type. The keys of columnToTypePropertyMapping are matched against the column
   // headers in the user csv files. If a column header matches a key in
-  // keyTypePropertyMappings then the associated value in
-  // keyTypePropertyMappings is the inferred location type and property.
-  static keyTypePropertyMappings = new Map<string, Array<TPName>>([
+  // columnToTypePropertyMapping then the associated value in
+  // columnToTypePropertyMapping is the inferred location type and property.
+  static columnToTypePropertyMapping = new Map<string, Array<TPName>>([
     ["longitude", [{ tName: "GeoCoordinates", pName: "longitude" }]],
     ["latitude", [{ tName: "GeoCoordinates", pName: "latitude" }]],
     ["latlon", [{ tName: "GeoCoordinates", pName: "name" }]],
@@ -108,7 +108,7 @@ export class PlaceDetector {
   }
 
   /**
-   * Processes keyTypePropertyMappings to set the placeTypesAndProperties attribute.
+   * Processes columnToTypePropertyMapping to set the placeTypesAndProperties attribute.
    */
   setValidPlaceTypesAndProperties() {
     // Process the PLACE_TYPES.
@@ -122,9 +122,11 @@ export class PlaceDetector {
       this.placeProperties.set(p.dcName, p);
     }
 
-    // Process the keyTypePropertyMappings.
+    // Process the columnToTypePropertyMapping.
     const tpMap = new Map<string, TypeProperty>();
-    const valArray = Array.from(PlaceDetector.keyTypePropertyMappings.values());
+    const valArray = Array.from(
+      PlaceDetector.columnToTypePropertyMapping.values()
+    );
     for (const tpNames of valArray) {
       for (const tp of tpNames) {
         // Create unique keys using a combination of the type and property.
@@ -167,7 +169,7 @@ export class PlaceDetector {
 
   /**
    * The low confidence column detector simply checks if the column header
-   * (string) matches one of the keys in keyTypePropertyMappings.
+   * (string) matches one of the keys in columnToTypePropertyMapping.
    * The header is converted to lower case and only alphanumeric chars are used.
    * If there is no match, the return value is null.
    *
@@ -178,11 +180,12 @@ export class PlaceDetector {
    */
   detectLowConfidence(header: string): TypeProperty {
     const h = header.toLowerCase().replace(/[^a-z0-9]/gi, "");
-    if (PlaceDetector.keyTypePropertyMappings.has(h)) {
+    if (PlaceDetector.columnToTypePropertyMapping.has(h)) {
       // Use any of the TPNames in the Array<TPName> associated with the
       // value associated with 'h'. All the TPNames associated with 'h' are
       // expected to have the same place type (tName).
-      const typeName = PlaceDetector.keyTypePropertyMappings.get(h)[0].tName;
+      const typeName =
+        PlaceDetector.columnToTypePropertyMapping.get(h)[0].tName;
 
       // Use null for the PlaceProperty because we are only matching types
       // for the low confidence cases.

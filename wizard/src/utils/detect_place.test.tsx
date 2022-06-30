@@ -86,7 +86,7 @@ test("placeDetectionKeys", () => {
     "county",
     "city",
   ]);
-  const got = new Set(PlaceDetector.keyTypePropertyMappings.keys());
+  const got = new Set(PlaceDetector.columnToTypePropertyMapping.keys());
   expect(got).toEqual(expected);
 });
 
