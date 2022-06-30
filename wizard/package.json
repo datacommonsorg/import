@@ -10,7 +10,8 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build -e wizard",
     "test": "jest",
-    "lint": "eslint --fix ."
+    "lint": "eslint --fix .",
+    "test-lint": "eslint ."
   },
   "license": "Apache-2.0",
   "dependencies": {

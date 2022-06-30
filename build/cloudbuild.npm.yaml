@@ -26,5 +26,5 @@ steps:
       - |
         cd wizard
         npm install
-        npm run lint
+        npm run test-lint
         npm run test
