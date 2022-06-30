@@ -22,7 +22,7 @@ export enum MappingType {
 
 export enum MappedThing {
   PLACE = "place",
-  STAT_VAR = "statvar",
+  STAT_VAR = "statVar",
   DATE = "date",
   UNIT = "unit",
   VALUE = "value",
@@ -79,7 +79,7 @@ export interface CsvData {
   // is no expectation that this structure contains all rows.
   // It is also assumed that order of values in the array will correspond to
   // the orderedColumnNames.
-  rowsForDisplay: Map<BigInt, Array<string>>;
+  rowsForDisplay: Map<bigint, Array<string>>;
 
   // The raw csv data can be either in the form of a file or a URL. One of the
   // following fields must be set:

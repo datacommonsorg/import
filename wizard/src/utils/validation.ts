@@ -30,61 +30,69 @@ import { MappedThing, Mapping, MappingType, MappingVal } from "../types";
  * (6) PLACE, when mapped as a COLUMN, must specify placeProperty
  */
 export function checkMappings(mappings: Mapping): Array<string> {
-  var errors = Array<string>();
-  for (const mthing of [MappedThing.PLACE, MappedThing.STAT_VAR, MappedThing.DATE]) {
+  const errors = Array<string>();
+  for (const mthing of [
+    MappedThing.PLACE,
+    MappedThing.STAT_VAR,
+    MappedThing.DATE,
+  ]) {
     if (!mappings.has(mthing)) {
       // Check #2
-      errors.push('Missing required mapping for ' + mthing);
+      errors.push("Missing required mapping for " + mthing);
     }
   }
 
-  var colHdrThings = Array<string>();
-  var numNonConsts = 0;
+  const colHdrThings = Array<string>();
+  let numNonConsts = 0;
   mappings.forEach((mval: MappingVal, mthing: MappedThing) => {
     if (mval.type == MappingType.COLUMN) {
-      if (mval.column == null || mval.column.id == '') {
+      if (mval.column == null || mval.column.id == "") {
         // Check #1
-        errors.push(mthing + ': missing value for COLUMN type ');
+        errors.push(mthing + ": missing value for COLUMN type ");
       }
       if (mthing == MappedThing.PLACE) {
-        if (mval.placeProperty == null || mval.placeProperty == '') {
+        if (mval.placeProperty == null || mval.placeProperty == "") {
           // Check #6
-          errors.push('Place mapped as COLUMN type is missing placeProperty');
+          errors.push("Place mapped as COLUMN type is missing placeProperty");
         }
       }
       numNonConsts++;
     } else if (mval.type == MappingType.COLUMN_HEADER) {
       if (mval.headers == null || mval.headers.length == 0) {
         // Check #1
-        errors.push(mthing + ': missing value for COLUMN_HEADER type');
+        errors.push(mthing + ": missing value for COLUMN_HEADER type");
       }
       colHdrThings.push(mthing);
       numNonConsts++;
     } else if (mval.type == MappingType.CONSTANT) {
       if (mval.constant == null || mval.constant.length == 0) {
         // Check #1
-        errors.push(mthing + ': missing value for CONSTANT type');
+        errors.push(mthing + ": missing value for CONSTANT type");
       }
     }
   });
   if (numNonConsts == 0) {
     // Check #5
-    errors.push('Atleast one mapping should identify a column');
+    errors.push("Atleast one mapping should identify a column");
   }
   if (colHdrThings.length == 0) {
     if (!mappings.has(MappedThing.VALUE)) {
       // Check #4
-      errors.push('Unable to detect \'value\' column');
+      errors.push("Unable to detect 'value' column");
     }
   } else if (colHdrThings.length == 1) {
     if (mappings.has(MappedThing.VALUE)) {
       // Check #4a
-      errors.push('Found multiple confusing \'value\' columns');
+      errors.push("Found multiple confusing 'value' columns");
     }
   } else {
     // Check #3
-    errors.push('Multiple ' + MappingType.COLUMN_HEADER +
-                ' mappings found: ' + colHdrThings.join(', '));
+    errors.push(
+      "Multiple " +
+        MappingType.COLUMN_HEADER +
+        " mappings found: " +
+        colHdrThings.join(", ")
+    );
   }
 
   return errors;
