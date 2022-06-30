@@ -363,7 +363,8 @@ public class DcidGenerator {
       id = id >>> MAX_NUM_BITS;
       if (id == 0) return i + 1;
     }
-    throw new ArithmeticException("Unexpected base32Encoding error: '" + new String(id_buf) + "' : " + i);
+    throw new ArithmeticException(
+        "Unexpected base32Encoding error: '" + new String(id_buf) + "' : " + i);
   }
 
   private static String getLongId(String input) {
