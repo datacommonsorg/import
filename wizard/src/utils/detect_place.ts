@@ -26,23 +26,13 @@ const MIN_HIGH_CONF_DETECT = 0.9;
 
 // All supported Place types must be encoded below.
 const PLACE_TYPES: DCType[] = [
-<<<<<<< HEAD
-  { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
-  { dcName: "State", displayName: "State" },
-  { dcName: "Country", displayName: "Country" },
-  { dcName: "Province", displayName: "Province" },
-  { dcName: "Municipality", displayName: "Municipality" },
-  { dcName: "County", displayName: "County" },
-  { dcName: "City", displayName: "City" },
-=======
   { dcid: "GeoCoordinates", displayName: "Geo Coordinates" },
-  { dcid: "state", displayName: "State" },
-  { dcid: "country", displayName: "Country" },
-  { dcid: "province", displayName: "Province" },
-  { dcid: "municipality", displayName: "Municipality" },
-  { dcid: "county", displayName: "County" },
-  { dcid: "city", displayName: "City" },
->>>>>>> master
+  { dcid: "State", displayName: "State" },
+  { dcid: "Country", displayName: "Country" },
+  { dcid: "Province", displayName: "Province" },
+  { dcid: "Municipality", displayName: "Municipality" },
+  { dcid: "County", displayName: "County" },
+  { dcid: "City", displayName: "City" },
 ];
 
 // All supported Place properties must be encoded below.
