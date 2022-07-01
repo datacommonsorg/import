@@ -392,7 +392,7 @@ public class StatCheckerTest {
   public void testShouldExtractSeriesInfo() {
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(logCtx, testFolder.getRoot().toPath());
-    StatChecker sc = new StatChecker(lw, null, false);
+    StatChecker sc = new StatChecker(lw, null);
 
     // For type-inferred namespaces
     List<String> typeInferredNamespaces = List.of("geoId/", "nuts/");
