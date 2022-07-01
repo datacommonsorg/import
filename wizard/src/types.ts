@@ -28,7 +28,7 @@ export enum MappedThing {
   VALUE = "value",
 }
 
-interface Column {
+export interface Column {
   // id of the column
   id: string;
   // original column header
