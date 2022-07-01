@@ -52,54 +52,54 @@ export function checkMappings(mappings: Mapping): Array<string> {
   const colHdrThings = Array<string>();
   let numNonConsts = 0;
   mappings.forEach((mval: MappingVal, mthing: MappedThing) => {
-    if (mthing == MappedThing.PLACE) {
+    if (mthing === MappedThing.PLACE) {
       if (
         mval.placeProperty == null ||
         mval.placeProperty.dcid == null ||
-        mval.placeProperty.dcid == ""
+        mval.placeProperty.dcid === ""
       ) {
         // Check #6
         errors.push("Place mapping is missing placeProperty");
       }
     }
-    if (mval.type == MappingType.COLUMN) {
-      if (mval.column == null || mval.column.id == "") {
+    if (mval.type === MappingType.COLUMN) {
+      if (mval.column == null || mval.column.id === "") {
         // Check #1
         errors.push(mthing + ": missing value for COLUMN type ");
       }
       numNonConsts++;
-    } else if (mval.type == MappingType.COLUMN_HEADER) {
-      if (mval.headers == null || mval.headers.length == 0) {
+    } else if (mval.type === MappingType.COLUMN_HEADER) {
+      if (mval.headers == null || mval.headers.length === 0) {
         // Check #1
         errors.push(mthing + ": missing value for COLUMN_HEADER type");
       }
       colHdrThings.push(mthing);
       numNonConsts++;
-    } else if (mval.type == MappingType.CONSTANT) {
-      if (mval.constant == null || mval.constant.length == 0) {
+    } else if (mval.type === MappingType.CONSTANT) {
+      if (mval.constant == null || mval.constant.length === 0) {
         // Check #1
         errors.push(mthing + ": missing value for CONSTANT type");
       }
-      if (mthing == MappedThing.PLACE) {
+      if (mthing === MappedThing.PLACE) {
         // Check #8
         errors.push(mthing + ": must not be CONSTANT type");
       }
     }
-    if (mthing == MappedThing.VALUE && mval.type != MappingType.COLUMN) {
+    if (mthing === MappedThing.VALUE && mval.type !== MappingType.COLUMN) {
       // Check #7
       errors.push(mthing + ": must be a COLUMN type");
     }
   });
-  if (numNonConsts == 0) {
+  if (numNonConsts === 0) {
     // Check #5
     errors.push("Atleast one mapping should identify a column");
   }
-  if (colHdrThings.length == 0) {
+  if (colHdrThings.length === 0) {
     if (!mappings.has(MappedThing.VALUE)) {
       // Check #4
       errors.push("Unable to detect 'value' column");
     }
-  } else if (colHdrThings.length == 1) {
+  } else if (colHdrThings.length === 1) {
     if (mappings.has(MappedThing.VALUE)) {
       // Check #4a
       errors.push("Found multiple confusing 'value' columns");

@@ -41,25 +41,25 @@ const MAPPED_THING_TO_SVOBS_PROP = new Map<MappedThing, string>([
 
 function initNode(idx: number, type: string): Array<string> {
   const pvs = Array<string>();
-  pvs.push("Node: E:" + FIXED_CSV_TABLE + "->E" + idx.toString());
-  pvs.push("typeOf: dcs:" + type);
+  pvs.push(`Node: E:${FIXED_CSV_TABLE}->E${idx.toString()}`);
+  pvs.push(`typeOf: dcs:${type}`);
   return pvs;
 }
 
 function getColPV(prop: string, col: string): string {
-  return prop + ": C:" + FIXED_CSV_TABLE + "->" + col;
+  return `${prop}: C:${FIXED_CSV_TABLE}->${col}`;
 }
 
 function getEntPV(prop: string, idx: number): string {
-  return prop + ": E:" + FIXED_CSV_TABLE + "->E" + idx.toString();
+  return `${prop}: E:${FIXED_CSV_TABLE}->E${idx.toString()}`;
 }
 
 function getConstPV(prop: string, val: string): string {
   // Constants are references except when it is a date or name.
-  if (prop == "observationDate" || prop == "name") {
-    return prop + ': "' + val + '"';
+  if (prop === "observationDate" || prop === "name") {
+    return `${prop}: "${val}"`;
   } else {
-    return prop + ": dcid:" + val;
+    return `${prop}: dcid:${val}`;
   }
 }
 
@@ -88,13 +88,13 @@ export function generateTMCF(mappings: Mapping): string {
   // Everything other than COLUMN_HEADER mappings get repeated in every node.
   mappings.forEach((mval: MappingVal, mthing: MappedThing) => {
     const mappedProp = MAPPED_THING_TO_SVOBS_PROP.get(mthing);
-    if (mval.type == MappingType.CONSTANT) {
+    if (mval.type === MappingType.CONSTANT) {
       // Constants are references except when it is a date.
       // NOTE: we cannot have PLACE here.
       commonPVs.push(getConstPV(mappedProp, mval.constant));
-    } else if (mval.type == MappingType.COLUMN) {
-      if (mthing == MappedThing.PLACE) {
-        if (mval.placeProperty.dcid == DCID_PROP) {
+    } else if (mval.type === MappingType.COLUMN) {
+      if (mthing === MappedThing.PLACE) {
+        if (mval.placeProperty.dcid === DCID_PROP) {
           // Place with DCID property can be a column ref.
           commonPVs.push(getColPV(mappedProp, mval.column.id));
         } else {
@@ -112,7 +112,7 @@ export function generateTMCF(mappings: Mapping): string {
         // For non-place types, column directly contains the corresponding values.
         commonPVs.push(getColPV(mappedProp, mval.column.id));
       }
-    } else if (mval.type == MappingType.COLUMN_HEADER) {
+    } else if (mval.type === MappingType.COLUMN_HEADER) {
       // Remember which mapped thing has the column header for next pass.
       // Validation has ensured there can be no more than one.
       colHdrThing = mthing;
@@ -129,8 +129,8 @@ export function generateTMCF(mappings: Mapping): string {
     mval.headers.forEach((hdr) => {
       let hasPlaceRef = false;
       if (
-        colHdrThing == MappedThing.PLACE &&
-        mval.placeProperty.dcid != DCID_PROP
+        colHdrThing === MappedThing.PLACE &&
+        mval.placeProperty.dcid !== DCID_PROP
       ) {
         hasPlaceRef = true;
         // For place with non-DCID property, we should introduce a place node.
