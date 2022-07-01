@@ -132,11 +132,9 @@ export interface DetectedDetails {
   confidence: ConfidenceLevel;
 }
 
-// A map from the mapped thing (aka StatVarObs fields) to the data value.
-//
-// This can be expected to contain *all* the required properties.
+// A map from the mapped thing (aka StatVarObs props) to the property value.
 export type Observation = Map<MappedThing, string>;
 
-// Observations keyed by the CSV row number.  A row has multiple observations
-// when the Mapping is of type COLUMN_HEADER with multiple MappingVal.headers.
+// Observations keyed by CSV row number. A row has multiple observations when
+// the Mapping is of type COLUMN_HEADER with multiple MappingVal.headers.
 export type RowObservations = Map<RowNumber, Array<Observation>>;

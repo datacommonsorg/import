@@ -92,6 +92,7 @@ test("GenerateRowObservations_SingleValueColumn", () => {
       [1000, ["CHN", "Count_Dog", "2022", "100000001"]],
     ]),
   };
+  // NOTE: Row 2 only has no entry because value is empty.
   const expected: Map<RowNumber, Array<string>> = new Map([
     [1, ["Value of Count_Person for USA in 2022 is 329000000 USDollar"]],
     [1000, ["Value of Count_Dog for CHN in 2022 is 100000001 USDollar"]],
@@ -152,6 +153,7 @@ test("GenerateRowObservations_DateValuesInHeader", () => {
       [1000, ["CHN", "Count_Dog", "100000001", "110000000"]],
     ]),
   };
+  // NOTE: Row 2 only has one entry because the value is empty.
   const expected: Map<RowNumber, Array<string>> = new Map([
     [
       1,

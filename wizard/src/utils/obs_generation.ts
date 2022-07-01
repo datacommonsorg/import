@@ -25,6 +25,7 @@ import {
   RowObservations,
 } from "../types";
 
+// Helper maps used while generating observaitons.
 interface ObsGenMaps {
   // Column Index -> mapping thing found in header for VALUE.
   valCol2Hdr: Map<number, MappedThing>;
@@ -34,6 +35,11 @@ interface ObsGenMaps {
   thing2Const: Map<MappedThing, string>;
 }
 
+/**
+ * Given a mapping and CSV Data computes the observations for every row
+ * corresponding to |rowsForDisplay|.
+ * ASSUMES: checkMappings() returns success on |mappings|
+ */
 export function generateRowObservations(
   mappings: Mapping,
   csvData: CsvData
@@ -76,6 +82,10 @@ export function generateRowObservations(
   return rowObs;
 }
 
+/**
+ * Given an Observation that was returned from generateRowObservations(), returns
+ * a human-readable string.
+ */
 export function observationToString(obs: Observation): string {
   const sv = obs.get(MappedThing.STAT_VAR);
   const place = obs.get(MappedThing.PLACE);
