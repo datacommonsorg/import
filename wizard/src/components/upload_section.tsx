@@ -22,6 +22,8 @@ import { getPredictions } from "../utils/heuristics";
 
 const NUM_FIRST_ROWS = 3;
 const NUM_LAST_ROWS = 3;
+const MAX_COLUMN_SAMPLES = 100;
+
 interface UploadSectionProps {
   onCsvProcessed: (csv: CsvData) => void;
   onPredictionRetrieved: (predictedMapping: Mapping) => void;
@@ -76,6 +78,7 @@ export function UploadSection(props: UploadSectionProps): JSX.Element {
 
   function onFileUpload(files: FileList): void {
     if (files.length < 1) {
+      // TODO: handle malformed csv
       return;
     }
     setIsProcessingData(true);
@@ -85,6 +88,7 @@ export function UploadSection(props: UploadSectionProps): JSX.Element {
       rowsForDisplay: new Map(),
       rawCsvFile: files[0],
     };
+    // key is column id
     const sampleColumnValues: Map<string, Set<string>> = new Map();
     let currRow = 0;
     Papa.parse(files[0], {
@@ -116,10 +120,9 @@ export function UploadSection(props: UploadSectionProps): JSX.Element {
               return;
             }
             const colId = csvData.orderedColumns[idx].id;
-            if (!sampleColumnValues.has(colId)) {
-              return;
+            if (sampleColumnValues.get(colId).size < MAX_COLUMN_SAMPLES) {
+              sampleColumnValues.get(colId).add(data);
             }
-            sampleColumnValues.get(colId).add(data);
           });
         }
         currRow++;
