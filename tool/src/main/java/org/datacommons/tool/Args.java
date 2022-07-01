@@ -19,6 +19,7 @@ class Args {
   public int numThreads = 1;
   public Path outputDir = null;
   public boolean generateSummaryReport = true;
+  public boolean checkObservationAbout = false;
 
   public String toString() {
     StringBuilder argStr = new StringBuilder();
@@ -34,6 +35,7 @@ class Args {
     if (samplePlaces != null) {
       argStr.append(", sample-places=" + Strings.join(samplePlaces, ':'));
     }
+    argStr.append(", observation-about=" + checkObservationAbout);
     return argStr.toString();
   }
 
@@ -50,6 +52,7 @@ class Args {
     }
     argsBuilder.setStatChecks(doStatChecks);
     if (samplePlaces != null) argsBuilder.addAllSamplePlaces(samplePlaces);
+    argsBuilder.setObservationAbout(checkObservationAbout);
     return argsBuilder.build();
   }
 
