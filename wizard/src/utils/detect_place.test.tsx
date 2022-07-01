@@ -23,51 +23,51 @@ test("placeTypesAndProperties", () => {
   const expected = new Set<TypeProperty>([
     {
       dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
-      dcProperty: { dcName: "Longitude", displayName: "Longitude" },
+      dcProperty: { dcName: "longitude", displayName: "Longitude" },
     },
     {
       dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
-      dcProperty: { dcName: "Latitude", displayName: "Latitude" },
+      dcProperty: { dcName: "latitude", displayName: "Latitude" },
     },
     {
       dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
-      dcProperty: { dcName: "Name", displayName: "Name" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
     {
       dcType: { dcName: "Country", displayName: "Country" },
-      dcProperty: { dcName: "Name", displayName: "Name" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
     {
       dcType: { dcName: "Country", displayName: "Country" },
-      dcProperty: { dcName: "IsoCode", displayName: "ISO Code" },
+      dcProperty: { dcName: "isoCode", displayName: "ISO Code" },
     },
     {
       dcType: { dcName: "Country", displayName: "Country" },
-      dcProperty: { dcName: "CountryAlpha3Code", displayName: "Alpha 3 Code" },
+      dcProperty: { dcName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
     },
     {
       dcType: { dcName: "Country", displayName: "Country" },
-      dcProperty: { dcName: "CountryNumericCode", displayName: "Numeric Code" },
+      dcProperty: { dcName: "countryNumericCode", displayName: "Numeric Code" },
     },
     {
       dcType: { dcName: "State", displayName: "State" },
-      dcProperty: { dcName: "Name", displayName: "Name" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
     {
       dcType: { dcName: "Province", displayName: "Province" },
-      dcProperty: { dcName: "Name", displayName: "Name" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
     {
       dcType: { dcName: "Municipality", displayName: "Municipality" },
-      dcProperty: { dcName: "Name", displayName: "Name" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
     {
       dcType: { dcName: "County", displayName: "County" },
-      dcProperty: { dcName: "Name", displayName: "Name" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
     {
       dcType: { dcName: "City", displayName: "City" },
-      dcProperty: { dcName: "Name", displayName: "Name" },
+      dcProperty: { dcName: "name", displayName: "Name" },
     },
   ]);
   expect(det.placeTypesAndProperties).toEqual(expected);
@@ -217,7 +217,7 @@ test("countryHighConf", () => {
       ],
       expected: {
         dcType: { dcName: "Country", displayName: "Country" },
-        dcProperty: { dcName: "Name", displayName: "Name" },
+        dcProperty: { dcName: "name", displayName: "Name" },
       },
     },
     {
@@ -225,7 +225,7 @@ test("countryHighConf", () => {
       colArray: ["us", "no", "lk", "nz", "sa", "au", "pk", "in", "bd", "it"],
       expected: {
         dcType: { dcName: "Country", displayName: "Country" },
-        dcProperty: { dcName: "IsoCode", displayName: "ISO Code" },
+        dcProperty: { dcName: "isoCode", displayName: "ISO Code" },
       },
     },
     {
@@ -245,7 +245,7 @@ test("countryHighConf", () => {
       expected: {
         dcType: { dcName: "Country", displayName: "Country" },
         dcProperty: {
-          dcName: "CountryAlpha3Code",
+          dcName: "countryAlpha3Code",
           displayName: "Alpha 3 Code",
         },
       },
@@ -267,7 +267,7 @@ test("countryHighConf", () => {
       expected: {
         dcType: { dcName: "Country", displayName: "Country" },
         dcProperty: {
-          dcName: "CountryNumericCode",
+          dcName: "countryNumericCode",
           displayName: "Numeric Code",
         },
       },
@@ -289,7 +289,7 @@ test("countryHighConf", () => {
       expected: {
         dcType: { dcName: "Country", displayName: "Country" },
         dcProperty: {
-          dcName: "CountryNumericCode",
+          dcName: "countryNumericCode",
           displayName: "Numeric Code",
         },
       },
@@ -358,7 +358,7 @@ test("placeDetection", () => {
   const expectedHighConf = {
     detectedTypeProperty: {
       dcType: { dcName: "Country", displayName: "Country" },
-      dcProperty: { dcName: "CountryAlpha3Code", displayName: "Alpha 3 Code" },
+      dcProperty: { dcName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
     },
     confidence: ConfidenceLevel.High,
   };

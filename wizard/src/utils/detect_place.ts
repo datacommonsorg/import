@@ -37,12 +37,12 @@ const PLACE_TYPES: DCType[] = [
 
 // All supported Place properties must be encoded below.
 const PLACE_PROPERTIES: DCProperty[] = [
-  { dcName: "Name", displayName: "Name" },
-  { dcName: "Longitude", displayName: "Longitude" },
-  { dcName: "Latitude", displayName: "Latitude" },
-  { dcName: "IsoCode", displayName: "ISO Code" },
-  { dcName: "CountryAlpha3Code", displayName: "Alpha 3 Code" },
-  { dcName: "CountryNumericCode", displayName: "Numeric Code" },
+  { dcName: "name", displayName: "Name" },
+  { dcName: "longitude", displayName: "Longitude" },
+  { dcName: "latitude", displayName: "Latitude" },
+  { dcName: "isoCode", displayName: "ISO Code" },
+  { dcName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
+  { dcName: "countryNumericCode", displayName: "Numeric Code" },
 ];
 
 // Helper interface to refer to the place types and place properties.
@@ -81,24 +81,24 @@ export class PlaceDetector {
   // columnToTypePropertyMapping then the associated value in
   // columnToTypePropertyMapping is the inferred location type and property.
   static columnToTypePropertyMapping = new Map<string, Array<TPName>>([
-    ["longitude", [{ tName: "GeoCoordinates", pName: "Longitude" }]],
-    ["latitude", [{ tName: "GeoCoordinates", pName: "Latitude" }]],
-    ["latlon", [{ tName: "GeoCoordinates", pName: "Name" }]],
-    ["geocoordinates", [{ tName: "GeoCoordinates", pName: "Name" }]],
+    ["longitude", [{ tName: "GeoCoordinates", pName: "longitude" }]],
+    ["latitude", [{ tName: "GeoCoordinates", pName: "latitude" }]],
+    ["latlon", [{ tName: "GeoCoordinates", pName: "name" }]],
+    ["geocoordinates", [{ tName: "GeoCoordinates", pName: "name" }]],
     [
       "country",
       [
-        { tName: "Country", pName: "Name" },
-        { tName: "Country", pName: "IsoCode" },
-        { tName: "Country", pName: "CountryAlpha3Code" },
-        { tName: "Country", pName: "CountryNumericCode" },
+        { tName: "Country", pName: "name" },
+        { tName: "Country", pName: "isoCode" },
+        { tName: "Country", pName: "countryAlpha3Code" },
+        { tName: "Country", pName: "countryNumericCode" },
       ],
     ],
-    ["state", [{ tName: "State", pName: "Name" }]],
-    ["province", [{ tName: "Province", pName: "Name" }]],
-    ["municipality", [{ tName: "Municipality", pName: "Name" }]],
-    ["county", [{ tName: "County", pName: "Name" }]],
-    ["city", [{ tName: "City", pName: "Name" }]],
+    ["state", [{ tName: "State", pName: "name" }]],
+    ["province", [{ tName: "Province", pName: "name" }]],
+    ["municipality", [{ tName: "Municipality", pName: "name" }]],
+    ["county", [{ tName: "County", pName: "name" }]],
+    ["city", [{ tName: "City", pName: "name" }]],
   ]);
 
   constructor() {
@@ -211,10 +211,10 @@ export class PlaceDetector {
     let numValid = 0;
 
     const counters = new Map<string, number>();
-    counters["Name"] = 0;
-    counters["IsoCode"] = 0;
-    counters["CountryAlpha3Code"] = 0;
-    counters["CountryNumericCode"] = 0;
+    counters["name"] = 0;
+    counters["isoCode"] = 0;
+    counters["countryAlpha3Code"] = 0;
+    counters["countryNumericCode"] = 0;
     for (const cVal of column) {
       if (cVal == null) {
         continue;
@@ -223,13 +223,13 @@ export class PlaceDetector {
       numValid++;
 
       if (this.countryNames.has(v)) {
-        counters["Name"]++;
+        counters["name"]++;
       } else if (this.countryISO.has(v)) {
-        counters["IsoCode"]++;
+        counters["isoCode"]++;
       } else if (this.countryAbbrv3.has(v)) {
-        counters["CountryAlpha3Code"]++;
+        counters["countryAlpha3Code"]++;
       } else if (this.countryNumeric.has(v)) {
-        counters["CountryNumericCode"]++;
+        counters["countryNumericCode"]++;
       }
     }
 
