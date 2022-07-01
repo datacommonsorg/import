@@ -83,17 +83,17 @@ public class StringUtil {
 
   public static boolean isNumber(String val) {
     try {
-      long l = Long.parseLong(val);
+      Long.parseLong(val);
       return true;
     } catch (NumberFormatException e) {
     }
     try {
-      long l = Long.parseUnsignedLong(val);
+      Long.parseUnsignedLong(val);
       return true;
     } catch (NumberFormatException e) {
     }
     try {
-      double d = Double.parseDouble(val);
+      Double.parseDouble(val);
       return true;
     } catch (NumberFormatException e) {
     }
