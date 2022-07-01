@@ -27,22 +27,22 @@ const MIN_HIGH_CONF_DETECT = 0.9;
 // All supported Place types must be encoded below.
 const PLACE_TYPES: DCType[] = [
   { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
-  { dcName: "state", displayName: "State" },
-  { dcName: "country", displayName: "Country" },
-  { dcName: "province", displayName: "Province" },
-  { dcName: "municipality", displayName: "Municipality" },
-  { dcName: "county", displayName: "County" },
-  { dcName: "city", displayName: "City" },
+  { dcName: "State", displayName: "State" },
+  { dcName: "Country", displayName: "Country" },
+  { dcName: "Province", displayName: "Province" },
+  { dcName: "Municipality", displayName: "Municipality" },
+  { dcName: "County", displayName: "County" },
+  { dcName: "City", displayName: "City" },
 ];
 
 // All supported Place properties must be encoded below.
 const PLACE_PROPERTIES: DCProperty[] = [
-  { dcName: "name", displayName: "Name" },
-  { dcName: "longitude", displayName: "Longitude" },
-  { dcName: "latitude", displayName: "Latitude" },
-  { dcName: "isoCode", displayName: "ISO Code" },
-  { dcName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
-  { dcName: "countryNumericCode", displayName: "Numeric Code" },
+  { dcName: "Name", displayName: "Name" },
+  { dcName: "Longitude", displayName: "Longitude" },
+  { dcName: "Latitude", displayName: "Latitude" },
+  { dcName: "IsoCode", displayName: "ISO Code" },
+  { dcName: "CountryAlpha3Code", displayName: "Alpha 3 Code" },
+  { dcName: "CountryNumericCode", displayName: "Numeric Code" },
 ];
 
 // Helper interface to refer to the place types and place properties.
@@ -81,24 +81,24 @@ export class PlaceDetector {
   // columnToTypePropertyMapping then the associated value in
   // columnToTypePropertyMapping is the inferred location type and property.
   static columnToTypePropertyMapping = new Map<string, Array<TPName>>([
-    ["longitude", [{ tName: "GeoCoordinates", pName: "longitude" }]],
-    ["latitude", [{ tName: "GeoCoordinates", pName: "latitude" }]],
-    ["latlon", [{ tName: "GeoCoordinates", pName: "name" }]],
-    ["geocoordinates", [{ tName: "GeoCoordinates", pName: "name" }]],
+    ["longitude", [{ tName: "GeoCoordinates", pName: "Longitude" }]],
+    ["latitude", [{ tName: "GeoCoordinates", pName: "Latitude" }]],
+    ["latlon", [{ tName: "GeoCoordinates", pName: "Name" }]],
+    ["geocoordinates", [{ tName: "GeoCoordinates", pName: "Name" }]],
     [
       "country",
       [
-        { tName: "country", pName: "name" },
-        { tName: "country", pName: "isoCode" },
-        { tName: "country", pName: "countryAlpha3Code" },
-        { tName: "country", pName: "countryNumericCode" },
+        { tName: "Country", pName: "Name" },
+        { tName: "Country", pName: "IsoCode" },
+        { tName: "Country", pName: "CountryAlpha3Code" },
+        { tName: "Country", pName: "CountryNumericCode" },
       ],
     ],
-    ["state", [{ tName: "state", pName: "name" }]],
-    ["province", [{ tName: "province", pName: "name" }]],
-    ["municipality", [{ tName: "municipality", pName: "name" }]],
-    ["county", [{ tName: "county", pName: "name" }]],
-    ["city", [{ tName: "city", pName: "name" }]],
+    ["state", [{ tName: "State", pName: "Name" }]],
+    ["province", [{ tName: "Province", pName: "Name" }]],
+    ["municipality", [{ tName: "Municipality", pName: "Name" }]],
+    ["county", [{ tName: "County", pName: "Name" }]],
+    ["city", [{ tName: "City", pName: "Name" }]],
   ]);
 
   constructor() {
@@ -130,7 +130,7 @@ export class PlaceDetector {
     for (const tpNames of valArray) {
       for (const tp of tpNames) {
         // Create unique keys using a combination of the type and property.
-        const key = tp.tName + tp.pName;
+        const key = (tp.tName + tp.pName).toLowerCase();
         if (tpMap.has(key)) {
           continue;
         }
@@ -147,6 +147,8 @@ export class PlaceDetector {
    * Process the countriesJSON object to generate the required sets.
    */
   preProcessCountries() {
+    // TODO: verify that country names do not have special chars. If they do,
+    // work out a separate solution.
     this.countryNames = new Set<string>();
     this.countryISO = new Set<string>();
     this.countryAbbrv3 = new Set<string>();
@@ -207,11 +209,12 @@ export class PlaceDetector {
    */
   detectCountryHighConf(column: Array<string>): TypeProperty {
     let numValid = 0;
-    let nameCounter = 0;
-    let isoCounter = 0;
-    let alphaNum3Counter = 0;
-    let numberCounter = 0;
 
+    const counters = new Map<string, number>();
+    counters["Name"] = 0;
+    counters["IsoCode"] = 0;
+    counters["CountryAlpha3Code"] = 0;
+    counters["CountryNumericCode"] = 0;
     for (const cVal of column) {
       if (cVal == null) {
         continue;
@@ -220,34 +223,26 @@ export class PlaceDetector {
       numValid++;
 
       if (this.countryNames.has(v)) {
-        nameCounter++;
+        counters["Name"]++;
       } else if (this.countryISO.has(v)) {
-        isoCounter++;
+        counters["IsoCode"]++;
       } else if (this.countryAbbrv3.has(v)) {
-        alphaNum3Counter++;
+        counters["CountryAlpha3Code"]++;
       } else if (this.countryNumeric.has(v)) {
-        numberCounter++;
+        counters["CountryNumericCode"]++;
       }
     }
 
-    // Determine the detected property.
-    let p: DCProperty;
-    if (nameCounter > numValid * MIN_HIGH_CONF_DETECT) {
-      p = this.placeProperties.get("name");
-    } else if (isoCounter > numValid * MIN_HIGH_CONF_DETECT) {
-      p = this.placeProperties.get("isoCode");
-    } else if (alphaNum3Counter > numValid * MIN_HIGH_CONF_DETECT) {
-      p = this.placeProperties.get("countryAlpha3Code");
-    } else if (numberCounter > numValid * MIN_HIGH_CONF_DETECT) {
-      p = this.placeProperties.get("countryNumericCode");
-    } else {
-      p = null;
+    // Determine the detected TypeProperty. Type is Country for all.
+    for (const [key, value] of Object.entries(counters)) {
+      if (value > numValid * MIN_HIGH_CONF_DETECT) {
+        return {
+          dcType: this.placeTypes.get("Country"),
+          dcProperty: this.placeProperties.get(key),
+        };
+      }
     }
-    if (p != null) {
-      return { dcType: this.placeTypes.get("country"), dcProperty: p };
-    } else {
-      return null;
-    }
+    return null;
   }
 
   /**
@@ -281,7 +276,6 @@ export class PlaceDetector {
    * @return the DetectedDetails object (or null).
    */
   detect(header: string, column: Array<string>): DetectedDetails {
-    const lcDetected = this.detectLowConfidence(header);
     const hcDetected = this.detectHighConfidence(header, column);
 
     if (hcDetected != null) {
@@ -290,13 +284,15 @@ export class PlaceDetector {
         detectedTypeProperty: hcDetected,
         confidence: ConfidenceLevel.High,
       };
-    } else if (lcDetected != null) {
+    }
+    // Now try low confidence detection.
+    const lcDetected = this.detectLowConfidence(header);
+    if (lcDetected != null) {
       return {
         detectedTypeProperty: lcDetected,
         confidence: ConfidenceLevel.Low,
       };
-    } else {
-      return null;
     }
+    return null;
   }
 }
