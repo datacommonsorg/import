@@ -22,7 +22,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.junit.Before;
@@ -30,7 +29,6 @@ import org.junit.Test;
 
 // TODO: Add test once sanity-check is implemented.
 public class TmcfCsvParserTest {
-  private static final Logger LOGGER = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
   private Debug.Log.Builder log = Debug.Log.newBuilder();
   private LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
 

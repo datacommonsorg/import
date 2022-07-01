@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
@@ -137,7 +136,7 @@ public class Processor {
     if (args.doStatChecks) {
       Set<String> samplePlaces =
           args.samplePlaces == null ? null : new HashSet<>(args.samplePlaces);
-      statChecker = new StatChecker(logCtx, samplePlaces, args.verbose);
+      statChecker = new StatChecker(logCtx, samplePlaces);
     }
     execService = Executors.newFixedThreadPool(args.numThreads);
   }
@@ -205,7 +204,7 @@ public class Processor {
             }
           });
     }
-    List<Future<Void>> futures = execService.invokeAll(cbs);
+    execService.invokeAll(cbs);
 
     if (existenceChecker != null) existenceChecker.drainRemoteCalls();
   }
@@ -278,11 +277,8 @@ public class Processor {
 
   // Called only when existenceChecker is enabled.
   private void checkNodes() throws IOException, InterruptedException, DCTooManyFailuresException {
-    long numNodesChecked = 0;
     for (Mcf.McfGraph n : nodesForVariousChecks) {
       McfChecker.check(n, existenceChecker, statVarState, logCtx);
-      numNodesChecked += n.getNodesCount();
-      numNodesChecked++;
       if (!logCtx.trackStatus(n.getNodesCount(), "nodes checked")) {
         throw new DCTooManyFailuresException("checkNodes encountered too many failures");
       }
@@ -351,7 +347,7 @@ public class Processor {
             }
           });
     }
-    List<Future<Void>> futures = execService.invokeAll(cbs);
+    execService.invokeAll(cbs);
 
     idResolver.drainRemoteCalls();
   }
@@ -396,12 +392,10 @@ public class Processor {
     if (statChecker == null) return;
     logger.info("Performing stats checks");
     statChecker.check();
-    statChecker.fetchSamplePlaceNames(args.verbose, httpClient);
+    statChecker.fetchSamplePlaceNames(httpClient);
   }
 
   private static class DCTooManyFailuresException extends Exception {
-    public DCTooManyFailuresException() {}
-
     public DCTooManyFailuresException(String message) {
       super(message);
     }

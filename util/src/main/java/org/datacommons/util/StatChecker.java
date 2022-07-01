@@ -69,7 +69,6 @@ public class StatChecker {
           "StatsCheck_Data_Holes");
   private static final Set<String> TYPE_INFERRED_PLACE_NAMESPACES = Set.of("geoId", "nuts");
   private static final int NUM_SUMMARY_ENTRIES_PER_COUNTER = 10;
-  private final boolean verbose;
   private final LogWrapper logCtx;
   // key is place dcid
   private final Map<String, PlaceSeriesSummary> placeSeriesSummaryMap;
@@ -87,9 +86,8 @@ public class StatChecker {
   // Creates a StatChecker instance. If no samplePlaces are provided, for each pair of (place
   // namespace, place dcid length), we will use the first 5 places that stat var observations are
   // added for as the sample places.
-  public StatChecker(LogWrapper logCtx, Set<String> samplePlaces, boolean verbose) {
+  public StatChecker(LogWrapper logCtx, Set<String> samplePlaces) {
     this.logCtx = logCtx;
-    this.verbose = verbose;
     this.placeSeriesSummaryMap = new HashMap<>();
     this.samplePlaces = new ConcurrentHashMap<>();
     this.svObValues = new ConcurrentHashMap<>();
@@ -541,7 +539,7 @@ public class StatChecker {
 
   // Makes API requests to get the names of the sample places from the DC
   // API, and puts that information to StatChecker.
-  public void fetchSamplePlaceNames(Boolean verbose, HttpClient httpClient) {
+  public void fetchSamplePlaceNames(HttpClient httpClient) {
     try {
       JsonObject apiResponse = ApiHelper.fetchPropertyValues(httpClient, getSamplePlaces(), "name");
       if (apiResponse != null) {
