@@ -22,16 +22,16 @@ test("placeTypesAndProperties", () => {
   const det = new PlaceDetector();
   const expected = new Set<TypeProperty>([
     {
-      dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
-      dcProperty: { dcName: "longitude", displayName: "Longitude" },
+      dcType: { dcid: "GeoCoordinates", displayName: "Geo Coordinates" },
+      dcProperty: { dcid: "longitude", displayName: "Longitude" },
     },
     {
-      dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
-      dcProperty: { dcName: "latitude", displayName: "Latitude" },
+      dcType: { dcid: "GeoCoordinates", displayName: "Geo Coordinates" },
+      dcProperty: { dcid: "latitude", displayName: "Latitude" },
     },
     {
-      dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
-      dcProperty: { dcName: "name", displayName: "Name" },
+      dcType: { dcid: "GeoCoordinates", displayName: "Geo Coordinates" },
+      dcProperty: { dcid: "name", displayName: "Name" },
     },
     {
       dcType: { dcName: "Country", displayName: "Country" },
@@ -150,7 +150,7 @@ test("placeLowConfidenceDetection", () => {
   expect(_.isEqual(det.detectLowConfidence("city"), cityType)).toBe(true);
 
   const geoType = {
-    dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
+    dcType: { dcid: "GeoCoordinates", displayName: "Geo Coordinates" },
   };
   expect(_.isEqual(det.detectLowConfidence("Lat-Lon"), geoType)).toBe(true);
   expect(_.isEqual(det.detectLowConfidence("Lat,Lon"), geoType)).toBe(true);

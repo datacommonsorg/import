@@ -26,6 +26,7 @@ const MIN_HIGH_CONF_DETECT = 0.9;
 
 // All supported Place types must be encoded below.
 const PLACE_TYPES: DCType[] = [
+<<<<<<< HEAD
   { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
   { dcName: "State", displayName: "State" },
   { dcName: "Country", displayName: "Country" },
@@ -33,16 +34,25 @@ const PLACE_TYPES: DCType[] = [
   { dcName: "Municipality", displayName: "Municipality" },
   { dcName: "County", displayName: "County" },
   { dcName: "City", displayName: "City" },
+=======
+  { dcid: "GeoCoordinates", displayName: "Geo Coordinates" },
+  { dcid: "state", displayName: "State" },
+  { dcid: "country", displayName: "Country" },
+  { dcid: "province", displayName: "Province" },
+  { dcid: "municipality", displayName: "Municipality" },
+  { dcid: "county", displayName: "County" },
+  { dcid: "city", displayName: "City" },
+>>>>>>> master
 ];
 
 // All supported Place properties must be encoded below.
 const PLACE_PROPERTIES: DCProperty[] = [
-  { dcName: "name", displayName: "Name" },
-  { dcName: "longitude", displayName: "Longitude" },
-  { dcName: "latitude", displayName: "Latitude" },
-  { dcName: "isoCode", displayName: "ISO Code" },
-  { dcName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
-  { dcName: "countryNumericCode", displayName: "Numeric Code" },
+  { dcid: "name", displayName: "Name" },
+  { dcid: "longitude", displayName: "Longitude" },
+  { dcid: "latitude", displayName: "Latitude" },
+  { dcid: "isoCode", displayName: "ISO Code" },
+  { dcid: "countryAlpha3Code", displayName: "Alpha 3 Code" },
+  { dcid: "countryNumericCode", displayName: "Numeric Code" },
 ];
 
 // Helper interface to refer to the place types and place properties.
@@ -114,12 +124,12 @@ export class PlaceDetector {
     // Process the PLACE_TYPES.
     this.placeTypes = new Map<string, DCType>();
     for (const t of PLACE_TYPES) {
-      this.placeTypes.set(t.dcName, t);
+      this.placeTypes.set(t.dcid, t);
     }
     // Process the PLACE_PROPERTIES.
     this.placeProperties = new Map<string, DCProperty>();
     for (const p of PLACE_PROPERTIES) {
-      this.placeProperties.set(p.dcName, p);
+      this.placeProperties.set(p.dcid, p);
     }
 
     // Process the columnToTypePropertyMapping.
