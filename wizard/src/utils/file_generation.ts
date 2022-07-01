@@ -37,15 +37,6 @@ export function generateSvMCF(csv: CsvData, mappings: Mapping): string {
 }
 
 /**
- * Generates the tmcf file given the correct mappings
- * @param mappings
- * @returns
- */
-export function generateTMCF(mappings: Mapping): string {
-  return "";
-}
-
-/**
  * Generates the translation metadata given the predicted mappings and correct
  * mappings
  * @param predictions

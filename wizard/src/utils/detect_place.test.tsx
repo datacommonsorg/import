@@ -22,52 +22,52 @@ test("placeTypesAndProperties", () => {
   const det = new PlaceDetector();
   const expected = new Set<TypeProperty>([
     {
-      dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
-      dcProperty: { dcName: "longitude", displayName: "Longitude" },
+      dcType: { dcid: "GeoCoordinates", displayName: "Geo Coordinates" },
+      dcProperty: { dcid: "longitude", displayName: "Longitude" },
     },
     {
-      dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
-      dcProperty: { dcName: "latitude", displayName: "Latitude" },
+      dcType: { dcid: "GeoCoordinates", displayName: "Geo Coordinates" },
+      dcProperty: { dcid: "latitude", displayName: "Latitude" },
     },
     {
-      dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
-      dcProperty: { dcName: "name", displayName: "Name" },
+      dcType: { dcid: "GeoCoordinates", displayName: "Geo Coordinates" },
+      dcProperty: { dcid: "name", displayName: "Name" },
     },
     {
-      dcType: { dcName: "country", displayName: "Country" },
-      dcProperty: { dcName: "name", displayName: "Name" },
+      dcType: { dcid: "country", displayName: "Country" },
+      dcProperty: { dcid: "name", displayName: "Name" },
     },
     {
-      dcType: { dcName: "country", displayName: "Country" },
-      dcProperty: { dcName: "isoCode", displayName: "ISO Code" },
+      dcType: { dcid: "country", displayName: "Country" },
+      dcProperty: { dcid: "isoCode", displayName: "ISO Code" },
     },
     {
-      dcType: { dcName: "country", displayName: "Country" },
-      dcProperty: { dcName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
+      dcType: { dcid: "country", displayName: "Country" },
+      dcProperty: { dcid: "countryAlpha3Code", displayName: "Alpha 3 Code" },
     },
     {
-      dcType: { dcName: "country", displayName: "Country" },
-      dcProperty: { dcName: "countryNumericCode", displayName: "Numeric Code" },
+      dcType: { dcid: "country", displayName: "Country" },
+      dcProperty: { dcid: "countryNumericCode", displayName: "Numeric Code" },
     },
     {
-      dcType: { dcName: "state", displayName: "State" },
-      dcProperty: { dcName: "name", displayName: "Name" },
+      dcType: { dcid: "state", displayName: "State" },
+      dcProperty: { dcid: "name", displayName: "Name" },
     },
     {
-      dcType: { dcName: "province", displayName: "Province" },
-      dcProperty: { dcName: "name", displayName: "Name" },
+      dcType: { dcid: "province", displayName: "Province" },
+      dcProperty: { dcid: "name", displayName: "Name" },
     },
     {
-      dcType: { dcName: "municipality", displayName: "Municipality" },
-      dcProperty: { dcName: "name", displayName: "Name" },
+      dcType: { dcid: "municipality", displayName: "Municipality" },
+      dcProperty: { dcid: "name", displayName: "Name" },
     },
     {
-      dcType: { dcName: "county", displayName: "County" },
-      dcProperty: { dcName: "name", displayName: "Name" },
+      dcType: { dcid: "county", displayName: "County" },
+      dcProperty: { dcid: "name", displayName: "Name" },
     },
     {
-      dcType: { dcName: "city", displayName: "City" },
-      dcProperty: { dcName: "name", displayName: "Name" },
+      dcType: { dcid: "city", displayName: "City" },
+      dcProperty: { dcid: "name", displayName: "Name" },
     },
   ]);
   expect(det.placeTypesAndProperties).toEqual(expected);
@@ -97,10 +97,10 @@ test("placeLowConfidenceDetection", () => {
   expect(det.detectLowConfidence(" ")).toBe(null);
   expect(det.detectLowConfidence("continent")).toBe(null);
 
-  const countryType = { dcType: { dcName: "country", displayName: "Country" } };
-  const stateType = { dcType: { dcName: "state", displayName: "State" } };
-  const countyType = { dcType: { dcName: "county", displayName: "County" } };
-  const cityType = { dcType: { dcName: "city", displayName: "City" } };
+  const countryType = { dcType: { dcid: "country", displayName: "Country" } };
+  const stateType = { dcType: { dcid: "state", displayName: "State" } };
+  const countyType = { dcType: { dcid: "county", displayName: "County" } };
+  const cityType = { dcType: { dcid: "city", displayName: "City" } };
 
   expect(_.isEqual(det.detectLowConfidence("Country.."), countryType)).toBe(
     true
@@ -115,7 +115,7 @@ test("placeLowConfidenceDetection", () => {
   expect(_.isEqual(det.detectLowConfidence("city"), cityType)).toBe(true);
 
   const geoType = {
-    dcType: { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
+    dcType: { dcid: "GeoCoordinates", displayName: "Geo Coordinates" },
   };
   expect(_.isEqual(det.detectLowConfidence("Lat-Lon"), geoType)).toBe(true);
   expect(_.isEqual(det.detectLowConfidence("Lat,Lon"), geoType)).toBe(true);
@@ -144,11 +144,11 @@ test("detectionLowConf", () => {
   expect(det.detect("", [])).toBe(null);
 
   const expected: DetectedDetails = {
-    detectedTypeProperty: { dcType: { dcName: "city", displayName: "City" } },
+    detectedTypeProperty: { dcType: { dcid: "city", displayName: "City" } },
     confidence: ConfidenceLevel.Low,
   };
   const notExpected: DetectedDetails = {
-    detectedTypeProperty: { dcType: { dcName: "city", displayName: "City" } },
+    detectedTypeProperty: { dcType: { dcid: "city", displayName: "City" } },
     confidence: ConfidenceLevel.High, // should be Low.
   };
 
