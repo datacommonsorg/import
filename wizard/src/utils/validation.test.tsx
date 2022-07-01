@@ -42,8 +42,8 @@ test("Fail_MalformedMappingVal", () => {
     ],
   ]);
   const expected = [
+    "Place mapping is missing placeProperty",
     "place: missing value for COLUMN type ",
-    "Place mapped as COLUMN type is missing placeProperty",
     "statVar: missing value for COLUMN_HEADER type",
     "date: missing value for CONSTANT type",
   ];
@@ -84,7 +84,7 @@ test("Fail_ValueMissing", () => {
       {
         type: MappingType.COLUMN,
         column: { id: "iso", header: "iso", columnIdx: 1 },
-        placeProperty: "isoCode",
+        placeProperty: { dcid: "isoCode", displayName: "isoCode" },
       },
     ],
     [
@@ -113,7 +113,7 @@ test("Pass_DateInColumnHeader", () => {
       {
         type: MappingType.COLUMN,
         column: { id: "iso", header: "iso", columnIdx: 1 },
-        placeProperty: "isoCode",
+        placeProperty: { dcid: "isoCode", displayName: "isoCode" },
       },
     ],
     [
@@ -152,7 +152,7 @@ test("Pass_NoColumnHeader", () => {
       {
         type: MappingType.COLUMN,
         column: { id: "iso", header: "iso", columnIdx: 1 },
-        placeProperty: "isoCode",
+        placeProperty: { dcid: "isoCode", displayName: "isoCode" },
       },
     ],
     [

@@ -42,9 +42,10 @@ export interface MappingVal {
   // Column that holds the mapping values. Should be set if type is
   // MappingType.COLUMN
   column?: Column;
-  // When MappedThing is PLACE, the values correspond to this type and property
-  // in the KG.
-  placeTypeProperty?: TypeProperty;
+  // When MappedThing is PLACE, the value corresponds to place property in KG.
+  placeProperty?: DCProperty;
+  // When MappedThing is PLACE, the value corresponds to place type in KG.
+  placeType?: DCType;
   // List of column headers that act as the mapping values. Should be set if
   // type is MappingType.COLUMN_HEADERS
   headers?: Column[];
@@ -94,7 +95,7 @@ export interface CsvData {
 
 // An abstraction for a Data Commons entity, e.g. a place type or property.
 interface Entity {
-  dcName: string;
+  dcid: string;
   displayName: string;
 }
 

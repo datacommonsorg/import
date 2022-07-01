@@ -27,10 +27,10 @@ import { MappedThing, Mapping, MappingType, MappingVal } from "../types";
  * (4) If there are no COLUMN_HEADER mappings, VALUE should be mapped
  *     (a) Conversely, if COLUMN_HEADER mapping exists, VALUE must not be mapped
  * (5) At least one of the mappings must specify a COLUMN or a COLUMN_HEADER
- * (6) PLACE, when mapped as a COLUMN, must specify placeProperty
+ * (6) PLACE must specify placeProperty
  * (7) VALUE, if it appears, has to be COLUMN
+ * (8) PLACE should not be CONSTANT (its atypical and not exposed in UI)
  *
- * TODO: Allow placeProperty for all mapping types of PLACE
  * TODO: Consider returning enum + string pair for error categories
  *
  * @param {mappings} CSV mappings
@@ -52,16 +52,20 @@ export function checkMappings(mappings: Mapping): Array<string> {
   const colHdrThings = Array<string>();
   let numNonConsts = 0;
   mappings.forEach((mval: MappingVal, mthing: MappedThing) => {
+    if (mthing == MappedThing.PLACE) {
+      if (
+        mval.placeProperty == null ||
+        mval.placeProperty.dcid == null ||
+        mval.placeProperty.dcid == ""
+      ) {
+        // Check #6
+        errors.push("Place mapping is missing placeProperty");
+      }
+    }
     if (mval.type == MappingType.COLUMN) {
       if (mval.column == null || mval.column.id == "") {
         // Check #1
         errors.push(mthing + ": missing value for COLUMN type ");
-      }
-      if (mthing == MappedThing.PLACE) {
-        if (mval.placeProperty == null || mval.placeProperty == "") {
-          // Check #6
-          errors.push("Place mapped as COLUMN type is missing placeProperty");
-        }
       }
       numNonConsts++;
     } else if (mval.type == MappingType.COLUMN_HEADER) {
@@ -75,6 +79,10 @@ export function checkMappings(mappings: Mapping): Array<string> {
       if (mval.constant == null || mval.constant.length == 0) {
         // Check #1
         errors.push(mthing + ": missing value for CONSTANT type");
+      }
+      if (mthing == MappedThing.PLACE) {
+        // Check #8
+        errors.push(mthing + ": must not be CONSTANT type");
       }
     }
     if (mthing == MappedThing.VALUE && mval.type != MappingType.COLUMN) {

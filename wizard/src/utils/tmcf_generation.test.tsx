@@ -25,7 +25,7 @@ test("SingleNodeTMCF", () => {
       {
         type: MappingType.COLUMN,
         column: { id: "iso", header: "iso", columnIdx: 1 },
-        placeProperty: "isoCode",
+        placeProperty: { dcid: "isoCode", displayName: "isoCode" },
       },
     ],
     [
@@ -72,14 +72,14 @@ test("SingleNodeTMCF", () => {
   expect(generateTMCF(input)).toEqual(expected);
 });
 
-test("MultiNodeTMCF", () => {
+test("MultiNodeTMCF_DateValueInHeader", () => {
   const input: Mapping = new Map([
     [
       MappedThing.PLACE,
       {
         type: MappingType.COLUMN,
         column: { id: "id", header: "id", columnIdx: 1 },
-        placeProperty: "dcid",
+        placeProperty: { dcid: "dcid", displayName: "dcid" },
       },
     ],
     [
@@ -123,5 +123,69 @@ test("MultiNodeTMCF", () => {
     "observationAbout: C:CSVTable->id\n" +
     "variableMeasured: C:CSVTable->indicators\n" +
     "unit: dcid:USDollar\n";
+  expect(generateTMCF(input)).toEqual(expected);
+});
+
+test("MultiNodeTMCF_PlaceValueInHeader", () => {
+  const input: Mapping = new Map([
+    [
+      MappedThing.PLACE,
+      {
+        type: MappingType.COLUMN_HEADER,
+        placeProperty: { dcid: "name", displayName: "name" },
+        placeType: { dcid: "AdministrativeArea1", displayName: "State" },
+        headers: [
+          { id: "California", header: "California", columnIdx: 3 },
+          { id: "Nevada", header: "Nevada", columnIdx: 4 },
+        ],
+      },
+    ],
+    [
+      MappedThing.STAT_VAR,
+      {
+        type: MappingType.COLUMN,
+        column: { id: "indicators", header: "indicators", columnIdx: 2 },
+      },
+    ],
+    [
+      MappedThing.DATE,
+      {
+        type: MappingType.COLUMN,
+        column: { id: "year", header: "year", columnIdx: 1 },
+      },
+    ],
+    [
+      MappedThing.UNIT,
+      {
+        type: MappingType.CONSTANT,
+        constant: "USDollar",
+      },
+    ],
+  ]);
+  const expected =
+    "Node: E:CSVTable->E0\n" +
+    "typeOf: dcs:AdministrativeArea1\n" +
+    'name: "California"\n' +
+    "\n" +
+    "Node: E:CSVTable->E2\n" +
+    "typeOf: dcs:AdministrativeArea1\n" +
+    'name: "Nevada"\n' +
+    "\n" +
+    "Node: E:CSVTable->E1\n" +
+    "typeOf: dcs:StatVarObservation\n" +
+    "value: C:CSVTable->California\n" +
+    "observationAbout: E:CSVTable->E0\n" +
+    "variableMeasured: C:CSVTable->indicators\n" +
+    "observationDate: C:CSVTable->year\n" +
+    "unit: dcid:USDollar\n" +
+    "\n" +
+    "Node: E:CSVTable->E3\n" +
+    "typeOf: dcs:StatVarObservation\n" +
+    "value: C:CSVTable->Nevada\n" +
+    "observationAbout: E:CSVTable->E2\n" +
+    "variableMeasured: C:CSVTable->indicators\n" +
+    "observationDate: C:CSVTable->year\n" +
+    "unit: dcid:USDollar\n";
+
   expect(generateTMCF(input)).toEqual(expected);
 });

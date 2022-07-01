@@ -55,18 +55,25 @@ function getEntPV(prop: string, idx: number): string {
 }
 
 function getConstPV(prop: string, val: string): string {
-  // Constants are references except when it is a date.
-  if (prop == "observationDate") {
+  // Constants are references except when it is a date or name.
+  if (prop == "observationDate" || prop == "name") {
     return prop + ': "' + val + '"';
   } else {
     return prop + ": dcid:" + val;
   }
 }
 
+function getPlaceType(mval: MappingVal): string {
+  let placeType = PLACE_TYPE;
+  if (mval.placeType != null && mval.placeType.dcid != null) {
+    placeType = mval.placeType.dcid;
+  }
+  return placeType;
+}
+
 /**
  * Generates the tmcf file given the correct mappings.
  * ASSUMES: checkMappings() returns success on |mappings|
- * TODO: Allow placeProperty for all mapping types of PLACE
  *
  * @param {mappings} finalized CSV mappings
  * @returns {string} generated TMCF string
@@ -74,8 +81,8 @@ function getConstPV(prop: string, val: string): string {
 export function generateTMCF(mappings: Mapping): string {
   const commonPVs = Array<string>();
   let colHdrThing: MappedThing = null;
-  const tmcfNodes = Array<Array<string>>();
-  let idx = 0;
+  const placeNodes = Array<Array<string>>();
+  let nodeIdx = 0;
 
   // Do one pass over the mappings building the common PVs in all TMCF nodes.
   // Everything other than COLUMN_HEADER mappings get repeated in every node.
@@ -83,21 +90,23 @@ export function generateTMCF(mappings: Mapping): string {
     const mappedProp = MAPPED_THING_TO_SVOBS_PROP.get(mthing);
     if (mval.type == MappingType.CONSTANT) {
       // Constants are references except when it is a date.
+      // NOTE: we cannot have PLACE here.
       commonPVs.push(getConstPV(mappedProp, mval.constant));
     } else if (mval.type == MappingType.COLUMN) {
       if (mthing == MappedThing.PLACE) {
-        if (mval.placeProperty == DCID_PROP) {
+        if (mval.placeProperty.dcid == DCID_PROP) {
           // Place with DCID property can be a column ref.
           commonPVs.push(getColPV(mappedProp, mval.column.id));
         } else {
           // For place with non-DCID property, we should introduce a place node,
           // and use entity reference.
-          const node = initNode(idx, PLACE_TYPE);
-          node.push(getColPV(mval.placeProperty, mval.column.id));
-          tmcfNodes.push(node);
-          commonPVs.push(getEntPV(mappedProp, idx));
+          const node = initNode(nodeIdx, getPlaceType(mval));
+          node.push(getColPV(mval.placeProperty.dcid, mval.column.id));
+          placeNodes.push(node);
+          nodeIdx++;
 
-          idx++;
+          // Reference the place node.
+          commonPVs.push(getEntPV(mappedProp, nodeIdx - 1));
         }
       } else {
         // For non-place types, column directly contains the corresponding values.
@@ -110,36 +119,54 @@ export function generateTMCF(mappings: Mapping): string {
     }
   });
 
-  // Track the beginning of SVObs nodes.
-  const beginObsIdx = idx;
-
+  // Populate the observation nodes now.
+  let obsNodes = Array<Array<string>>();
   if (colHdrThing != null) {
     const mappedProp = MAPPED_THING_TO_SVOBS_PROP.get(colHdrThing);
-    // Build one node per header entry.
-    mappings.get(colHdrThing).headers.forEach((hdr) => {
-      const node = initNode(idx, SVOBS_TYPE);
+    const mval = mappings.get(colHdrThing);
+
+    // Build one node per header entry in COLUMN_HEADER.
+    mval.headers.forEach((hdr) => {
+      let hasPlaceRef = false;
+      if (
+        colHdrThing == MappedThing.PLACE &&
+        mval.placeProperty.dcid != DCID_PROP
+      ) {
+        hasPlaceRef = true;
+        // For place with non-DCID property, we should introduce a place node.
+        const node = initNode(nodeIdx, getPlaceType(mval));
+        node.push(getConstPV(mval.placeProperty.dcid, hdr.id));
+        placeNodes.push(node);
+        nodeIdx++;
+      }
+      const node = initNode(nodeIdx, SVOBS_TYPE);
       // Each column contains numerical values of SVObs.
       node.push(getColPV(VALUE_PROP, hdr.id));
-      node.push(getConstPV(mappedProp, hdr.id));
-      tmcfNodes.push(node);
-      idx++;
+      if (hasPlaceRef) {
+        // Reference place node created above.
+        node.push(getEntPV(mappedProp, nodeIdx - 1));
+      } else {
+        node.push(getConstPV(mappedProp, hdr.id));
+      }
+      obsNodes.push(node);
+      nodeIdx++;
     });
   } else {
     // There is only one node in this case.
-    tmcfNodes.push(initNode(idx, SVOBS_TYPE));
-    idx++;
+    obsNodes.push(initNode(nodeIdx, SVOBS_TYPE));
+    nodeIdx++;
   }
 
   // Add the common PVs to Obs TMCF nodes.
-  for (let i = beginObsIdx; i < idx; i++) {
-    tmcfNodes[i] = tmcfNodes[i].concat(commonPVs);
-  }
+  obsNodes = obsNodes.map((val) => val.concat(commonPVs));
 
   // Build newline delimited strings.
   const nodeStrings = Array<string>();
-  tmcfNodes.forEach((pvs) => {
-    nodeStrings.push(pvs.join("\n"));
-    nodeStrings.push("");
+  [placeNodes, obsNodes].forEach((array) => {
+    array.forEach((pvs) => {
+      nodeStrings.push(pvs.join("\n"));
+      nodeStrings.push("");
+    });
   });
   return nodeStrings.join("\n");
 }
