@@ -25,6 +25,7 @@ export enum MappedThing {
   STAT_VAR = "statVar",
   DATE = "date",
   UNIT = "unit",
+  VALUE = "value",
 }
 
 export interface Column {
@@ -41,9 +42,10 @@ export interface MappingVal {
   // Column that holds the mapping values. Should be set if type is
   // MappingType.COLUMN
   column?: Column;
-  // When MappedThing is PLACE, the values correspond to this type and property
-  // in the KG.
-  placeTypeProperty?: TypeProperty;
+  // When MappedThing is PLACE, the value corresponds to place property in KG.
+  placeProperty?: DCProperty;
+  // When MappedThing is PLACE, the value corresponds to place type in KG.
+  placeType?: DCType;
   // List of column headers that act as the mapping values. Should be set if
   // type is MappingType.COLUMN_HEADERS
   headers?: Column[];
@@ -52,7 +54,7 @@ export interface MappingVal {
   constant?: string;
 }
 
-export type Mapping = Record<MappedThing, MappingVal>;
+export type Mapping = Map<MappedThing, MappingVal>;
 
 // CvsData should contain the minimum sufficient data from the
 // data csv file which will be used for all processing, e.g. column detection,
@@ -78,7 +80,7 @@ export interface CsvData {
   // is no expectation that this structure contains all rows.
   // It is also assumed that order of values in the array will correspond to
   // the orderedColumnNames.
-  rowsForDisplay: Map<BigInt, Array<string>>;
+  rowsForDisplay: Map<bigint, Array<string>>;
 
   // The raw csv data can be either in the form of a file or a URL. One of the
   // following fields must be set:
@@ -93,7 +95,7 @@ export interface CsvData {
 
 // An abstraction for a Data Commons entity, e.g. a place type or property.
 interface Entity {
-  dcName: string;
+  dcid: string;
   displayName: string;
 }
 

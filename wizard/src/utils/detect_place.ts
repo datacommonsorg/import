@@ -26,23 +26,23 @@ const MIN_HIGH_CONF_DETECT = 0.9;
 
 // All supported Place types must be encoded below.
 const PLACE_TYPES: DCType[] = [
-  { dcName: "GeoCoordinates", displayName: "Geo Coordinates" },
-  { dcName: "state", displayName: "State" },
-  { dcName: "country", displayName: "Country" },
-  { dcName: "province", displayName: "Province" },
-  { dcName: "municipality", displayName: "Municipality" },
-  { dcName: "county", displayName: "County" },
-  { dcName: "city", displayName: "City" },
+  { dcid: "GeoCoordinates", displayName: "Geo Coordinates" },
+  { dcid: "State", displayName: "State" },
+  { dcid: "Country", displayName: "Country" },
+  { dcid: "Province", displayName: "Province" },
+  { dcid: "Municipality", displayName: "Municipality" },
+  { dcid: "County", displayName: "County" },
+  { dcid: "City", displayName: "City" },
 ];
 
 // All supported Place properties must be encoded below.
 const PLACE_PROPERTIES: DCProperty[] = [
-  { dcName: "name", displayName: "Name" },
-  { dcName: "longitude", displayName: "Longitude" },
-  { dcName: "latitude", displayName: "Latitude" },
-  { dcName: "isoCode", displayName: "ISO Code" },
-  { dcName: "countryAlpha3Code", displayName: "Alpha 3 Code" },
-  { dcName: "countryNumericCode", displayName: "Numeric Code" },
+  { dcid: "name", displayName: "Name" },
+  { dcid: "longitude", displayName: "Longitude" },
+  { dcid: "latitude", displayName: "Latitude" },
+  { dcid: "isoCode", displayName: "ISO Code" },
+  { dcid: "countryAlpha3Code", displayName: "Alpha 3 Code" },
+  { dcid: "countryNumericCode", displayName: "Numeric Code" },
 ];
 
 // Helper interface to refer to the place types and place properties.
@@ -88,17 +88,17 @@ export class PlaceDetector {
     [
       "country",
       [
-        { tName: "country", pName: "name" },
-        { tName: "country", pName: "isoCode" },
-        { tName: "country", pName: "countryAlpha3Code" },
-        { tName: "country", pName: "countryNumericCode" },
+        { tName: "Country", pName: "name" },
+        { tName: "Country", pName: "isoCode" },
+        { tName: "Country", pName: "countryAlpha3Code" },
+        { tName: "Country", pName: "countryNumericCode" },
       ],
     ],
-    ["state", [{ tName: "state", pName: "name" }]],
-    ["province", [{ tName: "province", pName: "name" }]],
-    ["municipality", [{ tName: "municipality", pName: "name" }]],
-    ["county", [{ tName: "county", pName: "name" }]],
-    ["city", [{ tName: "city", pName: "name" }]],
+    ["state", [{ tName: "State", pName: "name" }]],
+    ["province", [{ tName: "Province", pName: "name" }]],
+    ["municipality", [{ tName: "Municipality", pName: "name" }]],
+    ["county", [{ tName: "County", pName: "name" }]],
+    ["city", [{ tName: "City", pName: "name" }]],
   ]);
 
   constructor() {
@@ -114,12 +114,12 @@ export class PlaceDetector {
     // Process the PLACE_TYPES.
     this.placeTypes = new Map<string, DCType>();
     for (const t of PLACE_TYPES) {
-      this.placeTypes.set(t.dcName, t);
+      this.placeTypes.set(t.dcid, t);
     }
     // Process the PLACE_PROPERTIES.
     this.placeProperties = new Map<string, DCProperty>();
     for (const p of PLACE_PROPERTIES) {
-      this.placeProperties.set(p.dcName, p);
+      this.placeProperties.set(p.dcid, p);
     }
 
     // Process the columnToTypePropertyMapping.
@@ -130,7 +130,7 @@ export class PlaceDetector {
     for (const tpNames of valArray) {
       for (const tp of tpNames) {
         // Create unique keys using a combination of the type and property.
-        const key = tp.tName + tp.pName;
+        const key = (tp.tName + tp.pName).toLowerCase();
         if (tpMap.has(key)) {
           continue;
         }
@@ -147,6 +147,8 @@ export class PlaceDetector {
    * Process the countriesJSON object to generate the required sets.
    */
   preProcessCountries() {
+    // TODO: verify that country names do not have special chars. If they do,
+    // work out a separate solution.
     this.countryNames = new Set<string>();
     this.countryISO = new Set<string>();
     this.countryAbbrv3 = new Set<string>();
@@ -195,10 +197,76 @@ export class PlaceDetector {
   }
 
   /**
+   * Country is detected with high confidence if > 90% of the non-null column
+   * values match one of the country format (property) arrays.
+   * If country is not detected, null is returned.
+   * If country is detected, the TypeProperty is returned.
+   *
+   * @param column: an array of strings representing the column values.
+   *
+   * @return the TypeProperty object or null if nothing can be determined with
+   *  high confidence.
+   */
+  detectCountryHighConf(column: Array<string>): TypeProperty {
+    let numValid = 0;
+
+    const counters = new Map<string, number>();
+    counters["name"] = 0;
+    counters["isoCode"] = 0;
+    counters["countryAlpha3Code"] = 0;
+    counters["countryNumericCode"] = 0;
+    for (const cVal of column) {
+      if (cVal == null) {
+        continue;
+      }
+      const v = toAlphaNumeric(cVal);
+      numValid++;
+
+      if (this.countryNames.has(v)) {
+        counters["name"]++;
+      } else if (this.countryISO.has(v)) {
+        counters["isoCode"]++;
+      } else if (this.countryAbbrv3.has(v)) {
+        counters["countryAlpha3Code"]++;
+      } else if (this.countryNumeric.has(v)) {
+        counters["countryNumericCode"]++;
+      }
+    }
+
+    // Determine the detected TypeProperty. Type is Country for all.
+    for (const [key, value] of Object.entries(counters)) {
+      if (value > numValid * MIN_HIGH_CONF_DETECT) {
+        return {
+          dcType: this.placeTypes.get("Country"),
+          dcProperty: this.placeProperties.get(key),
+        };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Detects with high confidence the type and property for a Place.
+   * If a place cannot be detected, returns null.
+   * Currently only supports detecting country (place type).
+   *
+   * @param header the name of the column.
+   * @param column: an array of strings representing the column values.
+   *
+   * @return the TypeProperty object or null if nothing can be determined with
+   * high confidence.
+   */
+  detectHighConfidence(header: string, column: Array<string>): TypeProperty {
+    // For now, only supports detecting country with high confidence.
+    // In the future, this should be modified to run through a list of detailed
+    // high confidence place detectors.
+    return this.detectCountryHighConf(column);
+  }
+
+  /**
    * Detecting Place.
    * If nothing is detected, null is returned.
-   * Otherwise, the detectedType, the detectedFormat and and confidence level
-   * are returned.
+   * Otherwise, the detectedTypeProperty is returned.
    * It is up to the consumer, e.g. in heuristics.ts, to decide whether to
    * pass the low confidence detection back to the user (or not).
    *
@@ -208,16 +276,23 @@ export class PlaceDetector {
    * @return the DetectedDetails object (or null).
    */
   detect(header: string, column: Array<string>): DetectedDetails {
-    // High Confidence detection is TBD. For now, only doing Low Confidence
-    // detection.
-    const lcDetected = this.detectLowConfidence(header);
-    if (lcDetected == null) {
-      return null;
-    }
+    const hcDetected = this.detectHighConfidence(header, column);
 
-    return {
-      detectedTypeProperty: lcDetected,
-      confidence: ConfidenceLevel.Low,
-    };
+    if (hcDetected != null) {
+      // High Confidence detection is given higher priority.
+      return {
+        detectedTypeProperty: hcDetected,
+        confidence: ConfidenceLevel.High,
+      };
+    }
+    // Now try low confidence detection.
+    const lcDetected = this.detectLowConfidence(header);
+    if (lcDetected != null) {
+      return {
+        detectedTypeProperty: lcDetected,
+        confidence: ConfidenceLevel.Low,
+      };
+    }
+    return null;
   }
 }

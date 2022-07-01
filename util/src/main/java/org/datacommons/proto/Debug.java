@@ -5276,6 +5276,19 @@ public final class Debug {
      * @return The bytes of the samplePlaces at the given index.
      */
     com.google.protobuf.ByteString getSamplePlacesBytes(int index);
+
+    /**
+     * <code>optional bool observation_about = 6;</code>
+     *
+     * @return Whether the observationAbout field is set.
+     */
+    boolean hasObservationAbout();
+    /**
+     * <code>optional bool observation_about = 6;</code>
+     *
+     * @return The observationAbout.
+     */
+    boolean getObservationAbout();
   }
   /** Protobuf type {@code org.datacommons.proto.CommandArgs} */
   public static final class CommandArgs extends com.google.protobuf.GeneratedMessageV3
@@ -5363,6 +5376,12 @@ public final class Debug {
                   mutable_bitField0_ |= 0x00000010;
                 }
                 samplePlaces_.add(bs);
+                break;
+              }
+            case 48:
+              {
+                bitField0_ |= 0x00000010;
+                observationAbout_ = input.readBool();
                 break;
               }
             default:
@@ -5668,6 +5687,25 @@ public final class Debug {
       return samplePlaces_.getByteString(index);
     }
 
+    public static final int OBSERVATION_ABOUT_FIELD_NUMBER = 6;
+    private boolean observationAbout_;
+    /**
+     * <code>optional bool observation_about = 6;</code>
+     *
+     * @return Whether the observationAbout field is set.
+     */
+    public boolean hasObservationAbout() {
+      return ((bitField0_ & 0x00000010) != 0);
+    }
+    /**
+     * <code>optional bool observation_about = 6;</code>
+     *
+     * @return The observationAbout.
+     */
+    public boolean getObservationAbout() {
+      return observationAbout_;
+    }
+
     private byte memoizedIsInitialized = -1;
 
     @java.lang.Override
@@ -5697,6 +5735,9 @@ public final class Debug {
       for (int i = 0; i < samplePlaces_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 5, samplePlaces_.getRaw(i));
       }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        output.writeBool(6, observationAbout_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -5725,6 +5766,9 @@ public final class Debug {
         }
         size += dataSize;
         size += 1 * getSamplePlacesList().size();
+      }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        size += com.google.protobuf.CodedOutputStream.computeBoolSize(6, observationAbout_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5758,6 +5802,10 @@ public final class Debug {
         if (getStatChecks() != other.getStatChecks()) return false;
       }
       if (!getSamplePlacesList().equals(other.getSamplePlacesList())) return false;
+      if (hasObservationAbout() != other.hasObservationAbout()) return false;
+      if (hasObservationAbout()) {
+        if (getObservationAbout() != other.getObservationAbout()) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -5788,6 +5836,10 @@ public final class Debug {
       if (getSamplePlacesCount() > 0) {
         hash = (37 * hash) + SAMPLE_PLACES_FIELD_NUMBER;
         hash = (53 * hash) + getSamplePlacesList().hashCode();
+      }
+      if (hasObservationAbout()) {
+        hash = (37 * hash) + OBSERVATION_ABOUT_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getObservationAbout());
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -5938,6 +5990,8 @@ public final class Debug {
         bitField0_ = (bitField0_ & ~0x00000008);
         samplePlaces_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000010);
+        observationAbout_ = false;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -5988,6 +6042,10 @@ public final class Debug {
           bitField0_ = (bitField0_ & ~0x00000010);
         }
         result.samplePlaces_ = samplePlaces_;
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.observationAbout_ = observationAbout_;
+          to_bitField0_ |= 0x00000010;
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -6061,6 +6119,9 @@ public final class Debug {
             samplePlaces_.addAll(other.samplePlaces_);
           }
           onChanged();
+        }
+        if (other.hasObservationAbout()) {
+          setObservationAbout(other.getObservationAbout());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -6374,6 +6435,47 @@ public final class Debug {
         }
         ensureSamplePlacesIsMutable();
         samplePlaces_.add(value);
+        onChanged();
+        return this;
+      }
+
+      private boolean observationAbout_;
+      /**
+       * <code>optional bool observation_about = 6;</code>
+       *
+       * @return Whether the observationAbout field is set.
+       */
+      public boolean hasObservationAbout() {
+        return ((bitField0_ & 0x00000020) != 0);
+      }
+      /**
+       * <code>optional bool observation_about = 6;</code>
+       *
+       * @return The observationAbout.
+       */
+      public boolean getObservationAbout() {
+        return observationAbout_;
+      }
+      /**
+       * <code>optional bool observation_about = 6;</code>
+       *
+       * @param value The observationAbout to set.
+       * @return This builder for chaining.
+       */
+      public Builder setObservationAbout(boolean value) {
+        bitField0_ |= 0x00000020;
+        observationAbout_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool observation_about = 6;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearObservationAbout() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        observationAbout_ = false;
         onChanged();
         return this;
       }
@@ -12657,29 +12759,30 @@ public final class Debug {
           + "ons.proto.Log.CounterSet:\0028\001\"c\n\005Level\022\025\n"
           + "\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\r"
           + "LEVEL_WARNING\020\002\022\017\n\013LEVEL_ERROR\020\003\022\017\n\013LEVE"
-          + "L_FATAL\020\004J\004\010\002\020\003\"\262\002\n\013CommandArgs\022\030\n\020exist"
+          + "L_FATAL\020\004J\004\010\002\020\003\"\315\002\n\013CommandArgs\022\030\n\020exist"
           + "ence_checks\030\001 \001(\010\022E\n\nresolution\030\002 \001(\01621."
           + "org.datacommons.proto.CommandArgs.Resolu"
           + "tionMode\022\023\n\013num_threads\030\003 \001(\005\022\023\n\013stat_ch"
-          + "ecks\030\004 \001(\010\022\025\n\rsample_places\030\005 \003(\t\"\200\001\n\016Re"
-          + "solutionMode\022\037\n\033RESOLUTION_MODE_UNSPECIF"
-          + "IED\020\000\022\030\n\024RESOLUTION_MODE_NONE\020\001\022\031\n\025RESOL"
-          + "UTION_MODE_LOCAL\020\002\022\030\n\024RESOLUTION_MODE_FU"
-          + "LL\020\003\"\251\001\n\tDataPoint\022\014\n\004date\030\001 \001(\t\022:\n\006valu"
-          + "es\030\002 \003(\0132*.org.datacommons.proto.DataPoi"
-          + "nt.DataValue\032R\n\tDataValue\022\r\n\005value\030\001 \001(\001"
-          + "\0226\n\tlocations\030\002 \003(\0132#.org.datacommons.pr"
-          + "oto.Log.Location\"\234\003\n\024StatValidationResul"
-          + "t\022\022\n\nplace_dcid\030\001 \001(\t\022\025\n\rstat_var_dcid\030\002"
-          + " \001(\t\022\032\n\022measurement_method\030\003 \001(\t\022\032\n\022obse"
-          + "rvation_period\030\004 \001(\t\022\026\n\016scaling_factor\030\005"
-          + " \001(\t\022\014\n\004unit\030\006 \001(\t\022\\\n\023validation_counter"
-          + "s\030\007 \003(\0132?.org.datacommons.proto.StatVali"
-          + "dationResult.StatValidationEntry\032\234\001\n\023Sta"
-          + "tValidationEntry\022\023\n\013counter_key\030\001 \001(\t\0228\n"
-          + "\016problem_points\030\002 \003(\0132 .org.datacommons."
-          + "proto.DataPoint\022\032\n\022additional_details\030\003 "
-          + "\001(\t\022\032\n\022percent_difference\030\004 \001(\001"
+          + "ecks\030\004 \001(\010\022\025\n\rsample_places\030\005 \003(\t\022\031\n\021obs"
+          + "ervation_about\030\006 \001(\010\"\200\001\n\016ResolutionMode\022"
+          + "\037\n\033RESOLUTION_MODE_UNSPECIFIED\020\000\022\030\n\024RESO"
+          + "LUTION_MODE_NONE\020\001\022\031\n\025RESOLUTION_MODE_LO"
+          + "CAL\020\002\022\030\n\024RESOLUTION_MODE_FULL\020\003\"\251\001\n\tData"
+          + "Point\022\014\n\004date\030\001 \001(\t\022:\n\006values\030\002 \003(\0132*.or"
+          + "g.datacommons.proto.DataPoint.DataValue\032"
+          + "R\n\tDataValue\022\r\n\005value\030\001 \001(\001\0226\n\tlocations"
+          + "\030\002 \003(\0132#.org.datacommons.proto.Log.Locat"
+          + "ion\"\234\003\n\024StatValidationResult\022\022\n\nplace_dc"
+          + "id\030\001 \001(\t\022\025\n\rstat_var_dcid\030\002 \001(\t\022\032\n\022measu"
+          + "rement_method\030\003 \001(\t\022\032\n\022observation_perio"
+          + "d\030\004 \001(\t\022\026\n\016scaling_factor\030\005 \001(\t\022\014\n\004unit\030"
+          + "\006 \001(\t\022\\\n\023validation_counters\030\007 \003(\0132?.org"
+          + ".datacommons.proto.StatValidationResult."
+          + "StatValidationEntry\032\234\001\n\023StatValidationEn"
+          + "try\022\023\n\013counter_key\030\001 \001(\t\0228\n\016problem_poin"
+          + "ts\030\002 \003(\0132 .org.datacommons.proto.DataPoi"
+          + "nt\022\032\n\022additional_details\030\003 \001(\t\022\032\n\022percen"
+          + "t_difference\030\004 \001(\001"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -12737,7 +12840,12 @@ public final class Debug {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_CommandArgs_descriptor,
             new java.lang.String[] {
-              "ExistenceChecks", "Resolution", "NumThreads", "StatChecks", "SamplePlaces",
+              "ExistenceChecks",
+              "Resolution",
+              "NumThreads",
+              "StatChecks",
+              "SamplePlaces",
+              "ObservationAbout",
             });
     internal_static_org_datacommons_proto_DataPoint_descriptor =
         getDescriptor().getMessageTypes().get(2);
