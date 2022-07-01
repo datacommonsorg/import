@@ -164,6 +164,9 @@ public class Processor {
     while ((n = parser.parseNextNode()) != null) {
       n = McfMutator.mutate(n.toBuilder(), logCtx);
 
+      if (idResolver != null && type == Mcf.McfType.INSTANCE_MCF) {
+        idResolver.addLocalGraph(n);
+      }
       if (existenceChecker != null && type == Mcf.McfType.INSTANCE_MCF) {
         // Add instance MCF nodes to ExistenceChecker.  We load all the nodes up first
         // before we check them later in checkNodes().
@@ -233,7 +236,8 @@ public class Processor {
       g = McfMutator.mutate(g.toBuilder(), logCtx);
 
       // This will set counters/messages in logCtx.
-      boolean success = McfChecker.check(g, existenceChecker, statVarState, logCtx);
+      boolean success =
+          McfChecker.check(g, existenceChecker, statVarState, args.checkObservationAbout, logCtx);
 
       if (args.resolutionMode != Args.ResolutionMode.NONE) {
         g = resolveCommon(g, writerPair);

@@ -10,7 +10,8 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build -e wizard",
     "test": "jest",
-    "lint": "eslint --fix ."
+    "lint": "eslint --fix .",
+    "test-lint": "eslint ."
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -42,5 +43,11 @@
     "jest": "^28.1.1",
     "ts-jest": "^28.0.5",
     "webpack-dev-server": "^4.9.2"
+  },
+  "overrides": {
+    "@types/eslint": "8.4.3"
+  },
+  "resolutions": {
+      "@types/eslint": "8.4.3"
   }
 }
