@@ -1,0 +1,3 @@
+DateTime,isoCode,wikidataId,CumulativeCount_MedicalTest_ConditionCOVID_19_Positive
+2020-01-01,pseudoIsoCodeSimple,pseudoWikidataIdSimple,1
+2020-01-02,pseudoIsoCodeDiverging,pseudoWikidataIdDiverging,2
