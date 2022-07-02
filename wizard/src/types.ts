@@ -56,6 +56,9 @@ export interface MappingVal {
 
 export type Mapping = Map<MappedThing, MappingVal>;
 
+// CSV Row number.
+export type RowNumber = number;
+
 // CvsData should contain the minimum sufficient data from the
 // data csv file which will be used for all processing, e.g. column detection,
 // and display/rendering.
@@ -80,7 +83,7 @@ export interface CsvData {
   // is no expectation that this structure contains all rows.
   // It is also assumed that order of values in the array will correspond to
   // the orderedColumnNames.
-  rowsForDisplay: Map<bigint, Array<string>>;
+  rowsForDisplay: Map<RowNumber, Array<string>>;
 
   // The raw csv data can be either in the form of a file or a URL. One of the
   // following fields must be set:
@@ -128,3 +131,10 @@ export interface DetectedDetails {
   // The level of confidence associated with the detection.
   confidence: ConfidenceLevel;
 }
+
+// A map from the mapped thing (aka StatVarObs props) to the property value.
+export type Observation = Map<MappedThing, string>;
+
+// Observations keyed by CSV row number. A row has multiple observations when
+// the Mapping is of type COLUMN_HEADER with multiple MappingVal.headers.
+export type RowObservations = Map<RowNumber, Array<Observation>>;
