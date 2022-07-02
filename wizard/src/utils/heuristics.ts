@@ -40,7 +40,11 @@ import { PlaceDetector } from "./detect_place";
  *
  * @returns a MappingVal object or null if no Place is detected.
  */
- function detectPlace(cols: Map<number, Array<string>>, columnOrder: Array<Column>, pDetector: PlaceDetector): MappingVal {
+function detectPlace(
+  cols: Map<number, Array<string>>,
+  columnOrder: Array<Column>,
+  pDetector: PlaceDetector
+): MappingVal {
   // Currently, only countries can be detected as Places.
   // TODO: determine a country property order for detection. For now, all
   // properties for countries are treated as equal.
