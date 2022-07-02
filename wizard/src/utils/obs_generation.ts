@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import _ from "lodash";
+
 import {
   Column,
   CsvData,
@@ -27,12 +29,59 @@ import {
 
 // Helper maps used while generating observaitons.
 interface ObsGenMaps {
-  // Column Index -> mapping thing found in header for VALUE.
+  // Column Index -> mapped thing found in header for VALUE.
   valCol2Hdr: Map<number, MappedThing>;
   // Mapped thing -> column index (for non-VALUE)
   thing2Col: Map<MappedThing, number>;
   // Mapped thing -> constant value (for non-VALUE)
   thing2Const: Map<MappedThing, string>;
+}
+
+function hasRequiredProps(obs: Observation): boolean {
+  for (const mthing of [
+    MappedThing.PLACE,
+    MappedThing.STAT_VAR,
+    MappedThing.DATE,
+    MappedThing.VALUE,
+  ]) {
+    if (!obs.has(mthing)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function generateObservationsInRow(
+  row: Array<string>,
+  header: Array<Column>,
+  obsGenMaps: ObsGenMaps
+): Array<Observation> {
+  const obsList = new Array<Observation>();
+  for (const valColIdx of Array.from(obsGenMaps.valCol2Hdr.keys())) {
+    const hdrThing = obsGenMaps.valCol2Hdr.get(valColIdx);
+    const obs: Observation = new Map();
+    // TODO: Consider if we want to do some cleaning and checking for non-numeric value.
+    if (!_.isEmpty(row[valColIdx])) {
+      obs.set(MappedThing.VALUE, row[valColIdx]);
+    }
+    // If this is a COLUMN_HEADER case, get the corresponding header value.
+    if (hdrThing !== MappedThing.VALUE) {
+      obs.set(hdrThing, header[valColIdx].header);
+    }
+    for (const mthing of Array.from(obsGenMaps.thing2Col.keys())) {
+      const colIdx = obsGenMaps.thing2Col.get(mthing);
+      if (!_.isEmpty(row[colIdx])) {
+        obs.set(mthing, row[colIdx]);
+      }
+    }
+    for (const mthing of Array.from(obsGenMaps.thing2Const.keys())) {
+      obs.set(mthing, obsGenMaps.thing2Const.get(mthing));
+    }
+    if (hasRequiredProps(obs)) {
+      obsList.push(obs);
+    }
+  }
+  return obsList;
 }
 
 /**
@@ -96,51 +145,4 @@ export function observationToString(obs: Observation): string {
     outStr += ` ${obs.get(MappedThing.UNIT)}`;
   }
   return outStr;
-}
-
-function generateObservationsInRow(
-  row: Array<string>,
-  header: Array<Column>,
-  obsGenMaps: ObsGenMaps
-): Array<Observation> {
-  const obsList = new Array<Observation>();
-  for (const valColIdx of Array.from(obsGenMaps.valCol2Hdr.keys())) {
-    const hdrThing = obsGenMaps.valCol2Hdr.get(valColIdx);
-    const obs: Observation = new Map();
-    // TODO: Consider if we want to do some cleaning and checking for non-numeric value.
-    if (row[valColIdx] != null && row[valColIdx] !== "") {
-      obs.set(MappedThing.VALUE, row[valColIdx]);
-    }
-    // If this is a COLUMN_HEADER case, get the corresponding header value.
-    if (hdrThing !== MappedThing.VALUE) {
-      obs.set(hdrThing, header[valColIdx].header);
-    }
-    for (const mthing of Array.from(obsGenMaps.thing2Col.keys())) {
-      const colIdx = obsGenMaps.thing2Col.get(mthing);
-      if (row[colIdx] != null && row[colIdx] !== "") {
-        obs.set(mthing, row[colIdx]);
-      }
-    }
-    for (const mthing of Array.from(obsGenMaps.thing2Const.keys())) {
-      obs.set(mthing, obsGenMaps.thing2Const.get(mthing));
-    }
-    if (hasRequiredProps(obs)) {
-      obsList.push(obs);
-    }
-  }
-  return obsList;
-}
-
-function hasRequiredProps(obs: Observation): boolean {
-  for (const mthing of [
-    MappedThing.PLACE,
-    MappedThing.STAT_VAR,
-    MappedThing.DATE,
-    MappedThing.VALUE,
-  ]) {
-    if (!obs.has(mthing)) {
-      return false;
-    }
-  }
-  return true;
 }
