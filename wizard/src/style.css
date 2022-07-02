@@ -13,3 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+  background: #f8f8f8;
+  margin: 0;
+}
+
+h1, h2 {
+  font-family: "Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+}
+
+h2 {
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 0;
+  margin: 0;
+}
+
+#main-header {
+  background-color: #660000;
+  color: #fff;
+  padding: 1.8rem;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+#main-pane {
+  padding: 1rem 1.8rem;
+}
+
+.section-container {
+  border: 1px solid rgba(0,0,0,.2);
+  background: white;
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 0.3rem;
+}
+
+.upload-section-header {
+  display: flex;
+  align-items: center;
+  padding-bottom: 1rem;
+}

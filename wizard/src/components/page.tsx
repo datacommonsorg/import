@@ -14,8 +14,21 @@
  * limitations under the License.
  */
 
-import React from "react";
+import React, { useState } from "react";
+
+import { CsvData, Mapping } from "../types";
+import { UploadSection } from "./upload_section";
 
 export function Page(): JSX.Element {
-  return <div>Import Wizard</div>;
+  const [csv, setCsv] = useState<CsvData>(null);
+  const [predictedMapping, setPredictedMapping] = useState<Mapping>(null);
+
+  return (
+    <>
+      <UploadSection
+        onCsvProcessed={(csv) => setCsv(csv)}
+        onPredictionRetrieved={(prediction) => setPredictedMapping(prediction)}
+      />
+    </>
+  );
 }
