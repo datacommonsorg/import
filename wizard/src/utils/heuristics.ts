@@ -33,19 +33,14 @@ import { PlaceDetector } from "./detect_place";
  * Place along with its details. If no Place is detected, the return value is
  * null.
  *
- * @param columns is a mapping from column indices to (sampled) column values.
+ * @param cols is a mapping from column indices to (sampled) column values.
  *  The indices correspond to those in the columnOrder Array.
  * @param columnOrder is an ordered list (Array) of Columns.
  * @param pDetector a PlaceDetector object.
  *
  * @returns a MappingVal object or null if no Place is detected.
  */
-
-function detectPlace(
-  cols: Map<number, Array<string>>,
-  columnOrder: Array<Column>,
-  pDetector: PlaceDetector
-): MappingVal {
+ function detectPlace(cols: Map<number, Array<string>>, columnOrder: Array<Column>, pDetector: PlaceDetector): MappingVal {
   // Currently, only countries can be detected as Places.
   // TODO: determine a country property order for detection. For now, all
   // properties for countries are treated as equal.
@@ -63,7 +58,7 @@ function detectPlace(
 
   if (detectedCountries.size > 0) {
     // Choose the first detected country columns.
-    const ind = 0;
+    const ind = Array.from(detectedCountries.keys())[0];
     return {
       type: MappingType.COLUMN, // Place detection is only possible for columns.
       column: columnOrder[ind],
