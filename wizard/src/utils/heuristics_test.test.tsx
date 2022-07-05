@@ -17,10 +17,13 @@ import _ from "lodash";
 
 import {
   Column,
+  CsvData,
+  DCProperty,
   MappedThing,
   Mapping,
   MappingType,
   MappingVal,
+  RowNumber,
 } from "../types";
 import { PlaceDetector } from "./detect_place";
 import * as heuristics from "./heuristics";
@@ -39,7 +42,7 @@ test("detectCountry", () => {
   const csv = {
     orderedColumns: [colCountry, colOther1, colOther2],
     columnValuesSampled: cols,
-    rowsForDisplay: new Map<bigint, Array<string>>(),
+    rowsForDisplay: new Map<RowNumber, Array<string>>(),
   };
 
   const expected: Mapping = new Map<MappedThing, MappingVal>([
@@ -77,7 +80,7 @@ test("detectCountryTwoColumns", () => {
   const csv = {
     orderedColumns: [colCountry, colCountryOther, colOther2],
     columnValuesSampled: cols,
-    rowsForDisplay: new Map<bigint, Array<string>>(),
+    rowsForDisplay: new Map<RowNumber, Array<string>>(),
   };
 
   const got = heuristics.getPredictions(csv, det).get(MappedThing.PLACE);
@@ -91,4 +94,115 @@ test("detectCountryTwoColumns", () => {
     displayName: "Country",
   });
   expect(got.column.header).toStrictEqual("a");
+});
+
+test("countryDetectionOrder", () => {
+  const det = new PlaceDetector();
+
+  const colISO = "iso";
+  const colAlpha3 = "alpha3";
+  const colNumber = "number";
+  const colName = "name";
+  const colISOMistake = "isoMistake";
+
+  const colVals = new Map<string, Array<string>>([
+    ["iso", ["US", "IT"]],
+    ["alpha3", ["USA", "ITA"]],
+    ["number", ["840", "380"]],
+    ["name", ["United States", "italy "]],
+    ["isoMistake", ["U", "ITA"]],
+  ]);
+
+  const cases: {
+    name: string;
+    orderedColNames: Array<string>;
+    expectedCol: Column;
+    expectedProp: DCProperty;
+  }[] = [
+    {
+      name: "all-properties",
+      orderedColNames: [colISO, colAlpha3, colNumber, colName],
+      expectedCol: { id: colISO + 0, header: colISO, columnIdx: 0 },
+      expectedProp: {
+        dcid: "isoCode",
+        displayName: "ISO Code",
+      },
+    },
+    {
+      name: "iso-missing",
+      orderedColNames: [colNumber, colName, colAlpha3],
+      expectedCol: { id: colAlpha3 + 2, header: colAlpha3, columnIdx: 2 },
+      expectedProp: {
+        dcid: "countryAlpha3Code",
+        displayName: "Alpha 3 Code",
+      },
+    },
+    {
+      name: "iso-alpha3-missing",
+      orderedColNames: [colNumber, colName],
+      expectedCol: { id: colNumber + 0, header: colNumber, columnIdx: 0 },
+      expectedProp: {
+        dcid: "countryNumericCode",
+        displayName: "Numeric Code",
+      },
+    },
+    {
+      name: "only-name",
+      orderedColNames: [colName],
+      expectedCol: { id: colName + 0, header: colName, columnIdx: 0 },
+      expectedProp: {
+        dcid: "name",
+        displayName: "Name",
+      },
+    },
+    {
+      name: "none-found",
+      orderedColNames: [],
+      expectedCol: null,
+      expectedProp: null,
+    },
+    {
+      name: "all-properties-iso-with-typos",
+      orderedColNames: [colISOMistake, colAlpha3, colNumber, colName],
+      expectedCol: { id: colAlpha3 + 1, header: colAlpha3, columnIdx: 1 },
+      expectedProp: {
+        dcid: "countryAlpha3Code",
+        displayName: "Alpha 3 Code",
+      },
+    },
+  ];
+  for (const c of cases) {
+    const colValsSampled = new Map<number, Array<string>>();
+    const orderedCols = new Array<Column>();
+    for (let i = 0; i < c.orderedColNames.length; i++) {
+      const cName = c.orderedColNames[i];
+      colValsSampled.set(i, colVals.get(cName));
+
+      orderedCols.push({ id: cName + i, header: cName, columnIdx: i });
+    }
+
+    const csv = {
+      orderedColumns: orderedCols,
+      columnValuesSampled: colValsSampled,
+      rowsForDisplay: new Map<RowNumber, Array<string>>(),
+    };
+    const got = heuristics.getPredictions(csv, det);
+    if (c.expectedProp == null) {
+      expect(got.size).toBe(0);
+      continue;
+    }
+
+    const expected = new Map<MappedThing, MappingVal>([
+      [
+        MappedThing.PLACE,
+        {
+          type: MappingType.COLUMN,
+          column: c.expectedCol,
+          placeProperty: c.expectedProp,
+          placeType: { dcid: "Country", displayName: "Country" },
+        },
+      ],
+    ]);
+    expect(got).toStrictEqual(expected);
+  }
 });
