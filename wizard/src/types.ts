@@ -66,16 +66,18 @@ export interface CsvData {
   // This field should dictate the fixed (internal) order of all csv columns.
   orderedColumns: Array<Column>;
 
-  // columnValuesSampled is a map from column id to an extract of the
-  // values in the column. This extract could be all of the column's values or
-  // a sample. This is the structure that should be used for detection
-  // heuristics and other advanced processing.
+  // columnValuesSampled is a map from column index to an extract of the
+  // values in the column. The column index is with reference to the order in
+  // orderedColumns.
+  // This extract could be all of the column's values or a sample. This is the
+  // structure that should be used for detection heuristics and other advanced
+  // processing.
   // It is assumed that all columns present in the original csv data file will
-  // be represented in this structure. All values in the orderedColumnNames
+  // be represented in this structure. All indices in the orderedColumnNames
   // array should be present as keys of columnValuesSampled.
   // Note that the length of all column-values need not be the same, e.g. due to
   // the removal of duplicate values.
-  columnValuesSampled: Map<string, Array<string>>;
+  columnValuesSampled: Map<number, Array<string>>;
 
   // rowsForDisplay is a mapping from the row index in the original csv file to
   // the contents of the row. This is a convenience structure to assist with
