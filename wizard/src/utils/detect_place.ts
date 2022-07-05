@@ -253,7 +253,7 @@ export class PlaceDetector {
    * @param header the name of the column.
    * @param column: an array of strings representing the column values.
    *
-   * @return the TypeProperty object or null if nothing can be determined with
+   * @returns the TypeProperty object or null if nothing can be determined with
    * high confidence.
    */
   detectHighConfidence(header: string, column: Array<string>): TypeProperty {
@@ -273,7 +273,7 @@ export class PlaceDetector {
    * @param header: the column header string.
    * @param column: an array of string column values.
    *
-   * @return the DetectedDetails object (or null).
+   * @returns the DetectedDetails object (or null).
    */
   detect(header: string, column: Array<string>): DetectedDetails {
     const hcDetected = this.detectHighConfidence(header, column);

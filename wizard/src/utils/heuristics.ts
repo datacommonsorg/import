@@ -14,13 +14,88 @@
  * limitations under the License.
  */
 
-import { CsvData, MappedThing, Mapping } from "../types";
+import {
+  Column,
+  ConfidenceLevel,
+  CsvData,
+  DCProperty,
+  DCType,
+  DetectedDetails,
+  MappedThing,
+  Mapping,
+  MappingType,
+  MappingVal,
+} from "../types";
+import { PlaceDetector } from "./detect_place";
 
 /**
- * Given a csv, returns the predicted mapping
+ * Process all columns and return the one which best represents the detected
+ * Place along with its details. If no Place is detected, the return value is
+ * null.
  *
- * @param csv array of csv rows where each row is an array of strings
+ * @param cols is a mapping from column indices to (sampled) column values.
+ *  The indices correspond to those in the columnOrder Array.
+ * @param columnOrder is an ordered list (Array) of Columns.
+ * @param pDetector a PlaceDetector object.
+ *
+ * @returns a MappingVal object or null if no Place is detected.
  */
-export function getPredictions(csv: CsvData): Mapping {
+function detectPlace(
+  cols: Map<number, Array<string>>,
+  columnOrder: Array<Column>,
+  pDetector: PlaceDetector
+): MappingVal {
+  // Currently, only countries can be detected as Places.
+  // TODO: determine a country property order for detection. For now, all
+  // properties for countries are treated as equal.
+  const detectedCountries = new Map<number, DetectedDetails>();
+
+  cols.forEach((colVals: Array<string>, colIndex: number) => {
+    const pD = pDetector.detect(columnOrder[colIndex].header, colVals);
+    if (pD != null && pD.confidence == ConfidenceLevel.High) {
+      // Check if the detected Place is a Country.
+      if (pD.detectedTypeProperty.dcType.dcid === "Country") {
+        detectedCountries.set(colIndex, pD);
+      }
+    }
+  });
+
+  if (detectedCountries.size > 0) {
+    // Choose the first detected country columns.
+    const ind = Array.from(detectedCountries.keys())[0];
+    return {
+      type: MappingType.COLUMN, // Place detection is only possible for columns.
+      column: columnOrder[ind],
+      placeProperty: detectedCountries.get(ind).detectedTypeProperty.dcProperty,
+      placeType: detectedCountries.get(ind).detectedTypeProperty.dcType,
+    };
+  }
   return null;
+}
+
+/**
+ * Given a csv, returns the predicted mappings.
+ *
+ * @param csv a CsvData structure which contains all the necessary information
+ *  and data about the user provided usv file.
+ * @param pDetector a PlaceDetector object.
+ *
+ * @returns a Mapping of all columns to their detected details.
+ */
+export function getPredictions(
+  csv: CsvData,
+  pDetector: PlaceDetector
+): Mapping {
+  const m: Mapping = new Map<MappedThing, MappingVal>();
+
+  // Iterate over all columns to determine if a Place is found.
+  const placeMVal = detectPlace(
+    csv.columnValuesSampled,
+    csv.orderedColumns,
+    pDetector
+  );
+  if (placeMVal != null) {
+    m.set(MappedThing.PLACE, placeMVal);
+  }
+  return m;
 }
