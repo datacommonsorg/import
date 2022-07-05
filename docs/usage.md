@@ -121,6 +121,12 @@ Specifies the directory to write output files.
 
 Default is `dc_generated/` within current working directory.
 
+### `-ep`, `--existence-checks-place`
+
+Specifies whether to perform existence checks for places found in the `observationAbout` property in StatVarObservation nodes.
+
+Defaults to `false`.
+
 ### `-s`, `--stat-checks`
 
 Checks integrity of time series by checking for holes, variance in values, etc.

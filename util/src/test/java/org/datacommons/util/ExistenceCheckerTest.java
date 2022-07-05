@@ -124,7 +124,6 @@ public class ExistenceCheckerTest {
 
   @Test
   public void endToEnd() throws IOException, InterruptedException {
-    var dummyNode = Mcf.McfGraph.PropertyValues.newBuilder().build();
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
     ExistenceChecker.DC_CALL_BATCH_LIMIT = 5;

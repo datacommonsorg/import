@@ -9,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.junit.Test;
 
 public class StringUtilTest {
@@ -17,7 +16,6 @@ public class StringUtilTest {
   @Test
   public void funcSplitStructuredLineWithEscapes() {
     char delimiter = ',';
-    Map<Character, Character> symbolPairs = Map.of('"', '"');
     List<String> result = new ArrayList<>();
 
     // no symbol pairs, just split across delimiter
