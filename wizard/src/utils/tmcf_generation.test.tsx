@@ -15,7 +15,7 @@
  */
 import _ from "lodash";
 
-import { MappedThing, Mapping, MappingType, MappingVal } from "../types";
+import { MappedThing, Mapping, MappingType } from "../types";
 import { generateTMCF } from "./tmcf_generation";
 
 test("SingleNodeTMCF", () => {
