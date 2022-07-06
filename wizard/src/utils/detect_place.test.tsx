@@ -73,6 +73,29 @@ test("placeTypesAndProperties", () => {
   expect(det.placeTypesAndProperties).toEqual(expected);
 });
 
+test("supportedPlaceTypeProperties", () => {
+  const det = new PlaceDetector();
+  const expected = new Set<TypeProperty>([
+    {
+      dcType: { dcid: "Country", displayName: "Country" },
+      dcProperty: { dcid: "name", displayName: "Name" },
+    },
+    {
+      dcType: { dcid: "Country", displayName: "Country" },
+      dcProperty: { dcid: "isoCode", displayName: "ISO Code" },
+    },
+    {
+      dcType: { dcid: "Country", displayName: "Country" },
+      dcProperty: { dcid: "countryAlpha3Code", displayName: "Alpha 3 Code" },
+    },
+    {
+      dcType: { dcid: "Country", displayName: "Country" },
+      dcProperty: { dcid: "countryNumericCode", displayName: "Numeric Code" },
+    },
+  ]);
+  expect(det.getSupportedPlaceTypesAndProperties()).toEqual(expected);
+});
+
 test("placeDetectionKeys", () => {
   const expected = new Set<string>([
     "longitude",
@@ -311,8 +334,8 @@ test("countryHighConf", () => {
       expected: null,
     },
     {
-      name: "iso-no-detection", // No detection due to: aa, bb and cc.
-      colArray: ["aa", "bb", "cc", "nz", "za", "au", "pk", "in", "bd", "it"],
+      name: "iso-no-detection", // No detection due to: aa, dd and ff.
+      colArray: ["aa", "dd", "ff", "za", "au", "pk", "in", "bd", "it"],
       expected: null,
     },
     {
