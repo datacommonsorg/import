@@ -28,13 +28,25 @@ import {
 } from "../types";
 import { PlaceDetector } from "./detect_place";
 
+/**
+ * countryOrder is a helper function which returns the column index of the
+ * detected country column based on a ranked order of preferred property types.
+ * For example, given two columns both of which represent countries, if one of
+ * them has ISO codes and the other country numbers, we will prefer the one with
+ * ISO codes.
+ *
+ * The detection order for type:Country is:
+ *    1. ISO code
+ *    2. Alpha Numberic 3 Letter Abbreviation
+ *    3. Numeric code
+ *    4. Country name.
+ *
+ * @param detectedCountries is a mapping from column indices to the DetectedDetails
+ *    objects which contain the specifics of the type and property detected.
+ *
+ * @returns the column index of the most preferred country column.
+ */
 function countryOrder(detectedCountries: Map<number, DetectedDetails>): number {
-  // The detection order for type:Country is:
-  //  1. ISO code
-  //  2. Alpha Numberic 3 Letter Abbreviation
-  //  3. Numeric code
-  //  4. Country name.
-
   const propDetected = new Map<string, number>();
 
   detectedCountries.forEach((details: DetectedDetails, index: number) => {
