@@ -26,6 +26,7 @@ import {
   MappingType,
   MappingVal,
 } from "../types";
+import { DateDetector } from "./detect_date";
 import { PlaceDetector } from "./detect_place";
 
 function countryOrder(detectedCountries: Map<number, DetectedDetails>): number {
@@ -100,6 +101,42 @@ function detectPlace(
   return null;
 }
 
+function detectDate(
+  cols: Map<number, Array<string>>,
+  columnOrder: Array<Column>,
+  dDetector: DateDetector
+): MappingVal {
+  const detectedDateColumns = new Array<Column>();
+  const detectedDateHeaders = new Array<Column>();
+
+  cols.forEach((colVals: Array<string>, colIndex: number) => {
+    const col = columnOrder[colIndex];
+
+    // Check if the column header can be parsed as a valid date.
+    if (dDetector.detectColumnHeaderDate(col.header) === true) {
+      detectedDateHeaders.push(col);
+    } else if (dDetector.detectColumnWithDates(col.header, colVals) === true) {
+      detectedDateColumns.push(col);
+    }
+  });
+  // If both detectedDateColumns and detectedDateHeaders are non-empty,
+  // return the detectedDateHeaders.
+  // If detectedDateHeaders are empty but detectedDateColumns has more
+  // than one column, return the any (the first one).
+  if (detectedDateHeaders.length > 0) {
+    return {
+      type: MappingType.COLUMN_HEADER,
+      headers: detectedDateHeaders,
+    };
+  } else if (detectedDateColumns.length > 0) {
+    return {
+      type: MappingType.COLUMN,
+      column: detectedDateColumns[0],
+    };
+  }
+  return null;
+}
+
 /**
  * Given a csv, returns the predicted mappings.
  *
@@ -111,7 +148,8 @@ function detectPlace(
  */
 export function getPredictions(
   csv: CsvData,
-  pDetector: PlaceDetector
+  pDetector: PlaceDetector,
+  dDetector: DateDetector
 ): Mapping {
   const m: Mapping = new Map<MappedThing, MappingVal>();
 
@@ -124,5 +162,19 @@ export function getPredictions(
   if (placeMVal != null) {
     m.set(MappedThing.PLACE, placeMVal);
   }
+  if (placeMVal != null) {
+    m.set(MappedThing.PLACE, placeMVal);
+  }
+
+  // Iterate over all columns to determine if a Date is found.
+  const dateMVal = detectDate(
+    csv.columnValuesSampled,
+    csv.orderedColumns,
+    dDetector
+  );
+  if (dateMVal != null) {
+    m.set(MappedThing.DATE, dateMVal);
+  }
+
   return m;
 }

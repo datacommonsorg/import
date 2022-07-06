@@ -25,11 +25,14 @@ import {
   MappingVal,
   RowNumber,
 } from "../types";
+import { DateDetector } from "./detect_date";
 import { PlaceDetector } from "./detect_place";
 import * as heuristics from "./heuristics";
 
-test("detectCountry", () => {
-  const det = new PlaceDetector();
+test("countryDetection", () => {
+  const pDet = new PlaceDetector();
+  const dDet = new DateDetector();
+
   const cols = new Map<number, Array<string>>([
     [0, ["USA", "ITA"]], // This column should be detected as a Place (country).
     [1, ["fdf"]],
@@ -60,12 +63,14 @@ test("detectCountry", () => {
     ],
   ]);
 
-  const got = heuristics.getPredictions(csv, det);
+  const got = heuristics.getPredictions(csv, pDet, dDet);
   expect(got).toStrictEqual(expected);
 });
 
-test("detectCountryTwoColumns", () => {
-  const det = new PlaceDetector();
+test("countryDetection-twocolumns", () => {
+  const pDet = new PlaceDetector();
+  const dDet = new DateDetector();
+
   const cols = new Map<number, Array<string>>([
     // One of the two columns below should be detected. They are both countries.
     [0, ["USA", "ITA"]],
@@ -83,7 +88,7 @@ test("detectCountryTwoColumns", () => {
     rowsForDisplay: new Map<RowNumber, Array<string>>(),
   };
 
-  const got = heuristics.getPredictions(csv, det).get(MappedThing.PLACE);
+  const got = heuristics.getPredictions(csv, pDet, dDet).get(MappedThing.PLACE);
   expect(got.type).toStrictEqual(MappingType.COLUMN);
   expect(got.placeProperty).toStrictEqual({
     dcid: "countryAlpha3Code",
@@ -97,7 +102,8 @@ test("detectCountryTwoColumns", () => {
 });
 
 test("countryDetectionOrder", () => {
-  const det = new PlaceDetector();
+  const pDet = new PlaceDetector();
+  const dDet = new DateDetector();
 
   const colISO = "iso";
   const colAlpha3 = "alpha3";
@@ -186,7 +192,7 @@ test("countryDetectionOrder", () => {
       columnValuesSampled: colValsSampled,
       rowsForDisplay: new Map<RowNumber, Array<string>>(),
     };
-    const got = heuristics.getPredictions(csv, det);
+    const got = heuristics.getPredictions(csv, pDet, dDet);
     if (c.expectedProp == null) {
       expect(got.size).toBe(0);
       continue;
@@ -205,4 +211,154 @@ test("countryDetectionOrder", () => {
     ]);
     expect(got).toStrictEqual(expected);
   }
+});
+
+test("dateDetection-headers", () => {
+  const pDet = new PlaceDetector();
+  const dDet = new DateDetector();
+
+  const cols = new Map<number, Array<string>>([
+    [0, []],
+    [1, []],
+    [2, []],
+  ]);
+  const dateCol1 = { id: "2020-100", header: "2020-10", columnIdx: 0 };
+  const dateCol2 = { id: "2020-111", header: "2020-11", columnIdx: 1 };
+  const colOther2 = { id: "a0", header: "a", columnIdx: 2 };
+
+  const csv = {
+    orderedColumns: [dateCol1, dateCol2, colOther2],
+    columnValuesSampled: cols,
+    rowsForDisplay: new Map<RowNumber, Array<string>>(),
+  };
+
+  const expected: Mapping = new Map<MappedThing, MappingVal>([
+    [
+      MappedThing.DATE,
+      {
+        type: MappingType.COLUMN_HEADER,
+        headers: [dateCol1, dateCol2],
+      },
+    ],
+  ]);
+
+  const got = heuristics.getPredictions(csv, pDet, dDet);
+  expect(got).toStrictEqual(expected);
+});
+
+test("dateDetection-columns", () => {
+  const pDet = new PlaceDetector();
+  const dDet = new DateDetector();
+
+  const cols = new Map<number, Array<string>>([
+    [0, ["2020-10", "2021-10", "2022-10"]],
+    [1, ["random", "random", "random"]],
+    [2, ["1", "2", "3"]],
+  ]);
+  const dateCol = { id: "a0", header: "a", columnIdx: 0 };
+  const colOther1 = { id: "b1", header: "b", columnIdx: 1 };
+  const colOther2 = { id: "c2", header: "c", columnIdx: 2 };
+
+  const csv = {
+    orderedColumns: [dateCol, colOther1, colOther2],
+    columnValuesSampled: cols,
+    rowsForDisplay: new Map<RowNumber, Array<string>>(),
+  };
+
+  const expected: Mapping = new Map<MappedThing, MappingVal>([
+    [
+      MappedThing.DATE,
+      {
+        type: MappingType.COLUMN,
+        column: dateCol,
+      },
+    ],
+  ]);
+
+  const got = heuristics.getPredictions(csv, pDet, dDet);
+  expect(got).toStrictEqual(expected);
+});
+
+test("dateDetection-headers-columns", () => {
+  const pDet = new PlaceDetector();
+  const dDet = new DateDetector();
+
+  // Column at index 2 is a date column but preference is given to column
+  // headers.
+  const cols = new Map<number, Array<string>>([
+    [0, ["1", "2", "3"]],
+    [1, ["random", "random", "random"]],
+    [2, ["2020-10", "2021-10", "2022-10"]],
+  ]);
+  const dateColHeader1 = { id: "2022-100", header: "2022-10", columnIdx: 0 };
+  const dateColHeader2 = { id: "20211", header: "2021-10", columnIdx: 1 };
+  const dateCol = { id: "c2", header: "c", columnIdx: 2 };
+
+  const csv = {
+    orderedColumns: [dateColHeader1, dateColHeader2, dateCol],
+    columnValuesSampled: cols,
+    rowsForDisplay: new Map<RowNumber, Array<string>>(),
+  };
+
+  const expected: Mapping = new Map<MappedThing, MappingVal>([
+    [
+      MappedThing.DATE,
+      {
+        type: MappingType.COLUMN_HEADER,
+        headers: [dateColHeader1, dateColHeader2],
+      },
+    ],
+  ]);
+
+  const got = heuristics.getPredictions(csv, pDet, dDet);
+  expect(got).toStrictEqual(expected);
+});
+
+test("comboDetection-date-and-place", () => {
+  const pDet = new PlaceDetector();
+  const dDet = new DateDetector();
+
+  // Column at index 2 is a date column but preference is given to column
+  // headers. There is also a place (country) column.
+  const cols = new Map<number, Array<string>>([
+    [0, ["1", "2", "3"]],
+    [1, ["random", "random", "random"]],
+    [2, ["2020-10", "2021-10", "2022-10"]],
+    [3, ["US", "IT", "ES"]],
+  ]);
+  const dateColHeader1 = { id: "2022-100", header: "2022-10", columnIdx: 0 };
+  const dateColHeader2 = { id: "20211", header: "2021-10", columnIdx: 1 };
+  const dateCol = { id: "c2", header: "c", columnIdx: 2 };
+  const countryCol = { id: "d3", header: "d", columnIdx: 3 };
+
+  const csv = {
+    orderedColumns: [dateColHeader1, dateColHeader2, dateCol, countryCol],
+    columnValuesSampled: cols,
+    rowsForDisplay: new Map<RowNumber, Array<string>>(),
+  };
+
+  const expected: Mapping = new Map<MappedThing, MappingVal>([
+    [
+      MappedThing.DATE,
+      {
+        type: MappingType.COLUMN_HEADER,
+        headers: [dateColHeader1, dateColHeader2],
+      },
+    ],
+    [
+      MappedThing.PLACE,
+      {
+        type: MappingType.COLUMN,
+        column: countryCol,
+        placeProperty: {
+          dcid: "isoCode",
+          displayName: "ISO Code",
+        },
+        placeType: { dcid: "Country", displayName: "Country" },
+      },
+    ],
+  ]);
+
+  const got = heuristics.getPredictions(csv, pDet, dDet);
+  expect(got).toStrictEqual(expected);
 });
