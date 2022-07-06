@@ -48,6 +48,12 @@ import { PlaceDetector } from "./detect_place";
  * @returns the column index of the most preferred country column.
  */
 function countryOrder(detectedCountries: Map<number, DetectedDetails>): number {
+  const propOrder = [
+    "isoCode",
+    "countryAlpha3Code",
+    "countryNumericCode",
+    "name",
+  ];
   const propDetected = new Map<string, number>();
 
   detectedCountries.forEach((details: DetectedDetails, index: number) => {
@@ -55,14 +61,10 @@ function countryOrder(detectedCountries: Map<number, DetectedDetails>): number {
     propDetected.set(prop, index);
   });
 
-  if (propDetected.has("isoCode")) {
-    return propDetected.get("isoCode");
-  } else if (propDetected.has("countryAlpha3Code")) {
-    return propDetected.get("countryAlpha3Code");
-  } else if (propDetected.has("countryNumericCode")) {
-    return propDetected.get("countryNumericCode");
-  } else if (propDetected.has("name")) {
-    return propDetected.get("name");
+  for (let i = 0; i < propOrder.length; i++) {
+    if (propDetected.has(propOrder[i])) {
+      return propDetected.get(propOrder[i]);
+    }
   }
   return null;
 }
