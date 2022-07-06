@@ -18,7 +18,6 @@ import Papa from "papaparse";
 import React, { useState } from "react";
 
 import { Column, CsvData, Mapping } from "../types";
-import { PlaceDetector } from "../utils/detect_place";
 import { getPredictions } from "../utils/heuristics";
 
 const NUM_FIRST_ROWS = 3;
@@ -67,12 +66,11 @@ export function UploadSection(props: UploadSectionProps): JSX.Element {
   ): void {
     for (const colId of Array.from(sampleColumnValues.keys())) {
       csvData.columnValuesSampled.set(
-        Number(colId),
+        colId,
         Array.from(sampleColumnValues.get(colId))
       );
     }
-    const pDet = new PlaceDetector();
-    const predictedMapping = getPredictions(csvData, pDet);
+    const predictedMapping = getPredictions(csvData);
     props.onCsvProcessed(csvData);
     props.onPredictionRetrieved(predictedMapping);
     setIsProcessingData(false);
