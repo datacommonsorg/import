@@ -148,7 +148,7 @@ export class PlaceDetector {
    * Returns the TypeProperty objects which are currently supported.
    */
   getSupportedPlaceTypesAndProperties(): Set<TypeProperty> {
-    let supported = new Set<TypeProperty>();
+    const supported = new Set<TypeProperty>();
 
     for (const tp of Array.from(this.placeTypesAndProperties)) {
       if (SUPPORTED_PLACE_TYPES.has(tp.dcType.dcid)) {
