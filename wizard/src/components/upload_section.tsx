@@ -18,6 +18,7 @@ import Papa from "papaparse";
 import React, { useState } from "react";
 
 import { Column, CsvData, Mapping } from "../types";
+import { PlaceDetector } from "../utils/detect_place";
 import { getPredictions } from "../utils/heuristics";
 
 const NUM_FIRST_ROWS = 3;
@@ -27,6 +28,7 @@ const MAX_COLUMN_SAMPLES = 100;
 interface UploadSectionProps {
   onCsvProcessed: (csv: CsvData) => void;
   onPredictionRetrieved: (predictedMapping: Mapping) => void;
+  placeDetector: PlaceDetector;
 }
 
 export function UploadSection(props: UploadSectionProps): JSX.Element {
@@ -43,6 +45,9 @@ export function UploadSection(props: UploadSectionProps): JSX.Element {
           accept=".csv"
           onChange={(event) => onFileUpload(event.target.files)}
         />
+      </div>
+      <div id="screen" style={{ display: isProcessingData ? "block" : "none" }}>
+        <div id="spinner"></div>
       </div>
     </div>
   );
@@ -62,15 +67,15 @@ export function UploadSection(props: UploadSectionProps): JSX.Element {
 
   function onParseComplete(
     csvData: CsvData,
-    sampleColumnValues: Map<string, Set<string>>
+    sampleColumnValues: Map<number, Set<string>>
   ): void {
-    for (const colId of Array.from(sampleColumnValues.keys())) {
+    for (const colIdx of Array.from(sampleColumnValues.keys())) {
       csvData.columnValuesSampled.set(
-        colId,
-        Array.from(sampleColumnValues.get(colId))
+        colIdx,
+        Array.from(sampleColumnValues.get(colIdx))
       );
     }
-    const predictedMapping = getPredictions(csvData);
+    const predictedMapping = getPredictions(csvData, props.placeDetector);
     props.onCsvProcessed(csvData);
     props.onPredictionRetrieved(predictedMapping);
     setIsProcessingData(false);
@@ -88,8 +93,8 @@ export function UploadSection(props: UploadSectionProps): JSX.Element {
       rowsForDisplay: new Map(),
       rawCsvFile: files[0],
     };
-    // key is column id
-    const sampleColumnValues: Map<string, Set<string>> = new Map();
+    // key is column idx
+    const sampleColumnValues: Map<number, Set<string>> = new Map();
     let currRow = 0;
     Papa.parse(files[0], {
       complete: () => {
@@ -104,8 +109,8 @@ export function UploadSection(props: UploadSectionProps): JSX.Element {
         // data row.
         if (currRow === 0) {
           csvData.orderedColumns = getOrderedColumns(result.data);
-          csvData.orderedColumns.forEach((col) => {
-            sampleColumnValues.set(col.id, new Set());
+          csvData.orderedColumns.forEach((_, idx) => {
+            sampleColumnValues.set(idx, new Set());
           });
         } else {
           csvData.rowsForDisplay.set(BigInt(currRow), result.data);
@@ -116,12 +121,11 @@ export function UploadSection(props: UploadSectionProps): JSX.Element {
           }
           // Add values in row to sample column values
           result.data.forEach((data, idx) => {
-            if (idx >= csvData.orderedColumns.length) {
-              return;
-            }
-            const colId = csvData.orderedColumns[idx].id;
-            if (sampleColumnValues.get(colId).size < MAX_COLUMN_SAMPLES) {
-              sampleColumnValues.get(colId).add(data);
+            if (
+              sampleColumnValues.has(idx) &&
+              sampleColumnValues.get(idx).size < MAX_COLUMN_SAMPLES
+            ) {
+              sampleColumnValues.get(idx).add(data);
             }
           });
         }
