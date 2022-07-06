@@ -26,7 +26,7 @@ import {
   MappingType,
   MappingVal,
 } from "../types";
-import { DateDetector } from "./detect_date";
+import * as dd from "./detect_date";
 import { PlaceDetector } from "./detect_place";
 
 /**
@@ -115,8 +115,7 @@ function detectPlace(
 
 function detectDate(
   cols: Map<number, Array<string>>,
-  columnOrder: Array<Column>,
-  dDetector: DateDetector
+  columnOrder: Array<Column>
 ): MappingVal {
   const detectedDateColumns = new Array<Column>();
   const detectedDateHeaders = new Array<Column>();
@@ -125,16 +124,16 @@ function detectDate(
     const col = columnOrder[colIndex];
 
     // Check if the column header can be parsed as a valid date.
-    if (dDetector.detectColumnHeaderDate(col.header) === true) {
+    if (dd.detectColumnHeaderDate(col.header)) {
       detectedDateHeaders.push(col);
-    } else if (dDetector.detectColumnWithDates(col.header, colVals) === true) {
+    } else if (dd.detectColumnWithDates(col.header, colVals)) {
       detectedDateColumns.push(col);
     }
   });
   // If both detectedDateColumns and detectedDateHeaders are non-empty,
   // return the detectedDateHeaders.
   // If detectedDateHeaders are empty but detectedDateColumns has more
-  // than one column, return the any (the first one).
+  // than one column, return any (e.g. the first one).
   if (detectedDateHeaders.length > 0) {
     return {
       type: MappingType.COLUMN_HEADER,
@@ -160,8 +159,7 @@ function detectDate(
  */
 export function getPredictions(
   csv: CsvData,
-  pDetector: PlaceDetector,
-  dDetector: DateDetector
+  pDetector: PlaceDetector
 ): Mapping {
   const m: Mapping = new Map<MappedThing, MappingVal>();
 
@@ -179,11 +177,7 @@ export function getPredictions(
   }
 
   // Iterate over all columns to determine if a Date is found.
-  const dateMVal = detectDate(
-    csv.columnValuesSampled,
-    csv.orderedColumns,
-    dDetector
-  );
+  const dateMVal = detectDate(csv.columnValuesSampled, csv.orderedColumns);
   if (dateMVal != null) {
     m.set(MappedThing.DATE, dateMVal);
   }

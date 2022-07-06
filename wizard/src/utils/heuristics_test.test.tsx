@@ -25,13 +25,12 @@ import {
   MappingVal,
   RowNumber,
 } from "../types";
-import { DateDetector } from "./detect_date";
+import * as dd from "./detect_date";
 import { PlaceDetector } from "./detect_place";
 import * as heuristics from "./heuristics";
 
 test("countryDetection", () => {
   const pDet = new PlaceDetector();
-  const dDet = new DateDetector();
 
   const cols = new Map<number, Array<string>>([
     [0, ["USA", "ITA"]], // This column should be detected as a Place (country).
@@ -63,13 +62,12 @@ test("countryDetection", () => {
     ],
   ]);
 
-  const got = heuristics.getPredictions(csv, pDet, dDet);
+  const got = heuristics.getPredictions(csv, pDet);
   expect(got).toStrictEqual(expected);
 });
 
 test("countryDetection-twocolumns", () => {
   const pDet = new PlaceDetector();
-  const dDet = new DateDetector();
 
   const cols = new Map<number, Array<string>>([
     // One of the two columns below should be detected. They are both countries.
@@ -88,7 +86,7 @@ test("countryDetection-twocolumns", () => {
     rowsForDisplay: new Map<RowNumber, Array<string>>(),
   };
 
-  const got = heuristics.getPredictions(csv, pDet, dDet).get(MappedThing.PLACE);
+  const got = heuristics.getPredictions(csv, pDet).get(MappedThing.PLACE);
   expect(got.type).toStrictEqual(MappingType.COLUMN);
   expect(got.placeProperty).toStrictEqual({
     dcid: "countryAlpha3Code",
@@ -103,7 +101,6 @@ test("countryDetection-twocolumns", () => {
 
 test("countryDetectionOrder", () => {
   const pDet = new PlaceDetector();
-  const dDet = new DateDetector();
 
   const colISO = "iso";
   const colAlpha3 = "alpha3";
@@ -192,7 +189,7 @@ test("countryDetectionOrder", () => {
       columnValuesSampled: colValsSampled,
       rowsForDisplay: new Map<RowNumber, Array<string>>(),
     };
-    const got = heuristics.getPredictions(csv, pDet, dDet);
+    const got = heuristics.getPredictions(csv, pDet);
     if (c.expectedProp == null) {
       expect(got.size).toBe(0);
       continue;
@@ -215,7 +212,6 @@ test("countryDetectionOrder", () => {
 
 test("dateDetection-headers", () => {
   const pDet = new PlaceDetector();
-  const dDet = new DateDetector();
 
   const cols = new Map<number, Array<string>>([
     [0, []],
@@ -242,13 +238,12 @@ test("dateDetection-headers", () => {
     ],
   ]);
 
-  const got = heuristics.getPredictions(csv, pDet, dDet);
+  const got = heuristics.getPredictions(csv, pDet);
   expect(got).toStrictEqual(expected);
 });
 
 test("dateDetection-columns", () => {
   const pDet = new PlaceDetector();
-  const dDet = new DateDetector();
 
   const cols = new Map<number, Array<string>>([
     [0, ["2020-10", "2021-10", "2022-10"]],
@@ -275,13 +270,12 @@ test("dateDetection-columns", () => {
     ],
   ]);
 
-  const got = heuristics.getPredictions(csv, pDet, dDet);
+  const got = heuristics.getPredictions(csv, pDet);
   expect(got).toStrictEqual(expected);
 });
 
 test("dateDetection-headers-columns", () => {
   const pDet = new PlaceDetector();
-  const dDet = new DateDetector();
 
   // Column at index 2 is a date column but preference is given to column
   // headers.
@@ -310,13 +304,12 @@ test("dateDetection-headers-columns", () => {
     ],
   ]);
 
-  const got = heuristics.getPredictions(csv, pDet, dDet);
+  const got = heuristics.getPredictions(csv, pDet);
   expect(got).toStrictEqual(expected);
 });
 
 test("comboDetection-date-and-place", () => {
   const pDet = new PlaceDetector();
-  const dDet = new DateDetector();
 
   // Column at index 2 is a date column but preference is given to column
   // headers. There is also a place (country) column.
@@ -359,6 +352,6 @@ test("comboDetection-date-and-place", () => {
     ],
   ]);
 
-  const got = heuristics.getPredictions(csv, pDet, dDet);
+  const got = heuristics.getPredictions(csv, pDet);
   expect(got).toStrictEqual(expected);
 });

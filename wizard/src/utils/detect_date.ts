@@ -13,56 +13,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import _ from "lodash";
+
 const MIN_HIGH_CONF_DETECT = 0.9;
 
+function detectDate(header: string): boolean {
+  const d = Date.parse(header);
+  return !Number.isNaN(d) && d >= 0;
+}
+
 /**
- * A DateDetector objected is meant to be initialized once. It provides
- * convenience access to date detectors.
+ * detectColumnHeaderDate returns true if 'header' can be parsed as valid Date
+ * objects.
+ *
+ * @param header: the column header string.
+ *
+ * @returns a boolean which is true if 'header' can be parsed as valid Date
+ *         object. It returns false otherwise.
  */
-export class DateDetector {
-  detectDate(header: string): boolean {
-    const d = Date.parse(header);
-    if (!Number.isNaN(d) && d >= 0) {
-      return true;
-    }
-    return false;
-  }
+export function detectColumnHeaderDate(header: string): boolean {
+  return detectDate(header);
+}
 
-  /**
-   * detectColumnHeaderDate returns true if 'header' can be parsed as valid Date
-   * objects.
-   *
-   * @param header: the column header string.
-   *
-   * @returns a boolean which is true if 'header' can be parsed as valid Date
-   *         object. It returns false otherwise.
-   */
-  detectColumnHeaderDate(header: string): boolean {
-    return this.detectDate(header);
-  }
+/**
+ * detectColumnWithDates returns true if > 90% of the non-empty string 'values'
+ * can be parsed as valid Date objects. It returns false otherwise.
+ *
+ * @param header: the column header string.
+ * @param values: an array of string column values.
+ *
+ * @returns a boolean which is true if > 90% of values can be parsed as valid
+ *     date objects. It returns false otherwise.
+ */
+export function detectColumnWithDates(
+  header: string,
+  values: Array<string>
+): boolean {
+  let detected = 0;
+  let total = 0;
 
-  /**
-   * detectColumnWithDates returns true if > 90% of the non-empty string 'values'
-   * can be parsed as valid Date objects. It returns false otherwise.
-   *
-   * @param header: the column header string.
-   * @param values: an array of string column values.
-   *
-   * @returns a boolean which is true if > 90% of values can be parsed as valid
-   *          date objects. It returns false otherwise.
-   */
-  detectColumnWithDates(header: string, values: Array<string>): boolean {
-    let detected = 0;
-    let total = 0;
-
-    for (const d of values) {
-      if (d && d.length > 0) {
-        total++;
-        if (this.detectDate(d) === true) {
-          detected++;
-        }
+  for (const d of values) {
+    if (d && !_.isEmpty(d)) {
+      total++;
+      if (detectDate(d)) {
+        detected++;
       }
     }
-    return detected > MIN_HIGH_CONF_DETECT * total ? true : false;
   }
+  return detected > MIN_HIGH_CONF_DETECT * total;
 }

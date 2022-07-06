@@ -15,17 +15,14 @@
  */
 import _ from "lodash";
 
-import { DateDetector } from "./detect_date";
+import * as dd from "./detect_date";
 
 test("dateDetectionBasics", () => {
-  const dd = new DateDetector();
   const got = dd.detectColumnHeaderDate("2020-10-01");
   expect(got).toBe(true);
 });
 
 test("dateHeaderDetectionBasics", () => {
-  const dd = new DateDetector();
-
   const cases: {
     name: string;
     input: string;
@@ -81,8 +78,6 @@ test("dateHeaderDetectionBasics", () => {
 });
 
 test("dateColumnDetection", () => {
-  const dd = new DateDetector();
-
   const cases: {
     name: string;
     input: Array<string>;
