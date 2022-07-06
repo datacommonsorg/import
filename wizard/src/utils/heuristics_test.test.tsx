@@ -17,19 +17,13 @@ import _ from "lodash";
 
 import {
   Column,
-<<<<<<< HEAD
   CsvData,
   DCProperty,
-=======
->>>>>>> master
   MappedThing,
   Mapping,
   MappingType,
   MappingVal,
-<<<<<<< HEAD
   RowNumber,
-=======
->>>>>>> master
 } from "../types";
 import { PlaceDetector } from "./detect_place";
 import * as heuristics from "./heuristics";
@@ -48,11 +42,7 @@ test("detectCountry", () => {
   const csv = {
     orderedColumns: [colCountry, colOther1, colOther2],
     columnValuesSampled: cols,
-<<<<<<< HEAD
     rowsForDisplay: new Map<RowNumber, Array<string>>(),
-=======
-    rowsForDisplay: new Map<bigint, Array<string>>(),
->>>>>>> master
   };
 
   const expected: Mapping = new Map<MappedThing, MappingVal>([
@@ -90,11 +80,7 @@ test("detectCountryTwoColumns", () => {
   const csv = {
     orderedColumns: [colCountry, colCountryOther, colOther2],
     columnValuesSampled: cols,
-<<<<<<< HEAD
     rowsForDisplay: new Map<RowNumber, Array<string>>(),
-=======
-    rowsForDisplay: new Map<bigint, Array<string>>(),
->>>>>>> master
   };
 
   const got = heuristics.getPredictions(csv, det).get(MappedThing.PLACE);
@@ -109,7 +95,6 @@ test("detectCountryTwoColumns", () => {
   });
   expect(got.column.header).toStrictEqual("a");
 });
-<<<<<<< HEAD
 
 test("countryDetectionOrder", () => {
   const det = new PlaceDetector();
@@ -221,5 +206,3 @@ test("countryDetectionOrder", () => {
     expect(got).toStrictEqual(expected);
   }
 });
-=======
->>>>>>> master
