@@ -23,6 +23,7 @@ function detectDate(header: string): boolean {
 }
 
 /**
+<<<<<<< HEAD
 * detectColumnHeaderDate returns true if 'header' can be parsed as valid Date
 * objects.
 *
@@ -46,11 +47,43 @@ export function detectColumnHeaderDate(header: string): boolean {
 *     date objects. It returns false otherwise.
 */
 export function detectColumnWithDates(header: string, values: Array<string>): boolean {
+=======
+ * detectColumnHeaderDate returns true if 'header' can be parsed as valid Date
+ * objects.
+ *
+ * @param header: the column header string.
+ *
+ * @returns a boolean which is true if 'header' can be parsed as valid Date
+ *         object. It returns false otherwise.
+ */
+export function detectColumnHeaderDate(header: string): boolean {
+  return detectDate(header);
+}
+
+/**
+ * detectColumnWithDates returns true if > 90% of the non-empty string 'values'
+ * can be parsed as valid Date objects. It returns false otherwise.
+ *
+ * @param header: the column header string.
+ * @param values: an array of string column values.
+ *
+ * @returns a boolean which is true if > 90% of values can be parsed as valid
+ *     date objects. It returns false otherwise.
+ */
+export function detectColumnWithDates(
+  header: string,
+  values: Array<string>
+): boolean {
+>>>>>>> master
   let detected = 0;
   let total = 0;
 
   for (const d of values) {
+<<<<<<< HEAD
     if (d && !_.isEmpty(d)) {
+=======
+    if (!_.isEmpty(d)) {
+>>>>>>> master
       total++;
       if (detectDate(d)) {
         detected++;

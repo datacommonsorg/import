@@ -26,6 +26,7 @@ import {
   MappingType,
   MappingVal,
 } from "../types";
+import * as dd from "./detect_date";
 import { PlaceDetector } from "./detect_place";
 
 /**
@@ -114,6 +115,41 @@ function detectPlace(
   return null;
 }
 
+function detectDate(
+  cols: Map<number, Array<string>>,
+  columnOrder: Array<Column>
+): MappingVal {
+  const detectedDateColumns = new Array<Column>();
+  const detectedDateHeaders = new Array<Column>();
+
+  cols.forEach((colVals: Array<string>, colIndex: number) => {
+    const col = columnOrder[colIndex];
+
+    // Check if the column header can be parsed as a valid date.
+    if (dd.detectColumnHeaderDate(col.header)) {
+      detectedDateHeaders.push(col);
+    } else if (dd.detectColumnWithDates(col.header, colVals)) {
+      detectedDateColumns.push(col);
+    }
+  });
+  // If both detectedDateColumns and detectedDateHeaders are non-empty,
+  // return the detectedDateHeaders.
+  // If detectedDateHeaders are empty but detectedDateColumns has more
+  // than one column, return any (e.g. the first one).
+  if (detectedDateHeaders.length > 0) {
+    return {
+      type: MappingType.COLUMN_HEADER,
+      headers: detectedDateHeaders,
+    };
+  } else if (detectedDateColumns.length > 0) {
+    return {
+      type: MappingType.COLUMN,
+      column: detectedDateColumns[0],
+    };
+  }
+  return null;
+}
+
 /**
  * Given a csv, returns the predicted mappings.
  *
@@ -138,5 +174,15 @@ export function getPredictions(
   if (placeMVal != null) {
     m.set(MappedThing.PLACE, placeMVal);
   }
+  if (placeMVal != null) {
+    m.set(MappedThing.PLACE, placeMVal);
+  }
+
+  // Iterate over all columns to determine if a Date is found.
+  const dateMVal = detectDate(csv.columnValuesSampled, csv.orderedColumns);
+  if (dateMVal != null) {
+    m.set(MappedThing.DATE, dateMVal);
+  }
+
   return m;
 }
