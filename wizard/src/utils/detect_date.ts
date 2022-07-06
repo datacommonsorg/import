@@ -53,7 +53,7 @@ export function detectColumnWithDates(
   let total = 0;
 
   for (const d of values) {
-    if (d && !_.isEmpty(d)) {
+    if (!_.isEmpty(d)) {
       total++;
       if (detectDate(d)) {
         detected++;
