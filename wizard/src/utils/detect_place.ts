@@ -22,7 +22,8 @@ import {
 } from "../types";
 import countriesJSON from "./country_mappings.json";
 
-const MIN_HIGH_CONF_DETECT = 0.9;
+const MIN_HIGH_CONF_DETECT = 0.7;
+const SUPPORTED_PLACE_TYPES = new Set<string>(["Country"]);
 
 // All supported Place types must be encoded below.
 const PLACE_TYPES: DCType[] = [
@@ -144,6 +145,20 @@ export class PlaceDetector {
   }
 
   /**
+   * Returns the TypeProperty objects which are currently supported.
+   */
+  getSupportedPlaceTypesAndProperties(): Set<TypeProperty> {
+    let supported = new Set<TypeProperty>();
+
+    for (const tp of Array.from(this.placeTypesAndProperties)) {
+      if (SUPPORTED_PLACE_TYPES.has(tp.dcType.dcid)) {
+        supported.add(tp);
+      }
+    }
+    return supported;
+  }
+
+  /**
    * Process the countriesJSON object to generate the required sets.
    */
   preProcessCountries() {
@@ -197,8 +212,8 @@ export class PlaceDetector {
   }
 
   /**
-   * Country is detected with high confidence if > 90% of the non-null column
-   * values match one of the country format (property) arrays.
+   * Country is detected with high confidence if > MIN_HIGH_CONF_DETECT of the
+   * non-null column values match one of the country format (property) arrays.
    * If country is not detected, null is returned.
    * If country is detected, the TypeProperty is returned.
    *
