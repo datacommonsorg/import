@@ -61,6 +61,139 @@ h2 {
   margin-top: 1rem;
 }
 
+.highlighted-col {
+  background-color: lightyellow;
+}
+
+table {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  overflow: auto;
+  font-size: 0.9rem;
+  max-height: 50vh;
+}
+
+tr th {
+  height: 2rem;
+  vertical-align: center;
+}
+
+table,
+th,
+td {
+  border: 1px solid #ccc;
+  border-collapse: collapse;
+}
+
+th {
+  background: #f5f6fa;
+  border-top: none;
+}
+
+th,
+td {
+  text-align: center;
+  padding: 0.2rem 0.5rem;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr td:first-child,
+tr th:first-child {
+  border-left: none;
+}
+
+tr td:last-child,
+tr th:last-child {
+  border-right: none;
+}
+
+.mapping-info-row th {
+  background-color: #cabdbd;
+  font-size: 0.8rem;
+  font-weight: normal;
+  min-width: 7rem;
+}
+
+.row-num {
+  font-weight: normal;
+  color: #7b7b7b;
+  font-size: 0.8rem;
+  width: 1rem;
+}
+
+.column-options {
+  margin-top: 1rem;
+}
+
+.column-options-header {
+  padding-bottom: 0.3rem;
+}
+.column-options-input-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.column-options-input {
+  margin: 0.3rem;
+  display: flex;
+  width: fit-content;
+  height: 1.5rem;
+  align-items: center;
+}
+
+.form-check-input {
+  margin-right: 0.3rem;
+}
+
+.form-select {
+  width: 10rem;
+  padding: 0.2rem;
+  border-color: #ccc;
+  margin: 0 0.5rem;
+  font-size: 0.9rem;
+  border-radius: 0.3rem
+}
+
+#column-type-mapped-thing {
+  margin-left: 0;
+}
+
+.confirmation-button {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.constant-values-section {
+  margin-top: 0;
+  border-top: 0;
+}
+
+.constant-value-input-container {
+  display: flex;
+  padding-top: 0.5rem;
+  align-items: center;
+}
+
+.constant-value-label {
+  width: 5rem;
+}
+
+.constant-value-input {
+  border: 1px solid #ccc;
+  border-radius: 0.3rem;
+  width: 20rem;
+  padding: 0.2rem;
+}
+
+.mapping-errors {
+  color: #dc3545;
+}
+
 /* Spinner */
 .screen,
 #screen {
