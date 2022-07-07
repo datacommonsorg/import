@@ -1,0 +1,19 @@
+*.pyc
+__pycache__/
+*.DS_Store
+.vscode/settings.json
+.env/
+.idea/
+.vscode/
+*.iml
+target/
+
+.settings/
+.classpath
+.factorypath
+.project
+
+# static files
+**/node_modules/**
+/wizard/build/**
+!wizard/build/.empty

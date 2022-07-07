@@ -1,0 +1,27 @@
+type: INSTANCE_MCF
+nodes {
+  key: "MadState"
+  value {
+    locations {
+      file: "f3.mcf"
+      line_number: 1
+    }
+    locations {
+      file: "f4.mcf"
+      line_number: 1
+    }
+  }
+}
+nodes {
+  key: "MadCity"
+  value {
+    locations {
+      file: "f1.mcf"
+      line_number: 1
+    }
+    locations {
+      file: "f2.mcf"
+      line_number: 1
+    }
+  }
+}

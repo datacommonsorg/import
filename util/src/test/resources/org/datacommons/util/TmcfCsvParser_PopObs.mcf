@@ -1,0 +1,56 @@
+Node: CityStats/E2/1
+typeOf: City
+name: "New York City"
+
+Node: CityStats/E3/1
+typeOf: StatisticalPopulation
+populationType: Person
+location: l:CityStats/E2/1
+gender: dcs:Male
+nationality: dcs:Canadian
+age: [10 20 Years]
+
+Node: CityStats/E4/1
+typeOf: Observation
+populationType: Person
+observedNode: l:CityStats/E3/1
+measuredProperty: count
+measuredValue: 20000000
+observationDate: 2012
+observationPeriod: "P5Y"
+
+Node: CityStats/E5/1
+typeOf: StatisticalPopulation
+populationType: Person
+location: dcid:geoId/NYCounty
+
+
+Node: dcid:geoId/CA
+typeOf: State
+
+Node: CityStats/E2/2
+typeOf: City
+name: "San Francisco"
+containedIn: dcid:geoId/CA
+
+Node: CityStats/E3/2
+typeOf: StatisticalPopulation
+populationType: Person
+location: l:CityStats/E2/2
+gender: dcs:Female
+nationality: dcs:Canadian
+age: [20 30 Years]
+
+Node: CityStats/E4/2
+typeOf: Observation
+populationType: Person
+observedNode: l:CityStats/E3/2
+measuredProperty: count
+measuredValue: 10000000.0
+observationDate: 2007
+observationPeriod: "P5Y"
+
+Node: CityStats/E5/2
+typeOf: StatisticalPopulation
+populationType: Person
+location: dcid:geoId/SFCounty

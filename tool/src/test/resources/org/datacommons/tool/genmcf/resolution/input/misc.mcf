@@ -1,0 +1,61 @@
+# 1. Place with DCID, needs resolution by wikidataID
+Node: PlaceLocalId
+wikidataId: "Q486860"
+typeOf: schema:City
+
+# 2. Resolvable SVObs
+Node: SVObsId
+typeOf: dcs:StatVarObservation
+variableMeasured: dcid:Count_Person
+observationAbout: l:PlaceLocalId
+observationDate: "2017-01"
+value: 1000
+
+# 3. Unresolvable StatVar
+Node: SVId
+typeOf: dcs:StatisticalVariable
+populationType: schema:Person
+measuredProperty: dcs:count
+
+# 4. Unresolvable SVObs which references the SVId above.
+Node: UnresSVObsId
+typeOf: dcs:StatVarObservation
+variableMeasured: l:SVId
+observationAbout: l:PlaceLocalId
+observationDate: "2017-01"
+value: 1000
+
+# 5. Resolvable StatPop
+Node: PopLocalId
+typeOf: dcs:StatisticalPopulation
+location: l:PlaceLocalId
+populationType: schema:Person
+gender: schema:Male
+age: [Years 18 -]
+
+# 6. Resolvable legacy Obs
+Node: ObsLocalId
+typeOf: dcs:Observation
+observationDate: "2017-01"
+observedNode: l:PopLocalId
+measuredProperty: dcs:count
+measuredValue: 10000
+
+# 7. Unresolvable album
+Node: AlbumLocalId
+typeOf: dcs:MusicAlbum
+name: "Bad"
+bestSong: l:SongLocalId
+
+# 8. Unresolvable song
+Node: SongLocalId
+typeOf: dcs:Song
+name: "Liberian Girl"
+albumOf: l:AlbumLocalId
+
+# 9. A Org with DCID, but orphan ref.
+Node: GoogleId
+typeOf: dcs:Organization
+name: "Google Inc"
+dcid: "org/goog"
+parent: l:AlphabetId

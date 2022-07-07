@@ -1,0 +1,32 @@
+Node: E:CityStats->E1
+typeOf: State
+dcid: C:CityStats->StateId
+name: C:CityStats->StateName
+
+Node: E:CityStats->E2
+typeOf: City
+name: C:CityStats->City
+containedIn: E:CityStats->E1
+
+Node: E:CityStats->E3
+typeOf: StatisticalPopulation
+populationType: Person
+location: E:CityStats->E2
+gender: C:CityStats->Gender
+age: C:CityStats->AgeRange
+nationality: dcs:Canadian
+
+Node: E:CityStats->E4
+typeOf: Observation
+populationType: Person
+observedNode: E:CityStats->E3
+measuredProperty: count
+measuredValue: C:CityStats->Count
+observationDate: C:CityStats->Year
+observationPeriod: P5Y
+
+# Additional node just to store a reference property.
+Node: E:CityStats->E5
+typeOf: StatisticalPopulation
+populationType: Person
+location: C:CityStats->CountyId

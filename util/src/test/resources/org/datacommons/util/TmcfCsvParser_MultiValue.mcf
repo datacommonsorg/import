@@ -1,0 +1,18 @@
+Node: Society/E0/1
+employment: "Occidental", "Columbia"
+name: "Barack"
+spouse: "Michelle"
+typeOf: dcid:Person
+
+Node: Society/E0/2
+employment: "Fordham U, Bronx", "Wharton"
+name: "Donald"
+spouse: "Ivana", "Marla", "Melania"
+typeOf: dcid:Person
+
+Node: Society/E0/3
+employment: "Delaware"
+name: "John Biden, Jr."
+spouse: "Jill"
+typeOf: dcid:Person
+

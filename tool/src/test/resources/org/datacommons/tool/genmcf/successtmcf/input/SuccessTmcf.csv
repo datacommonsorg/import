@@ -1,0 +1,17 @@
+Year,Place_Id,Place_Name,Place_Type,LatLong,SV1,SV2
+19,US- CA,California,State,[LatLong 36N 1194W],1,2
+2019,"CA-BC,Canada",British–Columbia,AdministrativeArea1,[LatLong 53W 127N],1,2
+2019-06-01,CA-AB,Alberta,Administrative–Area1,[Lat Long 539 116],1,2
+2019,US-SF,"San,Francisco",,[LatLong 37],1,2
+2019,US-WA,Washington,State,[LatLong 48, 120],1,2
+"2018, 2019",CA-VN,Vancouver,City,[],1,2
+2019,,Toronto,City,[LatLong 43, 116],1,2,
+2019,CH-SH,Shanghai,City,[,1,2
+2019,123,testPlace,AdministrativeArea1,[LatLong 53W 127N],1,2
+2019,veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongdcid,testPlace,AdministrativeArea1,[LatLong 53W 127N],1,2
+2019-02-03,CA-MN,Manitoba,Province,[Lat Long],1,2
+2019,CA-SK,Saskatchewan,Province,[LatLong 43N 116W],"[5 6]",2
+2019,CA-YU,Yukon,Territory,[LatLong 43S 116E],"\"[5]\"",2
+2017-06-01,CA-AB,Alberta,Administrative–Area1,[Lat Long 539 116],2,2
+2017-09-01,CA-AB,Alberta,Administrative–Area1,[Lat Long 539 116],10,2
+2011-01-01,CA-AB,Alberta,Administrative–Area1,[Lat Long 539 116],0,2

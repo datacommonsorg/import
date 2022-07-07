@@ -1,0 +1,49 @@
+{
+  "statsCheckSummary": [{
+    "placeDcid": "geoId/06",
+    "statVarDcid": "Count_Person",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "validationCounters": [{
+      "counterKey": "StatsCheck_Inconsistent_Values",
+      "problemPoints": [{
+        "date": "2015",
+        "values": [{
+          "value": 1000201.0,
+          "locations": [{
+            "file": "StatCheckerTest.mcf",
+            "lineNumber": "64"
+          }]
+        }, {
+          "value": 1000202.0,
+          "locations": [{
+            "file": "StatCheckerTest.mcf",
+            "lineNumber": "71"
+          }]
+        }]
+      }]
+    }]
+  }, {
+    "placeDcid": "geoId/06",
+    "statVarDcid": "Count_Person",
+    "measurementMethod": "CensusACS5YrSurvey",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "validationCounters": [{
+      "counterKey": "StatsCheck_3_Sigma",
+      "problemPoints": [{
+        "date": "2014",
+        "values": [{
+          "value": 1000100.0,
+          "locations": [{
+            "file": "StatCheckerTest.mcf",
+            "lineNumber": "1"
+          }]
+        }]
+      }]
+    }]
+  }]
+}

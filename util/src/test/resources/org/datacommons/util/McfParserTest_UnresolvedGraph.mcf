@@ -1,0 +1,14 @@
+Node: USACountry
+typeOf: schema:Country
+name: "United States Of America"
+dcid: "dc/2sffw13"
+
+Node: dcid:dc/mx44
+# We must not have quoted City.
+typeOf: "City"
+# We must have quoted Mountain View.
+name: Mountain View
+containedInPlace: dc/4fef4e, l:USACountry
+population: 81438
+area: 31.788
+inCounty: true

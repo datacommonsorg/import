@@ -1,0 +1,49 @@
+{
+  "levelSummary": {
+    "LEVEL_INFO": {
+      "counters": {
+        "CSV_GeneralStats": "42"
+      }
+    },
+    "LEVEL_WARNING": {
+      "counters": {
+        "MCF_EmptyValue": "1"
+      }
+    },
+    "LEVEL_ERROR": {
+      "counters": {
+        "MCF_NoColonFound": "1"
+      }
+    },
+    "LEVEL_FATAL": {
+      "counters": {
+        "CSV_FoundABomb": "1"
+      }
+    }
+  },
+  "entries": [{
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "TestInput.mcf",
+      "lineNumber": "10"
+    },
+    "userMessage": "Missing Colon",
+    "counterKey": "MCF_NoColonFound"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "TestInput.mcf",
+      "lineNumber": "20"
+    },
+    "userMessage": "Empty value",
+    "counterKey": "MCF_EmptyValue"
+  }, {
+    "level": "LEVEL_FATAL",
+    "location": {
+      "file": "TestInput.csv",
+      "lineNumber": "30"
+    },
+    "userMessage": "Found a Time Bomb",
+    "counterKey": "CSV_FoundABomb"
+  }]
+}
