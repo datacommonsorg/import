@@ -246,7 +246,7 @@ export function MappingSection(props: MappingSectionProps): JSX.Element {
 // Get a map of place type to set of matching place properties
 function getValidPlaceTypeProperties(
   placeDetector: PlaceDetector
-): Record<string, Set<string>> {
+): Record<string, Set<DCProperty>> {
   const validPlaceTypeProperties = {};
   placeDetector
     .getSupportedPlaceTypesAndProperties()
@@ -256,7 +256,7 @@ function getValidPlaceTypeProperties(
         validPlaceTypeProperties[type] = new Set();
       }
       if (!_.isEmpty(typeProperty.dcProperty)) {
-        validPlaceTypeProperties[type].add(typeProperty.dcProperty.dcid);
+        validPlaceTypeProperties[type].add(typeProperty.dcProperty);
       }
     });
   return validPlaceTypeProperties;
@@ -266,7 +266,7 @@ function getValidPlaceTypeProperties(
 function getColumnInfo(
   csvData: CsvData,
   predictedMapping: Mapping,
-  validPlaceTypeProperties: Record<string, Set<string>>,
+  validPlaceTypeProperties: Record<string, Set<DCProperty>>,
   placeDetector: PlaceDetector
 ): Record<string, ColumnInfo> {
   const defaultPlaceType = Object.keys(validPlaceTypeProperties)[0];
@@ -279,8 +279,7 @@ function getColumnInfo(
       column,
       columnMappedThing: REQUIRED_MAPPINGS[0],
       columnPlaceType: placeDetector.placeTypes.get(defaultPlaceType),
-      columnPlaceProperty:
-        placeDetector.placeProperties.get(defaultPlaceProperty),
+      columnPlaceProperty: defaultPlaceProperty,
       headerMappedThing: REQUIRED_MAPPINGS[0],
     };
   });
@@ -303,11 +302,9 @@ function getColumnInfo(
         const placeType = mappingVal.placeType
           ? mappingVal.placeType
           : placeDetector.placeTypes.get(defaultPlaceType);
-        const placePropertyDcid = mappingVal.placeProperty
-          ? mappingVal.placeProperty.dcid
+        const placeProperty = mappingVal.placeProperty
+          ? mappingVal.placeProperty
           : Array.from(validPlaceTypeProperties[placeType.dcid])[0];
-        const placeProperty =
-          placeDetector.placeProperties.get(placePropertyDcid);
         columnInfo[colId].columnPlaceType = placeType;
         columnInfo[colId].columnPlaceProperty = placeProperty;
       }

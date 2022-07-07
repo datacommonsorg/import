@@ -22,14 +22,14 @@ import _ from "lodash";
 import React from "react";
 import { FormGroup, Input, Label } from "reactstrap";
 
-import { MappedThing, MappingType } from "../types";
+import { DCProperty, MappedThing, MappingType } from "../types";
 import { PlaceDetector } from "../utils/detect_place";
 import { ColumnInfo } from "./mapping_section";
 
 interface MappingColumnOptionsProps {
   column: ColumnInfo;
   onColumnUpdated: (column: ColumnInfo) => void;
-  validPlaceTypeProperties: Record<string, Set<string>>;
+  validPlaceTypeProperties: Record<string, Set<DCProperty>>;
   placeDetector: PlaceDetector;
 }
 
@@ -112,11 +112,8 @@ export function MappingColumnOptions(
                   }
                 >
                   {validPlaceProperties.map((property) => (
-                    <option value={property} key={property}>
-                      {
-                        props.placeDetector.placeProperties.get(property)
-                          .displayName
-                      }
+                    <option value={property.dcid} key={property.dcid}>
+                      {property.displayName}
                     </option>
                   ))}
                 </Input>
@@ -180,7 +177,7 @@ export function MappingColumnOptions(
     columnPlaceType?: string,
     columnPlaceProperty?: string
   ): void {
-    const updatedColumn = _.cloneDeep(props.column);
+    const updatedColumn: ColumnInfo = _.cloneDeep(props.column);
     updatedColumn.type = mappingType;
     updatedColumn.mappedThing = mappedThing;
     if (mappingType === MappingType.COLUMN) {
@@ -196,11 +193,12 @@ export function MappingColumnOptions(
           updatedColumn.columnPlaceProperty
         )
           ? updatedColumn.columnPlaceProperty
-          : Array.from(possibleProperties)[0];
+          : possibleProperties[0];
       }
       // if columnPlaceProperty is updated, update columnPlaceProperty
       if (!_.isEmpty(columnPlaceProperty)) {
-        updatedColumn.columnPlaceProperty = columnPlaceProperty;
+        updatedColumn.columnPlaceProperty =
+          props.placeDetector.placeProperties.get(columnPlaceProperty);
       }
     }
     if (mappingType === MappingType.COLUMN_HEADER) {
