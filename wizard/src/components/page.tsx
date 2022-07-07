@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-import React, { useState } from "react";
+import _ from "lodash";
+import React, { useRef, useState } from "react";
 
 import { CsvData, Mapping } from "../types";
+import { PlaceDetector } from "../utils/detect_place";
 import { UploadSection } from "./upload_section";
 
 export function Page(): JSX.Element {
   const [csv, setCsv] = useState<CsvData>(null);
   const [predictedMapping, setPredictedMapping] = useState<Mapping>(null);
+  const placeDetector = useRef(new PlaceDetector());
 
   return (
     <>
       <UploadSection
         onCsvProcessed={(csv) => setCsv(csv)}
         onPredictionRetrieved={(prediction) => setPredictedMapping(prediction)}
+        placeDetector={placeDetector.current}
       />
     </>
   );
