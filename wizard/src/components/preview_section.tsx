@@ -13,6 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/**
+ * Component for previewing the results of the mapping and downloading the
+ * import package
+ */
+
 import JSZip from "jszip";
 import _ from "lodash";
 import React from "react";

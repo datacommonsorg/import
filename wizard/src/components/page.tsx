@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/**
+ * Main component for the import wizard.
+ */
+
 import _ from "lodash";
 import React, { useRef, useState } from "react";
 
