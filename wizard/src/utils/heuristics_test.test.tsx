@@ -312,20 +312,30 @@ test("comboDetection-date-and-place", () => {
   const pDet = new PlaceDetector();
 
   // Column at index 2 is a date column but preference is given to column
-  // headers. There is also a place (country) column.
+  // headers.
+  // There are also two place columns: country and state. The State column is
+  // preferred.
   const cols = new Map<number, Array<string>>([
     [0, ["1", "2", "3"]],
     [1, ["random", "random", "random"]],
     [2, ["2020-10", "2021-10", "2022-10"]],
     [3, ["US", "IT", "ES"]],
+    [3, ["CA", "NY", "MA"]],
   ]);
   const dateColHeader1 = { id: "2022-100", header: "2022-10", columnIdx: 0 };
   const dateColHeader2 = { id: "20211", header: "2021-10", columnIdx: 1 };
   const dateCol = { id: "c2", header: "c", columnIdx: 2 };
   const countryCol = { id: "d3", header: "d", columnIdx: 3 };
+  const stateCol = { id: "e4", header: "e", columnIdx: 4 };
 
   const csv = {
-    orderedColumns: [dateColHeader1, dateColHeader2, dateCol, countryCol],
+    orderedColumns: [
+      dateColHeader1,
+      dateColHeader2,
+      dateCol,
+      countryCol,
+      stateCol,
+    ],
     columnValuesSampled: cols,
     rowsForDisplay: new Map<RowNumber, Array<string>>(),
   };
@@ -344,10 +354,10 @@ test("comboDetection-date-and-place", () => {
         type: MappingType.COLUMN,
         column: countryCol,
         placeProperty: {
-          dcid: "isoCode",
-          displayName: "ISO Code",
+          dcid: "fips52AlphaCode",
+          displayName: "US State Alpha Code",
         },
-        placeType: { dcid: "Country", displayName: "Country" },
+        placeType: { dcid: "State", displayName: "State" },
       },
     ],
   ]);

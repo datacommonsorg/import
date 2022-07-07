@@ -54,6 +54,17 @@ test("placeTypesAndProperties", () => {
       dcProperty: { dcid: "name", displayName: "Name" },
     },
     {
+      dcType: { dcid: "State", displayName: "State" },
+      dcProperty: { dcid: "isoCode", displayName: "ISO Code" },
+    },
+    {
+      dcType: { dcid: "State", displayName: "State" },
+      dcProperty: {
+        dcid: "fips52AlphaCode",
+        displayName: "US State Alpha Code",
+      },
+    },
+    {
       dcType: { dcid: "Province", displayName: "Province" },
       dcProperty: { dcid: "name", displayName: "Name" },
     },
@@ -92,6 +103,21 @@ test("supportedPlaceTypeProperties", () => {
       dcType: { dcid: "Country", displayName: "Country" },
       dcProperty: { dcid: "countryNumericCode", displayName: "Numeric Code" },
     },
+    {
+      dcType: { dcid: "State", displayName: "State" },
+      dcProperty: { dcid: "name", displayName: "Name" },
+    },
+    {
+      dcType: { dcid: "State", displayName: "State" },
+      dcProperty: { dcid: "isoCode", displayName: "ISO Code" },
+    },
+    {
+      dcType: { dcid: "State", displayName: "State" },
+      dcProperty: {
+        dcid: "fips52AlphaCode",
+        displayName: "US State Alpha Code",
+      },
+    },
   ]);
   expect(det.getSupportedPlaceTypesAndProperties()).toEqual(expected);
 });
@@ -122,8 +148,10 @@ test("countries", () => {
   expect(det.countryNames.size).toEqual(numCountriesExpected);
   expect(det.countryISO.size).toEqual(numIsoCodes);
   expect(det.countryAbbrv3.size).toEqual(numAbbrv3Codes);
-  expect(det.countryNumeric.size).toEqual(numNumeric); // Some other random spot checks. // Norway.
+  expect(det.countryNumeric.size).toEqual(numNumeric);
 
+  // Some other random spot checks.
+  // Norway.
   expect(det.countryNames).toContain("norway");
   expect(det.countryISO).toContain("no");
   expect(det.countryAbbrv3).toContain("nor");
@@ -146,6 +174,38 @@ test("countries", () => {
   expect(det.countryNumeric).not.toContain("");
   expect(det.countryNumeric).not.toContain(null);
   expect(det.countryNumeric).not.toContain(0);
+});
+
+test("States", () => {
+  const det = new PlaceDetector();
+  const numStatesExpected = 89; // US and India.
+  const numIsoCodes = 89; // US and India.
+  const numFipsCodes = 52; // US only.
+
+  expect(det.stateNames.size).toEqual(numStatesExpected);
+  expect(det.stateISO.size).toEqual(numIsoCodes);
+  expect(det.stateFipsAlpha.size).toEqual(numFipsCodes);
+
+  // Some random checks.
+  // California.
+  expect(det.stateNames).toContain("california");
+  expect(det.stateISO).toContain("us-ca");
+  expect(det.stateFipsAlpha).toContain("ca");
+
+  // New York.
+  expect(det.stateNames).toContain("newyork");
+  expect(det.stateNames).toContain("newyork");
+  expect(det.stateISO).toContain("us-ny");
+  expect(det.stateFipsAlpha).toContain("ny");
+
+  // Texas.
+  expect(det.stateNames).toContain("texas");
+  expect(det.stateISO).toContain("us-tx");
+  expect(det.stateFipsAlpha).toContain("tx");
+
+  // Haryana (India).
+  expect(det.stateNames).toContain("haryana");
+  expect(det.stateISO).toContain("in-hr");
 });
 
 test("placeLowConfidenceDetection", () => {
@@ -372,13 +432,123 @@ test("countryHighConf", () => {
   }
 });
 
+test("stateHighConf", () => {
+  const det = new PlaceDetector();
+  const cases: {
+    name: string;
+    colArray: Array<string>;
+    expected: TypeProperty;
+  }[] = [
+    {
+      name: "name-detection",
+      colArray: [
+        "california",
+        "new york",
+        "massahusetts",
+        "new hampshire",
+        "south dakota",
+        "north dakota",
+        "washington",
+        "puerto rico",
+        "michigan",
+        "idaho",
+      ],
+      expected: {
+        dcType: { dcid: "State", displayName: "State" },
+        dcProperty: { dcid: "name", displayName: "Name" },
+      },
+    },
+    {
+      name: "iso-detection",
+      colArray: [
+        "US-CA",
+        "US-NY",
+        "US-MA",
+        "US-NH",
+        "US-SD",
+        "US-ND",
+        "US-WA",
+        "US-PR",
+        "US-MI",
+        "US-ID",
+      ],
+      expected: {
+        dcType: { dcid: "State", displayName: "State" },
+        dcProperty: { dcid: "isoCode", displayName: "ISO Code" },
+      },
+    },
+    {
+      name: "fips52AlphaCode",
+      colArray: ["ca", "ny", "ma", "nh", "sd", "sd", "nd", "wa", "pr", "mi"],
+      expected: {
+        dcType: { dcid: "State", displayName: "State" },
+        dcProperty: {
+          dcid: "fips52AlphaCode",
+          displayName: "US State Alpha Code",
+        },
+      },
+    },
+    {
+      name: "fips52AlphaCode-detection-with-null",
+      colArray: ["ca", "ny", "ma", "nh", "sd", "sd", "nd", "wa", null, null],
+      expected: {
+        dcType: { dcid: "State", displayName: "State" },
+        dcProperty: {
+          dcid: "fips52AlphaCode",
+          displayName: "US State Alpha Code",
+        },
+      },
+    },
+    {
+      name: "iso-no-detection", // No detection due to: US-AA, US-BB, US-CC, US-DD.
+      colArray: [
+        "US-AA",
+        "US-BB",
+        "US-CC",
+        "US-DD",
+        "US-SD",
+        "US-ND",
+        "US-WA",
+        "US-PR",
+        "US-MI",
+        "US-ID",
+      ],
+      expected: null,
+    },
+  ];
+  for (const c of cases) {
+    if (c.expected == null) {
+      expect(det.detect("", c.colArray)).toBe(null);
+      continue;
+    }
+    expect(det.detect("", c.colArray)).toStrictEqual({
+      detectedTypeProperty: c.expected,
+      confidence: ConfidenceLevel.High,
+    });
+  }
+});
+
 test("placeDetection", () => {
   const det = new PlaceDetector();
   const colName = "country";
 
-  // High Conf. Detection.
-  const colArray = ["USA", "NOR", "ITA"];
-  const expectedHighConf = {
+  // High Conf. State Detection.
+  let colArray = ["CA", "WA", "PA"];
+  let expectedHighConf = {
+    detectedTypeProperty: {
+      dcType: { dcid: "State", displayName: "State" },
+      dcProperty: {
+        dcid: "fips52AlphaCode",
+        displayName: "US State Alpha Code",
+      },
+    },
+    confidence: ConfidenceLevel.High,
+  };
+  expect(det.detect(colName, colArray)).toStrictEqual(expectedHighConf);
+
+  // High Conf. Country Detection.
+  colArray = ["USA", "NOR", "ITA"];
+  expectedHighConf = {
     detectedTypeProperty: {
       dcType: { dcid: "Country", displayName: "Country" },
       dcProperty: { dcid: "countryAlpha3Code", displayName: "Alpha 3 Code" },

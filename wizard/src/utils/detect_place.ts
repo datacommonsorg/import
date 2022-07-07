@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import _ from "lodash";
+
 import {
   ConfidenceLevel,
   DCProperty,
@@ -21,9 +23,10 @@ import {
   TypeProperty,
 } from "../types";
 import countriesJSON from "./country_mappings.json";
+import statesJSON from "./state_mappings.json";
 
 const MIN_HIGH_CONF_DETECT = 0.7;
-const SUPPORTED_PLACE_TYPES = new Set<string>(["Country"]);
+const SUPPORTED_PLACE_TYPES = new Set<string>(["Country", "State"]);
 
 // All supported Place types must be encoded below.
 const PLACE_TYPES: DCType[] = [
@@ -44,6 +47,7 @@ const PLACE_PROPERTIES: DCProperty[] = [
   { dcid: "isoCode", displayName: "ISO Code" },
   { dcid: "countryAlpha3Code", displayName: "Alpha 3 Code" },
   { dcid: "countryNumericCode", displayName: "Numeric Code" },
+  { dcid: "fips52AlphaCode", displayName: "US State Alpha Code" },
 ];
 
 // Helper interface to refer to the place types and place properties.
@@ -53,7 +57,7 @@ interface TPName {
 }
 
 function toAlphaNumeric(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]/gi, "");
+  return _.isEmpty(s) ? null : s.toLowerCase().replace(/[^a-z0-9]/gi, "");
 }
 
 /**
@@ -63,10 +67,16 @@ function toAlphaNumeric(s: string): string {
  * a list of string values).
  */
 export class PlaceDetector {
+  // Country specific.
   countryNames: Set<string>;
   countryISO: Set<string>;
   countryAbbrv3: Set<string>;
   countryNumeric: Set<string>;
+
+  // State specific.
+  stateNames: Set<string>;
+  stateISO: Set<string>;
+  stateFipsAlpha: Set<string>;
 
   // Convenience in-memory maps of types and properties where the keys are their
   // respective DC Names.
@@ -95,7 +105,14 @@ export class PlaceDetector {
         { tName: "Country", pName: "countryNumericCode" },
       ],
     ],
-    ["state", [{ tName: "State", pName: "name" }]],
+    [
+      "state",
+      [
+        { tName: "State", pName: "name" },
+        { tName: "State", pName: "isoCode" },
+        { tName: "State", pName: "fips52AlphaCode" },
+      ],
+    ],
     ["province", [{ tName: "Province", pName: "name" }]],
     ["municipality", [{ tName: "Municipality", pName: "name" }]],
     ["county", [{ tName: "County", pName: "name" }]],
@@ -105,6 +122,7 @@ export class PlaceDetector {
   constructor() {
     // Set the various class attributes.
     this.preProcessCountries();
+    this.preProcessUSStates();
     this.setValidPlaceTypesAndProperties();
   }
 
@@ -148,7 +166,7 @@ export class PlaceDetector {
    * Returns the TypeProperty objects which are currently supported.
    */
   getSupportedPlaceTypesAndProperties(): Set<TypeProperty> {
-    let supported = new Set<TypeProperty>();
+    const supported = new Set<TypeProperty>();
 
     for (const tp of Array.from(this.placeTypesAndProperties)) {
       if (SUPPORTED_PLACE_TYPES.has(tp.dcType.dcid)) {
@@ -180,6 +198,26 @@ export class PlaceDetector {
       }
       if (country.country_numeric_code != null) {
         this.countryNumeric.add(toAlphaNumeric(country.country_numeric_code));
+      }
+    }
+  }
+
+  /**
+   * Process the statesJSON object to generate the required sets.
+   */
+  preProcessUSStates() {
+    this.stateNames = new Set<string>();
+    this.stateISO = new Set<string>();
+    this.stateFipsAlpha = new Set<string>();
+
+    for (const state of statesJSON) {
+      this.stateNames.add(toAlphaNumeric(state.name));
+
+      if (state.iso_code != null) {
+        this.stateISO.add(state.iso_code.toLowerCase());
+      }
+      if (!_.isEmpty(state.fips52AlphaCode)) {
+        this.stateFipsAlpha.add(toAlphaNumeric(state.fips52AlphaCode));
       }
     }
   }
@@ -261,6 +299,53 @@ export class PlaceDetector {
   }
 
   /**
+   * State is detected with high confidence if > MIN_HIGH_CONF_DETECT of the
+   * non-null column values match one of the state format (property) arrays.
+   * If state is not detected, null is returned.
+   * If state is detected, the TypeProperty is returned.
+   *
+   * @param column: an array of strings representing the column values.
+   *
+   * @return the TypeProperty object or null if nothing can be determined with
+   *  high confidence.
+   */
+  detectStateHighConf(column: Array<string>): TypeProperty {
+    let numValid = 0;
+
+    const counters = new Map<string, number>();
+    counters["name"] = 0;
+    counters["isoCode"] = 0;
+    counters["fips52AlphaCode"] = 0;
+    for (const cVal of column) {
+      if (cVal == null) {
+        continue;
+      }
+      const v = toAlphaNumeric(cVal);
+      numValid++;
+
+      if (this.stateNames.has(v)) {
+        counters["name"]++;
+      } else if (this.stateISO.has(cVal.toLowerCase())) {
+        // Note: this matches lower case only.
+        counters["isoCode"]++;
+      } else if (this.stateFipsAlpha.has(v)) {
+        counters["fips52AlphaCode"]++;
+      }
+    }
+
+    // Determine the detected TypeProperty. Type is State for all.
+    for (const [key, value] of Object.entries(counters)) {
+      if (value > numValid * MIN_HIGH_CONF_DETECT) {
+        return {
+          dcType: this.placeTypes.get("State"),
+          dcProperty: this.placeProperties.get(key),
+        };
+      }
+    }
+    return null;
+  }
+
+  /**
    * Detects with high confidence the type and property for a Place.
    * If a place cannot be detected, returns null.
    * Currently only supports detecting country (place type).
@@ -272,10 +357,12 @@ export class PlaceDetector {
    * high confidence.
    */
   detectHighConfidence(header: string, column: Array<string>): TypeProperty {
-    // For now, only supports detecting country with high confidence.
+    // For now, only supports detecting country and states (US, India) with high
+    // confidence.
     // In the future, this should be modified to run through a list of detailed
     // high confidence place detectors.
-    return this.detectCountryHighConf(column);
+    const country = this.detectCountryHighConf(column);
+    return country != null ? country : this.detectStateHighConf(column);
   }
 
   /**
