@@ -6,7 +6,7 @@ const htmlPlugin = new HtmlWebPackPlugin({
 });
 
 module.exports = {
-  entry: ["./src/index.ts", "./src/style.css"],
+  entry: ["./src/index.ts", "./src/style.scss"],
   module: {
     rules: [
       {
@@ -15,8 +15,8 @@ module.exports = {
         exclude: /node_modules/,
       },
       {
-        test: /\.css$/i,
-        use: ["style-loader", "css-loader"],
+        test: /\.(css|scss)$/i,
+        use: ["style-loader", "css-loader", "sass-loader"],
         exclude: /node_modules/,
       },
     ],

@@ -24,9 +24,108 @@
   <body>
     <div id="main">
       <header id="main-header">
-        Data Commons Import Wizard
+        <nav class="navbar navbar-dark navbar-expand-lg col" id="main-nav">
+          <div class="container-fluid">
+            <div class="navbar-brand">
+              <a href="http://datacommons.org">Data Commons</a>
+              <span>
+                &nbsp;Import Wizard
+              </span>
+              </a>
+            </div>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#dc-main-nav">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-md-end" id="dc-main-nav">
+              <ul class="navbar-nav float-md-right">
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="nav-explore-dropdown" role="button"
+                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Explore
+                  </a>
+                  <div class="dropdown-menu" aria-labelledby="nav-explore-dropdown">
+                    <a class="dropdown-item" href="http://datacommons.org/place">Place Explorer</a>
+                    <a class="dropdown-item" href="http://datacommons.org/browser">Graph Browser</a>
+                    <a class="dropdown-item" href="http://datacommons.org/tools/timeline">Timelines Explorer</a>
+                    <a class="dropdown-item" href="http://datacommons.org/tools/scatter">Scatter Plot Explorer</a>
+                    <a class="dropdown-item" href="http://datacommons.org/tools/map">Map Explorer</a>
+                    <a class="dropdown-item" href="http://datacommons.org/tools/statvar">Statistical Variable Explorer</a>
+                  </div>
+                </li>
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="nav-doc-dropdown" role="button" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">Documentation</a>
+                  <div class="dropdown-menu" aria-labelledby="nav-doc-dropdown">
+                    <a class="dropdown-item" href="http://docs.datacommons.org">Documentation</a>
+                    <a class="dropdown-item" href="http://docs.datacommons.org/api">APIs</a>
+                    <a class="dropdown-item" href="http://docs.datacommons.org/tutorials">Tutorials</a>
+                    <a class="dropdown-item" href="https://docs.datacommons.org/contributing/">Contribute</a>
+                  </div>
+                </li>
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="nav-about-dropdown" role="button"
+                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    About
+                  </a>
+                  <div class="dropdown-menu dropdown-menu-right" aria-labelledby="nav-about-dropdown">
+                    <a class="dropdown-item" href="https://datacommons.org/about">About Data Commons</a>
+                    <a class="dropdown-item" href="https://docs.datacommons.org/blog.html">Blog</a>
+                    <a class="dropdown-item" href="https://docs.datacommons.org/datasets/">Data Sources</a>
+                    <a class="dropdown-item" href="https://datacommons.org/faq">FAQ</a>
+                    <a class="dropdown-item" href="https://datacommons.org/feedback">Feedback</a>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
       </header>
-      <div id="main-pane"></div>
+      <div id="main-pane" class="main-content container"></div>
+      <footer id="main-footer">
+        <div class="container">
+          <div class="row">
+            <section class="col-12 col-sm-6 col-md-4">
+              <h6>Explore</h6>
+              <a href="https://datacommons.org/place">Place Explorer</a>
+              <a href="https://datacommons.org/browser">Graph Browser</a>
+              <a href="https://datacommons.org/tools/timeline">Timelines Explorer</a>
+              <a href="https://datacommons.org/tools/scatter">Scatter Plot Explorer</a>
+              <a href="https://datacommons.org/tools/map">Map Explorer</a>
+              <a href="https://datacommons.org/tools/statvar">Statistical Variable Explorer</a>
+            </section>
+            <section class="col-12 col-sm-6 col-md-4">
+              <h6>Documentation</h6>
+              <a href="http://docs.datacommons.org">Documentation</a>
+              <a href="http://docs.datacommons.org/api">APIs</a>
+              <a href="http://docs.datacommons.org/tutorials">Tutorials</a>
+              <a href="https://docs.datacommons.org/contributing/">Contribute</a>
+              <a href="http://github.com/datacommonsorg">Github Repository</a>
+            </section>
+            <section class="col-12 col-sm-6 col-md-4">
+              <h6>Data Commons</h6>
+              <a href="http://datacommons.org/about">About Data Commons</a>
+              <a href="https://docs.datacommons.org/blog.html">Blog</a>
+              <a href="https://docs.datacommons.org/datasets/">Data Sources</a>
+              <a href="http://datacommons.org/feedback">Feedback</a>
+              <a href="http://datacommons.org/faq">Frequently Asked Questions</a>
+            </section>
+          </div>
+          <div class="row">
+            <div id="sub-footer" class="col-12">
+              <span>Data Commons is a Google supported project</span>
+              <div class="float-md-right mt-3 mt-md-0">
+                <a href="https://policies.google.com/terms">Terms and Conditions</a>
+                <a href="https://policies.google.com/privacy?hl=en-US">Privacy Policy</a>
+                <a href="{{ url_for('static.disclaimers') }}">Disclaimers</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+      crossorigin="anonymous"></script>
   </body>
 </html>
