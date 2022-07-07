@@ -11,7 +11,7 @@ npm start
 Run all tests:
 
 ```bash
-npm run test
+./run_test.sh -a
 ```
 
 Run specific test file:
@@ -23,5 +23,5 @@ npm run test <filename without .test.ts>
 Run and fix lint errors:
 
 ```bash
-npm run lint
+./run_test.sh -f
 ```

@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -e
 
 # Tests if lint is required on client side code
 function run_npm_lint_test {
@@ -31,10 +32,15 @@ function run_lint_fix {
   npm run lint
 }
 
+function run_npm_test {
+  npm install
+  npm run build
+  npm run test
+}
+
 
 function run_all_tests {
   run_npm_lint_test
-  npm install
   run_npm_test
 }
 
@@ -56,8 +62,7 @@ while getopts tpwotblcsaf OPTION; do
         ;;
     c)
         echo -e "### Running client tests"
-        npm install
-        npm run test
+        run_npm_test
         ;;
     f)
         echo -e "### Fix lint errors"
