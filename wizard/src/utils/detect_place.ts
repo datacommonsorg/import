@@ -56,7 +56,7 @@ interface TPName {
   pName: string;
 }
 
-function toAlphaNumeric(s: string): string {
+function toAlphaNumericAndLower(s: string): string {
   return _.isEmpty(s) ? null : s.toLowerCase().replace(/[^a-z0-9]/gi, "");
 }
 
@@ -188,16 +188,20 @@ export class PlaceDetector {
     this.countryNumeric = new Set<string>();
 
     for (const country of countriesJSON) {
-      this.countryNames.add(toAlphaNumeric(country.name));
+      this.countryNames.add(toAlphaNumericAndLower(country.name));
 
       if (country.iso_code != null) {
-        this.countryISO.add(toAlphaNumeric(country.iso_code));
+        this.countryISO.add(toAlphaNumericAndLower(country.iso_code));
       }
       if (country.country_alpha_3_code != null) {
-        this.countryAbbrv3.add(toAlphaNumeric(country.country_alpha_3_code));
+        this.countryAbbrv3.add(
+          toAlphaNumericAndLower(country.country_alpha_3_code)
+        );
       }
       if (country.country_numeric_code != null) {
-        this.countryNumeric.add(toAlphaNumeric(country.country_numeric_code));
+        this.countryNumeric.add(
+          toAlphaNumericAndLower(country.country_numeric_code)
+        );
       }
     }
   }
@@ -211,13 +215,13 @@ export class PlaceDetector {
     this.stateFipsAlpha = new Set<string>();
 
     for (const state of statesJSON) {
-      this.stateNames.add(toAlphaNumeric(state.name));
+      this.stateNames.add(toAlphaNumericAndLower(state.name));
 
       if (state.iso_code != null) {
         this.stateISO.add(state.iso_code.toLowerCase());
       }
       if (!_.isEmpty(state.fips52AlphaCode)) {
-        this.stateFipsAlpha.add(toAlphaNumeric(state.fips52AlphaCode));
+        this.stateFipsAlpha.add(toAlphaNumericAndLower(state.fips52AlphaCode));
       }
     }
   }
@@ -272,7 +276,7 @@ export class PlaceDetector {
       if (cVal == null) {
         continue;
       }
-      const v = toAlphaNumeric(cVal);
+      const v = toAlphaNumericAndLower(cVal);
       numValid++;
 
       if (this.countryNames.has(v)) {
@@ -317,10 +321,10 @@ export class PlaceDetector {
     counters["isoCode"] = 0;
     counters["fips52AlphaCode"] = 0;
     for (const cVal of column) {
-      if (cVal == null) {
+      if (_.isEmpty(cVal)) {
         continue;
       }
-      const v = toAlphaNumeric(cVal);
+      const v = toAlphaNumericAndLower(cVal);
       numValid++;
 
       if (this.stateNames.has(v)) {
