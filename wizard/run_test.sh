@@ -35,6 +35,7 @@ function run_lint_fix {
 function run_all_tests {
   run_npm_lint_test
   npm install
+  npm run build
   run_npm_test
 }
 
