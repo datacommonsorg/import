@@ -185,22 +185,22 @@ export function MappingColumnOptions(
     updatedColumn.mappedThing = mappedThing;
     if (mappingType === MappingType.COLUMN) {
       updatedColumn.columnMappedThing = mappedThing;
+      // if columnPlaceType is updated, updated columnPlaceType and
+      // columnPlaceProperty
+      if (!_.isEmpty(columnPlaceType)) {
+        updatedColumn.columnPlaceType =
+          props.placeDetector.placeTypes.get(columnPlaceType);
+        const possibleProperties =
+          props.validPlaceTypeProperties[columnPlaceType] || new Set();
+        updatedColumn.columnPlaceProperty = possibleProperties.has(
+          updatedColumn.columnPlaceProperty
+        )
+          ? updatedColumn.columnPlaceProperty
+          : Array.from(possibleProperties)[0];
+      }
+      // if columnPlaceProperty is updated, update columnPlaceProperty
       if (!_.isEmpty(columnPlaceProperty)) {
         updatedColumn.columnPlaceProperty = columnPlaceProperty;
-      }
-      if (!_.isEmpty(columnPlaceType)) {
-        updatedColumn.columnPlaceType = columnPlaceType;
-        // if columnPlaceProperty wasn't entered, update to the first possible
-        // one
-        if (_.isEmpty(columnPlaceProperty)) {
-          const possibleProperties =
-            props.validPlaceTypeProperties[columnPlaceType] || new Set();
-          updatedColumn.columnPlaceProperty = possibleProperties.has(
-            updatedColumn.columnPlaceProperty
-          )
-            ? updatedColumn.columnPlaceProperty
-            : Array.from(possibleProperties)[0];
-        }
       }
     }
     if (mappingType === MappingType.COLUMN_HEADER) {
