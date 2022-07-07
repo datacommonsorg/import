@@ -40,11 +40,8 @@ export function generateSvMCF(csv: CsvData, mappings: Mapping): string {
 // convert Mapping object to a regular javascript object so it can be converted
 // into a JSON string
 function mappingToObject(mapping: Mapping): Record<string, MappingVal> {
-  if (_.isEmpty(mapping)) {
-    return {};
-  }
   const obj = {};
-  Array.from(mapping.entries()).forEach(([mappedThing, mappingVal]) => {
+  mapping.forEach((mappingVal, mappedThing) => {
     obj[mappedThing] = mappingVal;
   });
   return obj;
