@@ -46,7 +46,7 @@ const COUNTRY_PROPERTY_ORDER = [
  * @param detectedPlaces is a mapping from column indices to the DetectedDetails
  *    objects which contain the specifics of the type and property detected.
  *
- * @returns the column index of the most preferred country column.
+ * @returns the column index of the most preferred Place column.
  */
 function placePropertyOrder(
   detectedPlaces: Map<number, DetectedDetails>,
@@ -59,9 +59,9 @@ function placePropertyOrder(
     propDetected.set(prop, index);
   });
 
-  for (let i = 0; i < propertyOrder.length; i++) {
-    if (propDetected.has(propertyOrder[i])) {
-      return propDetected.get(propertyOrder[i]);
+  for (const prop of propertyOrder) {
+    if (propDetected.has(prop)) {
+      return propDetected.get(prop);
     }
   }
   return null;
@@ -85,7 +85,6 @@ function detectPlace(
   pDetector: PlaceDetector
 ): MappingVal {
   // Currently, only countries and states can be detected as Places.
-  // Preference is given to States over Countries.
   const detectedStates = new Map<number, DetectedDetails>();
   const detectedCountries = new Map<number, DetectedDetails>();
 
@@ -107,7 +106,7 @@ function detectPlace(
   // States are given preference.
   if (detectedStates.size > 0) {
     // Get the index of the detected property according to a preference order.
-    const index = placePropertyOrder(detectedStates, STATE_PROPERTY_ORDER); //stateOrder(detectedStates);
+    const index = placePropertyOrder(detectedStates, STATE_PROPERTY_ORDER);
     if (index != null) {
       detectedIndex = index;
       detectedPlaces = detectedStates;
@@ -118,13 +117,6 @@ function detectPlace(
     if (index != null) {
       detectedIndex = index;
       detectedPlaces = detectedCountries;
-      // return {
-      //   type: MappingType.COLUMN, // Place detection is only possible for columns.
-      //   column: columnOrder[index],
-      //   placeProperty:
-      //     detectedCountries.get(index).detectedTypeProperty.dcProperty,
-      //   placeType: detectedCountries.get(index).detectedTypeProperty.dcType,
-      // };
     }
   }
 
