@@ -18,8 +18,6 @@ import {
   Column,
   ConfidenceLevel,
   CsvData,
-  DCProperty,
-  DCType,
   DetectedDetails,
   MappedThing,
   Mapping,

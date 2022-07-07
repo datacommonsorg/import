@@ -17,7 +17,6 @@ import _ from "lodash";
 
 import {
   Column,
-  CsvData,
   DCProperty,
   MappedThing,
   Mapping,
