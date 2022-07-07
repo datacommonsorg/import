@@ -213,10 +213,7 @@ export function MappingSection(props: MappingSectionProps): JSX.Element {
   }
 
   function onColumnInfoConfirmed(): void {
-    const correctedMapping = getMapping(
-      columnState.columns,
-      constantVals
-    );
+    const correctedMapping = getMapping(columnState.columns, constantVals);
     const updatedConstantVals = {};
     for (const thing of REQUIRED_MAPPINGS) {
       if (_.isEmpty(correctedMapping.get(thing))) {
@@ -236,10 +233,7 @@ export function MappingSection(props: MappingSectionProps): JSX.Element {
   }
 
   function onConstantsConfirmed(): void {
-    const correctedMapping = getMapping(
-      columnState.columns,
-      constantVals
-    );
+    const correctedMapping = getMapping(columnState.columns, constantVals);
     const mappingErrors = checkMappings(correctedMapping);
     setErrorList(mappingErrors);
     if (_.isEmpty(mappingErrors)) {
