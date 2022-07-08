@@ -88,7 +88,7 @@
             This version is intended to help our closest partners import clean CSV files with very specific requirements.
           </p>
           <p>We welcome any feedback at <a href="mailto:datcom-support@google.com ">datcom-support@google.com</a> while we iterate on improvements.</p>
-          <details>
+          <details id="csv-requirements">
             <summary>CSV Format Requirements</summary>
             <ul>
               <li>
@@ -252,19 +252,19 @@
               </li>
             </ul>
           </details>
-          <details>
+          <details id="terminology">
             <summary>Terminology Glossary</summary>
             <ul>
-              <li><b>Place</b> - Only Country level data supported for now. See 'Formats This Version Supports' for more details. State level data coming soon.</li>
+              <li><b>Place</b> - Only Country level data supported for now. See <a href="#supported-formats">Supported Date and Place Formats</a> for more details. State level data coming soon.</li>
               <li><b>Name of Variable</b> - Ex: Population, Life expectancy, Median Income. Also referred to as 'Statistical Variables' and 'StatVars' in Data Commons.</li>
-              <li><b>Date</b> - See 'Formats this Version Supports' section for more details.</li>
+              <li><b>Date</b> - See <a href="#supported-formats">Supported Date and Place Formats</a> section for more details.</li>
               <li><b>Observation Value</b> - The numerical values within a column.</li>
               <li><b>Not Mapped</b> - Columns to be excluded from the mapping .</li>
               <li><b>Constant</b> - If all observations in the CSV are about the same Place and/or the same Date and/or the same Variable, then those do not need to be specified as columns.</li>
             </ul>
           </details>
-          <details>
-            <summary>Formats This Version Supports</summary>
+          <details id="supported-formats">
+            <summary>Supported Date and Place Formats</summary>
             <ul>
               <li>
                 <span>Date formats supported: <a href="https://en.wikipedia.org/wiki/ISO_8601" target="_blank">ISO-8601</a> format only</span>
@@ -294,10 +294,10 @@
               </li>
             </ul>
           </details>
-          <details>
+          <details id="instructions">
             <summary>Import Steps</summary>
             <ol>
-              <li>Review CSV Format Requirements, Terminology Glossary, and Formats This Version Supports.</li>
+              <li>Review <a href="#csv-requirements">CSV Format Requirements</a>, <a href="#terminology">Terminology Glossary</a>, and <a href="#supported-formats">Supported Date and Place Formats</a>.</li>
               <li>Review your CSV file and make any necessary edits to conform to these requirements.</li>
               <li>Select Choose File and import your .csv file (see below upload button). </li>
               <li>Confirm Mappings in the import wizard, one column at a time.
