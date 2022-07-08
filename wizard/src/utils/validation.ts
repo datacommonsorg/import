@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-import { MappedThing, Mapping, MappingType, MappingVal } from "../types";
+import {
+  MAPPED_THING_NAMES,
+  MappedThing,
+  Mapping,
+  MappingType,
+  MappingVal,
+} from "../types";
 
 /*
  * Checks the provided mapping and returns an array of errors found in it.
@@ -45,13 +51,15 @@ export function checkMappings(mappings: Mapping): Array<string> {
   ]) {
     if (!mappings.has(mthing)) {
       // Check #2
-      errors.push("Missing required mapping for " + mthing);
+      const mThingName = MAPPED_THING_NAMES[mthing] || mthing;
+      errors.push("Missing required mapping for " + mThingName);
     }
   }
 
   const colHdrThings = Array<string>();
   let numNonConsts = 0;
   mappings.forEach((mval: MappingVal, mthing: MappedThing) => {
+    const mthingName = MAPPED_THING_NAMES[mthing] || mthing;
     if (mthing === MappedThing.PLACE) {
       if (
         mval.placeProperty == null ||
@@ -65,29 +73,29 @@ export function checkMappings(mappings: Mapping): Array<string> {
     if (mval.type === MappingType.COLUMN) {
       if (mval.column == null || mval.column.id === "") {
         // Check #1
-        errors.push(mthing + ": missing value for COLUMN type ");
+        errors.push(mthingName + ": missing value for COLUMN type ");
       }
       numNonConsts++;
     } else if (mval.type === MappingType.COLUMN_HEADER) {
       if (mval.headers == null || mval.headers.length === 0) {
         // Check #1
-        errors.push(mthing + ": missing value for COLUMN_HEADER type");
+        errors.push(mthingName + ": missing value for COLUMN_HEADER type");
       }
       colHdrThings.push(mthing);
       numNonConsts++;
     } else if (mval.type === MappingType.CONSTANT) {
       if (mval.constant == null || mval.constant.length === 0) {
         // Check #1
-        errors.push(mthing + ": missing value for CONSTANT type");
+        errors.push(mthingName + ": missing value for CONSTANT type");
       }
       if (mthing === MappedThing.PLACE) {
         // Check #8
-        errors.push(mthing + ": must not be CONSTANT type");
+        errors.push(mthingName + ": must not be CONSTANT type");
       }
     }
     if (mthing === MappedThing.VALUE && mval.type !== MappingType.COLUMN) {
       // Check #7
-      errors.push(mthing + ": must be a COLUMN type");
+      errors.push(mthingName + ": must be a COLUMN type");
     }
   });
   if (numNonConsts === 0) {
@@ -97,12 +105,12 @@ export function checkMappings(mappings: Mapping): Array<string> {
   if (colHdrThings.length === 0) {
     if (!mappings.has(MappedThing.VALUE)) {
       // Check #4
-      errors.push("Unable to detect 'value' column");
+      errors.push("Unable to detect 'Observation Value' column");
     }
   } else if (colHdrThings.length === 1) {
     if (mappings.has(MappedThing.VALUE)) {
       // Check #4a
-      errors.push("Found multiple confusing 'value' columns");
+      errors.push("Found multiple confusing 'Observation Value' columns");
     }
   } else {
     // Check #3
