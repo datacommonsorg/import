@@ -52,8 +52,8 @@ export function Page(): JSX.Element {
             setCorrectedMapping(correctedMapping);
           }}
           placeDetector={placeDetector.current}
-        />)
-}
+        />
+      )}
       {showPreview && (
         <div className="card-section">
           <PreviewSection
