@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import _ from "lodash";
 
-import { CsvData, Mapping } from "../types";
+import { CsvData, Mapping, MappingVal } from "../types";
 
 /**
  * Generates the cleaned csv given the original csv and the correct mappings
@@ -36,16 +37,30 @@ export function generateSvMCF(csv: CsvData, mappings: Mapping): string {
   return "";
 }
 
+// convert Mapping object to a regular javascript object so it can be converted
+// into a JSON string
+function mappingToObject(mapping: Mapping): Record<string, MappingVal> {
+  const obj = {};
+  mapping.forEach((mappingVal, mappedThing) => {
+    obj[mappedThing] = mappingVal;
+  });
+  return obj;
+}
+
 /**
- * Generates the translation metadata given the predicted mappings and correct
- * mappings
+ * Generates the translation metadata json string given the predicted mappings
+ * and correct mappings
  * @param predictions
- * @param corrections
+ * @param correctedMapping
  * @returns
  */
-export function generateTranslationMetadata(
+export function generateTranslationMetadataJson(
   predictions: Mapping,
-  corrections: Mapping
+  correctedMapping: Mapping
 ): string {
-  return "";
+  const translationMetadata = {
+    predictions: mappingToObject(predictions),
+    correctedMapping: mappingToObject(correctedMapping),
+  };
+  return JSON.stringify(translationMetadata);
 }
