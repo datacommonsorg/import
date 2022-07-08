@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
+/**
+ * Main component for the import wizard.
+ */
+
 import _ from "lodash";
 import React, { useRef, useState } from "react";
 
 import { CsvData, Mapping } from "../types";
 import { PlaceDetector } from "../utils/detect_place";
 import { MappingSection } from "./mapping_section";
+import { PreviewSection } from "./preview_section";
 import { UploadSection } from "./upload_section";
 
 export function Page(): JSX.Element {
@@ -47,7 +52,16 @@ export function Page(): JSX.Element {
             setCorrectedMapping(correctedMapping);
           }}
           placeDetector={placeDetector.current}
-        />
+        />)
+}
+      {showPreview && (
+        <div className="card-section">
+          <PreviewSection
+            predictedMapping={predictedMapping}
+            correctedMapping={correctedMapping}
+            csvData={csv}
+          />
+        </div>
       )}
     </>
   );

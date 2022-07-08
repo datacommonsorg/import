@@ -27,41 +27,41 @@ import {
 import * as dd from "./detect_date";
 import { PlaceDetector } from "./detect_place";
 
+const STATE_PROPERTY_ORDER = ["isoCode", "fips52AlphaCode", "name"];
+
+const COUNTRY_PROPERTY_ORDER = [
+  "isoCode",
+  "countryAlpha3Code",
+  "countryNumericCode",
+  "name",
+];
+
 /**
- * countryOrder is a helper function which returns the column index of the
- * detected country column based on a ranked order of preferred property types.
+ * placePropertyOrder is a helper function which returns the column index of the
+ * detected place column based on a ranked order of preferred property types.
  * For example, given two columns both of which represent countries, if one of
  * them has ISO codes and the other country numbers, we will prefer the one with
  * ISO codes.
  *
- * The detection order for type:Country is:
- *    1. ISO code
- *    2. Alpha Numberic 3 Letter Abbreviation
- *    3. Numeric code
- *    4. Country name.
- *
- * @param detectedCountries is a mapping from column indices to the DetectedDetails
+ * @param detectedPlaces is a mapping from column indices to the DetectedDetails
  *    objects which contain the specifics of the type and property detected.
  *
- * @returns the column index of the most preferred country column.
+ * @returns the column index of the most preferred Place column.
  */
-function countryOrder(detectedCountries: Map<number, DetectedDetails>): number {
-  const propOrder = [
-    "isoCode",
-    "countryAlpha3Code",
-    "countryNumericCode",
-    "name",
-  ];
+function placePropertyOrder(
+  detectedPlaces: Map<number, DetectedDetails>,
+  propertyOrder: Array<string>
+): number {
   const propDetected = new Map<string, number>();
 
-  detectedCountries.forEach((details: DetectedDetails, index: number) => {
+  detectedPlaces.forEach((details: DetectedDetails, index: number) => {
     const prop = details.detectedTypeProperty.dcProperty.dcid;
     propDetected.set(prop, index);
   });
 
-  for (let i = 0; i < propOrder.length; i++) {
-    if (propDetected.has(propOrder[i])) {
-      return propDetected.get(propOrder[i]);
+  for (const prop of propertyOrder) {
+    if (propDetected.has(prop)) {
+      return propDetected.get(prop);
     }
   }
   return null;
@@ -84,31 +84,50 @@ function detectPlace(
   columnOrder: Array<Column>,
   pDetector: PlaceDetector
 ): MappingVal {
-  // Currently, only countries can be detected as Places.
+  // Currently, only countries and states can be detected as Places.
+  const detectedStates = new Map<number, DetectedDetails>();
   const detectedCountries = new Map<number, DetectedDetails>();
 
   cols.forEach((colVals: Array<string>, colIndex: number) => {
     const pD = pDetector.detect(columnOrder[colIndex].header, colVals);
     if (pD != null && pD.confidence == ConfidenceLevel.High) {
-      // Check if the detected Place is a Country.
+      // Check if the detected Place is a State or Country.
+      if (pD.detectedTypeProperty.dcType.dcid === "State") {
+        detectedStates.set(colIndex, pD);
+      }
       if (pD.detectedTypeProperty.dcType.dcid === "Country") {
         detectedCountries.set(colIndex, pD);
       }
     }
   });
 
-  if (detectedCountries.size > 0) {
+  let detectedIndex: number;
+  let detectedPlaces: Map<number, DetectedDetails>;
+  // States are given preference.
+  if (detectedStates.size > 0) {
     // Get the index of the detected property according to a preference order.
-    const index = countryOrder(detectedCountries);
+    const index = placePropertyOrder(detectedStates, STATE_PROPERTY_ORDER);
     if (index != null) {
-      return {
-        type: MappingType.COLUMN, // Place detection is only possible for columns.
-        column: columnOrder[index],
-        placeProperty:
-          detectedCountries.get(index).detectedTypeProperty.dcProperty,
-        placeType: detectedCountries.get(index).detectedTypeProperty.dcType,
-      };
+      detectedIndex = index;
+      detectedPlaces = detectedStates;
     }
+  } else if (detectedCountries.size > 0) {
+    // Get the index of the detected property according to a preference order.
+    const index = placePropertyOrder(detectedCountries, COUNTRY_PROPERTY_ORDER);
+    if (index != null) {
+      detectedIndex = index;
+      detectedPlaces = detectedCountries;
+    }
+  }
+
+  if (detectedIndex != null) {
+    return {
+      type: MappingType.COLUMN, // Place detection is only possible for columns.
+      column: columnOrder[detectedIndex],
+      placeProperty:
+        detectedPlaces.get(detectedIndex).detectedTypeProperty.dcProperty,
+      placeType: detectedPlaces.get(detectedIndex).detectedTypeProperty.dcType,
+    };
   }
   return null;
 }
