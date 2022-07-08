@@ -71,7 +71,7 @@ export function PreviewSection(props: PreviewSectionProps): JSX.Element {
         </div>
       </div>
       <div className="confirmation-button">
-        <Button onClick={onDownloadClicked}>download package</Button>
+        <Button onClick={onDownloadClicked}>Download Package</Button>
       </div>
     </>
   );

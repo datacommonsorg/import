@@ -136,32 +136,36 @@ export function MappingSection(props: MappingSectionProps): JSX.Element {
             validPlaceTypeProperties={validPlaceTypeProperties.current}
             placeDetector={props.placeDetector}
           />
-          {/* button to select previous column */}
-          <Button
-            onClick={() => {
-              const prevCol = Math.max(0, columnState.selectedColumn - 1);
-              setColumnState({ ...columnState, selectedColumn: prevCol });
-            }}
-            disabled={columnState.selectedColumn === 0}
-          >
-            Previous
-          </Button>
-          {/* button to select next column */}
-          <Button
-            onClick={() => {
-              const nextCol = Math.min(
-                props.csvData.orderedColumns.length,
-                columnState.selectedColumn + 1
-              );
-              setColumnState({ ...columnState, selectedColumn: nextCol });
-            }}
-            disabled={
-              columnState.selectedColumn ===
-              props.csvData.orderedColumns.length - 1
-            }
-          >
-            Next
-          </Button>
+          <div className="column-navigation-buttons">
+            {/* button to select previous column */}
+            <Button
+              onClick={() => {
+                const prevCol = Math.max(0, columnState.selectedColumn - 1);
+                setColumnState({ ...columnState, selectedColumn: prevCol });
+              }}
+              disabled={columnState.selectedColumn === 0}
+            >
+              <i className="material-icons-outlined">arrow_back_ios</i>
+              Prev
+            </Button>
+            {/* button to select next column */}
+            <Button
+              onClick={() => {
+                const nextCol = Math.min(
+                  props.csvData.orderedColumns.length,
+                  columnState.selectedColumn + 1
+                );
+                setColumnState({ ...columnState, selectedColumn: nextCol });
+              }}
+              disabled={
+                columnState.selectedColumn ===
+                props.csvData.orderedColumns.length - 1
+              }
+            >
+              Next
+              <i className="material-icons-outlined">arrow_forward_ios</i>
+            </Button>
+          </div>
         </div>
       </div>
       {showConstantVals && (
