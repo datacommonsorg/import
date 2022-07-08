@@ -104,7 +104,7 @@ export function MappingSection(props: MappingSectionProps): JSX.Element {
   useEffect(() => {
     props.onCorrectedMappingUpdated();
     setShowConfirmationButton(true);
-  }, [columnState.columns, constantVals, props.onCorrectedMappingUpdated]);
+  }, [columnState.columns, constantVals]);
 
   const selectedColumnId =
     props.csvData.orderedColumns[columnState.selectedColumn].id;
