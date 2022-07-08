@@ -25,7 +25,7 @@ import {
 import countriesJSON from "./country_mappings.json";
 import statesJSON from "./state_mappings.json";
 
-const MIN_HIGH_CONF_DETECT = 0.7;
+const MIN_HIGH_CONF_DETECT = 0.4;
 const SUPPORTED_PLACE_TYPES = new Set<string>(["Country", "State"]);
 
 // All supported Place types must be encoded below.

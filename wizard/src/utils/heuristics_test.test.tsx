@@ -319,7 +319,7 @@ test("comboDetection-date-and-place", () => {
     [1, ["random", "random", "random"]],
     [2, ["2020-10", "2021-10", "2022-10"]],
     [3, ["US", "IT", "ES"]],
-    [3, ["CA", "NY", "MA"]],
+    [3, ["WY", "FL", "NJ"]],
   ]);
   const dateColHeader1 = { id: "2022-100", header: "2022-10", columnIdx: 0 };
   const dateColHeader2 = { id: "20211", header: "2021-10", columnIdx: 1 };

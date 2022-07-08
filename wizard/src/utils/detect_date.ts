@@ -18,8 +18,11 @@ import _ from "lodash";
 const MIN_HIGH_CONF_DETECT = 0.9;
 
 function detectDate(header: string): boolean {
+  // Date is detected if header is a valid ISO-8601 format.
+  // Note also: since we are only interested in detecting dates (and not time),
+  // if the header string length is <= 3, we consider that to be invalid.
   const d = Date.parse(header);
-  return !Number.isNaN(d) && d >= 0;
+  return !Number.isNaN(d) && header.length > 3;
 }
 
 /**
