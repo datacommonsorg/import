@@ -34,9 +34,11 @@ interface MappingColumnOptionsProps {
 }
 
 const MAPPED_THING_NAMES = {
-  [MappedThing.UNIT]: "unit of measure",
-  [MappedThing.VALUE]: "observation value",
+  [MappedThing.VALUE]: "Observation Value",
+  [MappedThing.STAT_VAR]: "Name of Variable",
 };
+
+const IGNORED_MAPPED_THINGS = new Set([MappedThing.UNIT]);
 
 export function MappingColumnOptions(
   props: MappingColumnOptionsProps
@@ -71,11 +73,13 @@ export function MappingColumnOptions(
                 updateColumn(MappingType.COLUMN, e.target.value as MappedThing)
               }
             >
-              {Object.values(MappedThing).map((thing) => (
-                <option value={thing} key={thing}>
-                  {MAPPED_THING_NAMES[thing] || thing}
-                </option>
-              ))}
+              {Object.values(MappedThing)
+                .filter((thing) => !IGNORED_MAPPED_THINGS.has(thing))
+                .map((thing) => (
+                  <option value={thing} key={thing}>
+                    {MAPPED_THING_NAMES[thing] || thing}
+                  </option>
+                ))}
             </Input>
             values{" "}
             {props.column.columnMappedThing === MappedThing.PLACE && (
@@ -154,11 +158,13 @@ export function MappingColumnOptions(
                 }
                 className="pac-target-input"
               >
-                {Object.values(MappedThing).map((thing) => (
-                  <option value={thing} key={thing}>
-                    {MAPPED_THING_NAMES[thing] || thing}
-                  </option>
-                ))}
+                {Object.values(MappedThing)
+                  .filter((thing) => !IGNORED_MAPPED_THINGS.has(thing))
+                  .map((thing) => (
+                    <option value={thing} key={thing}>
+                      {MAPPED_THING_NAMES[thing] || thing}
+                    </option>
+                  ))}
               </Input>
               <span>{props.column.column.header}</span>
             </>
