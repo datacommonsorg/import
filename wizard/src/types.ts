@@ -28,6 +28,11 @@ export enum MappedThing {
   VALUE = "Value",
 }
 
+export const MAPPED_THING_NAMES = {
+  [MappedThing.VALUE]: "Observation Value",
+  [MappedThing.STAT_VAR]: "Name of Variable",
+};
+
 export interface Column {
   // id of the column
   id: string;

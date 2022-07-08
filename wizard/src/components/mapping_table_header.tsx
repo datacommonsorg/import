@@ -20,7 +20,7 @@
 
 import React from "react";
 
-import { Column, MappedThing, MappingType } from "../types";
+import { Column, MappedThing, MAPPED_THING_NAMES, MappingType } from "../types";
 import { ColumnInfo } from "./mapping_section";
 
 interface MappingTableHeaderProps {
@@ -41,10 +41,14 @@ export function MappingTableHeader(
           <th className="row-num"></th>
           {props.orderedColumns.map((column, idx) => {
             const info = props.columnInfo[column.id];
+            const isMapped =
+              info.type === MappingType.COLUMN ||
+              info.type === MappingType.COLUMN_HEADER;
             return (
               <th
                 key={`mapping-info-${idx}`}
                 onClick={() => props.onColumnSelected(idx)}
+                className={isMapped ? "mapping-info-col-detected" : ""}
               >
                 {getColumnMappingString(info)}
               </th>
@@ -80,15 +84,16 @@ export function MappingTableHeader(
 }
 
 function getColumnMappingString(column: ColumnInfo): string {
+  const mThingName = MAPPED_THING_NAMES[column.mappedThing] || column.mappedThing;
   if (column.type === MappingType.COLUMN) {
-    let mString = `${column.mappedThing}s`;
+    let mString = `${mThingName}s`;
     if (column.mappedThing === MappedThing.PLACE) {
       mString += ` of type ${column.columnPlaceType.displayName} and of format ${column.columnPlaceProperty.displayName}`;
     }
     return mString;
   }
   if (column.type === MappingType.COLUMN_HEADER) {
-    return `header is a ${column.mappedThing}`;
+    return `Header is a ${mThingName}`;
   }
   return "Not mapped";
 }

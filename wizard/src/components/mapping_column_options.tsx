@@ -22,7 +22,7 @@ import _ from "lodash";
 import React from "react";
 import { FormGroup, Input, Label } from "reactstrap";
 
-import { DCProperty, MappedThing, MappingType } from "../types";
+import { DCProperty, MappedThing, MAPPED_THING_NAMES, MappingType } from "../types";
 import { PlaceDetector } from "../utils/detect_place";
 import { ColumnInfo } from "./mapping_section";
 
@@ -32,11 +32,6 @@ interface MappingColumnOptionsProps {
   validPlaceTypeProperties: Record<string, Set<DCProperty>>;
   placeDetector: PlaceDetector;
 }
-
-const MAPPED_THING_NAMES = {
-  [MappedThing.VALUE]: "Observation Value",
-  [MappedThing.STAT_VAR]: "Name of Variable",
-};
 
 const IGNORED_MAPPED_THINGS = new Set([MappedThing.UNIT]);
 

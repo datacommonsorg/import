@@ -236,14 +236,24 @@ tr th:last-child {
   background-color: #cabdbd;
   font-size: 0.8rem;
   font-weight: normal;
-  min-width: 7rem;
+  min-width: 12rem;
+  height: 3rem;
+  color: #7b7b7b;
+}
+
+.mapping-info-row th:first-child {
+  min-width: 0;
+}
+
+.mapping-info-row .mapping-info-col-detected {
+  color: black;
+  font-weight: 500;
 }
 
 .row-num {
   font-weight: normal;
   color: #7b7b7b;
   font-size: 0.8rem;
-  width: 1rem;
 }
 
 .column-options {
