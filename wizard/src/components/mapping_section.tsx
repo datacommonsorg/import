@@ -36,7 +36,7 @@ import { PlaceDetector } from "../utils/detect_place";
 import { checkMappings } from "../utils/validation";
 import { MappingColumnOptions } from "./mapping_column_options";
 import { MappingConstantsSection } from "./mapping_constants_section";
-import { MappingSectionTable } from "./mapping_section_table";
+import { MappingTable } from "./mapping_table";
 
 export interface ColumnInfo {
   // the column of interest
@@ -119,7 +119,7 @@ export function MappingSection(props: MappingSectionProps): JSX.Element {
         <div className="section-header">
           <h2>Confirm Mappings</h2>
         </div>
-        <MappingSectionTable
+        <MappingTable
           csvData={props.csvData}
           selectedColumn={columnState.selectedColumn}
           onColumnSelected={(colIdx) =>
@@ -136,6 +136,7 @@ export function MappingSection(props: MappingSectionProps): JSX.Element {
             validPlaceTypeProperties={validPlaceTypeProperties.current}
             placeDetector={props.placeDetector}
           />
+          {/* button to select previous column */}
           <Button
             onClick={() => {
               const prevCol = Math.max(0, columnState.selectedColumn - 1);
@@ -145,6 +146,7 @@ export function MappingSection(props: MappingSectionProps): JSX.Element {
           >
             Previous
           </Button>
+          {/* button to select next column */}
           <Button
             onClick={() => {
               const nextCol = Math.min(

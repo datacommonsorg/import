@@ -51,6 +51,7 @@ export function MappingColumnOptions(
         The values in the column <b>{props.column.column.header}</b> are:
       </div>
       <FormGroup radio="true" className="column-options-input-section">
+        {/* radio option for mapping type of COLUMN */}
         <Label radio="true" className="column-options-input column-type">
           <Input
             type="radio"
@@ -61,6 +62,7 @@ export function MappingColumnOptions(
             }
           />
           <div>
+            {/* drop down for selecting the mapped thing */}
             <Input
               id="column-type-mapped-thing"
               type="select"
@@ -79,6 +81,7 @@ export function MappingColumnOptions(
             {props.column.columnMappedThing === MappedThing.PLACE && (
               <>
                 of type
+                {/* drop down for selecting the place type */}
                 <Input
                   id="column-type-place-type"
                   type="select"
@@ -98,6 +101,7 @@ export function MappingColumnOptions(
                   ))}
                 </Input>
                 and of format
+                {/* drop down for selecting the place property */}
                 <Input
                   id="column-type-place-property"
                   type="select"
@@ -121,6 +125,7 @@ export function MappingColumnOptions(
             )}
           </div>
         </Label>
+        {/* radio option for mapping type of HEADER */}
         <Label radio="true" className="column-options-input header-type">
           <Input
             type="radio"
@@ -136,6 +141,7 @@ export function MappingColumnOptions(
           {
             <>
               <span>Data values for the </span>
+              {/* drop down for selecting the mapped thing */}
               <Input
                 id="header-type-mapped-thing"
                 type="select"
@@ -158,6 +164,7 @@ export function MappingColumnOptions(
             </>
           }
         </Label>
+        {/* radio option for NO MAPPING */}
         <Label radio="true" className="column-options-input no-type">
           <Input
             type="radio"
