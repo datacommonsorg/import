@@ -378,36 +378,36 @@ test("countryHighConf", () => {
       },
     },
     {
-      name: "name-no-detection", //No detection due to: united statesssss, norwayyyy and north africa.
+      name: "name-no-detection", // No detection. Too many non names.
       colArray: [
         "United statesssss",
         "Norwayyyy",
-        "sri lanka",
-        "new zealand",
-        "north africa",
-        "australia",
-        "Pakistan",
-        "India",
+        "sri lankawwww",
+        "new zealandiiiiii",
+        "north africaaaaaaaaa",
+        "australiayyyyy",
+        "Pakistanyyyyyy",
+        "Indiannnnnn",
         "bangladesh",
         "french Afars and Issas",
       ],
       expected: null,
     },
     {
-      name: "iso-no-detection", // No detection due to: aa, dd and ff.
-      colArray: ["aa", "dd", "ff", "za", "au", "pk", "in", "bd", "it"],
+      name: "iso-no-detection", // No detection. Too many non-ISO codes.
+      colArray: ["aa", "dd", "ff", "ww", "xx", "yy", "uu", "bd", "it"],
       expected: null,
     },
     {
-      name: "alpha3-no-detection", // No detection due to: aaa, bbb and ccc.
+      name: "alpha3-no-detection", // No detection. Too many non-Alpha3 codes.
       colArray: [
         "aaa",
         "bbb",
         "ccc",
-        "nzl",
-        "zaf",
-        "aus",
-        "pak",
+        "ddd",
+        "zzz",
+        "yyy",
+        "xxx",
         "ind",
         "bgd",
         "ita",
@@ -415,8 +415,8 @@ test("countryHighConf", () => {
       expected: null,
     },
     {
-      name: "numeric-no-detection", // No detection due to: 0, 1, 2.
-      colArray: ["0", "1", "2", "554", "710", "36", "586", "356", "50", "380"],
+      name: "numeric-no-detection", // No detection. Too many non-numeric codes.
+      colArray: ["0", "1", "2", "-1", "-2", "-3", "-4", "-5", "50", "380"],
       expected: null,
     },
   ];
@@ -479,7 +479,7 @@ test("stateHighConf", () => {
     },
     {
       name: "fips52AlphaCode",
-      colArray: ["ca", "ny", "ma", "nh", "sd", "sd", "nd", "wa", "pr", "mi"],
+      colArray: ["nm", "ny", "wy", "nj", "ct", "nd", "nh", "wa", "fl"],
       expected: {
         dcType: { dcid: "State", displayName: "State" },
         dcProperty: {
@@ -490,7 +490,7 @@ test("stateHighConf", () => {
     },
     {
       name: "fips52AlphaCode-detection-with-null",
-      colArray: ["ca", "ny", "ma", "nh", "sd", "sd", "nd", "wa", null, null],
+      colArray: ["nm", "ny", "wy", "nj", "ct", "nd", "nh", "wa", "fl", null],
       expected: {
         dcType: { dcid: "State", displayName: "State" },
         dcProperty: {
@@ -500,16 +500,16 @@ test("stateHighConf", () => {
       },
     },
     {
-      name: "iso-no-detection", // No detection due to: US-AA, US-BB, US-CC, US-DD.
+      name: "iso-no-detection", // No detection due to too many non-ISO codes.
       colArray: [
         "US-AA",
         "US-BB",
         "US-CC",
         "US-DD",
-        "US-SD",
-        "US-ND",
-        "US-WA",
-        "US-PR",
+        "US-EE",
+        "US-FF",
+        "US-RR",
+        "US-KK",
         "US-MI",
         "US-ID",
       ],
@@ -533,13 +533,13 @@ test("placeDetection", () => {
   const colName = "country";
 
   // High Conf. State Detection.
-  let colArray = ["CA", "WA", "PA"];
+  let colArray = ["US-CA", "US-WA", "US-PA"];
   let expectedHighConf = {
     detectedTypeProperty: {
       dcType: { dcid: "State", displayName: "State" },
       dcProperty: {
-        dcid: "fips52AlphaCode",
-        displayName: "US State Alpha Code",
+        dcid: "isoCode",
+        displayName: "ISO Code",
       },
     },
     confidence: ConfidenceLevel.High,
@@ -561,6 +561,7 @@ test("placeDetection", () => {
   // Modifying colArray to ensure country cannot be detected with high conf.
   // But it should be a low confidence detection due to the colName.
   colArray[0] = "randomString";
+  colArray[1] = "randomString";
   const expectedLowConf = {
     detectedTypeProperty: {
       dcType: { dcid: "Country", displayName: "Country" },
