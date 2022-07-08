@@ -27,6 +27,7 @@ import { MappingTableBody } from "./mapping_table_body";
 import { MappingTableHeader } from "./mapping_table_header";
 
 const TABLE_ID = "mapping-section-table";
+const HIGHLIGHT_MARGIN = 30;
 
 interface MappingTableProps {
   csvData: CsvData;
@@ -43,16 +44,11 @@ export function MappingTable(props: MappingTableProps): JSX.Element {
     // if there is a highlightedColumn, scroll it into view
     if (highlightedColumn.current) {
       const tableElement = document.getElementById(TABLE_ID);
-      const tableRight = tableElement.offsetLeft + tableElement.offsetWidth;
-      const highlightedElement = highlightedColumn.current as HTMLElement;
-      const leftDiff =
-        highlightedElement.offsetLeft +
-        highlightedElement.offsetWidth -
-        tableRight;
-      if (leftDiff > 0) {
-        tableElement.scrollLeft = leftDiff + highlightedElement.offsetWidth;
-      } else {
-        tableElement.scrollLeft = 0;
+      const tableRight = tableElement.scrollLeft + tableElement.offsetWidth;
+      const highlightedElementLeft = (highlightedColumn.current as HTMLElement).offsetLeft;
+      const highlightedElementRight = highlightedElementLeft + (highlightedColumn.current as HTMLElement).offsetWidth;
+      if (highlightedElementLeft <= tableElement.scrollLeft || highlightedElementRight >= tableRight) {
+        tableElement.scrollLeft = highlightedElementRight - tableElement.offsetWidth + HIGHLIGHT_MARGIN;
       }
     }
   });
