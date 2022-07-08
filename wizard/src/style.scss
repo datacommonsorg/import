@@ -54,6 +54,8 @@ h2 {
 
 #main-pane {
   min-height: 400px;
+  max-width: 1750px;
+  padding: 0 3rem;
 }
 
 #main-nav .navbar-brand {
@@ -86,7 +88,6 @@ h2 {
 // Footer
 #main-footer {
   background: #f0f0f0;
-  margin-top: 3rem;
   padding-top: 3rem;
   /* Trick to get the footer to extend to the bottom of short pages */
   box-shadow: 0 50vh 0 50vh #f0f0f0;
@@ -124,6 +125,36 @@ h2 {
 #main-footer .col-12,
 #main-footer .col-sm-6 {
   margin-bottom: 2rem;
+}
+
+#main-body {
+  position: relative;
+  padding-bottom: 3rem;
+}
+
+/* Info section */
+.info-section {
+  padding: 2rem 3rem 0 3rem;
+  max-width: 1750px;
+}
+
+summary {
+  font-weight: bold;
+  width: fit-content;
+  padding-bottom: 0.5rem;
+}
+
+.info-section table {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+a, a:hover {
+  color: #660000;
+}
+
+::marker {
+  margin-right: 0.5rem;
 }
 
 /* Section */
