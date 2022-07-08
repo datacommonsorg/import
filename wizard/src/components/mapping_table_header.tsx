@@ -20,7 +20,7 @@
 
 import React from "react";
 
-import { Column, MappedThing, MAPPED_THING_NAMES, MappingType } from "../types";
+import { Column, MAPPED_THING_NAMES, MappedThing, MappingType } from "../types";
 import { ColumnInfo } from "./mapping_section";
 
 interface MappingTableHeaderProps {
@@ -84,7 +84,8 @@ export function MappingTableHeader(
 }
 
 function getColumnMappingString(column: ColumnInfo): string {
-  const mThingName = MAPPED_THING_NAMES[column.mappedThing] || column.mappedThing;
+  const mThingName =
+    MAPPED_THING_NAMES[column.mappedThing] || column.mappedThing;
   if (column.type === MappingType.COLUMN) {
     let mString = `${mThingName}s`;
     if (column.mappedThing === MappedThing.PLACE) {

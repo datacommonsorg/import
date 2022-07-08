@@ -22,7 +22,12 @@ import _ from "lodash";
 import React from "react";
 import { FormGroup, Input, Label } from "reactstrap";
 
-import { DCProperty, MappedThing, MAPPED_THING_NAMES, MappingType } from "../types";
+import {
+  DCProperty,
+  MAPPED_THING_NAMES,
+  MappedThing,
+  MappingType,
+} from "../types";
 import { PlaceDetector } from "../utils/detect_place";
 import { ColumnInfo } from "./mapping_section";
 

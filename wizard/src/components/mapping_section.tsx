@@ -99,12 +99,12 @@ export function MappingSection(props: MappingSectionProps): JSX.Element {
     setColumnState({ columns, selectedColumn: 0 });
     setConstantVals({});
     setErrorList([]);
-  }, [props.csvData, props.predictedMapping]);
+  }, [props.csvData, props.predictedMapping, props.placeDetector]);
 
   useEffect(() => {
     props.onCorrectedMappingUpdated();
     setShowConfirmationButton(true);
-  }, [columnState.columns, constantVals]);
+  }, [columnState.columns, constantVals, props.onCorrectedMappingUpdated]);
 
   const selectedColumnId =
     props.csvData.orderedColumns[columnState.selectedColumn].id;

@@ -20,7 +20,6 @@
  */
 
 import JSZip from "jszip";
-import _ from "lodash";
 import React from "react";
 import { Button } from "reactstrap";
 
