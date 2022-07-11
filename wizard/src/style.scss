@@ -1,0 +1,362 @@
+/**
+ * Copyright 2022 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@import "~bootstrap/scss/bootstrap";
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol";
+  background: #f8f8f8;
+  margin: 0;
+}
+
+h1,
+h2 {
+  font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+h2 {
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 0;
+  margin: 0;
+}
+
+#main-header {
+  background-color: #660000;
+  padding: 0.5rem 0;
+  box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+#main-header .nav-item.dropdown {
+  margin-right: 1rem;
+}
+
+#main-header .dropdown-item:active {
+  background-color: var(--link-color);
+}
+
+#main-pane {
+  min-height: 400px;
+  max-width: 1750px;
+  padding: 0 3rem;
+}
+
+#main-nav .navbar-brand {
+  font-size: 1.1rem;
+  line-height: 24px;
+  display: flex;
+  align-items: center;
+}
+
+#main-nav .navbar-brand a {
+  color: #fff;
+  font-weight: 500;
+}
+
+#main-nav .navbar-brand span,
+#main-nav .navbar-brand span a {
+  font-weight: 200;
+  letter-spacing: 2px;
+  margin-left: 0.4rem;
+}
+
+#main-nav .dropdown-item,
+#main-nav .nav-link {
+  /* Specify fonts in absolute px until we remove inclusion of MDL from tool pages */
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+// Footer
+#main-footer {
+  background: #f0f0f0;
+  padding-top: 3rem;
+  /* Trick to get the footer to extend to the bottom of short pages */
+  box-shadow: 0 50vh 0 50vh #f0f0f0;
+}
+
+#main-footer a {
+  color: #660000;
+}
+
+#main-footer,
+#main-footer h6 {
+  font-size: 0.9rem;
+}
+
+#main-footer #sub-footer {
+  border-top: 1px solid $gray-300;
+  padding-top: 1.5rem;
+  padding-bottom: 3rem;
+  line-height: 2.5rem;
+}
+
+#sub-footer .btn,
+#sub-footer a {
+  margin-right: 0.75rem;
+}
+
+#sub-footer a:last-of-type {
+  margin-right: 0;
+}
+
+#main-footer section a {
+  display: block;
+}
+
+#main-footer .col-12,
+#main-footer .col-sm-6 {
+  margin-bottom: 2rem;
+}
+
+#main-body {
+  position: relative;
+  padding-bottom: 3rem;
+}
+
+/* Info section */
+.info-section {
+  padding: 2rem 3rem 0 3rem;
+  max-width: 1750px;
+}
+
+summary {
+  font-weight: bold;
+  width: fit-content;
+  padding-bottom: 0.5rem;
+}
+
+.info-section table {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+a, a:hover {
+  color: #660000;
+}
+
+::marker {
+  margin-right: 0.5rem;
+}
+
+/* Section */
+.section-container {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: white;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-radius: 0.3rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  padding-bottom: 1rem;
+}
+
+.upload-section-inputs {
+  margin-top: 1rem;
+}
+
+/* Mapping Section */
+
+.mapping-section {
+  position: relative;
+}
+
+.highlighted-col {
+  background-color: lightyellow;
+}
+
+table {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  overflow: auto;
+  font-size: 0.9rem;
+  max-height: 50vh;
+}
+
+tr th {
+  height: 2rem;
+  vertical-align: center;
+}
+
+table,
+th,
+td {
+  border: 1px solid #ccc;
+  border-collapse: collapse;
+}
+
+th {
+  background: #f5f6fa;
+  border-top: none;
+}
+
+th,
+td {
+  text-align: center;
+  padding: 0.2rem 0.5rem;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr td:first-child,
+tr th:first-child {
+  border-left: none;
+}
+
+tr td:last-child,
+tr th:last-child {
+  border-right: none;
+}
+
+.mapping-info-row th {
+  background-color: #cabdbd;
+  font-size: 0.8rem;
+  font-weight: normal;
+  min-width: 7rem;
+}
+
+.row-num {
+  font-weight: normal;
+  color: #7b7b7b;
+  font-size: 0.8rem;
+  width: 1rem;
+}
+
+.column-options {
+  margin-top: 1rem;
+}
+
+.column-options-header {
+  padding-bottom: 0.3rem;
+}
+.column-options-input-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.column-options-input {
+  margin: 0.3rem;
+  display: flex;
+  width: fit-content;
+  height: 1.5rem;
+  align-items: center;
+}
+
+.form-check-input {
+  margin-right: 0.3rem;
+}
+
+.form-select {
+  width: 10rem;
+  padding: 0.2rem;
+  border-color: #ccc;
+  margin: 0 0.5rem;
+  font-size: 0.9rem;
+  border-radius: 0.3rem
+}
+
+#column-type-mapped-thing {
+  margin-left: 0;
+}
+
+.confirmation-button {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.constant-values-section {
+  margin-top: 0;
+  border-top: 0;
+}
+
+.constant-value-input-container {
+  display: flex;
+  padding-top: 0.5rem;
+  align-items: center;
+}
+
+.constant-value-label {
+  width: 5rem;
+}
+
+.constant-value-input {
+  border: 1px solid #ccc;
+  border-radius: 0.3rem;
+  width: 20rem;
+  padding: 0.2rem;
+}
+
+.mapping-errors {
+  color: #dc3545;
+}
+
+/* Spinner */
+.screen,
+#screen {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  width: 100%;
+  height: 100%;
+}
+
+#spinner:not([hidden]) {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#spinner::after {
+  content: "";
+  z-index: 10;
+  width: 80px;
+  height: 80px;
+  border: 2px solid #f3f3f3;
+  border-top: 3px solid #660000;
+  border-radius: 100%;
+  will-change: transform;
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

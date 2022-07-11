@@ -17,14 +17,352 @@
 <html>
   <head>
     <title>Import Wizard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;600&family=Roboto&display=swap"
+    rel="stylesheet">
   </head>
 
   <body>
     <div id="main">
       <header id="main-header">
-        Data Commons
+        <nav class="navbar navbar-dark navbar-expand-lg col" id="main-nav">
+          <div class="container-fluid">
+            <div class="navbar-brand">
+              <a href="https://datacommons.org">Data Commons</a>
+              <span>
+                &nbsp;Import Wizard
+              </span>
+              </a>
+            </div>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#dc-main-nav">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-md-end" id="dc-main-nav">
+              <ul class="navbar-nav float-md-right">
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="nav-explore-dropdown" role="button"
+                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Explore
+                  </a>
+                  <div class="dropdown-menu" aria-labelledby="nav-explore-dropdown">
+                    <a class="dropdown-item" href="https://datacommons.org/place">Place Explorer</a>
+                    <a class="dropdown-item" href="https://datacommons.org/browser">Graph Browser</a>
+                    <a class="dropdown-item" href="https://datacommons.org/tools/timeline">Timelines Explorer</a>
+                    <a class="dropdown-item" href="https://datacommons.org/tools/scatter">Scatter Plot Explorer</a>
+                    <a class="dropdown-item" href="https://datacommons.org/tools/map">Map Explorer</a>
+                    <a class="dropdown-item" href="https://datacommons.org/tools/statvar">Statistical Variable Explorer</a>
+                  </div>
+                </li>
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="nav-doc-dropdown" role="button" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">Documentation</a>
+                  <div class="dropdown-menu" aria-labelledby="nav-doc-dropdown">
+                    <a class="dropdown-item" href="https://docs.datacommons.org">Documentation</a>
+                    <a class="dropdown-item" href="https://docs.datacommons.org/api">APIs</a>
+                    <a class="dropdown-item" href="https://docs.datacommons.org/tutorials">Tutorials</a>
+                    <a class="dropdown-item" href="https://docs.datacommons.org/contributing/">Contribute</a>
+                  </div>
+                </li>
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="nav-about-dropdown" role="button"
+                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    About
+                  </a>
+                  <div class="dropdown-menu dropdown-menu-right" aria-labelledby="nav-about-dropdown">
+                    <a class="dropdown-item" href="https://datacommons.org/about">About Data Commons</a>
+                    <a class="dropdown-item" href="https://docs.datacommons.org/blog.html">Blog</a>
+                    <a class="dropdown-item" href="https://docs.datacommons.org/datasets/">Data Sources</a>
+                    <a class="dropdown-item" href="https://datacommons.org/faq">FAQ</a>
+                    <a class="dropdown-item" href="https://datacommons.org/feedback">Feedback</a>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
       </header>
-      <div id="main-pane"></div>
+      <div id="main-body">
+        <div class="info-section container">
+          <p>
+            Welcome to the Data Commons Import Wizard! We've created this tool (still in early beta) to simplify the process of
+            importing and mapping data from CSV files. Please review all of the information below before proceeding to import.
+            This version is intended to help our closest partners import clean CSV files with very specific requirements.
+          </p>
+          <p>We welcome any feedback at <a href="mailto:datcom-support@google.com ">datcom-support@google.com</a> while we iterate on improvements.</p>
+          <details id="csv-requirements">
+            <summary>CSV Format Requirements</summary>
+            <ul>
+              <li>
+                <p>
+                  Each CSV file is expected to have columns corresponding to the Values (numeric) about a Variable, Place and Date.
+                  For example, in the table shown below, there are separate columns for Variable (Variable), Place (Country), Date (Year) and Value (Value)
+                  and each row of the CSV corresponds to one observation of the Variable about a Place at the specified Date.
+                </p>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Year</th>
+                      <th>Country</th>
+                      <th>Variable</th>
+                      <th>Value</th>
+                      <th>Extra Column</th>
+                      <th>Another Extra Column</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>2017</td>
+                      <td>UK</td>
+                      <td>Life Expectancy</td>
+                      <td>81.25609756</td>
+                      <td>1</td>
+                      <td>random text</td>
+                    </tr>
+                    <tr>
+                      <td>2017</td>
+                      <td>UK</td>
+                      <td>Population</td>
+                      <td>65844142</td>
+                      <td>1</td>
+                      <td>random text</td>
+                    </tr>
+                    <tr>
+                      <td>2017</td>
+                      <td>KR</td>
+                      <td>Life Expectancy</td>
+                      <td>82.62682928</td>
+                      <td>2</td>
+                      <td>random text</td>
+                    </tr>
+                    <tr>
+                      <td>...</td>
+                      <td>...</td>
+                      <td>...</td>
+                      <td>...</td>
+                      <td>...</td>
+                      <td>...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </li>
+              <li>
+                If all observations in the CSV are about the same Place and/or the same Date and/or the same Variable, then those do not need to be specified as columns. They can be specified as constants. After mapping columns, if any of Date, Variable (statvars), or Place are not mapped, then there will be a section for users to enter constants for the missing things.
+              </li>
+              <li>
+                <span>It is possible to specify Date OR Variable as column headers (but not both at the same time).</span>
+                <ul>
+                  <li>
+                    <span><b>Example 1</b>: In the table shown below, all values in each Date column (2017, 2018) are assumed to be observations that correspond to the Date specified in the column header.</span>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Country</th>
+                          <th>Variable</th>
+                          <th>2017</th>
+                          <th>2018</th>
+                          <th>Extra Column</th>
+                          <th>Another Extra Column</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>UK</td>
+                          <td>Life Expectancy</td>
+                          <td>81.2560975609756</td>
+                          <td>81.2560975609756</td>
+                          <td>1</td>
+                          <td>random text</td>
+                        </tr>
+                        <tr>
+                          <td>KR</td>
+                          <td>Population</td>
+                          <td>51361911</td>
+                          <td>51606633</td>
+                          <td>1</td>
+                          <td>random text</td>
+                        </tr>
+                        <tr>
+                          <td>UK</td>
+                          <td>Population</td>
+                          <td>65844142</td>
+                          <td>66273576</td>
+                          <td>2</td>
+                          <td>random text</td>
+                        </tr>
+                        <tr>
+                          <td>...</td>
+                          <td>...</td>
+                          <td>...</td>
+                          <td>...</td>
+                          <td>...</td>
+                          <td>...</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </li>
+                  <li>
+                    <span><b>Example 2</b>: In the table shown below, all values in each Variable column (Life Expectancy, Population) are assumed to be observations that correspond to the Variable specified in the column header.</span>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Year</th>
+                          <th>Country</th>
+                          <th>Life Expectancy</th>
+                          <th>Population</th>
+                          <th>Extra Column</th>
+                          <th>Another Extra Column</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>2017</td>
+                          <td>UK</td>
+                          <td>81.25609756</td>
+                          <td>65844142</td>
+                          <td>1</td>
+                          <td>random text</td>
+                        </tr>
+                        <tr>
+                          <td>2017</td>
+                          <td>KR</td>
+                          <td>82.62682928</td>
+                          <td>51361911</td>
+                          <td>2</td>
+                          <td>random text</td>
+                        </tr>
+                        <tr>
+                          <td>2017</td>
+                          <td>US</td>
+                          <td>78.5390243902439</td>
+                          <td>325147121</td>
+                          <td>3</td>
+                          <td>random text</td>
+                        </tr>
+                        <tr>
+                          <td>...</td>
+                          <td>...</td>
+                          <td>...</td>
+                          <td>...</td>
+                          <td>...</td>
+                          <td>...</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </details>
+          <details id="terminology">
+            <summary>Terminology Glossary</summary>
+            <ul>
+              <li><b>Place</b> - Only Country level data supported for now. See <a href="#supported-formats">Supported Date and Place Formats</a> for more details. State level data coming soon.</li>
+              <li><b>Name of Variable</b> - Ex: Population, Life expectancy, Median Income. Also referred to as 'Statistical Variables' and 'StatVars' in Data Commons.</li>
+              <li><b>Date</b> - See <a href="#supported-formats">Supported Date and Place Formats</a> section for more details.</li>
+              <li><b>Observation Value</b> - The numerical values within a column.</li>
+              <li><b>Not Mapped</b> - Columns to be excluded from the mapping .</li>
+              <li><b>Constant</b> - If all observations in the CSV are about the same Place and/or the same Date and/or the same Variable, then those do not need to be specified as columns.</li>
+            </ul>
+          </details>
+          <details id="supported-formats">
+            <summary>Supported Date and Place Formats</summary>
+            <ul>
+              <li>
+                <span>Date formats supported: <a href="https://en.wikipedia.org/wiki/ISO_8601" target="_blank">ISO-8601</a> format only</span>
+                <ul>
+                  <li>Example: YYYY-MM-DD like 2022-08-23</li>
+                  <li>Example: YYYYMMDD like 20220823</li>
+                  <li>Example: YYYY-MM like 2022-08 (but not YYYYMM)</li>
+                  <li>Example: YYYY-MM-DD like 2022-08-23</li>
+                </ul>
+              </li>
+              <li>
+                <span>Place types and formats supported:</span>
+                <ul>
+                  <li>Type: Country
+                    <ul>
+                      <li>Formats (case-insensitive):
+                        <ul>
+                          <li>ISO Code, e.g. "US", "NO", "IT". See the Alpha-2 code column <a href="https://www.iban.com/country-codes" target="_blank">here</a>.</li>
+                          <li>3 letter Alphanumeric code, e.g. "USA", "NOR", "ITA". See the Alpha-3 code column <a href="https://www.iban.com/country-codes" target="_blank">here</a>.</li>
+                          <li>Country numbers, e.g. 840, 578, 380. See the Numeric column <a href="https://www.iban.com/country-codes" target="_blank">here</a>.</li>
+                          <li>Country names, e.g. "United States of America", "Norway", "Italy".</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </details>
+          <details id="instructions">
+            <summary>Import Steps</summary>
+            <ol>
+              <li>Review <a href="#csv-requirements">CSV Format Requirements</a>, <a href="#terminology">Terminology Glossary</a>, and <a href="#supported-formats">Supported Date and Place Formats</a>.</li>
+              <li>Review your CSV file and make any necessary edits to conform to these requirements.</li>
+              <li>Select Choose File and import your .csv file (see below upload button). </li>
+              <li>Confirm Mappings in the import wizard, one column at a time.
+                <ul>
+                  <li>Identify Place, Variable, Date, and Observation Values Using the Tool</li>
+                </ul>
+              </li>
+              <li>After completing the full mapping, press next to generate and download a zip file containing the TMCF and JSON files.</li>
+              <li>Share the files with the Data Commons team.
+                <ul>
+                  <li>Use Google Drive to share a link to the URL</li>
+                  <li>Share URL in an email to <a href="mailto:datcom-support@google.com ">datcom-support@google.com</a></li>
+                </ul>
+              </li>
+              <li>Datacommons will validate the import and reach out to you if necessary.</li>
+            </ol>
+          </details>
+        </div>
+        <div id="main-pane" class="container"></div>
+      </div>
+      <footer id="main-footer">
+        <div class="container">
+          <div class="row">
+            <section class="col-12 col-sm-6 col-md-4">
+              <h6>Explore</h6>
+              <a href="https://datacommons.org/place">Place Explorer</a>
+              <a href="https://datacommons.org/browser">Graph Browser</a>
+              <a href="https://datacommons.org/tools/timeline">Timelines Explorer</a>
+              <a href="https://datacommons.org/tools/scatter">Scatter Plot Explorer</a>
+              <a href="https://datacommons.org/tools/map">Map Explorer</a>
+              <a href="https://datacommons.org/tools/statvar">Statistical Variable Explorer</a>
+            </section>
+            <section class="col-12 col-sm-6 col-md-4">
+              <h6>Documentation</h6>
+              <a href="https://docs.datacommons.org">Documentation</a>
+              <a href="https://docs.datacommons.org/api">APIs</a>
+              <a href="https://docs.datacommons.org/tutorials">Tutorials</a>
+              <a href="https://docs.datacommons.org/contributing/">Contribute</a>
+              <a href="https://github.com/datacommonsorg">Github Repository</a>
+            </section>
+            <section class="col-12 col-sm-6 col-md-4">
+              <h6>Data Commons</h6>
+              <a href="https://datacommons.org/about">About Data Commons</a>
+              <a href="https://docs.datacommons.org/blog.html">Blog</a>
+              <a href="https://docs.datacommons.org/datasets/">Data Sources</a>
+              <a href="https://datacommons.org/feedback">Feedback</a>
+              <a href="https://datacommons.org/faq">Frequently Asked Questions</a>
+            </section>
+          </div>
+          <div class="row">
+            <div id="sub-footer" class="col-12">
+              <span>Data Commons is a Google supported project</span>
+              <div class="float-md-right mt-3 mt-md-0">
+                <a href="https://policies.google.com/terms">Terms and Conditions</a>
+                <a href="https://policies.google.com/privacy?hl=en-US">Privacy Policy</a>
+                <a href="{{ url_for('static.disclaimers') }}">Disclaimers</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+      crossorigin="anonymous"></script>
   </body>
 </html>

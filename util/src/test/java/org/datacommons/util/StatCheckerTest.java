@@ -49,7 +49,7 @@ public class StatCheckerTest {
     String mcfPath = this.getClass().getResource("StatCheckerTest.mcf").getPath();
     Mcf.McfGraph graph = McfParser.parseInstanceMcfFile(mcfPath, false, lw);
     // create stat checker, extract series from the graph and check the series from the graph
-    StatChecker sc = new StatChecker(lw, null, false);
+    StatChecker sc = new StatChecker(lw, null);
     sc.extractStatsFromGraph(graph);
     sc.check();
     // check statsCheckSummary in logCtx is as expected
@@ -69,7 +69,7 @@ public class StatCheckerTest {
   public void testCheckSvObsInGraph() throws IOException {
     Debug.Log.Builder log = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(log, Path.of("/tmp/statCheckerTest"));
-    StatChecker sc = new StatChecker(lw, null, false);
+    StatChecker sc = new StatChecker(lw, null);
 
     // Graph with no duplicate StatVarObs.
     String mcf =
@@ -386,6 +386,48 @@ public class StatCheckerTest {
     StatChecker.checkSigmaDivergence(new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_3_Sigma", List.of("2012")));
     assertEquals(1, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_3_Sigma"));
+  }
+
+  @Test
+  public void testShouldExtractSeriesInfo() {
+    Debug.Log.Builder logCtx = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(logCtx, testFolder.getRoot().toPath());
+    StatChecker sc = new StatChecker(lw, null);
+
+    // For type-inferred namespaces
+    List<String> typeInferredNamespaces = List.of("geoId/", "nuts/");
+    for (String namespace : typeInferredNamespaces) {
+      // First 5 places of the same length should work
+      assertTrue(sc.shouldExtractSeriesInfo(namespace + "01"));
+      assertTrue(sc.shouldExtractSeriesInfo(namespace + "02"));
+      assertTrue(sc.shouldExtractSeriesInfo(namespace + "03"));
+      assertTrue(sc.shouldExtractSeriesInfo(namespace + "04"));
+      assertTrue(sc.shouldExtractSeriesInfo(namespace + "05"));
+
+      // New places beyond the first 5 should not work
+      assertFalse(sc.shouldExtractSeriesInfo(namespace + "06"));
+
+      // Adding a different length should work
+      assertTrue(sc.shouldExtractSeriesInfo(namespace + "01000000"));
+
+      // Querying for a place that already exists should return true
+      assertTrue(sc.shouldExtractSeriesInfo(namespace + "05"));
+    }
+
+    // For typeless namespaces
+    String typelessNamespace = "typeless/";
+    String filler = "0";
+    // First 25 places should work, even if different lengths
+    for (int i = 0; i < 25; i++) {
+      // typeless/0, typeless/01, typeless/002, typeless/0003, etc.
+      assertTrue(
+          sc.shouldExtractSeriesInfo(typelessNamespace + filler.repeat(i) + String.valueOf(i)));
+    }
+    // Adds beyond the first 25 should not work
+    assertFalse(sc.shouldExtractSeriesInfo(typelessNamespace + "06"));
+
+    // Querying for a place that already exists should return true
+    assertTrue(sc.shouldExtractSeriesInfo(typelessNamespace + "002"));
   }
 
   private boolean checkHasCounter(

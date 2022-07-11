@@ -54,7 +54,8 @@ public class GenMcfTest {
           "resolution", 5,
           "statchecks", 3,
           "successtmcf", 3,
-          "measurementresult", 4);
+          "measurementresult", 4,
+          "localidresolution", 5);
 
   @Test
   public void GenMcfTest() throws IOException {

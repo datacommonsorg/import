@@ -25,6 +25,4 @@ steps:
       - -c
       - |
         cd wizard
-        npm install
-        npm run lint
-        npm run test
+        ./run_test.sh -a

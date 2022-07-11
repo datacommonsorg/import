@@ -25,9 +25,10 @@ export enum MappedThing {
   STAT_VAR = "statVar",
   DATE = "date",
   UNIT = "unit",
+  VALUE = "value",
 }
 
-interface Column {
+export interface Column {
   // id of the column
   id: string;
   // original column header
@@ -41,9 +42,10 @@ export interface MappingVal {
   // Column that holds the mapping values. Should be set if type is
   // MappingType.COLUMN
   column?: Column;
-  // If column is set, the values in the column correspond to this property in
-  // the KG
-  valueProperty?: string;
+  // When MappedThing is PLACE, the value corresponds to place property in KG.
+  placeProperty?: DCProperty;
+  // When MappedThing is PLACE, the value corresponds to place type in KG.
+  placeType?: DCType;
   // List of column headers that act as the mapping values. Should be set if
   // type is MappingType.COLUMN_HEADERS
   headers?: Column[];
@@ -52,7 +54,10 @@ export interface MappingVal {
   constant?: string;
 }
 
-export type Mapping = Record<MappedThing, MappingVal>;
+export type Mapping = Map<MappedThing, MappingVal>;
+
+// CSV Row number.
+export type RowNumber = number;
 
 // CvsData should contain the minimum sufficient data from the
 // data csv file which will be used for all processing, e.g. column detection,
@@ -61,16 +66,18 @@ export interface CsvData {
   // This field should dictate the fixed (internal) order of all csv columns.
   orderedColumns: Array<Column>;
 
-  // columnValuesSampled is a map from column id to an extract of the
-  // values in the column. This extract could be all of the column's values or
-  // a sample. This is the structure that should be used for detection
-  // heuristics and other advanced processing.
+  // columnValuesSampled is a map from column index to an extract of the
+  // values in the column. The column index is with reference to the order in
+  // orderedColumns.
+  // This extract could be all of the column's values or a sample. This is the
+  // structure that should be used for detection heuristics and other advanced
+  // processing.
   // It is assumed that all columns present in the original csv data file will
-  // be represented in this structure. All values in the orderedColumnNames
+  // be represented in this structure. All indices in the orderedColumnNames
   // array should be present as keys of columnValuesSampled.
   // Note that the length of all column-values need not be the same, e.g. due to
   // the removal of duplicate values.
-  columnValuesSampled: Map<string, Array<string>>;
+  columnValuesSampled: Map<number, Array<string>>;
 
   // rowsForDisplay is a mapping from the row index in the original csv file to
   // the contents of the row. This is a convenience structure to assist with
@@ -78,7 +85,7 @@ export interface CsvData {
   // is no expectation that this structure contains all rows.
   // It is also assumed that order of values in the array will correspond to
   // the orderedColumnNames.
-  rowsForDisplay: Map<BigInt, Array<string>>;
+  rowsForDisplay: Map<RowNumber, Array<string>>;
 
   // The raw csv data can be either in the form of a file or a URL. One of the
   // following fields must be set:
@@ -91,11 +98,17 @@ export interface CsvData {
 
 // Types used for Detection.
 
-// DetectedFormat denotes the format type associated with some detected type..
-export interface DetectedFormat {
-  propertyName: string;
+// An abstraction for a Data Commons entity, e.g. a place type or property.
+interface Entity {
+  dcid: string;
   displayName: string;
 }
+
+// A Data Commons entity type, e.g. Country (which a type of Place).
+export type DCType = Entity;
+
+// A Data Commons property, e.g. longitude.
+export type DCProperty = Entity;
 
 // Denotes a level of confidence in the detection.
 // It can be associated with any detected type.
@@ -105,13 +118,25 @@ export enum ConfidenceLevel {
   High,
 }
 
-export interface DetectedDetails {
-  // The type detected.
-  detectedType: string;
+export interface TypeProperty {
+  // The Data Commons type.
+  dcType: DCType;
 
-  // (Optional) The format detected.
-  detectedFormat?: DetectedFormat;
+  // (Optional) The Data Commons property.
+  dcProperty?: DCProperty;
+}
+
+export interface DetectedDetails {
+  // The detected Type and (optional) Property.
+  detectedTypeProperty: TypeProperty;
 
   // The level of confidence associated with the detection.
   confidence: ConfidenceLevel;
 }
+
+// A map from the mapped thing (aka StatVarObs props) to the property value.
+export type Observation = Map<MappedThing, string>;
+
+// Observations keyed by CSV row number. A row has multiple observations when
+// the Mapping is of type COLUMN_HEADER with multiple MappingVal.headers.
+export type RowObservations = Map<RowNumber, Array<Observation>>;

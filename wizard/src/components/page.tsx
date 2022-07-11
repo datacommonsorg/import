@@ -14,8 +14,55 @@
  * limitations under the License.
  */
 
-import React from "react";
+/**
+ * Main component for the import wizard.
+ */
+
+import _ from "lodash";
+import React, { useRef, useState } from "react";
+
+import { CsvData, Mapping } from "../types";
+import { PlaceDetector } from "../utils/detect_place";
+import { MappingSection } from "./mapping_section";
+import { PreviewSection } from "./preview_section";
+import { UploadSection } from "./upload_section";
 
 export function Page(): JSX.Element {
-  return <div>Import Wizard</div>;
+  const [csv, setCsv] = useState<CsvData>(null);
+  const [predictedMapping, setPredictedMapping] = useState<Mapping>(null);
+  const [correctedMapping, setCorrectedMapping] = useState<Mapping>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const showMapping = !_.isEmpty(csv);
+  const placeDetector = useRef(new PlaceDetector());
+
+  return (
+    <>
+      <UploadSection
+        onCsvProcessed={(csv) => setCsv(csv)}
+        onPredictionRetrieved={(prediction) => setPredictedMapping(prediction)}
+        placeDetector={placeDetector.current}
+      />
+      {showMapping && (
+        <MappingSection
+          csvData={csv}
+          predictedMapping={predictedMapping}
+          onCorrectedMappingUpdated={() => setShowPreview(false)}
+          onCorrectedMappingSubmitted={(correctedMapping) => {
+            setShowPreview(true);
+            setCorrectedMapping(correctedMapping);
+          }}
+          placeDetector={placeDetector.current}
+        />
+      )}
+      {showPreview && (
+        <div className="card-section">
+          <PreviewSection
+            predictedMapping={predictedMapping}
+            correctedMapping={correctedMapping}
+            csvData={csv}
+          />
+        </div>
+      )}
+    </>
+  );
 }

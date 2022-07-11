@@ -79,7 +79,8 @@ public class LogWrapper {
   }
 
   private void initCounterMap() {
-    for (var level : Debug.Log.Level.values()) {
+    int num_levels = Debug.Log.Level.values().length;
+    for (int i = 0; i < num_levels; i++) {
       counterMaps.add(new ConcurrentHashMap<>());
     }
   }

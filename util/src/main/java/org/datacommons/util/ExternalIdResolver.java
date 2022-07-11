@@ -25,7 +25,7 @@ import org.datacommons.proto.Recon;
 // This class is used as follows:
 // 1. Do N submitNode calls (which may batch up RPCs)
 // 2. Call drainRemoteCalls() (to drain all RPCs)
-// 3. Do N resolveNode calls (to resolve a dcid)
+// 3. Do M resolveNode calls (to resolve a dcid)
 //
 // If this order is not followed, errors will be thrown.
 // This class is thread-safe.
@@ -190,6 +190,34 @@ public class ExternalIdResolver {
     }
   }
 
+  public synchronized void addLocalGraph(Mcf.McfGraph.PropertyValues node) {
+    // Skip doing anything with unresolvable types.
+    if (!isResolvableType(node)) {
+      return;
+    }
+
+    String dcid = McfUtil.getPropVal(node, Vocabulary.DCID);
+    if (dcid.isEmpty()) {
+      return;
+    }
+
+    Map<String, Set<String>> externalIds = getExternalIds(node);
+    for (Map.Entry<String, Set<String>> externalId : externalIds.entrySet()) {
+      String externalIdProp = externalId.getKey();
+      Set<String> externalIdValues = externalId.getValue();
+      for (String externalIdValue : externalIdValues) {
+        addToMappedIds(externalIdProp, externalIdValue, dcid);
+      }
+    }
+  }
+
+  public synchronized void addLocalGraph(Mcf.McfGraph graph) {
+    for (Map.Entry<String, Mcf.McfGraph.PropertyValues> nodeEntry :
+        graph.getNodesMap().entrySet()) {
+      addLocalGraph(nodeEntry.getValue());
+    }
+  }
+
   // Returns true if this node is of a type that is resolvable by the ID mapper.
   private static boolean isResolvableType(Mcf.McfGraph.PropertyValues node) {
     for (var typeOf : McfUtil.getPropVals(node, Vocabulary.TYPE_OF)) {
@@ -249,7 +277,7 @@ public class ExternalIdResolver {
         }
       }
       if (!dcid.isEmpty()) {
-        mappedIds.computeIfAbsent(extProp, k -> new HashMap<>()).put(extId, dcid);
+        addToMappedIds(extProp, extId, dcid);
         if (verbose) logger.info("Resolved " + entity.getSourceId() + " -> " + dcid);
       } else {
         if (verbose) logger.info("Resolved to empty dcid for " + entity.getSourceId());
@@ -258,6 +286,10 @@ public class ExternalIdResolver {
 
     // Clear the batch.
     batchedIds.clear();
+  }
+
+  private void addToMappedIds(String extProp, String extId, String dcid) {
+    mappedIds.computeIfAbsent(extProp, k -> new HashMap<>()).put(extId, dcid);
   }
 
   private Recon.ResolveEntitiesResponse callDc(Recon.ResolveEntitiesRequest reconReq)

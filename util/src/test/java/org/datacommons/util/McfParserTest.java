@@ -43,12 +43,12 @@ public class McfParserTest {
             + "typeOf: schema:State\n"
             + "description: \"Odd\"double\"quotes"
             + "\"fails\"\n";
-    var graph = McfParser.parseInstanceMcfString(mcf, true, lw);
+    McfParser.parseInstanceMcfString(mcf, true, lw);
     assertTrue(TestUtil.checkLog(lw.getLog(), "StrSplit_BadQuotesInToken_description", "US1"));
 
     // New-line in value.
     mcf = "Node: US2\n" + "typeOf: schema:State\n" + "description: \"Line with\nnewline\"\n";
-    graph = McfParser.parseInstanceMcfString(mcf, true, lw);
+    McfParser.parseInstanceMcfString(mcf, true, lw);
     assertTrue(TestUtil.checkLog(logCtx.build(), "StrSplit_BadQuotesInToken_description", "US2"));
   }
 
