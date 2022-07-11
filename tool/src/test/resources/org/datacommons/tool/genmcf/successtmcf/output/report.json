@@ -711,6 +711,7 @@
     "resolution": "RESOLUTION_MODE_FULL",
     "numThreads": 1,
     "statChecks": true,
-    "observationAbout": false
+    "observationAbout": false,
+    "allowNanSvobs": false
   }
 }
