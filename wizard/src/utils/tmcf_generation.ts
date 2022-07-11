@@ -14,13 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  CsvData,
-  MappedThing,
-  Mapping,
-  MappingType,
-  MappingVal,
-} from "../types";
+import { MappedThing, Mapping, MappingType, MappingVal } from "../types";
 
 const FIXED_CSV_TABLE = "CSVTable";
 const SVOBS_TYPE = "StatVarObservation";
