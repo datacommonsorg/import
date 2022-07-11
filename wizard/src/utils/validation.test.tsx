@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import _ from "lodash";
 
-import { MappedThing, Mapping, MappingType, MappingVal } from "../types";
+import { MappedThing, Mapping, MappingType } from "../types";
 import { checkMappings } from "./validation";
 
 test("Fail_MalformedMappingVal", () => {
@@ -43,9 +42,9 @@ test("Fail_MalformedMappingVal", () => {
   ]);
   const expected = [
     "Place mapping is missing placeProperty",
-    "place: missing value for COLUMN type ",
-    "statVar: missing value for COLUMN_HEADER type",
-    "date: missing value for CONSTANT type",
+    "Place: missing value for COLUMN type ",
+    "Name of Variable: missing value for COLUMN_HEADER type",
+    "Date: missing value for CONSTANT type",
   ];
   expect(checkMappings(input)).toEqual(expected);
 });
@@ -68,11 +67,11 @@ test("Fail_MissingRequiredPropsAndMultipleColumnHeaders", () => {
     ],
   ]);
   const expected = [
-    "Missing required mapping for place",
-    "Missing required mapping for statVar",
-    "Missing required mapping for date",
-    "value: must be a COLUMN type",
-    "Multiple columnHeader mappings found: unit, value",
+    "Missing required mapping for Place",
+    "Missing required mapping for Name of Variable",
+    "Missing required mapping for Date",
+    "Observation Value: must be a COLUMN type",
+    "Multiple columnHeader mappings found: Unit, Value",
   ];
   expect(checkMappings(input)).toEqual(expected);
 });
@@ -102,7 +101,7 @@ test("Fail_ValueMissing", () => {
       },
     ],
   ]);
-  const expected = ["Unable to detect 'value' column"];
+  const expected = ["Unable to detect 'Observation Value' column"];
   expect(checkMappings(input)).toEqual(expected);
 });
 

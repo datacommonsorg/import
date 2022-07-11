@@ -13,29 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import _ from "lodash";
-
-import { CsvData, Mapping, MappingVal } from "../types";
-
-/**
- * Generates the cleaned csv given the original csv and the correct mappings
- * @param csv
- * @param mappings
- * @returns
- */
-export function generateCleanedCSV(csv: CsvData, mappings: Mapping): string {
-  return "";
-}
-
-/**
- * Generates the stat vars mcf given the original csv and the correct mappings
- * @param csv
- * @param mappings
- * @returns
- */
-export function generateSvMCF(csv: CsvData, mappings: Mapping): string {
-  return "";
-}
+import { Mapping, MappingVal } from "../types";
 
 // convert Mapping object to a regular javascript object so it can be converted
 // into a JSON string

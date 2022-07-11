@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import _ from "lodash";
-
 import { MappedThing, Mapping, MappingType } from "../types";
 import { generateTranslationMetadataJson } from "./file_generation";
 
@@ -77,14 +75,14 @@ test("generateTranslationMetadataJson", () => {
       prediction: new Map(),
       correctedMapping: correctedMapping,
       expected:
-        '{"predictions":{},"correctedMapping":{"place":{"type":"column","column":{"id":"d3","header":"d","columnIdx":3},"placeProperty":{"dcid":"countryAlpha3Code","displayName":"Alpha 3 Code"},"placeType":{"dcid":"Country","displayName":"Country"}},"date":{"type":"columnHeader","headers":[{"id":"2022-100","header":"2022-10","columnIdx":0},{"id":"20211","header":"2021-10","columnIdx":1}]}}}',
+        '{"predictions":{},"correctedMapping":{"Place":{"type":"column","column":{"id":"d3","header":"d","columnIdx":3},"placeProperty":{"dcid":"countryAlpha3Code","displayName":"Alpha 3 Code"},"placeType":{"dcid":"Country","displayName":"Country"}},"Date":{"type":"columnHeader","headers":[{"id":"2022-100","header":"2022-10","columnIdx":0},{"id":"20211","header":"2021-10","columnIdx":1}]}}}',
     },
     {
       name: "empty correctedMapping",
       prediction: predictedMapping,
       correctedMapping: new Map(),
       expected:
-        '{"predictions":{"place":{"type":"column","column":{"id":"d3","header":"d","columnIdx":3},"placeProperty":{"dcid":"name","displayName":"name"},"placeType":{"dcid":"Country","displayName":"Country"}},"date":{"type":"column","column":{"id":"c2","header":"c","columnIdx":2}}},"correctedMapping":{}}',
+        '{"predictions":{"Place":{"type":"column","column":{"id":"d3","header":"d","columnIdx":3},"placeProperty":{"dcid":"name","displayName":"name"},"placeType":{"dcid":"Country","displayName":"Country"}},"Date":{"type":"column","column":{"id":"c2","header":"c","columnIdx":2}}},"correctedMapping":{}}',
     },
     {
       name: "both empty",
@@ -97,7 +95,7 @@ test("generateTranslationMetadataJson", () => {
       prediction: predictedMapping,
       correctedMapping: correctedMapping,
       expected:
-        '{"predictions":{"place":{"type":"column","column":{"id":"d3","header":"d","columnIdx":3},"placeProperty":{"dcid":"name","displayName":"name"},"placeType":{"dcid":"Country","displayName":"Country"}},"date":{"type":"column","column":{"id":"c2","header":"c","columnIdx":2}}},"correctedMapping":{"place":{"type":"column","column":{"id":"d3","header":"d","columnIdx":3},"placeProperty":{"dcid":"countryAlpha3Code","displayName":"Alpha 3 Code"},"placeType":{"dcid":"Country","displayName":"Country"}},"date":{"type":"columnHeader","headers":[{"id":"2022-100","header":"2022-10","columnIdx":0},{"id":"20211","header":"2021-10","columnIdx":1}]}}}',
+        '{"predictions":{"Place":{"type":"column","column":{"id":"d3","header":"d","columnIdx":3},"placeProperty":{"dcid":"name","displayName":"name"},"placeType":{"dcid":"Country","displayName":"Country"}},"Date":{"type":"column","column":{"id":"c2","header":"c","columnIdx":2}}},"correctedMapping":{"Place":{"type":"column","column":{"id":"d3","header":"d","columnIdx":3},"placeProperty":{"dcid":"countryAlpha3Code","displayName":"Alpha 3 Code"},"placeType":{"dcid":"Country","displayName":"Country"}},"Date":{"type":"columnHeader","headers":[{"id":"2022-100","header":"2022-10","columnIdx":0},{"id":"20211","header":"2021-10","columnIdx":1}]}}}',
     },
   ];
 

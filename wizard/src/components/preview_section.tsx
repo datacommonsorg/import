@@ -20,7 +20,6 @@
  */
 
 import JSZip from "jszip";
-import _ from "lodash";
 import React from "react";
 import { Button } from "reactstrap";
 
@@ -71,7 +70,7 @@ export function PreviewSection(props: PreviewSectionProps): JSX.Element {
         </div>
       </div>
       <div className="confirmation-button">
-        <Button onClick={onDownloadClicked}>download package</Button>
+        <Button onClick={onDownloadClicked}>Download Package</Button>
       </div>
     </>
   );

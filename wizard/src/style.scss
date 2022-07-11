@@ -236,14 +236,24 @@ tr th:last-child {
   background-color: #cabdbd;
   font-size: 0.8rem;
   font-weight: normal;
-  min-width: 7rem;
+  min-width: 12rem;
+  height: 3rem;
+  color: #7b7b7b;
+}
+
+.mapping-info-row th:first-child {
+  min-width: 0;
+}
+
+.mapping-info-row .mapping-info-col-detected {
+  color: black;
+  font-weight: 500;
 }
 
 .row-num {
   font-weight: normal;
   color: #7b7b7b;
   font-size: 0.8rem;
-  width: 1rem;
 }
 
 .column-options {
@@ -260,6 +270,7 @@ tr th:last-child {
 
 .column-options-input {
   margin: 0.3rem;
+  margin-bottom: 0.2rem;
   display: flex;
   width: fit-content;
   height: 1.5rem;
@@ -268,6 +279,9 @@ tr th:last-child {
 
 .form-check-input {
   margin-right: 0.3rem;
+  position: relative;
+  margin-left: 0;
+  margin-top: 0;
 }
 
 .form-select {
@@ -283,10 +297,32 @@ tr th:last-child {
   margin-left: 0;
 }
 
+.column-navigation-buttons {
+  display: flex;
+}
+
+.column-navigation-buttons .btn {
+  display: flex;
+  font-size: 0.8rem;
+  margin-right: 0.25rem;
+  padding: 0.3rem 0.5rem;
+  align-items: center;
+}
+
+.column-navigation-buttons .btn i {
+  font-size: 0.8rem;
+  margin: 0 0.1rem;
+}
+
 .confirmation-button {
   display: flex;
   justify-content: flex-end;
   margin-top: 1rem;
+}
+
+.confirmation-button .btn {
+  background: #660000;
+  border-color: none;
 }
 
 .constant-values-section {
@@ -308,7 +344,7 @@ tr th:last-child {
   border: 1px solid #ccc;
   border-radius: 0.3rem;
   width: 20rem;
-  padding: 0.2rem;
+  padding: 0.2rem; 
 }
 
 .mapping-errors {
