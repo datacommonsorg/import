@@ -236,6 +236,8 @@
         <h2>
           <a name="places" href="#places">Series Summaries for Sample Places</a>
         </h2>
+        <button onclick="open_all_details()">Expand All</button>
+        <button onclick="close_all_details()">Collapse All</button>
         <#list placeSeriesSummaryMap as place, placeSeriesSummary>
           <details class="place-series-details">
             <summary class="place-series-summary"><a name="places--${place}" href="#places--${place}">${(placeSeriesSummary.getPlaceName())!place} (${place})</a></summary>
@@ -327,6 +329,22 @@
       // reference for another post mentioning this issue:
       // https://datatables.net/forums/discussion/53837/class-no-footer-applied-to-table-despite-a-footer-is-present
       $(id).removeClass("no-footer");
+    }
+
+    // Set the "open" attribute of all 'details' tags to `new_value`.
+    // `new_value` should be boolean; true for open, false for close.
+    function set_all_details(new_value){
+      const tags = document.querySelectorAll('details');
+      tags.forEach(tag=>{
+          tag.open = new_value
+        });
+    }
+
+    function close_all_details(tags){
+      set_all_details(false)
+    }
+    function open_all_details(tags){
+      set_all_details(true)
     }
 
     $(document).ready(function () {

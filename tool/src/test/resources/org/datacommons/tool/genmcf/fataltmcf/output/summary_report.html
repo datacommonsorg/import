@@ -316,6 +316,22 @@
       $(id).removeClass("no-footer");
     }
 
+    // Set the "open" attribute of all 'details' tags to `new_value`.
+    // `new_value` should be boolean; true for open, false for close.
+    function set_all_details(new_value){
+      const tags = document.querySelectorAll('details');
+      tags.forEach(tag=>{
+          tag.open = new_value
+        });
+    }
+
+    function close_all_details(tags){
+      set_all_details(false)
+    }
+    function open_all_details(tags){
+      set_all_details(true)
+    }
+
     $(document).ready(function () {
       const sampleplace_table_ids = [
       ]
