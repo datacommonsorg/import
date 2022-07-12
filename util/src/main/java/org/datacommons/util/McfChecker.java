@@ -101,6 +101,17 @@ public class McfChecker {
       throws IOException, InterruptedException {
     return new McfChecker(graph, columns, existenceChecker, null, false, true, logCtx).check();
   }
+  // Version of checkTemplate that allows to specify "allowNanSVObs"
+  public static boolean checkTemplate(
+      Mcf.McfGraph graph,
+      Set<String> columns,
+      ExistenceChecker existenceChecker,
+      LogWrapper logCtx,
+      boolean allowNanSVObs)
+      throws IOException, InterruptedException {
+    return new McfChecker(graph, columns, existenceChecker, null, false, allowNanSVObs, logCtx)
+        .check();
+  }
 
   private McfChecker(
       Mcf.McfGraph graph,

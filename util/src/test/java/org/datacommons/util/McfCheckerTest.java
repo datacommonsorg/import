@@ -271,7 +271,9 @@ public class McfCheckerTest {
             + "value: \"DataSuppressed\"\n"
             + "observationAbout: dcid:geoId/SF\n"
             + "observationDate: \"2020\"\n";
-    assertTrue(success(mcf));
+    // This should only succeed when we allow not-a-number SVObs values
+    assertTrue(success(mcf)); // allow NaN SVObs by default
+    assertTrue(!successDisallowNanSVObs(mcf));
 
     // A bad StatVarObs node with no value.
     mcf =
@@ -618,6 +620,16 @@ public class McfCheckerTest {
   private static boolean success(
       String mcfString, Set<String> columns, boolean doExistenceCheck, boolean isTemplate)
       throws IOException, InterruptedException {
+    return success(mcfString, columns, doExistenceCheck, isTemplate, true);
+  }
+
+  private static boolean success(
+      String mcfString,
+      Set<String> columns,
+      boolean doExistenceCheck,
+      boolean isTemplate,
+      boolean allowNanSVObs)
+      throws IOException, InterruptedException {
     Debug.Log.Builder log = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(log, Path.of("InMemory"));
     Mcf.McfGraph graph;
@@ -630,7 +642,7 @@ public class McfCheckerTest {
     if (doExistenceCheck) {
       ec = new ExistenceChecker(HttpClient.newHttpClient(), false, lw);
     }
-    if (!McfChecker.checkTemplate(graph, columns, ec, lw)) {
+    if (!McfChecker.checkTemplate(graph, columns, ec, lw, allowNanSVObs)) {
       System.err.println("Check unexpectedly failed for \n" + mcfString + "\n :: \n" + log);
       return false;
     }
@@ -642,5 +654,10 @@ public class McfCheckerTest {
 
   private static boolean success(String mcfString) throws IOException, InterruptedException {
     return success(mcfString, null, false, false);
+  }
+
+  private static boolean successDisallowNanSVObs(String mcfString)
+      throws IOException, InterruptedException {
+    return success(mcfString, null, false, false, false);
   }
 }
