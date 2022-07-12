@@ -53,6 +53,8 @@
     </div>
     <h1>Summary Report</h1>
     <h3>Table of Contents</h3>
+    <button onclick="open_all_details()">Expand All</button>
+    <button onclick="close_all_details()">Collapse All</button>
     <ul>
       <li><a href="#import-run-details">Import Run Details</a></li>
       <li><a href="#counters">Counters</a></li>
@@ -470,8 +472,7 @@
         <h2>
           <a name="places" href="#places">Series Summaries for Sample Places</a>
         </h2>
-        <button onclick="open_all_details()">Expand All</button>
-        <button onclick="close_all_details()">Collapse All</button>
+
           <details class="place-series-details">
             <summary class="place-series-summary"><a name="places--geoId/01" href="#places--geoId/01">Alabama (geoId/01)</a></summary>
             <a href="https://datacommons.org/browser/geoId/01" target="_blank">Open this place (geoId/01) in Data Commons browser.</a>

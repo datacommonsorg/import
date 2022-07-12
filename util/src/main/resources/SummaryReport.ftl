@@ -53,6 +53,8 @@
     </div>
     <h1>Summary Report</h1>
     <h3>Table of Contents</h3>
+    <button onclick="open_all_details()">Expand All</button>
+    <button onclick="close_all_details()">Collapse All</button>
     <ul>
       <li><a href="#import-run-details">Import Run Details</a></li>
       <li><a href="#counters">Counters</a></li>
@@ -236,8 +238,7 @@
         <h2>
           <a name="places" href="#places">Series Summaries for Sample Places</a>
         </h2>
-        <button onclick="open_all_details()">Expand All</button>
-        <button onclick="close_all_details()">Collapse All</button>
+
         <#list placeSeriesSummaryMap as place, placeSeriesSummary>
           <details class="place-series-details">
             <summary class="place-series-summary"><a name="places--${place}" href="#places--${place}">${(placeSeriesSummary.getPlaceName())!place} (${place})</a></summary>
