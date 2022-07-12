@@ -54,6 +54,7 @@ public class McfChecker {
   private ExistenceChecker existenceChecker;
   private StatVarState svState;
   boolean shouldCheckObservationAbout; // Should check for observationAbout existence on SVObs
+  boolean allowNanSVObs;
 
   // Argument |graph| may be Instance or Template MCF.
   public static boolean check(
@@ -61,10 +62,17 @@ public class McfChecker {
       ExistenceChecker existenceChecker,
       StatVarState svState,
       boolean shouldCheckObservationAbout,
+      boolean allowNanSVObs,
       LogWrapper logCtx)
       throws IOException, InterruptedException {
     return new McfChecker(
-            graph, null, existenceChecker, svState, shouldCheckObservationAbout, logCtx)
+            graph,
+            null,
+            existenceChecker,
+            svState,
+            shouldCheckObservationAbout,
+            allowNanSVObs,
+            logCtx)
         .check();
   }
 
@@ -74,7 +82,7 @@ public class McfChecker {
       StatVarState svState,
       LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return check(graph, existenceChecker, svState, false, logCtx);
+    return check(graph, existenceChecker, svState, false, true, logCtx);
   }
 
   // Used to check a single node from TMcfCsvParser.
@@ -84,14 +92,14 @@ public class McfChecker {
     Mcf.McfGraph.Builder nodeGraph = Mcf.McfGraph.newBuilder();
     nodeGraph.setType(mcfType);
     nodeGraph.putNodes(nodeId, node);
-    return new McfChecker(nodeGraph.build(), null, null, null, false, logCtx).check();
+    return new McfChecker(nodeGraph.build(), null, null, null, false, true, logCtx).check();
   }
 
   // Used with Template MCF when there are columns from CSV header.
   public static boolean checkTemplate(
       Mcf.McfGraph graph, Set<String> columns, ExistenceChecker existenceChecker, LogWrapper logCtx)
       throws IOException, InterruptedException {
-    return new McfChecker(graph, columns, existenceChecker, null, false, logCtx).check();
+    return new McfChecker(graph, columns, existenceChecker, null, false, true, logCtx).check();
   }
 
   private McfChecker(
@@ -100,6 +108,7 @@ public class McfChecker {
       ExistenceChecker existenceChecker,
       StatVarState svState,
       boolean shouldCheckObservationAbout,
+      boolean allowNanSVObs,
       LogWrapper logCtx) {
     this.graph = graph;
     this.columns = columns;
@@ -107,6 +116,7 @@ public class McfChecker {
     this.existenceChecker = existenceChecker;
     this.svState = svState;
     this.shouldCheckObservationAbout = shouldCheckObservationAbout;
+    this.allowNanSVObs = allowNanSVObs;
   }
 
   // Returns true if there was no sanity error found.
@@ -279,12 +289,28 @@ public class McfChecker {
               + "'",
           node);
     }
-    checkRequiredSingleValueProp(
-        Debug.Log.Level.LEVEL_WARNING,
-        nodeId,
-        node,
-        Vocabulary.STAT_VAR_OBSERVATION_TYPE,
-        Vocabulary.GENERIC_VALUE);
+    String observationValue =
+        checkRequiredSingleValueProp(
+            Debug.Log.Level.LEVEL_WARNING,
+            nodeId,
+            node,
+            Vocabulary.STAT_VAR_OBSERVATION_TYPE,
+            Vocabulary.GENERIC_VALUE);
+
+    // Raise an error if the SVObs Value is not a number (NaN) and the flag to
+    // allow NaN SVObs is false
+    if (observationValue != "" && !McfUtil.isSvObWithNumberValue(node) && !this.allowNanSVObs) {
+      addLog(
+          "Sanity_SVObs_Value_NotANumber",
+          "Found a non-numeric value for the value field of StatVarObservation but allowNanSVObs was false :: value: '"
+              + observationValue
+              + "', property: '"
+              + Vocabulary.GENERIC_VALUE
+              + "', node: '"
+              + nodeId
+              + "'",
+          node);
+    }
 
     if (shouldCheckObservationAbout && existenceChecker != null) {
       LogCb logCb =
