@@ -2,10 +2,10 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "NumRowSuccesses": "14",
-        "NumPVSuccesses": "155",
+        "NumRowSuccesses": "16",
+        "NumPVSuccesses": "210",
         "Existence_NumChecks": "221",
-        "NumNodeSuccesses": "21",
+        "NumNodeSuccesses": "30",
         "CSV_MalformedDCIDPVFailures": "4",
         "Existence_NumDcCalls": "1"
       }
@@ -33,7 +33,6 @@
         "CSV_InconsistentRows": "2",
         "Sanity_InvalidChars_observationAbout": "2",
         "MCF_MalformedComplexValueParts": "1",
-        "Sanity_SVObs_Value_NotANumber": "2",
         "Sanity_MultipleDcidValues": "1",
         "StrSplit_EmptyToken_location": "1",
         "Sanity_MissingOrEmpty_typeOf": "1",
@@ -237,22 +236,6 @@
     },
     "userMessage": "Quantity value must be a number :: value: '[Lat Long]', property: 'location', node: 'dcid:CA-MN'",
     "counterKey": "MCF_QuantityMalformedValue"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "SuccessTmcf.csv",
-      "lineNumber": "13"
-    },
-    "userMessage": "Found a non-numeric value for the value field of StatVarObservation but allowNanSVObs was false :: value: '65', property: 'value', node: 'E:SVTest->E0'",
-    "counterKey": "Sanity_SVObs_Value_NotANumber"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "SuccessTmcf.csv",
-      "lineNumber": "14"
-    },
-    "userMessage": "Found a non-numeric value for the value field of StatVarObservation but allowNanSVObs was false :: value: '[5]', property: 'value', node: 'E:SVTest->E0'",
-    "counterKey": "Sanity_SVObs_Value_NotANumber"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
@@ -729,6 +712,6 @@
     "numThreads": 1,
     "statChecks": true,
     "observationAbout": false,
-    "allowNanSvobs": false
+    "allowNanSvobs": true
   }
 }

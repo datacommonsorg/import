@@ -2,10 +2,10 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "NumRowSuccesses": "0",
-        "NumPVSuccesses": "0",
+        "NumRowSuccesses": "3",
+        "NumPVSuccesses": "21",
         "Existence_NumChecks": "28",
-        "NumNodeSuccesses": "0",
+        "NumNodeSuccesses": "3",
         "Existence_NumDcCalls": "3"
       }
     },
@@ -13,11 +13,6 @@
       "counters": {
         "Existence_MissingTriple_domainIncludes": "1",
         "API_EmptyDcCallResponse": "1"
-      }
-    },
-    "LEVEL_ERROR": {
-      "counters": {
-        "Sanity_SVObs_Value_NotANumber": "3"
       }
     }
   },
@@ -29,30 +24,6 @@
     },
     "userMessage": "Failed triple existence check :: subject: 'area', predicate: 'domainIncludes', object: 'Place', node: 'dcid:Acre_MeasurementResult_StatVar'",
     "counterKey": "Existence_MissingTriple_domainIncludes"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "acre.csv",
-      "lineNumber": "2"
-    },
-    "userMessage": "Found a non-numeric value for the value field of StatVarObservation but allowNanSVObs was false :: value: 'Acre1.0', property: 'value', node: 'E:Acre_Table->E0'",
-    "counterKey": "Sanity_SVObs_Value_NotANumber"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "acre.csv",
-      "lineNumber": "3"
-    },
-    "userMessage": "Found a non-numeric value for the value field of StatVarObservation but allowNanSVObs was false :: value: 'Acre10.0', property: 'value', node: 'E:Acre_Table->E0'",
-    "counterKey": "Sanity_SVObs_Value_NotANumber"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "acre.csv",
-      "lineNumber": "3"
-    },
-    "userMessage": "Found a non-numeric value for the value field of StatVarObservation but allowNanSVObs was false :: value: 'Acre100.0', property: 'value', node: 'E:Acre_Table->E0'",
-    "counterKey": "Sanity_SVObs_Value_NotANumber"
   }],
   "commandArgs": {
     "existenceChecks": true,
@@ -60,6 +31,6 @@
     "numThreads": 1,
     "statChecks": true,
     "observationAbout": false,
-    "allowNanSvobs": false
+    "allowNanSvobs": true
   }
 }
