@@ -385,6 +385,13 @@ Found a property reference that does not start with a lower-case.
 
 **Suffix Description:** The property, and optionally, the type of the node separated with an underscore (`_`) from the property.
 
+### Sanity_SVObs_Value_NotANumber
+
+Found a SVObs whose `value` was not a number. If you are importing a dataset
+where this is expected (for example, `statType` is `measurementResult` and
+therefore the SVObs values are references), set `--allow-non-numeric-svobs=true`
+in the command line invocation.
+
 ## Existence Checks
 
 Existence counters are logged for issues relating to the existence check of references
