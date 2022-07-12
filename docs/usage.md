@@ -175,8 +175,16 @@ Note  that information relevant to this check (sample place, file and location o
 the values involved, and the exact percent fluctuation) are conveniently provided
 to assist the user in debugging issues.
 
-
 Defaults to `true`.
+
+### `--allow-non-numeric-svobs`
+Allows non-numeric (text or reference) values for StatVarObservation value field.
+- When `false`, non-numeric values will log an error counter ([`Sanity_SVObs_Value_NotANumber`](counters.md#sanitysvobsvaluenotanumber))
+- When `true`, these values will be allowed and relevant StatChecks might be performed
+(depending on the value of --stat-checks).
+
+Defaults to `false`.
+
 
 ### `-p`, `--sample-places=<samplePlaces>`
 
