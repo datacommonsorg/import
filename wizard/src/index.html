@@ -256,7 +256,7 @@
           <details id="terminology">
             <summary>Terminology Glossary</summary>
             <ul>
-              <li><b>Place</b> - Only Country level data supported for now. See <a href="#supported-formats">Supported Date and Place Formats</a> for more details. State level data coming soon.</li>
+              <li><b>Place</b> - Only Country and State (USA and India) level data supported for now. See <a href="#supported-formats">Supported Date and Place Formats</a> for more details.</li>
               <li><b>Name of Variable</b> - Ex: Population, Life expectancy, Median Income. Also referred to as 'Statistical Variables' and 'StatVars' in Data Commons.</li>
               <li><b>Date</b> - See <a href="#supported-formats">Supported Date and Place Formats</a> section for more details.</li>
               <li><b>Observation Value</b> - The numerical values within a column.</li>
@@ -287,6 +287,17 @@
                           <li>3 letter Alphanumeric code, e.g. "USA", "NOR", "ITA". See the Alpha-3 code column <a href="https://www.iban.com/country-codes" target="_blank">here</a>.</li>
                           <li>Country numbers, e.g. 840, 578, 380. See the Numeric column <a href="https://www.iban.com/country-codes" target="_blank">here</a>.</li>
                           <li>Country names, e.g. "United States of America", "Norway", "Italy".</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                  <li>Type: State (only USA and India supported at this time
+                    <ul>
+                      <li>Formats (case-insensitive):
+                        <ul>
+                          <li>ISO-3166 Code, e.g. "US-MA", "US-CA", "IN-HR". See examples for <a href="https://www.iso.org/obp/ui/#iso:code:3166:US" target="_blank">USA</a> and <a href="https://www.iso.org/obp/ui/#iso:code:3166:IN" target="_blank">India</a>.</li>
+                          <li>(US only): 2 letter abbreviation (postal code), e.g "MA", "CA". See examples <a href="https://www.nrcs.usda.gov/wps/portal/nrcs/detail/?cid=nrcs143_013696" target="_blank">here</a>.</li>
+                          <li>State names, e.g. "Massachusetts", "California", "Haryana".</li>
                         </ul>
                       </li>
                     </ul>
