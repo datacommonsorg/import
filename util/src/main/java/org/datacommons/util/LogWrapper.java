@@ -33,6 +33,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Debug.StatValidationResult;
+import org.datacommons.proto.LogLocation;
 
 // The class that provides logging functionality.  This class is Thread Safe.
 // This class can be heavily contended so it uses concurrent-hashmaps and atomic counters for
@@ -86,10 +87,10 @@ public class LogWrapper {
   }
 
   public void addEntry(
-      Debug.Log.Level level, String counter, String message, List<Debug.Log.Location> locations) {
+      Debug.Log.Level level, String counter, String message, List<LogLocation.Location> locations) {
     if (log == null) return;
     if (!locations.isEmpty()) {
-      Debug.Log.Location loc = locations.get(0);
+      LogLocation.Location loc = locations.get(0);
       addEntry(level, counter, message, loc.getFile(), loc.getLineNumber());
     } else {
       addEntry(level, counter, message, "FileNotSet.idk", -1);
@@ -241,7 +242,7 @@ public class LogWrapper {
     e.setUserMessage(message);
     e.setCounterKey(counter);
 
-    Debug.Log.Location.Builder l = e.getLocationBuilder();
+    LogLocation.Location.Builder l = e.getLocationBuilder();
     l.setFile(file);
     l.setLineNumber(lno);
   }

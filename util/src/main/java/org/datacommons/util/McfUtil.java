@@ -15,7 +15,7 @@
 package org.datacommons.util;
 
 import java.util.*;
-import org.datacommons.proto.Debug;
+import org.datacommons.proto.LogLocation;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.ValueType;
@@ -113,7 +113,7 @@ public class McfUtil {
     // node-id -> {prop -> vals}
     HashMap<String, HashMap<String, HashSet<Mcf.McfGraph.TypedValue>>> dedupMap = new HashMap<>();
     // node-id -> locations
-    HashMap<String, List<Debug.Log.Location>> locationMap = new HashMap<>();
+    HashMap<String, List<LogLocation.Location>> locationMap = new HashMap<>();
 
     for (Mcf.McfGraph graph : graphs) {
       for (Map.Entry<String, Mcf.McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
@@ -128,9 +128,9 @@ public class McfUtil {
             dedupMap.get(node.getKey()).get(pv.getKey()).add(tv);
           }
         }
-        for (Debug.Log.Location loc : node.getValue().getLocationsList()) {
+        for (LogLocation.Location loc : node.getValue().getLocationsList()) {
           if (!locationMap.containsKey(node.getKey())) {
-            locationMap.put(node.getKey(), new ArrayList<Debug.Log.Location>());
+            locationMap.put(node.getKey(), new ArrayList<LogLocation.Location>());
           }
           locationMap.get(node.getKey()).add(loc);
         }
