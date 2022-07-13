@@ -93,8 +93,8 @@ test("MultiNodeTMCF_DateValueInHeader", () => {
       {
         type: MappingType.COLUMN_HEADER,
         headers: [
-          { id: "2018", header: "2018", columnIdx: 3 },
-          { id: "2019", header: "2019", columnIdx: 4 },
+          { id: "2018_1", header: "2018", columnIdx: 3 },
+          { id: "2019_2", header: "2019", columnIdx: 4 },
         ],
       },
     ],
@@ -134,8 +134,8 @@ test("MultiNodeTMCF_PlaceValueInHeader", () => {
         placeProperty: { dcid: "name", displayName: "name" },
         placeType: { dcid: "AdministrativeArea1", displayName: "State" },
         headers: [
-          { id: "California", header: "California", columnIdx: 3 },
-          { id: "Nevada", header: "Nevada", columnIdx: 4 },
+          { id: "California_1", header: "California", columnIdx: 3 },
+          { id: "Nevada_2", header: "Nevada", columnIdx: 4 },
         ],
       },
     ],
