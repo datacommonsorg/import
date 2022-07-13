@@ -222,7 +222,6 @@ public class LogWrapper {
 
   public void addEntry(
       Debug.Log.Level level, String counter, String message, String file, long lno) {
-    if (TEST_MODE) System.err.println(counter + " - " + message);
     String counterName = counter == null || counter.isEmpty() ? "MissingCounterName" : counter;
     incrementCounterBy(level, counterName, 1);
 
