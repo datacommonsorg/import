@@ -109,7 +109,7 @@ test("MultiNodeTMCF_DateValueInHeader", () => {
   const expected =
     "Node: E:CSVTable->E0\n" +
     "typeOf: dcs:StatVarObservation\n" +
-    "value: C:CSVTable->2018\n" +
+    "value: C:CSVTable->2018_1\n" +
     'observationDate: "2018"\n' +
     "observationAbout: C:CSVTable->id\n" +
     "variableMeasured: C:CSVTable->indicators\n" +
@@ -117,7 +117,7 @@ test("MultiNodeTMCF_DateValueInHeader", () => {
     "\n" +
     "Node: E:CSVTable->E1\n" +
     "typeOf: dcs:StatVarObservation\n" +
-    "value: C:CSVTable->2019\n" +
+    "value: C:CSVTable->2019_2\n" +
     'observationDate: "2019"\n' +
     "observationAbout: C:CSVTable->id\n" +
     "variableMeasured: C:CSVTable->indicators\n" +
@@ -172,7 +172,7 @@ test("MultiNodeTMCF_PlaceValueInHeader", () => {
     "\n" +
     "Node: E:CSVTable->E1\n" +
     "typeOf: dcs:StatVarObservation\n" +
-    "value: C:CSVTable->California\n" +
+    "value: C:CSVTable->California_1\n" +
     "observationAbout: E:CSVTable->E0\n" +
     "variableMeasured: C:CSVTable->indicators\n" +
     "observationDate: C:CSVTable->year\n" +
@@ -180,7 +180,7 @@ test("MultiNodeTMCF_PlaceValueInHeader", () => {
     "\n" +
     "Node: E:CSVTable->E3\n" +
     "typeOf: dcs:StatVarObservation\n" +
-    "value: C:CSVTable->Nevada\n" +
+    "value: C:CSVTable->Nevada_2\n" +
     "observationAbout: E:CSVTable->E2\n" +
     "variableMeasured: C:CSVTable->indicators\n" +
     "observationDate: C:CSVTable->year\n" +
