@@ -80,7 +80,7 @@ class Main {
   public boolean doStatChecks;
 
   @CommandLine.Option(
-      names = {"--allow-non-numeric-svobs"},
+      names = {"--allow-non-numeric-obs-values"},
       defaultValue = "false",
       scope = CommandLine.ScopeType.INHERIT,
       description =
