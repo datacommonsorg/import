@@ -15,6 +15,7 @@ import org.datacommons.proto.Debug.DataPoint.DataValue;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
+import org.datacommons.proto.Mcf.McfType;
 import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
@@ -110,7 +111,11 @@ public class PlaceSeriesSummary {
     // Add the value of this StatVarObservation node to the timeseries of this node's SeriesSummary.
     String obsDate = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE);
     String value = McfUtil.getPropVal(node, Vocabulary.VALUE);
-    TypedValue typedValue = TypedValue.newBuilder().setValue(value).build();
+    // TODO: WHAT TO PUT FOR isResolved?
+    // TODO: WHAT TO PUT FOR logCb?
+    TypedValue typedValue =
+        McfParser.parseTypedValue(McfType.INSTANCE_MCF, false, Vocabulary.VALUE, value, null)
+            .build();
     DataValue dataVal =
         DataValue.newBuilder()
             .setValue(typedValue)

@@ -149,12 +149,13 @@ public class StatChecker {
           StatValidationResult.Builder resBuilder = seriesSummary.validationResult;
 
           // General checks; these don't depend on the type of the values.
-          
+
           // Check inconsistent values (sawtooth).
           checkSeriesValueInconsistencies(timeSeries, resBuilder, logCtx);
           // Check for holes in dates, invalid dates, etc.
           checkDates(timeSeries, resBuilder, logCtx);
 
+          // TODO: THROW ERROR IF TYPE IS UNKNOWN?
           // TODO: ENSURE HOMOGENOUS TIMESERIES TYPE INSTEAD OF BLINDLY READING THE TYPE OF THE
           // FIRST VALUE
           ValueType type = timeSeries.get(0).getValues(0).getValue().getType();
@@ -163,14 +164,12 @@ public class StatChecker {
             stringSeries.add(dp.getValues(0).getValue().getValue());
           }
 
-          System.out.println(" >>> TYPE WAS: " + type.toString());
-
-          // if (type == ValueType.NUMBER) {
-          // Check N-Sigma variance.
-          checkSigmaDivergence(timeSeries, resBuilder, logCtx);
-          // Check N-Percent fluctuations.
-          checkPercentFluctuations(timeSeries, resBuilder, logCtx);
-          // }
+          if (type == ValueType.NUMBER) {
+            // Check N-Sigma variance.
+            checkSigmaDivergence(timeSeries, resBuilder, logCtx);
+            // Check N-Percent fluctuations.
+            checkPercentFluctuations(timeSeries, resBuilder, logCtx);
+          }
 
           // add result to log.
           if (!resBuilder.getValidationCountersList().isEmpty() && !countersRemaining.isEmpty()) {
@@ -283,7 +282,7 @@ public class StatChecker {
       String v = null;
       boolean vInitialized = false;
       for (DataValue val : dp.getValuesList()) {
-        if (vInitialized && val.getValue().getValue() != v) {
+        if (vInitialized && !val.getValue().getValue().equals(v)) {
           inconsistentValueCounter.addProblemPoints(dp);
           logCtx.incrementWarningCounterBy(counterKey, 1);
         }
@@ -309,8 +308,6 @@ public class StatChecker {
     // ie. if the data point is beyond 3 std deviation, only add it to that counter.
     for (DataPoint dp : timeSeries) {
       double val = Double.parseDouble(dp.getValues(0).getValue().getValue());
-      System.out.println(
-          dp.getValues(0).getValue().getValue() + " was parsed as " + Double.toString(val));
       if (Math.abs(val - meanAndStdDev.mean) > 3 * meanAndStdDev.stdDev) {
         sigma3Counter.addProblemPoints(dp);
         logCtx.incrementWarningCounterBy(sigma3CounterKey, 1);
