@@ -129,7 +129,7 @@ export function generateTMCF(mappings: Mapping): string {
         hasPlaceRef = true;
         // For place with non-DCID property, we should introduce a place node.
         const node = initNode(nodeIdx, getPlaceType(mval));
-        node.push(getConstPV(mval.placeProperty.dcid, hdr.id));
+        node.push(getConstPV(mval.placeProperty.dcid, hdr.header));
         placeNodes.push(node);
         nodeIdx++;
       }
@@ -140,7 +140,7 @@ export function generateTMCF(mappings: Mapping): string {
         // Reference place node created above.
         node.push(getEntPV(mappedProp, nodeIdx - 1));
       } else {
-        node.push(getConstPV(mappedProp, hdr.id));
+        node.push(getConstPV(mappedProp, hdr.header));
       }
       obsNodes.push(node);
       nodeIdx++;
