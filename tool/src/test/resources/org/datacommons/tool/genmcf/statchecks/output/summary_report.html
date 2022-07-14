@@ -53,6 +53,8 @@
     </div>
     <h1>Summary Report</h1>
     <h3>Table of Contents</h3>
+    <button onclick="open_all_details()">Expand All</button>
+    <button onclick="close_all_details()">Collapse All</button>
     <ul>
       <li><a href="#import-run-details">Import Run Details</a></li>
       <li><a href="#counters">Counters</a></li>
@@ -470,6 +472,7 @@
         <h2>
           <a name="places" href="#places">Series Summaries for Sample Places</a>
         </h2>
+
           <details class="place-series-details">
             <summary class="place-series-summary"><a name="places--geoId/01" href="#places--geoId/01">Alabama (geoId/01)</a></summary>
             <a href="https://datacommons.org/browser/geoId/01" target="_blank">Open this place (geoId/01) in Data Commons browser.</a>
@@ -1220,6 +1223,22 @@
       // reference for another post mentioning this issue:
       // https://datatables.net/forums/discussion/53837/class-no-footer-applied-to-table-despite-a-footer-is-present
       $(id).removeClass("no-footer");
+    }
+
+    // Set the "open" attribute of all 'details' tags to `new_value`.
+    // `new_value` should be boolean; true for open, false for close.
+    function set_all_details(new_value){
+      const tags = document.querySelectorAll('details');
+      tags.forEach(tag=>{
+          tag.open = new_value
+        });
+    }
+
+    function close_all_details(tags){
+      set_all_details(false)
+    }
+    function open_all_details(tags){
+      set_all_details(true)
     }
 
     $(document).ready(function () {
