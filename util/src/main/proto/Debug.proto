@@ -17,6 +17,7 @@ syntax = "proto2";
 package org.datacommons.proto;
 
 import "LogLocation.proto";
+import "Mcf.proto";
 
 //
 // A log of import processing with details on any warnings, errors, etc.
@@ -83,7 +84,7 @@ message CommandArgs {
 
 message DataPoint {
     message DataValue {
-        optional double value = 1;
+        optional McfGraph.TypedValue value = 1;
         // The location in the file where this value was read from.
         repeated Location locations = 2;
     }

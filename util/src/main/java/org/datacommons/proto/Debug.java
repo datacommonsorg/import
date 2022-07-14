@@ -6003,17 +6003,19 @@ public final class Debug {
         com.google.protobuf.MessageOrBuilder {
 
       /**
-       * <code>optional double value = 1;</code>
+       * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
        *
        * @return Whether the value field is set.
        */
       boolean hasValue();
       /**
-       * <code>optional double value = 1;</code>
+       * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
        *
        * @return The value.
        */
-      double getValue();
+      org.datacommons.proto.Mcf.McfGraph.TypedValue getValue();
+      /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+      org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getValueOrBuilder();
 
       /**
        *
@@ -6112,10 +6114,20 @@ public final class Debug {
               case 0:
                 done = true;
                 break;
-              case 9:
+              case 10:
                 {
+                  org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder subBuilder = null;
+                  if (((bitField0_ & 0x00000001) != 0)) {
+                    subBuilder = value_.toBuilder();
+                  }
+                  value_ =
+                      input.readMessage(
+                          org.datacommons.proto.Mcf.McfGraph.TypedValue.PARSER, extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(value_);
+                    value_ = subBuilder.buildPartial();
+                  }
                   bitField0_ |= 0x00000001;
-                  value_ = input.readDouble();
                   break;
                 }
               case 18:
@@ -6170,9 +6182,9 @@ public final class Debug {
 
       private int bitField0_;
       public static final int VALUE_FIELD_NUMBER = 1;
-      private double value_;
+      private org.datacommons.proto.Mcf.McfGraph.TypedValue value_;
       /**
-       * <code>optional double value = 1;</code>
+       * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
        *
        * @return Whether the value field is set.
        */
@@ -6180,12 +6192,20 @@ public final class Debug {
         return ((bitField0_ & 0x00000001) != 0);
       }
       /**
-       * <code>optional double value = 1;</code>
+       * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
        *
        * @return The value.
        */
-      public double getValue() {
-        return value_;
+      public org.datacommons.proto.Mcf.McfGraph.TypedValue getValue() {
+        return value_ == null
+            ? org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()
+            : value_;
+      }
+      /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+      public org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getValueOrBuilder() {
+        return value_ == null
+            ? org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()
+            : value_;
       }
 
       public static final int LOCATIONS_FIELD_NUMBER = 2;
@@ -6267,7 +6287,7 @@ public final class Debug {
       @java.lang.Override
       public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
         if (((bitField0_ & 0x00000001) != 0)) {
-          output.writeDouble(1, value_);
+          output.writeMessage(1, getValue());
         }
         for (int i = 0; i < locations_.size(); i++) {
           output.writeMessage(2, locations_.get(i));
@@ -6282,7 +6302,7 @@ public final class Debug {
 
         size = 0;
         if (((bitField0_ & 0x00000001) != 0)) {
-          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(1, value_);
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, getValue());
         }
         for (int i = 0; i < locations_.size(); i++) {
           size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, locations_.get(i));
@@ -6305,8 +6325,7 @@ public final class Debug {
 
         if (hasValue() != other.hasValue()) return false;
         if (hasValue()) {
-          if (java.lang.Double.doubleToLongBits(getValue())
-              != java.lang.Double.doubleToLongBits(other.getValue())) return false;
+          if (!getValue().equals(other.getValue())) return false;
         }
         if (!getLocationsList().equals(other.getLocationsList())) return false;
         if (!unknownFields.equals(other.unknownFields)) return false;
@@ -6322,10 +6341,7 @@ public final class Debug {
         hash = (19 * hash) + getDescriptor().hashCode();
         if (hasValue()) {
           hash = (37 * hash) + VALUE_FIELD_NUMBER;
-          hash =
-              (53 * hash)
-                  + com.google.protobuf.Internal.hashLong(
-                      java.lang.Double.doubleToLongBits(getValue()));
+          hash = (53 * hash) + getValue().hashCode();
         }
         if (getLocationsCount() > 0) {
           hash = (37 * hash) + LOCATIONS_FIELD_NUMBER;
@@ -6465,6 +6481,7 @@ public final class Debug {
 
         private void maybeForceBuilderInitialization() {
           if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+            getValueFieldBuilder();
             getLocationsFieldBuilder();
           }
         }
@@ -6472,7 +6489,11 @@ public final class Debug {
         @java.lang.Override
         public Builder clear() {
           super.clear();
-          value_ = 0D;
+          if (valueBuilder_ == null) {
+            value_ = null;
+          } else {
+            valueBuilder_.clear();
+          }
           bitField0_ = (bitField0_ & ~0x00000001);
           if (locationsBuilder_ == null) {
             locations_ = java.util.Collections.emptyList();
@@ -6510,7 +6531,11 @@ public final class Debug {
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           if (((from_bitField0_ & 0x00000001) != 0)) {
-            result.value_ = value_;
+            if (valueBuilder_ == null) {
+              result.value_ = value_;
+            } else {
+              result.value_ = valueBuilder_.build();
+            }
             to_bitField0_ |= 0x00000001;
           }
           if (locationsBuilder_ == null) {
@@ -6576,7 +6601,7 @@ public final class Debug {
           if (other == org.datacommons.proto.Debug.DataPoint.DataValue.getDefaultInstance())
             return this;
           if (other.hasValue()) {
-            setValue(other.getValue());
+            mergeValue(other.getValue());
           }
           if (locationsBuilder_ == null) {
             if (!other.locations_.isEmpty()) {
@@ -6637,9 +6662,14 @@ public final class Debug {
 
         private int bitField0_;
 
-        private double value_;
+        private org.datacommons.proto.Mcf.McfGraph.TypedValue value_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+                org.datacommons.proto.Mcf.McfGraph.TypedValue,
+                org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder,
+                org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>
+            valueBuilder_;
         /**
-         * <code>optional double value = 1;</code>
+         * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
          *
          * @return Whether the value field is set.
          */
@@ -6647,35 +6677,108 @@ public final class Debug {
           return ((bitField0_ & 0x00000001) != 0);
         }
         /**
-         * <code>optional double value = 1;</code>
+         * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
          *
          * @return The value.
          */
-        public double getValue() {
-          return value_;
+        public org.datacommons.proto.Mcf.McfGraph.TypedValue getValue() {
+          if (valueBuilder_ == null) {
+            return value_ == null
+                ? org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()
+                : value_;
+          } else {
+            return valueBuilder_.getMessage();
+          }
         }
-        /**
-         * <code>optional double value = 1;</code>
-         *
-         * @param value The value to set.
-         * @return This builder for chaining.
-         */
-        public Builder setValue(double value) {
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        public Builder setValue(org.datacommons.proto.Mcf.McfGraph.TypedValue value) {
+          if (valueBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            value_ = value;
+            onChanged();
+          } else {
+            valueBuilder_.setMessage(value);
+          }
           bitField0_ |= 0x00000001;
-          value_ = value;
-          onChanged();
           return this;
         }
-        /**
-         * <code>optional double value = 1;</code>
-         *
-         * @return This builder for chaining.
-         */
-        public Builder clearValue() {
-          bitField0_ = (bitField0_ & ~0x00000001);
-          value_ = 0D;
-          onChanged();
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        public Builder setValue(
+            org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder builderForValue) {
+          if (valueBuilder_ == null) {
+            value_ = builderForValue.build();
+            onChanged();
+          } else {
+            valueBuilder_.setMessage(builderForValue.build());
+          }
+          bitField0_ |= 0x00000001;
           return this;
+        }
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        public Builder mergeValue(org.datacommons.proto.Mcf.McfGraph.TypedValue value) {
+          if (valueBuilder_ == null) {
+            if (((bitField0_ & 0x00000001) != 0)
+                && value_ != null
+                && value_ != org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()) {
+              value_ =
+                  org.datacommons.proto.Mcf.McfGraph.TypedValue.newBuilder(value_)
+                      .mergeFrom(value)
+                      .buildPartial();
+            } else {
+              value_ = value;
+            }
+            onChanged();
+          } else {
+            valueBuilder_.mergeFrom(value);
+          }
+          bitField0_ |= 0x00000001;
+          return this;
+        }
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        public Builder clearValue() {
+          if (valueBuilder_ == null) {
+            value_ = null;
+            onChanged();
+          } else {
+            valueBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000001);
+          return this;
+        }
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        public org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder getValueBuilder() {
+          bitField0_ |= 0x00000001;
+          onChanged();
+          return getValueFieldBuilder().getBuilder();
+        }
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        public org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getValueOrBuilder() {
+          if (valueBuilder_ != null) {
+            return valueBuilder_.getMessageOrBuilder();
+          } else {
+            return value_ == null
+                ? org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()
+                : value_;
+          }
+        }
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        private com.google.protobuf.SingleFieldBuilderV3<
+                org.datacommons.proto.Mcf.McfGraph.TypedValue,
+                org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder,
+                org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>
+            getValueFieldBuilder() {
+          if (valueBuilder_ == null) {
+            valueBuilder_ =
+                new com.google.protobuf.SingleFieldBuilderV3<
+                    org.datacommons.proto.Mcf.McfGraph.TypedValue,
+                    org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder,
+                    org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>(
+                    getValue(), getParentForChildren(), isClean());
+            value_ = null;
+          }
+          return valueBuilder_;
         }
 
         private java.util.List<org.datacommons.proto.LogLocation.Location> locations_ =
@@ -12023,56 +12126,58 @@ public final class Debug {
   static {
     java.lang.String[] descriptorData = {
       "\n\013Debug.proto\022\025org.datacommons.proto\032\021Lo"
-          + "gLocation.proto\"\375\005\n\003Log\022C\n\rlevel_summary"
-          + "\030\001 \003(\0132,.org.datacommons.proto.Log.Level"
-          + "SummaryEntry\0221\n\007entries\030\003 \003(\0132 .org.data"
-          + "commons.proto.Log.Entry\022H\n\023stats_check_s"
-          + "ummary\030\004 \003(\0132+.org.datacommons.proto.Sta"
-          + "tValidationResult\0228\n\014command_args\030\005 \001(\0132"
-          + "\".org.datacommons.proto.CommandArgs\032\204\001\n\n"
-          + "CounterSet\022E\n\010counters\030\001 \003(\01323.org.datac"
-          + "ommons.proto.Log.CounterSet.CountersEntr"
-          + "y\032/\n\rCountersEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value"
-          + "\030\002 \001(\003:\0028\001\032\253\001\n\005Entry\022/\n\005level\030\001 \001(\0162 .or"
-          + "g.datacommons.proto.Log.Level\0221\n\010locatio"
-          + "n\030\002 \001(\0132\037.org.datacommons.proto.Location"
-          + "\022\024\n\014user_message\030\003 \001(\t\022\023\n\013counter_key\030\004 "
-          + "\001(\t\022\023\n\013column_name\030\005 \003(\t\032Z\n\021LevelSummary"
-          + "Entry\022\013\n\003key\030\001 \001(\t\0224\n\005value\030\002 \001(\0132%.org."
-          + "datacommons.proto.Log.CounterSet:\0028\001\"c\n\005"
-          + "Level\022\025\n\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLEVEL_IN"
-          + "FO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LEVEL_ERROR\020\003"
-          + "\022\017\n\013LEVEL_FATAL\020\004J\004\010\002\020\003\"\346\002\n\013CommandArgs\022"
-          + "\030\n\020existence_checks\030\001 \001(\010\022E\n\nresolution\030"
-          + "\002 \001(\01621.org.datacommons.proto.CommandArg"
-          + "s.ResolutionMode\022\023\n\013num_threads\030\003 \001(\005\022\023\n"
-          + "\013stat_checks\030\004 \001(\010\022\025\n\rsample_places\030\005 \003("
-          + "\t\022\031\n\021observation_about\030\006 \001(\010\022\027\n\017allow_na"
-          + "n_svobs\030\007 \001(\010\"\200\001\n\016ResolutionMode\022\037\n\033RESO"
-          + "LUTION_MODE_UNSPECIFIED\020\000\022\030\n\024RESOLUTION_"
-          + "MODE_NONE\020\001\022\031\n\025RESOLUTION_MODE_LOCAL\020\002\022\030"
-          + "\n\024RESOLUTION_MODE_FULL\020\003\"\245\001\n\tDataPoint\022\014"
-          + "\n\004date\030\001 \001(\t\022:\n\006values\030\002 \003(\0132*.org.datac"
-          + "ommons.proto.DataPoint.DataValue\032N\n\tData"
-          + "Value\022\r\n\005value\030\001 \001(\001\0222\n\tlocations\030\002 \003(\0132"
-          + "\037.org.datacommons.proto.Location\"\234\003\n\024Sta"
-          + "tValidationResult\022\022\n\nplace_dcid\030\001 \001(\t\022\025\n"
-          + "\rstat_var_dcid\030\002 \001(\t\022\032\n\022measurement_meth"
-          + "od\030\003 \001(\t\022\032\n\022observation_period\030\004 \001(\t\022\026\n\016"
-          + "scaling_factor\030\005 \001(\t\022\014\n\004unit\030\006 \001(\t\022\\\n\023va"
-          + "lidation_counters\030\007 \003(\0132?.org.datacommon"
-          + "s.proto.StatValidationResult.StatValidat"
-          + "ionEntry\032\234\001\n\023StatValidationEntry\022\023\n\013coun"
-          + "ter_key\030\001 \001(\t\0228\n\016problem_points\030\002 \003(\0132 ."
-          + "org.datacommons.proto.DataPoint\022\032\n\022addit"
-          + "ional_details\030\003 \001(\t\022\032\n\022percent_differenc"
-          + "e\030\004 \001(\001"
+          + "gLocation.proto\032\tMcf.proto\"\375\005\n\003Log\022C\n\rle"
+          + "vel_summary\030\001 \003(\0132,.org.datacommons.prot"
+          + "o.Log.LevelSummaryEntry\0221\n\007entries\030\003 \003(\013"
+          + "2 .org.datacommons.proto.Log.Entry\022H\n\023st"
+          + "ats_check_summary\030\004 \003(\0132+.org.datacommon"
+          + "s.proto.StatValidationResult\0228\n\014command_"
+          + "args\030\005 \001(\0132\".org.datacommons.proto.Comma"
+          + "ndArgs\032\204\001\n\nCounterSet\022E\n\010counters\030\001 \003(\0132"
+          + "3.org.datacommons.proto.Log.CounterSet.C"
+          + "ountersEntry\032/\n\rCountersEntry\022\013\n\003key\030\001 \001"
+          + "(\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\253\001\n\005Entry\022/\n\005level"
+          + "\030\001 \001(\0162 .org.datacommons.proto.Log.Level"
+          + "\0221\n\010location\030\002 \001(\0132\037.org.datacommons.pro"
+          + "to.Location\022\024\n\014user_message\030\003 \001(\t\022\023\n\013cou"
+          + "nter_key\030\004 \001(\t\022\023\n\013column_name\030\005 \003(\t\032Z\n\021L"
+          + "evelSummaryEntry\022\013\n\003key\030\001 \001(\t\0224\n\005value\030\002"
+          + " \001(\0132%.org.datacommons.proto.Log.Counter"
+          + "Set:\0028\001\"c\n\005Level\022\025\n\021LEVEL_UNSPECIFIED\020\000\022"
+          + "\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LE"
+          + "VEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010\002\020\003\"\346\002\n\013C"
+          + "ommandArgs\022\030\n\020existence_checks\030\001 \001(\010\022E\n\n"
+          + "resolution\030\002 \001(\01621.org.datacommons.proto"
+          + ".CommandArgs.ResolutionMode\022\023\n\013num_threa"
+          + "ds\030\003 \001(\005\022\023\n\013stat_checks\030\004 \001(\010\022\025\n\rsample_"
+          + "places\030\005 \003(\t\022\031\n\021observation_about\030\006 \001(\010\022"
+          + "\027\n\017allow_nan_svobs\030\007 \001(\010\"\200\001\n\016ResolutionM"
+          + "ode\022\037\n\033RESOLUTION_MODE_UNSPECIFIED\020\000\022\030\n\024"
+          + "RESOLUTION_MODE_NONE\020\001\022\031\n\025RESOLUTION_MOD"
+          + "E_LOCAL\020\002\022\030\n\024RESOLUTION_MODE_FULL\020\003\"\321\001\n\t"
+          + "DataPoint\022\014\n\004date\030\001 \001(\t\022:\n\006values\030\002 \003(\0132"
+          + "*.org.datacommons.proto.DataPoint.DataVa"
+          + "lue\032z\n\tDataValue\0229\n\005value\030\001 \001(\0132*.org.da"
+          + "tacommons.proto.McfGraph.TypedValue\0222\n\tl"
+          + "ocations\030\002 \003(\0132\037.org.datacommons.proto.L"
+          + "ocation\"\234\003\n\024StatValidationResult\022\022\n\nplac"
+          + "e_dcid\030\001 \001(\t\022\025\n\rstat_var_dcid\030\002 \001(\t\022\032\n\022m"
+          + "easurement_method\030\003 \001(\t\022\032\n\022observation_p"
+          + "eriod\030\004 \001(\t\022\026\n\016scaling_factor\030\005 \001(\t\022\014\n\004u"
+          + "nit\030\006 \001(\t\022\\\n\023validation_counters\030\007 \003(\0132?"
+          + ".org.datacommons.proto.StatValidationRes"
+          + "ult.StatValidationEntry\032\234\001\n\023StatValidati"
+          + "onEntry\022\023\n\013counter_key\030\001 \001(\t\0228\n\016problem_"
+          + "points\030\002 \003(\0132 .org.datacommons.proto.Dat"
+          + "aPoint\022\032\n\022additional_details\030\003 \001(\t\022\032\n\022pe"
+          + "rcent_difference\030\004 \001(\001"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
             descriptorData,
             new com.google.protobuf.Descriptors.FileDescriptor[] {
               org.datacommons.proto.LogLocation.getDescriptor(),
+              org.datacommons.proto.Mcf.getDescriptor(),
             });
     internal_static_org_datacommons_proto_Log_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_org_datacommons_proto_Log_fieldAccessorTable =
@@ -12168,6 +12273,7 @@ public final class Debug {
               "CounterKey", "ProblemPoints", "AdditionalDetails", "PercentDifference",
             });
     org.datacommons.proto.LogLocation.getDescriptor();
+    org.datacommons.proto.Mcf.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

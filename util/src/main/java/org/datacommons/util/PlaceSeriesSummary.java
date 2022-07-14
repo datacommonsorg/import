@@ -14,6 +14,7 @@ import org.datacommons.proto.Debug.DataPoint;
 import org.datacommons.proto.Debug.DataPoint.DataValue;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.McfGraph.TypedValue;
 import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
@@ -42,7 +43,7 @@ public class PlaceSeriesSummary {
       List<String> valueStrings = new ArrayList<String>();
 
       for (DataPoint dv : this.timeSeries.values()) {
-        valueStrings.add(Double.toString(dv.getValues(0).getValue()));
+        valueStrings.add(dv.getValues(0).getValue().getValue());
       }
       return String.join(" | ", valueStrings);
     }
@@ -63,7 +64,7 @@ public class PlaceSeriesSummary {
                 localDateTime.getDayOfMonth(),
                 localDateTime.getMonthValue(),
                 localDateTime.getYear()),
-            timeSeriesDataPoint.getValue().getValues(0).getValue());
+            Double.parseDouble(timeSeriesDataPoint.getValue().getValues(0).getValue().getValue()));
       }
 
       return StatVarSummary.constructSVGChartFromTimeSeries(timeSeries);
@@ -109,9 +110,10 @@ public class PlaceSeriesSummary {
     // Add the value of this StatVarObservation node to the timeseries of this node's SeriesSummary.
     String obsDate = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE);
     String value = McfUtil.getPropVal(node, Vocabulary.VALUE);
+    TypedValue typedValue = TypedValue.newBuilder().setValue(value).build();
     DataValue dataVal =
         DataValue.newBuilder()
-            .setValue(Double.parseDouble(value))
+            .setValue(typedValue)
             .addAllLocations(node.getLocationsList())
             .build();
     DataPoint.Builder dataPoint = DataPoint.newBuilder().setDate(obsDate);
@@ -157,7 +159,7 @@ public class PlaceSeriesSummary {
           dp -> {
             if (!dp.getValuesList().isEmpty()) {
               summary.seriesDates.add(dp.getDate());
-              summary.seriesValues.add(dp.getValues(0).getValue());
+              summary.seriesValues.add(Double.parseDouble(dp.getValues(0).getValue().getValue()));
             }
           });
       statVarSummaryMap.put(svSeriesSummary.getKey(), summary);

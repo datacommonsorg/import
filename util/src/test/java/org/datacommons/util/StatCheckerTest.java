@@ -34,6 +34,8 @@ import org.datacommons.proto.Debug.DataPoint.DataValue;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
 import org.datacommons.proto.Mcf;
+import org.datacommons.proto.Mcf.McfGraph.TypedValue;
+import org.datacommons.proto.Mcf.ValueType;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -57,6 +59,7 @@ public class StatCheckerTest {
         new File(this.getClass().getResource("StatCheckerTestReport.json").getPath());
     String expectedReportStr = FileUtils.readFileToString(expectedReport, StandardCharsets.UTF_8);
     Debug.Log.Builder expectedLog = Debug.Log.newBuilder();
+    // System.out.println(logCtx.getStatsCheckSummaryList().get(0).toString());
     JsonFormat.parser().merge(expectedReportStr, expectedLog);
     expect
         .about(ProtoTruth.protos())
@@ -459,7 +462,9 @@ public class StatCheckerTest {
     if (timeSeries.containsKey(date)) {
       dp = timeSeries.get(date).toBuilder();
     }
-    DataValue dataVal = DataValue.newBuilder().setValue(val).build();
+    TypedValue typedValue =
+        TypedValue.newBuilder().setValue(Double.toString(val)).setType(ValueType.NUMBER).build();
+    DataValue dataVal = DataValue.newBuilder().setValue(typedValue).build();
     dp.addValues(dataVal);
     timeSeries.put(date, dp.build());
   }

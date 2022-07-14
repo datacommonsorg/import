@@ -32,6 +32,7 @@ import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
 import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.PlaceSeriesSummary.SeriesSummary;
 import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
 
@@ -146,14 +147,31 @@ public class StatChecker {
         for (SeriesSummary seriesSummary : seriesSummaryMap.values()) {
           List<DataPoint> timeSeries = new ArrayList<>(seriesSummary.timeSeries.values());
           StatValidationResult.Builder resBuilder = seriesSummary.validationResult;
+
+          // General checks; these don't depend on the type of the values.
+          
           // Check inconsistent values (sawtooth).
           checkSeriesValueInconsistencies(timeSeries, resBuilder, logCtx);
+          // Check for holes in dates, invalid dates, etc.
+          checkDates(timeSeries, resBuilder, logCtx);
+
+          // TODO: ENSURE HOMOGENOUS TIMESERIES TYPE INSTEAD OF BLINDLY READING THE TYPE OF THE
+          // FIRST VALUE
+          ValueType type = timeSeries.get(0).getValues(0).getValue().getType();
+          List<String> stringSeries = new ArrayList<String>();
+          for (DataPoint dp : timeSeries) {
+            stringSeries.add(dp.getValues(0).getValue().getValue());
+          }
+
+          System.out.println(" >>> TYPE WAS: " + type.toString());
+
+          // if (type == ValueType.NUMBER) {
           // Check N-Sigma variance.
           checkSigmaDivergence(timeSeries, resBuilder, logCtx);
           // Check N-Percent fluctuations.
           checkPercentFluctuations(timeSeries, resBuilder, logCtx);
-          // Check for holes in dates, invalid dates, etc.
-          checkDates(timeSeries, resBuilder, logCtx);
+          // }
+
           // add result to log.
           if (!resBuilder.getValidationCountersList().isEmpty() && !countersRemaining.isEmpty()) {
             // only add entry if resBuilder contains a validation counter that we still want to add
@@ -262,15 +280,15 @@ public class StatChecker {
     String counterKey = "StatsCheck_Inconsistent_Values";
     inconsistentValueCounter.setCounterKey(counterKey);
     for (DataPoint dp : timeSeries) {
-      double v = 0;
+      String v = null;
       boolean vInitialized = false;
       for (DataValue val : dp.getValuesList()) {
-        if (vInitialized && val.getValue() != v) {
+        if (vInitialized && val.getValue().getValue() != v) {
           inconsistentValueCounter.addProblemPoints(dp);
           logCtx.incrementWarningCounterBy(counterKey, 1);
         }
         vInitialized = true;
-        v = val.getValue();
+        v = val.getValue().getValue();
       }
     }
     if (!inconsistentValueCounter.getProblemPointsList().isEmpty()) {
@@ -290,7 +308,9 @@ public class StatChecker {
     // Only add data points to the counter of the greatest standard deviation that it belongs to.
     // ie. if the data point is beyond 3 std deviation, only add it to that counter.
     for (DataPoint dp : timeSeries) {
-      double val = dp.getValues(0).getValue();
+      double val = Double.parseDouble(dp.getValues(0).getValue().getValue());
+      System.out.println(
+          dp.getValues(0).getValue().getValue() + " was parsed as " + Double.toString(val));
       if (Math.abs(val - meanAndStdDev.mean) > 3 * meanAndStdDev.stdDev) {
         sigma3Counter.addProblemPoints(dp);
         logCtx.incrementWarningCounterBy(sigma3CounterKey, 1);
@@ -313,7 +333,7 @@ public class StatChecker {
     double sum = 0;
     double sumSqDev = 0;
     for (DataPoint dp : timeSeries) {
-      double val = dp.getValues(0).getValue();
+      double val = Double.parseDouble(dp.getValues(0).getValue().getValue());
       if (weights > 0) {
         sumSqDev += 1 * weights / 1 / (weights + 1) * Math.pow((1 / weights * sum - val), 2);
       }
@@ -339,10 +359,10 @@ public class StatChecker {
       // Don't try to compare between times because this is a Sawtooth
       if (dp.getValuesCount() > 1) return;
       if (dp.getValuesCount() == 0) continue;
-      double currVal = dp.getValues(0).getValue();
+      double currVal = Double.parseDouble(dp.getValues(0).getValue().getValue());
       if (baseDataPoint != null) {
         double currDelta;
-        double baseVal = baseDataPoint.getValues(0).getValue();
+        double baseVal = Double.parseDouble(baseDataPoint.getValues(0).getValue().getValue());
         if (baseVal == 0) {
           currDelta = (currVal) / SMALL_NUMBER;
         } else {
