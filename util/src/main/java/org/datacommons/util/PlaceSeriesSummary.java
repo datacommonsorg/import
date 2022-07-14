@@ -16,6 +16,7 @@ import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
 import org.datacommons.proto.Mcf.McfType;
+import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
@@ -49,7 +50,20 @@ public class PlaceSeriesSummary {
       return String.join(" | ", valueStrings);
     }
 
+    public ValueType getValueType() {
+      // TODO this is an approximation that I will fix by checking series type properly.
+      return new ArrayList<>(this.getTimeSeries().values())
+          .get(0)
+          .getValues(0)
+          .getValue()
+          .getType();
+    }
+
     public String getTimeSeriesSVGChart() {
+
+      if (getValueType() != ValueType.NUMBER) {
+        return "<b>Charts for non-numeric types are not supported yet</b>";
+      }
 
       TimeSeries timeSeries = new TimeSeries("ts");
 
@@ -137,6 +151,7 @@ public class PlaceSeriesSummary {
 
   // Generate a map of stat var id to StatVarSummary for that stat var from the stats information
   // saved to this object. Used by SummaryReport.ftl
+  // TODO: is this function used in any significant manner?
   public Map<String, StatVarSummary> getStatVarSummaryMap() {
     Map<String, StatVarSummary> statVarSummaryMap = new HashMap<>();
     for (Map.Entry<String, Map<Long, SeriesSummary>> svSeriesSummary :
@@ -164,7 +179,7 @@ public class PlaceSeriesSummary {
           dp -> {
             if (!dp.getValuesList().isEmpty()) {
               summary.seriesDates.add(dp.getDate());
-              summary.seriesValues.add(Double.parseDouble(dp.getValues(0).getValue().getValue()));
+              summary.seriesValues.add(dp.getValues(0).getValue().getValue());
             }
           });
       statVarSummaryMap.put(svSeriesSummary.getKey(), summary);

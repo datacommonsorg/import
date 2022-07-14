@@ -52,7 +52,7 @@ public class SummaryReportGenerator {
     // PlaceSeriesSummary and the value at index n of seriesValues will correspond to the date at
     // index n of seriesDates.
     List<String> seriesDates = new ArrayList<>();
-    List<Double> seriesValues = new ArrayList<>();
+    List<String> seriesValues = new ArrayList<>();
 
     public int getNumObservations() {
       return this.numObservations;
@@ -86,7 +86,7 @@ public class SummaryReportGenerator {
       return this.seriesDates;
     }
 
-    public List<Double> getSeriesValues() {
+    public List<String> getSeriesValues() {
       return this.seriesValues;
     }
 

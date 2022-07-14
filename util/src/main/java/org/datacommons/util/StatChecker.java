@@ -107,16 +107,14 @@ public class StatChecker {
   public synchronized void extractStatsFromGraph(McfGraph graph) {
     for (Map.Entry<String, McfGraph.PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
       McfGraph.PropertyValues node = nodeEntry.getValue();
-      if (McfUtil.isSvObWithNumberValue(node)) {
-        // We will extract basic stat var information from every StatVarObservation nodes
-        extractStatVarInfoFromNode(node);
-        // We will only extract series information from StatVarObservation nodes about sample places
-        String placeDcid = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT);
-        if (shouldExtractSeriesInfo(placeDcid)) {
-          placeSeriesSummaryMap
-              .computeIfAbsent(placeDcid, k -> new PlaceSeriesSummary())
-              .extractSeriesFromNode(node);
-        }
+      // We will extract basic stat var information from every StatVarObservation nodes
+      extractStatVarInfoFromNode(node);
+      // We will only extract series information from StatVarObservation nodes about sample places
+      String placeDcid = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT);
+      if (shouldExtractSeriesInfo(placeDcid)) {
+        placeSeriesSummaryMap
+            .computeIfAbsent(placeDcid, k -> new PlaceSeriesSummary())
+            .extractSeriesFromNode(node);
       }
     }
   }
@@ -158,7 +156,8 @@ public class StatChecker {
           // TODO: THROW ERROR IF TYPE IS UNKNOWN?
           // TODO: ENSURE HOMOGENOUS TIMESERIES TYPE INSTEAD OF BLINDLY READING THE TYPE OF THE
           // FIRST VALUE
-          ValueType type = timeSeries.get(0).getValues(0).getValue().getType();
+          ValueType type = seriesSummary.getValueType();
+
           List<String> stringSeries = new ArrayList<String>();
           for (DataPoint dp : timeSeries) {
             stringSeries.add(dp.getValues(0).getValue().getValue());

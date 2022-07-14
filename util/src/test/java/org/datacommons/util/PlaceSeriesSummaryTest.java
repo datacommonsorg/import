@@ -26,12 +26,12 @@ public class PlaceSeriesSummaryTest {
     countPersonExpectedSummary.seriesDates =
         List.of("2014", "2014", "2015", "2018", "2019", "2020");
     countPersonExpectedSummary.seriesValues =
-        List.of(1000100.0, 1000101.0, 1000400.0, 1000400.0, 1000400.0, 1000400.0);
+        List.of("1000100", "1000101", "1000400", "1000400", "1000400", "1000400");
     StatVarSummary countFemaleExpectedSummary = new StatVarSummary();
     countFemaleExpectedSummary.numObservations = 2;
     countFemaleExpectedSummary.mMethods = Set.of("CensusACS5YrSurvey");
     countFemaleExpectedSummary.seriesDates = List.of("2015", "2016");
-    countFemaleExpectedSummary.seriesValues = List.of(500200.0, 500300.0);
+    countFemaleExpectedSummary.seriesValues = List.of("500200", "500300");
     Map<String, StatVarSummary> expectedMap =
         Map.of(
             "Count_Person",

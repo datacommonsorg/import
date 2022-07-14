@@ -12,7 +12,7 @@
     "LEVEL_WARNING": {
       "counters": {
         "Existence_MissingTriple_domainIncludes": "1",
-        "API_EmptyDcCallResponse": "1"
+        "StatsCheck_Inconsistent_Values": "2"
       }
     }
   },
@@ -24,6 +24,78 @@
     },
     "userMessage": "Failed triple existence check :: subject: 'area', predicate: 'domainIncludes', object: 'Place', node: 'dcid:Acre_MeasurementResult_StatVar'",
     "counterKey": "Existence_MissingTriple_domainIncludes"
+  }],
+  "statsCheckSummary": [{
+    "placeDcid": "geoId/01",
+    "statVarDcid": "Acre_MeasurementResult_StatVar",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "validationCounters": [{
+      "counterKey": "StatsCheck_Inconsistent_Values",
+      "problemPoints": [{
+        "date": "2020-01-01",
+        "values": [{
+          "value": {
+            "type": "TEXT",
+            "value": "Acre1.0"
+          },
+          "locations": [{
+            "file": "acre.csv",
+            "lineNumber": "2"
+          }]
+        }, {
+          "value": {
+            "type": "TEXT",
+            "value": "Acre10.0"
+          },
+          "locations": [{
+            "file": "acre.csv",
+            "lineNumber": "3"
+          }]
+        }, {
+          "value": {
+            "type": "TEXT",
+            "value": "Acre100.0"
+          },
+          "locations": [{
+            "file": "acre.csv",
+            "lineNumber": "3"
+          }]
+        }]
+      }, {
+        "date": "2020-01-01",
+        "values": [{
+          "value": {
+            "type": "TEXT",
+            "value": "Acre1.0"
+          },
+          "locations": [{
+            "file": "acre.csv",
+            "lineNumber": "2"
+          }]
+        }, {
+          "value": {
+            "type": "TEXT",
+            "value": "Acre10.0"
+          },
+          "locations": [{
+            "file": "acre.csv",
+            "lineNumber": "3"
+          }]
+        }, {
+          "value": {
+            "type": "TEXT",
+            "value": "Acre100.0"
+          },
+          "locations": [{
+            "file": "acre.csv",
+            "lineNumber": "3"
+          }]
+        }]
+      }]
+    }]
   }],
   "commandArgs": {
     "existenceChecks": true,

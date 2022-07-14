@@ -95,14 +95,38 @@
                   <a href="#counters--LEVEL_WARNING--Existence_MissingTriple_domainIncludes">Existence_MissingTriple_domainIncludes</a>
                 </li>
                 <li>
-                  <a href="#counters--LEVEL_WARNING--API_EmptyDcCallResponse">API_EmptyDcCallResponse</a>
+                  <a href="#counters--LEVEL_WARNING--StatsCheck_Inconsistent_Values">StatsCheck_Inconsistent_Values</a>
                 </li>
               </ul>
             </details>
           </li>
       </ul>
       
+        <li><a href="#statvars"">StatVarObservations by StatVar</a></li>
+          <details>
+            <summary>StatVars</summary>
+              <ul>
+                  <li>
+                    <a href="#statvars--Acre_MeasurementResult_StatVar">Acre_MeasurementResult_StatVar</a>
+                  </li>
+              </ul>
+          </details>
 
+        <li><a href="#places"">Series Summaries for Sample Places</a></li>
+        <ul class="toc-details-ul">
+            <li>
+              <details>
+                <summary>
+                  <a href="#places--geoId/01">Alabama (geoId/01)</a>
+                </summary>
+                <ul>
+                  <li>
+                    <a href="#places--geoId/01--Acre_MeasurementResult_StatVar">Acre_MeasurementResult_StatVar</a>
+                  </li>
+                </ul>
+              </details>
+            </li>
+        </ul>
     </ul>
 
     <div>
@@ -179,12 +203,107 @@
                   <td>1</td>
                 </tr>
                 <tr>
-                  <td><a href="#counters--LEVEL_WARNING--API_EmptyDcCallResponse" name="counters--LEVEL_WARNING--API_EmptyDcCallResponse">API_EmptyDcCallResponse</a></td>
-                  <td>1</td>
+                  <td><a href="#counters--LEVEL_WARNING--StatsCheck_Inconsistent_Values" name="counters--LEVEL_WARNING--StatsCheck_Inconsistent_Values">StatsCheck_Inconsistent_Values</a></td>
+                  <td>2</td>
                 </tr>
             </tbody>
       </table>
     </div>
+      
+      <div>
+        <h2>
+          <a name="statvars" href="#statvars">StatVarObservations by StatVar</a>
+        </h2>
+        <!-- 
+          classes here provide styling through DataTables.
+          documentation:
+          - hover: https://datatables.net/examples/styling/hover.html
+          - order-column: https://datatables.net/examples/styling/order-column.html
+        -->
+        <table id="statvars-table" class="datatables-table hover order-column" width="95%">
+          <thead>
+            <tr>
+              <th>StatVar</th>
+              <th>Num Places</th>
+              <th>Num Observations</th>
+              <th>Num Observation Dates</th>
+              <th>Min Date</th>
+              <th>Max Date</th>
+              <th>Measurement Methods</th>
+              <th>Units</th>
+              <th>Scaling Factors</th>
+              <th>Observation Periods</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a name="statvars--Acre_MeasurementResult_StatVar" href="#statvars--Acre_MeasurementResult_StatVar">Acre_MeasurementResult_StatVar</a></td>
+              <td>1</td>
+              <td>3</td>
+              <td>1</td>
+              <td>2020-01-01</td>
+              <td>2020-01-01</td>
+              <td>
+                <div></div>
+              </td>
+              <td>
+                <div></div>
+              </td>
+              <td>
+                <div></div>
+              </td>
+              <td>
+                <div></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h2>
+          <a name="places" href="#places">Series Summaries for Sample Places</a>
+        </h2>
+          <details class="place-series-details">
+            <summary class="place-series-summary"><a name="places--geoId/01" href="#places--geoId/01">Alabama (geoId/01)</a></summary>
+            <a href="https://datacommons.org/browser/geoId/01" target="_blank">Open this place (geoId/01) in Data Commons browser.</a>
+            <table id="sampleplaces-table--1" class="datatables-table hover order-column" width="95%">
+              <thead>
+                <tr>
+                  <th>StatVar</th>
+                  <th>Num Observations</th>
+                  <th>Dates</th>
+                  <th>Corresponding Values</th>
+                  <th>Measurement Method</th>
+                  <th>Unit</th>
+                  <th>Scaling Factor</th>
+                  <th>Observation Period</th>
+                  <th>Time Series Chart</th>
+                </tr>
+              </thead>
+              <tbody>
+                    <tr>
+                      <td><a href="#places--geoId/01--Acre_MeasurementResult_StatVar" name="places--geoId/01--Acre_MeasurementResult_StatVar">Acre_MeasurementResult_StatVar</a></td>
+                      <td>1</td>
+                      <td>2020-01-01</td>
+                      <td>Acre1.0</td>
+                      <td>
+                        <div></div>
+                      </td>
+                      <td>
+                        <div></div>
+                      </td>
+                      <td>
+                        <div></div>
+                      </td>
+                      <td>
+                        <div></div>
+                      </td>
+                      <td style="max-width:none;text-align: -webkit-center;"><b>Charts for non-numeric types are not supported yet</b></td>
+                    </tr>
+              </tbody>
+            </table>
+          </details>
+      </div>
     <script>
       function handle_hash_change(){
         /*
@@ -232,6 +351,7 @@
 
     $(document).ready(function () {
       const sampleplace_table_ids = [
+          "#sampleplaces-table--1",
       ]
 
       make_table_DataTable("#statvars-table");
