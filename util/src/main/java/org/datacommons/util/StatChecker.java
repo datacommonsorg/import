@@ -148,14 +148,13 @@ public class StatChecker {
 
           // General checks; these don't depend on the type of the values.
 
+          // Check that the ValueType of all values are the same
+          checkSeriesTypeInconsistencies(timeSeries, resBuilder, logCtx);
           // Check inconsistent values (sawtooth).
           checkSeriesValueInconsistencies(timeSeries, resBuilder, logCtx);
           // Check for holes in dates, invalid dates, etc.
           checkDates(timeSeries, resBuilder, logCtx);
 
-          // TODO: THROW ERROR IF TYPE IS UNKNOWN?
-          // TODO: ENSURE HOMOGENOUS TIMESERIES TYPE INSTEAD OF BLINDLY READING THE TYPE OF THE
-          // FIRST VALUE
           ValueType type = seriesSummary.getValueType();
 
           List<String> stringSeries = new ArrayList<String>();
@@ -269,6 +268,31 @@ public class StatChecker {
       return MAX_PLACES_FOR_TYPE_INFERRED_NS;
     } else {
       return MAX_PLACES_FOR_TYPELESS_NS;
+    }
+  }
+
+  protected static void checkSeriesTypeInconsistencies(
+      List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder, LogWrapper logCtx) {
+    StatValidationEntry.Builder inconsistentTypeCounter = StatValidationEntry.newBuilder();
+    String counterKey = "StatsCheck_Inconsistent_Types";
+    inconsistentTypeCounter.setCounterKey(counterKey);
+
+    ValueType firstType = null;
+
+    for (DataPoint dp : timeSeries) {
+      for (DataValue val : dp.getValuesList()) {
+        ValueType type = val.getValue().getType();
+        if (firstType == null) {
+          firstType = type;
+        }
+        if (!firstType.equals(type)) {
+          inconsistentTypeCounter.addProblemPoints(dp);
+          logCtx.incrementWarningCounterBy(counterKey, 1);
+        }
+      }
+    }
+    if (!inconsistentTypeCounter.getProblemPointsList().isEmpty()) {
+      resBuilder.addValidationCounters(inconsistentTypeCounter.build());
     }
   }
 

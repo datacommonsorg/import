@@ -51,7 +51,9 @@ public class PlaceSeriesSummary {
     }
 
     public ValueType getValueType() {
-      // TODO this is an approximation that I will fix by checking series type properly.
+      // We can return the type of the first DataPoint
+      // Whether the types in this series is consistent is checked by
+      // StatChecker.checkSeriesTypeInconsistencies
       return new ArrayList<>(this.getTimeSeries().values())
           .get(0)
           .getValues(0)

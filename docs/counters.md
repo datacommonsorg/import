@@ -412,9 +412,13 @@ External triple existence check with the DataCommons API returned no results.
 ## Statistics Checks
 These counters represent potential issues found in the statistical analysis of the input data for pitfalls such as extreme outliers, holes in dates that the data is available for, etc.
 
+### StatsCheck_Inconsistent_Types
+
+Two different types (for example, numbers and strings) were found for the observations of the same StatVar.
+
 ### StatsCheck_Inconsistent_Values
 
-Two different values were found for the same StatVarObservation.
+Two different values were found for the observations of the same StatVar.
 
 ### StatsCheck_3_Sigma
 

@@ -35,7 +35,7 @@ import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
-import org.datacommons.proto.Mcf.ValueType;
+import org.datacommons.proto.Mcf.McfType;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -170,6 +170,42 @@ public class StatCheckerTest {
         new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertTrue(checkHasCounter(resBuilder, "StatsCheck_Inconsistent_Values", List.of("2013")));
     assertEquals(1, TestUtil.getCounter(logCtx.getLog(), "StatsCheck_Inconsistent_Values"));
+  }
+
+  @Test
+  public void testFuncCheckTypeInconsistencies() {
+    Debug.Log.Builder log = Debug.Log.newBuilder();
+    LogWrapper logCtx = new LogWrapper(log, Path.of("/tmp/statCheckerTest"));
+    StatValidationResult.Builder resBuilder = StatValidationResult.newBuilder();
+    Map<String, DataPoint> timeSeries = new TreeMap<>();
+    String counterKey = "StatsCheck_Inconsistent_Types";
+
+    // Empty list does not fail
+    StatChecker.checkSeriesTypeInconsistencies(
+        new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
+    assertFalse(checkHasCounter(resBuilder, counterKey, new ArrayList<>()));
+
+    // List of one does not fail
+    resBuilder.clear();
+    addDataPoint(timeSeries, "2011", 24.0);
+    StatChecker.checkSeriesTypeInconsistencies(
+        new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
+    assertFalse(checkHasCounter(resBuilder, counterKey, new ArrayList<>()));
+
+    // List of two numbers does not fail, but ...
+    resBuilder.clear();
+    addDataPoint(timeSeries, "2012", 24.0);
+    addDataPoint(timeSeries, "2013", 240.3);
+    StatChecker.checkSeriesTypeInconsistencies(
+        new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
+    assertFalse(checkHasCounter(resBuilder, counterKey, new ArrayList<>()));
+
+    // ... adding a String/Reference to that list of two numbers triggers log
+    addDataPoint(timeSeries, "2014", "DataSuppressed");
+    StatChecker.checkSeriesTypeInconsistencies(
+        new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
+    assertTrue(checkHasCounter(resBuilder, counterKey, List.of("2014")));
+    assertEquals(1, TestUtil.getCounter(logCtx.getLog(), counterKey));
   }
 
   @Test
@@ -457,15 +493,19 @@ public class StatCheckerTest {
     return counterFound;
   }
 
-  private void addDataPoint(Map<String, DataPoint> timeSeries, String date, double val) {
+  private void addDataPoint(Map<String, DataPoint> timeSeries, String date, String val) {
     DataPoint.Builder dp = DataPoint.newBuilder().setDate(date);
     if (timeSeries.containsKey(date)) {
       dp = timeSeries.get(date).toBuilder();
     }
     TypedValue typedValue =
-        TypedValue.newBuilder().setValue(Double.toString(val)).setType(ValueType.NUMBER).build();
+        McfParser.parseTypedValue(McfType.INSTANCE_MCF, false, Vocabulary.VALUE, val, null).build();
     DataValue dataVal = DataValue.newBuilder().setValue(typedValue).build();
     dp.addValues(dataVal);
     timeSeries.put(date, dp.build());
+  }
+
+  private void addDataPoint(Map<String, DataPoint> timeSeries, String date, double val) {
+    addDataPoint(timeSeries, date, Double.toString(val));
   }
 }
