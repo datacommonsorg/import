@@ -104,6 +104,9 @@ test("countryDetectionOrder", () => {
   const colISO = "iso";
   const colAlpha3 = "alpha3";
   const colNumber = "number";
+  // colName does not provide any help with choosing between numeric country
+  // codes vs FIPS codes for US states. The default preference is given to
+  // country detection.
   const colName = "name";
   const colISOMistake = "isoMistake";
 
@@ -312,20 +315,27 @@ test("comboDetection-date-and-place", () => {
 
   // Column at index 2 is a date column but preference is given to column
   // headers.
-  // There are also two place columns: country and state. The State column is
-  // preferred.
+  // There are also three place columns: one each which correspond to country
+  // and state unambiguously while the third one could be either country or
+  // state. For the ambiguous column, the header name "state" is provided which
+  // will give preference to "State" detection for that column. Therefore, there
+  // are two State columns and one Country column detected. In picking one Place
+  // column, preference is given to State over Country and within States, the
+  // preference is given to fips52AlphaCode over the FIPS (numeric) codes.
   const cols = new Map<number, Array<string>>([
     [0, ["1", "2", "3"]],
     [1, ["random", "random", "random"]],
     [2, ["2020-10", "2021-10", "2022-10"]],
     [3, ["US", "IT", "ES"]],
-    [3, ["WY", "FL", "NJ"]],
+    [4, ["WY", "FL", "NJ"]],
+    [5, ["36", "40", "50"]], // numeric country code OR FIPS state code.
   ]);
   const dateColHeader1 = { id: "2022-100", header: "2022-10", columnIdx: 0 };
   const dateColHeader2 = { id: "20211", header: "2021-10", columnIdx: 1 };
   const dateCol = { id: "c2", header: "c", columnIdx: 2 };
   const countryCol = { id: "d3", header: "d", columnIdx: 3 };
   const stateCol = { id: "e4", header: "e", columnIdx: 4 };
+  const stateNumericCol = { id: "state5", header: "state", columnIdx: 5 };
 
   const csv = {
     orderedColumns: [
@@ -334,6 +344,7 @@ test("comboDetection-date-and-place", () => {
       dateCol,
       countryCol,
       stateCol,
+      stateNumericCol,
     ],
     columnValuesSampled: cols,
     rowsForDisplay: new Map<RowNumber, Array<string>>(),
@@ -351,7 +362,7 @@ test("comboDetection-date-and-place", () => {
       MappedThing.PLACE,
       {
         type: MappingType.COLUMN,
-        column: countryCol,
+        column: stateCol,
         placeProperty: {
           dcid: "fips52AlphaCode",
           displayName: "US State Alpha Code",

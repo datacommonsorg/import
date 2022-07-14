@@ -48,6 +48,7 @@ const PLACE_PROPERTIES: DCProperty[] = [
   { dcid: "countryAlpha3Code", displayName: "Alpha 3 Code" },
   { dcid: "countryNumericCode", displayName: "Numeric Code" },
   { dcid: "fips52AlphaCode", displayName: "US State Alpha Code" },
+  { dcid: "geoId", displayName: "FIPS Code" },
 ];
 
 // Helper interface to refer to the place types and place properties.
@@ -77,6 +78,7 @@ export class PlaceDetector {
   stateNames: Set<string>;
   stateISO: Set<string>;
   stateFipsAlpha: Set<string>;
+  stateFipsCode: Set<string>;
 
   // Convenience in-memory maps of types and properties where the keys are their
   // respective DC Names.
@@ -111,6 +113,7 @@ export class PlaceDetector {
         { tName: "State", pName: "name" },
         { tName: "State", pName: "isoCode" },
         { tName: "State", pName: "fips52AlphaCode" },
+        { tName: "State", pName: "geoId" },
       ],
     ],
     ["province", [{ tName: "Province", pName: "name" }]],
@@ -213,12 +216,18 @@ export class PlaceDetector {
     this.stateNames = new Set<string>();
     this.stateISO = new Set<string>();
     this.stateFipsAlpha = new Set<string>();
+    this.stateFipsCode = new Set<string>();
 
     for (const state of statesJSON) {
       this.stateNames.add(toAlphaNumericAndLower(state.name));
 
       if (state.iso_code != null) {
         this.stateISO.add(state.iso_code.toLowerCase());
+      }
+
+      // FIPS codes are only relevant for the Unites States.
+      if (!_.isEmpty(state.id) && state.iso_code.startsWith("US")) {
+        this.stateFipsCode.add(toAlphaNumericAndLower(state.id.split("/")[1]));
       }
       if (!_.isEmpty(state.fips52AlphaCode)) {
         this.stateFipsAlpha.add(toAlphaNumericAndLower(state.fips52AlphaCode));
@@ -320,6 +329,7 @@ export class PlaceDetector {
     counters["name"] = 0;
     counters["isoCode"] = 0;
     counters["fips52AlphaCode"] = 0;
+    counters["geoId"] = 0;
     for (const cVal of column) {
       if (_.isEmpty(cVal)) {
         continue;
@@ -334,6 +344,8 @@ export class PlaceDetector {
         counters["isoCode"]++;
       } else if (this.stateFipsAlpha.has(v)) {
         counters["fips52AlphaCode"]++;
+      } else if (this.stateFipsCode.has(v)) {
+        counters["geoId"]++;
       }
     }
 
@@ -366,7 +378,29 @@ export class PlaceDetector {
     // In the future, this should be modified to run through a list of detailed
     // high confidence place detectors.
     const country = this.detectCountryHighConf(column);
-    return country != null ? country : this.detectStateHighConf(column);
+
+    // If country was detected and the header has a country in the name, return
+    // country. If not, we have to do more work to disambiguate country vs state.
+    if (
+      country != null &&
+      toAlphaNumericAndLower(header).split("country").length > 1
+    ) {
+      return country;
+    }
+
+    const state = this.detectStateHighConf(column);
+    // If state was detected and the header has a state in the name, return
+    // state.
+    if (
+      state != null &&
+      toAlphaNumericAndLower(header).split("state").length > 1
+    ) {
+      return state;
+    }
+
+    // If neither of the two conditions above were met, return in a priority
+    // order with country before state.
+    return country != null ? country : state;
   }
 
   /**
