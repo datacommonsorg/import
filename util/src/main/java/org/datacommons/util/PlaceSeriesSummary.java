@@ -45,7 +45,13 @@ public class PlaceSeriesSummary {
       List<String> valueStrings = new ArrayList<String>();
 
       for (DataPoint dv : this.timeSeries.values()) {
-        valueStrings.add(dv.getValues(0).getValue().getValue());
+        TypedValue tv = dv.getValues(0).getValue();
+        String valueString = tv.getValue();
+        // if the value is a number, parse it to Double and back to get the .0 suffix
+        if (tv.getType() == ValueType.NUMBER) {
+          valueString = Double.toString(Double.parseDouble(valueString));
+        }
+        valueStrings.add(valueString);
       }
       return String.join(" | ", valueStrings);
     }
