@@ -27,7 +27,7 @@ import {
 import * as dd from "./detect_date";
 import { PlaceDetector } from "./detect_place";
 
-const STATE_PROPERTY_ORDER = ["isoCode", "fips52AlphaCode", "name"];
+const STATE_PROPERTY_ORDER = ["isoCode", "fips52AlphaCode", "geoId", "name"];
 
 const COUNTRY_PROPERTY_ORDER = [
   "isoCode",
@@ -171,7 +171,7 @@ function detectDate(
  * Given a csv, returns the predicted mappings.
  *
  * @param csv a CsvData structure which contains all the necessary information
- *  and data about the user provided usv file.
+ *  and data about the user provided csv file.
  * @param pDetector a PlaceDetector object.
  *
  * @returns a Mapping of all columns to their detected details.
