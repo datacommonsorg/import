@@ -93,8 +93,8 @@ test("MultiNodeTMCF_DateValueInHeader", () => {
       {
         type: MappingType.COLUMN_HEADER,
         headers: [
-          { id: "2018", header: "2018", columnIdx: 3 },
-          { id: "2019", header: "2019", columnIdx: 4 },
+          { id: "2018_1", header: "2018", columnIdx: 3 },
+          { id: "2019_2", header: "2019", columnIdx: 4 },
         ],
       },
     ],
@@ -109,7 +109,7 @@ test("MultiNodeTMCF_DateValueInHeader", () => {
   const expected =
     "Node: E:CSVTable->E0\n" +
     "typeOf: dcs:StatVarObservation\n" +
-    "value: C:CSVTable->2018\n" +
+    "value: C:CSVTable->2018_1\n" +
     'observationDate: "2018"\n' +
     "observationAbout: C:CSVTable->id\n" +
     "variableMeasured: C:CSVTable->indicators\n" +
@@ -117,7 +117,7 @@ test("MultiNodeTMCF_DateValueInHeader", () => {
     "\n" +
     "Node: E:CSVTable->E1\n" +
     "typeOf: dcs:StatVarObservation\n" +
-    "value: C:CSVTable->2019\n" +
+    "value: C:CSVTable->2019_2\n" +
     'observationDate: "2019"\n' +
     "observationAbout: C:CSVTable->id\n" +
     "variableMeasured: C:CSVTable->indicators\n" +
@@ -134,8 +134,8 @@ test("MultiNodeTMCF_PlaceValueInHeader", () => {
         placeProperty: { dcid: "name", displayName: "name" },
         placeType: { dcid: "AdministrativeArea1", displayName: "State" },
         headers: [
-          { id: "California", header: "California", columnIdx: 3 },
-          { id: "Nevada", header: "Nevada", columnIdx: 4 },
+          { id: "California_1", header: "California", columnIdx: 3 },
+          { id: "Nevada_2", header: "Nevada", columnIdx: 4 },
         ],
       },
     ],
@@ -172,7 +172,7 @@ test("MultiNodeTMCF_PlaceValueInHeader", () => {
     "\n" +
     "Node: E:CSVTable->E1\n" +
     "typeOf: dcs:StatVarObservation\n" +
-    "value: C:CSVTable->California\n" +
+    "value: C:CSVTable->California_1\n" +
     "observationAbout: E:CSVTable->E0\n" +
     "variableMeasured: C:CSVTable->indicators\n" +
     "observationDate: C:CSVTable->year\n" +
@@ -180,7 +180,7 @@ test("MultiNodeTMCF_PlaceValueInHeader", () => {
     "\n" +
     "Node: E:CSVTable->E3\n" +
     "typeOf: dcs:StatVarObservation\n" +
-    "value: C:CSVTable->Nevada\n" +
+    "value: C:CSVTable->Nevada_2\n" +
     "observationAbout: E:CSVTable->E2\n" +
     "variableMeasured: C:CSVTable->indicators\n" +
     "observationDate: C:CSVTable->year\n" +
