@@ -25,6 +25,8 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -32,6 +34,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
+import org.datacommons.proto.Debug.Log;
 import org.datacommons.proto.Debug.StatValidationResult;
 
 // The class that provides logging functionality.  This class is Thread Safe.
@@ -149,6 +152,11 @@ public class LogWrapper {
 
   private void persistLog(boolean silent) throws IOException {
     refreshCounters();
+
+    if (LogWrapper.TEST_MODE) {
+      sortLogEntries();
+    }
+
     File logFile = new File(logPath.toString());
     FileUtils.writeStringToFile(logFile, StringUtil.msgToJson(log.build()), StandardCharsets.UTF_8);
     if (!silent) {
@@ -214,7 +222,6 @@ public class LogWrapper {
 
   public void addEntry(
       Debug.Log.Level level, String counter, String message, String file, long lno) {
-    if (TEST_MODE) System.err.println(counter + " - " + message);
     String counterName = counter == null || counter.isEmpty() ? "MissingCounterName" : counter;
     incrementCounterBy(level, counterName, 1);
 
@@ -244,5 +251,30 @@ public class LogWrapper {
     Debug.Log.Location.Builder l = e.getLocationBuilder();
     l.setFile(file);
     l.setLineNumber(lno);
+  }
+
+  private void sortLogEntries() {
+    class SortByCounterKeyThenUserMessage implements Comparator<Log.Entry> {
+      public int compare(Log.Entry a, Log.Entry b) {
+        int counterKeyCompare = a.getCounterKey().compareTo(b.getCounterKey());
+        // When counter keys are equivalent, sort by user message as secondary sort key
+        if (counterKeyCompare == 0) {
+          return a.getUserMessage().compareTo(b.getUserMessage());
+        }
+        return counterKeyCompare;
+      }
+    }
+
+    List<Log.Entry.Builder> entriesBuilders = log.getEntriesBuilderList();
+    List<Log.Entry> entries = new ArrayList<Log.Entry>();
+
+    for (Debug.Log.Entry.Builder builder : entriesBuilders) {
+      Log.Entry entry = builder.build();
+      entries.add(entry);
+    }
+
+    Collections.sort(entries, new SortByCounterKeyThenUserMessage());
+    log.clearEntries();
+    log.addAllEntries(entries);
   }
 }

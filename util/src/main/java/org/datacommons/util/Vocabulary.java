@@ -108,6 +108,7 @@ public final class Vocabulary {
   public static final String INDIAN_CENSUS_AREA_CODE_2011 = "indianCensusAreaCode2011";
   public static final String LGD_CODE = "lgdCode";
   public static final String UDISE_CODE = "udiseCode";
+  public static final String FIPS_ALPHA_CODE = "fips52AlphaCode";
 
   // StatVar/StatVarObs related things.
   public static final String POPULATION_TYPE = "populationType";
@@ -277,7 +278,8 @@ public final class Vocabulary {
           Vocabulary.INDIAN_CENSUS_AREA_CODE_2011,
           Vocabulary.INDIAN_CENSUS_AREA_CODE_2001,
           Vocabulary.LGD_CODE,
-          Vocabulary.UDISE_CODE);
+          Vocabulary.UDISE_CODE,
+          Vocabulary.FIPS_ALPHA_CODE);
 
   public static boolean isSchemaReferenceProperty(String prop) {
     return prop.equals(TYPE_OF)
