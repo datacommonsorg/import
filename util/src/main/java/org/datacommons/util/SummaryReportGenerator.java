@@ -4,6 +4,7 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.awt.*;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -22,7 +23,6 @@ import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.chart.util.ShapeUtils;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.graphics2d.svg.SVGGraphics2D;
@@ -100,7 +100,7 @@ public class SummaryReportGenerator {
       // create and use a renderer to draw each data point on the time series chart as a diamond and
       // remove the legend
       XYItemRenderer renderer = new XYLineAndShapeRenderer(true, true);
-      renderer.setSeriesShape(0, ShapeUtils.createDiamond(5));
+      renderer.setSeriesShape(0, new Ellipse2D.Double(3, 3, 3, 3)); // ShapeUtils.createDiamond(2));
       renderer.setSeriesVisibleInLegend(0, false);
       plot.setRenderer(renderer);
       // change the background color of the chart to be white
