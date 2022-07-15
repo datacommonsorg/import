@@ -273,7 +273,11 @@ public class McfCheckerTest {
             + "observationDate: \"2020\"\n";
     // This should only succeed when we allow not-a-number SVObs values
     assertTrue(success(mcf)); // allow NaN SVObs by default
-    assertTrue(!successDisallowNanSVObs(mcf));
+    assertTrue(
+        failureDisallowNanSVObs(
+            mcf,
+            "Sanity_SVObs_Value_NotANumber",
+            "Found a non-numeric value for the value field of StatVarObservation but allowNanSVObs was false :: value: 'DataSuppressed', property: 'value', node: 'SFWomenIncome2020'"));
 
     // A bad StatVarObs node with no value.
     mcf =
@@ -588,7 +592,8 @@ public class McfCheckerTest {
       String counter,
       String message,
       Set<String> columns,
-      boolean doExistenceCheck)
+      boolean doExistenceCheck,
+      boolean allowNanSVObs)
       throws IOException, InterruptedException {
     Debug.Log.Builder log = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(log, Path.of("InMemory"));
@@ -602,7 +607,7 @@ public class McfCheckerTest {
     } else {
       graph = McfParser.parseInstanceMcfString(mcfString, false, lw);
     }
-    if (McfChecker.checkTemplate(graph, columns, ec, lw) && !doExistenceCheck) {
+    if (McfChecker.checkTemplate(graph, columns, ec, lw, allowNanSVObs) && !doExistenceCheck) {
       System.err.println("Check unexpectedly passed for " + mcfString);
       return false;
     }
@@ -612,9 +617,24 @@ public class McfCheckerTest {
     return TestUtil.checkLog(lw.getLog(), counter, message);
   }
 
+  private static boolean failure(
+      String mcfString,
+      String counter,
+      String message,
+      Set<String> columns,
+      boolean doExistenceCheck)
+      throws IOException, InterruptedException {
+    return failure(mcfString, counter, message, columns, doExistenceCheck, true);
+  }
+
   private static boolean failure(String mcfString, String counter, String message)
       throws IOException, InterruptedException {
-    return failure(mcfString, counter, message, null, false);
+    return failure(mcfString, counter, message, null, false, true);
+  }
+
+  private static boolean failureDisallowNanSVObs(String mcfString, String counter, String message)
+      throws IOException, InterruptedException {
+    return failure(mcfString, counter, message, null, false, false);
   }
 
   private static boolean success(
@@ -654,10 +674,5 @@ public class McfCheckerTest {
 
   private static boolean success(String mcfString) throws IOException, InterruptedException {
     return success(mcfString, null, false, false);
-  }
-
-  private static boolean successDisallowNanSVObs(String mcfString)
-      throws IOException, InterruptedException {
-    return success(mcfString, null, false, false, false);
   }
 }
