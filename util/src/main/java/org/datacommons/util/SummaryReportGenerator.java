@@ -95,15 +95,36 @@ public class SummaryReportGenerator {
       if (timeSeries.isEmpty()) return "";
       dataset.addSeries(timeSeries);
       // create the time series chart with default settings
-      JFreeChart chart = ChartFactory.createTimeSeriesChart("", "", "", dataset);
+      JFreeChart chart = ChartFactory.createTimeSeriesChart("", "", "", null);
       XYPlot plot = chart.getXYPlot();
       // create and use a renderer to draw each data point on the time series chart as a diamond and
       // remove the legend
-      XYItemRenderer renderer = new XYLineAndShapeRenderer(true, true);
-      renderer.setSeriesShape(
-          0, new Ellipse2D.Double(-1.5, -1.5, 3.0, 3.0));
-      renderer.setSeriesVisibleInLegend(0, false);
-      plot.setRenderer(renderer);
+      XYItemRenderer lineRenderer = new XYLineAndShapeRenderer(true, false);
+      XYItemRenderer shapeRenderer = new XYLineAndShapeRenderer(false, true);
+      lineRenderer.setSeriesPaint(0, Color.BLACK); // new Color(0x00, 0x00, 0xff));
+      shapeRenderer.setSeriesPaint(0, Color.RED); // new Color(0x00, 0x00, 0xff));
+
+      // shapeOffset is both in X and Y. 0 origin is anchored on the top-left of the shape
+      // for Ellipse2D.Double, but the center of the shape for XYItemRenderer, so we offset
+      // the Ellipse2D.Double shape to place it where it needs to be.
+      double shapeSize = 4;
+      double shapeOffset = -1.0 * (shapeSize / 2.0);
+      lineRenderer.setSeriesShape(
+          0, new Ellipse2D.Double(shapeOffset, shapeOffset, shapeSize, shapeSize));
+      shapeRenderer.setSeriesShape(
+          0, new Ellipse2D.Double(shapeOffset, shapeOffset, shapeSize, shapeSize));
+
+      lineRenderer.setSeriesVisibleInLegend(0, false);
+      shapeRenderer.setSeriesVisibleInLegend(0, false);
+
+      // lower indices are painted over the others
+      // this makes it such that the dots are over the lines, making them clear.
+      plot.setRenderer(0, shapeRenderer);
+      plot.setRenderer(1, lineRenderer);
+      
+      plot.setDataset(0, dataset);
+      plot.setDataset(1, dataset);
+
       // change the background color of the chart to be white
       plot.setBackgroundPaint(Color.WHITE);
       ValueAxis yAxis = plot.getRangeAxis();
