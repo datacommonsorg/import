@@ -18,36 +18,65 @@
  * Component for showing the header of the table preview in the mapping section.
  */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { Input } from "reactstrap";
 
-import { Column, MAPPED_THING_NAMES, MappedThing, MappingType } from "../types";
+import { MAPPED_THING_NAMES, MappedThing, MappingType } from "../types";
 import { ColumnInfo } from "./mapping_section";
 
+interface EditHeaderState {
+  colIdx: number;
+  header: string;
+}
 interface MappingTableHeaderProps {
-  orderedColumns: Column[];
-  columnInfo: Record<string, ColumnInfo>;
+  columnInfo: Map<number, ColumnInfo>;
   onColumnSelected: (colIdx: number) => void;
   highlightedColumnRef: React.RefObject<HTMLTableHeaderCellElement>;
   selectedColumn: number;
+  onColumnUpdated: (colIdx: number, column: ColumnInfo) => void;
 }
 
 export function MappingTableHeader(
   props: MappingTableHeaderProps
 ): JSX.Element {
+  const [editHeaderState, setEditHeaderState] = useState<EditHeaderState>({
+    colIdx: -1,
+    header: "",
+  });
+  const orderedColumns = Array.from(props.columnInfo.keys()).sort((a, b) => {
+    if (a > b) {
+      return 1;
+    } else if (a < b) {
+      return -1;
+    } else {
+      return 0;
+    }
+  });
+
+  useEffect(() => {
+    // This will save the edit state when another column is selected
+    if (
+      editHeaderState.colIdx >= 0 &&
+      editHeaderState.colIdx !== props.selectedColumn
+    ) {
+      onHeaderUpdated();
+    }
+  }, [props.selectedColumn]);
+
   return (
     <>
       <thead className="mapping-info-row">
         <tr>
           <th className="row-num"></th>
-          {props.orderedColumns.map((column, idx) => {
-            const info = props.columnInfo[column.id];
+          {orderedColumns.map((columnIdx) => {
+            const info = props.columnInfo.get(columnIdx);
             const isMapped =
               info.type === MappingType.COLUMN ||
               info.type === MappingType.COLUMN_HEADER;
             return (
               <th
-                key={`mapping-info-${idx}`}
-                onClick={() => props.onColumnSelected(idx)}
+                key={`mapping-info-${columnIdx}`}
+                onClick={() => props.onColumnSelected(columnIdx)}
                 className={isMapped ? "mapping-info-col-detected" : ""}
               >
                 {getColumnMappingString(info)}
@@ -56,24 +85,60 @@ export function MappingTableHeader(
           })}
         </tr>
       </thead>
-      <thead>
+      <thead className="column-header-row">
         <tr>
           <th className="row-num">0</th>
-          {props.orderedColumns.map((column, idx) => {
+          {orderedColumns.map((columnIdx) => {
+            const info = props.columnInfo.get(columnIdx);
             return (
               <th
-                key={`heading-${idx}`}
+                key={`heading-${columnIdx}`}
                 className={
-                  props.selectedColumn === idx ? "highlighted-col" : ""
+                  props.selectedColumn === columnIdx ? "highlighted-col" : ""
                 }
                 ref={
-                  props.selectedColumn === idx
+                  props.selectedColumn === columnIdx
                     ? props.highlightedColumnRef
                     : null
                 }
-                onClick={() => props.onColumnSelected(idx)}
+                onClick={() => props.onColumnSelected(columnIdx)}
               >
-                <div>{column.header}</div>
+                {editHeaderState.colIdx === columnIdx ? (
+                  <form
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      onHeaderUpdated();
+                    }}
+                  >
+                    <Input
+                      className="header-input"
+                      type="text"
+                      multiple={true}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEditHeaderState({ ...editHeaderState, header: val });
+                      }}
+                      value={editHeaderState.header}
+                      onBlur={() => onHeaderUpdated()}
+                      autoFocus={true}
+                    />
+                  </form>
+                ) : (
+                  <div>
+                    <span>{info.column.header}</span>
+                    <i
+                      onClick={() =>
+                        setEditHeaderState({
+                          colIdx: columnIdx,
+                          header: info.column.header,
+                        })
+                      }
+                      className="material-icons-outlined"
+                    >
+                      edit
+                    </i>
+                  </div>
+                )}
               </th>
             );
           })}
@@ -81,6 +146,20 @@ export function MappingTableHeader(
       </thead>
     </>
   );
+
+  function onHeaderUpdated(): void {
+    const info = props.columnInfo.get(editHeaderState.colIdx);
+    const updatedColumn = {
+      ...info.column,
+      id: editHeaderState.header,
+      header: editHeaderState.header,
+    };
+    props.onColumnUpdated(editHeaderState.colIdx, {
+      ...info,
+      column: updatedColumn,
+    });
+    setEditHeaderState({ colIdx: -1, header: "" });
+  }
 }
 
 function getColumnMappingString(column: ColumnInfo): string {

@@ -34,9 +34,12 @@ export const MAPPED_THING_NAMES = {
 };
 
 export interface Column {
-  // id of the column
+  // Id of the column.
+  // If in the original csv, there are two or more columns with the same header,
+  // id will be <header>_<columnIdx>. Otherwise, id will be the same as the
+  // header.
   id: string;
-  // original column header
+  // column header name
   header: string;
   // column index (leftmost column will be 0)
   columnIdx: number;

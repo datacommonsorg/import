@@ -20,11 +20,14 @@
  */
 
 import JSZip from "jszip";
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "reactstrap";
 
 import { CsvData, Mapping } from "../types";
-import { generateTranslationMetadataJson } from "../utils/file_generation";
+import {
+  generateCsv,
+  generateTranslationMetadataJson,
+} from "../utils/file_generation";
 import {
   generateRowObservations,
   observationToString,
@@ -37,9 +40,12 @@ interface PreviewSectionProps {
   predictedMapping: Mapping;
   correctedMapping: Mapping;
   csvData: CsvData;
+  shouldGenerateCsv: boolean;
 }
 
 export function PreviewSection(props: PreviewSectionProps): JSX.Element {
+  const [isGeneratingFiles, setIsGeneratingFiles] = useState(false);
+  const cleanCsvPromise = getCleanCsvPromise();
   const zipFolder = new JSZip().folder("importPackage");
   const sampleObs = generateRowObservations(
     props.correctedMapping,
@@ -72,10 +78,25 @@ export function PreviewSection(props: PreviewSectionProps): JSX.Element {
       <div className="confirmation-button">
         <Button onClick={onDownloadClicked}>Download Package</Button>
       </div>
+      <div
+        id="screen"
+        style={{ display: isGeneratingFiles ? "block" : "none" }}
+      >
+        <div id="spinner"></div>
+      </div>
     </>
   );
 
+  function getCleanCsvPromise(): Promise<string> {
+    if (props.shouldGenerateCsv) {
+      return generateCsv(props.csvData);
+    } else {
+      return Promise.resolve(null);
+    }
+  }
+
   function onDownloadClicked(): void {
+    setIsGeneratingFiles(true);
     const files: Record<string, string | Blob> = {};
     const translationMetadataJson = generateTranslationMetadataJson(
       props.predictedMapping,
@@ -85,19 +106,38 @@ export function PreviewSection(props: PreviewSectionProps): JSX.Element {
       type: "text/json",
     });
     files["import.tmcf"] = generateTMCF(props.correctedMapping);
-    Object.entries(files).forEach(([fileName, fileContent]) => {
-      zipFolder.file(fileName, fileContent);
-    });
-    zipFolder.generateAsync({ type: "blob" }).then((content) => {
-      const link = document.createElement("a");
-      const url = window.URL.createObjectURL(content);
-      link.setAttribute("href", url);
-      link.setAttribute("download", "importPackage.zip");
-      link.onclick = () => {
-        setTimeout(() => window.URL.revokeObjectURL(url));
-      };
-      link.click();
-      link.remove();
-    });
+    cleanCsvPromise
+      .then((csvString) => {
+        if (props.shouldGenerateCsv) {
+          files["cleanedData.csv"] = new Blob([csvString], {
+            type: "text/csv;chartset=utf-8",
+          });
+        }
+        Object.entries(files).forEach(([fileName, fileContent]) => {
+          zipFolder.file(fileName, fileContent);
+        });
+        zipFolder
+          .generateAsync({ type: "blob" })
+          .then((content) => {
+            const link = document.createElement("a");
+            const url = window.URL.createObjectURL(content);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "importPackage.zip");
+            setIsGeneratingFiles(false);
+            link.onclick = () => {
+              setTimeout(() => window.URL.revokeObjectURL(url));
+            };
+            link.click();
+            link.remove();
+          })
+          .catch(() => {
+            setIsGeneratingFiles(false);
+            alert("Sorry, there was a problem generating the import package.");
+          });
+      })
+      .catch(() => {
+        setIsGeneratingFiles(false);
+        alert("Sorry, there was a problem generating the import package.");
+      });
   }
 }
