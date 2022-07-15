@@ -551,16 +551,16 @@
       "file": "NoCsv.mcf",
       "lineNumber": "49"
     },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E30', property: 'observationAbout' node: 'E:SVTest->E0'",
-    "counterKey": "Sanity_TmcfMissingEntityDef"
+    "userMessage": "Found non-ascii characters in a value that is not text :: value: 'geoId–SFCounty', type: 'RESOLVED_REF', property: 'location', node: 'CityStats/E5/2'",
+    "counterKey": "Sanity_NonAsciiValueInNonText"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "NoCsv.mcf",
       "lineNumber": "116"
     },
-    "userMessage": "No definition found for a referenced 'E:' value :: reference: 'E:SVTest->E3', property: 'observationAbout' node: 'E:SVTest->E0'",
-    "counterKey": "Sanity_TmcfMissingEntityDef"
+    "userMessage": "Schema node has property values with non-ascii characters :: value: 'Beverage–type', property: 'name', node: 'dcid:beverageType'",
+    "counterKey": "Sanity_NonAsciiValueInSchema"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
