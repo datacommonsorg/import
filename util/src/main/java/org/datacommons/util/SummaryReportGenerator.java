@@ -97,8 +97,9 @@ public class SummaryReportGenerator {
       // create the time series chart with default settings
       JFreeChart chart = ChartFactory.createTimeSeriesChart("", "", "", null);
       XYPlot plot = chart.getXYPlot();
-      // create and use a renderer to draw each data point on the time series chart as a diamond and
-      // remove the legend
+      // create and use separate renderers for the line and the shapes to be able
+      // to customize their colors. we use the same dataset on each so that they have
+      // the same outline.
       XYItemRenderer lineRenderer = new XYLineAndShapeRenderer(true, false);
       XYItemRenderer shapeRenderer = new XYLineAndShapeRenderer(false, true);
       lineRenderer.setSeriesPaint(0, Color.BLACK); // new Color(0x00, 0x00, 0xff));
@@ -107,7 +108,7 @@ public class SummaryReportGenerator {
       // shapeOffset is both in X and Y. 0 origin is anchored on the top-left of the shape
       // for Ellipse2D.Double, but the center of the shape for XYItemRenderer, so we offset
       // the Ellipse2D.Double shape to place it where it needs to be.
-      double shapeSize = 4;
+      double shapeSize = 4; // we may put this in a CLI flag if desired.
       double shapeOffset = -1.0 * (shapeSize / 2.0);
       lineRenderer.setSeriesShape(
           0, new Ellipse2D.Double(shapeOffset, shapeOffset, shapeSize, shapeSize));
@@ -117,7 +118,7 @@ public class SummaryReportGenerator {
       lineRenderer.setSeriesVisibleInLegend(0, false);
       shapeRenderer.setSeriesVisibleInLegend(0, false);
 
-      // lower indices are painted over the others
+      // lower indices are painted over higher indices
       // this makes it such that the dots are over the lines, making them clear.
       plot.setRenderer(0, shapeRenderer);
       plot.setRenderer(1, lineRenderer);
@@ -125,7 +126,6 @@ public class SummaryReportGenerator {
       plot.setDataset(0, dataset);
       plot.setDataset(1, dataset);
 
-      // change the background color of the chart to be white
       plot.setBackgroundPaint(Color.WHITE);
       ValueAxis yAxis = plot.getRangeAxis();
       if (timeSeries.findValueRange().getLength() == 0) {
