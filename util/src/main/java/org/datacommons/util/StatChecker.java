@@ -32,7 +32,6 @@ import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
 import org.datacommons.proto.Mcf.McfGraph;
-import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.PlaceSeriesSummary.SeriesSummary;
 import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
 
@@ -107,7 +106,7 @@ public class StatChecker {
   public synchronized void extractStatsFromGraph(McfGraph graph) {
     for (Map.Entry<String, McfGraph.PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
       McfGraph.PropertyValues node = nodeEntry.getValue();
-      if (isSvObWithNumberValue(node)) {
+      if (McfUtil.isSvObWithNumberValue(node)) {
         // We will extract basic stat var information from every StatVarObservation nodes
         extractStatVarInfoFromNode(node);
         // We will only extract series information from StatVarObservation nodes about sample places
@@ -126,7 +125,7 @@ public class StatChecker {
   public boolean checkSvObsInGraph(McfGraph graph) {
     boolean success = true;
     for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
-      if (isSvObWithNumberValue(node.getValue())) {
+      if (McfUtil.isSvObWithNumberValue(node.getValue())) {
         success &= checkSvObsValueInconsistency(node.getValue());
       }
     }
@@ -181,16 +180,6 @@ public class StatChecker {
 
   public Map<String, StatVarSummary> getSVSummaryMap() {
     return this.svSummaryMap;
-  }
-
-  // Return whether the node is a statVarObservation node with value of type number.
-  private boolean isSvObWithNumberValue(McfGraph.PropertyValues node) {
-    List<String> types = McfUtil.getPropVals(node, Vocabulary.TYPE_OF);
-    McfGraph.Values nodeValues =
-        node.getPvsOrDefault(Vocabulary.VALUE, McfGraph.Values.getDefaultInstance());
-    return types.contains(Vocabulary.STAT_VAR_OBSERVATION_TYPE)
-        && nodeValues.getTypedValuesCount() != 0
-        && nodeValues.getTypedValues(0).getType() == ValueType.NUMBER;
   }
 
   // Only extract series information for a statVarObservation node that is about a sample place.

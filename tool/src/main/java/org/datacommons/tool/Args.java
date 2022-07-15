@@ -20,6 +20,7 @@ class Args {
   public Path outputDir = null;
   public boolean generateSummaryReport = true;
   public boolean checkObservationAbout = false;
+  public boolean allowNonNumericStatVarObservation = false;
 
   public String toString() {
     StringBuilder argStr = new StringBuilder();
@@ -36,6 +37,8 @@ class Args {
       argStr.append(", sample-places=" + Strings.join(samplePlaces, ':'));
     }
     argStr.append(", observation-about=" + checkObservationAbout);
+    argStr.append(", allow-non-numeric-svobs=" + allowNonNumericStatVarObservation);
+
     return argStr.toString();
   }
 
@@ -53,6 +56,7 @@ class Args {
     argsBuilder.setStatChecks(doStatChecks);
     if (samplePlaces != null) argsBuilder.addAllSamplePlaces(samplePlaces);
     argsBuilder.setObservationAbout(checkObservationAbout);
+    argsBuilder.setAllowNanSvobs(allowNonNumericStatVarObservation);
     return argsBuilder.build();
   }
 

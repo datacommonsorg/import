@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
+import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.datacommons.proto.Debug;
 import org.jsoup.nodes.Document;
@@ -75,6 +76,11 @@ public class TestUtil {
   public static String readStringFromPath(Path filePath) throws IOException {
     File file = new File(filePath.toString());
     return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+  }
+
+  // Reads the given File and returns the contents as a list of lines
+  public static List<String> readLinesFromFile(File file) throws IOException {
+    return FileUtils.readLines(file, StandardCharsets.UTF_8);
   }
 
   public static void assertHtmlFilesAreSimilar(String expected, String actual) {

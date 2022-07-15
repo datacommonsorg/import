@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.FilenameUtils;
+import org.datacommons.util.LogWrapper;
 import org.datacommons.util.SummaryReportGenerator;
 import org.datacommons.util.TmcfCsvParser;
 import org.junit.Rule;
@@ -38,7 +39,9 @@ import picocli.CommandLine;
 // To add a new test case, add a new directory in resources/org/datacommons/tool/lint. In that new
 // directory, add an input directory and an output directory. In the input directory, put the test
 // files you want to run the lint tool against. In the output directory, put a report.json file with
-// the expected report output.
+// the expected report output. Optionally, you may put a text file in the input directory named
+// "args.txt"
+// that contains one command line arguments (e.g. -s=true) per line.
 //
 // These tests can be run in a mode to produce golden files, as below:
 //    mvn -DgoldenFilesPrefix=$PWD/tool/src/test/resources/org/datacommons/tool test
@@ -54,13 +57,17 @@ public class GenMcfTest {
           "resolution", 5,
           "statchecks", 3,
           "successtmcf", 3,
+          "measurementresult", 4,
           "localidresolution", 5);
+
+  private static final String ARGS_TXT_FNAME = "args.txt";
 
   @Test
   public void GenMcfTest() throws IOException {
     // Set this so that the generated node IDs are deterministic
     TmcfCsvParser.TEST_mode = true;
     SummaryReportGenerator.TEST_mode = true;
+    LogWrapper.TEST_MODE = true;
 
     String goldenFilesPrefix = System.getProperty("goldenFilesPrefix");
     Main app = new Main();
@@ -81,15 +88,22 @@ public class GenMcfTest {
                   "failed_instance_mcf_nodes.mcf",
                   "summary_report.html"));
       for (File inputFile : inputFiles) {
-        argsList.add(inputFile.getPath());
         String fName = inputFile.getName();
-        if (fName.endsWith(".csv") || fName.endsWith(".tsv")) {
-          expectedOutputFiles.add(
-              "table_mcf_nodes_" + FilenameUtils.removeExtension(fName) + ".mcf");
-          expectedOutputFiles.add(
-              "failed_table_mcf_nodes_" + FilenameUtils.removeExtension(fName) + ".mcf");
+
+        if (fName.equals(ARGS_TXT_FNAME)) {
+          List<String> argsFromFile = TestUtil.readLinesFromFile(inputFile);
+          argsList.addAll(argsFromFile);
+        } else {
+          argsList.add(inputFile.getPath());
+          if (fName.endsWith(".csv") || fName.endsWith(".tsv")) {
+            expectedOutputFiles.add(
+                "table_mcf_nodes_" + FilenameUtils.removeExtension(fName) + ".mcf");
+            expectedOutputFiles.add(
+                "failed_table_mcf_nodes_" + FilenameUtils.removeExtension(fName) + ".mcf");
+          }
         }
       }
+
       argsList.add("--resolution=FULL");
       argsList.add("--output-dir=" + Paths.get(testFolder.getRoot().getPath(), testName));
       String[] args = argsList.toArray(new String[argsList.size()]);

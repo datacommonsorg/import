@@ -65,6 +65,13 @@ test("placeTypesAndProperties", () => {
       },
     },
     {
+      dcType: { dcid: "State", displayName: "State" },
+      dcProperty: {
+        dcid: "geoId",
+        displayName: "FIPS Code",
+      },
+    },
+    {
       dcType: { dcid: "Province", displayName: "Province" },
       dcProperty: { dcid: "name", displayName: "Name" },
     },
@@ -117,6 +124,10 @@ test("supportedPlaceTypeProperties", () => {
         dcid: "fips52AlphaCode",
         displayName: "US State Alpha Code",
       },
+    },
+    {
+      dcType: { dcid: "State", displayName: "State" },
+      dcProperty: { dcid: "geoId", displayName: "FIPS Code" },
     },
   ]);
   expect(det.getSupportedPlaceTypesAndProperties()).toEqual(expected);
@@ -180,28 +191,33 @@ test("States", () => {
   const det = new PlaceDetector();
   const numStatesExpected = 89; // US and India.
   const numIsoCodes = 89; // US and India.
+  const numFips52AlphaCodes = 52; // US only.
   const numFipsCodes = 52; // US only.
 
   expect(det.stateNames.size).toEqual(numStatesExpected);
   expect(det.stateISO.size).toEqual(numIsoCodes);
-  expect(det.stateFipsAlpha.size).toEqual(numFipsCodes);
+  expect(det.stateFipsAlpha.size).toEqual(numFips52AlphaCodes);
+  expect(det.stateFipsCode.size).toEqual(numFipsCodes);
 
   // Some random checks.
   // California.
   expect(det.stateNames).toContain("california");
   expect(det.stateISO).toContain("us-ca");
   expect(det.stateFipsAlpha).toContain("ca");
+  expect(det.stateFipsCode).toContain("06");
 
   // New York.
   expect(det.stateNames).toContain("newyork");
   expect(det.stateNames).toContain("newyork");
   expect(det.stateISO).toContain("us-ny");
   expect(det.stateFipsAlpha).toContain("ny");
+  expect(det.stateFipsCode).toContain("36");
 
   // Texas.
   expect(det.stateNames).toContain("texas");
   expect(det.stateISO).toContain("us-tx");
   expect(det.stateFipsAlpha).toContain("tx");
+  expect(det.stateFipsCode).toContain("48");
 
   // Haryana (India).
   expect(det.stateNames).toContain("haryana");
@@ -425,7 +441,7 @@ test("countryHighConf", () => {
       expect(det.detect("", c.colArray)).toBe(null);
       continue;
     }
-    expect(det.detect("", c.colArray)).toStrictEqual({
+    expect(det.detect("country", c.colArray)).toStrictEqual({
       detectedTypeProperty: c.expected,
       confidence: ConfidenceLevel.High,
     });
@@ -489,6 +505,17 @@ test("stateHighConf", () => {
       },
     },
     {
+      name: "fipsCode",
+      colArray: ["01", "02", "04", "48", "49", "50", "36", "28", "30"],
+      expected: {
+        dcType: { dcid: "State", displayName: "State" },
+        dcProperty: {
+          dcid: "geoId",
+          displayName: "FIPS Code",
+        },
+      },
+    },
+    {
       name: "fips52AlphaCode-detection-with-null",
       colArray: ["nm", "ny", "wy", "nj", "ct", "nd", "nh", "wa", "fl", null],
       expected: {
@@ -521,7 +548,7 @@ test("stateHighConf", () => {
       expect(det.detect("", c.colArray)).toBe(null);
       continue;
     }
-    expect(det.detect("", c.colArray)).toStrictEqual({
+    expect(det.detect("state in col header", c.colArray)).toStrictEqual({
       detectedTypeProperty: c.expected,
       confidence: ConfidenceLevel.High,
     });
@@ -572,4 +599,47 @@ test("placeDetection", () => {
 
   // Now, use a column name which is not found to result in no detection.
   expect(det.detect("", colArray)).toStrictEqual(null);
+});
+
+test("countryNumericVsStateFIPS", () => {
+  const det = new PlaceDetector();
+
+  // Column has values which can be Numeric Codes for countries or
+  // FIPS codes for US States.
+  const colArray = ["36", "40", "50", "60"];
+
+  // If the column header is no helpful information, detection should give
+  // preference to Country.
+  let header = "nothing helpful";
+  let expectedHighConf = {
+    detectedTypeProperty: {
+      dcType: { dcid: "Country", displayName: "Country" },
+      dcProperty: {
+        dcid: "countryNumericCode",
+        displayName: "Numeric Code",
+      },
+    },
+    confidence: ConfidenceLevel.High,
+  };
+  expect(det.detect(header, colArray)).toStrictEqual(expectedHighConf);
+
+  // If the column header contains "country", detection should still give
+  // preference to Country.
+  header = "something that has country in it";
+  expect(det.detect(header, colArray)).toStrictEqual(expectedHighConf);
+
+  // If the column header contains "state", detection should give preference to
+  // US State.
+  header = "Something with State in it";
+  expectedHighConf = {
+    detectedTypeProperty: {
+      dcType: { dcid: "State", displayName: "State" },
+      dcProperty: {
+        dcid: "geoId",
+        displayName: "FIPS Code",
+      },
+    },
+    confidence: ConfidenceLevel.High,
+  };
+  expect(det.detect(header, colArray)).toStrictEqual(expectedHighConf);
 });
