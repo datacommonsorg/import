@@ -30,30 +30,6 @@
     }
   },
   "entries": [{
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "misc.mcf",
-      "lineNumber": "15"
-    },
-    "userMessage": "Found a missing or empty property value :: property: 'statType', node: 'SVId', type: 'StatisticalVariable'",
-    "counterKey": "Sanity_MissingOrEmpty_statType"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "misc.mcf",
-      "lineNumber": "15"
-    },
-    "userMessage": "Found a missing or empty property value :: property: 'dcid', node: 'SVId', type: 'StatisticalVariable'",
-    "counterKey": "Sanity_MissingOrEmpty_dcid"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "misc.mcf",
-      "lineNumber": "51"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'Song', property: 'typeOf', node: 'SongLocalId'",
-    "counterKey": "Existence_MissingReference_typeOf"
-  }, {
     "level": "LEVEL_WARNING",
     "location": {
       "file": "misc.mcf",
@@ -70,45 +46,13 @@
     "userMessage": "Failed reference existence check :: property-ref: 'bestSong', node: 'AlbumLocalId'",
     "counterKey": "Existence_MissingReference_Property"
   }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "misc.mcf",
-      "lineNumber": "57"
-    },
-    "userMessage": "Found orphan local ref :: ref: 'l:AlphabetId', property: 'parent', node: 'GoogleId'",
-    "counterKey": "Resolution_OrphanLocalReference_parent"
-  }, {
-    "level": "LEVEL_ERROR",
+    "level": "LEVEL_WARNING",
     "location": {
       "file": "misc.mcf",
       "lineNumber": "51"
     },
-    "userMessage": "Failed to assign DCID :: type: 'Song', node: 'SongLocalId'",
-    "counterKey": "Resolution_DcidAssignmentFailure_Song"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "misc.mcf",
-      "lineNumber": "15"
-    },
-    "userMessage": "Failed to assign DCID :: type: 'StatisticalVariable', node: 'SVId'",
-    "counterKey": "Resolution_DcidAssignmentFailure_StatisticalVariable"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "misc.mcf",
-      "lineNumber": "45"
-    },
-    "userMessage": "Failed to assign DCID :: type: 'MusicAlbum', node: 'AlbumLocalId'",
-    "counterKey": "Resolution_DcidAssignmentFailure_MusicAlbum"
-  }, {
-    "level": "LEVEL_ERROR",
-    "location": {
-      "file": "misc.mcf",
-      "lineNumber": "21"
-    },
-    "userMessage": "Found a local ref to an unresolvable node :: ref: 'l:SVId', property: 'variableMeasured', node: 'UnresSVObsId'",
-    "counterKey": "Resolution_ReferenceToFailedNode_variableMeasured"
+    "userMessage": "Failed reference existence check :: value-ref: 'Song', property: 'typeOf', node: 'SongLocalId'",
+    "counterKey": "Existence_MissingReference_typeOf"
   }, {
     "level": "LEVEL_WARNING",
     "location": {
@@ -189,6 +133,62 @@
     },
     "userMessage": "Failed reference existence check :: value-ref: 'CumulativeCount_MedicalTest_ConditionCOVID_19_Positive_Super_Super_Super_Super_Super_Long_Variable_Name', property: 'variableMeasured', node: 'E:COVID19_cases_india->E0'",
     "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "45"
+    },
+    "userMessage": "Failed to assign DCID :: type: 'MusicAlbum', node: 'AlbumLocalId'",
+    "counterKey": "Resolution_DcidAssignmentFailure_MusicAlbum"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "51"
+    },
+    "userMessage": "Failed to assign DCID :: type: 'Song', node: 'SongLocalId'",
+    "counterKey": "Resolution_DcidAssignmentFailure_Song"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Failed to assign DCID :: type: 'StatisticalVariable', node: 'SVId'",
+    "counterKey": "Resolution_DcidAssignmentFailure_StatisticalVariable"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "57"
+    },
+    "userMessage": "Found orphan local ref :: ref: 'l:AlphabetId', property: 'parent', node: 'GoogleId'",
+    "counterKey": "Resolution_OrphanLocalReference_parent"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "21"
+    },
+    "userMessage": "Found a local ref to an unresolvable node :: ref: 'l:SVId', property: 'variableMeasured', node: 'UnresSVObsId'",
+    "counterKey": "Resolution_ReferenceToFailedNode_variableMeasured"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'dcid', node: 'SVId', type: 'StatisticalVariable'",
+    "counterKey": "Sanity_MissingOrEmpty_dcid"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "misc.mcf",
+      "lineNumber": "15"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'statType', node: 'SVId', type: 'StatisticalVariable'",
+    "counterKey": "Sanity_MissingOrEmpty_statType"
   }],
   "commandArgs": {
     "existenceChecks": true,

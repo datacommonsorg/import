@@ -177,7 +177,7 @@ to assist the user in debugging issues.
 
 Defaults to `true`.
 
-### `--allow-non-numeric-svobs`
+### `--allow-non-numeric-obs-values`
 Allows non-numeric (text or reference) values for StatVarObservation value field.
 - When `false`, non-numeric values will log an error counter ([`Sanity_SVObs_Value_NotANumber`](counters.md#sanitysvobsvaluenotanumber))
 - When `true`, these values will be allowed and relevant StatChecks might be performed

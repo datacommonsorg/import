@@ -389,7 +389,7 @@ Found a property reference that does not start with a lower-case.
 
 Found a SVObs whose `value` was not a number. If you are importing a dataset
 where this is expected (for example, `statType` is `measurementResult` and
-therefore the SVObs values are references), set `--allow-non-numeric-svobs=true`
+therefore the SVObs values are references), set `--allow-non-numeric-obs-values=true`
 in the command line invocation.
 
 ## Existence Checks

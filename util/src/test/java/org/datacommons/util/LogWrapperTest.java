@@ -29,11 +29,17 @@ import org.junit.rules.TemporaryFolder;
 public class LogWrapperTest {
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
-  @Test
-  public void main() throws IOException {
+  private LogWrapper setupLogWrapper() {
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
     // First use LogWrapper to update logCtx
+    LogWrapper.TEST_MODE = true;
     LogWrapper lw = new LogWrapper(logCtx, testFolder.getRoot().toPath());
+    return lw;
+  }
+
+  @Test
+  public void main() throws IOException {
+    LogWrapper lw = setupLogWrapper();
     lw.addEntry(
         Debug.Log.Level.LEVEL_ERROR, "MCF_NoColonFound", "Missing Colon", "TestInput.mcf", 10);
     lw.addEntry(
@@ -55,9 +61,7 @@ public class LogWrapperTest {
 
   @Test
   public void tooManyErrors() throws IOException {
-    Debug.Log.Builder logCtx = Debug.Log.newBuilder();
-    // First use LogWrapper to update logCtx
-    LogWrapper lw = new LogWrapper(logCtx, testFolder.getRoot().toPath());
+    LogWrapper lw = setupLogWrapper();
     for (int i = 1; i <= 50; i++) {
       lw.addEntry(
           Debug.Log.Level.LEVEL_ERROR, "MCF_ErrorCounter" + i, "Foo Error", "TestInput.mcf", i);

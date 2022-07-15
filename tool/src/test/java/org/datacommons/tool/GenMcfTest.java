@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.FilenameUtils;
+import org.datacommons.util.LogWrapper;
 import org.datacommons.util.SummaryReportGenerator;
 import org.datacommons.util.TmcfCsvParser;
 import org.junit.Rule;
@@ -66,6 +67,7 @@ public class GenMcfTest {
     // Set this so that the generated node IDs are deterministic
     TmcfCsvParser.TEST_mode = true;
     SummaryReportGenerator.TEST_mode = true;
+    LogWrapper.TEST_MODE = true;
 
     String goldenFilesPrefix = System.getProperty("goldenFilesPrefix");
     Main app = new Main();

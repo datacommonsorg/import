@@ -22,13 +22,13 @@
     }
   },
   "entries": [{
-    "level": "LEVEL_ERROR",
+    "level": "LEVEL_FATAL",
     "location": {
-      "file": "TestInput.mcf",
-      "lineNumber": "10"
+      "file": "TestInput.csv",
+      "lineNumber": "30"
     },
-    "userMessage": "Missing Colon",
-    "counterKey": "MCF_NoColonFound"
+    "userMessage": "Found a Time Bomb",
+    "counterKey": "CSV_FoundABomb"
   }, {
     "level": "LEVEL_WARNING",
     "location": {
@@ -38,12 +38,12 @@
     "userMessage": "Empty value",
     "counterKey": "MCF_EmptyValue"
   }, {
-    "level": "LEVEL_FATAL",
+    "level": "LEVEL_ERROR",
     "location": {
-      "file": "TestInput.csv",
-      "lineNumber": "30"
+      "file": "TestInput.mcf",
+      "lineNumber": "10"
     },
-    "userMessage": "Found a Time Bomb",
-    "counterKey": "CSV_FoundABomb"
+    "userMessage": "Missing Colon",
+    "counterKey": "MCF_NoColonFound"
   }]
 }

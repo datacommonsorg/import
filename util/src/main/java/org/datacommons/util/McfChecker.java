@@ -57,6 +57,7 @@ public class McfChecker {
   boolean allowNanSVObs;
 
   // Argument |graph| may be Instance or Template MCF.
+  // TODO: Package args into a struct-like class to simplify function signatures
   public static boolean check(
       Mcf.McfGraph graph,
       ExistenceChecker existenceChecker,
