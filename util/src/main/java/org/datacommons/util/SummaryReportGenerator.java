@@ -100,7 +100,8 @@ public class SummaryReportGenerator {
       // create and use a renderer to draw each data point on the time series chart as a diamond and
       // remove the legend
       XYItemRenderer renderer = new XYLineAndShapeRenderer(true, true);
-      renderer.setSeriesShape(0, new Ellipse2D.Double(3, 3, 3, 3)); // ShapeUtils.createDiamond(2));
+      renderer.setSeriesShape(
+          0, new Ellipse2D.Double(-1.5, -1.5, 3.0, 3.0));
       renderer.setSeriesVisibleInLegend(0, false);
       plot.setRenderer(renderer);
       // change the background color of the chart to be white
