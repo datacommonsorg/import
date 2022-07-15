@@ -17,6 +17,8 @@ package org.datacommons.util;
 import java.util.*;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
+import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.ValueType;
 
 // A container class of MCF related utilities.
 public class McfUtil {
@@ -166,6 +168,16 @@ public class McfUtil {
       return val.substring(val.indexOf(Vocabulary.REFERENCE_DELIMITER) + 1);
     }
     return val;
+  }
+
+  // Return whether the node is a statVarObservation node with value of type number.
+  public static boolean isSvObWithNumberValue(McfGraph.PropertyValues node) {
+    List<String> types = McfUtil.getPropVals(node, Vocabulary.TYPE_OF);
+    McfGraph.Values nodeValues =
+        node.getPvsOrDefault(Vocabulary.VALUE, McfGraph.Values.getDefaultInstance());
+    return types.contains(Vocabulary.STAT_VAR_OBSERVATION_TYPE)
+        && nodeValues.getTypedValuesCount() != 0
+        && nodeValues.getTypedValues(0).getType() == ValueType.NUMBER;
   }
 
   private static String getValue(Mcf.McfGraph.TypedValue typedValue) {

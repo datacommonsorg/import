@@ -1,0 +1,27 @@
+Node: Acre_Table/E0/1
+observationDate: "2020-01-01"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:Acre_MeasurementResult_StatVar
+value: dcid:Acre1.0
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-01value=Acre1.0"
+dcid: "dc/o/2mx1hq31vsyh6"
+
+Node: Acre_Table/E0/2
+observationDate: "2020-01-01"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:Acre_MeasurementResult_StatVar
+value: dcid:Acre10.0
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-01value=Acre10.0"
+dcid: "dc/o/ndyt1vgyp01ld"
+
+Node: Acre_Table/E0/2
+observationDate: "2020-01-01"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:Acre_MeasurementResult_StatVar
+value: dcid:Acre100.0
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-01value=Acre100.0"
+dcid: "dc/o/53yy1msv3mh5h"
+

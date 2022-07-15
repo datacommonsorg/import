@@ -80,6 +80,18 @@ class Main {
   public boolean doStatChecks;
 
   @CommandLine.Option(
+      names = {"--allow-non-numeric-obs-values"},
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "Allows non-numeric (text or reference) values for StatVarObservation "
+              + "value field. If false, non-numeric values will raise an error (Sanity_SVObs_Value_NotANumber). If true, "
+              + "these values will be allowed and relevant StatChecks might be performed "
+              + "(depending on the value of --stat-checks). "
+              + "Defaults to false.")
+  public boolean allowNonNumericStatVarObservation;
+
+  @CommandLine.Option(
       names = {"-p", "--sample-places"},
       scope = CommandLine.ScopeType.INHERIT,
       description =

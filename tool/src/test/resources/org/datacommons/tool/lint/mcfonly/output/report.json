@@ -562,6 +562,7 @@
     "resolution": "RESOLUTION_MODE_LOCAL",
     "numThreads": 1,
     "statChecks": true,
-    "observationAbout": false
+    "observationAbout": false,
+    "allowNanSvobs": false
   }
 }

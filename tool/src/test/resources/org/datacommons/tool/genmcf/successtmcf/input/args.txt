@@ -1,0 +1,1 @@
+--allow-non-numeric-obs-values=true
