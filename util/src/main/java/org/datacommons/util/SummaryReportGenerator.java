@@ -122,7 +122,7 @@ public class SummaryReportGenerator {
       // this makes it such that the dots are over the lines, making them clear.
       plot.setRenderer(0, shapeRenderer);
       plot.setRenderer(1, lineRenderer);
-      
+
       plot.setDataset(0, dataset);
       plot.setDataset(1, dataset);
 
