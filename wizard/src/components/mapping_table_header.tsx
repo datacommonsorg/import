@@ -18,6 +18,7 @@
  * Component for showing the header of the table preview in the mapping section.
  */
 
+import _ from "lodash";
 import React, { useEffect, useState } from "react";
 import { Input } from "reactstrap";
 
@@ -149,10 +150,17 @@ export function MappingTableHeader(
 
   function onHeaderUpdated(): void {
     const info = props.columnInfo.get(editHeaderState.colIdx);
+    const newHeader = editHeaderState.header;
+    const duplicateHeader = Array.from(props.columnInfo.values()).find(
+      (col) => col.column.id === newHeader
+    );
+    const newId = !_.isEmpty(duplicateHeader)
+      ? `${newHeader}_${editHeaderState.colIdx}`
+      : newHeader;
     const updatedColumn = {
       ...info.column,
-      id: editHeaderState.header,
-      header: editHeaderState.header,
+      id: newId,
+      header: newHeader,
     };
     props.onColumnUpdated(editHeaderState.colIdx, {
       ...info,

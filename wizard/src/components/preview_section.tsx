@@ -116,24 +116,18 @@ export function PreviewSection(props: PreviewSectionProps): JSX.Element {
         Object.entries(files).forEach(([fileName, fileContent]) => {
           zipFolder.file(fileName, fileContent);
         });
-        zipFolder
-          .generateAsync({ type: "blob" })
-          .then((content) => {
-            const link = document.createElement("a");
-            const url = window.URL.createObjectURL(content);
-            link.setAttribute("href", url);
-            link.setAttribute("download", "importPackage.zip");
-            setIsGeneratingFiles(false);
-            link.onclick = () => {
-              setTimeout(() => window.URL.revokeObjectURL(url));
-            };
-            link.click();
-            link.remove();
-          })
-          .catch(() => {
-            setIsGeneratingFiles(false);
-            alert("Sorry, there was a problem generating the import package.");
-          });
+        zipFolder.generateAsync({ type: "blob" }).then((content) => {
+          const link = document.createElement("a");
+          const url = window.URL.createObjectURL(content);
+          link.setAttribute("href", url);
+          link.setAttribute("download", "importPackage.zip");
+          setIsGeneratingFiles(false);
+          link.onclick = () => {
+            setTimeout(() => window.URL.revokeObjectURL(url));
+          };
+          link.click();
+          link.remove();
+        });
       })
       .catch(() => {
         setIsGeneratingFiles(false);
