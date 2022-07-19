@@ -44,15 +44,9 @@ export function MappingTableHeader(
     colIdx: -1,
     header: "",
   });
-  const orderedColumns = Array.from(props.columnInfo.keys()).sort((a, b) => {
-    if (a > b) {
-      return 1;
-    } else if (a < b) {
-      return -1;
-    } else {
-      return 0;
-    }
-  });
+  const orderedColumns = Array.from(props.columnInfo.keys()).sort(
+    (a, b) => a - b
+  );
 
   useEffect(() => {
     // This will save the edit state when another column is selected
