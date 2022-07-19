@@ -56,11 +56,17 @@ public class PlaceSeriesSummary {
     }
 
     public ValueType getValueType() {
-      // We can return the type of the first DataPoint
+      // We can return the type of the first DataPoint as the type of the series.
       // Whether the types in this series is consistent is checked by
       // StatChecker.checkSeriesTypeInconsistencies
-      return SeriesSummary.getTypeOfDataPoint(
+      if (this.getTimeSeries().size() > 0){
+        return SeriesSummary.getTypeOfDataPoint(
           new ArrayList<>(this.getTimeSeries().values()).get(0));
+      } else {
+        // This should not really happen since SeriesSummary is only created
+        // with a node to add and that node is added right after in extractSeriesFromNode
+        return null;
+      }
     }
 
     public String getTimeSeriesSVGChart() {
