@@ -32,8 +32,9 @@ interface MappingTableProps {
   csvData: CsvData;
   selectedColumn: number;
   onColumnSelected: (colIdx: number) => void;
-  // key is column id
-  columnInfo: Record<string, ColumnInfo>;
+  // key is column idx
+  columnInfo: Map<number, ColumnInfo>;
+  onColumnUpdated: (colIdx: number, column: ColumnInfo) => void;
 }
 
 export function MappingTable(props: MappingTableProps): JSX.Element {
@@ -62,11 +63,11 @@ export function MappingTable(props: MappingTableProps): JSX.Element {
   return (
     <table id={TABLE_ID}>
       <MappingTableHeader
-        orderedColumns={props.csvData.orderedColumns}
         columnInfo={props.columnInfo}
         onColumnSelected={props.onColumnSelected}
         highlightedColumnRef={highlightedColumn}
         selectedColumn={props.selectedColumn}
+        onColumnUpdated={props.onColumnUpdated}
       />
       <MappingTableBody
         csvData={props.csvData}

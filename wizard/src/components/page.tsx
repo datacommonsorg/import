@@ -23,6 +23,7 @@ import React, { useRef, useState } from "react";
 
 import { CsvData, Mapping } from "../types";
 import { PlaceDetector } from "../utils/detect_place";
+import { shouldGenerateCsv } from "../utils/file_generation";
 import { MappingSection } from "./mapping_section";
 import { PreviewSection } from "./preview_section";
 import { UploadSection } from "./upload_section";
@@ -30,7 +31,10 @@ import { UploadSection } from "./upload_section";
 export function Page(): JSX.Element {
   const [csv, setCsv] = useState<CsvData>(null);
   const [predictedMapping, setPredictedMapping] = useState<Mapping>(null);
-  const [correctedMapping, setCorrectedMapping] = useState<Mapping>(null);
+  const [corrections, setCorrections] = useState<{
+    mapping: Mapping;
+    csv: CsvData;
+  }>(null);
   const [showPreview, setShowPreview] = useState(false);
   const showMapping = !_.isEmpty(csv);
   const placeDetector = useRef(new PlaceDetector());
@@ -47,9 +51,9 @@ export function Page(): JSX.Element {
           csvData={csv}
           predictedMapping={predictedMapping}
           onCorrectedMappingUpdated={() => setShowPreview(false)}
-          onCorrectedMappingSubmitted={(correctedMapping) => {
+          onCorrectionsSubmitted={(mapping, csv) => {
             setShowPreview(true);
-            setCorrectedMapping(correctedMapping);
+            setCorrections({ mapping, csv });
           }}
           placeDetector={placeDetector.current}
         />
@@ -58,8 +62,9 @@ export function Page(): JSX.Element {
         <div className="card-section">
           <PreviewSection
             predictedMapping={predictedMapping}
-            correctedMapping={correctedMapping}
-            csvData={csv}
+            correctedMapping={corrections.mapping}
+            csvData={corrections.csv}
+            shouldGenerateCsv={shouldGenerateCsv(csv, corrections.csv)}
           />
         </div>
       )}

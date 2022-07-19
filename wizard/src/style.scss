@@ -250,6 +250,12 @@ tr th:last-child {
   font-weight: 500;
 }
 
+.column-header-row i {
+  font-size: 1rem;
+  padding: 0 0.3rem;
+  cursor: pointer;
+}
+
 .row-num {
   font-weight: normal;
   color: #7b7b7b;

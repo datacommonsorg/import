@@ -56,8 +56,8 @@ export interface ColumnInfo {
 }
 
 interface ColumnState {
-  // key is column id
-  columns: Record<string, ColumnInfo>;
+  // key is column idx
+  columns: Map<number, ColumnInfo>;
   selectedColumn: number;
 }
 
@@ -65,7 +65,10 @@ interface MappingSectionProps {
   csvData: CsvData;
   predictedMapping: Mapping;
   onCorrectedMappingUpdated: () => void;
-  onCorrectedMappingSubmitted: (correctedMapping: Mapping) => void;
+  onCorrectionsSubmitted: (
+    correctedMapping: Mapping,
+    correctedCsv: CsvData
+  ) => void;
   placeDetector: PlaceDetector;
 }
 
@@ -77,7 +80,7 @@ const REQUIRED_MAPPINGS = [
 
 export function MappingSection(props: MappingSectionProps): JSX.Element {
   const [columnState, setColumnState] = useState<ColumnState>({
-    columns: {},
+    columns: new Map(),
     selectedColumn: 0,
   });
   // key is mapped thing and value is the constant
@@ -106,12 +109,15 @@ export function MappingSection(props: MappingSectionProps): JSX.Element {
     setShowConfirmationButton(true);
   }, [columnState.columns, constantVals]);
 
-  const selectedColumnId =
-    props.csvData.orderedColumns[columnState.selectedColumn].id;
-  if (_.isEmpty(columnState) || !(selectedColumnId in columnState.columns)) {
+  if (
+    _.isEmpty(columnState) ||
+    !columnState.columns.has(columnState.selectedColumn)
+  ) {
     return null;
   }
-  const selectedColumnInfo = columnState.columns[selectedColumnId];
+  const selectedColumnInfo = columnState.columns.get(
+    columnState.selectedColumn
+  );
   const showConstantVals = !_.isEmpty(constantVals);
   return (
     <>
@@ -126,12 +132,13 @@ export function MappingSection(props: MappingSectionProps): JSX.Element {
             setColumnState({ ...columnState, selectedColumn: colIdx })
           }
           columnInfo={columnState.columns}
+          onColumnUpdated={onColumnInfoUpdated}
         />
         <div className="selected-column-container">
           <MappingColumnOptions
             column={selectedColumnInfo}
             onColumnUpdated={(columnInfo: ColumnInfo) =>
-              onColumnInfoUpdated(selectedColumnId, columnInfo)
+              onColumnInfoUpdated(columnState.selectedColumn, columnInfo)
             }
             validPlaceTypeProperties={validPlaceTypeProperties.current}
             placeDetector={props.placeDetector}
@@ -209,17 +216,21 @@ export function MappingSection(props: MappingSectionProps): JSX.Element {
   );
 
   function onColumnInfoUpdated(
-    columnId: string,
+    columnIdx: number,
     updatedColumn: ColumnInfo
   ): void {
     const updatedColumnInfo = _.cloneDeep(columnState.columns);
-    updatedColumnInfo[columnId] = updatedColumn;
+    updatedColumnInfo.set(columnIdx, updatedColumn);
     setColumnState({ ...columnState, columns: updatedColumnInfo });
     setConstantVals({});
   }
 
   function onColumnInfoConfirmed(): void {
     const correctedMapping = getMapping(columnState.columns, constantVals);
+    const correctedCsv = updateCsvOrderedColumns(
+      columnState.columns,
+      props.csvData
+    );
     const updatedConstantVals = {};
     for (const thing of REQUIRED_MAPPINGS) {
       if (_.isEmpty(correctedMapping.get(thing))) {
@@ -233,17 +244,21 @@ export function MappingSection(props: MappingSectionProps): JSX.Element {
     const mappingErrors = checkMappings(correctedMapping);
     setErrorList(mappingErrors);
     if (_.isEmpty(mappingErrors)) {
-      props.onCorrectedMappingSubmitted(correctedMapping);
+      props.onCorrectionsSubmitted(correctedMapping, correctedCsv);
       setShowConfirmationButton(false);
     }
   }
 
   function onConstantsConfirmed(): void {
     const correctedMapping = getMapping(columnState.columns, constantVals);
+    const correctedCsv = updateCsvOrderedColumns(
+      columnState.columns,
+      props.csvData
+    );
     const mappingErrors = checkMappings(correctedMapping);
     setErrorList(mappingErrors);
     if (_.isEmpty(mappingErrors)) {
-      props.onCorrectedMappingSubmitted(correctedMapping);
+      props.onCorrectionsSubmitted(correctedMapping, correctedCsv);
       setShowConfirmationButton(false);
     }
   }
@@ -274,20 +289,20 @@ function getColumnInfo(
   predictedMapping: Mapping,
   validPlaceTypeProperties: Record<string, Set<DCProperty>>,
   placeDetector: PlaceDetector
-): Record<string, ColumnInfo> {
+): Map<number, ColumnInfo> {
   const defaultPlaceType = Object.keys(validPlaceTypeProperties)[0];
   const defaultPlaceProperty = Array.from(
     validPlaceTypeProperties[defaultPlaceType]
   )[0];
-  const columnInfo = {};
+  const columnInfo = new Map();
   csvData.orderedColumns.forEach((column) => {
-    columnInfo[column.id] = {
+    columnInfo.set(column.columnIdx, {
       column,
       columnMappedThing: REQUIRED_MAPPINGS[0],
       columnPlaceType: placeDetector.placeTypes.get(defaultPlaceType),
       columnPlaceProperty: defaultPlaceProperty,
       headerMappedThing: REQUIRED_MAPPINGS[0],
-    };
+    });
   });
   if (_.isEmpty(predictedMapping)) {
     return columnInfo;
@@ -297,13 +312,13 @@ function getColumnInfo(
       mappingVal.type === MappingType.COLUMN &&
       !_.isEmpty(mappingVal.column)
     ) {
-      const colId = mappingVal.column.id;
-      if (!(colId in columnInfo)) {
+      const colIdx = mappingVal.column.columnIdx;
+      if (!columnInfo.has(colIdx)) {
         return;
       }
-      columnInfo[colId].type = mappingVal.type;
-      columnInfo[colId].mappedThing = mappedThing;
-      columnInfo[colId].columnMappedThing = mappedThing;
+      columnInfo.get(colIdx).type = mappingVal.type;
+      columnInfo.get(colIdx).mappedThing = mappedThing;
+      columnInfo.get(colIdx).columnMappedThing = mappedThing;
       if (mappedThing === MappedThing.PLACE) {
         const placeType = mappingVal.placeType
           ? mappingVal.placeType
@@ -311,21 +326,21 @@ function getColumnInfo(
         const placeProperty = mappingVal.placeProperty
           ? mappingVal.placeProperty
           : Array.from(validPlaceTypeProperties[placeType.dcid])[0];
-        columnInfo[colId].columnPlaceType = placeType;
-        columnInfo[colId].columnPlaceProperty = placeProperty;
+        columnInfo.get(colIdx).columnPlaceType = placeType;
+        columnInfo.get(colIdx).columnPlaceProperty = placeProperty;
       }
     } else if (
       mappingVal.type === MappingType.COLUMN_HEADER &&
       !_.isEmpty(mappingVal.headers)
     ) {
       for (const headerColumn of mappingVal.headers) {
-        const colId = headerColumn.id;
-        if (!(colId in columnInfo)) {
+        const colIdx = headerColumn.columnIdx;
+        if (!columnInfo.has(colIdx)) {
           continue;
         }
-        columnInfo[colId].type = mappingVal.type;
-        columnInfo[colId].mappedThing = mappedThing;
-        columnInfo[colId].headerMappedThing = mappedThing;
+        columnInfo.get(colIdx).type = mappingVal.type;
+        columnInfo.get(colIdx).mappedThing = mappedThing;
+        columnInfo.get(colIdx).headerMappedThing = mappedThing;
       }
     }
   });
@@ -334,11 +349,11 @@ function getColumnInfo(
 
 // Get the Mapping object for the given columnInfo and constants
 function getMapping(
-  columnInfo: Record<string, ColumnInfo>,
+  columnInfo: Map<number, ColumnInfo>,
   constants: Record<string, string>
 ): Mapping {
   const mapping = new Map();
-  Object.entries(columnInfo).forEach(([, info]) => {
+  columnInfo.forEach((info) => {
     if (_.isEmpty(info.mappedThing) || _.isEmpty(info.type)) {
       return;
     }
@@ -369,4 +384,17 @@ function getMapping(
     mapping.set(mappedThing, { type: MappingType.CONSTANT, constant: val });
   });
   return mapping;
+}
+
+function updateCsvOrderedColumns(
+  columnInfo: Map<number, ColumnInfo>,
+  originalCsvData: CsvData
+): CsvData {
+  const updatedOrderedColumns = originalCsvData.orderedColumns.map((col) => {
+    return columnInfo.get(col.columnIdx).column;
+  });
+  return {
+    ...originalCsvData,
+    orderedColumns: updatedOrderedColumns,
+  };
 }
