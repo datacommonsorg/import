@@ -25,25 +25,41 @@ import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Pattern;
 import org.apache.commons.text.StringEscapeUtils;
 
 // Common set of utils to handle strings
 public class StringUtil {
   // From https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatterBuilder.html
+  // Pattern specification:
+  // https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatterBuilder.html#appendPattern-java.lang.String-
   private static final List<String> DATE_PATTERNS =
-      List.of(
-          "yyyy",
-          "yyyy-MM",
-          "yyyyMM",
-          "yyyy-M",
-          "yyyy-MM-dd",
-          "yyyyMMdd",
-          "yyyy-M-d",
-          "yyyy-MM-dd'T'HH:mm",
-          "yyyy-MM-dd'T'HH:mm:ss",
-          "yyyy-MM-dd'T'HH:mm:ss.SSS",
-          "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+      List.of( // comment is the string length(s) that could potentially match these strings
+          "yyyy", // 4
+          "yyyy-MM", // 7
+          "yyyyMM", // 6
+          "yyyy-M", // 6, 7
+          "yyyy-MM-dd", // 10
+          "yyyyMMdd", // 8
+          "yyyy-M-d", // 8, 9, 10
+          "yyyy-MM-dd'T'HH:mm", // 16
+          "yyyy-MM-dd'T'HH:mm:ss", // 19
+          "yyyy-MM-dd'T'HH:mm:ss.SSS", // 23
+          "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"); // 29 (`XXX` adds 6 becuase it means ""+HH:MM"")
+
+  private static final Map<Integer, List<String>> DATE_PATTERNS_LENGTH_MAP =
+      Map.of(
+          4, List.of("yyyy"),
+          6, List.of("yyyyMM", "yyyy-M"),
+          7, List.of("yyyy-MM", "yyyy-M"),
+          8, List.of("yyyyMMdd", "yyyy-M-d"),
+          9, List.of("yyyy-M-d"),
+          10, List.of("yyyy-MM-dd", "yyyy-M-d"),
+          16, List.of("yyyy-MM-dd'T'HH:mm"),
+          19, List.of("yyyy-MM-dd'T'HH:mm:ss"),
+          23, List.of("yyyy-MM-dd'T'HH:mm:ss.SSS"),
+          29, List.of("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
 
   // The Java API does not match 20071, 2007101, so add these for compatibility with CPP
   // implementation.
@@ -124,18 +140,22 @@ public class StringUtil {
 
   public static LocalDateTime getValidISO8601Date(String dateValue) {
     // TODO: handle the extra date patterns
-    for (String pattern : DATE_PATTERNS) {
-      try {
-        DateTimeFormatter dateFormat =
-            new DateTimeFormatterBuilder()
-                .appendPattern(pattern)
-                .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
-                .parseDefaulting(ChronoField.MONTH_OF_YEAR, 1)
-                .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
-                .toFormatter(Locale.ENGLISH);
-        return LocalDateTime.parse(dateValue, dateFormat);
-      } catch (DateTimeParseException ex) {
-        // Pass through
+
+    List<String> possiblePatterns = DATE_PATTERNS_LENGTH_MAP.get(dateValue.length());
+    if (possiblePatterns != null) {
+      for (String pattern : possiblePatterns) {
+        try {
+          DateTimeFormatter dateFormat =
+              new DateTimeFormatterBuilder()
+                  .appendPattern(pattern)
+                  .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
+                  .parseDefaulting(ChronoField.MONTH_OF_YEAR, 1)
+                  .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+                  .toFormatter(Locale.ENGLISH);
+          return LocalDateTime.parse(dateValue, dateFormat);
+        } catch (DateTimeParseException ex) {
+          // Pass through
+        }
       }
     }
     return null;
