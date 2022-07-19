@@ -59,11 +59,8 @@ public class PlaceSeriesSummary {
       // We can return the type of the first DataPoint
       // Whether the types in this series is consistent is checked by
       // StatChecker.checkSeriesTypeInconsistencies
-      return new ArrayList<>(this.getTimeSeries().values())
-          .get(0)
-          .getValues(0)
-          .getValue()
-          .getType();
+      return SeriesSummary.getTypeOfDataPoint(
+          new ArrayList<>(this.getTimeSeries().values()).get(0));
     }
 
     public String getTimeSeriesSVGChart() {
@@ -86,10 +83,23 @@ public class PlaceSeriesSummary {
                 localDateTime.getDayOfMonth(),
                 localDateTime.getMonthValue(),
                 localDateTime.getYear()),
-            Double.parseDouble(timeSeriesDataPoint.getValue().getValues(0).getValue().getValue()));
+            getValueOfDataPointAsNumber(timeSeriesDataPoint.getValue()));
       }
 
       return StatVarSummary.constructSVGChartFromTimeSeries(timeSeries);
+    }
+
+    // Helper functions to extract fields of interest from a DataPoint object.
+    public static ValueType getTypeOfDataPoint(DataPoint dp) {
+      return dp.getValues(0).getValue().getType();
+    }
+
+    public static String getValueOfDataPoint(DataPoint dp) {
+      return dp.getValues(0).getValue().getValue();
+    }
+
+    public static Double getValueOfDataPointAsNumber(DataPoint dp) {
+      return Double.parseDouble(SeriesSummary.getValueOfDataPoint(dp));
     }
   }
 
@@ -131,7 +141,7 @@ public class PlaceSeriesSummary {
 
     // Add the value of this StatVarObservation node to the timeseries of this node's SeriesSummary.
     String obsDate = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE);
-    
+
     // We never expect to get null here, since the node would have been dropped.
     // The value will already have been parsed into a TypedValue, so we can depend on the fact that
     // typedValue.getType() is not the default enum value (UNKNOWN_VALUE_TYPE).

@@ -159,7 +159,7 @@ public class StatChecker {
 
           List<String> stringSeries = new ArrayList<String>();
           for (DataPoint dp : timeSeries) {
-            stringSeries.add(dp.getValues(0).getValue().getValue());
+            stringSeries.add(SeriesSummary.getValueOfDataPoint(dp));
           }
 
           if (type == ValueType.NUMBER) {
@@ -330,7 +330,7 @@ public class StatChecker {
     // Only add data points to the counter of the greatest standard deviation that it belongs to.
     // ie. if the data point is beyond 3 std deviation, only add it to that counter.
     for (DataPoint dp : timeSeries) {
-      double val = Double.parseDouble(dp.getValues(0).getValue().getValue());
+      double val = SeriesSummary.getValueOfDataPointAsNumber(dp);
       if (Math.abs(val - meanAndStdDev.mean) > 3 * meanAndStdDev.stdDev) {
         sigma3Counter.addProblemPoints(dp);
         logCtx.incrementWarningCounterBy(sigma3CounterKey, 1);
@@ -353,7 +353,7 @@ public class StatChecker {
     double sum = 0;
     double sumSqDev = 0;
     for (DataPoint dp : timeSeries) {
-      double val = Double.parseDouble(dp.getValues(0).getValue().getValue());
+      double val = SeriesSummary.getValueOfDataPointAsNumber(dp);
       if (weights > 0) {
         sumSqDev += 1 * weights / 1 / (weights + 1) * Math.pow((1 / weights * sum - val), 2);
       }
@@ -379,10 +379,10 @@ public class StatChecker {
       // Don't try to compare between times because this is a Sawtooth
       if (dp.getValuesCount() > 1) return;
       if (dp.getValuesCount() == 0) continue;
-      double currVal = Double.parseDouble(dp.getValues(0).getValue().getValue());
+      double currVal = SeriesSummary.getValueOfDataPointAsNumber(dp);
       if (baseDataPoint != null) {
         double currDelta;
-        double baseVal = Double.parseDouble(baseDataPoint.getValues(0).getValue().getValue());
+        double baseVal = SeriesSummary.getValueOfDataPointAsNumber(baseDataPoint);
         if (baseVal == 0) {
           currDelta = (currVal) / SMALL_NUMBER;
         } else {
