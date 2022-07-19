@@ -564,6 +564,12 @@ public class StatChecker {
     svMap.units.add(McfUtil.getPropVal(node, Vocabulary.UNIT));
     svMap.scalingFactors.add(McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR));
     svMap.observationPeriods.add(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_PERIOD));
+
+    McfGraph.Values nodeValues = node.getPvsOrDefault(Vocabulary.VALUE, null);
+    if (nodeValues != null) {
+      String typedValue = nodeValues.getTypedValues(0).getType().toString();
+      svMap.valueTypes.add(typedValue);
+    }
   }
 
   // Makes API requests to get the names of the sample places from the DC
