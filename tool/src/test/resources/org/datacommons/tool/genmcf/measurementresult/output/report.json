@@ -38,8 +38,9 @@
         "date": "2020-01-01",
         "values": [{
           "value": {
-            "type": "TEXT",
-            "value": "Acre1.0"
+            "type": "RESOLVED_REF",
+            "value": "Acre1.0",
+            "column": "Acre_MeasurementResult_StatVar"
           },
           "locations": [{
             "file": "acre.csv",
@@ -47,8 +48,9 @@
           }]
         }, {
           "value": {
-            "type": "TEXT",
-            "value": "Acre10.0"
+            "type": "RESOLVED_REF",
+            "value": "Acre10.0",
+            "column": "Acre_MeasurementResult_StatVar"
           },
           "locations": [{
             "file": "acre.csv",
@@ -56,8 +58,9 @@
           }]
         }, {
           "value": {
-            "type": "TEXT",
-            "value": "Acre100.0"
+            "type": "RESOLVED_REF",
+            "value": "Acre100.0",
+            "column": "Acre_MeasurementResult_StatVar"
           },
           "locations": [{
             "file": "acre.csv",
@@ -68,8 +71,9 @@
         "date": "2020-01-01",
         "values": [{
           "value": {
-            "type": "TEXT",
-            "value": "Acre1.0"
+            "type": "RESOLVED_REF",
+            "value": "Acre1.0",
+            "column": "Acre_MeasurementResult_StatVar"
           },
           "locations": [{
             "file": "acre.csv",
@@ -77,8 +81,9 @@
           }]
         }, {
           "value": {
-            "type": "TEXT",
-            "value": "Acre10.0"
+            "type": "RESOLVED_REF",
+            "value": "Acre10.0",
+            "column": "Acre_MeasurementResult_StatVar"
           },
           "locations": [{
             "file": "acre.csv",
@@ -86,8 +91,9 @@
           }]
         }, {
           "value": {
-            "type": "TEXT",
-            "value": "Acre100.0"
+            "type": "RESOLVED_REF",
+            "value": "Acre100.0",
+            "column": "Acre_MeasurementResult_StatVar"
           },
           "locations": [{
             "file": "acre.csv",

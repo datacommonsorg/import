@@ -46,7 +46,8 @@
         "values": [{
           "value": {
             "type": "NUMBER",
-            "value": "0"
+            "value": "0",
+            "column": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive"
           },
           "locations": [{
             "file": "covid.csv",
@@ -58,7 +59,8 @@
         "values": [{
           "value": {
             "type": "NUMBER",
-            "value": "1"
+            "value": "1",
+            "column": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive"
           },
           "locations": [{
             "file": "covid.csv",
@@ -82,7 +84,8 @@
         "values": [{
           "value": {
             "type": "NUMBER",
-            "value": "3"
+            "value": "3",
+            "column": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive"
           },
           "locations": [{
             "file": "covid.csv",
@@ -91,7 +94,8 @@
         }, {
           "value": {
             "type": "NUMBER",
-            "value": "8"
+            "value": "8",
+            "column": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive"
           },
           "locations": [{
             "file": "covid.csv",
@@ -128,7 +132,8 @@
         "values": [{
           "value": {
             "type": "NUMBER",
-            "value": "1"
+            "value": "1",
+            "column": "CumulativeCount_MedicalTest_ConditionCOVID_19_Positive"
           },
           "locations": [{
             "file": "covid.csv",

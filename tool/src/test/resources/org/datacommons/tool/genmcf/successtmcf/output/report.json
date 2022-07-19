@@ -689,7 +689,8 @@
         "values": [{
           "value": {
             "type": "NUMBER",
-            "value": "0"
+            "value": "0",
+            "column": "SV1"
           },
           "locations": [{
             "file": "SuccessTmcf.csv",
@@ -701,7 +702,8 @@
         "values": [{
           "value": {
             "type": "NUMBER",
-            "value": "2"
+            "value": "2",
+            "column": "SV1"
           },
           "locations": [{
             "file": "SuccessTmcf.csv",

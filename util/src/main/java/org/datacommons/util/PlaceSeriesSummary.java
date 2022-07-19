@@ -15,7 +15,6 @@ import org.datacommons.proto.Debug.DataPoint.DataValue;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
-import org.datacommons.proto.Mcf.McfType;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
 import org.jfree.data.time.Day;
@@ -132,12 +131,12 @@ public class PlaceSeriesSummary {
 
     // Add the value of this StatVarObservation node to the timeseries of this node's SeriesSummary.
     String obsDate = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE);
-    String value = McfUtil.getPropVal(node, Vocabulary.VALUE);
-    // TODO: WHAT TO PUT FOR isResolved?
-    // TODO: WHAT TO PUT FOR logCb?
-    TypedValue typedValue =
-        McfParser.parseTypedValue(McfType.INSTANCE_MCF, false, Vocabulary.VALUE, value, null)
-            .build();
+    
+    // We never expect to get null here, since the node would have been dropped.
+    // The value will already have been parsed into a TypedValue, so we can depend on the fact that
+    // typedValue.getType() is not the default enum value (UNKNOWN_VALUE_TYPE).
+    McfGraph.Values nodeValues = node.getPvsOrDefault(Vocabulary.VALUE, null);
+    TypedValue typedValue = nodeValues.getTypedValues(0);
     DataValue dataVal =
         DataValue.newBuilder()
             .setValue(typedValue)
