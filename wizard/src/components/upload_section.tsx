@@ -53,9 +53,19 @@ export function UploadSection(props: UploadSectionProps): JSX.Element {
   );
 
   function getOrderedColumns(headerRow: string[]): Column[] {
+    const uniqueHeaders = new Set();
+    headerRow.forEach((header) => {
+      if (uniqueHeaders.has(header)) {
+        uniqueHeaders.delete(header);
+      } else {
+        uniqueHeaders.add(header);
+      }
+    });
     const orderedColumns = [];
     headerRow.forEach((header, idx) => {
-      const colId = `${header}_${idx}`;
+      // column id will be the same as header if header is unique, otherwise,
+      // auto generate the column id.
+      const colId = uniqueHeaders.has(header) ? header : `${header}_${idx}`;
       orderedColumns.push({
         columnIdx: idx,
         header,
