@@ -38,7 +38,7 @@ public class StringUtil {
   // https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatterBuilder.html#appendPattern-java.lang.String-
   // Key is the pattern, value is a list of lengths that this pattern could
   // potentially match. This is used in filtering out impossible date checks by
-  //comparing the length of the input date string against the Set<Integer> here.
+  // comparing the length of the input date string against the Set<Integer> here.
   private static final Map<String, Set<Integer>> DATE_PATTERNS =
       Map.ofEntries(
           Map.entry("yyyy", Set.of(4)),
