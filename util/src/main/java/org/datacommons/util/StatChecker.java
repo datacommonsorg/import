@@ -269,7 +269,7 @@ public class StatChecker {
   protected static void checkSeriesTypeInconsistencies(
       List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder, LogWrapper logCtx) {
     StatValidationEntry.Builder inconsistentTypeCounter = StatValidationEntry.newBuilder();
-    String counterKey = "StatsCheck_Inconsistent_Types";
+    String counterKey = "StatsCheck_MultipleValueTypesInASeries";
     inconsistentTypeCounter.setCounterKey(counterKey);
 
     ValueType firstType = null;

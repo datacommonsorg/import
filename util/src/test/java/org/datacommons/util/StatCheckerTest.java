@@ -178,7 +178,7 @@ public class StatCheckerTest {
     LogWrapper logCtx = new LogWrapper(log, Path.of("/tmp/statCheckerTest"));
     StatValidationResult.Builder resBuilder = StatValidationResult.newBuilder();
     Map<String, DataPoint> timeSeries = new TreeMap<>();
-    String counterKey = "StatsCheck_Inconsistent_Types";
+    String counterKey = "StatsCheck_MultipleValueTypesInASeries";
 
     // Empty list does not fail
     StatChecker.checkSeriesTypeInconsistencies(
