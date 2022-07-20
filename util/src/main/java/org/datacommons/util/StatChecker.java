@@ -157,11 +157,6 @@ public class StatChecker {
 
           ValueType type = seriesSummary.getValueType();
 
-          List<String> stringSeries = new ArrayList<String>();
-          for (DataPoint dp : timeSeries) {
-            stringSeries.add(SeriesSummary.getValueOfDataPoint(dp));
-          }
-
           if (type == ValueType.NUMBER) {
             // Check N-Sigma variance.
             checkSigmaDivergence(timeSeries, resBuilder, logCtx);
