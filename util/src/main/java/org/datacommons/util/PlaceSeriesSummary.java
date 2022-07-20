@@ -146,8 +146,7 @@ public class PlaceSeriesSummary {
     // We never expect to get null here, since the node would have been dropped.
     // The value will already have been parsed into a TypedValue, so we can depend on the fact that
     // typedValue.getType() is not the default enum value (UNKNOWN_VALUE_TYPE).
-    McfGraph.Values nodeValues = node.getPvsOrDefault(Vocabulary.VALUE, null);
-    TypedValue typedValue = nodeValues.getTypedValues(0);
+    TypedValue typedValue = McfUtil.getPropTvs(node, Vocabulary.VALUE).get(0);
     DataValue dataVal =
         DataValue.newBuilder()
             .setValue(typedValue)
