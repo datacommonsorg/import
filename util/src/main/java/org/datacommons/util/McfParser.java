@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import org.datacommons.proto.Debug;
+import org.datacommons.proto.LogLocation;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
 
@@ -195,7 +196,7 @@ public class McfParser {
         graph
             .getNodesOrDefault(curEntity, McfGraph.PropertyValues.getDefaultInstance())
             .toBuilder();
-    Debug.Log.Location.Builder location = pvs.addLocationsBuilder();
+    LogLocation.Location.Builder location = pvs.addLocationsBuilder();
     location.setFile(fileName);
     location.setLineNumber(lineNum);
     graph.putNodes(curEntity, pvs.build());

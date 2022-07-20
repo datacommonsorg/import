@@ -11,13 +11,13 @@
       "problemPoints": [{
         "date": "2015",
         "values": [{
-          "value": 1000201.0,
+          "value": {"type": "NUMBER", "value": "1000201"},
           "locations": [{
             "file": "StatCheckerTest.mcf",
             "lineNumber": "64"
           }]
         }, {
-          "value": 1000202.0,
+          "value": {"type": "NUMBER", "value": "1000202"},
           "locations": [{
             "file": "StatCheckerTest.mcf",
             "lineNumber": "71"
@@ -37,7 +37,7 @@
       "problemPoints": [{
         "date": "2014",
         "values": [{
-          "value": 1000100.0,
+          "value": {"type": "NUMBER", "value": "1000100"},
           "locations": [{
             "file": "StatCheckerTest.mcf",
             "lineNumber": "1"

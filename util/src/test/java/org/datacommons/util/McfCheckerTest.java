@@ -675,4 +675,9 @@ public class McfCheckerTest {
   private static boolean success(String mcfString) throws IOException, InterruptedException {
     return success(mcfString, null, false, false);
   }
+
+  private static boolean successDisallowNanSVObs(String mcfString)
+      throws IOException, InterruptedException {
+    return success(mcfString, null, false, false, false);
+  }
 }

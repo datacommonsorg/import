@@ -41,7 +41,10 @@
       "problemPoints": [{
         "date": "2020-03-02",
         "values": [{
-          "value": 3.0,
+          "value": {
+            "type": "NUMBER",
+            "value": "3"
+          },
           "locations": [{
             "file": "covid.mcf",
             "lineNumber": "49"
@@ -50,7 +53,10 @@
       }, {
         "date": "2020-03-03",
         "values": [{
-          "value": 7.0,
+          "value": {
+            "type": "NUMBER",
+            "value": "7"
+          },
           "locations": [{
             "file": "covid.mcf",
             "lineNumber": "65"
@@ -71,13 +77,19 @@
       "problemPoints": [{
         "date": "2020-02-03",
         "values": [{
-          "value": 8.0,
+          "value": {
+            "type": "NUMBER",
+            "value": "8"
+          },
           "locations": [{
             "file": "covid.mcf",
             "lineNumber": "25"
           }]
         }, {
-          "value": 3.0,
+          "value": {
+            "type": "NUMBER",
+            "value": "3"
+          },
           "locations": [{
             "file": "covid.mcf",
             "lineNumber": "17"
@@ -100,7 +112,10 @@
       "problemPoints": [{
         "date": "2020-03",
         "values": [{
-          "value": 1.0,
+          "value": {
+            "type": "NUMBER",
+            "value": "1"
+          },
           "locations": [{
             "file": "covid.mcf",
             "lineNumber": "105"

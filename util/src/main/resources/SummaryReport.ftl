@@ -192,6 +192,7 @@
               <th>Num Observation Dates</th>
               <th>Min Date</th>
               <th>Max Date</th>
+              <th>Value Types</th>
               <th>Measurement Methods</th>
               <th>Units</th>
               <th>Scaling Factors</th>
@@ -207,6 +208,11 @@
               <td>${svSummary.getUniqueDates()?size}</td>
               <td>${svSummary.getUniqueDates()?first!""}</td>
               <td>${svSummary.getUniqueDates()?last!""}</td>
+              <td>
+                <#list svSummary.getValueTypes() as valueType>
+                <div>${valueType}</div>
+                </#list>
+              </td>
               <td>
                 <#list svSummary.getMMethods() as method>
                 <div>${method}</div>
@@ -250,6 +256,7 @@
                   <th>Num Observations</th>
                   <th>Dates</th>
                   <th>Corresponding Values</th>
+                  <th>Value Type</th>
                   <th>Measurement Method</th>
                   <th>Unit</th>
                   <th>Scaling Factor</th>
@@ -265,6 +272,7 @@
                       <td>${seriesSummary.getTimeSeries()?size}</td>
                       <td>${seriesSummary.getDatesString()}</td>
                       <td>${seriesSummary.getValueString()}</td>
+                      <td>${seriesSummary.getValueType().toString()}</td>
                       <td>
                         <div>${seriesSummary.getValidationResult().getMeasurementMethod()}</div>
                       </td>

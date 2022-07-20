@@ -32,6 +32,7 @@ import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
 import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.PlaceSeriesSummary.SeriesSummary;
 import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
 
@@ -106,16 +107,14 @@ public class StatChecker {
   public synchronized void extractStatsFromGraph(McfGraph graph) {
     for (Map.Entry<String, McfGraph.PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
       McfGraph.PropertyValues node = nodeEntry.getValue();
-      if (McfUtil.isSvObWithNumberValue(node)) {
-        // We will extract basic stat var information from every StatVarObservation nodes
-        extractStatVarInfoFromNode(node);
-        // We will only extract series information from StatVarObservation nodes about sample places
-        String placeDcid = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT);
-        if (shouldExtractSeriesInfo(placeDcid)) {
-          placeSeriesSummaryMap
-              .computeIfAbsent(placeDcid, k -> new PlaceSeriesSummary())
-              .extractSeriesFromNode(node);
-        }
+      // We will extract basic stat var information from every StatVarObservation nodes
+      extractStatVarInfoFromNode(node);
+      // We will only extract series information from StatVarObservation nodes about sample places
+      String placeDcid = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT);
+      if (shouldExtractSeriesInfo(placeDcid)) {
+        placeSeriesSummaryMap
+            .computeIfAbsent(placeDcid, k -> new PlaceSeriesSummary())
+            .extractSeriesFromNode(node);
       }
     }
   }
@@ -146,14 +145,30 @@ public class StatChecker {
         for (SeriesSummary seriesSummary : seriesSummaryMap.values()) {
           List<DataPoint> timeSeries = new ArrayList<>(seriesSummary.timeSeries.values());
           StatValidationResult.Builder resBuilder = seriesSummary.validationResult;
+
+          // General checks; these don't depend on the type of the values.
+
+          // Check that the ValueType of all values are the same
+          checkSeriesTypeInconsistencies(timeSeries, resBuilder, logCtx);
           // Check inconsistent values (sawtooth).
           checkSeriesValueInconsistencies(timeSeries, resBuilder, logCtx);
-          // Check N-Sigma variance.
-          checkSigmaDivergence(timeSeries, resBuilder, logCtx);
-          // Check N-Percent fluctuations.
-          checkPercentFluctuations(timeSeries, resBuilder, logCtx);
           // Check for holes in dates, invalid dates, etc.
           checkDates(timeSeries, resBuilder, logCtx);
+
+          ValueType type = seriesSummary.getValueType();
+
+          List<String> stringSeries = new ArrayList<String>();
+          for (DataPoint dp : timeSeries) {
+            stringSeries.add(SeriesSummary.getValueOfDataPoint(dp));
+          }
+
+          if (type == ValueType.NUMBER) {
+            // Check N-Sigma variance.
+            checkSigmaDivergence(timeSeries, resBuilder, logCtx);
+            // Check N-Percent fluctuations.
+            checkPercentFluctuations(timeSeries, resBuilder, logCtx);
+          }
+
           // add result to log.
           if (!resBuilder.getValidationCountersList().isEmpty() && !countersRemaining.isEmpty()) {
             // only add entry if resBuilder contains a validation counter that we still want to add
@@ -256,21 +271,46 @@ public class StatChecker {
     }
   }
 
+  protected static void checkSeriesTypeInconsistencies(
+      List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder, LogWrapper logCtx) {
+    StatValidationEntry.Builder inconsistentTypeCounter = StatValidationEntry.newBuilder();
+    String counterKey = "StatsCheck_Inconsistent_Types";
+    inconsistentTypeCounter.setCounterKey(counterKey);
+
+    ValueType firstType = null;
+
+    for (DataPoint dp : timeSeries) {
+      for (DataValue val : dp.getValuesList()) {
+        ValueType type = val.getValue().getType();
+        if (firstType == null) {
+          firstType = type;
+        }
+        if (!firstType.equals(type)) {
+          inconsistentTypeCounter.addProblemPoints(dp);
+          logCtx.incrementWarningCounterBy(counterKey, 1);
+        }
+      }
+    }
+    if (!inconsistentTypeCounter.getProblemPointsList().isEmpty()) {
+      resBuilder.addValidationCounters(inconsistentTypeCounter.build());
+    }
+  }
+
   protected static void checkSeriesValueInconsistencies(
       List<DataPoint> timeSeries, StatValidationResult.Builder resBuilder, LogWrapper logCtx) {
     StatValidationEntry.Builder inconsistentValueCounter = StatValidationEntry.newBuilder();
     String counterKey = "StatsCheck_Inconsistent_Values";
     inconsistentValueCounter.setCounterKey(counterKey);
     for (DataPoint dp : timeSeries) {
-      double v = 0;
+      String v = null;
       boolean vInitialized = false;
       for (DataValue val : dp.getValuesList()) {
-        if (vInitialized && val.getValue() != v) {
+        if (vInitialized && !val.getValue().getValue().equals(v)) {
           inconsistentValueCounter.addProblemPoints(dp);
           logCtx.incrementWarningCounterBy(counterKey, 1);
         }
         vInitialized = true;
-        v = val.getValue();
+        v = val.getValue().getValue();
       }
     }
     if (!inconsistentValueCounter.getProblemPointsList().isEmpty()) {
@@ -290,7 +330,7 @@ public class StatChecker {
     // Only add data points to the counter of the greatest standard deviation that it belongs to.
     // ie. if the data point is beyond 3 std deviation, only add it to that counter.
     for (DataPoint dp : timeSeries) {
-      double val = dp.getValues(0).getValue();
+      double val = SeriesSummary.getValueOfDataPointAsNumber(dp);
       if (Math.abs(val - meanAndStdDev.mean) > 3 * meanAndStdDev.stdDev) {
         sigma3Counter.addProblemPoints(dp);
         logCtx.incrementWarningCounterBy(sigma3CounterKey, 1);
@@ -313,7 +353,7 @@ public class StatChecker {
     double sum = 0;
     double sumSqDev = 0;
     for (DataPoint dp : timeSeries) {
-      double val = dp.getValues(0).getValue();
+      double val = SeriesSummary.getValueOfDataPointAsNumber(dp);
       if (weights > 0) {
         sumSqDev += 1 * weights / 1 / (weights + 1) * Math.pow((1 / weights * sum - val), 2);
       }
@@ -339,10 +379,10 @@ public class StatChecker {
       // Don't try to compare between times because this is a Sawtooth
       if (dp.getValuesCount() > 1) return;
       if (dp.getValuesCount() == 0) continue;
-      double currVal = dp.getValues(0).getValue();
+      double currVal = SeriesSummary.getValueOfDataPointAsNumber(dp);
       if (baseDataPoint != null) {
         double currDelta;
-        double baseVal = baseDataPoint.getValues(0).getValue();
+        double baseVal = SeriesSummary.getValueOfDataPointAsNumber(baseDataPoint);
         if (baseVal == 0) {
           currDelta = (currVal) / SMALL_NUMBER;
         } else {
@@ -524,6 +564,12 @@ public class StatChecker {
     svMap.units.add(McfUtil.getPropVal(node, Vocabulary.UNIT));
     svMap.scalingFactors.add(McfUtil.getPropVal(node, Vocabulary.SCALING_FACTOR));
     svMap.observationPeriods.add(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_PERIOD));
+
+    McfGraph.Values nodeValues = node.getPvsOrDefault(Vocabulary.VALUE, null);
+    if (nodeValues != null) {
+      String typedValue = nodeValues.getTypedValues(0).getType().toString();
+      svMap.valueTypes.add(typedValue);
+    }
   }
 
   // Makes API requests to get the names of the sample places from the DC

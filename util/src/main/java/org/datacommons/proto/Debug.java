@@ -394,869 +394,6 @@ public final class Debug {
       // @@protoc_insertion_point(enum_scope:org.datacommons.proto.Log.Level)
     }
 
-    public interface LocationOrBuilder
-        extends
-        // @@protoc_insertion_point(interface_extends:org.datacommons.proto.Log.Location)
-        com.google.protobuf.MessageOrBuilder {
-
-      /**
-       *
-       *
-       * <pre>
-       * Name of the file. Could be a full path or not. Typically, this is
-       * an MCF file or CSV.
-       * </pre>
-       *
-       * <code>optional string file = 1;</code>
-       *
-       * @return Whether the file field is set.
-       */
-      boolean hasFile();
-      /**
-       *
-       *
-       * <pre>
-       * Name of the file. Could be a full path or not. Typically, this is
-       * an MCF file or CSV.
-       * </pre>
-       *
-       * <code>optional string file = 1;</code>
-       *
-       * @return The file.
-       */
-      java.lang.String getFile();
-      /**
-       *
-       *
-       * <pre>
-       * Name of the file. Could be a full path or not. Typically, this is
-       * an MCF file or CSV.
-       * </pre>
-       *
-       * <code>optional string file = 1;</code>
-       *
-       * @return The bytes for file.
-       */
-      com.google.protobuf.ByteString getFileBytes();
-
-      /**
-       *
-       *
-       * <pre>
-       * Line number in file, starting from 1.  Matches the row number in
-       * CSV (since we do not handle newlines in values).
-       * </pre>
-       *
-       * <code>optional int64 line_number = 2;</code>
-       *
-       * @return Whether the lineNumber field is set.
-       */
-      boolean hasLineNumber();
-      /**
-       *
-       *
-       * <pre>
-       * Line number in file, starting from 1.  Matches the row number in
-       * CSV (since we do not handle newlines in values).
-       * </pre>
-       *
-       * <code>optional int64 line_number = 2;</code>
-       *
-       * @return The lineNumber.
-       */
-      long getLineNumber();
-    }
-    /** Protobuf type {@code org.datacommons.proto.Log.Location} */
-    public static final class Location extends com.google.protobuf.GeneratedMessageV3
-        implements
-        // @@protoc_insertion_point(message_implements:org.datacommons.proto.Log.Location)
-        LocationOrBuilder {
-      private static final long serialVersionUID = 0L;
-      // Use Location.newBuilder() to construct.
-      private Location(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-        super(builder);
-      }
-
-      private Location() {
-        file_ = "";
-      }
-
-      @java.lang.Override
-      @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
-        return new Location();
-      }
-
-      @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
-        return this.unknownFields;
-      }
-
-      private Location(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        this();
-        if (extensionRegistry == null) {
-          throw new java.lang.NullPointerException();
-        }
-        int mutable_bitField0_ = 0;
-        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-            com.google.protobuf.UnknownFieldSet.newBuilder();
-        try {
-          boolean done = false;
-          while (!done) {
-            int tag = input.readTag();
-            switch (tag) {
-              case 0:
-                done = true;
-                break;
-              case 10:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000001;
-                  file_ = bs;
-                  break;
-                }
-              case 16:
-                {
-                  bitField0_ |= 0x00000002;
-                  lineNumber_ = input.readInt64();
-                  break;
-                }
-              default:
-                {
-                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                    done = true;
-                  }
-                  break;
-                }
-            }
-          }
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          throw e.setUnfinishedMessage(this);
-        } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(e)
-              .setUnfinishedMessage(this);
-        } finally {
-          this.unknownFields = unknownFields.build();
-          makeExtensionsImmutable();
-        }
-      }
-
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Debug
-            .internal_static_org_datacommons_proto_Log_Location_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Debug
-            .internal_static_org_datacommons_proto_Log_Location_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Debug.Log.Location.class,
-                org.datacommons.proto.Debug.Log.Location.Builder.class);
-      }
-
-      private int bitField0_;
-      public static final int FILE_FIELD_NUMBER = 1;
-      private volatile java.lang.Object file_;
-      /**
-       *
-       *
-       * <pre>
-       * Name of the file. Could be a full path or not. Typically, this is
-       * an MCF file or CSV.
-       * </pre>
-       *
-       * <code>optional string file = 1;</code>
-       *
-       * @return Whether the file field is set.
-       */
-      public boolean hasFile() {
-        return ((bitField0_ & 0x00000001) != 0);
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Name of the file. Could be a full path or not. Typically, this is
-       * an MCF file or CSV.
-       * </pre>
-       *
-       * <code>optional string file = 1;</code>
-       *
-       * @return The file.
-       */
-      public java.lang.String getFile() {
-        java.lang.Object ref = file_;
-        if (ref instanceof java.lang.String) {
-          return (java.lang.String) ref;
-        } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            file_ = s;
-          }
-          return s;
-        }
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Name of the file. Could be a full path or not. Typically, this is
-       * an MCF file or CSV.
-       * </pre>
-       *
-       * <code>optional string file = 1;</code>
-       *
-       * @return The bytes for file.
-       */
-      public com.google.protobuf.ByteString getFileBytes() {
-        java.lang.Object ref = file_;
-        if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-          file_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-
-      public static final int LINE_NUMBER_FIELD_NUMBER = 2;
-      private long lineNumber_;
-      /**
-       *
-       *
-       * <pre>
-       * Line number in file, starting from 1.  Matches the row number in
-       * CSV (since we do not handle newlines in values).
-       * </pre>
-       *
-       * <code>optional int64 line_number = 2;</code>
-       *
-       * @return Whether the lineNumber field is set.
-       */
-      public boolean hasLineNumber() {
-        return ((bitField0_ & 0x00000002) != 0);
-      }
-      /**
-       *
-       *
-       * <pre>
-       * Line number in file, starting from 1.  Matches the row number in
-       * CSV (since we do not handle newlines in values).
-       * </pre>
-       *
-       * <code>optional int64 line_number = 2;</code>
-       *
-       * @return The lineNumber.
-       */
-      public long getLineNumber() {
-        return lineNumber_;
-      }
-
-      private byte memoizedIsInitialized = -1;
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        byte isInitialized = memoizedIsInitialized;
-        if (isInitialized == 1) return true;
-        if (isInitialized == 0) return false;
-
-        memoizedIsInitialized = 1;
-        return true;
-      }
-
-      @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-        if (((bitField0_ & 0x00000001) != 0)) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 1, file_);
-        }
-        if (((bitField0_ & 0x00000002) != 0)) {
-          output.writeInt64(2, lineNumber_);
-        }
-        unknownFields.writeTo(output);
-      }
-
-      @java.lang.Override
-      public int getSerializedSize() {
-        int size = memoizedSize;
-        if (size != -1) return size;
-
-        size = 0;
-        if (((bitField0_ & 0x00000001) != 0)) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, file_);
-        }
-        if (((bitField0_ & 0x00000002) != 0)) {
-          size += com.google.protobuf.CodedOutputStream.computeInt64Size(2, lineNumber_);
-        }
-        size += unknownFields.getSerializedSize();
-        memoizedSize = size;
-        return size;
-      }
-
-      @java.lang.Override
-      public boolean equals(final java.lang.Object obj) {
-        if (obj == this) {
-          return true;
-        }
-        if (!(obj instanceof org.datacommons.proto.Debug.Log.Location)) {
-          return super.equals(obj);
-        }
-        org.datacommons.proto.Debug.Log.Location other =
-            (org.datacommons.proto.Debug.Log.Location) obj;
-
-        if (hasFile() != other.hasFile()) return false;
-        if (hasFile()) {
-          if (!getFile().equals(other.getFile())) return false;
-        }
-        if (hasLineNumber() != other.hasLineNumber()) return false;
-        if (hasLineNumber()) {
-          if (getLineNumber() != other.getLineNumber()) return false;
-        }
-        if (!unknownFields.equals(other.unknownFields)) return false;
-        return true;
-      }
-
-      @java.lang.Override
-      public int hashCode() {
-        if (memoizedHashCode != 0) {
-          return memoizedHashCode;
-        }
-        int hash = 41;
-        hash = (19 * hash) + getDescriptor().hashCode();
-        if (hasFile()) {
-          hash = (37 * hash) + FILE_FIELD_NUMBER;
-          hash = (53 * hash) + getFile().hashCode();
-        }
-        if (hasLineNumber()) {
-          hash = (37 * hash) + LINE_NUMBER_FIELD_NUMBER;
-          hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getLineNumber());
-        }
-        hash = (29 * hash) + unknownFields.hashCode();
-        memoizedHashCode = hash;
-        return hash;
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(java.nio.ByteBuffer data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-          com.google.protobuf.ByteString data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-          com.google.protobuf.ByteString data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(byte[] data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location parseDelimitedFrom(
-          java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location parseDelimitedFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-            PARSER, input, extensionRegistry);
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location parseFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
-      }
-
-      @java.lang.Override
-      public Builder newBuilderForType() {
-        return newBuilder();
-      }
-
-      public static Builder newBuilder() {
-        return DEFAULT_INSTANCE.toBuilder();
-      }
-
-      public static Builder newBuilder(org.datacommons.proto.Debug.Log.Location prototype) {
-        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-      }
-
-      @java.lang.Override
-      public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
-      }
-
-      @java.lang.Override
-      protected Builder newBuilderForType(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        Builder builder = new Builder(parent);
-        return builder;
-      }
-      /** Protobuf type {@code org.datacommons.proto.Log.Location} */
-      public static final class Builder
-          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-          implements
-          // @@protoc_insertion_point(builder_implements:org.datacommons.proto.Log.Location)
-          org.datacommons.proto.Debug.Log.LocationOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-          return org.datacommons.proto.Debug
-              .internal_static_org_datacommons_proto_Log_Location_descriptor;
-        }
-
-        @java.lang.Override
-        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-            internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Debug
-              .internal_static_org_datacommons_proto_Log_Location_fieldAccessorTable
-              .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Debug.Log.Location.class,
-                  org.datacommons.proto.Debug.Log.Location.Builder.class);
-        }
-
-        // Construct using org.datacommons.proto.Debug.Log.Location.newBuilder()
-        private Builder() {
-          maybeForceBuilderInitialization();
-        }
-
-        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-          super(parent);
-          maybeForceBuilderInitialization();
-        }
-
-        private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
-        }
-
-        @java.lang.Override
-        public Builder clear() {
-          super.clear();
-          file_ = "";
-          bitField0_ = (bitField0_ & ~0x00000001);
-          lineNumber_ = 0L;
-          bitField0_ = (bitField0_ & ~0x00000002);
-          return this;
-        }
-
-        @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-          return org.datacommons.proto.Debug
-              .internal_static_org_datacommons_proto_Log_Location_descriptor;
-        }
-
-        @java.lang.Override
-        public org.datacommons.proto.Debug.Log.Location getDefaultInstanceForType() {
-          return org.datacommons.proto.Debug.Log.Location.getDefaultInstance();
-        }
-
-        @java.lang.Override
-        public org.datacommons.proto.Debug.Log.Location build() {
-          org.datacommons.proto.Debug.Log.Location result = buildPartial();
-          if (!result.isInitialized()) {
-            throw newUninitializedMessageException(result);
-          }
-          return result;
-        }
-
-        @java.lang.Override
-        public org.datacommons.proto.Debug.Log.Location buildPartial() {
-          org.datacommons.proto.Debug.Log.Location result =
-              new org.datacommons.proto.Debug.Log.Location(this);
-          int from_bitField0_ = bitField0_;
-          int to_bitField0_ = 0;
-          if (((from_bitField0_ & 0x00000001) != 0)) {
-            to_bitField0_ |= 0x00000001;
-          }
-          result.file_ = file_;
-          if (((from_bitField0_ & 0x00000002) != 0)) {
-            result.lineNumber_ = lineNumber_;
-            to_bitField0_ |= 0x00000002;
-          }
-          result.bitField0_ = to_bitField0_;
-          onBuilt();
-          return result;
-        }
-
-        @java.lang.Override
-        public Builder clone() {
-          return super.clone();
-        }
-
-        @java.lang.Override
-        public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-          return super.setField(field, value);
-        }
-
-        @java.lang.Override
-        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-          return super.clearField(field);
-        }
-
-        @java.lang.Override
-        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-          return super.clearOneof(oneof);
-        }
-
-        @java.lang.Override
-        public Builder setRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index,
-            java.lang.Object value) {
-          return super.setRepeatedField(field, index, value);
-        }
-
-        @java.lang.Override
-        public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-          return super.addRepeatedField(field, value);
-        }
-
-        @java.lang.Override
-        public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof org.datacommons.proto.Debug.Log.Location) {
-            return mergeFrom((org.datacommons.proto.Debug.Log.Location) other);
-          } else {
-            super.mergeFrom(other);
-            return this;
-          }
-        }
-
-        public Builder mergeFrom(org.datacommons.proto.Debug.Log.Location other) {
-          if (other == org.datacommons.proto.Debug.Log.Location.getDefaultInstance()) return this;
-          if (other.hasFile()) {
-            bitField0_ |= 0x00000001;
-            file_ = other.file_;
-            onChanged();
-          }
-          if (other.hasLineNumber()) {
-            setLineNumber(other.getLineNumber());
-          }
-          this.mergeUnknownFields(other.unknownFields);
-          onChanged();
-          return this;
-        }
-
-        @java.lang.Override
-        public final boolean isInitialized() {
-          return true;
-        }
-
-        @java.lang.Override
-        public Builder mergeFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws java.io.IOException {
-          org.datacommons.proto.Debug.Log.Location parsedMessage = null;
-          try {
-            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (org.datacommons.proto.Debug.Log.Location) e.getUnfinishedMessage();
-            throw e.unwrapIOException();
-          } finally {
-            if (parsedMessage != null) {
-              mergeFrom(parsedMessage);
-            }
-          }
-          return this;
-        }
-
-        private int bitField0_;
-
-        private java.lang.Object file_ = "";
-        /**
-         *
-         *
-         * <pre>
-         * Name of the file. Could be a full path or not. Typically, this is
-         * an MCF file or CSV.
-         * </pre>
-         *
-         * <code>optional string file = 1;</code>
-         *
-         * @return Whether the file field is set.
-         */
-        public boolean hasFile() {
-          return ((bitField0_ & 0x00000001) != 0);
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Name of the file. Could be a full path or not. Typically, this is
-         * an MCF file or CSV.
-         * </pre>
-         *
-         * <code>optional string file = 1;</code>
-         *
-         * @return The file.
-         */
-        public java.lang.String getFile() {
-          java.lang.Object ref = file_;
-          if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-            java.lang.String s = bs.toStringUtf8();
-            if (bs.isValidUtf8()) {
-              file_ = s;
-            }
-            return s;
-          } else {
-            return (java.lang.String) ref;
-          }
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Name of the file. Could be a full path or not. Typically, this is
-         * an MCF file or CSV.
-         * </pre>
-         *
-         * <code>optional string file = 1;</code>
-         *
-         * @return The bytes for file.
-         */
-        public com.google.protobuf.ByteString getFileBytes() {
-          java.lang.Object ref = file_;
-          if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-            file_ = b;
-            return b;
-          } else {
-            return (com.google.protobuf.ByteString) ref;
-          }
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Name of the file. Could be a full path or not. Typically, this is
-         * an MCF file or CSV.
-         * </pre>
-         *
-         * <code>optional string file = 1;</code>
-         *
-         * @param value The file to set.
-         * @return This builder for chaining.
-         */
-        public Builder setFile(java.lang.String value) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000001;
-          file_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Name of the file. Could be a full path or not. Typically, this is
-         * an MCF file or CSV.
-         * </pre>
-         *
-         * <code>optional string file = 1;</code>
-         *
-         * @return This builder for chaining.
-         */
-        public Builder clearFile() {
-          bitField0_ = (bitField0_ & ~0x00000001);
-          file_ = getDefaultInstance().getFile();
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Name of the file. Could be a full path or not. Typically, this is
-         * an MCF file or CSV.
-         * </pre>
-         *
-         * <code>optional string file = 1;</code>
-         *
-         * @param value The bytes for file to set.
-         * @return This builder for chaining.
-         */
-        public Builder setFileBytes(com.google.protobuf.ByteString value) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000001;
-          file_ = value;
-          onChanged();
-          return this;
-        }
-
-        private long lineNumber_;
-        /**
-         *
-         *
-         * <pre>
-         * Line number in file, starting from 1.  Matches the row number in
-         * CSV (since we do not handle newlines in values).
-         * </pre>
-         *
-         * <code>optional int64 line_number = 2;</code>
-         *
-         * @return Whether the lineNumber field is set.
-         */
-        public boolean hasLineNumber() {
-          return ((bitField0_ & 0x00000002) != 0);
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Line number in file, starting from 1.  Matches the row number in
-         * CSV (since we do not handle newlines in values).
-         * </pre>
-         *
-         * <code>optional int64 line_number = 2;</code>
-         *
-         * @return The lineNumber.
-         */
-        public long getLineNumber() {
-          return lineNumber_;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Line number in file, starting from 1.  Matches the row number in
-         * CSV (since we do not handle newlines in values).
-         * </pre>
-         *
-         * <code>optional int64 line_number = 2;</code>
-         *
-         * @param value The lineNumber to set.
-         * @return This builder for chaining.
-         */
-        public Builder setLineNumber(long value) {
-          bitField0_ |= 0x00000002;
-          lineNumber_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * Line number in file, starting from 1.  Matches the row number in
-         * CSV (since we do not handle newlines in values).
-         * </pre>
-         *
-         * <code>optional int64 line_number = 2;</code>
-         *
-         * @return This builder for chaining.
-         */
-        public Builder clearLineNumber() {
-          bitField0_ = (bitField0_ & ~0x00000002);
-          lineNumber_ = 0L;
-          onChanged();
-          return this;
-        }
-
-        @java.lang.Override
-        public final Builder setUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.setUnknownFields(unknownFields);
-        }
-
-        @java.lang.Override
-        public final Builder mergeUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.mergeUnknownFields(unknownFields);
-        }
-
-        // @@protoc_insertion_point(builder_scope:org.datacommons.proto.Log.Location)
-      }
-
-      // @@protoc_insertion_point(class_scope:org.datacommons.proto.Log.Location)
-      private static final org.datacommons.proto.Debug.Log.Location DEFAULT_INSTANCE;
-
-      static {
-        DEFAULT_INSTANCE = new org.datacommons.proto.Debug.Log.Location();
-      }
-
-      public static org.datacommons.proto.Debug.Log.Location getDefaultInstance() {
-        return DEFAULT_INSTANCE;
-      }
-
-      @java.lang.Deprecated
-      public static final com.google.protobuf.Parser<Location> PARSER =
-          new com.google.protobuf.AbstractParser<Location>() {
-            @java.lang.Override
-            public Location parsePartialFrom(
-                com.google.protobuf.CodedInputStream input,
-                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                throws com.google.protobuf.InvalidProtocolBufferException {
-              return new Location(input, extensionRegistry);
-            }
-          };
-
-      public static com.google.protobuf.Parser<Location> parser() {
-        return PARSER;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Parser<Location> getParserForType() {
-        return PARSER;
-      }
-
-      @java.lang.Override
-      public org.datacommons.proto.Debug.Log.Location getDefaultInstanceForType() {
-        return DEFAULT_INSTANCE;
-      }
-    }
-
     public interface CounterSetOrBuilder
         extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.Log.CounterSet)
@@ -2078,19 +1215,19 @@ public final class Debug {
       org.datacommons.proto.Debug.Log.Level getLevel();
 
       /**
-       * <code>optional .org.datacommons.proto.Log.Location location = 2;</code>
+       * <code>optional .org.datacommons.proto.Location location = 2;</code>
        *
        * @return Whether the location field is set.
        */
       boolean hasLocation();
       /**
-       * <code>optional .org.datacommons.proto.Log.Location location = 2;</code>
+       * <code>optional .org.datacommons.proto.Location location = 2;</code>
        *
        * @return The location.
        */
-      org.datacommons.proto.Debug.Log.Location getLocation();
-      /** <code>optional .org.datacommons.proto.Log.Location location = 2;</code> */
-      org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationOrBuilder();
+      org.datacommons.proto.LogLocation.Location getLocation();
+      /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
+      org.datacommons.proto.LogLocation.LocationOrBuilder getLocationOrBuilder();
 
       /**
        *
@@ -2298,13 +1435,13 @@ public final class Debug {
                 }
               case 18:
                 {
-                  org.datacommons.proto.Debug.Log.Location.Builder subBuilder = null;
+                  org.datacommons.proto.LogLocation.Location.Builder subBuilder = null;
                   if (((bitField0_ & 0x00000002) != 0)) {
                     subBuilder = location_.toBuilder();
                   }
                   location_ =
                       input.readMessage(
-                          org.datacommons.proto.Debug.Log.Location.PARSER, extensionRegistry);
+                          org.datacommons.proto.LogLocation.Location.PARSER, extensionRegistry);
                   if (subBuilder != null) {
                     subBuilder.mergeFrom(location_);
                     location_ = subBuilder.buildPartial();
@@ -2398,9 +1535,9 @@ public final class Debug {
       }
 
       public static final int LOCATION_FIELD_NUMBER = 2;
-      private org.datacommons.proto.Debug.Log.Location location_;
+      private org.datacommons.proto.LogLocation.Location location_;
       /**
-       * <code>optional .org.datacommons.proto.Log.Location location = 2;</code>
+       * <code>optional .org.datacommons.proto.Location location = 2;</code>
        *
        * @return Whether the location field is set.
        */
@@ -2408,19 +1545,19 @@ public final class Debug {
         return ((bitField0_ & 0x00000002) != 0);
       }
       /**
-       * <code>optional .org.datacommons.proto.Log.Location location = 2;</code>
+       * <code>optional .org.datacommons.proto.Location location = 2;</code>
        *
        * @return The location.
        */
-      public org.datacommons.proto.Debug.Log.Location getLocation() {
+      public org.datacommons.proto.LogLocation.Location getLocation() {
         return location_ == null
-            ? org.datacommons.proto.Debug.Log.Location.getDefaultInstance()
+            ? org.datacommons.proto.LogLocation.Location.getDefaultInstance()
             : location_;
       }
-      /** <code>optional .org.datacommons.proto.Log.Location location = 2;</code> */
-      public org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationOrBuilder() {
+      /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
+      public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationOrBuilder() {
         return location_ == null
-            ? org.datacommons.proto.Debug.Log.Location.getDefaultInstance()
+            ? org.datacommons.proto.LogLocation.Location.getDefaultInstance()
             : location_;
       }
 
@@ -3114,14 +2251,14 @@ public final class Debug {
           return this;
         }
 
-        private org.datacommons.proto.Debug.Log.Location location_;
+        private org.datacommons.proto.LogLocation.Location location_;
         private com.google.protobuf.SingleFieldBuilderV3<
-                org.datacommons.proto.Debug.Log.Location,
-                org.datacommons.proto.Debug.Log.Location.Builder,
-                org.datacommons.proto.Debug.Log.LocationOrBuilder>
+                org.datacommons.proto.LogLocation.Location,
+                org.datacommons.proto.LogLocation.Location.Builder,
+                org.datacommons.proto.LogLocation.LocationOrBuilder>
             locationBuilder_;
         /**
-         * <code>optional .org.datacommons.proto.Log.Location location = 2;</code>
+         * <code>optional .org.datacommons.proto.Location location = 2;</code>
          *
          * @return Whether the location field is set.
          */
@@ -3129,21 +2266,21 @@ public final class Debug {
           return ((bitField0_ & 0x00000002) != 0);
         }
         /**
-         * <code>optional .org.datacommons.proto.Log.Location location = 2;</code>
+         * <code>optional .org.datacommons.proto.Location location = 2;</code>
          *
          * @return The location.
          */
-        public org.datacommons.proto.Debug.Log.Location getLocation() {
+        public org.datacommons.proto.LogLocation.Location getLocation() {
           if (locationBuilder_ == null) {
             return location_ == null
-                ? org.datacommons.proto.Debug.Log.Location.getDefaultInstance()
+                ? org.datacommons.proto.LogLocation.Location.getDefaultInstance()
                 : location_;
           } else {
             return locationBuilder_.getMessage();
           }
         }
-        /** <code>optional .org.datacommons.proto.Log.Location location = 2;</code> */
-        public Builder setLocation(org.datacommons.proto.Debug.Log.Location value) {
+        /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
+        public Builder setLocation(org.datacommons.proto.LogLocation.Location value) {
           if (locationBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -3156,9 +2293,9 @@ public final class Debug {
           bitField0_ |= 0x00000002;
           return this;
         }
-        /** <code>optional .org.datacommons.proto.Log.Location location = 2;</code> */
+        /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
         public Builder setLocation(
-            org.datacommons.proto.Debug.Log.Location.Builder builderForValue) {
+            org.datacommons.proto.LogLocation.Location.Builder builderForValue) {
           if (locationBuilder_ == null) {
             location_ = builderForValue.build();
             onChanged();
@@ -3168,14 +2305,14 @@ public final class Debug {
           bitField0_ |= 0x00000002;
           return this;
         }
-        /** <code>optional .org.datacommons.proto.Log.Location location = 2;</code> */
-        public Builder mergeLocation(org.datacommons.proto.Debug.Log.Location value) {
+        /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
+        public Builder mergeLocation(org.datacommons.proto.LogLocation.Location value) {
           if (locationBuilder_ == null) {
             if (((bitField0_ & 0x00000002) != 0)
                 && location_ != null
-                && location_ != org.datacommons.proto.Debug.Log.Location.getDefaultInstance()) {
+                && location_ != org.datacommons.proto.LogLocation.Location.getDefaultInstance()) {
               location_ =
-                  org.datacommons.proto.Debug.Log.Location.newBuilder(location_)
+                  org.datacommons.proto.LogLocation.Location.newBuilder(location_)
                       .mergeFrom(value)
                       .buildPartial();
             } else {
@@ -3188,7 +2325,7 @@ public final class Debug {
           bitField0_ |= 0x00000002;
           return this;
         }
-        /** <code>optional .org.datacommons.proto.Log.Location location = 2;</code> */
+        /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
         public Builder clearLocation() {
           if (locationBuilder_ == null) {
             location_ = null;
@@ -3199,34 +2336,34 @@ public final class Debug {
           bitField0_ = (bitField0_ & ~0x00000002);
           return this;
         }
-        /** <code>optional .org.datacommons.proto.Log.Location location = 2;</code> */
-        public org.datacommons.proto.Debug.Log.Location.Builder getLocationBuilder() {
+        /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
+        public org.datacommons.proto.LogLocation.Location.Builder getLocationBuilder() {
           bitField0_ |= 0x00000002;
           onChanged();
           return getLocationFieldBuilder().getBuilder();
         }
-        /** <code>optional .org.datacommons.proto.Log.Location location = 2;</code> */
-        public org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationOrBuilder() {
+        /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
+        public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationOrBuilder() {
           if (locationBuilder_ != null) {
             return locationBuilder_.getMessageOrBuilder();
           } else {
             return location_ == null
-                ? org.datacommons.proto.Debug.Log.Location.getDefaultInstance()
+                ? org.datacommons.proto.LogLocation.Location.getDefaultInstance()
                 : location_;
           }
         }
-        /** <code>optional .org.datacommons.proto.Log.Location location = 2;</code> */
+        /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
         private com.google.protobuf.SingleFieldBuilderV3<
-                org.datacommons.proto.Debug.Log.Location,
-                org.datacommons.proto.Debug.Log.Location.Builder,
-                org.datacommons.proto.Debug.Log.LocationOrBuilder>
+                org.datacommons.proto.LogLocation.Location,
+                org.datacommons.proto.LogLocation.Location.Builder,
+                org.datacommons.proto.LogLocation.LocationOrBuilder>
             getLocationFieldBuilder() {
           if (locationBuilder_ == null) {
             locationBuilder_ =
                 new com.google.protobuf.SingleFieldBuilderV3<
-                    org.datacommons.proto.Debug.Log.Location,
-                    org.datacommons.proto.Debug.Log.Location.Builder,
-                    org.datacommons.proto.Debug.Log.LocationOrBuilder>(
+                    org.datacommons.proto.LogLocation.Location,
+                    org.datacommons.proto.LogLocation.Location.Builder,
+                    org.datacommons.proto.LogLocation.LocationOrBuilder>(
                     getLocation(), getParentForChildren(), isClean());
             location_ = null;
           }
@@ -6866,17 +6003,19 @@ public final class Debug {
         com.google.protobuf.MessageOrBuilder {
 
       /**
-       * <code>optional double value = 1;</code>
+       * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
        *
        * @return Whether the value field is set.
        */
       boolean hasValue();
       /**
-       * <code>optional double value = 1;</code>
+       * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
        *
        * @return The value.
        */
-      double getValue();
+      org.datacommons.proto.Mcf.McfGraph.TypedValue getValue();
+      /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+      org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getValueOrBuilder();
 
       /**
        *
@@ -6885,9 +6024,9 @@ public final class Debug {
        * The location in the file where this value was read from.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      java.util.List<org.datacommons.proto.Debug.Log.Location> getLocationsList();
+      java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList();
       /**
        *
        *
@@ -6895,9 +6034,9 @@ public final class Debug {
        * The location in the file where this value was read from.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      org.datacommons.proto.Debug.Log.Location getLocations(int index);
+      org.datacommons.proto.LogLocation.Location getLocations(int index);
       /**
        *
        *
@@ -6905,7 +6044,7 @@ public final class Debug {
        * The location in the file where this value was read from.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       int getLocationsCount();
       /**
@@ -6915,9 +6054,9 @@ public final class Debug {
        * The location in the file where this value was read from.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      java.util.List<? extends org.datacommons.proto.Debug.Log.LocationOrBuilder>
+      java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder>
           getLocationsOrBuilderList();
       /**
        *
@@ -6926,9 +6065,9 @@ public final class Debug {
        * The location in the file where this value was read from.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationsOrBuilder(int index);
+      org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(int index);
     }
     /** Protobuf type {@code org.datacommons.proto.DataPoint.DataValue} */
     public static final class DataValue extends com.google.protobuf.GeneratedMessageV3
@@ -6975,22 +6114,32 @@ public final class Debug {
               case 0:
                 done = true;
                 break;
-              case 9:
+              case 10:
                 {
+                  org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder subBuilder = null;
+                  if (((bitField0_ & 0x00000001) != 0)) {
+                    subBuilder = value_.toBuilder();
+                  }
+                  value_ =
+                      input.readMessage(
+                          org.datacommons.proto.Mcf.McfGraph.TypedValue.PARSER, extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(value_);
+                    value_ = subBuilder.buildPartial();
+                  }
                   bitField0_ |= 0x00000001;
-                  value_ = input.readDouble();
                   break;
                 }
               case 18:
                 {
                   if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                     locations_ =
-                        new java.util.ArrayList<org.datacommons.proto.Debug.Log.Location>();
+                        new java.util.ArrayList<org.datacommons.proto.LogLocation.Location>();
                     mutable_bitField0_ |= 0x00000002;
                   }
                   locations_.add(
                       input.readMessage(
-                          org.datacommons.proto.Debug.Log.Location.PARSER, extensionRegistry));
+                          org.datacommons.proto.LogLocation.Location.PARSER, extensionRegistry));
                   break;
                 }
               default:
@@ -7033,9 +6182,9 @@ public final class Debug {
 
       private int bitField0_;
       public static final int VALUE_FIELD_NUMBER = 1;
-      private double value_;
+      private org.datacommons.proto.Mcf.McfGraph.TypedValue value_;
       /**
-       * <code>optional double value = 1;</code>
+       * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
        *
        * @return Whether the value field is set.
        */
@@ -7043,16 +6192,24 @@ public final class Debug {
         return ((bitField0_ & 0x00000001) != 0);
       }
       /**
-       * <code>optional double value = 1;</code>
+       * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
        *
        * @return The value.
        */
-      public double getValue() {
-        return value_;
+      public org.datacommons.proto.Mcf.McfGraph.TypedValue getValue() {
+        return value_ == null
+            ? org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()
+            : value_;
+      }
+      /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+      public org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getValueOrBuilder() {
+        return value_ == null
+            ? org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()
+            : value_;
       }
 
       public static final int LOCATIONS_FIELD_NUMBER = 2;
-      private java.util.List<org.datacommons.proto.Debug.Log.Location> locations_;
+      private java.util.List<org.datacommons.proto.LogLocation.Location> locations_;
       /**
        *
        *
@@ -7060,9 +6217,9 @@ public final class Debug {
        * The location in the file where this value was read from.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      public java.util.List<org.datacommons.proto.Debug.Log.Location> getLocationsList() {
+      public java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList() {
         return locations_;
       }
       /**
@@ -7072,9 +6229,9 @@ public final class Debug {
        * The location in the file where this value was read from.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      public java.util.List<? extends org.datacommons.proto.Debug.Log.LocationOrBuilder>
+      public java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder>
           getLocationsOrBuilderList() {
         return locations_;
       }
@@ -7085,7 +6242,7 @@ public final class Debug {
        * The location in the file where this value was read from.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       public int getLocationsCount() {
         return locations_.size();
@@ -7097,9 +6254,9 @@ public final class Debug {
        * The location in the file where this value was read from.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      public org.datacommons.proto.Debug.Log.Location getLocations(int index) {
+      public org.datacommons.proto.LogLocation.Location getLocations(int index) {
         return locations_.get(index);
       }
       /**
@@ -7109,9 +6266,9 @@ public final class Debug {
        * The location in the file where this value was read from.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      public org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationsOrBuilder(int index) {
+      public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(int index) {
         return locations_.get(index);
       }
 
@@ -7130,7 +6287,7 @@ public final class Debug {
       @java.lang.Override
       public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
         if (((bitField0_ & 0x00000001) != 0)) {
-          output.writeDouble(1, value_);
+          output.writeMessage(1, getValue());
         }
         for (int i = 0; i < locations_.size(); i++) {
           output.writeMessage(2, locations_.get(i));
@@ -7145,7 +6302,7 @@ public final class Debug {
 
         size = 0;
         if (((bitField0_ & 0x00000001) != 0)) {
-          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(1, value_);
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, getValue());
         }
         for (int i = 0; i < locations_.size(); i++) {
           size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, locations_.get(i));
@@ -7168,8 +6325,7 @@ public final class Debug {
 
         if (hasValue() != other.hasValue()) return false;
         if (hasValue()) {
-          if (java.lang.Double.doubleToLongBits(getValue())
-              != java.lang.Double.doubleToLongBits(other.getValue())) return false;
+          if (!getValue().equals(other.getValue())) return false;
         }
         if (!getLocationsList().equals(other.getLocationsList())) return false;
         if (!unknownFields.equals(other.unknownFields)) return false;
@@ -7185,10 +6341,7 @@ public final class Debug {
         hash = (19 * hash) + getDescriptor().hashCode();
         if (hasValue()) {
           hash = (37 * hash) + VALUE_FIELD_NUMBER;
-          hash =
-              (53 * hash)
-                  + com.google.protobuf.Internal.hashLong(
-                      java.lang.Double.doubleToLongBits(getValue()));
+          hash = (53 * hash) + getValue().hashCode();
         }
         if (getLocationsCount() > 0) {
           hash = (37 * hash) + LOCATIONS_FIELD_NUMBER;
@@ -7328,6 +6481,7 @@ public final class Debug {
 
         private void maybeForceBuilderInitialization() {
           if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+            getValueFieldBuilder();
             getLocationsFieldBuilder();
           }
         }
@@ -7335,7 +6489,11 @@ public final class Debug {
         @java.lang.Override
         public Builder clear() {
           super.clear();
-          value_ = 0D;
+          if (valueBuilder_ == null) {
+            value_ = null;
+          } else {
+            valueBuilder_.clear();
+          }
           bitField0_ = (bitField0_ & ~0x00000001);
           if (locationsBuilder_ == null) {
             locations_ = java.util.Collections.emptyList();
@@ -7373,7 +6531,11 @@ public final class Debug {
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           if (((from_bitField0_ & 0x00000001) != 0)) {
-            result.value_ = value_;
+            if (valueBuilder_ == null) {
+              result.value_ = value_;
+            } else {
+              result.value_ = valueBuilder_.build();
+            }
             to_bitField0_ |= 0x00000001;
           }
           if (locationsBuilder_ == null) {
@@ -7439,7 +6601,7 @@ public final class Debug {
           if (other == org.datacommons.proto.Debug.DataPoint.DataValue.getDefaultInstance())
             return this;
           if (other.hasValue()) {
-            setValue(other.getValue());
+            mergeValue(other.getValue());
           }
           if (locationsBuilder_ == null) {
             if (!other.locations_.isEmpty()) {
@@ -7500,9 +6662,14 @@ public final class Debug {
 
         private int bitField0_;
 
-        private double value_;
+        private org.datacommons.proto.Mcf.McfGraph.TypedValue value_;
+        private com.google.protobuf.SingleFieldBuilderV3<
+                org.datacommons.proto.Mcf.McfGraph.TypedValue,
+                org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder,
+                org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>
+            valueBuilder_;
         /**
-         * <code>optional double value = 1;</code>
+         * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
          *
          * @return Whether the value field is set.
          */
@@ -7510,52 +6677,125 @@ public final class Debug {
           return ((bitField0_ & 0x00000001) != 0);
         }
         /**
-         * <code>optional double value = 1;</code>
+         * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
          *
          * @return The value.
          */
-        public double getValue() {
-          return value_;
+        public org.datacommons.proto.Mcf.McfGraph.TypedValue getValue() {
+          if (valueBuilder_ == null) {
+            return value_ == null
+                ? org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()
+                : value_;
+          } else {
+            return valueBuilder_.getMessage();
+          }
         }
-        /**
-         * <code>optional double value = 1;</code>
-         *
-         * @param value The value to set.
-         * @return This builder for chaining.
-         */
-        public Builder setValue(double value) {
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        public Builder setValue(org.datacommons.proto.Mcf.McfGraph.TypedValue value) {
+          if (valueBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            value_ = value;
+            onChanged();
+          } else {
+            valueBuilder_.setMessage(value);
+          }
           bitField0_ |= 0x00000001;
-          value_ = value;
-          onChanged();
           return this;
         }
-        /**
-         * <code>optional double value = 1;</code>
-         *
-         * @return This builder for chaining.
-         */
-        public Builder clearValue() {
-          bitField0_ = (bitField0_ & ~0x00000001);
-          value_ = 0D;
-          onChanged();
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        public Builder setValue(
+            org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder builderForValue) {
+          if (valueBuilder_ == null) {
+            value_ = builderForValue.build();
+            onChanged();
+          } else {
+            valueBuilder_.setMessage(builderForValue.build());
+          }
+          bitField0_ |= 0x00000001;
           return this;
+        }
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        public Builder mergeValue(org.datacommons.proto.Mcf.McfGraph.TypedValue value) {
+          if (valueBuilder_ == null) {
+            if (((bitField0_ & 0x00000001) != 0)
+                && value_ != null
+                && value_ != org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()) {
+              value_ =
+                  org.datacommons.proto.Mcf.McfGraph.TypedValue.newBuilder(value_)
+                      .mergeFrom(value)
+                      .buildPartial();
+            } else {
+              value_ = value;
+            }
+            onChanged();
+          } else {
+            valueBuilder_.mergeFrom(value);
+          }
+          bitField0_ |= 0x00000001;
+          return this;
+        }
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        public Builder clearValue() {
+          if (valueBuilder_ == null) {
+            value_ = null;
+            onChanged();
+          } else {
+            valueBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000001);
+          return this;
+        }
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        public org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder getValueBuilder() {
+          bitField0_ |= 0x00000001;
+          onChanged();
+          return getValueFieldBuilder().getBuilder();
+        }
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        public org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getValueOrBuilder() {
+          if (valueBuilder_ != null) {
+            return valueBuilder_.getMessageOrBuilder();
+          } else {
+            return value_ == null
+                ? org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()
+                : value_;
+          }
+        }
+        /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+        private com.google.protobuf.SingleFieldBuilderV3<
+                org.datacommons.proto.Mcf.McfGraph.TypedValue,
+                org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder,
+                org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>
+            getValueFieldBuilder() {
+          if (valueBuilder_ == null) {
+            valueBuilder_ =
+                new com.google.protobuf.SingleFieldBuilderV3<
+                    org.datacommons.proto.Mcf.McfGraph.TypedValue,
+                    org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder,
+                    org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>(
+                    getValue(), getParentForChildren(), isClean());
+            value_ = null;
+          }
+          return valueBuilder_;
         }
 
-        private java.util.List<org.datacommons.proto.Debug.Log.Location> locations_ =
+        private java.util.List<org.datacommons.proto.LogLocation.Location> locations_ =
             java.util.Collections.emptyList();
 
         private void ensureLocationsIsMutable() {
           if (!((bitField0_ & 0x00000002) != 0)) {
             locations_ =
-                new java.util.ArrayList<org.datacommons.proto.Debug.Log.Location>(locations_);
+                new java.util.ArrayList<org.datacommons.proto.LogLocation.Location>(locations_);
             bitField0_ |= 0x00000002;
           }
         }
 
         private com.google.protobuf.RepeatedFieldBuilderV3<
-                org.datacommons.proto.Debug.Log.Location,
-                org.datacommons.proto.Debug.Log.Location.Builder,
-                org.datacommons.proto.Debug.Log.LocationOrBuilder>
+                org.datacommons.proto.LogLocation.Location,
+                org.datacommons.proto.LogLocation.Location.Builder,
+                org.datacommons.proto.LogLocation.LocationOrBuilder>
             locationsBuilder_;
 
         /**
@@ -7565,9 +6805,9 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public java.util.List<org.datacommons.proto.Debug.Log.Location> getLocationsList() {
+        public java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList() {
           if (locationsBuilder_ == null) {
             return java.util.Collections.unmodifiableList(locations_);
           } else {
@@ -7581,7 +6821,7 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public int getLocationsCount() {
           if (locationsBuilder_ == null) {
@@ -7597,9 +6837,9 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public org.datacommons.proto.Debug.Log.Location getLocations(int index) {
+        public org.datacommons.proto.LogLocation.Location getLocations(int index) {
           if (locationsBuilder_ == null) {
             return locations_.get(index);
           } else {
@@ -7613,9 +6853,9 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public Builder setLocations(int index, org.datacommons.proto.Debug.Log.Location value) {
+        public Builder setLocations(int index, org.datacommons.proto.LogLocation.Location value) {
           if (locationsBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -7635,10 +6875,10 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public Builder setLocations(
-            int index, org.datacommons.proto.Debug.Log.Location.Builder builderForValue) {
+            int index, org.datacommons.proto.LogLocation.Location.Builder builderForValue) {
           if (locationsBuilder_ == null) {
             ensureLocationsIsMutable();
             locations_.set(index, builderForValue.build());
@@ -7655,9 +6895,9 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public Builder addLocations(org.datacommons.proto.Debug.Log.Location value) {
+        public Builder addLocations(org.datacommons.proto.LogLocation.Location value) {
           if (locationsBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -7677,9 +6917,9 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public Builder addLocations(int index, org.datacommons.proto.Debug.Log.Location value) {
+        public Builder addLocations(int index, org.datacommons.proto.LogLocation.Location value) {
           if (locationsBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -7699,10 +6939,10 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public Builder addLocations(
-            org.datacommons.proto.Debug.Log.Location.Builder builderForValue) {
+            org.datacommons.proto.LogLocation.Location.Builder builderForValue) {
           if (locationsBuilder_ == null) {
             ensureLocationsIsMutable();
             locations_.add(builderForValue.build());
@@ -7719,10 +6959,10 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public Builder addLocations(
-            int index, org.datacommons.proto.Debug.Log.Location.Builder builderForValue) {
+            int index, org.datacommons.proto.LogLocation.Location.Builder builderForValue) {
           if (locationsBuilder_ == null) {
             ensureLocationsIsMutable();
             locations_.add(index, builderForValue.build());
@@ -7739,10 +6979,10 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public Builder addAllLocations(
-            java.lang.Iterable<? extends org.datacommons.proto.Debug.Log.Location> values) {
+            java.lang.Iterable<? extends org.datacommons.proto.LogLocation.Location> values) {
           if (locationsBuilder_ == null) {
             ensureLocationsIsMutable();
             com.google.protobuf.AbstractMessageLite.Builder.addAll(values, locations_);
@@ -7759,7 +6999,7 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public Builder clearLocations() {
           if (locationsBuilder_ == null) {
@@ -7778,7 +7018,7 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public Builder removeLocations(int index) {
           if (locationsBuilder_ == null) {
@@ -7797,9 +7037,9 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public org.datacommons.proto.Debug.Log.Location.Builder getLocationsBuilder(int index) {
+        public org.datacommons.proto.LogLocation.Location.Builder getLocationsBuilder(int index) {
           return getLocationsFieldBuilder().getBuilder(index);
         }
         /**
@@ -7809,9 +7049,10 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationsOrBuilder(int index) {
+        public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(
+            int index) {
           if (locationsBuilder_ == null) {
             return locations_.get(index);
           } else {
@@ -7825,9 +7066,9 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public java.util.List<? extends org.datacommons.proto.Debug.Log.LocationOrBuilder>
+        public java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder>
             getLocationsOrBuilderList() {
           if (locationsBuilder_ != null) {
             return locationsBuilder_.getMessageOrBuilderList();
@@ -7842,11 +7083,11 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public org.datacommons.proto.Debug.Log.Location.Builder addLocationsBuilder() {
+        public org.datacommons.proto.LogLocation.Location.Builder addLocationsBuilder() {
           return getLocationsFieldBuilder()
-              .addBuilder(org.datacommons.proto.Debug.Log.Location.getDefaultInstance());
+              .addBuilder(org.datacommons.proto.LogLocation.Location.getDefaultInstance());
         }
         /**
          *
@@ -7855,11 +7096,11 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public org.datacommons.proto.Debug.Log.Location.Builder addLocationsBuilder(int index) {
+        public org.datacommons.proto.LogLocation.Location.Builder addLocationsBuilder(int index) {
           return getLocationsFieldBuilder()
-              .addBuilder(index, org.datacommons.proto.Debug.Log.Location.getDefaultInstance());
+              .addBuilder(index, org.datacommons.proto.LogLocation.Location.getDefaultInstance());
         }
         /**
          *
@@ -7868,24 +7109,24 @@ public final class Debug {
          * The location in the file where this value was read from.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public java.util.List<org.datacommons.proto.Debug.Log.Location.Builder>
+        public java.util.List<org.datacommons.proto.LogLocation.Location.Builder>
             getLocationsBuilderList() {
           return getLocationsFieldBuilder().getBuilderList();
         }
 
         private com.google.protobuf.RepeatedFieldBuilderV3<
-                org.datacommons.proto.Debug.Log.Location,
-                org.datacommons.proto.Debug.Log.Location.Builder,
-                org.datacommons.proto.Debug.Log.LocationOrBuilder>
+                org.datacommons.proto.LogLocation.Location,
+                org.datacommons.proto.LogLocation.Location.Builder,
+                org.datacommons.proto.LogLocation.LocationOrBuilder>
             getLocationsFieldBuilder() {
           if (locationsBuilder_ == null) {
             locationsBuilder_ =
                 new com.google.protobuf.RepeatedFieldBuilderV3<
-                    org.datacommons.proto.Debug.Log.Location,
-                    org.datacommons.proto.Debug.Log.Location.Builder,
-                    org.datacommons.proto.Debug.Log.LocationOrBuilder>(
+                    org.datacommons.proto.LogLocation.Location,
+                    org.datacommons.proto.LogLocation.Location.Builder,
+                    org.datacommons.proto.LogLocation.LocationOrBuilder>(
                     locations_,
                     ((bitField0_ & 0x00000002) != 0),
                     getParentForChildren(),
@@ -12840,10 +12081,6 @@ public final class Debug {
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_Log_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_Log_Location_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_org_datacommons_proto_Log_Location_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
       internal_static_org_datacommons_proto_Log_CounterSet_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_Log_CounterSet_fieldAccessorTable;
@@ -12888,56 +12125,60 @@ public final class Debug {
 
   static {
     java.lang.String[] descriptorData = {
-      "\n\013Debug.proto\022\025org.datacommons.proto\"\260\006\n"
-          + "\003Log\022C\n\rlevel_summary\030\001 \003(\0132,.org.dataco"
-          + "mmons.proto.Log.LevelSummaryEntry\0221\n\007ent"
-          + "ries\030\003 \003(\0132 .org.datacommons.proto.Log.E"
-          + "ntry\022H\n\023stats_check_summary\030\004 \003(\0132+.org."
-          + "datacommons.proto.StatValidationResult\0228"
-          + "\n\014command_args\030\005 \001(\0132\".org.datacommons.p"
-          + "roto.CommandArgs\032-\n\010Location\022\014\n\004file\030\001 \001"
-          + "(\t\022\023\n\013line_number\030\002 \001(\003\032\204\001\n\nCounterSet\022E"
-          + "\n\010counters\030\001 \003(\01323.org.datacommons.proto"
-          + ".Log.CounterSet.CountersEntry\032/\n\rCounter"
-          + "sEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\257"
-          + "\001\n\005Entry\022/\n\005level\030\001 \001(\0162 .org.datacommon"
-          + "s.proto.Log.Level\0225\n\010location\030\002 \001(\0132#.or"
-          + "g.datacommons.proto.Log.Location\022\024\n\014user"
-          + "_message\030\003 \001(\t\022\023\n\013counter_key\030\004 \001(\t\022\023\n\013c"
-          + "olumn_name\030\005 \003(\t\032Z\n\021LevelSummaryEntry\022\013\n"
-          + "\003key\030\001 \001(\t\0224\n\005value\030\002 \001(\0132%.org.datacomm"
-          + "ons.proto.Log.CounterSet:\0028\001\"c\n\005Level\022\025\n"
-          + "\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\r"
-          + "LEVEL_WARNING\020\002\022\017\n\013LEVEL_ERROR\020\003\022\017\n\013LEVE"
-          + "L_FATAL\020\004J\004\010\002\020\003\"\346\002\n\013CommandArgs\022\030\n\020exist"
-          + "ence_checks\030\001 \001(\010\022E\n\nresolution\030\002 \001(\01621."
-          + "org.datacommons.proto.CommandArgs.Resolu"
-          + "tionMode\022\023\n\013num_threads\030\003 \001(\005\022\023\n\013stat_ch"
-          + "ecks\030\004 \001(\010\022\025\n\rsample_places\030\005 \003(\t\022\031\n\021obs"
-          + "ervation_about\030\006 \001(\010\022\027\n\017allow_nan_svobs\030"
-          + "\007 \001(\010\"\200\001\n\016ResolutionMode\022\037\n\033RESOLUTION_M"
-          + "ODE_UNSPECIFIED\020\000\022\030\n\024RESOLUTION_MODE_NON"
-          + "E\020\001\022\031\n\025RESOLUTION_MODE_LOCAL\020\002\022\030\n\024RESOLU"
-          + "TION_MODE_FULL\020\003\"\251\001\n\tDataPoint\022\014\n\004date\030\001"
-          + " \001(\t\022:\n\006values\030\002 \003(\0132*.org.datacommons.p"
-          + "roto.DataPoint.DataValue\032R\n\tDataValue\022\r\n"
-          + "\005value\030\001 \001(\001\0226\n\tlocations\030\002 \003(\0132#.org.da"
-          + "tacommons.proto.Log.Location\"\234\003\n\024StatVal"
-          + "idationResult\022\022\n\nplace_dcid\030\001 \001(\t\022\025\n\rsta"
-          + "t_var_dcid\030\002 \001(\t\022\032\n\022measurement_method\030\003"
-          + " \001(\t\022\032\n\022observation_period\030\004 \001(\t\022\026\n\016scal"
-          + "ing_factor\030\005 \001(\t\022\014\n\004unit\030\006 \001(\t\022\\\n\023valida"
-          + "tion_counters\030\007 \003(\0132?.org.datacommons.pr"
-          + "oto.StatValidationResult.StatValidationE"
-          + "ntry\032\234\001\n\023StatValidationEntry\022\023\n\013counter_"
-          + "key\030\001 \001(\t\0228\n\016problem_points\030\002 \003(\0132 .org."
-          + "datacommons.proto.DataPoint\022\032\n\022additiona"
-          + "l_details\030\003 \001(\t\022\032\n\022percent_difference\030\004 "
-          + "\001(\001"
+      "\n\013Debug.proto\022\025org.datacommons.proto\032\021Lo"
+          + "gLocation.proto\032\tMcf.proto\"\375\005\n\003Log\022C\n\rle"
+          + "vel_summary\030\001 \003(\0132,.org.datacommons.prot"
+          + "o.Log.LevelSummaryEntry\0221\n\007entries\030\003 \003(\013"
+          + "2 .org.datacommons.proto.Log.Entry\022H\n\023st"
+          + "ats_check_summary\030\004 \003(\0132+.org.datacommon"
+          + "s.proto.StatValidationResult\0228\n\014command_"
+          + "args\030\005 \001(\0132\".org.datacommons.proto.Comma"
+          + "ndArgs\032\204\001\n\nCounterSet\022E\n\010counters\030\001 \003(\0132"
+          + "3.org.datacommons.proto.Log.CounterSet.C"
+          + "ountersEntry\032/\n\rCountersEntry\022\013\n\003key\030\001 \001"
+          + "(\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\253\001\n\005Entry\022/\n\005level"
+          + "\030\001 \001(\0162 .org.datacommons.proto.Log.Level"
+          + "\0221\n\010location\030\002 \001(\0132\037.org.datacommons.pro"
+          + "to.Location\022\024\n\014user_message\030\003 \001(\t\022\023\n\013cou"
+          + "nter_key\030\004 \001(\t\022\023\n\013column_name\030\005 \003(\t\032Z\n\021L"
+          + "evelSummaryEntry\022\013\n\003key\030\001 \001(\t\0224\n\005value\030\002"
+          + " \001(\0132%.org.datacommons.proto.Log.Counter"
+          + "Set:\0028\001\"c\n\005Level\022\025\n\021LEVEL_UNSPECIFIED\020\000\022"
+          + "\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LE"
+          + "VEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010\002\020\003\"\346\002\n\013C"
+          + "ommandArgs\022\030\n\020existence_checks\030\001 \001(\010\022E\n\n"
+          + "resolution\030\002 \001(\01621.org.datacommons.proto"
+          + ".CommandArgs.ResolutionMode\022\023\n\013num_threa"
+          + "ds\030\003 \001(\005\022\023\n\013stat_checks\030\004 \001(\010\022\025\n\rsample_"
+          + "places\030\005 \003(\t\022\031\n\021observation_about\030\006 \001(\010\022"
+          + "\027\n\017allow_nan_svobs\030\007 \001(\010\"\200\001\n\016ResolutionM"
+          + "ode\022\037\n\033RESOLUTION_MODE_UNSPECIFIED\020\000\022\030\n\024"
+          + "RESOLUTION_MODE_NONE\020\001\022\031\n\025RESOLUTION_MOD"
+          + "E_LOCAL\020\002\022\030\n\024RESOLUTION_MODE_FULL\020\003\"\321\001\n\t"
+          + "DataPoint\022\014\n\004date\030\001 \001(\t\022:\n\006values\030\002 \003(\0132"
+          + "*.org.datacommons.proto.DataPoint.DataVa"
+          + "lue\032z\n\tDataValue\0229\n\005value\030\001 \001(\0132*.org.da"
+          + "tacommons.proto.McfGraph.TypedValue\0222\n\tl"
+          + "ocations\030\002 \003(\0132\037.org.datacommons.proto.L"
+          + "ocation\"\234\003\n\024StatValidationResult\022\022\n\nplac"
+          + "e_dcid\030\001 \001(\t\022\025\n\rstat_var_dcid\030\002 \001(\t\022\032\n\022m"
+          + "easurement_method\030\003 \001(\t\022\032\n\022observation_p"
+          + "eriod\030\004 \001(\t\022\026\n\016scaling_factor\030\005 \001(\t\022\014\n\004u"
+          + "nit\030\006 \001(\t\022\\\n\023validation_counters\030\007 \003(\0132?"
+          + ".org.datacommons.proto.StatValidationRes"
+          + "ult.StatValidationEntry\032\234\001\n\023StatValidati"
+          + "onEntry\022\023\n\013counter_key\030\001 \001(\t\0228\n\016problem_"
+          + "points\030\002 \003(\0132 .org.datacommons.proto.Dat"
+          + "aPoint\022\032\n\022additional_details\030\003 \001(\t\022\032\n\022pe"
+          + "rcent_difference\030\004 \001(\001"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-            descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
+            descriptorData,
+            new com.google.protobuf.Descriptors.FileDescriptor[] {
+              org.datacommons.proto.LogLocation.getDescriptor(),
+              org.datacommons.proto.Mcf.getDescriptor(),
+            });
     internal_static_org_datacommons_proto_Log_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_org_datacommons_proto_Log_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
@@ -12945,16 +12186,8 @@ public final class Debug {
             new java.lang.String[] {
               "LevelSummary", "Entries", "StatsCheckSummary", "CommandArgs",
             });
-    internal_static_org_datacommons_proto_Log_Location_descriptor =
-        internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(0);
-    internal_static_org_datacommons_proto_Log_Location_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_Log_Location_descriptor,
-            new java.lang.String[] {
-              "File", "LineNumber",
-            });
     internal_static_org_datacommons_proto_Log_CounterSet_descriptor =
-        internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(1);
+        internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(0);
     internal_static_org_datacommons_proto_Log_CounterSet_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_CounterSet_descriptor,
@@ -12970,7 +12203,7 @@ public final class Debug {
               "Key", "Value",
             });
     internal_static_org_datacommons_proto_Log_Entry_descriptor =
-        internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(2);
+        internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(1);
     internal_static_org_datacommons_proto_Log_Entry_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_Entry_descriptor,
@@ -12978,7 +12211,7 @@ public final class Debug {
               "Level", "Location", "UserMessage", "CounterKey", "ColumnName",
             });
     internal_static_org_datacommons_proto_Log_LevelSummaryEntry_descriptor =
-        internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(3);
+        internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(2);
     internal_static_org_datacommons_proto_Log_LevelSummaryEntry_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_Log_LevelSummaryEntry_descriptor,
@@ -13039,6 +12272,8 @@ public final class Debug {
             new java.lang.String[] {
               "CounterKey", "ProblemPoints", "AdditionalDetails", "PercentDifference",
             });
+    org.datacommons.proto.LogLocation.getDescriptor();
+    org.datacommons.proto.Mcf.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)
