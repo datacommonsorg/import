@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Pattern;
 import org.apache.commons.text.StringEscapeUtils;
 
@@ -34,32 +36,24 @@ public class StringUtil {
   // From https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatterBuilder.html
   // Pattern specification:
   // https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatterBuilder.html#appendPattern-java.lang.String-
-  private static final List<String> DATE_PATTERNS =
-      List.of( // comment is the string length(s) that could potentially match these strings
-          "yyyy", // 4
-          "yyyy-MM", // 7
-          "yyyyMM", // 6
-          "yyyy-M", // 6, 7
-          "yyyy-MM-dd", // 10
-          "yyyyMMdd", // 8
-          "yyyy-M-d", // 8, 9, 10
-          "yyyy-MM-dd'T'HH:mm", // 16
-          "yyyy-MM-dd'T'HH:mm:ss", // 19
-          "yyyy-MM-dd'T'HH:mm:ss.SSS", // 23
-          "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"); // 29 (`XXX` adds 6 becuase it means ""+HH:MM"")
-
-  private static final Map<Integer, List<String>> DATE_PATTERNS_LENGTH_MAP =
-      Map.of(
-          4, List.of("yyyy"),
-          6, List.of("yyyyMM", "yyyy-M"),
-          7, List.of("yyyy-MM", "yyyy-M"),
-          8, List.of("yyyyMMdd", "yyyy-M-d"),
-          9, List.of("yyyy-M-d"),
-          10, List.of("yyyy-MM-dd", "yyyy-M-d"),
-          16, List.of("yyyy-MM-dd'T'HH:mm"),
-          19, List.of("yyyy-MM-dd'T'HH:mm:ss"),
-          23, List.of("yyyy-MM-dd'T'HH:mm:ss.SSS"),
-          29, List.of("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+  // Key is the pattern, value is a list of lengths that this pattern could
+  // potentially match. This is used in constructing DATE_PATTERNS_LENGTH_MAP,
+  // which filters out impossible date checks by comparing the lenght of the input
+  // map.
+  private static final Map<String, Set<Integer>> DATE_PATTERNS =
+      Map.ofEntries(
+          Map.entry("yyyy", Set.of(4)),
+          Map.entry("yyyy-MM", Set.of(7)),
+          Map.entry("yyyyMM", Set.of(6)),
+          Map.entry("yyyy-M", Set.of(6, 7)),
+          Map.entry("yyyy-MM-dd", Set.of(10)),
+          Map.entry("yyyyMMdd", Set.of(8)),
+          Map.entry("yyyy-M-d", Set.of(8, 9, 10)),
+          Map.entry("yyyy-MM-dd'T'HH:mm", Set.of(16)),
+          Map.entry("yyyy-MM-dd'T'HH:mm:ss", Set.of(19)),
+          Map.entry("yyyy-MM-dd'T'HH:mm:ss.SSS", Set.of(23)),
+          // `XXX` adds 6 because it means ""+HH:MM"")
+          Map.entry("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Set.of(29)));
 
   // The Java API does not match 20071, 2007101, so add these for compatibility with CPP
   // implementation.
@@ -122,7 +116,7 @@ public class StringUtil {
   }
 
   public static String getValidISO8601DatePattern(String dateValue) {
-    for (String pattern : DATE_PATTERNS) {
+    for (String pattern : DATE_PATTERNS.keySet()) {
       try {
         DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH).parse(dateValue);
         return pattern;
@@ -140,14 +134,12 @@ public class StringUtil {
 
   public static LocalDateTime getValidISO8601Date(String dateValue) {
     // TODO: handle the extra date patterns
-
-    List<String> possiblePatterns = DATE_PATTERNS_LENGTH_MAP.get(dateValue.length());
-    if (possiblePatterns != null) {
-      for (String pattern : possiblePatterns) {
+    for (Entry<String, Set<Integer>> entry : DATE_PATTERNS.entrySet()) {
+      if (entry.getValue().contains(dateValue.length())) {
         try {
           DateTimeFormatter dateFormat =
               new DateTimeFormatterBuilder()
-                  .appendPattern(pattern)
+                  .appendPattern(entry.getKey())
                   .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
                   .parseDefaulting(ChronoField.MONTH_OF_YEAR, 1)
                   .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
@@ -162,7 +154,7 @@ public class StringUtil {
   }
 
   public static String getValidISO8601DateTemplate(String datePattern) {
-    if (DATE_PATTERNS.contains(datePattern)) {
+    if (DATE_PATTERNS.keySet().contains(datePattern)) {
       return datePattern;
     } else {
       return "";
