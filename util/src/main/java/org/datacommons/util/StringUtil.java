@@ -39,8 +39,8 @@ public class StringUtil {
   // Key is the pattern, value is a list of lengths that this pattern could
   // potentially match. This is used in filtering out impossible date checks by
   // comparing the length of the input date string against the Set<Integer> here.
-  private static final Map<String, Set<Integer>> DATE_PATTERNS =
-      Map.ofEntries(
+  private static final List<Entry<String, Set<Integer>>> DATE_PATTERNS =
+      List.of(
           Map.entry("yyyy", Set.of(4)),
           Map.entry("yyyy-MM", Set.of(7)),
           Map.entry("yyyyMM", Set.of(6)),
@@ -115,7 +115,7 @@ public class StringUtil {
   }
 
   public static String getValidISO8601DatePattern(String dateValue) {
-    for (Entry<String, Set<Integer>> entry : DATE_PATTERNS.entrySet()) {
+    for (Entry<String, Set<Integer>> entry : DATE_PATTERNS) {
       if (entry.getValue().contains(dateValue.length())) {
         String pattern = entry.getKey();
         try {
@@ -136,7 +136,7 @@ public class StringUtil {
 
   public static LocalDateTime getValidISO8601Date(String dateValue) {
     // TODO: handle the extra date patterns
-    for (Entry<String, Set<Integer>> entry : DATE_PATTERNS.entrySet()) {
+    for (Entry<String, Set<Integer>> entry : DATE_PATTERNS) {
       if (entry.getValue().contains(dateValue.length())) {
         String pattern = entry.getKey();
         try {
@@ -157,11 +157,12 @@ public class StringUtil {
   }
 
   public static String getValidISO8601DateTemplate(String datePattern) {
-    if (DATE_PATTERNS.keySet().contains(datePattern)) {
-      return datePattern;
-    } else {
-      return "";
+    for (Entry<String, Set<Integer>> entry : DATE_PATTERNS) {
+      if (entry.getKey().equals(datePattern)) {
+        return entry.getKey();
+      }
     }
+    return "";
   }
 
   // Splits a string using the delimiter character. A field is not split if the delimiter is within
