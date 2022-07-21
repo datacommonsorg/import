@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
+import org.datacommons.proto.Mcf.McfGraph.TypedValue;
 
 // Checks common types of nodes on naming and schema requirements.
 //
@@ -312,10 +313,13 @@ public class McfChecker {
     // Raise an error if the SVObs Value is not a number (NaN) and the flag to
     // allow NaN SVObs is false
     if (observationValue != "" && !McfUtil.isSvObWithNumberValue(node) && !this.allowNanSVObs) {
+      TypedValue typedValue = McfUtil.getPropTvs(node, Vocabulary.VALUE).get(0);
       addLog(
           "Sanity_SVObs_Value_NotANumber",
-          "Found a non-numeric value for the value field of StatVarObservation but allowNanSVObs was false :: value: '"
+          "Found a non-numeric type in the value field of StatVarObservation but allowNanSVObs was false :: value: '"
               + observationValue
+              + "', type: '"
+              + typedValue.getType().toString()
               + "', property: '"
               + Vocabulary.GENERIC_VALUE
               + "', node: '"

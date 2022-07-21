@@ -277,7 +277,11 @@ public class McfCheckerTest {
         failureDisallowNanSVObs(
             mcf,
             "Sanity_SVObs_Value_NotANumber",
-            "Found a non-numeric value for the value field of StatVarObservation but allowNanSVObs was false :: value: 'DataSuppressed', property: 'value', node: 'SFWomenIncome2020'"));
+            "Found a non-numeric type in the value field of StatVarObservation but allowNanSVObs was false :: "
+                + "value: 'DataSuppressed', "
+                + "type: 'TEXT', "
+                + "property: 'value', "
+                + "node: 'SFWomenIncome2020'"));
 
     // A bad StatVarObs node with no value.
     mcf =
