@@ -115,12 +115,15 @@ public class StringUtil {
   }
 
   public static String getValidISO8601DatePattern(String dateValue) {
-    for (String pattern : DATE_PATTERNS.keySet()) {
-      try {
-        DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH).parse(dateValue);
-        return pattern;
-      } catch (DateTimeParseException ex) {
-        // Pass through
+    for (Entry<String, Set<Integer>> entry : DATE_PATTERNS.entrySet()) {
+      if (entry.getValue().contains(dateValue.length())) {
+        String pattern = entry.getKey();
+        try {
+          DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH).parse(dateValue);
+          return pattern;
+        } catch (DateTimeParseException ex) {
+          // Pass through
+        }
       }
     }
     for (String pattern : EXTRA_DATE_PATTERNS) {
@@ -135,10 +138,11 @@ public class StringUtil {
     // TODO: handle the extra date patterns
     for (Entry<String, Set<Integer>> entry : DATE_PATTERNS.entrySet()) {
       if (entry.getValue().contains(dateValue.length())) {
+        String pattern = entry.getKey();
         try {
           DateTimeFormatter dateFormat =
               new DateTimeFormatterBuilder()
-                  .appendPattern(entry.getKey())
+                  .appendPattern(pattern)
                   .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
                   .parseDefaulting(ChronoField.MONTH_OF_YEAR, 1)
                   .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
