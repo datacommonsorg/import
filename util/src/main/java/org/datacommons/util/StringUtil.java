@@ -41,11 +41,13 @@ public class StringUtil {
   // comparing the length of the input date string against the Set<Integer> here.
   private static final List<Entry<String, Set<Integer>>> DATE_PATTERNS =
       List.of(
-          Map.entry("yyyy", Set.of(4)),
+          // Sort these entries starting with the most common cases for runtime
+          // speed performance.
           Map.entry("yyyy-MM", Set.of(7)),
+          Map.entry("yyyy-MM-dd", Set.of(10)),
+          Map.entry("yyyy", Set.of(4)),
           Map.entry("yyyyMM", Set.of(6)),
           Map.entry("yyyy-M", Set.of(6, 7)),
-          Map.entry("yyyy-MM-dd", Set.of(10)),
           Map.entry("yyyyMMdd", Set.of(8)),
           Map.entry("yyyy-M-d", Set.of(8, 9, 10)),
           Map.entry("yyyy-MM-dd'T'HH:mm", Set.of(16)),
