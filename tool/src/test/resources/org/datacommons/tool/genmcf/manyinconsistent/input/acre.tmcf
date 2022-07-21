@@ -1,0 +1,6 @@
+Node: E:Acre_Table->E0
+typeOf: dcs:StatVarObservation
+variableMeasured: dcs:Some_StatVar
+observationAbout: C:Acre_Table->geoId
+observationDate: C:Acre_Table->DateTime
+value: C:Acre_Table->Some_StatVar
