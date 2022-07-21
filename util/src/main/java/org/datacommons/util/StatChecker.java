@@ -60,6 +60,7 @@ public class StatChecker {
           Vocabulary.OBSERVATION_DATE);
   private static final List<String> COUNTER_KEYS =
       List.of(
+          "StatsCheck_MultipleValueTypesInASeries",
           "StatsCheck_Inconsistent_Values",
           "StatsCheck_3_Sigma",
           "StatsCheck_MaxPercentFluctuationGreaterThan500",
@@ -273,20 +274,38 @@ public class StatChecker {
     inconsistentTypeCounter.setCounterKey(counterKey);
 
     ValueType firstType = null;
+    boolean foundInconsistencies = false;
 
     for (DataPoint dp : timeSeries) {
       for (DataValue val : dp.getValuesList()) {
         ValueType type = val.getValue().getType();
         if (firstType == null) {
           firstType = type;
+          // we want a pair of points in the logged counter, so we always add
+          // the first dp as a "problem point". however, this will only get logged
+          // if foundInconsistencies is set to True
+          inconsistentTypeCounter.addProblemPoints(dp);
+          System.out.println("Setting first type as " + firstType);
         }
         if (!firstType.equals(type)) {
+          System.out.println(
+              "First type was "
+                  + firstType
+                  + ", found a type that is "
+                  + type
+                  + " so, adding that problem point");
           inconsistentTypeCounter.addProblemPoints(dp);
+          foundInconsistencies = true;
           logCtx.incrementWarningCounterBy(counterKey, 1);
         }
       }
     }
-    if (!inconsistentTypeCounter.getProblemPointsList().isEmpty()) {
+    if (foundInconsistencies) {
+      System.out.println(
+          "[snn] found: "
+              + foundInconsistencies
+              + ", count of pps: "
+              + inconsistentTypeCounter.getProblemPointsCount());
       resBuilder.addValidationCounters(inconsistentTypeCounter.build());
     }
   }

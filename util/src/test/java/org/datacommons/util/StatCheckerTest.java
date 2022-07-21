@@ -195,7 +195,6 @@ public class StatCheckerTest {
     // List of two numbers does not fail, but ...
     resBuilder.clear();
     addDataPoint(timeSeries, "2012", 24.0);
-    addDataPoint(timeSeries, "2013", 240.3);
     StatChecker.checkSeriesTypeInconsistencies(
         new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
     assertFalse(checkHasCounter(resBuilder, counterKey, new ArrayList<>()));
@@ -204,7 +203,7 @@ public class StatCheckerTest {
     addDataPoint(timeSeries, "2014", "DataSuppressed");
     StatChecker.checkSeriesTypeInconsistencies(
         new ArrayList<>(timeSeries.values()), resBuilder, logCtx);
-    assertTrue(checkHasCounter(resBuilder, counterKey, List.of("2014")));
+    assertTrue(checkHasCounter(resBuilder, counterKey, List.of("2011", "2014")));
     assertEquals(1, TestUtil.getCounter(logCtx.getLog(), counterKey));
   }
 

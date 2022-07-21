@@ -2,17 +2,17 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "NumRowSuccesses": "3",
-        "NumPVSuccesses": "21",
-        "Existence_NumChecks": "28",
-        "NumNodeSuccesses": "3",
+        "NumRowSuccesses": "4",
+        "NumPVSuccesses": "28",
+        "Existence_NumChecks": "34",
+        "NumNodeSuccesses": "4",
         "Existence_NumDcCalls": "3"
       }
     },
     "LEVEL_WARNING": {
       "counters": {
         "Existence_MissingTriple_domainIncludes": "1",
-        "StatsCheck_Inconsistent_Values": "2"
+        "StatsCheck_MultipleValueTypesInASeries": "1"
       }
     }
   },
@@ -33,7 +33,7 @@
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
-      "counterKey": "StatsCheck_Inconsistent_Values",
+      "counterKey": "StatsCheck_MultipleValueTypesInASeries",
       "problemPoints": [{
         "date": "2020-01-01",
         "values": [{
@@ -46,58 +46,18 @@
             "file": "acre.csv",
             "lineNumber": "2"
           }]
-        }, {
-          "value": {
-            "type": "RESOLVED_REF",
-            "value": "Acre10.0",
-            "column": "Acre_MeasurementResult_StatVar"
-          },
-          "locations": [{
-            "file": "acre.csv",
-            "lineNumber": "3"
-          }]
-        }, {
-          "value": {
-            "type": "RESOLVED_REF",
-            "value": "Acre100.0",
-            "column": "Acre_MeasurementResult_StatVar"
-          },
-          "locations": [{
-            "file": "acre.csv",
-            "lineNumber": "3"
-          }]
         }]
       }, {
-        "date": "2020-01-01",
+        "date": "2020-01-04",
         "values": [{
           "value": {
-            "type": "RESOLVED_REF",
-            "value": "Acre1.0",
+            "type": "NUMBER",
+            "value": "42",
             "column": "Acre_MeasurementResult_StatVar"
           },
           "locations": [{
             "file": "acre.csv",
-            "lineNumber": "2"
-          }]
-        }, {
-          "value": {
-            "type": "RESOLVED_REF",
-            "value": "Acre10.0",
-            "column": "Acre_MeasurementResult_StatVar"
-          },
-          "locations": [{
-            "file": "acre.csv",
-            "lineNumber": "3"
-          }]
-        }, {
-          "value": {
-            "type": "RESOLVED_REF",
-            "value": "Acre100.0",
-            "column": "Acre_MeasurementResult_StatVar"
-          },
-          "locations": [{
-            "file": "acre.csv",
-            "lineNumber": "3"
+            "lineNumber": "4"
           }]
         }]
       }]
