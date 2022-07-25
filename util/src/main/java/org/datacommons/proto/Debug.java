@@ -5314,6 +5314,31 @@ public final class Debug {
      * @return The allowNanSvobs.
      */
     boolean getAllowNanSvobs();
+
+    /**
+     *
+     *
+     * <pre>
+     * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+     * </pre>
+     *
+     * <code>optional bool check_measurement_result = 8;</code>
+     *
+     * @return Whether the checkMeasurementResult field is set.
+     */
+    boolean hasCheckMeasurementResult();
+    /**
+     *
+     *
+     * <pre>
+     * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+     * </pre>
+     *
+     * <code>optional bool check_measurement_result = 8;</code>
+     *
+     * @return The checkMeasurementResult.
+     */
+    boolean getCheckMeasurementResult();
   }
   /** Protobuf type {@code org.datacommons.proto.CommandArgs} */
   public static final class CommandArgs extends com.google.protobuf.GeneratedMessageV3
@@ -5413,6 +5438,12 @@ public final class Debug {
               {
                 bitField0_ |= 0x00000020;
                 allowNanSvobs_ = input.readBool();
+                break;
+              }
+            case 64:
+              {
+                bitField0_ |= 0x00000040;
+                checkMeasurementResult_ = input.readBool();
                 break;
               }
             default:
@@ -5768,6 +5799,37 @@ public final class Debug {
       return allowNanSvobs_;
     }
 
+    public static final int CHECK_MEASUREMENT_RESULT_FIELD_NUMBER = 8;
+    private boolean checkMeasurementResult_;
+    /**
+     *
+     *
+     * <pre>
+     * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+     * </pre>
+     *
+     * <code>optional bool check_measurement_result = 8;</code>
+     *
+     * @return Whether the checkMeasurementResult field is set.
+     */
+    public boolean hasCheckMeasurementResult() {
+      return ((bitField0_ & 0x00000040) != 0);
+    }
+    /**
+     *
+     *
+     * <pre>
+     * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+     * </pre>
+     *
+     * <code>optional bool check_measurement_result = 8;</code>
+     *
+     * @return The checkMeasurementResult.
+     */
+    public boolean getCheckMeasurementResult() {
+      return checkMeasurementResult_;
+    }
+
     private byte memoizedIsInitialized = -1;
 
     @java.lang.Override
@@ -5803,6 +5865,9 @@ public final class Debug {
       if (((bitField0_ & 0x00000020) != 0)) {
         output.writeBool(7, allowNanSvobs_);
       }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        output.writeBool(8, checkMeasurementResult_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -5837,6 +5902,9 @@ public final class Debug {
       }
       if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream.computeBoolSize(7, allowNanSvobs_);
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        size += com.google.protobuf.CodedOutputStream.computeBoolSize(8, checkMeasurementResult_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5878,6 +5946,10 @@ public final class Debug {
       if (hasAllowNanSvobs()) {
         if (getAllowNanSvobs() != other.getAllowNanSvobs()) return false;
       }
+      if (hasCheckMeasurementResult() != other.hasCheckMeasurementResult()) return false;
+      if (hasCheckMeasurementResult()) {
+        if (getCheckMeasurementResult() != other.getCheckMeasurementResult()) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -5916,6 +5988,10 @@ public final class Debug {
       if (hasAllowNanSvobs()) {
         hash = (37 * hash) + ALLOW_NAN_SVOBS_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getAllowNanSvobs());
+      }
+      if (hasCheckMeasurementResult()) {
+        hash = (37 * hash) + CHECK_MEASUREMENT_RESULT_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getCheckMeasurementResult());
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -6070,6 +6146,8 @@ public final class Debug {
         bitField0_ = (bitField0_ & ~0x00000020);
         allowNanSvobs_ = false;
         bitField0_ = (bitField0_ & ~0x00000040);
+        checkMeasurementResult_ = false;
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -6127,6 +6205,10 @@ public final class Debug {
         if (((from_bitField0_ & 0x00000040) != 0)) {
           result.allowNanSvobs_ = allowNanSvobs_;
           to_bitField0_ |= 0x00000020;
+        }
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          result.checkMeasurementResult_ = checkMeasurementResult_;
+          to_bitField0_ |= 0x00000040;
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -6207,6 +6289,9 @@ public final class Debug {
         }
         if (other.hasAllowNanSvobs()) {
           setAllowNanSvobs(other.getAllowNanSvobs());
+        }
+        if (other.hasCheckMeasurementResult()) {
+          setCheckMeasurementResult(other.getCheckMeasurementResult());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -6626,6 +6711,71 @@ public final class Debug {
       public Builder clearAllowNanSvobs() {
         bitField0_ = (bitField0_ & ~0x00000040);
         allowNanSvobs_ = false;
+        onChanged();
+        return this;
+      }
+
+      private boolean checkMeasurementResult_;
+      /**
+       *
+       *
+       * <pre>
+       * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+       * </pre>
+       *
+       * <code>optional bool check_measurement_result = 8;</code>
+       *
+       * @return Whether the checkMeasurementResult field is set.
+       */
+      public boolean hasCheckMeasurementResult() {
+        return ((bitField0_ & 0x00000080) != 0);
+      }
+      /**
+       *
+       *
+       * <pre>
+       * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+       * </pre>
+       *
+       * <code>optional bool check_measurement_result = 8;</code>
+       *
+       * @return The checkMeasurementResult.
+       */
+      public boolean getCheckMeasurementResult() {
+        return checkMeasurementResult_;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+       * </pre>
+       *
+       * <code>optional bool check_measurement_result = 8;</code>
+       *
+       * @param value The checkMeasurementResult to set.
+       * @return This builder for chaining.
+       */
+      public Builder setCheckMeasurementResult(boolean value) {
+        bitField0_ |= 0x00000080;
+        checkMeasurementResult_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       *
+       *
+       * <pre>
+       * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+       * </pre>
+       *
+       * <code>optional bool check_measurement_result = 8;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearCheckMeasurementResult() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        checkMeasurementResult_ = false;
         onChanged();
         return this;
       }
@@ -12909,31 +13059,31 @@ public final class Debug {
           + "ons.proto.Log.CounterSet:\0028\001\"c\n\005Level\022\025\n"
           + "\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLEVEL_INFO\020\001\022\021\n\r"
           + "LEVEL_WARNING\020\002\022\017\n\013LEVEL_ERROR\020\003\022\017\n\013LEVE"
-          + "L_FATAL\020\004J\004\010\002\020\003\"\346\002\n\013CommandArgs\022\030\n\020exist"
+          + "L_FATAL\020\004J\004\010\002\020\003\"\210\003\n\013CommandArgs\022\030\n\020exist"
           + "ence_checks\030\001 \001(\010\022E\n\nresolution\030\002 \001(\01621."
           + "org.datacommons.proto.CommandArgs.Resolu"
           + "tionMode\022\023\n\013num_threads\030\003 \001(\005\022\023\n\013stat_ch"
           + "ecks\030\004 \001(\010\022\025\n\rsample_places\030\005 \003(\t\022\031\n\021obs"
           + "ervation_about\030\006 \001(\010\022\027\n\017allow_nan_svobs\030"
-          + "\007 \001(\010\"\200\001\n\016ResolutionMode\022\037\n\033RESOLUTION_M"
-          + "ODE_UNSPECIFIED\020\000\022\030\n\024RESOLUTION_MODE_NON"
-          + "E\020\001\022\031\n\025RESOLUTION_MODE_LOCAL\020\002\022\030\n\024RESOLU"
-          + "TION_MODE_FULL\020\003\"\251\001\n\tDataPoint\022\014\n\004date\030\001"
-          + " \001(\t\022:\n\006values\030\002 \003(\0132*.org.datacommons.p"
-          + "roto.DataPoint.DataValue\032R\n\tDataValue\022\r\n"
-          + "\005value\030\001 \001(\001\0226\n\tlocations\030\002 \003(\0132#.org.da"
-          + "tacommons.proto.Log.Location\"\234\003\n\024StatVal"
-          + "idationResult\022\022\n\nplace_dcid\030\001 \001(\t\022\025\n\rsta"
-          + "t_var_dcid\030\002 \001(\t\022\032\n\022measurement_method\030\003"
-          + " \001(\t\022\032\n\022observation_period\030\004 \001(\t\022\026\n\016scal"
-          + "ing_factor\030\005 \001(\t\022\014\n\004unit\030\006 \001(\t\022\\\n\023valida"
-          + "tion_counters\030\007 \003(\0132?.org.datacommons.pr"
-          + "oto.StatValidationResult.StatValidationE"
-          + "ntry\032\234\001\n\023StatValidationEntry\022\023\n\013counter_"
-          + "key\030\001 \001(\t\0228\n\016problem_points\030\002 \003(\0132 .org."
-          + "datacommons.proto.DataPoint\022\032\n\022additiona"
-          + "l_details\030\003 \001(\t\022\032\n\022percent_difference\030\004 "
-          + "\001(\001"
+          + "\007 \001(\010\022 \n\030check_measurement_result\030\010 \001(\010\""
+          + "\200\001\n\016ResolutionMode\022\037\n\033RESOLUTION_MODE_UN"
+          + "SPECIFIED\020\000\022\030\n\024RESOLUTION_MODE_NONE\020\001\022\031\n"
+          + "\025RESOLUTION_MODE_LOCAL\020\002\022\030\n\024RESOLUTION_M"
+          + "ODE_FULL\020\003\"\251\001\n\tDataPoint\022\014\n\004date\030\001 \001(\t\022:"
+          + "\n\006values\030\002 \003(\0132*.org.datacommons.proto.D"
+          + "ataPoint.DataValue\032R\n\tDataValue\022\r\n\005value"
+          + "\030\001 \001(\001\0226\n\tlocations\030\002 \003(\0132#.org.datacomm"
+          + "ons.proto.Log.Location\"\234\003\n\024StatValidatio"
+          + "nResult\022\022\n\nplace_dcid\030\001 \001(\t\022\025\n\rstat_var_"
+          + "dcid\030\002 \001(\t\022\032\n\022measurement_method\030\003 \001(\t\022\032"
+          + "\n\022observation_period\030\004 \001(\t\022\026\n\016scaling_fa"
+          + "ctor\030\005 \001(\t\022\014\n\004unit\030\006 \001(\t\022\\\n\023validation_c"
+          + "ounters\030\007 \003(\0132?.org.datacommons.proto.St"
+          + "atValidationResult.StatValidationEntry\032\234"
+          + "\001\n\023StatValidationEntry\022\023\n\013counter_key\030\001 "
+          + "\001(\t\0228\n\016problem_points\030\002 \003(\0132 .org.dataco"
+          + "mmons.proto.DataPoint\022\032\n\022additional_deta"
+          + "ils\030\003 \001(\t\022\032\n\022percent_difference\030\004 \001(\001"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -12998,6 +13148,7 @@ public final class Debug {
               "SamplePlaces",
               "ObservationAbout",
               "AllowNanSvobs",
+              "CheckMeasurementResult",
             });
     internal_static_org_datacommons_proto_DataPoint_descriptor =
         getDescriptor().getMessageTypes().get(2);

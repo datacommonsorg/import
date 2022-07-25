@@ -185,6 +185,11 @@ Allows non-numeric (text or reference) values for StatVarObservation value field
 
 Defaults to `false`.
 
+### `--check-measurement-result`
+
+TODO(snny): description
+
+Defaults to false.
 
 ### `-p`, `--sample-places=<samplePlaces>`
 

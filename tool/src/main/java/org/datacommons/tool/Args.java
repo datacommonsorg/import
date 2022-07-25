@@ -21,6 +21,7 @@ class Args {
   public boolean generateSummaryReport = true;
   public boolean checkObservationAbout = false;
   public boolean allowNonNumericStatVarObservation = false;
+  public boolean checkMeasurementResult = false;
 
   public String toString() {
     StringBuilder argStr = new StringBuilder();
@@ -38,6 +39,7 @@ class Args {
     }
     argStr.append(", observation-about=" + checkObservationAbout);
     argStr.append(", allow-non-numeric-svobs=" + allowNonNumericStatVarObservation);
+    argStr.append(", check-measurement-result=" + checkMeasurementResult);
 
     return argStr.toString();
   }

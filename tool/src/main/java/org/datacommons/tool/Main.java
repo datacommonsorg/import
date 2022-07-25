@@ -92,6 +92,13 @@ class Main {
   public boolean allowNonNumericStatVarObservation;
 
   @CommandLine.Option(
+      names = {"--check-measurement-result"},
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT,
+      description = "TODO(snny): description" + "Defaults to false.")
+  public boolean checkMeasurementResult;
+
+  @CommandLine.Option(
       names = {"-p", "--sample-places"},
       scope = CommandLine.ScopeType.INHERIT,
       description =
