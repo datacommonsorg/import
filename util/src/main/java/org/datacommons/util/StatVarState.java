@@ -1,5 +1,7 @@
 package org.datacommons.util;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.util.List;
@@ -60,27 +62,38 @@ public class StatVarState {
       // TODO(snny): throw error? do nothing?
     }
 
-    var dataJson =
+    JsonObject dataJson =
         ApiHelper.fetchPropertyValues(this.httpClient, List.of(svDcid), Vocabulary.STAT_TYPE);
-    if (dataJson == null) {
+    String statType = parseApiStatTypeResponse(dataJson, svDcid);
+    if (statType != null) { // statType == null when the response data was off
+      addStatType(svDcid, statType);
+    }
+  }
+
+  // Returns the statType indicated in the payload.
+  // Returns null if there are any issue in the import data.
+  protected String parseApiStatTypeResponse(JsonObject payload, String svDcid) {
+    // TODO(snny): test this function
+    
+    if (payload == null) {
       // TODO(snny): handle this
     }
 
     // TODO(snny): handle assertion errors...
 
-    assert dataJson.has(svDcid);
-    var nodeJson = dataJson.getAsJsonObject(svDcid);
+    assert payload.has(svDcid);
+    JsonObject nodeJson = payload.getAsJsonObject(svDcid);
 
     assert nodeJson.has("out");
-    var statTypeValuesJson = nodeJson.getAsJsonArray("out");
+    JsonArray statTypeValuesJson = nodeJson.getAsJsonArray("out");
 
     assert statTypeValuesJson.size() == 1;
-    var statTypeJson = statTypeValuesJson.get(0).getAsJsonObject();
+    JsonObject statTypeJson = statTypeValuesJson.get(0).getAsJsonObject();
 
     assert statTypeJson.has("value");
     String statType = statTypeJson.get("value").getAsString();
 
-    addStatType(svDcid, statType);
+    return statType;
   }
 
   // Returns false if a dcid collision is found. Returns true otherwise.
