@@ -43,9 +43,9 @@ public class StringUtil {
       List.of(
           // Sort these entries starting with the most common cases for runtime
           // speed performance.
+          Map.entry("yyyy", Set.of(4)),
           Map.entry("yyyy-M", Set.of(6, 7)),
           Map.entry("yyyy-M-d", Set.of(8, 9, 10)),
-          Map.entry("yyyy", Set.of(4)),
           Map.entry("yyyyMM", Set.of(6)),
           Map.entry("yyyyMMdd", Set.of(8)),
           Map.entry("yyyy-MM-dd'T'HH:mm", Set.of(16)),
