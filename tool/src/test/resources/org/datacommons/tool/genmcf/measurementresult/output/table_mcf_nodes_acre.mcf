@@ -34,7 +34,7 @@ typeOf: dcid:StatVarObservation
 keyString: "observationAbout=geoId/01variableMeasured=WHO/TOBACCO_0000000342observationDate=2020-01-04value=ThisReferenceDoesNotExistAndShouldError"
 dcid: "dc/o/7kjm3hkkbpw2d"
 
-Node: Acre_Table/E0/4
+Node: Acre_Table/E0/5
 observationDate: "2020-01-05"
 observationAbout: dcid:geoId/01
 variableMeasured: dcid:WHO/TOBACCO_0000000342
