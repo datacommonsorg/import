@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.junit.Test;
 
 public class StringUtilTest {
@@ -102,7 +103,8 @@ public class StringUtilTest {
     assertTrue(StringUtil.getValidISO8601DatePattern("201").isEmpty());
 
     // Year + Month.
-    assertEquals("yyyy-MM", StringUtil.getValidISO8601DatePattern("2017-01"));
+    assertTrue( // either pattern is a valid match
+        Set.of("yyyy-MM", "yyyy-M").contains(StringUtil.getValidISO8601DatePattern("2017-01")));
     assertEquals("yyyy-M", StringUtil.getValidISO8601DatePattern("2017-1"));
     assertEquals("yyyyMM", StringUtil.getValidISO8601DatePattern("201701"));
     assertEquals("^\\d{5}$", StringUtil.getValidISO8601DatePattern("20171"));
@@ -110,7 +112,9 @@ public class StringUtilTest {
 
     // Year + Month + Day.
     assertEquals("yyyy-M-d", StringUtil.getValidISO8601DatePattern("2017-1-1"));
-    assertEquals("yyyy-MM-dd", StringUtil.getValidISO8601DatePattern("2017-11-09"));
+    assertTrue( // either pattern is a valid match
+        Set.of("yyyy-M-d", "yyyy-MM-dd")
+            .contains(StringUtil.getValidISO8601DatePattern("2017-11-09")));
     assertEquals("yyyyMMdd", StringUtil.getValidISO8601DatePattern("20171109"));
     assertEquals("^\\d{7}$", StringUtil.getValidISO8601DatePattern("2017119"));
     assertTrue(StringUtil.getValidISO8601DatePattern("2017-Nov-09").isEmpty());
