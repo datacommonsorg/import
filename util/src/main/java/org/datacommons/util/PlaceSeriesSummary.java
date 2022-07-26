@@ -14,6 +14,8 @@ import org.datacommons.proto.Debug.DataPoint;
 import org.datacommons.proto.Debug.DataPoint.DataValue;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.McfGraph.TypedValue;
+import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
@@ -42,12 +44,31 @@ public class PlaceSeriesSummary {
       List<String> valueStrings = new ArrayList<String>();
 
       for (DataPoint dv : this.timeSeries.values()) {
-        valueStrings.add(Double.toString(dv.getValues(0).getValue()));
+        TypedValue tv = dv.getValues(0).getValue();
+        valueStrings.add(tv.getValue());
       }
       return String.join(" | ", valueStrings);
     }
 
+    public ValueType getValueType() {
+      // We can return the type of the first DataPoint as the type of the series.
+      // Whether the types in this series is consistent is checked by
+      // StatChecker.checkSeriesTypeInconsistencies
+      if (this.getTimeSeries().size() > 0) {
+        return SeriesSummary.getTypeOfDataPoint(
+            new ArrayList<>(this.getTimeSeries().values()).get(0));
+      } else {
+        // This should not really happen since SeriesSummary is only created
+        // with a node to add and that node is added right after in extractSeriesFromNode
+        return null;
+      }
+    }
+
     public String getTimeSeriesSVGChart() {
+
+      if (getValueType() != ValueType.NUMBER) {
+        return "<b>Charts for non-numeric types are not supported yet</b>";
+      }
 
       TimeSeries timeSeries = new TimeSeries("ts");
 
@@ -63,10 +84,23 @@ public class PlaceSeriesSummary {
                 localDateTime.getDayOfMonth(),
                 localDateTime.getMonthValue(),
                 localDateTime.getYear()),
-            timeSeriesDataPoint.getValue().getValues(0).getValue());
+            getValueOfDataPointAsNumber(timeSeriesDataPoint.getValue()));
       }
 
       return StatVarSummary.constructSVGChartFromTimeSeries(timeSeries);
+    }
+
+    // Helper functions to extract fields of interest from a DataPoint object.
+    public static ValueType getTypeOfDataPoint(DataPoint dp) {
+      return dp.getValues(0).getValue().getType();
+    }
+
+    public static String getValueOfDataPoint(DataPoint dp) {
+      return dp.getValues(0).getValue().getValue();
+    }
+
+    public static Double getValueOfDataPointAsNumber(DataPoint dp) {
+      return Double.parseDouble(SeriesSummary.getValueOfDataPoint(dp));
     }
   }
 
@@ -108,10 +142,14 @@ public class PlaceSeriesSummary {
 
     // Add the value of this StatVarObservation node to the timeseries of this node's SeriesSummary.
     String obsDate = McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE);
-    String value = McfUtil.getPropVal(node, Vocabulary.VALUE);
+
+    // We never expect to get null here, since the node would have been dropped.
+    // The value will already have been parsed into a TypedValue, so we can depend on the fact that
+    // typedValue.getType() is not the default enum value (UNKNOWN_VALUE_TYPE).
+    TypedValue typedValue = McfUtil.getPropTvs(node, Vocabulary.VALUE).get(0);
     DataValue dataVal =
         DataValue.newBuilder()
-            .setValue(Double.parseDouble(value))
+            .setValue(typedValue)
             .addAllLocations(node.getLocationsList())
             .build();
     DataPoint.Builder dataPoint = DataPoint.newBuilder().setDate(obsDate);
@@ -130,6 +168,7 @@ public class PlaceSeriesSummary {
 
   // Generate a map of stat var id to StatVarSummary for that stat var from the stats information
   // saved to this object. Used by SummaryReport.ftl
+  // TODO: is this function used in any significant manner?
   public Map<String, StatVarSummary> getStatVarSummaryMap() {
     Map<String, StatVarSummary> statVarSummaryMap = new HashMap<>();
     for (Map.Entry<String, Map<Long, SeriesSummary>> svSeriesSummary :
@@ -157,7 +196,7 @@ public class PlaceSeriesSummary {
           dp -> {
             if (!dp.getValuesList().isEmpty()) {
               summary.seriesDates.add(dp.getDate());
-              summary.seriesValues.add(dp.getValues(0).getValue());
+              summary.seriesValues.add(dp.getValues(0).getValue().getValue());
             }
           });
       statVarSummaryMap.put(svSeriesSummary.getKey(), summary);

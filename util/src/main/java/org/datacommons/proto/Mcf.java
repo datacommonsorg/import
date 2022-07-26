@@ -2694,9 +2694,9 @@ public final class Mcf {
        * There can be multiple if PVs in this node are merged from different files.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      java.util.List<org.datacommons.proto.Debug.Log.Location> getLocationsList();
+      java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList();
       /**
        *
        *
@@ -2705,9 +2705,9 @@ public final class Mcf {
        * There can be multiple if PVs in this node are merged from different files.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      org.datacommons.proto.Debug.Log.Location getLocations(int index);
+      org.datacommons.proto.LogLocation.Location getLocations(int index);
       /**
        *
        *
@@ -2716,7 +2716,7 @@ public final class Mcf {
        * There can be multiple if PVs in this node are merged from different files.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       int getLocationsCount();
       /**
@@ -2727,9 +2727,9 @@ public final class Mcf {
        * There can be multiple if PVs in this node are merged from different files.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      java.util.List<? extends org.datacommons.proto.Debug.Log.LocationOrBuilder>
+      java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder>
           getLocationsOrBuilderList();
       /**
        *
@@ -2739,9 +2739,9 @@ public final class Mcf {
        * There can be multiple if PVs in this node are merged from different files.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationsOrBuilder(int index);
+      org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(int index);
 
       /**
        *
@@ -2893,12 +2893,12 @@ public final class Mcf {
                 {
                   if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                     locations_ =
-                        new java.util.ArrayList<org.datacommons.proto.Debug.Log.Location>();
+                        new java.util.ArrayList<org.datacommons.proto.LogLocation.Location>();
                     mutable_bitField0_ |= 0x00000002;
                   }
                   locations_.add(
                       input.readMessage(
-                          org.datacommons.proto.Debug.Log.Location.PARSER, extensionRegistry));
+                          org.datacommons.proto.LogLocation.Location.PARSER, extensionRegistry));
                   break;
                 }
               case 26:
@@ -3071,7 +3071,7 @@ public final class Mcf {
       }
 
       public static final int LOCATIONS_FIELD_NUMBER = 2;
-      private java.util.List<org.datacommons.proto.Debug.Log.Location> locations_;
+      private java.util.List<org.datacommons.proto.LogLocation.Location> locations_;
       /**
        *
        *
@@ -3080,9 +3080,9 @@ public final class Mcf {
        * There can be multiple if PVs in this node are merged from different files.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      public java.util.List<org.datacommons.proto.Debug.Log.Location> getLocationsList() {
+      public java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList() {
         return locations_;
       }
       /**
@@ -3093,9 +3093,9 @@ public final class Mcf {
        * There can be multiple if PVs in this node are merged from different files.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      public java.util.List<? extends org.datacommons.proto.Debug.Log.LocationOrBuilder>
+      public java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder>
           getLocationsOrBuilderList() {
         return locations_;
       }
@@ -3107,7 +3107,7 @@ public final class Mcf {
        * There can be multiple if PVs in this node are merged from different files.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       public int getLocationsCount() {
         return locations_.size();
@@ -3120,9 +3120,9 @@ public final class Mcf {
        * There can be multiple if PVs in this node are merged from different files.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      public org.datacommons.proto.Debug.Log.Location getLocations(int index) {
+      public org.datacommons.proto.LogLocation.Location getLocations(int index) {
         return locations_.get(index);
       }
       /**
@@ -3133,9 +3133,9 @@ public final class Mcf {
        * There can be multiple if PVs in this node are merged from different files.
        * </pre>
        *
-       * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+       * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      public org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationsOrBuilder(int index) {
+      public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(int index) {
         return locations_.get(index);
       }
 
@@ -3887,21 +3887,21 @@ public final class Mcf {
           return this;
         }
 
-        private java.util.List<org.datacommons.proto.Debug.Log.Location> locations_ =
+        private java.util.List<org.datacommons.proto.LogLocation.Location> locations_ =
             java.util.Collections.emptyList();
 
         private void ensureLocationsIsMutable() {
           if (!((bitField0_ & 0x00000002) != 0)) {
             locations_ =
-                new java.util.ArrayList<org.datacommons.proto.Debug.Log.Location>(locations_);
+                new java.util.ArrayList<org.datacommons.proto.LogLocation.Location>(locations_);
             bitField0_ |= 0x00000002;
           }
         }
 
         private com.google.protobuf.RepeatedFieldBuilderV3<
-                org.datacommons.proto.Debug.Log.Location,
-                org.datacommons.proto.Debug.Log.Location.Builder,
-                org.datacommons.proto.Debug.Log.LocationOrBuilder>
+                org.datacommons.proto.LogLocation.Location,
+                org.datacommons.proto.LogLocation.Location.Builder,
+                org.datacommons.proto.LogLocation.LocationOrBuilder>
             locationsBuilder_;
 
         /**
@@ -3912,9 +3912,9 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public java.util.List<org.datacommons.proto.Debug.Log.Location> getLocationsList() {
+        public java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList() {
           if (locationsBuilder_ == null) {
             return java.util.Collections.unmodifiableList(locations_);
           } else {
@@ -3929,7 +3929,7 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public int getLocationsCount() {
           if (locationsBuilder_ == null) {
@@ -3946,9 +3946,9 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public org.datacommons.proto.Debug.Log.Location getLocations(int index) {
+        public org.datacommons.proto.LogLocation.Location getLocations(int index) {
           if (locationsBuilder_ == null) {
             return locations_.get(index);
           } else {
@@ -3963,9 +3963,9 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public Builder setLocations(int index, org.datacommons.proto.Debug.Log.Location value) {
+        public Builder setLocations(int index, org.datacommons.proto.LogLocation.Location value) {
           if (locationsBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -3986,10 +3986,10 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public Builder setLocations(
-            int index, org.datacommons.proto.Debug.Log.Location.Builder builderForValue) {
+            int index, org.datacommons.proto.LogLocation.Location.Builder builderForValue) {
           if (locationsBuilder_ == null) {
             ensureLocationsIsMutable();
             locations_.set(index, builderForValue.build());
@@ -4007,9 +4007,9 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public Builder addLocations(org.datacommons.proto.Debug.Log.Location value) {
+        public Builder addLocations(org.datacommons.proto.LogLocation.Location value) {
           if (locationsBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -4030,9 +4030,9 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public Builder addLocations(int index, org.datacommons.proto.Debug.Log.Location value) {
+        public Builder addLocations(int index, org.datacommons.proto.LogLocation.Location value) {
           if (locationsBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -4053,10 +4053,10 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public Builder addLocations(
-            org.datacommons.proto.Debug.Log.Location.Builder builderForValue) {
+            org.datacommons.proto.LogLocation.Location.Builder builderForValue) {
           if (locationsBuilder_ == null) {
             ensureLocationsIsMutable();
             locations_.add(builderForValue.build());
@@ -4074,10 +4074,10 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public Builder addLocations(
-            int index, org.datacommons.proto.Debug.Log.Location.Builder builderForValue) {
+            int index, org.datacommons.proto.LogLocation.Location.Builder builderForValue) {
           if (locationsBuilder_ == null) {
             ensureLocationsIsMutable();
             locations_.add(index, builderForValue.build());
@@ -4095,10 +4095,10 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public Builder addAllLocations(
-            java.lang.Iterable<? extends org.datacommons.proto.Debug.Log.Location> values) {
+            java.lang.Iterable<? extends org.datacommons.proto.LogLocation.Location> values) {
           if (locationsBuilder_ == null) {
             ensureLocationsIsMutable();
             com.google.protobuf.AbstractMessageLite.Builder.addAll(values, locations_);
@@ -4116,7 +4116,7 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public Builder clearLocations() {
           if (locationsBuilder_ == null) {
@@ -4136,7 +4136,7 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public Builder removeLocations(int index) {
           if (locationsBuilder_ == null) {
@@ -4156,9 +4156,9 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public org.datacommons.proto.Debug.Log.Location.Builder getLocationsBuilder(int index) {
+        public org.datacommons.proto.LogLocation.Location.Builder getLocationsBuilder(int index) {
           return getLocationsFieldBuilder().getBuilder(index);
         }
         /**
@@ -4169,9 +4169,10 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public org.datacommons.proto.Debug.Log.LocationOrBuilder getLocationsOrBuilder(int index) {
+        public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(
+            int index) {
           if (locationsBuilder_ == null) {
             return locations_.get(index);
           } else {
@@ -4186,9 +4187,9 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public java.util.List<? extends org.datacommons.proto.Debug.Log.LocationOrBuilder>
+        public java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder>
             getLocationsOrBuilderList() {
           if (locationsBuilder_ != null) {
             return locationsBuilder_.getMessageOrBuilderList();
@@ -4204,11 +4205,11 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public org.datacommons.proto.Debug.Log.Location.Builder addLocationsBuilder() {
+        public org.datacommons.proto.LogLocation.Location.Builder addLocationsBuilder() {
           return getLocationsFieldBuilder()
-              .addBuilder(org.datacommons.proto.Debug.Log.Location.getDefaultInstance());
+              .addBuilder(org.datacommons.proto.LogLocation.Location.getDefaultInstance());
         }
         /**
          *
@@ -4218,11 +4219,11 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public org.datacommons.proto.Debug.Log.Location.Builder addLocationsBuilder(int index) {
+        public org.datacommons.proto.LogLocation.Location.Builder addLocationsBuilder(int index) {
           return getLocationsFieldBuilder()
-              .addBuilder(index, org.datacommons.proto.Debug.Log.Location.getDefaultInstance());
+              .addBuilder(index, org.datacommons.proto.LogLocation.Location.getDefaultInstance());
         }
         /**
          *
@@ -4232,24 +4233,24 @@ public final class Mcf {
          * There can be multiple if PVs in this node are merged from different files.
          * </pre>
          *
-         * <code>repeated .org.datacommons.proto.Log.Location locations = 2;</code>
+         * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public java.util.List<org.datacommons.proto.Debug.Log.Location.Builder>
+        public java.util.List<org.datacommons.proto.LogLocation.Location.Builder>
             getLocationsBuilderList() {
           return getLocationsFieldBuilder().getBuilderList();
         }
 
         private com.google.protobuf.RepeatedFieldBuilderV3<
-                org.datacommons.proto.Debug.Log.Location,
-                org.datacommons.proto.Debug.Log.Location.Builder,
-                org.datacommons.proto.Debug.Log.LocationOrBuilder>
+                org.datacommons.proto.LogLocation.Location,
+                org.datacommons.proto.LogLocation.Location.Builder,
+                org.datacommons.proto.LogLocation.LocationOrBuilder>
             getLocationsFieldBuilder() {
           if (locationsBuilder_ == null) {
             locationsBuilder_ =
                 new com.google.protobuf.RepeatedFieldBuilderV3<
-                    org.datacommons.proto.Debug.Log.Location,
-                    org.datacommons.proto.Debug.Log.Location.Builder,
-                    org.datacommons.proto.Debug.Log.LocationOrBuilder>(
+                    org.datacommons.proto.LogLocation.Location,
+                    org.datacommons.proto.LogLocation.Location.Builder,
+                    org.datacommons.proto.LogLocation.LocationOrBuilder>(
                     locations_,
                     ((bitField0_ & 0x00000002) != 0),
                     getParentForChildren(),
@@ -5387,36 +5388,36 @@ public final class Mcf {
 
   static {
     java.lang.String[] descriptorData = {
-      "\n\tMcf.proto\022\025org.datacommons.proto\032\013Debu"
-          + "g.proto\"\233\005\n\010McfGraph\022:\n\004type\030\001 \001(\0162\036.org"
-          + ".datacommons.proto.McfType:\014INSTANCE_MCF"
-          + "\0229\n\005nodes\030\002 \003(\0132*.org.datacommons.proto."
-          + "McfGraph.NodesEntry\032[\n\nTypedValue\022.\n\004typ"
-          + "e\030\001 \001(\0162 .org.datacommons.proto.ValueTyp"
-          + "e\022\r\n\005value\030\002 \001(\t\022\016\n\006column\030\003 \001(\t\032J\n\006Valu"
-          + "es\022@\n\014typed_values\030\001 \003(\0132*.org.datacommo"
-          + "ns.proto.McfGraph.TypedValue\032\220\002\n\016Propert"
-          + "yValues\022D\n\003pvs\030\001 \003(\01327.org.datacommons.p"
-          + "roto.McfGraph.PropertyValues.PvsEntry\0226\n"
-          + "\tlocations\030\002 \003(\0132#.org.datacommons.proto"
-          + ".Log.Location\022\025\n\rtemplate_node\030\003 \001(\t\022\025\n\r"
-          + "error_message\030\004 \001(\t\032R\n\010PvsEntry\022\013\n\003key\030\001"
-          + " \001(\t\0225\n\005value\030\002 \001(\0132&.org.datacommons.pr"
-          + "oto.McfGraph.Values:\0028\001\032\\\n\nNodesEntry\022\013\n"
-          + "\003key\030\001 \001(\t\022=\n\005value\030\002 \001(\0132..org.datacomm"
-          + "ons.proto.McfGraph.PropertyValues:\0028\001*C\n"
-          + "\007McfType\022\024\n\020UNKNOWN_MCF_TYPE\020\000\022\020\n\014INSTAN"
-          + "CE_MCF\020\001\022\020\n\014TEMPLATE_MCF\020\002*\226\001\n\tValueType"
-          + "\022\026\n\022UNKNOWN_VALUE_TYPE\020\000\022\010\n\004TEXT\020\001\022\n\n\006NU"
-          + "MBER\020\002\022\022\n\016UNRESOLVED_REF\020\003\022\020\n\014RESOLVED_R"
-          + "EF\020\004\022\021\n\rCOMPLEX_VALUE\020\005\022\020\n\014TABLE_COLUMN\020"
-          + "\006\022\020\n\014TABLE_ENTITY\020\007"
+      "\n\tMcf.proto\022\025org.datacommons.proto\032\021LogL"
+          + "ocation.proto\"\227\005\n\010McfGraph\022:\n\004type\030\001 \001(\016"
+          + "2\036.org.datacommons.proto.McfType:\014INSTAN"
+          + "CE_MCF\0229\n\005nodes\030\002 \003(\0132*.org.datacommons."
+          + "proto.McfGraph.NodesEntry\032[\n\nTypedValue\022"
+          + ".\n\004type\030\001 \001(\0162 .org.datacommons.proto.Va"
+          + "lueType\022\r\n\005value\030\002 \001(\t\022\016\n\006column\030\003 \001(\t\032J"
+          + "\n\006Values\022@\n\014typed_values\030\001 \003(\0132*.org.dat"
+          + "acommons.proto.McfGraph.TypedValue\032\214\002\n\016P"
+          + "ropertyValues\022D\n\003pvs\030\001 \003(\01327.org.datacom"
+          + "mons.proto.McfGraph.PropertyValues.PvsEn"
+          + "try\0222\n\tlocations\030\002 \003(\0132\037.org.datacommons"
+          + ".proto.Location\022\025\n\rtemplate_node\030\003 \001(\t\022\025"
+          + "\n\rerror_message\030\004 \001(\t\032R\n\010PvsEntry\022\013\n\003key"
+          + "\030\001 \001(\t\0225\n\005value\030\002 \001(\0132&.org.datacommons."
+          + "proto.McfGraph.Values:\0028\001\032\\\n\nNodesEntry\022"
+          + "\013\n\003key\030\001 \001(\t\022=\n\005value\030\002 \001(\0132..org.dataco"
+          + "mmons.proto.McfGraph.PropertyValues:\0028\001*"
+          + "C\n\007McfType\022\024\n\020UNKNOWN_MCF_TYPE\020\000\022\020\n\014INST"
+          + "ANCE_MCF\020\001\022\020\n\014TEMPLATE_MCF\020\002*\226\001\n\tValueTy"
+          + "pe\022\026\n\022UNKNOWN_VALUE_TYPE\020\000\022\010\n\004TEXT\020\001\022\n\n\006"
+          + "NUMBER\020\002\022\022\n\016UNRESOLVED_REF\020\003\022\020\n\014RESOLVED"
+          + "_REF\020\004\022\021\n\rCOMPLEX_VALUE\020\005\022\020\n\014TABLE_COLUM"
+          + "N\020\006\022\020\n\014TABLE_ENTITY\020\007"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
             descriptorData,
             new com.google.protobuf.Descriptors.FileDescriptor[] {
-              org.datacommons.proto.Debug.getDescriptor(),
+              org.datacommons.proto.LogLocation.getDescriptor(),
             });
     internal_static_org_datacommons_proto_McfGraph_descriptor =
         getDescriptor().getMessageTypes().get(0);
@@ -5468,7 +5469,7 @@ public final class Mcf {
             new java.lang.String[] {
               "Key", "Value",
             });
-    org.datacommons.proto.Debug.getDescriptor();
+    org.datacommons.proto.LogLocation.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

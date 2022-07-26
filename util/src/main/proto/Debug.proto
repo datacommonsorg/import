@@ -16,18 +16,13 @@ syntax = "proto2";
 
 package org.datacommons.proto;
 
+import "LogLocation.proto";
+import "Mcf.proto";
+
 //
 // A log of import processing with details on any warnings, errors, etc.
 //
 message Log {
-    message Location {
-        // Name of the file. Could be a full path or not. Typically, this is
-        // an MCF file or CSV.
-        optional string file = 1;
-        // Line number in file, starting from 1.  Matches the row number in
-        // CSV (since we do not handle newlines in values).
-        optional int64 line_number = 2;
-    }
 
     // Severity level of the message.
     enum Level {
@@ -91,9 +86,9 @@ message CommandArgs {
 
 message DataPoint {
     message DataValue {
-        optional double value = 1;
+        optional McfGraph.TypedValue value = 1;
         // The location in the file where this value was read from.
-        repeated Log.Location locations = 2;
+        repeated Location locations = 2;
     }
 
     optional string date = 1;

@@ -680,11 +680,18 @@
     "scalingFactor": "",
     "unit": "",
     "validationCounters": [{
+      "counterKey": "StatsCheck_Data_Holes",
+      "additionalDetails": "Possible data hole found. Dates in this series: 2011-01-01, 2017-06-01, 2017-09-01, 2019-06-01"
+    }, {
       "counterKey": "StatsCheck_MaxPercentFluctuationGreaterThan500",
       "problemPoints": [{
         "date": "2011-01-01",
         "values": [{
-          "value": 0.0,
+          "value": {
+            "type": "NUMBER",
+            "value": "0",
+            "column": "SV1"
+          },
           "locations": [{
             "file": "SuccessTmcf.csv",
             "lineNumber": "16"
@@ -693,7 +700,11 @@
       }, {
         "date": "2017-06-01",
         "values": [{
-          "value": 2.0,
+          "value": {
+            "type": "NUMBER",
+            "value": "2",
+            "column": "SV1"
+          },
           "locations": [{
             "file": "SuccessTmcf.csv",
             "lineNumber": "15"
@@ -701,9 +712,6 @@
         }]
       }],
       "percentDifference": 2.0E8
-    }, {
-      "counterKey": "StatsCheck_Data_Holes",
-      "additionalDetails": "Possible data hole found. Dates in this series: 2011-01-01, 2017-06-01, 2017-09-01, 2019-06-01"
     }]
   }],
   "commandArgs": {
