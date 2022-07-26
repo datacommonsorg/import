@@ -26,12 +26,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import org.datacommons.proto.Debug;
 import org.datacommons.proto.Debug.DataPoint;
 import org.datacommons.proto.Debug.DataPoint.DataValue;
 import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
 import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.PlaceSeriesSummary.SeriesSummary;
 import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
@@ -144,7 +146,7 @@ public class StatChecker {
       for (Map<Long, SeriesSummary> seriesSummaryMap :
           placeSeriesSummary.getSvSeriesSummaryMap().values()) {
         for (SeriesSummary seriesSummary : seriesSummaryMap.values()) {
-          List<DataPoint> timeSeries = new ArrayList<>(seriesSummary.timeSeries.values());
+          List<DataPoint> timeSeries = seriesSummary.getTimeSeriesAsList();
           StatValidationResult.Builder resBuilder = seriesSummary.validationResult;
 
           // General checks; these don't depend on the type of the values.
@@ -183,6 +185,51 @@ public class StatChecker {
         }
       }
     }
+  }
+
+  // This feature is not within check() because it might potentially move.
+  //
+  // We are not sure of the performance cost the synchronous polling of statTypes would impose.
+  // So, we put it in StatChecker such that it only performs on sample places, yet,
+  // it is separated fromSo, we put it check() since it is subject to a potential move.
+  public synchronized void checkMeasurementResult(
+      StatVarState statVarState, ExistenceChecker existenceChecker)
+      throws IOException, InterruptedException {
+    if (existenceChecker == null) {
+      return;
+    }
+
+    for (PlaceSeriesSummary placeSeriesSummary : placeSeriesSummaryMap.values()) {
+      for (Map<Long, SeriesSummary> seriesSummaryMap :
+          placeSeriesSummary.getSvSeriesSummaryMap().values()) {
+        for (SeriesSummary seriesSummary : seriesSummaryMap.values()) {
+          String svDcid = seriesSummary.getValidationResult().getStatVarDcid();
+          String statType = statVarState.getStatType(svDcid);
+
+          if (statType == null) {
+            // TODO: handle this case
+          }
+
+          if (statType.equals(Vocabulary.MEASUREMENT_RESULT)) {
+            List<DataPoint> timeSeries = seriesSummary.getTimeSeriesAsList();
+            for (DataPoint dp : timeSeries) {
+              String value = SeriesSummary.getValueOfDataPoint(dp);
+              // Node is optional, but if we pass in null, LogWrapper will throw
+              // NullPointerException because lineNo and fileName are not initialized,
+              // so, we pass in a dummy Node with no file locations.
+              LogCb logCb =
+                  new LogCb(
+                          logCtx, Debug.Log.Level.LEVEL_ERROR, PropertyValues.newBuilder().build())
+                      .setDetail(LogCb.PREF_KEY, Vocabulary.MEASUREMENT_RESULT)
+                      .setDetail(LogCb.VALUE_KEY, value)
+                      .setCounterSuffix("value_StatType_measurementResult");
+              existenceChecker.submitNodeCheck(value, logCb);
+            }
+          }
+        }
+      }
+    }
+    existenceChecker.drainRemoteCalls();
   }
 
   public Map<String, PlaceSeriesSummary> getPlaceSeriesSummaryMap() {

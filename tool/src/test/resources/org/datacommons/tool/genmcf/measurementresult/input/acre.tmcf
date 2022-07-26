@@ -1,6 +1,6 @@
 Node: E:Acre_Table->E0
 typeOf: dcs:StatVarObservation
-variableMeasured: dcs:Acre_MeasurementResult_StatVar
+variableMeasured: dcid:WHO/TOBACCO_0000000342
 observationAbout: C:Acre_Table->geoId
 observationDate: C:Acre_Table->DateTime
-value: C:Acre_Table->Acre_MeasurementResult_StatVar
+value: C:Acre_Table->WHO/TOBACCO_0000000342

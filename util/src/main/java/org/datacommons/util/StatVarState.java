@@ -95,10 +95,14 @@ public class StatVarState {
     }
     JsonObject statTypeJson = statTypeValuesJson.get(0).getAsJsonObject();
 
-    if (!statTypeJson.has("value")) {
+    // StatType is a reference property, so the schema described under "Structure 2"
+    // in https://docs.datacommons.org/api/rest/property_value.html applies to us.
+    // This means that we can use the "name" field to get the value to compare against
+    // what is defined in Vocabulary.*
+    if (!statTypeJson.has("name")) {
       return null;
     }
-    String statType = statTypeJson.get("value").getAsString();
+    String statType = statTypeJson.get("name").getAsString();
 
     return statType;
   }

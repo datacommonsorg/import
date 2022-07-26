@@ -2,11 +2,11 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "NumRowSuccesses": "4",
-        "NumPVSuccesses": "28",
-        "Existence_NumChecks": "34",
-        "NumNodeSuccesses": "4",
-        "Existence_NumDcCalls": "3"
+        "NumRowSuccesses": "5",
+        "NumPVSuccesses": "35",
+        "Existence_NumChecks": "45",
+        "NumNodeSuccesses": "5",
+        "Existence_NumDcCalls": "4"
       }
     },
     "LEVEL_WARNING": {
@@ -14,9 +14,30 @@
         "Existence_MissingTriple_domainIncludes": "1",
         "StatsCheck_MultipleValueTypesInASeries": "1"
       }
+    },
+    "LEVEL_ERROR": {
+      "counters": {
+        "Existence_MissingReference_value_StatType_measurementResult": "2"
+      }
     }
   },
   "entries": [{
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "FileNotSet.idk",
+      "lineNumber": "-1"
+    },
+    "userMessage": "Failed reference existence check :: value: '42', property-ref: 'measurementResult'",
+    "counterKey": "Existence_MissingReference_value_StatType_measurementResult"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "FileNotSet.idk",
+      "lineNumber": "-1"
+    },
+    "userMessage": "Failed reference existence check :: value: 'ThisReferenceDoesNotExistAndShouldError', property-ref: 'measurementResult'",
+    "counterKey": "Existence_MissingReference_value_StatType_measurementResult"
+  }, {
     "level": "LEVEL_WARNING",
     "location": {
       "file": "acre.mcf",
@@ -27,7 +48,7 @@
   }],
   "statsCheckSummary": [{
     "placeDcid": "geoId/01",
-    "statVarDcid": "Acre_MeasurementResult_StatVar",
+    "statVarDcid": "WHO/TOBACCO_0000000342",
     "measurementMethod": "",
     "observationPeriod": "",
     "scalingFactor": "",
@@ -40,7 +61,7 @@
           "value": {
             "type": "RESOLVED_REF",
             "value": "Acre1.0",
-            "column": "Acre_MeasurementResult_StatVar"
+            "column": "WHO/TOBACCO_0000000342"
           },
           "locations": [{
             "file": "acre.csv",
@@ -48,16 +69,16 @@
           }]
         }]
       }, {
-        "date": "2020-01-04",
+        "date": "2020-01-05",
         "values": [{
           "value": {
             "type": "NUMBER",
             "value": "42",
-            "column": "Acre_MeasurementResult_StatVar"
+            "column": "WHO/TOBACCO_0000000342"
           },
           "locations": [{
             "file": "acre.csv",
-            "lineNumber": "4"
+            "lineNumber": "5"
           }]
         }]
       }]

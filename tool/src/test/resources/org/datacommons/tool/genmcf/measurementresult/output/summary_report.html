@@ -102,6 +102,20 @@
               </ul>
             </details>
           </li>
+          <li>
+            <details>
+              <summary>
+                <a href="#counters--LEVEL_ERROR">
+                  LEVEL_ERROR
+                </a>
+              </summary>
+              <ul>
+                <li>
+                  <a href="#counters--LEVEL_ERROR--Existence_MissingReference_value_StatType_measurementResult">Existence_MissingReference_value_StatType_measurementResult</a>
+                </li>
+              </ul>
+            </details>
+          </li>
       </ul>
       
         <li><a href="#statvars"">StatVarObservations by StatVar</a></li>
@@ -109,7 +123,7 @@
             <summary>StatVars</summary>
               <ul>
                   <li>
-                    <a href="#statvars--Acre_MeasurementResult_StatVar">Acre_MeasurementResult_StatVar</a>
+                    <a href="#statvars--WHO/TOBACCO_0000000342">WHO/TOBACCO_0000000342</a>
                   </li>
               </ul>
           </details>
@@ -123,7 +137,7 @@
                 </summary>
                 <ul>
                   <li>
-                    <a href="#places--geoId/01--Acre_MeasurementResult_StatVar">Acre_MeasurementResult_StatVar</a>
+                    <a href="#places--geoId/01--WHO/TOBACCO_0000000342">WHO/TOBACCO_0000000342</a>
                   </li>
                 </ul>
               </details>
@@ -177,23 +191,23 @@
               </tr>
                 <tr>
                   <td><a href="#counters--LEVEL_INFO--NumRowSuccesses" name="counters--LEVEL_INFO--NumRowSuccesses">NumRowSuccesses</a></td>
-                  <td>4</td>
+                  <td>5</td>
                 </tr>
                 <tr>
                   <td><a href="#counters--LEVEL_INFO--NumPVSuccesses" name="counters--LEVEL_INFO--NumPVSuccesses">NumPVSuccesses</a></td>
-                  <td>28</td>
+                  <td>35</td>
                 </tr>
                 <tr>
                   <td><a href="#counters--LEVEL_INFO--Existence_NumChecks" name="counters--LEVEL_INFO--Existence_NumChecks">Existence_NumChecks</a></td>
-                  <td>34</td>
+                  <td>45</td>
                 </tr>
                 <tr>
                   <td><a href="#counters--LEVEL_INFO--NumNodeSuccesses" name="counters--LEVEL_INFO--NumNodeSuccesses">NumNodeSuccesses</a></td>
-                  <td>4</td>
+                  <td>5</td>
                 </tr>
                 <tr>
                   <td><a href="#counters--LEVEL_INFO--Existence_NumDcCalls" name="counters--LEVEL_INFO--Existence_NumDcCalls">Existence_NumDcCalls</a></td>
-                  <td>3</td>
+                  <td>4</td>
                 </tr>
             </tbody>
             <tbody>
@@ -207,6 +221,15 @@
                 <tr>
                   <td><a href="#counters--LEVEL_WARNING--StatsCheck_MultipleValueTypesInASeries" name="counters--LEVEL_WARNING--StatsCheck_MultipleValueTypesInASeries">StatsCheck_MultipleValueTypesInASeries</a></td>
                   <td>1</td>
+                </tr>
+            </tbody>
+            <tbody>
+              <tr>
+                <th colspan="2" align="left"><a href="#counters--LEVEL_ERROR" name="counters--LEVEL_ERROR">LEVEL_ERROR</a></th>
+              </tr>
+                <tr>
+                  <td><a href="#counters--LEVEL_ERROR--Existence_MissingReference_value_StatType_measurementResult" name="counters--LEVEL_ERROR--Existence_MissingReference_value_StatType_measurementResult">Existence_MissingReference_value_StatType_measurementResult</a></td>
+                  <td>2</td>
                 </tr>
             </tbody>
       </table>
@@ -239,12 +262,12 @@
           </thead>
           <tbody>
             <tr>
-              <td><a name="statvars--Acre_MeasurementResult_StatVar" href="#statvars--Acre_MeasurementResult_StatVar">Acre_MeasurementResult_StatVar</a></td>
+              <td><a name="statvars--WHO/TOBACCO_0000000342" href="#statvars--WHO/TOBACCO_0000000342">WHO/TOBACCO_0000000342</a></td>
               <td>1</td>
-              <td>4</td>
-              <td>4</td>
+              <td>5</td>
+              <td>5</td>
               <td>2020-01-01</td>
-              <td>2020-01-04</td>
+              <td>2020-01-05</td>
               <td>
                 <div></div>
               </td>
@@ -285,10 +308,10 @@
               </thead>
               <tbody>
                     <tr>
-                      <td><a href="#places--geoId/01--Acre_MeasurementResult_StatVar" name="places--geoId/01--Acre_MeasurementResult_StatVar">Acre_MeasurementResult_StatVar</a></td>
-                      <td>4</td>
-                      <td>2020-01-01 | 2020-01-02 | 2020-01-03 | 2020-01-04</td>
-                      <td>Acre1.0 | Acre10.0 | Acre100.0 | 42</td>
+                      <td><a href="#places--geoId/01--WHO/TOBACCO_0000000342" name="places--geoId/01--WHO/TOBACCO_0000000342">WHO/TOBACCO_0000000342</a></td>
+                      <td>5</td>
+                      <td>2020-01-01 | 2020-01-02 | 2020-01-03 | 2020-01-04 | 2020-01-05</td>
+                      <td>Acre1.0 | Acre10.0 | Acre100.0 | ThisReferenceDoesNotExistAndShouldError | 42</td>
                       <td>
                         <div></div>
                       </td>

@@ -23,7 +23,7 @@ public class StatVarStateTest {
   String TEST_SV_MEASRES_HTTP_RESP =
       "{\"payload\": \"{\\\""
           + TEST_SV_MEASRES_DCID
-          + "\\\": {\\\"out\\\":[{\\\"value\\\":\\\""
+          + "\\\": {\\\"out\\\":[{\\\"name\\\":\\\""
           + Vocabulary.MEASUREMENT_RESULT
           + "\\\"}]}}\" }";
 
@@ -87,7 +87,7 @@ public class StatVarStateTest {
             // direction should be "out"
             "{\"" + svDcid + "\":{\"in\": [{\"irrelevant value\": 0}]}}",
             // array should have only 1 element (only one statType per SV)
-            "{\"" + svDcid + "\":{\"out\": [{\"value\":\"someValue\"}, {}]}}",
+            "{\"" + svDcid + "\":{\"out\": [{\"name\":\"someValue\"}, {}]}}",
             // object does not have "value" field
             "{\"" + svDcid + "\":{\"out\": [{\"provenance\":\"datacommons.org\"}]}}");
     JsonParser parser = new JsonParser();
