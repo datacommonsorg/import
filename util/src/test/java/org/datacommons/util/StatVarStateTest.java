@@ -3,8 +3,12 @@ package org.datacommons.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
@@ -15,18 +19,16 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 public class StatVarStateTest {
-  @Test
-  // Also exercises the private function fetchStatTypeFromApi(), used underneath
-  // getStatType for SVs that we don't know about yet
-  public void funcGetStatType() throws IOException, InterruptedException {
-    String TEST_SV_MEASRES_DCID = "SinanYumurtaci_DCIntern2022";
-    String TEST_SV_MEASRES_HTTP_RESP =
-        "{\"payload\": \"{\\\""
-            + TEST_SV_MEASRES_DCID
-            + "\\\": {\\\"out\\\":[{\\\"value\\\":\\\""
-            + Vocabulary.MEASUREMENT_RESULT
-            + "\\\"}]}}\" }";
+  String TEST_SV_MEASRES_DCID = "SinanYumurtaci_DCIntern2022";
+  String TEST_SV_MEASRES_HTTP_RESP =
+      "{\"payload\": \"{\\\""
+          + TEST_SV_MEASRES_DCID
+          + "\\\": {\\\"out\\\":[{\\\"value\\\":\\\""
+          + Vocabulary.MEASUREMENT_RESULT
+          + "\\\"}]}}\" }";
 
+  @Test
+  public void getStatTypeHttpCalls() throws IOException, InterruptedException {
     // Common setup
     var mockHttp = Mockito.mock(HttpClient.class);
     var mockResp = Mockito.mock(HttpResponse.class);
@@ -56,6 +58,61 @@ public class StatVarStateTest {
 
     // And the responses from the two calls are equivalent
     assertEquals(result, result_repeat);
+  }
+
+  // Test many things that parseApiStatTypeResponse should return null for
+  // (i.e. incorrect/invalid inputs)
+  @Test
+  public void funcParseApiStatTypeResponseNulls() {
+
+    String returnValue;
+
+    // Null inputs, or empty dcid string
+    returnValue = StatVarState.parseApiStatTypeResponse(null, "someDcid");
+    assertEquals(null, returnValue);
+
+    returnValue = StatVarState.parseApiStatTypeResponse(new JsonObject(), null);
+    assertEquals(null, returnValue);
+
+    returnValue = StatVarState.parseApiStatTypeResponse(new JsonObject(), "");
+    assertEquals(null, returnValue);
+
+    // Various bad JSON
+    String svDcid = "Test_SV";
+    List<String> badJsonStrings =
+        List.of(
+            "{}",
+            // dcid is incorrect
+            "{\"IncorrectSVDcid\":{\"irrelevant value\": 0}}",
+            // direction should be "out"
+            "{\"" + svDcid + "\":{\"in\": [{\"irrelevant value\": 0}]}}",
+            // array should have only 1 element (only one statType per SV)
+            "{\"" + svDcid + "\":{\"out\": [{\"value\":\"someValue\"}, {}]}}",
+            // object does not have "value" field
+            "{\"" + svDcid + "\":{\"out\": [{\"provenance\":\"datacommons.org\"}]}}");
+    JsonParser parser = new JsonParser();
+    JsonObject badInput;
+    String assertionFailedMessage;
+    for (String badJsonString : badJsonStrings) {
+      badInput = parser.parse(badJsonString).getAsJsonObject();
+
+      returnValue = StatVarState.parseApiStatTypeResponse(badInput, svDcid);
+      assertionFailedMessage =
+          "parseApiStatTypeResponse response to JSON "
+              + badJsonString
+              + " was expected to be null but was "
+              + returnValue;
+      assertEquals(assertionFailedMessage, null, returnValue);
+    }
+
+    // Valid case; test that the JSON object in the string contained in TEST_SV_MEASRES_HTTP_RESP
+    // is correctly parsed and Vocabulary.MEASUREMENT_RESULT is returned.
+    String innerJsonString =
+        parser.parse(TEST_SV_MEASRES_HTTP_RESP).getAsJsonObject().get("payload").getAsString();
+    JsonObject test_sv_measres_api_payload = parser.parse(innerJsonString).getAsJsonObject();
+    returnValue =
+        StatVarState.parseApiStatTypeResponse(test_sv_measres_api_payload, TEST_SV_MEASRES_DCID);
+    assertEquals(Vocabulary.MEASUREMENT_RESULT, returnValue);
   }
 
   @Test

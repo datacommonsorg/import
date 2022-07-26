@@ -42,12 +42,11 @@ public class StatVarState {
 
   public String getStatType(String svDcid) {
     if (!statVarStatType.containsKey(svDcid)) {
-      // We do not have the statType in memory, so
-      // we will need to fetch is synchronously...
+      // We do not have the statType in memory, so  we will need to fetch it synchronously...
       try {
         fetchStatTypeFromApi(svDcid);
       } catch (IOException | InterruptedException e) {
-        // TODO(snny): logCtx error here!!
+        logCtx.incrementWarningCounterBy("API_FailedDcCall", 1);
       }
     }
     return statVarStatType.get(svDcid);
@@ -59,7 +58,7 @@ public class StatVarState {
 
   private void fetchStatTypeFromApi(String svDcid) throws IOException, InterruptedException {
     if (this.httpClient == null) {
-      // TODO(snny): throw error? do nothing?
+      return; // do nothing; we don't have an HTTPClient to make requests with
     }
 
     JsonObject dataJson =
@@ -72,25 +71,33 @@ public class StatVarState {
 
   // Returns the statType indicated in the payload.
   // Returns null if there are any issue in the import data.
-  protected String parseApiStatTypeResponse(JsonObject payload, String svDcid) {
-    // TODO(snny): test this function
-    
+  protected static String parseApiStatTypeResponse(JsonObject payload, String svDcid) {
     if (payload == null) {
-      // TODO(snny): handle this
+      return null;
     }
 
-    // TODO(snny): handle assertion errors...
+    if (svDcid == null || svDcid == "") {
+      return null;
+    }
 
-    assert payload.has(svDcid);
+    if (!payload.has(svDcid)) {
+      return null;
+    }
     JsonObject nodeJson = payload.getAsJsonObject(svDcid);
 
-    assert nodeJson.has("out");
+    if (!nodeJson.has("out")) {
+      return null;
+    }
     JsonArray statTypeValuesJson = nodeJson.getAsJsonArray("out");
 
-    assert statTypeValuesJson.size() == 1;
+    if (statTypeValuesJson.size() != 1) {
+      return null;
+    }
     JsonObject statTypeJson = statTypeValuesJson.get(0).getAsJsonObject();
 
-    assert statTypeJson.has("value");
+    if (!statTypeJson.has("value")) {
+      return null;
+    }
     String statType = statTypeJson.get("value").getAsString();
 
     return statType;
