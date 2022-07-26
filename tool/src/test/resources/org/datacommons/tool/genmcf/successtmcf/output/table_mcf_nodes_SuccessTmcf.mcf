@@ -248,7 +248,7 @@ typeOf: dcid:StatVarObservation
 keyString: "observationAbout=CA-ABvariableMeasured=SV2observationDate=2017-09-01value=2measurementMethod=SVTest"
 dcid: "dc/o/gk7mjz5641fvd"
 
-Node: SVTest/E0/15
+Node: SVTest/E0/16
 observationDate: "2011-01-01"
 observationAbout: dcid:CA-AB
 variableMeasured: dcid:SV1
@@ -258,7 +258,7 @@ typeOf: dcid:StatVarObservation
 keyString: "observationAbout=CA-ABvariableMeasured=SV1observationDate=2011-01-01value=0measurementMethod=SVTest"
 dcid: "dc/o/jthmwgr5pvym7"
 
-Node: SVTest/E1/15
+Node: SVTest/E1/16
 observationDate: "2011-01-01"
 observationAbout: dcid:CA-AB
 variableMeasured: dcid:SV2
