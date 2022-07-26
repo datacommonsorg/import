@@ -16,7 +16,7 @@ typeOf: dcid:StatVarObservation
 keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-01value=Acre10.0"
 dcid: "dc/o/ndyt1vgyp01ld"
 
-Node: Acre_Table/E0/2
+Node: Acre_Table/E0/3
 observationDate: "2020-01-01"
 observationAbout: dcid:geoId/01
 variableMeasured: dcid:Acre_MeasurementResult_StatVar

@@ -22,33 +22,33 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "covid.csv",
-      "lineNumber": "2"
+      "lineNumber": "3"
     },
-    "userMessage": "Failed to assign DCID :: type: 'Place', node: 'COVID19_cases_india/E1/1'",
+    "userMessage": "Failed to assign DCID :: type: 'Place', node: 'COVID19_cases_india/E1/2'",
     "counterKey": "Resolution_DcidAssignmentFailure_Place"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "covid.csv",
-      "lineNumber": "2"
+      "lineNumber": "3"
     },
-    "userMessage": "Found diverging DCIDs for external IDs :: extId1: 'pseudoIsoCodeDiverging, dcid1: 'pseudoPlaceDivergent_AAA', property1: 'isoCode, extId2: 'pseudoWikidataIdDiverging', dcid2:pseudoPlaceDivergent_BBB, property2: 'wikidataId', node: 'COVID19_cases_india/E1/1'",
+    "userMessage": "Found diverging DCIDs for external IDs :: extId1: 'pseudoIsoCodeDiverging, dcid1: 'pseudoPlaceDivergent_AAA', property1: 'isoCode, extId2: 'pseudoWikidataIdDiverging', dcid2:pseudoPlaceDivergent_BBB, property2: 'wikidataId', node: 'COVID19_cases_india/E1/2'",
     "counterKey": "Resolution_DivergingDcidsForExternalIds_isoCode_wikidataId"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "covid.csv",
-      "lineNumber": "2"
+      "lineNumber": "3"
     },
-    "userMessage": "Unable to replace a local reference :: ref: 'COVID19_cases_india/E1/1', node: 'COVID19_cases_india/E0/1'",
+    "userMessage": "Unable to replace a local reference :: ref: 'COVID19_cases_india/E1/2', node: 'COVID19_cases_india/E0/2'",
     "counterKey": "Resolution_IrreplaceableLocalRef"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "covid.csv",
-      "lineNumber": "2"
+      "lineNumber": "3"
     },
-    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'COVID19_cases_india/E1/1', node: 'COVID19_cases_india/E0/1'",
+    "userMessage": "Unable to assign DCID due to unresolved local reference :: ref: 'COVID19_cases_india/E1/2', node: 'COVID19_cases_india/E0/2'",
     "counterKey": "Resolution_UnassignableNodeDcid"
   }],
   "commandArgs": {

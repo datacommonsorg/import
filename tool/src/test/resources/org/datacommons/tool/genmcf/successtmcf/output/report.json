@@ -176,7 +176,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "16"
+      "lineNumber": "17"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
     "counterKey": "Existence_MissingReference_measurementMethod"
@@ -264,7 +264,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "16"
+      "lineNumber": "17"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E1'",
     "counterKey": "Existence_MissingReference_measurementMethod"
@@ -368,7 +368,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "16"
+      "lineNumber": "17"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
     "counterKey": "Existence_MissingReference_variableMeasured"
@@ -456,7 +456,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "16"
+      "lineNumber": "17"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'SV2', property: 'variableMeasured', node: 'E:SVTest->E1'",
     "counterKey": "Existence_MissingReference_variableMeasured"
@@ -536,7 +536,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "16"
+      "lineNumber": "17"
     },
     "userMessage": "Found invalid chars in dcid value :: value: 'Administrative–Area1', invalid-chars: '–', property: 'typeOf', node: 'E:SVTest->E3'",
     "counterKey": "Sanity_InvalidChars_typeOf"
@@ -632,7 +632,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "SuccessTmcf.csv",
-      "lineNumber": "16"
+      "lineNumber": "17"
     },
     "userMessage": "Found non-ascii characters in a value that is not text :: value: 'Administrative–Area1', type: 'RESOLVED_REF', property: 'typeOf', node: 'E:SVTest->E3'",
     "counterKey": "Sanity_NonAsciiValueInNonText"
@@ -687,7 +687,7 @@
           "value": 0.0,
           "locations": [{
             "file": "SuccessTmcf.csv",
-            "lineNumber": "16"
+            "lineNumber": "17"
           }]
         }]
       }, {
