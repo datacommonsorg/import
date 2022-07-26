@@ -37,6 +37,9 @@ public class TmcfCsvParser {
 
   private Mcf.McfGraph tmcf;
   private char delimiter;
+  // We track the line number using a private variable instead of using
+  // csvparser.getCurrentLineNumber() because that function does not increment
+  // the line number for the last line that does not end in a newline.
   private long currentLineNumber;
   private String csvFileName;
   private CSVParser csvParser;
@@ -373,9 +376,6 @@ public class TmcfCsvParser {
 
   // Returns the current line in the CSV.
   private long getCurrentLineNumber() {
-    // We track the line number using a private variable instead of using
-    // csvparser.getCurrentLineNumber() because that function does not increment
-    // the line number for the last line that does not end in a newline.
     return currentLineNumber;
   }
 }
