@@ -15,7 +15,7 @@
 syntax = "proto2";
 
 package org.datacommons.proto;
-import "Debug.proto";
+import "LogLocation.proto";
 
 // Proto representation of a Data Commons sub-graph which may be made of instance nodes (INSTANCE_MCF)
 // or template nodes (TEMPLATE_MCF).
@@ -43,7 +43,7 @@ message McfGraph {
 
     // Information identifying the location of this node in the source.
     // There can be multiple if PVs in this node are merged from different files.
-    repeated Log.Location locations = 2;
+    repeated Location locations = 2;
 
     // Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
     optional string template_node = 3;

@@ -26,6 +26,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.datacommons.proto.Debug;
+import org.datacommons.proto.LogLocation;
 import org.datacommons.proto.Mcf;
 
 // Converts a Template MCF file and an associated CSV into instance MCF.
@@ -207,7 +208,7 @@ public class TmcfCsvParser {
           nodeBuilder.putPvs(currentProp, values);
         }
         nodeBuilder.setTemplateNode(tableEntity.getKey());
-        Debug.Log.Location.Builder loc = nodeBuilder.addLocationsBuilder();
+        LogLocation.Location.Builder loc = nodeBuilder.addLocationsBuilder();
         loc.setFile(csvFileName);
         loc.setLineNumber(getCurrentLineNumber());
 
