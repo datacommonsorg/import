@@ -92,6 +92,19 @@ class Main {
   public boolean allowNonNumericStatVarObservation;
 
   @CommandLine.Option(
+      names = {"--check-measurement-result"},
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "Checks DCID references from StatVarObservation nodes if the StatisticalVariable "
+              + "they are measuring has `statType: measurementResult`. "
+              + "If the StatVar definition exists in the local MCF files provided, that will be used. "
+              + "Otherwise, API requests to the Data Commons KG will be made synchronously per unknown StatVar. "
+              + "Only nodes in sample places are subject to this check. "
+              + "Defaults to `false`.")
+  public boolean checkMeasurementResult;
+
+  @CommandLine.Option(
       names = {"-p", "--sample-places"},
       scope = CommandLine.ScopeType.INHERIT,
       description =

@@ -26,11 +26,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import org.datacommons.proto.Debug;
 import org.datacommons.proto.Debug.DataPoint;
 import org.datacommons.proto.Debug.DataPoint.DataValue;
 import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
+import org.datacommons.proto.LogLocation;
+import org.datacommons.proto.LogLocation.Location;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.PlaceSeriesSummary.SeriesSummary;
@@ -144,7 +147,7 @@ public class StatChecker {
       for (Map<Long, SeriesSummary> seriesSummaryMap :
           placeSeriesSummary.getSvSeriesSummaryMap().values()) {
         for (SeriesSummary seriesSummary : seriesSummaryMap.values()) {
-          List<DataPoint> timeSeries = new ArrayList<>(seriesSummary.timeSeries.values());
+          List<DataPoint> timeSeries = seriesSummary.getTimeSeriesAsList();
           StatValidationResult.Builder resBuilder = seriesSummary.validationResult;
 
           // General checks; these don't depend on the type of the values.
@@ -183,6 +186,70 @@ public class StatChecker {
         }
       }
     }
+  }
+
+  // This feature is not within check() because it uses ExistenceChecker instead
+  // of using the StatChecker.check() mechanism of counter keys.
+  //
+  // It still lives in this file, at least temporarily, because we are performing
+  // measurementResult checks on only sample places right now. That is because
+  // the current implementation synchronously fetches the statTypes of unknown
+  // StatVars from the API, and we don't want to pay that performance cost for
+  // all nodes.
+  public synchronized void checkMeasurementResult(
+      StatVarState statVarState, ExistenceChecker existenceChecker)
+      throws IOException, InterruptedException {
+    for (PlaceSeriesSummary placeSeriesSummary : placeSeriesSummaryMap.values()) {
+      for (Map<Long, SeriesSummary> seriesSummaryMap :
+          placeSeriesSummary.getSvSeriesSummaryMap().values()) {
+        for (SeriesSummary seriesSummary : seriesSummaryMap.values()) {
+          String svDcid = seriesSummary.getValidationResult().getStatVarDcid();
+          String statType = statVarState.getStatType(svDcid);
+          List<DataPoint> timeSeries = seriesSummary.getTimeSeriesAsList();
+
+          // If StatType is null, we were not able to determine the statType of SV
+          // from the local cache OR the API. Log an error and continue to next SV.
+          if (statType == null) {
+
+            List<Location> locations = new ArrayList<Location>();
+            if (timeSeries != null) {
+              locations = timeSeries.get(0).getValues(0).getLocationsList();
+            }
+
+            logCtx.addEntry(
+                Level.LEVEL_ERROR,
+                "Existence_CheckMeasurementResult_StatTypeUnknown",
+                "Could not find the statType of a StatisticalVariable to determine if it is subject to measurementResult checks :: "
+                    + "node: '"
+                    + svDcid
+                    + "'",
+                locations);
+
+            continue;
+          }
+
+          // Only perform checks when statType is measurementResult
+          if (!statType.equals(Vocabulary.MEASUREMENT_RESULT)) {
+            continue;
+          }
+
+          for (DataPoint dp : timeSeries) {
+            String value = SeriesSummary.getValueOfDataPoint(dp);
+            LogLocation.Location location = dp.getValues(0).getLocations(0);
+            String fileName = location.getFile();
+            long lineNumber = location.getLineNumber();
+
+            LogCb logCb =
+                new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, fileName, lineNumber)
+                    .setDetail(LogCb.PREF_KEY, Vocabulary.MEASUREMENT_RESULT)
+                    .setDetail(LogCb.VALUE_KEY, value)
+                    .setCounterSuffix("value_StatType_measurementResult");
+            existenceChecker.submitNodeCheck(value, logCb);
+          }
+        }
+      }
+    }
+    existenceChecker.drainRemoteCalls();
   }
 
   public Map<String, PlaceSeriesSummary> getPlaceSeriesSummaryMap() {

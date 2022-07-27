@@ -36,6 +36,10 @@ public class PlaceSeriesSummary {
       return this.timeSeries;
     }
 
+    public List<DataPoint> getTimeSeriesAsList() {
+      return new ArrayList<>(this.getTimeSeries().values());
+    }
+
     public String getDatesString() {
       return String.join(" | ", this.timeSeries.keySet());
     }

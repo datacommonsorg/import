@@ -132,7 +132,7 @@ public class Processor {
     if (args.resolutionMode == Args.ResolutionMode.FULL) {
       idResolver = new ExternalIdResolver(this.httpClient, args.verbose, logCtx);
     }
-    statVarState = new StatVarState(logCtx);
+    statVarState = new StatVarState(this.httpClient, logCtx);
     if (args.doStatChecks) {
       Set<String> samplePlaces =
           args.samplePlaces == null ? null : new HashSet<>(args.samplePlaces);
@@ -173,6 +173,12 @@ public class Processor {
         existenceChecker.addLocalGraph(n);
       } else {
         McfChecker.check(n, existenceChecker, statVarState, logCtx);
+      }
+      if (args.checkMeasurementResult && type == Mcf.McfType.INSTANCE_MCF) {
+        // Add instance MCF nodes to StatVarState, which will remember the statType
+        // of SVs so that we don't need to make HTTP requests for it for
+        // measurementResult checks.
+        statVarState.addLocalGraph(n);
       }
       if (existenceChecker != null
           || args.resolutionMode != Args.ResolutionMode.NONE
@@ -394,10 +400,13 @@ public class Processor {
     return errorFound;
   }
 
-  private void checkStats() {
+  private void checkStats() throws IOException, InterruptedException {
     if (statChecker == null) return;
     logger.info("Performing stats checks");
     statChecker.check();
+    if (existenceChecker != null && statVarState != null && args.checkMeasurementResult) {
+      statChecker.checkMeasurementResult(statVarState, existenceChecker);
+    }
     statChecker.fetchSamplePlaceNames(httpClient);
   }
 

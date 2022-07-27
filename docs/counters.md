@@ -409,6 +409,12 @@ External reference existence check with the DataCommons API returned no results.
 
 External triple existence check with the DataCommons API returned no results.
 
+### Existence_CheckMeasurementResult_StatTypeUnknown
+
+Could not find the `statType` of a StatVar, but `--check-measurement-result` was
+set to `true` and we need the `statType`s of the StatVars to determine if we should
+perform existence checks for SVOs measuring this SV.
+
 ## Statistics Checks
 These counters represent potential issues found in the statistical analysis of the input data for pitfalls such as extreme outliers, holes in dates that the data is available for, etc.
 

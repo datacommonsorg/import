@@ -76,7 +76,7 @@ class GenMcf implements Callable<Integer> {
     args.generateSummaryReport = parent.generateSummaryReport;
     args.checkObservationAbout = parent.checkObservationAbout;
     args.allowNonNumericStatVarObservation = parent.allowNonNumericStatVarObservation;
-
+    args.checkMeasurementResult = parent.checkMeasurementResult;
     // Process all the things.
     return Processor.process(args);
   }

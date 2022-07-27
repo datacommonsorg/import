@@ -46,6 +46,8 @@ public class ApiHelper {
     var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     var payloadJson = new JsonParser().parse(response.body().trim()).getAsJsonObject();
     if (payloadJson == null || !payloadJson.has("payload")) return null;
+    // The API returns the actual response in a JSON-serialized string.
+    // This string is in the "payload" field of the raw response.
     return new JsonParser().parse(payloadJson.get("payload").getAsString()).getAsJsonObject();
   }
 }

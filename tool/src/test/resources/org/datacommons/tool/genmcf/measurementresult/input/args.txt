@@ -1,1 +1,2 @@
 --allow-non-numeric-obs-values=true
+--check-measurement-result=true
