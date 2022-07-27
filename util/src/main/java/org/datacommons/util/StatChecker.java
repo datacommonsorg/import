@@ -209,14 +209,13 @@ public class StatChecker {
         for (SeriesSummary seriesSummary : seriesSummaryMap.values()) {
           String svDcid = seriesSummary.getValidationResult().getStatVarDcid();
           String statType = statVarState.getStatType(svDcid);
-
           List<DataPoint> timeSeries = seriesSummary.getTimeSeriesAsList();
 
           // If StatType is null, we were not able to determine the statType of SV
           // from the local cache OR the API. Log an error and continue to next SV.
           if (statType == null) {
-            List<Location> locations = new ArrayList<Location>();
 
+            List<Location> locations = new ArrayList<Location>();
             if (timeSeries != null) {
               locations = timeSeries.get(0).getValues(0).getLocationsList();
             }
@@ -229,25 +228,27 @@ public class StatChecker {
                     + svDcid
                     + "'",
                 locations);
+
             continue;
           }
 
-          if (statType.equals(Vocabulary.MEASUREMENT_RESULT)) {
+          // Only perform checks when statType is measurementResult
+          if (!statType.equals(Vocabulary.MEASUREMENT_RESULT)) {
+            continue;
+          }
 
-            for (DataPoint dp : timeSeries) {
-              String value = SeriesSummary.getValueOfDataPoint(dp);
+          for (DataPoint dp : timeSeries) {
+            String value = SeriesSummary.getValueOfDataPoint(dp);
+            LogLocation.Location location = dp.getValues(0).getLocations(0);
+            String fileName = location.getFile();
+            long lineNumber = location.getLineNumber();
 
-              LogLocation.Location location = dp.getValues(0).getLocations(0);
-              String fileName = location.getFile();
-              long lineNumber = location.getLineNumber();
-
-              LogCb logCb =
-                  new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, fileName, lineNumber)
-                      .setDetail(LogCb.PREF_KEY, Vocabulary.MEASUREMENT_RESULT)
-                      .setDetail(LogCb.VALUE_KEY, value)
-                      .setCounterSuffix("value_StatType_measurementResult");
-              existenceChecker.submitNodeCheck(value, logCb);
-            }
+            LogCb logCb =
+                new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, fileName, lineNumber)
+                    .setDetail(LogCb.PREF_KEY, Vocabulary.MEASUREMENT_RESULT)
+                    .setDetail(LogCb.VALUE_KEY, value)
+                    .setCounterSuffix("value_StatType_measurementResult");
+            existenceChecker.submitNodeCheck(value, logCb);
           }
         }
       }
