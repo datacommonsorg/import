@@ -199,10 +199,6 @@ public class StatChecker {
   public synchronized void checkMeasurementResult(
       StatVarState statVarState, ExistenceChecker existenceChecker)
       throws IOException, InterruptedException {
-    if (existenceChecker == null) {
-      return;
-    }
-
     for (PlaceSeriesSummary placeSeriesSummary : placeSeriesSummaryMap.values()) {
       for (Map<Long, SeriesSummary> seriesSummaryMap :
           placeSeriesSummary.getSvSeriesSummaryMap().values()) {

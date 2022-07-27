@@ -404,7 +404,7 @@ public class Processor {
     if (statChecker == null) return;
     logger.info("Performing stats checks");
     statChecker.check();
-    if (existenceChecker != null && args.checkMeasurementResult) {
+    if (existenceChecker != null && statVarState != null && args.checkMeasurementResult) {
       statChecker.checkMeasurementResult(statVarState, existenceChecker);
     }
     statChecker.fetchSamplePlaceNames(httpClient);
