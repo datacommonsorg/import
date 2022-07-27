@@ -1,6 +1,6 @@
-DateTime,geoId,WHO/TOBACCO_0000000342
-2020-01-01,geoId/01,dcid:Acre1.0
-2020-01-02,geoId/01,dcid:Acre10.0
-2020-01-03,geoId/01,dcid:Acre100.0
-2020-01-04,geoId/01,dcid:ThisReferenceDoesNotExistAndShouldError
-2020-01-05,geoId/01,42
+DateTime,geoId,WHO/TOBACCO_0000000342,Acre_MeasurementResult_StatVar
+2020-01-01,geoId/01,dcid:Acre1.0,dcid:Acre10.0
+2020-01-02,geoId/01,dcid:Acre10.0,dcid:Acre10.0
+2020-01-03,geoId/01,dcid:Acre100.0,dcid:Acre10.0
+2020-01-04,geoId/01,dcid:ThisReferenceDoesNotExistAndShouldError,dcid:Acre10.0
+2020-01-05,geoId/01,42,dcid:Acre10.0

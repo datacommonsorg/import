@@ -1,6 +1,15 @@
+# statType will be checked against the API
 Node: E:Acre_Table->E0
 typeOf: dcs:StatVarObservation
 variableMeasured: dcid:WHO/TOBACCO_0000000342
 observationAbout: C:Acre_Table->geoId
 observationDate: C:Acre_Table->DateTime
 value: C:Acre_Table->WHO/TOBACCO_0000000342
+
+# statType exists in the local graph in acre.mcf, should not generate an API call
+Node: E:Acre_Table->E1
+typeOf: dcs:StatVarObservation
+variableMeasured: dcid:Acre_MeasurementResult_StatVar
+observationAbout: C:Acre_Table->geoId
+observationDate: C:Acre_Table->DateTime
+value: C:Acre_Table->Acre_MeasurementResult_StatVar
