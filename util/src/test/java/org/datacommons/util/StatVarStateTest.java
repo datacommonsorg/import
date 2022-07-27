@@ -59,11 +59,11 @@ public class StatVarStateTest {
     assertEquals(result, result_repeat);
   }
 
-  @Test
   // Test that querying SV described in local MCF returns the correct statType
   // with no HTTP calls.
   //
   // Online behavior is tested in getStatTypeHttpCalls.
+  @Test
   public void testAddLocalGraph() throws IOException, InterruptedException {
     var mockHttp = Mockito.mock(HttpClient.class);
 
