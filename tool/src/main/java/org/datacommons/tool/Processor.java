@@ -175,9 +175,9 @@ public class Processor {
         McfChecker.check(n, existenceChecker, statVarState, logCtx);
       }
       if (args.checkMeasurementResult && type == Mcf.McfType.INSTANCE_MCF) {
-        // Load the statType of the StatCheckers that we know of so that we can
-        // conditionally submit existence checks for SVO values when their SV
-        // has statType == Vocabulary.MEASUREMENT_RESULT.
+        // Add instance MCF nodes to StatVarState, which will remember the statType
+        // of SVs so that we don't need to make HTTP requests for it for
+        // measurementResult checks.
         statVarState.addLocalGraph(n);
       }
       if (existenceChecker != null
