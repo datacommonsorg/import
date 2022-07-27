@@ -1,0 +1,59 @@
+[1mdiff --git a/util/src/test/java/org/datacommons/util/StatVarStateTest.java b/util/src/test/java/org/datacommons/util/StatVarStateTest.java[m
+[1mindex 6f88b81..36e5370 100644[m
+[1m--- a/util/src/test/java/org/datacommons/util/StatVarStateTest.java[m
+[1m+++ b/util/src/test/java/org/datacommons/util/StatVarStateTest.java[m
+[36m@@ -15,6 +15,7 @@[m [mimport java.net.http.HttpResponse;[m
+ import java.nio.file.Path;[m
+ import java.util.List;[m
+ import org.datacommons.proto.Debug;[m
+[32m+[m[32mimport org.datacommons.proto.Mcf.McfGraph;[m
+ import org.junit.Test;[m
+ import org.mockito.Mockito;[m
+ [m
+[36m@@ -60,6 +61,46 @@[m [mpublic class StatVarStateTest {[m
+     assertEquals(result, result_repeat);[m
+   }[m
+ [m
+[32m+[m[32m  @Test[m
+[32m+[m[32m  // Test that querying SV described in local MCF returns the correct statType[m
+[32m+[m[32m  // with no HTTP calls.[m
+[32m+[m[32m  //[m
+[32m+[m[32m  // Online behavior is tested in getStatTypeHttpCalls.[m
+[32m+[m[32m  public void testAddLocalGraph() throws IOException, InterruptedException {[m
+[32m+[m[32m    var mockHttp = Mockito.mock(HttpClient.class);[m
+[32m+[m
+[32m+[m[32m    Debug.Log.Builder lb = Debug.Log.newBuilder();[m
+[32m+[m[32m    LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));[m
+[32m+[m[32m    StatVarState svs = new StatVarState(mockHttp, lw);[m
+[32m+[m
+[32m+[m[32m    int expected_http_calls = 0;[m
+[32m+[m[32m    String localSvDcid = "Acre_MeasurementResult_StatVar";[m
+[32m+[m[32m    String localSvStatType = "measurementResult";[m
+[32m+[m
+[32m+[m[32m    String localMcf =[m
+[32m+[m[32m        "Node: dcid:"[m
+[32m+[m[32m            + localSvDcid[m
+[32m+[m[32m            + "\n"[m
+[32m+[m[32m            + "populationType: dcid:Place\n"[m
+[32m+[m[32m            + "dcid: \"Acre_MeasurementResult_StatVar\"\n"[m
+[32m+[m[32m            + "statType: dcid:"[m
+[32m+[m[32m            + localSvStatType[m
+[32m+[m[32m            + "\n"[m
+[32m+[m[32m            + "measuredProperty: dcid:area\n"[m
+[32m+[m[32m            + "typeOf: dcid:StatisticalVariable\n";[m
+[32m+[m
+[32m+[m[32m    // Add node to local MCF[m
+[32m+[m[32m    McfGraph graph = McfParser.parseInstanceMcfString(localMcf, true, lw);[m
+[32m+[m[32m    svs.addLocalGraph(graph);[m
+[32m+[m
+[32m+[m[32m    // Query the statType of the node we just asked about[m
+[32m+[m[32m    // Expect the return to be measurementResult, and that no additional http[m
+[32m+[m[32m    // calls were made.[m
+[32m+[m[32m    String resultLocal = svs.getStatType(localSvDcid);[m
+[32m+[m[32m    verify(mockHttp, times(expected_http_calls)).send(any(), any());[m
+[32m+[m[32m    assertEquals(localSvStatType, resultLocal);[m
+[32m+[m[32m  }[m
+[32m+[m
+   // Test many things that parseApiStatTypeResponse should return null for[m
+   // (i.e. incorrect/invalid inputs)[m
+   @Test[m
