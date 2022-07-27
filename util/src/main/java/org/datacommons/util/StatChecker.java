@@ -32,8 +32,8 @@ import org.datacommons.proto.Debug.DataPoint.DataValue;
 import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
+import org.datacommons.proto.LogLocation;
 import org.datacommons.proto.Mcf.McfGraph;
-import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.PlaceSeriesSummary.SeriesSummary;
 import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
@@ -214,12 +214,13 @@ public class StatChecker {
             List<DataPoint> timeSeries = seriesSummary.getTimeSeriesAsList();
             for (DataPoint dp : timeSeries) {
               String value = SeriesSummary.getValueOfDataPoint(dp);
-              // Node is optional, but if we pass in null, LogWrapper will throw
-              // NullPointerException because lineNo and fileName are not initialized,
-              // so, we pass in a dummy Node with no file locations.
+              LogLocation.Location location = dp.getValues(0).getLocations(0);
+
+              String fileName = location.getFile();
+              long lineNumber = location.getLineNumber();
+
               LogCb logCb =
-                  new LogCb(
-                          logCtx, Debug.Log.Level.LEVEL_ERROR, PropertyValues.newBuilder().build())
+                  new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, fileName, lineNumber)
                       .setDetail(LogCb.PREF_KEY, Vocabulary.MEASUREMENT_RESULT)
                       .setDetail(LogCb.VALUE_KEY, value)
                       .setCounterSuffix("value_StatType_measurementResult");

@@ -25,16 +25,16 @@
   "entries": [{
     "level": "LEVEL_ERROR",
     "location": {
-      "file": "FileNotSet.idk",
-      "lineNumber": "-1"
+      "file": "acre.csv",
+      "lineNumber": "6"
     },
     "userMessage": "Failed reference existence check :: value: '42', property-ref: 'measurementResult'",
     "counterKey": "Existence_MissingReference_value_StatType_measurementResult"
   }, {
     "level": "LEVEL_ERROR",
     "location": {
-      "file": "FileNotSet.idk",
-      "lineNumber": "-1"
+      "file": "acre.csv",
+      "lineNumber": "5"
     },
     "userMessage": "Failed reference existence check :: value: 'ThisReferenceDoesNotExistAndShouldError', property-ref: 'measurementResult'",
     "counterKey": "Existence_MissingReference_value_StatType_measurementResult"
