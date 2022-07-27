@@ -60,7 +60,7 @@ public class StatVarState {
     if (this.httpClient == null) {
       return; // do nothing; we don't have an HTTPClient to make requests with
     }
-    logCtx.incrementInfoCounterBy("Existence_NumDcCalls", 1);
+    logCtx.incrementInfoCounterBy("StatVarState_NumDcCalls", 1);
     JsonObject dataJson =
         ApiHelper.fetchPropertyValues(this.httpClient, List.of(svDcid), Vocabulary.STAT_TYPE);
     String statType = parseApiStatTypeResponse(dataJson, svDcid);

@@ -4,9 +4,10 @@
       "counters": {
         "NumRowSuccesses": "5",
         "NumPVSuccesses": "70",
+        "StatVarState_NumDcCalls": "1",
         "Existence_NumChecks": "80",
         "NumNodeSuccesses": "10",
-        "Existence_NumDcCalls": "5"
+        "Existence_NumDcCalls": "4"
       }
     },
     "LEVEL_WARNING": {
