@@ -7,6 +7,15 @@ typeOf: dcid:StatVarObservation
 keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-01value=Acre10.0"
 dcid: "dc/o/ndyt1vgyp01ld"
 
+Node: Acre_Table/E2/1
+observationDate: "2020-01-01"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:StatVar_DoesNotExistAnywhere
+value: 1
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=StatVar_DoesNotExistAnywhereobservationDate=2020-01-01value=1"
+dcid: "dc/o/p1llyxxkl0z4c"
+
 Node: Acre_Table/E0/1
 observationDate: "2020-01-01"
 observationAbout: dcid:geoId/01
@@ -24,6 +33,15 @@ value: dcid:Acre10.0
 typeOf: dcid:StatVarObservation
 keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-02value=Acre10.0"
 dcid: "dc/o/wkk3ljtheq6rb"
+
+Node: Acre_Table/E2/2
+observationDate: "2020-01-02"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:StatVar_DoesNotExistAnywhere
+value: 2
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=StatVar_DoesNotExistAnywhereobservationDate=2020-01-02value=2"
+dcid: "dc/o/k6102mvb8lzvg"
 
 Node: Acre_Table/E0/2
 observationDate: "2020-01-02"
@@ -43,6 +61,15 @@ typeOf: dcid:StatVarObservation
 keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-03value=Acre10.0"
 dcid: "dc/o/hlnleb1t0se37"
 
+Node: Acre_Table/E2/3
+observationDate: "2020-01-03"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:StatVar_DoesNotExistAnywhere
+value: 3
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=StatVar_DoesNotExistAnywhereobservationDate=2020-01-03value=3"
+dcid: "dc/o/yfhq70tng6nd8"
+
 Node: Acre_Table/E0/3
 observationDate: "2020-01-03"
 observationAbout: dcid:geoId/01
@@ -61,6 +88,15 @@ typeOf: dcid:StatVarObservation
 keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-04value=Acre10.0"
 dcid: "dc/o/fv7trekggnylb"
 
+Node: Acre_Table/E2/4
+observationDate: "2020-01-04"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:StatVar_DoesNotExistAnywhere
+value: 4
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=StatVar_DoesNotExistAnywhereobservationDate=2020-01-04value=4"
+dcid: "dc/o/9gpsqtkkm0txg"
+
 Node: Acre_Table/E0/4
 observationDate: "2020-01-04"
 observationAbout: dcid:geoId/01
@@ -78,6 +114,15 @@ value: dcid:Acre10.0
 typeOf: dcid:StatVarObservation
 keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-05value=Acre10.0"
 dcid: "dc/o/kdxz9b6twfk2c"
+
+Node: Acre_Table/E2/5
+observationDate: "2020-01-05"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:StatVar_DoesNotExistAnywhere
+value: 5
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=StatVar_DoesNotExistAnywhereobservationDate=2020-01-05value=5"
+dcid: "dc/o/w9ssex7bkghl5"
 
 Node: Acre_Table/E0/5
 observationDate: "2020-01-05"

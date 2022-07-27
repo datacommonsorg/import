@@ -33,6 +33,7 @@ import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
 import org.datacommons.proto.LogLocation;
+import org.datacommons.proto.LogLocation.Location;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.PlaceSeriesSummary.SeriesSummary;
@@ -209,16 +210,34 @@ public class StatChecker {
           String svDcid = seriesSummary.getValidationResult().getStatVarDcid();
           String statType = statVarState.getStatType(svDcid);
 
+          List<DataPoint> timeSeries = seriesSummary.getTimeSeriesAsList();
+
+          // If StatType is null, we were not able to determine the statType of SV
+          // from the local cache OR the API. Log an error and continue to next SV.
           if (statType == null) {
-            // TODO: handle this case
+            List<Location> locations = new ArrayList<Location>();
+
+            if (timeSeries != null) {
+              locations = timeSeries.get(0).getValues(0).getLocationsList();
+            }
+
+            logCtx.addEntry(
+                Level.LEVEL_ERROR,
+                "Existence_CheckMeasurementResult_StatTypeUnknown",
+                "Could not find the statType of a StatisticalVariable to determine if it is subject to measurementResult checks :: "
+                    + "node: '"
+                    + svDcid
+                    + "'",
+                locations);
+            continue;
           }
 
           if (statType.equals(Vocabulary.MEASUREMENT_RESULT)) {
-            List<DataPoint> timeSeries = seriesSummary.getTimeSeriesAsList();
+
             for (DataPoint dp : timeSeries) {
               String value = SeriesSummary.getValueOfDataPoint(dp);
-              LogLocation.Location location = dp.getValues(0).getLocations(0);
 
+              LogLocation.Location location = dp.getValues(0).getLocations(0);
               String fileName = location.getFile();
               long lineNumber = location.getLineNumber();
 

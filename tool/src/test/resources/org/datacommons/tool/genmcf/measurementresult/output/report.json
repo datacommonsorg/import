@@ -3,26 +3,36 @@
     "LEVEL_INFO": {
       "counters": {
         "NumRowSuccesses": "5",
-        "NumPVSuccesses": "70",
-        "StatVarState_NumDcCalls": "1",
-        "Existence_NumChecks": "80",
-        "NumNodeSuccesses": "10",
+        "NumPVSuccesses": "105",
+        "StatVarState_NumDcCalls": "2",
+        "Existence_NumChecks": "110",
+        "NumNodeSuccesses": "15",
         "Existence_NumDcCalls": "4"
       }
     },
     "LEVEL_WARNING": {
       "counters": {
         "Existence_MissingTriple_domainIncludes": "1",
+        "Existence_MissingReference_variableMeasured": "5",
         "StatsCheck_MultipleValueTypesInASeries": "1"
       }
     },
     "LEVEL_ERROR": {
       "counters": {
-        "Existence_MissingReference_value_StatType_measurementResult": "2"
+        "Existence_MissingReference_value_StatType_measurementResult": "2",
+        "Existence_CheckMeasurementResult_StatTypeUnknown": "1"
       }
     }
   },
   "entries": [{
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "acre.csv",
+      "lineNumber": "2"
+    },
+    "userMessage": "Could not find the statType of a StatisticalVariable to determine if it is subject to measurementResult checks :: node: 'StatVar_DoesNotExistAnywhere'",
+    "counterKey": "Existence_CheckMeasurementResult_StatTypeUnknown"
+  }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "acre.csv",
@@ -38,6 +48,46 @@
     },
     "userMessage": "Failed reference existence check :: value: 'ThisReferenceDoesNotExistAndShouldError', property-ref: 'measurementResult'",
     "counterKey": "Existence_MissingReference_value_StatType_measurementResult"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "acre.csv",
+      "lineNumber": "2"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'StatVar_DoesNotExistAnywhere', property: 'variableMeasured', node: 'E:Acre_Table->E2'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "acre.csv",
+      "lineNumber": "3"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'StatVar_DoesNotExistAnywhere', property: 'variableMeasured', node: 'E:Acre_Table->E2'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "acre.csv",
+      "lineNumber": "4"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'StatVar_DoesNotExistAnywhere', property: 'variableMeasured', node: 'E:Acre_Table->E2'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "acre.csv",
+      "lineNumber": "5"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'StatVar_DoesNotExistAnywhere', property: 'variableMeasured', node: 'E:Acre_Table->E2'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "acre.csv",
+      "lineNumber": "6"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'StatVar_DoesNotExistAnywhere', property: 'variableMeasured', node: 'E:Acre_Table->E2'",
+    "counterKey": "Existence_MissingReference_variableMeasured"
   }, {
     "level": "LEVEL_WARNING",
     "location": {
