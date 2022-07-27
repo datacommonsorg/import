@@ -96,6 +96,21 @@ public class StatVarStateTest {
     assertEquals(localSvStatType, resultLocal);
   }
 
+  @Test
+  public void funcParseApiStatType() {
+    // Test that the payload contained in TEST_SV_MEASRES_HTTP_RESP
+    // is correctly parsed and Vocabulary.MEASUREMENT_RESULT is returned.
+    JsonParser parser = new JsonParser();
+
+    String payloadString =
+        parser.parse(TEST_SV_MEASRES_HTTP_RESP).getAsJsonObject().get("payload").getAsString();
+
+    JsonObject payloadJson = parser.parse(payloadString).getAsJsonObject();
+
+    String returnValue = StatVarState.parseApiStatTypeResponse(payloadJson, TEST_SV_MEASRES_DCID);
+
+    assertEquals(Vocabulary.MEASUREMENT_RESULT, returnValue);
+  }
   // Test many things that parseApiStatTypeResponse should return null for
   // (i.e. incorrect/invalid inputs)
   @Test
@@ -119,7 +134,7 @@ public class StatVarStateTest {
 
     String svDcid = "Test_SV";
     JsonParser parser = new JsonParser();
-    
+
     List<String> badJsonStrings =
         List.of(
             "{}",
@@ -131,7 +146,7 @@ public class StatVarStateTest {
             String.format("{\"%s\":{\"out\": [{\"name\":\"someValue\"}, {}]}}", svDcid),
             // object does not have "value" field
             String.format("{\"%s\":{\"out\": [{\"provenance\":\"datacommons.org\"}]}}", svDcid));
-    
+
     for (String badJsonString : badJsonStrings) {
       badInput = parser.parse(badJsonString).getAsJsonObject();
       returnValue = StatVarState.parseApiStatTypeResponse(badInput, svDcid);
@@ -143,15 +158,6 @@ public class StatVarStateTest {
 
       assertEquals(assertionFailedMessage, null, returnValue);
     }
-
-    // Valid case; test that the JSON object in the string contained in TEST_SV_MEASRES_HTTP_RESP
-    // is correctly parsed and Vocabulary.MEASUREMENT_RESULT is returned.
-    String innerJsonString =
-        parser.parse(TEST_SV_MEASRES_HTTP_RESP).getAsJsonObject().get("payload").getAsString();
-    JsonObject test_sv_measres_api_payload = parser.parse(innerJsonString).getAsJsonObject();
-    returnValue =
-        StatVarState.parseApiStatTypeResponse(test_sv_measres_api_payload, TEST_SV_MEASRES_DCID);
-    assertEquals(Vocabulary.MEASUREMENT_RESULT, returnValue);
   }
 
   @Test
