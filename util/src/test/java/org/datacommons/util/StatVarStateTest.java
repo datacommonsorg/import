@@ -22,11 +22,9 @@ import org.mockito.Mockito;
 public class StatVarStateTest {
   String TEST_SV_MEASRES_DCID = "SinanYumurtaci_DCIntern2022";
   String TEST_SV_MEASRES_HTTP_RESP =
-      "{\"payload\": \"{\\\""
-          + TEST_SV_MEASRES_DCID
-          + "\\\": {\\\"out\\\":[{\\\"name\\\":\\\""
-          + Vocabulary.MEASUREMENT_RESULT
-          + "\\\"}]}}\" }";
+      String.format(
+          "{\"payload\": \"{\\\"%s\\\": {\\\"out\\\":[{\\\"name\\\":\\\"%s\\\"}]}}\" }",
+          TEST_SV_MEASRES_DCID, Vocabulary.MEASUREMENT_RESULT);
 
   @Test
   public void getStatTypeHttpCalls() throws IOException, InterruptedException {
@@ -78,16 +76,13 @@ public class StatVarStateTest {
     String localSvStatType = "measurementResult";
 
     String localMcf =
-        "Node: dcid:"
-            + localSvDcid
-            + "\n"
-            + "populationType: dcid:Place\n"
-            + "dcid: \"Acre_MeasurementResult_StatVar\"\n"
-            + "statType: dcid:"
-            + localSvStatType
-            + "\n"
-            + "measuredProperty: dcid:area\n"
-            + "typeOf: dcid:StatisticalVariable\n";
+        String.format(
+            "Node: dcid:%s\n"
+                + "populationType: dcid:Place\n"
+                + "statType: dcid:%s\n"
+                + "measuredProperty: dcid:area\n"
+                + "typeOf: dcid:StatisticalVariable\n",
+            localSvDcid, localSvStatType);
 
     // Add node to local MCF
     McfGraph graph = McfParser.parseInstanceMcfString(localMcf, true, lw);
@@ -126,11 +121,11 @@ public class StatVarStateTest {
             // dcid is incorrect
             "{\"IncorrectSVDcid\":{\"irrelevant value\": 0}}",
             // direction should be "out"
-            "{\"" + svDcid + "\":{\"in\": [{\"irrelevant value\": 0}]}}",
+            String.format("{\"%s\":{\"in\": [{\"irrelevant value\": 0}]}}", svDcid),
             // array should have only 1 element (only one statType per SV)
-            "{\"" + svDcid + "\":{\"out\": [{\"name\":\"someValue\"}, {}]}}",
+            String.format("{\"%s\":{\"out\": [{\"name\":\"someValue\"}, {}]}}", svDcid),
             // object does not have "value" field
-            "{\"" + svDcid + "\":{\"out\": [{\"provenance\":\"datacommons.org\"}]}}");
+            String.format("{\"%s\":{\"out\": [{\"provenance\":\"datacommons.org\"}]}}", svDcid));
     JsonParser parser = new JsonParser();
     JsonObject badInput;
     String assertionFailedMessage;

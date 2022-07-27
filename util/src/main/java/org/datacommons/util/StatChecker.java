@@ -187,11 +187,14 @@ public class StatChecker {
     }
   }
 
-  // This feature is not within check() because it might potentially move.
+  // This feature is not within check() because it uses ExistenceChecker instead
+  // of using the StatChecker.check() mechanism of counter keys.
   //
-  // We are not sure of the performance cost the synchronous polling of statTypes would impose.
-  // So, we put it in StatChecker such that it only performs on sample places, yet,
-  // it is separated fromSo, we put it check() since it is subject to a potential move.
+  // It still lives in this file, at least temporarily, because we are performing
+  // measurementResult checks on only sample places right now. That is because
+  // the current implementation synchronously fetches the statTypes of unknown
+  // StatVars from the API, and we don't want to pay that performance cost for
+  // all nodes.
   public synchronized void checkMeasurementResult(
       StatVarState statVarState, ExistenceChecker existenceChecker)
       throws IOException, InterruptedException {
