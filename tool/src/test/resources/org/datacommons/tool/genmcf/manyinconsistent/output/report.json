@@ -34,7 +34,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "acre.csv",
-      "lineNumber": "3"
+      "lineNumber": "4"
     },
     "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/01', variableMeasured: 'Some_StatVar', observationDate: '2020-01-01', value1: 1.0, value2: 3.0",
     "counterKey": "Sanity_InconsistentSvObsValues"
@@ -67,43 +67,67 @@
       "problemPoints": [{
         "date": "2020-01-01",
         "values": [{
-          "value": 1.0,
+          "value": {
+            "type": "NUMBER",
+            "value": "1",
+            "column": "Some_StatVar"
+          },
           "locations": [{
             "file": "acre.csv",
             "lineNumber": "2"
           }]
         }, {
-          "value": 2.0,
+          "value": {
+            "type": "NUMBER",
+            "value": "2",
+            "column": "Some_StatVar"
+          },
           "locations": [{
             "file": "acre.csv",
             "lineNumber": "3"
           }]
         }, {
-          "value": 3.0,
+          "value": {
+            "type": "NUMBER",
+            "value": "3",
+            "column": "Some_StatVar"
+          },
           "locations": [{
             "file": "acre.csv",
-            "lineNumber": "3"
+            "lineNumber": "4"
           }]
         }]
       }, {
         "date": "2020-01-01",
         "values": [{
-          "value": 1.0,
+          "value": {
+            "type": "NUMBER",
+            "value": "1",
+            "column": "Some_StatVar"
+          },
           "locations": [{
             "file": "acre.csv",
             "lineNumber": "2"
           }]
         }, {
-          "value": 2.0,
+          "value": {
+            "type": "NUMBER",
+            "value": "2",
+            "column": "Some_StatVar"
+          },
           "locations": [{
             "file": "acre.csv",
             "lineNumber": "3"
           }]
         }, {
-          "value": 3.0,
+          "value": {
+            "type": "NUMBER",
+            "value": "3",
+            "column": "Some_StatVar"
+          },
           "locations": [{
             "file": "acre.csv",
-            "lineNumber": "3"
+            "lineNumber": "4"
           }]
         }]
       }]
