@@ -11,7 +11,7 @@
     },
     "LEVEL_WARNING": {
       "counters": {
-        "StatsCheck_Inconsistent_Values": "2"
+        "StatsCheck_Inconsistent_Values": "1"
       }
     },
     "LEVEL_ERROR": {
@@ -65,39 +65,6 @@
     "validationCounters": [{
       "counterKey": "StatsCheck_Inconsistent_Values",
       "problemPoints": [{
-        "date": "2020-01-01",
-        "values": [{
-          "value": {
-            "type": "NUMBER",
-            "value": "1",
-            "column": "Some_StatVar"
-          },
-          "locations": [{
-            "file": "acre.csv",
-            "lineNumber": "2"
-          }]
-        }, {
-          "value": {
-            "type": "NUMBER",
-            "value": "2",
-            "column": "Some_StatVar"
-          },
-          "locations": [{
-            "file": "acre.csv",
-            "lineNumber": "3"
-          }]
-        }, {
-          "value": {
-            "type": "NUMBER",
-            "value": "3",
-            "column": "Some_StatVar"
-          },
-          "locations": [{
-            "file": "acre.csv",
-            "lineNumber": "4"
-          }]
-        }]
-      }, {
         "date": "2020-01-01",
         "values": [{
           "value": {

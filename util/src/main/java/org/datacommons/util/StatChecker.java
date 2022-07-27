@@ -310,6 +310,10 @@ public class StatChecker {
         if (vInitialized && !val.getValue().getValue().equals(v)) {
           inconsistentValueCounter.addProblemPoints(dp);
           logCtx.incrementWarningCounterBy(counterKey, 1);
+          // Once we log this DataPoint, iterating on any further values would
+          // duplicate the log incorrectly, so we break out of the loop and
+          // move to the next DataPoint in the timeSeries
+          break;
         }
         vInitialized = true;
         v = val.getValue().getValue();
