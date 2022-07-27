@@ -174,6 +174,12 @@ public class Processor {
       } else {
         McfChecker.check(n, existenceChecker, statVarState, logCtx);
       }
+      if (args.checkMeasurementResult && type == Mcf.McfType.INSTANCE_MCF) {
+        // Load the statType of the StatCheckers that we know of so that we can
+        // conditionally submit existence checks for SVO values when their SV
+        // has statType == Vocabulary.MEASUREMENT_RESULT.
+        statVarState.addLocalGraph(n);
+      }
       if (existenceChecker != null
           || args.resolutionMode != Args.ResolutionMode.NONE
           || statChecker != null) {

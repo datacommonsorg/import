@@ -6,7 +6,7 @@
         "NumPVSuccesses": "35",
         "Existence_NumChecks": "45",
         "NumNodeSuccesses": "5",
-        "Existence_NumDcCalls": "4"
+        "Existence_NumDcCalls": "5"
       }
     },
     "LEVEL_WARNING": {

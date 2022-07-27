@@ -52,7 +52,7 @@ public class StatVarState {
     return statVarStatType.get(svDcid);
   }
 
-  public void addStatType(String svDcid, String statType) {
+  private void addStatType(String svDcid, String statType) {
     statVarStatType.put(svDcid, statType);
   }
 
@@ -60,7 +60,7 @@ public class StatVarState {
     if (this.httpClient == null) {
       return; // do nothing; we don't have an HTTPClient to make requests with
     }
-
+    logCtx.incrementInfoCounterBy("Existence_NumDcCalls", 1);
     JsonObject dataJson =
         ApiHelper.fetchPropertyValues(this.httpClient, List.of(svDcid), Vocabulary.STAT_TYPE);
     String statType = parseApiStatTypeResponse(dataJson, svDcid);
@@ -105,6 +105,25 @@ public class StatVarState {
     String statType = statTypeJson.get("name").getAsString();
 
     return statType;
+  }
+
+  public synchronized void addLocalGraph(Mcf.McfGraph graph) {
+    for (Map.Entry<String, Mcf.McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
+
+      // Only keep StatVars
+      String typeOf = McfUtil.getPropVal(node.getValue(), Vocabulary.TYPE_OF);
+      if (!typeOf.equals(Vocabulary.STAT_VAR_TYPE)) {
+        continue;
+      }
+
+      String dcid = McfUtil.getPropVal(node.getValue(), Vocabulary.DCID);
+      if (dcid.isEmpty()) {
+        continue;
+      }
+
+      String statType = McfUtil.getPropVals(node.getValue(), Vocabulary.STAT_TYPE).get(0);
+      addStatType(dcid, statType);
+    }
   }
 
   // Returns false if a dcid collision is found. Returns true otherwise.
