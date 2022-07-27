@@ -113,8 +113,13 @@ public class StatVarStateTest {
     returnValue = StatVarState.parseApiStatTypeResponse(new JsonObject(), "");
     assertEquals(null, returnValue);
 
-    // Various bad JSON
+    // Inputting various bad JSONs should all return null.
+    JsonObject badInput;
+    String assertionFailedMessage;
+
     String svDcid = "Test_SV";
+    JsonParser parser = new JsonParser();
+    
     List<String> badJsonStrings =
         List.of(
             "{}",
@@ -126,18 +131,16 @@ public class StatVarStateTest {
             String.format("{\"%s\":{\"out\": [{\"name\":\"someValue\"}, {}]}}", svDcid),
             // object does not have "value" field
             String.format("{\"%s\":{\"out\": [{\"provenance\":\"datacommons.org\"}]}}", svDcid));
-    JsonParser parser = new JsonParser();
-    JsonObject badInput;
-    String assertionFailedMessage;
+    
     for (String badJsonString : badJsonStrings) {
       badInput = parser.parse(badJsonString).getAsJsonObject();
-
       returnValue = StatVarState.parseApiStatTypeResponse(badInput, svDcid);
       assertionFailedMessage =
           "parseApiStatTypeResponse response to JSON "
               + badJsonString
               + " was expected to be null but was "
               + returnValue;
+
       assertEquals(assertionFailedMessage, null, returnValue);
     }
 
