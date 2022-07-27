@@ -58,7 +58,8 @@ public class GenMcfTest {
           "statchecks", 3,
           "successtmcf", 3,
           "measurementresult", 4,
-          "localidresolution", 5);
+          "localidresolution", 5,
+          "manyinconsistent", 4);
 
   private static final String ARGS_TXT_FNAME = "args.txt";
 

@@ -1,0 +1,111 @@
+{
+  "levelSummary": {
+    "LEVEL_INFO": {
+      "counters": {
+        "NumRowSuccesses": "1",
+        "NumPVSuccesses": "7",
+        "Existence_NumChecks": "23",
+        "NumNodeSuccesses": "1",
+        "Existence_NumDcCalls": "2"
+      }
+    },
+    "LEVEL_WARNING": {
+      "counters": {
+        "StatsCheck_Inconsistent_Values": "1"
+      }
+    },
+    "LEVEL_ERROR": {
+      "counters": {
+        "Sanity_InconsistentSvObsValues": "2",
+        "Sanity_MissingOrEmpty_statType": "1",
+        "Sanity_MissingOrEmpty_measuredProperty": "1"
+      }
+    }
+  },
+  "entries": [{
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "acre.csv",
+      "lineNumber": "3"
+    },
+    "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/01', variableMeasured: 'Some_StatVar', observationDate: '2020-01-01', value1: 1.0, value2: 2.0",
+    "counterKey": "Sanity_InconsistentSvObsValues"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "acre.csv",
+      "lineNumber": "4"
+    },
+    "userMessage": "Found nodes with different values for the same StatVarObservation :: observationAbout: 'geoId/01', variableMeasured: 'Some_StatVar', observationDate: '2020-01-01', value1: 1.0, value2: 3.0",
+    "counterKey": "Sanity_InconsistentSvObsValues"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "acre.mcf",
+      "lineNumber": "1"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'measuredProperty', node: 'dcid:Some_StatVar', type: 'StatisticalVariable'",
+    "counterKey": "Sanity_MissingOrEmpty_measuredProperty"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "acre.mcf",
+      "lineNumber": "1"
+    },
+    "userMessage": "Found a missing or empty property value :: property: 'statType', node: 'dcid:Some_StatVar', type: 'StatisticalVariable'",
+    "counterKey": "Sanity_MissingOrEmpty_statType"
+  }],
+  "statsCheckSummary": [{
+    "placeDcid": "geoId/01",
+    "statVarDcid": "Some_StatVar",
+    "measurementMethod": "",
+    "observationPeriod": "",
+    "scalingFactor": "",
+    "unit": "",
+    "validationCounters": [{
+      "counterKey": "StatsCheck_Inconsistent_Values",
+      "problemPoints": [{
+        "date": "2020-01-01",
+        "values": [{
+          "value": {
+            "type": "NUMBER",
+            "value": "1",
+            "column": "Some_StatVar"
+          },
+          "locations": [{
+            "file": "acre.csv",
+            "lineNumber": "2"
+          }]
+        }, {
+          "value": {
+            "type": "NUMBER",
+            "value": "2",
+            "column": "Some_StatVar"
+          },
+          "locations": [{
+            "file": "acre.csv",
+            "lineNumber": "3"
+          }]
+        }, {
+          "value": {
+            "type": "NUMBER",
+            "value": "3",
+            "column": "Some_StatVar"
+          },
+          "locations": [{
+            "file": "acre.csv",
+            "lineNumber": "4"
+          }]
+        }]
+      }]
+    }]
+  }],
+  "commandArgs": {
+    "existenceChecks": true,
+    "resolution": "RESOLUTION_MODE_FULL",
+    "numThreads": 1,
+    "statChecks": true,
+    "observationAbout": false,
+    "allowNanSvobs": false
+  }
+}
