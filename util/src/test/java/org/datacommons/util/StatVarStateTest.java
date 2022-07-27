@@ -103,7 +103,7 @@ public class StatVarStateTest {
 
     String returnValue;
 
-    // Null inputs, or empty dcid string
+    // Null/empty inputs
     returnValue = StatVarState.parseApiStatTypeResponse(null, "someDcid");
     assertEquals(null, returnValue);
 
