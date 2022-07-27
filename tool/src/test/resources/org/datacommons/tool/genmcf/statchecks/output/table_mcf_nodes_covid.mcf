@@ -538,7 +538,7 @@ observationPeriod: "P1Y"
 keyString: "observationAbout=geoId/27111variableMeasured=CumulativeCount_MedicalTest_ConditionCOVID_19_PositiveobservationDate=2020-06-02value=1observationPeriod=P1Y"
 dcid: "dc/o/2pyydweng49e2"
 
-Node: COVID19_cases_india/E0/54
+Node: COVID19_cases_india/E0/55
 observationDate: "2020-06-02"
 observationAbout: dcid:geoId/28111
 variableMeasured: dcid:CumulativeCount_MedicalTest_ConditionCOVID_19_Positive

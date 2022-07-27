@@ -26,19 +26,22 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.datacommons.proto.Debug;
+import org.datacommons.proto.LogLocation;
 import org.datacommons.proto.Mcf;
 
 // Converts a Template MCF file and an associated CSV into instance MCF.
 //
 // NOTE: Sets the location file in LogWrapper (at different times to point to TMCF and CSV).
 // TODO: Add more column info in generated MCF, even when values are missing.
-// TODO: CSV Parser's getCurrentLineNumber() appears to return not increment line-number for the
-//       last line if it does not end with a newline. Consider tracking line-number directly.
 public class TmcfCsvParser {
   public static boolean TEST_mode = false;
 
   private Mcf.McfGraph tmcf;
   private char delimiter;
+  // We track the line number using a private variable instead of using
+  // csvparser.getCurrentLineNumber() because that function does not increment
+  // the line number for the last line that does not end in a newline.
+  private long currentLineNumber;
   private String csvFileName;
   private CSVParser csvParser;
   private LogWrapper logCtx;
@@ -51,6 +54,7 @@ public class TmcfCsvParser {
     TmcfCsvParser tmcfCsvParser = new TmcfCsvParser();
     tmcfCsvParser.tmcf = McfParser.parseTemplateMcfFile(tmcfFile, logCtx);
     tmcfCsvParser.logCtx = logCtx;
+    tmcfCsvParser.currentLineNumber = 1;
     tmcfCsvParser.csvParser =
         CSVParser.parse(
             new FileReader(csvFile),
@@ -72,6 +76,7 @@ public class TmcfCsvParser {
           "Unable to parse header from CSV file :: file: '" + csvFile + "'",
           tmcfCsvParser.csvFileName,
           0);
+
       return null;
     }
     // Check TMCF.
@@ -103,6 +108,7 @@ public class TmcfCsvParser {
       return null;
     }
     RowProcessor processor = new RowProcessor();
+    currentLineNumber++;
     processor.process(csvParser.iterator().next());
     return processor.instanceMcf();
   }
@@ -119,7 +125,7 @@ public class TmcfCsvParser {
       instanceMcf = Mcf.McfGraph.newBuilder();
       instanceMcf.setType(Mcf.McfType.INSTANCE_MCF);
       entityToDcid = new HashMap<>();
-      rowId = TEST_mode ? String.valueOf(csvParser.getCurrentLineNumber() - 1) : newUUID();
+      rowId = TEST_mode ? String.valueOf(getCurrentLineNumber()) : newUUID();
     }
 
     public Mcf.McfGraph instanceMcf() {
@@ -136,8 +142,7 @@ public class TmcfCsvParser {
       }
 
       LogCb logCb =
-          new LogCb(
-              logCtx, Debug.Log.Level.LEVEL_ERROR, csvFileName, csvParser.getCurrentLineNumber());
+          new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, csvFileName, getCurrentLineNumber());
 
       // Process DCIDs from all the nodes first and add to entityToDcid map, which will be consulted
       // to resolve entity references in processValues() function.
@@ -203,9 +208,9 @@ public class TmcfCsvParser {
           nodeBuilder.putPvs(currentProp, values);
         }
         nodeBuilder.setTemplateNode(tableEntity.getKey());
-        Debug.Log.Location.Builder loc = nodeBuilder.addLocationsBuilder();
+        LogLocation.Location.Builder loc = nodeBuilder.addLocationsBuilder();
         loc.setFile(csvFileName);
-        loc.setLineNumber(csvParser.getCurrentLineNumber());
+        loc.setLineNumber(getCurrentLineNumber());
 
         Mcf.McfGraph.PropertyValues newNode = nodeBuilder.build();
         boolean success =
@@ -225,19 +230,11 @@ public class TmcfCsvParser {
 
       // Used for parseSchemaTerm() and splitAndStripWithQuoteEscape()
       LogCb errCb =
-          new LogCb(
-                  logCtx,
-                  Debug.Log.Level.LEVEL_ERROR,
-                  csvFileName,
-                  csvParser.getCurrentLineNumber())
+          new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, csvFileName, getCurrentLineNumber())
               .setDetail(LogCb.PROP_KEY, currentProp)
               .setDetail(LogCb.NODE_KEY, templateEntity);
       LogCb warnCb =
-          new LogCb(
-                  logCtx,
-                  Debug.Log.Level.LEVEL_WARNING,
-                  csvFileName,
-                  csvParser.getCurrentLineNumber())
+          new LogCb(logCtx, Debug.Log.Level.LEVEL_WARNING, csvFileName, getCurrentLineNumber())
               .setDetail(LogCb.PROP_KEY, currentProp)
               .setDetail(LogCb.NODE_KEY, templateEntity);
 
@@ -375,6 +372,11 @@ public class TmcfCsvParser {
   }
 
   private void addLog(Debug.Log.Level level, String counter, String message) {
-    logCtx.addEntry(level, counter, message, csvFileName, csvParser.getCurrentLineNumber());
+    logCtx.addEntry(level, counter, message, csvFileName, getCurrentLineNumber());
+  }
+
+  // Returns the current line in the CSV.
+  private long getCurrentLineNumber() {
+    return currentLineNumber;
   }
 }

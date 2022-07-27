@@ -25,25 +25,34 @@ import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Pattern;
 import org.apache.commons.text.StringEscapeUtils;
 
 // Common set of utils to handle strings
 public class StringUtil {
   // From https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatterBuilder.html
-  private static final List<String> DATE_PATTERNS =
+  // Pattern specification:
+  // https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatterBuilder.html#appendPattern-java.lang.String-
+  // Key is the pattern, value is a list of lengths that this pattern could
+  // potentially match. This is used in filtering out impossible date checks by
+  // comparing the length of the input date string against the Set<Integer> here.
+  private static final List<Entry<String, Set<Integer>>> DATE_PATTERNS =
       List.of(
-          "yyyy",
-          "yyyy-MM",
-          "yyyyMM",
-          "yyyy-M",
-          "yyyy-MM-dd",
-          "yyyyMMdd",
-          "yyyy-M-d",
-          "yyyy-MM-dd'T'HH:mm",
-          "yyyy-MM-dd'T'HH:mm:ss",
-          "yyyy-MM-dd'T'HH:mm:ss.SSS",
-          "yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+          // Sort these entries starting with the most common cases for runtime
+          // speed performance.
+          Map.entry("yyyy", Set.of(4)),
+          Map.entry("yyyy-M", Set.of(6, 7)),
+          Map.entry("yyyy-M-d", Set.of(8, 9, 10)),
+          Map.entry("yyyyMM", Set.of(6)),
+          Map.entry("yyyyMMdd", Set.of(8)),
+          Map.entry("yyyy-MM-dd'T'HH:mm", Set.of(16)),
+          Map.entry("yyyy-MM-dd'T'HH:mm:ss", Set.of(19)),
+          Map.entry("yyyy-MM-dd'T'HH:mm:ss.SSS", Set.of(23)),
+          // `XXX` adds 6 because it means ""+HH:MM"")
+          Map.entry("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Set.of(29)));
 
   // The Java API does not match 20071, 2007101, so add these for compatibility with CPP
   // implementation.
@@ -106,12 +115,15 @@ public class StringUtil {
   }
 
   public static String getValidISO8601DatePattern(String dateValue) {
-    for (String pattern : DATE_PATTERNS) {
-      try {
-        DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH).parse(dateValue);
-        return pattern;
-      } catch (DateTimeParseException ex) {
-        // Pass through
+    for (Entry<String, Set<Integer>> entry : DATE_PATTERNS) {
+      if (entry.getValue().contains(dateValue.length())) {
+        String pattern = entry.getKey();
+        try {
+          DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH).parse(dateValue);
+          return pattern;
+        } catch (DateTimeParseException ex) {
+          // Pass through
+        }
       }
     }
     for (String pattern : EXTRA_DATE_PATTERNS) {
@@ -124,29 +136,33 @@ public class StringUtil {
 
   public static LocalDateTime getValidISO8601Date(String dateValue) {
     // TODO: handle the extra date patterns
-    for (String pattern : DATE_PATTERNS) {
-      try {
-        DateTimeFormatter dateFormat =
-            new DateTimeFormatterBuilder()
-                .appendPattern(pattern)
-                .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
-                .parseDefaulting(ChronoField.MONTH_OF_YEAR, 1)
-                .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
-                .toFormatter(Locale.ENGLISH);
-        return LocalDateTime.parse(dateValue, dateFormat);
-      } catch (DateTimeParseException ex) {
-        // Pass through
+    for (Entry<String, Set<Integer>> entry : DATE_PATTERNS) {
+      if (entry.getValue().contains(dateValue.length())) {
+        String pattern = entry.getKey();
+        try {
+          DateTimeFormatter dateFormat =
+              new DateTimeFormatterBuilder()
+                  .appendPattern(pattern)
+                  .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
+                  .parseDefaulting(ChronoField.MONTH_OF_YEAR, 1)
+                  .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+                  .toFormatter(Locale.ENGLISH);
+          return LocalDateTime.parse(dateValue, dateFormat);
+        } catch (DateTimeParseException ex) {
+          // Pass through
+        }
       }
     }
     return null;
   }
 
   public static String getValidISO8601DateTemplate(String datePattern) {
-    if (DATE_PATTERNS.contains(datePattern)) {
-      return datePattern;
-    } else {
-      return "";
+    for (Entry<String, Set<Integer>> entry : DATE_PATTERNS) {
+      if (entry.getKey().equals(datePattern)) {
+        return entry.getKey();
+      }
     }
+    return "";
   }
 
   // Splits a string using the delimiter character. A field is not split if the delimiter is within
