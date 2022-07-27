@@ -4456,7 +4456,7 @@ public final class Debug {
      *
      *
      * <pre>
-     * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+     * check the existence of SVObs value references if the SV they are measuring has statType: measurementResult
      * </pre>
      *
      * <code>optional bool check_measurement_result = 8;</code>
@@ -4468,7 +4468,7 @@ public final class Debug {
      *
      *
      * <pre>
-     * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+     * check the existence of SVObs value references if the SV they are measuring has statType: measurementResult
      * </pre>
      *
      * <code>optional bool check_measurement_result = 8;</code>
@@ -4942,7 +4942,7 @@ public final class Debug {
      *
      *
      * <pre>
-     * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+     * check the existence of SVObs value references if the SV they are measuring has statType: measurementResult
      * </pre>
      *
      * <code>optional bool check_measurement_result = 8;</code>
@@ -4956,7 +4956,7 @@ public final class Debug {
      *
      *
      * <pre>
-     * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+     * check the existence of SVObs value references if the SV they are measuring has statType: measurementResult
      * </pre>
      *
      * <code>optional bool check_measurement_result = 8;</code>
@@ -5857,7 +5857,7 @@ public final class Debug {
        *
        *
        * <pre>
-       * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+       * check the existence of SVObs value references if the SV they are measuring has statType: measurementResult
        * </pre>
        *
        * <code>optional bool check_measurement_result = 8;</code>
@@ -5871,7 +5871,7 @@ public final class Debug {
        *
        *
        * <pre>
-       * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+       * check the existence of SVObs value references if the SV they are measuring has statType: measurementResult
        * </pre>
        *
        * <code>optional bool check_measurement_result = 8;</code>
@@ -5885,7 +5885,7 @@ public final class Debug {
        *
        *
        * <pre>
-       * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+       * check the existence of SVObs value references if the SV they are measuring has statType: measurementResult
        * </pre>
        *
        * <code>optional bool check_measurement_result = 8;</code>
@@ -5903,7 +5903,7 @@ public final class Debug {
        *
        *
        * <pre>
-       * check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+       * check the existence of SVObs value references if the SV they are measuring has statType: measurementResult
        * </pre>
        *
        * <code>optional bool check_measurement_result = 8;</code>

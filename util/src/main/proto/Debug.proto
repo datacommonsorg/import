@@ -80,7 +80,7 @@ message CommandArgs {
     repeated string sample_places = 5;
     optional bool observation_about = 6;
     optional bool allow_nan_svobs = 7;  // allow not-a-number svobs values
-    // check the existence of SVObs values if the SV they are measuring has statType: measurementResult
+    // check the existence of SVObs value references if the SV they are measuring has statType: measurementResult
     optional bool check_measurement_result = 8; 
 }
 
