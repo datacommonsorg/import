@@ -14,8 +14,9 @@ import org.datacommons.proto.Mcf;
 // different StatVars (by content), or if the same StatVar content is assigned different curated
 // DCIDs.  Used by the McfChecker.
 //
-// Tracks statType of the StatVars that we know of. Used for performing existence
-// checks for SVObs values only if StatVar has statType == MEASUREMENT_RESULT.
+// Tracks statType of the StatVars that we know of. Used for measurementResult
+// checks. MeasurementResult checks is when we check the existence of SVO value
+// references for SVOs that are measuring SVs with statType == MEASUREMENT_RESULT.
 //
 // This class is thread-safe.
 //
@@ -23,10 +24,8 @@ import org.datacommons.proto.Mcf;
 public class StatVarState {
   private HttpClient httpClient;
   private final LogWrapper logCtx;
-
   private final Map<String, String> generatedToCurated = new ConcurrentHashMap<>();
   private final Map<String, String> curatedToGenerated = new ConcurrentHashMap<>();
-
   // Key: StatVar DCID, Value: statType value of the StatVar
   private final Map<String, String> statVarStatType = new ConcurrentHashMap<>();
 
@@ -40,9 +39,12 @@ public class StatVarState {
     this.logCtx = logCtx;
   }
 
+  // Returns the statType of the given DCID. Makes a API call if the SV does not
+  // exist in the local cache. Returns null if the API request fails (SV does not
+  // exist, etc.)
   public String getStatType(String svDcid) {
     if (!statVarStatType.containsKey(svDcid)) {
-      // We do not have the statType in memory, so  we will need to fetch it synchronously...
+      // We do not have the statType in memory, so  we will need to fetch it synchronously
       try {
         fetchStatTypeFromApi(svDcid);
       } catch (IOException | InterruptedException e) {
@@ -56,6 +58,9 @@ public class StatVarState {
     statVarStatType.put(svDcid, statType);
   }
 
+  // Uses the API to get the statType of the given SV. Sets the statType in
+  // this.statVarStatType map if API successfully returns the statType, does not
+  // modify state otherwise.
   private void fetchStatTypeFromApi(String svDcid) throws IOException, InterruptedException {
     if (this.httpClient == null) {
       return; // do nothing; we don't have an HTTPClient to make requests with
@@ -69,8 +74,8 @@ public class StatVarState {
     }
   }
 
-  // Returns the statType indicated in the payload.
-  // Returns null if there are any issue in the import data.
+  // Returns the statType indicated in the API JSON payload.
+  // Returns null if there are any issues with the input.
   protected static String parseApiStatTypeResponse(JsonObject payload, String svDcid) {
     if (payload == null) {
       return null;
@@ -107,6 +112,7 @@ public class StatVarState {
     return statType;
   }
 
+  // Given graph of instance MCF nodes, adds the statType of StatVars to the cache
   public synchronized void addLocalGraph(Mcf.McfGraph graph) {
     for (Map.Entry<String, Mcf.McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
 
