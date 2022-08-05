@@ -126,8 +126,10 @@ public class StatVarState {
         continue;
       }
 
-      String statType = McfUtil.getPropVals(node.getValue(), Vocabulary.STAT_TYPE).get(0);
-      addStatType(dcid, statType);
+      String statType = McfUtil.getPropVal(node.getValue(), Vocabulary.STAT_TYPE);
+      if(statType != ""){
+        addStatType(dcid, statType);
+      }
     }
   }
 
