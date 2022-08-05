@@ -249,6 +249,7 @@ public class StatChecker {
         }
       }
     }
+    // Drain the existence check calls that potentially have been batched locally
     existenceChecker.drainRemoteCalls();
   }
 
