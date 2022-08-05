@@ -23,7 +23,7 @@ public class StatVarStateTest {
   String TEST_SV_MEASRES_DCID = "SinanYumurtaci_DCIntern2022";
   String TEST_SV_MEASRES_HTTP_RESP =
       String.format(
-          "{\"payload\": \"{\\\"%s\\\": {\\\"out\\\":[{\\\"name\\\":\\\"%s\\\"}]}}\" }",
+          "{\"payload\": \"{\\\"%s\\\": {\\\"out\\\":[{\\\"dcid\\\":\\\"%s\\\"}]}}\" }",
           TEST_SV_MEASRES_DCID, Vocabulary.MEASUREMENT_RESULT);
 
   @Test
@@ -143,7 +143,7 @@ public class StatVarStateTest {
             // direction should be "out"
             String.format("{\"%s\":{\"in\": [{\"irrelevant value\": 0}]}}", svDcid),
             // array should have only 1 element (only one statType per SV)
-            String.format("{\"%s\":{\"out\": [{\"name\":\"someValue\"}, {}]}}", svDcid),
+            String.format("{\"%s\":{\"out\": [{\"dcid\":\"someValue\"}, {}]}}", svDcid),
             // object does not have "value" field
             String.format("{\"%s\":{\"out\": [{\"provenance\":\"datacommons.org\"}]}}", svDcid));
 
