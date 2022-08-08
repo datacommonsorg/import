@@ -136,7 +136,9 @@ public class Processor {
     if (args.doStatChecks) {
       Set<String> samplePlaces =
           args.samplePlaces == null ? null : new HashSet<>(args.samplePlaces);
-      statChecker = new StatChecker(logCtx, samplePlaces);
+      statChecker =
+          new StatChecker(
+              logCtx, samplePlaces, statVarState, existenceChecker, args.checkMeasurementResult);
     }
     execService = Executors.newFixedThreadPool(args.numThreads);
   }
@@ -404,9 +406,6 @@ public class Processor {
     if (statChecker == null) return;
     logger.info("Performing stats checks");
     statChecker.check();
-    if (existenceChecker != null && statVarState != null && args.checkMeasurementResult) {
-      statChecker.checkMeasurementResult(statVarState, existenceChecker);
-    }
     statChecker.fetchSamplePlaceNames(httpClient);
   }
 
