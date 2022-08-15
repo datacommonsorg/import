@@ -26,11 +26,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import org.datacommons.proto.Debug;
 import org.datacommons.proto.Debug.DataPoint;
 import org.datacommons.proto.Debug.DataPoint.DataValue;
 import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Debug.StatValidationResult;
 import org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry;
+import org.datacommons.proto.LogLocation;
+import org.datacommons.proto.LogLocation.Location;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.PlaceSeriesSummary.SeriesSummary;
@@ -83,11 +86,19 @@ public class StatChecker {
   // StatVarObservation.
   private final ConcurrentMap<Long, Float> svObValues;
   private final String EMPTY_PROP_STRING = "EMPTY_PROP";
+  private StatVarState statVarState;
+  private ExistenceChecker existenceChecker;
+  private boolean checkMeasurementResult;
 
   // Creates a StatChecker instance. If no samplePlaces are provided, for each pair of (place
   // namespace, place dcid length), we will use the first 5 places that stat var observations are
   // added for as the sample places.
-  public StatChecker(LogWrapper logCtx, Set<String> samplePlaces) {
+  public StatChecker(
+      LogWrapper logCtx,
+      Set<String> samplePlaces,
+      StatVarState statVarState,
+      ExistenceChecker existenceChecker,
+      boolean checkMeasurementResult) {
     this.logCtx = logCtx;
     this.placeSeriesSummaryMap = new HashMap<>();
     this.samplePlaces = new ConcurrentHashMap<>();
@@ -99,6 +110,19 @@ public class StatChecker {
       this.shouldGenerateSamplePlaces = false;
       this.samplePlaces.put(RECEIVED_SAMPLE_PLACES_KEY, samplePlaces);
     }
+    this.statVarState = statVarState;
+    this.existenceChecker = existenceChecker;
+    this.checkMeasurementResult = checkMeasurementResult;
+    if (this.checkMeasurementResult) {
+      if (this.existenceChecker == null || this.statVarState == null) {
+        throw new IllegalArgumentException(
+            "ExistenceChecker and StatVarState objects must be non-null when checkMeasurementResult is true");
+      }
+    }
+  }
+
+  public StatChecker(LogWrapper logCtx, Set<String> samplePlaces) {
+    this(logCtx, samplePlaces, null, null, false);
   }
 
   // Given a graph, extract stat var info and time series info (about the chosen sample places) from
@@ -135,7 +159,7 @@ public class StatChecker {
   // Iterate through seriesSummaries, perform a list of checks (value inconsistencies, sigma
   // variance, percent fluctuations, holes in dates, invalid dates, etc) and add these results to
   // the logCtx.
-  public synchronized void check() {
+  public synchronized void check() throws IOException, InterruptedException {
     Map<String, Integer> countersRemaining = new HashMap<>();
     for (String counterKey : COUNTER_KEYS) {
       countersRemaining.put(counterKey, NUM_SUMMARY_ENTRIES_PER_COUNTER);
@@ -144,7 +168,9 @@ public class StatChecker {
       for (Map<Long, SeriesSummary> seriesSummaryMap :
           placeSeriesSummary.getSvSeriesSummaryMap().values()) {
         for (SeriesSummary seriesSummary : seriesSummaryMap.values()) {
-          List<DataPoint> timeSeries = new ArrayList<>(seriesSummary.timeSeries.values());
+          String svDcid = seriesSummary.getValidationResult().getStatVarDcid();
+          List<DataPoint> timeSeries = seriesSummary.getTimeSeriesAsList();
+
           StatValidationResult.Builder resBuilder = seriesSummary.validationResult;
 
           // General checks; these don't depend on the type of the values.
@@ -165,6 +191,10 @@ public class StatChecker {
             checkPercentFluctuations(timeSeries, resBuilder, logCtx);
           }
 
+          if (type == ValueType.RESOLVED_REF && checkMeasurementResult) {
+            checkMeasurementResult(svDcid, timeSeries);
+          }
+
           // add result to log.
           if (!resBuilder.getValidationCountersList().isEmpty() && !countersRemaining.isEmpty()) {
             // only add entry if resBuilder contains a validation counter that we still want to add
@@ -182,6 +212,63 @@ public class StatChecker {
           }
         }
       }
+    }
+    // Drain the existence check calls that potentially have been submitted by
+    // calls to checkMeasurementResult.
+    if (existenceChecker != null && checkMeasurementResult) {
+      existenceChecker.drainRemoteCalls();
+    }
+  }
+
+  // This feature is not within check() because it uses ExistenceChecker instead
+  // of using the StatChecker.check() mechanism of counter keys.
+  //
+  // It still lives in this file, at least temporarily, because we are performing
+  // measurementResult checks on only sample places right now. That is because
+  // the current implementation synchronously fetches the statTypes of unknown
+  // StatVars from the API, and we don't want to pay that performance cost for
+  // all nodes.
+  public synchronized void checkMeasurementResult(String svDcid, List<DataPoint> timeSeries)
+      throws IOException, InterruptedException {
+
+    String statType = statVarState.getStatType(svDcid);
+
+    // If StatType is null, we were not able to determine the statType of SV
+    // from the local cache OR the API. Log an error and continue to next SV.
+    if (statType == null) {
+      List<Location> locations = new ArrayList<Location>();
+      if (timeSeries != null) {
+        locations = timeSeries.get(0).getValues(0).getLocationsList();
+      }
+      logCtx.addEntry(
+          Level.LEVEL_ERROR,
+          "Existence_CheckMeasurementResult_StatTypeUnknown",
+          "Could not find the statType of a StatisticalVariable to determine if it is subject to measurementResult checks :: "
+              + "node: '"
+              + svDcid
+              + "'",
+          locations);
+      return;
+    }
+
+    // Only perform checks when statType is measurementResult
+    if (!statType.equals(Vocabulary.MEASUREMENT_RESULT)) {
+      return;
+    }
+
+    for (DataPoint dp : timeSeries) {
+      String value = SeriesSummary.getValueOfDataPoint(dp);
+      LogLocation.Location location = dp.getValues(0).getLocations(0);
+      String fileName = location.getFile();
+      long lineNumber = location.getLineNumber();
+
+      LogCb logCb =
+          new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, fileName, lineNumber)
+              .setDetail(LogCb.PREF_KEY, Vocabulary.MEASUREMENT_RESULT)
+              .setDetail(LogCb.VALUE_KEY, value)
+              .setCounterSuffix("value_StatType_measurementResult");
+
+      existenceChecker.submitNodeCheck(value, logCb);
     }
   }
 

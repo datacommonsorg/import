@@ -1,13 +1,31 @@
-Node: Acre_Table/E0/1
+Node: Acre_Table/E1/1
 observationDate: "2020-01-01"
 observationAbout: dcid:geoId/01
 variableMeasured: dcid:Acre_MeasurementResult_StatVar
+value: dcid:Acre10.0
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-01value=Acre10.0"
+dcid: "dc/o/ndyt1vgyp01ld"
+
+Node: Acre_Table/E2/1
+observationDate: "2020-01-01"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:StatVar_DoesNotExistAnywhere
+value: dcid:Acre10.0
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=StatVar_DoesNotExistAnywhereobservationDate=2020-01-01value=Acre10.0"
+dcid: "dc/o/ch502b5vc4y7f"
+
+Node: Acre_Table/E0/1
+observationDate: "2020-01-01"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:WHO/TOBACCO_0000000342
 value: dcid:Acre1.0
 typeOf: dcid:StatVarObservation
-keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-01value=Acre1.0"
-dcid: "dc/o/2mx1hq31vsyh6"
+keyString: "observationAbout=geoId/01variableMeasured=WHO/TOBACCO_0000000342observationDate=2020-01-01value=Acre1.0"
+dcid: "dc/o/kbvx6bk9x9x2d"
 
-Node: Acre_Table/E0/2
+Node: Acre_Table/E1/2
 observationDate: "2020-01-02"
 observationAbout: dcid:geoId/01
 variableMeasured: dcid:Acre_MeasurementResult_StatVar
@@ -16,21 +34,102 @@ typeOf: dcid:StatVarObservation
 keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-02value=Acre10.0"
 dcid: "dc/o/wkk3ljtheq6rb"
 
-Node: Acre_Table/E0/3
+Node: Acre_Table/E2/2
+observationDate: "2020-01-02"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:StatVar_DoesNotExistAnywhere
+value: dcid:Acre10.0
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=StatVar_DoesNotExistAnywhereobservationDate=2020-01-02value=Acre10.0"
+dcid: "dc/o/lv6mgr7hd44h4"
+
+Node: Acre_Table/E0/2
+observationDate: "2020-01-02"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:WHO/TOBACCO_0000000342
+value: dcid:Acre10.0
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=WHO/TOBACCO_0000000342observationDate=2020-01-02value=Acre10.0"
+dcid: "dc/o/wgwhszbr5q48h"
+
+Node: Acre_Table/E1/3
 observationDate: "2020-01-03"
 observationAbout: dcid:geoId/01
 variableMeasured: dcid:Acre_MeasurementResult_StatVar
+value: dcid:Acre10.0
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-03value=Acre10.0"
+dcid: "dc/o/hlnleb1t0se37"
+
+Node: Acre_Table/E2/3
+observationDate: "2020-01-03"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:StatVar_DoesNotExistAnywhere
+value: dcid:Acre10.0
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=StatVar_DoesNotExistAnywhereobservationDate=2020-01-03value=Acre10.0"
+dcid: "dc/o/prl1jpeljd89"
+
+Node: Acre_Table/E0/3
+observationDate: "2020-01-03"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:WHO/TOBACCO_0000000342
 value: dcid:Acre100.0
 typeOf: dcid:StatVarObservation
-keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-03value=Acre100.0"
-dcid: "dc/o/6qf2x2kc3gs45"
+keyString: "observationAbout=geoId/01variableMeasured=WHO/TOBACCO_0000000342observationDate=2020-01-03value=Acre100.0"
+dcid: "dc/o/c5plk3706v8e9"
+
+Node: Acre_Table/E1/4
+observationDate: "2020-01-04"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:Acre_MeasurementResult_StatVar
+value: dcid:Acre10.0
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-04value=Acre10.0"
+dcid: "dc/o/fv7trekggnylb"
+
+Node: Acre_Table/E2/4
+observationDate: "2020-01-04"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:StatVar_DoesNotExistAnywhere
+value: dcid:Acre10.0
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=StatVar_DoesNotExistAnywhereobservationDate=2020-01-04value=Acre10.0"
+dcid: "dc/o/rn27305qjfzw2"
 
 Node: Acre_Table/E0/4
 observationDate: "2020-01-04"
 observationAbout: dcid:geoId/01
+variableMeasured: dcid:WHO/TOBACCO_0000000342
+value: dcid:ThisReferenceDoesNotExistAndShouldError
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=WHO/TOBACCO_0000000342observationDate=2020-01-04value=ThisReferenceDoesNotExistAndShouldError"
+dcid: "dc/o/7kjm3hkkbpw2d"
+
+Node: Acre_Table/E1/5
+observationDate: "2020-01-05"
+observationAbout: dcid:geoId/01
 variableMeasured: dcid:Acre_MeasurementResult_StatVar
+value: dcid:Acre10.0
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-05value=Acre10.0"
+dcid: "dc/o/kdxz9b6twfk2c"
+
+Node: Acre_Table/E2/5
+observationDate: "2020-01-05"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:StatVar_DoesNotExistAnywhere
+value: dcid:Acre10.0
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=geoId/01variableMeasured=StatVar_DoesNotExistAnywhereobservationDate=2020-01-05value=Acre10.0"
+dcid: "dc/o/qwk8xxy827c91"
+
+Node: Acre_Table/E0/5
+observationDate: "2020-01-05"
+observationAbout: dcid:geoId/01
+variableMeasured: dcid:WHO/TOBACCO_0000000342
 value: 42
 typeOf: dcid:StatVarObservation
-keyString: "observationAbout=geoId/01variableMeasured=Acre_MeasurementResult_StatVarobservationDate=2020-01-04value=42"
-dcid: "dc/o/qhehg6vdpbpe6"
+keyString: "observationAbout=geoId/01variableMeasured=WHO/TOBACCO_0000000342observationDate=2020-01-05value=42"
+dcid: "dc/o/rqn2d8nnx5bp8"
 

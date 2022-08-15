@@ -185,6 +185,17 @@ Allows non-numeric (text or reference) values for StatVarObservation value field
 
 Defaults to `false`.
 
+### `--check-measurement-result`
+
+Checks DCID references from StatVarObservation nodes if the StatisticalVariable
+they are measuring has `statType: measurementResult`.
+
+If the StatVar definition exists in the local MCF files provided, that will be used.
+Otherwise, API requests to the Data Commons KG will be made synchronously per unknown StatVar.
+
+Only nodes in sample places are subject to this check.
+
+Defaults to `false`.
 
 ### `-p`, `--sample-places=<samplePlaces>`
 

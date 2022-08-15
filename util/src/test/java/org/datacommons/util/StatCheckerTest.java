@@ -45,7 +45,7 @@ public class StatCheckerTest {
   @Rule public final Expect expect = Expect.create();
 
   @Test
-  public void testEndToEnd() throws IOException {
+  public void testEndToEnd() throws IOException, InterruptedException {
     Debug.Log.Builder logCtx = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(logCtx, testFolder.getRoot().toPath());
     String mcfPath = this.getClass().getResource("StatCheckerTest.mcf").getPath();

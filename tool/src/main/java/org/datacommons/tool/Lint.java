@@ -69,6 +69,7 @@ class Lint implements Callable<Integer> {
     args.generateSummaryReport = parent.generateSummaryReport;
     args.checkObservationAbout = parent.checkObservationAbout;
     args.allowNonNumericStatVarObservation = parent.allowNonNumericStatVarObservation;
+    args.checkMeasurementResult = parent.checkMeasurementResult;
     return Processor.process(args);
   }
 }
