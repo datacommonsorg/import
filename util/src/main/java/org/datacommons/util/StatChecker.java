@@ -113,6 +113,12 @@ public class StatChecker {
     this.statVarState = statVarState;
     this.existenceChecker = existenceChecker;
     this.checkMeasurementResult = checkMeasurementResult;
+    if (this.checkMeasurementResult) {
+      if (this.existenceChecker == null || this.statVarState == null) {
+        throw new IllegalArgumentException(
+            "ExistenceChecker and StatVarState objects must be non-null when checkMeasurementResult is true");
+      }
+    }
   }
 
   public StatChecker(LogWrapper logCtx, Set<String> samplePlaces) {
@@ -224,12 +230,6 @@ public class StatChecker {
   // all nodes.
   public synchronized void checkMeasurementResult(String svDcid, List<DataPoint> timeSeries)
       throws IOException, InterruptedException {
-    if (existenceChecker == null) {
-      return;
-    }
-    if (statVarState == null) {
-      return;
-    }
 
     String statType = statVarState.getStatType(svDcid);
 
