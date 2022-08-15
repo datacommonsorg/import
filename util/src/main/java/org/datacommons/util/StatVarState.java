@@ -127,7 +127,7 @@ public class StatVarState {
       }
 
       String statType = McfUtil.getPropVal(node.getValue(), Vocabulary.STAT_TYPE);
-      if (statType != "") {
+      if (!statType.equals("")) {
         addStatType(dcid, statType);
       }
     }
