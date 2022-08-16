@@ -50,7 +50,7 @@ Detailed documentation on the Import Tool is available [here](docs/usage.md).
 1. The tools are built using Apache Maven version 3.8.0.
    - For MacOS: `brew install maven`
 2. The tools use protobuf and require that `protoc` be installed.
-   - For MacOS: `brew install protoc`
+   - For MacOS: `brew install protobuf`
 3. Make sure Java 11+ (but not Java 16) is installed
    - You can install it from [here](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk)
 4. Check what version of Java Maven is using: `mvn --version`
