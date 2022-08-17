@@ -146,7 +146,6 @@ public class McfResolver {
 
       // 0. If DCID exists move on to the next node.
       if (!McfUtil.getPropVal(node.build(), Vocabulary.DCID).isEmpty()) {
-        // Already has dcid. Move to the next node...
         continue;
       }
 
