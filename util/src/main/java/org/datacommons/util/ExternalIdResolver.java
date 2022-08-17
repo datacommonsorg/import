@@ -91,10 +91,7 @@ public class ExternalIdResolver {
 
       if (numBatchedIds >= MAX_RESOLUTION_BATCH_IDS) {
         if (verbose) {
-          logger.info(
-              "Processing batched external-IDs due to MAX_RESOLUTION_BATCH_IDS threshold ("
-                  + MAX_RESOLUTION_BATCH_IDS
-                  + ")");
+          logger.info("Processing batched external-IDs due to MAX_RESOLUTION_BATCH_IDS threshold");
         }
         drainRemoteCallsInternal();
       }
@@ -164,7 +161,7 @@ public class ExternalIdResolver {
                     + (foundFirst ? prop : foundExternalProp),
                 "Found diverging DCIDs for external IDs :: extId1: '"
                     + (foundFirst ? foundExternalId : id)
-                    + ", "
+                    + "', "
                     + "dcid1: '"
                     + (foundFirst ? foundDcid : newDcid)
                     + "', property1: '"
