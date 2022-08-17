@@ -32,7 +32,7 @@
       "file": "covid.csv",
       "lineNumber": "3"
     },
-    "userMessage": "Found diverging DCIDs for external IDs :: extId1: 'pseudoIsoCodeDiverging, dcid1: 'pseudoPlaceDivergent_AAA', property1: 'isoCode, extId2: 'pseudoWikidataIdDiverging', dcid2:pseudoPlaceDivergent_BBB, property2: 'wikidataId', node: 'COVID19_cases_india/E1/2'",
+    "userMessage": "Found diverging DCIDs for external IDs :: extId1: 'pseudoIsoCodeDiverging, dcid1: 'pseudoPlaceDivergent_AAA', property1: 'isoCode, extId2: 'pseudoWikidataIdDiverging', dcid2: 'pseudoPlaceDivergent_BBB', property2: 'wikidataId', node: 'COVID19_cases_india/E1/2'",
     "counterKey": "Resolution_DivergingDcidsForExternalIds_isoCode_wikidataId"
   }, {
     "level": "LEVEL_ERROR",
