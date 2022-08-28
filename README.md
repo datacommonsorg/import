@@ -51,13 +51,9 @@ Detailed documentation on the Import Tool is available [here](docs/usage.md).
    - For MacOS: `brew install maven`
 2. The tools use protobuf and require that `protoc` be installed.
    - For MacOS: `brew install protobuf`
-3. Make sure Java 11+ (but not Java 16) is installed
+3. Make sure Java 11+ is installed
    - You can install it from [here](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk)
 4. Check what version of Java Maven is using: `mvn --version`
-5. If Maven is using Java 16:
-   - Open `~/.bash_profile`
-   - Add `export JAVA_HOME=<Path to your downloaded Java 11>`
-   - Save your change and run `source ~/.bash_profile`
 
 ### Build and Test Import Tool
 
@@ -110,7 +106,7 @@ follow instructions in the
 to integrate with IntelliJ/Eclipse IDEs.
 
 The formatting is done as part of the build. It can be checked by running:
-`mvn com.coveo:fmt-maven-plugin:check`
+`mvn com.spotify.fmt:fmt-maven-plugin:check`
 
 ### Contributing Changes
 
