@@ -144,26 +144,20 @@ public class McfResolver {
     for (var nodeId : output.getNodesMap().keySet()) {
       var node = output.getNodesMap().get(nodeId).toBuilder();
 
-      // 1. Check if DCID exists and if there are any unresolved refs.
+      // 0. If DCID exists move on to the next node.
+      if (!McfUtil.getPropVal(node.build(), Vocabulary.DCID).isEmpty()) {
+        continue;
+      }
+
+      // 1. Check if there are any unresolved refs.
       String unresolvedRef = new String();
-      boolean hasDcid = false;
-      // For every PV...
       for (var pv : node.getPvsMap().entrySet()) {
-        var prop = pv.getKey();
-        if (prop.equals(Vocabulary.DCID)) {
-          hasDcid = true;
-          break;
-        }
         // For every value in PV...
         for (var val : pv.getValue().getTypedValuesList()) {
           unresolvedRef = getLocalId(val.toBuilder());
           if (!unresolvedRef.isEmpty()) break;
         }
         if (!unresolvedRef.isEmpty()) break;
-      }
-      if (hasDcid) {
-        // Already has dcid. Move to the next node...
-        continue;
       }
 
       // 2. Identify the type of node.

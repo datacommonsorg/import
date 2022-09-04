@@ -161,7 +161,7 @@ public class ExternalIdResolver {
                     + (foundFirst ? prop : foundExternalProp),
                 "Found diverging DCIDs for external IDs :: extId1: '"
                     + (foundFirst ? foundExternalId : id)
-                    + ", "
+                    + "', "
                     + "dcid1: '"
                     + (foundFirst ? foundDcid : newDcid)
                     + "', property1: '"
@@ -169,9 +169,9 @@ public class ExternalIdResolver {
                     + ", "
                     + "extId2: '"
                     + (foundFirst ? id : foundExternalId)
-                    + "', dcid2:"
+                    + "', dcid2: '"
                     + (foundFirst ? newDcid : foundDcid)
-                    + ", property2: '"
+                    + "', property2: '"
                     + (foundFirst ? prop : foundExternalProp)
                     + "', node: '"
                     + nodeId
@@ -286,6 +286,7 @@ public class ExternalIdResolver {
 
     // Clear the batch.
     batchedIds.clear();
+    numBatchedIds = 0;
   }
 
   private void addToMappedIds(String extProp, String extId, String dcid) {

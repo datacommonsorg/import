@@ -28,3 +28,9 @@ observationDate: "2017-01"
 typeOf: dcid:StatVarObservation
 value: 1000
 variableMeasured: dcid:Count_Person
+
+Node: dcid:org/amzn
+dcid: "org/amzn"
+location: dcid:geoId/1234567
+name: "Amazon"
+typeOf: dcid:Organization
