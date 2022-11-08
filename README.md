@@ -43,7 +43,11 @@ Detailed documentation on the Import Tool is available [here](docs/usage.md).
     Another option is to copy/paste the JSON content in [jsongrid](https://jsongrid.com).
 
 - To see the list of flags that can be used and what the default values are: `dc-import --help`.
+
 ## Development
+
+NOTE: The instructions below are relevant for developing the tool. To use the
+tool, you just need the Java (11+) installed (see instructions above).
 
 ### Prerequisites
 
