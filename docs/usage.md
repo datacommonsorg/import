@@ -16,6 +16,8 @@ The tool is a command line application built with Java. See below for usage inst
 
 # Usage
 
+Make sure you've downloaded the .jar file under Assets [here](https://github.com/datacommonsorg/import/releases/tag/0.1-alpha.1h). Note the path to .jar.
+
 Use the import tool from the command line, like so:
 
   ```bash
