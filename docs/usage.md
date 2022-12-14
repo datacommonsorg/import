@@ -14,9 +14,11 @@ It is under active development, including feature additions and bug fixes.
 
 The tool is a command line application built with Java. See below for usage instructions.
 
-# Usage
+# Installation
 
-Make sure you've downloaded the .jar file under Assets [here](https://github.com/datacommonsorg/import/releases/tag/0.1-alpha.1h). Note the path to .jar.
+Make sure you've downloaded the .jar file under Assets [here](https://github.com/datacommonsorg/import/releases/). Note the path to .jar.
+
+# Usage
 
 Use the import tool from the command line, like so:
 
