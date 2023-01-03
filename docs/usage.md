@@ -77,7 +77,7 @@ To run the tool in genmcf mode, use:
 
 Optionally, schema file(s) may also be passed. This is required to resolve references to newly introduced schema nodes.
 
-Similar to using lint mode above, if you are importing a dataset where non-numerical StatVar Observations expected (for example, statType is measurementResult and therefore the SVObs values are references), set `--allow-non-numeric-obs-values=true` in the command line invocation.
+Similar to when using `lint` mode above, if you are importing a dataset where non-numerical StatVar Observations expected (for example, statType is measurementResult and therefore the SVObs values are references), set `--allow-non-numeric-obs-values=true` in the command line invocation.
 
 For example, we can use `genmcf` to perform validations, and generate instance MCF from test files about COVID-19 cases in India.
 
