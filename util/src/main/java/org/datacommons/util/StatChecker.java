@@ -423,6 +423,7 @@ public class StatChecker {
     // Only add data points to the counter of the greatest standard deviation that it belongs to.
     // ie. if the data point is beyond 3 std deviation, only add it to that counter.
     for (DataPoint dp : timeSeries) {
+      if (SeriesSummary.getTypeOfDataPoint(dp) != ValueType.NUMBER) continue;
       double val = SeriesSummary.getValueOfDataPointAsNumber(dp);
       if (Math.abs(val - meanAndStdDev.mean) > 3 * meanAndStdDev.stdDev) {
         sigma3Counter.addProblemPoints(dp);
@@ -446,6 +447,7 @@ public class StatChecker {
     double sum = 0;
     double sumSqDev = 0;
     for (DataPoint dp : timeSeries) {
+      if (SeriesSummary.getTypeOfDataPoint(dp) != ValueType.NUMBER) continue;
       double val = SeriesSummary.getValueOfDataPointAsNumber(dp);
       if (weights > 0) {
         sumSqDev += 1 * weights / 1 / (weights + 1) * Math.pow((1 / weights * sum - val), 2);
@@ -472,8 +474,10 @@ public class StatChecker {
       // Don't try to compare between times because this is a Sawtooth
       if (dp.getValuesCount() > 1) return;
       if (dp.getValuesCount() == 0) continue;
+      if (SeriesSummary.getTypeOfDataPoint(dp) != ValueType.NUMBER) continue;
       double currVal = SeriesSummary.getValueOfDataPointAsNumber(dp);
-      if (baseDataPoint != null) {
+      if (baseDataPoint != null
+          && SeriesSummary.getTypeOfDataPoint(baseDataPoint) == ValueType.NUMBER) {
         double currDelta;
         double baseVal = SeriesSummary.getValueOfDataPointAsNumber(baseDataPoint);
         if (baseVal == 0) {
