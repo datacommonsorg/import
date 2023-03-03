@@ -69,11 +69,6 @@ public class PlaceSeriesSummary {
     }
 
     public String getTimeSeriesSVGChart() {
-
-      if (getValueType() != ValueType.NUMBER) {
-        return "<b>Charts for non-numeric types are not supported yet</b>";
-      }
-
       TimeSeries timeSeries = new TimeSeries("ts");
 
       // this.timeSeries is kept sorted with a TreeMap, so we simply add the
@@ -83,14 +78,21 @@ public class PlaceSeriesSummary {
 
         LocalDateTime localDateTime = StringUtil.getValidISO8601Date(timeSeriesDataPoint.getKey());
         if (localDateTime == null) continue;
+
+        DataPoint dp = timeSeriesDataPoint.getValue();
+        if (SeriesSummary.getTypeOfDataPoint(dp) != ValueType.NUMBER) continue;
+
         timeSeries.addOrUpdate(
             new Day(
                 localDateTime.getDayOfMonth(),
                 localDateTime.getMonthValue(),
                 localDateTime.getYear()),
-            getValueOfDataPointAsNumber(timeSeriesDataPoint.getValue()));
+            getValueOfDataPointAsNumber(dp));
       }
 
+      if (timeSeries.getItemCount() == 0) {
+        return "<b>Charts for non-numeric types are not supported yet</b>";
+      }
       return StatVarSummary.constructSVGChartFromTimeSeries(timeSeries);
     }
 
