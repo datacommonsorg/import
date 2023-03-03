@@ -14,6 +14,10 @@ It is under active development, including feature additions and bug fixes.
 
 The tool is a command line application built with Java. See below for usage instructions.
 
+# Installation
+
+Make sure you've downloaded the .jar file under Assets [here](https://github.com/datacommonsorg/import/releases/). Note the path to .jar.
+
 # Usage
 
 Use the import tool from the command line, like so:
@@ -54,6 +58,8 @@ To run the tool in lint mode, use:
   ```bash
   dc-import lint <list of mcf files>
   ```
+  
+Note that if you are importing a dataset where non-numerical StatVar Observations are expected (for example, statType is measurementResult and, therefore, the SVObs values are references), set `--allow-non-numeric-obs-values=true` in the command line invocation.
 
 For example, we can use `lint` to perform syntax validation on [a test MCF included in this repository](tool/src/test/resources/org/datacommons/tool/lint/mcfonly/input/McfOnly.mcf) at path `tool/src/test/resources/org/datacommons/tool/lint/mcfonly/input/McfOnly.mcf` relative to the base of this repo like so:
   ```bash
@@ -70,6 +76,8 @@ To run the tool in genmcf mode, use:
   ```
 
 Optionally, schema file(s) may also be passed. This is required to resolve references to newly introduced schema nodes.
+
+Similar to when using `lint` mode above, if you are importing a dataset where non-numerical StatVar Observations are expected (for example, statType is measurementResult and, therefore, the SVObs values are references), set `--allow-non-numeric-obs-values=true` in the command line invocation.
 
 For example, we can use `genmcf` to perform validations, and generate instance MCF from test files about COVID-19 cases in India.
 
