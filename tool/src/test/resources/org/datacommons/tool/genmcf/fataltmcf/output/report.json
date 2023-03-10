@@ -2,7 +2,6 @@
   "levelSummary": {
     "LEVEL_WARNING": {
       "counters": {
-        "API_EmptyDcCallResponse": "1",
         "Sanity_MultipleVals_value": "1"
       }
     },

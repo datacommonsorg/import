@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.apache.logging.log4j.LogManager;
@@ -212,7 +213,16 @@ public class Processor {
             }
           });
     }
-    execService.invokeAll(cbs);
+
+    var futures = execService.invokeAll(cbs);
+    for (var f : futures) {
+      try {
+        f.get();
+      } catch (ExecutionException ex) {
+        ex.getCause().printStackTrace();
+        throw new DCTooManyFailuresException("Fatal error processing CSVs!");
+      }
+    }
 
     if (existenceChecker != null) existenceChecker.drainRemoteCalls();
   }
@@ -361,7 +371,16 @@ public class Processor {
             }
           });
     }
-    execService.invokeAll(cbs);
+
+    var futures = execService.invokeAll(cbs);
+    for (var f : futures) {
+      try {
+        f.get();
+      } catch (ExecutionException ex) {
+        ex.getCause().printStackTrace();
+        throw new DCTooManyFailuresException("Fatal error during resolution!");
+      }
+    }
 
     idResolver.drainRemoteCalls();
   }

@@ -1,4 +1,4 @@
-Year,Place_Id,Place_Name,Place_Type,LatLong,SV1,SV2
+﻿Year,Place_Id,Place_Name,Place_Type,LatLong,SV1,SV2
 19,US- CA,California,State,[LatLong 36N 1194W],1,2
 2019,"CA-BC,Canada",British–Columbia,AdministrativeArea1,[LatLong 53W 127N],1,2
 2019-06-01,CA-AB,Alberta,Administrative–Area1,[Lat Long 539 116],1,2

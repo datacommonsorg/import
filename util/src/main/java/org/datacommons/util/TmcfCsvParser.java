@@ -14,9 +14,12 @@
 
 package org.datacommons.util;
 
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +28,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.input.BOMInputStream;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.LogLocation;
 import org.datacommons.proto.Mcf;
@@ -51,17 +55,22 @@ public class TmcfCsvParser {
   public static TmcfCsvParser init(
       String tmcfFile, String csvFile, char delimiter, LogWrapper logCtx)
       throws IOException, InterruptedException {
+    // Strip out any BOM characters (from old Excel CSVs)
+    Reader reader =
+        new InputStreamReader(new BOMInputStream(Files.newInputStream(Paths.get(csvFile))));
+
     TmcfCsvParser tmcfCsvParser = new TmcfCsvParser();
     tmcfCsvParser.tmcf = McfParser.parseTemplateMcfFile(tmcfFile, logCtx);
     tmcfCsvParser.logCtx = logCtx;
     tmcfCsvParser.currentLineNumber = 1;
     tmcfCsvParser.csvParser =
         CSVParser.parse(
-            new FileReader(csvFile),
+            reader,
             CSVFormat.DEFAULT
                 .withDelimiter(delimiter)
                 .withEscape('\\')
                 .withHeader()
+                .withAllowMissingColumnNames()
                 .withSkipHeaderRecord()
                 .withIgnoreEmptyLines()
                 .withIgnoreSurroundingSpaces());
