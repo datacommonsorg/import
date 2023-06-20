@@ -12,7 +12,6 @@
     },
     "LEVEL_WARNING": {
       "counters": {
-        "Existence_MissingTriple_domainIncludes": "1",
         "Existence_MissingReference_variableMeasured": "5",
         "StatsCheck_MultipleValueTypesInASeries": "1"
       }
@@ -88,14 +87,6 @@
     },
     "userMessage": "Failed reference existence check :: value-ref: 'StatVar_DoesNotExistAnywhere', property: 'variableMeasured', node: 'E:Acre_Table->E2'",
     "counterKey": "Existence_MissingReference_variableMeasured"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "acre.mcf",
-      "lineNumber": "1"
-    },
-    "userMessage": "Failed triple existence check :: subject: 'area', predicate: 'domainIncludes', object: 'Place', node: 'dcid:Acre_MeasurementResult_StatVar'",
-    "counterKey": "Existence_MissingTriple_domainIncludes"
   }],
   "statsCheckSummary": [{
     "placeDcid": "geoId/01",
