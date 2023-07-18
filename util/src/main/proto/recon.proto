@@ -76,3 +76,20 @@ message ResolveEntitiesResponse {
     }
     repeated ResolvedEntity resolved_entities = 1;
 }
+
+message ResolveCoordinatesRequest {
+    message Coordinate {
+        double latitude = 1;
+        double longitude = 2;
+    }
+    repeated Coordinate coordinates = 1;
+}
+
+message ResolveCoordinatesResponse {
+    message PlaceCoordinate {
+        double latitude = 1;
+        double longitude = 2;
+        repeated string place_dcids = 3;
+    }
+    repeated PlaceCoordinate place_coordinates = 1;
+}
