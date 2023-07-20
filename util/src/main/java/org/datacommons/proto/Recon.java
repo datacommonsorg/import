@@ -9832,6 +9832,3220 @@ public final class Recon {
     }
   }
 
+  public interface ResolveCoordinatesRequestOrBuilder
+      extends
+      // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveCoordinatesRequest)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
+     */
+    java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
+        getCoordinatesList();
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
+     */
+    org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate getCoordinates(int index);
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
+     */
+    int getCoordinatesCount();
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
+     */
+    java.util.List<
+            ? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>
+        getCoordinatesOrBuilderList();
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
+     */
+    org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder
+        getCoordinatesOrBuilder(int index);
+  }
+  /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest} */
+  public static final class ResolveCoordinatesRequest extends com.google.protobuf.GeneratedMessageV3
+      implements
+      // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesRequest)
+      ResolveCoordinatesRequestOrBuilder {
+    private static final long serialVersionUID = 0L;
+    // Use ResolveCoordinatesRequest.newBuilder() to construct.
+    private ResolveCoordinatesRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+
+    private ResolveCoordinatesRequest() {
+      coordinates_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+      return new ResolveCoordinatesRequest();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+      return this.unknownFields;
+    }
+
+    private ResolveCoordinatesRequest(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10:
+              {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  coordinates_ =
+                      new java.util.ArrayList<
+                          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                coordinates_.add(
+                    input.readMessage(
+                        org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.parser(),
+                        extensionRegistry));
+                break;
+              }
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          coordinates_ = java.util.Collections.unmodifiableList(coordinates_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.class,
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.Builder.class);
+    }
+
+    public interface CoordinateOrBuilder
+        extends
+        // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveCoordinatesRequest.Coordinate)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>double latitude = 1;</code>
+       *
+       * @return The latitude.
+       */
+      double getLatitude();
+
+      /**
+       * <code>double longitude = 2;</code>
+       *
+       * @return The longitude.
+       */
+      double getLongitude();
+    }
+    /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest.Coordinate} */
+    public static final class Coordinate extends com.google.protobuf.GeneratedMessageV3
+        implements
+        // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesRequest.Coordinate)
+        CoordinateOrBuilder {
+      private static final long serialVersionUID = 0L;
+      // Use Coordinate.newBuilder() to construct.
+      private Coordinate(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+
+      private Coordinate() {}
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+        return new Coordinate();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+        return this.unknownFields;
+      }
+
+      private Coordinate(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 9:
+                {
+                  latitude_ = input.readDouble();
+                  break;
+                }
+              case 17:
+                {
+                  longitude_ = input.readDouble();
+                  break;
+                }
+              default:
+                {
+                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.class,
+                org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder.class);
+      }
+
+      public static final int LATITUDE_FIELD_NUMBER = 1;
+      private double latitude_;
+      /**
+       * <code>double latitude = 1;</code>
+       *
+       * @return The latitude.
+       */
+      public double getLatitude() {
+        return latitude_;
+      }
+
+      public static final int LONGITUDE_FIELD_NUMBER = 2;
+      private double longitude_;
+      /**
+       * <code>double longitude = 2;</code>
+       *
+       * @return The longitude.
+       */
+      public double getLongitude() {
+        return longitude_;
+      }
+
+      private byte memoizedIsInitialized = -1;
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+        if (latitude_ != 0D) {
+          output.writeDouble(1, latitude_);
+        }
+        if (longitude_ != 0D) {
+          output.writeDouble(2, longitude_);
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (latitude_ != 0D) {
+          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(1, latitude_);
+        }
+        if (longitude_ != 0D) {
+          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(2, longitude_);
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+          return true;
+        }
+        if (!(obj instanceof org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate)) {
+          return super.equals(obj);
+        }
+        org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate other =
+            (org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate) obj;
+
+        if (java.lang.Double.doubleToLongBits(getLatitude())
+            != java.lang.Double.doubleToLongBits(other.getLatitude())) return false;
+        if (java.lang.Double.doubleToLongBits(getLongitude())
+            != java.lang.Double.doubleToLongBits(other.getLongitude())) return false;
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        hash = (37 * hash) + LATITUDE_FIELD_NUMBER;
+        hash =
+            (53 * hash)
+                + com.google.protobuf.Internal.hashLong(
+                    java.lang.Double.doubleToLongBits(getLatitude()));
+        hash = (37 * hash) + LONGITUDE_FIELD_NUMBER;
+        hash =
+            (53 * hash)
+                + com.google.protobuf.Internal.hashLong(
+                    java.lang.Double.doubleToLongBits(getLongitude()));
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
+          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
+          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
+          byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
+          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
+          java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+          parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+          parseDelimitedFrom(
+              java.io.InputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
+          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() {
+        return newBuilder();
+      }
+
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+
+      public static Builder newBuilder(
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest.Coordinate} */
+      public static final class Builder
+          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+          implements
+          // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveCoordinatesRequest.Coordinate)
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.class,
+                  org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder.class);
+        }
+
+        // Construct using
+        // org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+        }
+
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          latitude_ = 0D;
+
+          longitude_ = 0D;
+
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor;
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+            getDefaultInstanceForType() {
+          return org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+              .getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate build() {
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate buildPartial() {
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate result =
+              new org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate(this);
+          result.latitude_ = latitude_;
+          result.longitude_ = longitude_;
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          return super.setField(field, value);
+        }
+
+        @java.lang.Override
+        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+
+        @java.lang.Override
+        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index,
+            java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate) {
+            return mergeFrom(
+                (org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate) other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(
+            org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate other) {
+          if (other
+              == org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+                  .getDefaultInstance()) return this;
+          if (other.getLatitude() != 0D) {
+            setLatitude(other.getLatitude());
+          }
+          if (other.getLongitude() != 0D) {
+            setLongitude(other.getLongitude());
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage =
+                (org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate)
+                    e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private double latitude_;
+        /**
+         * <code>double latitude = 1;</code>
+         *
+         * @return The latitude.
+         */
+        public double getLatitude() {
+          return latitude_;
+        }
+        /**
+         * <code>double latitude = 1;</code>
+         *
+         * @param value The latitude to set.
+         * @return This builder for chaining.
+         */
+        public Builder setLatitude(double value) {
+
+          latitude_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>double latitude = 1;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearLatitude() {
+
+          latitude_ = 0D;
+          onChanged();
+          return this;
+        }
+
+        private double longitude_;
+        /**
+         * <code>double longitude = 2;</code>
+         *
+         * @return The longitude.
+         */
+        public double getLongitude() {
+          return longitude_;
+        }
+        /**
+         * <code>double longitude = 2;</code>
+         *
+         * @param value The longitude to set.
+         * @return This builder for chaining.
+         */
+        public Builder setLongitude(double value) {
+
+          longitude_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>double longitude = 2;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearLongitude() {
+
+          longitude_ = 0D;
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+        // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveCoordinatesRequest.Coordinate)
+      }
+
+      // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveCoordinatesRequest.Coordinate)
+      private static final org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+          DEFAULT_INSTANCE;
+
+      static {
+        DEFAULT_INSTANCE = new org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate();
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+          getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      private static final com.google.protobuf.Parser<Coordinate> PARSER =
+          new com.google.protobuf.AbstractParser<Coordinate>() {
+            @java.lang.Override
+            public Coordinate parsePartialFrom(
+                com.google.protobuf.CodedInputStream input,
+                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+              return new Coordinate(input, extensionRegistry);
+            }
+          };
+
+      public static com.google.protobuf.Parser<Coordinate> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<Coordinate> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+          getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+    }
+
+    public static final int COORDINATES_FIELD_NUMBER = 1;
+    private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
+        coordinates_;
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
+     */
+    public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
+        getCoordinatesList() {
+      return coordinates_;
+    }
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
+     */
+    public java.util.List<
+            ? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>
+        getCoordinatesOrBuilderList() {
+      return coordinates_;
+    }
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
+     */
+    public int getCoordinatesCount() {
+      return coordinates_.size();
+    }
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
+     */
+    public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate getCoordinates(
+        int index) {
+      return coordinates_.get(index);
+    }
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
+     */
+    public org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder
+        getCoordinatesOrBuilder(int index) {
+      return coordinates_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+      for (int i = 0; i < coordinates_.size(); i++) {
+        output.writeMessage(1, coordinates_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < coordinates_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, coordinates_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (!(obj instanceof org.datacommons.proto.Recon.ResolveCoordinatesRequest)) {
+        return super.equals(obj);
+      }
+      org.datacommons.proto.Recon.ResolveCoordinatesRequest other =
+          (org.datacommons.proto.Recon.ResolveCoordinatesRequest) obj;
+
+      if (!getCoordinatesList().equals(other.getCoordinatesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getCoordinatesCount() > 0) {
+        hash = (37 * hash) + COORDINATES_FIELD_NUMBER;
+        hash = (53 * hash) + getCoordinatesList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseDelimitedFrom(
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+
+    public static Builder newBuilder(
+        org.datacommons.proto.Recon.ResolveCoordinatesRequest prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
+        // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveCoordinatesRequest)
+        org.datacommons.proto.Recon.ResolveCoordinatesRequestOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.datacommons.proto.Recon.ResolveCoordinatesRequest.class,
+                org.datacommons.proto.Recon.ResolveCoordinatesRequest.Builder.class);
+      }
+
+      // Construct using org.datacommons.proto.Recon.ResolveCoordinatesRequest.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+          getCoordinatesFieldBuilder();
+        }
+      }
+
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (coordinatesBuilder_ == null) {
+          coordinates_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          coordinatesBuilder_.clear();
+        }
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest getDefaultInstanceForType() {
+        return org.datacommons.proto.Recon.ResolveCoordinatesRequest.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest build() {
+        org.datacommons.proto.Recon.ResolveCoordinatesRequest result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest buildPartial() {
+        org.datacommons.proto.Recon.ResolveCoordinatesRequest result =
+            new org.datacommons.proto.Recon.ResolveCoordinatesRequest(this);
+        int from_bitField0_ = bitField0_;
+        if (coordinatesBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0)) {
+            coordinates_ = java.util.Collections.unmodifiableList(coordinates_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.coordinates_ = coordinates_;
+        } else {
+          result.coordinates_ = coordinatesBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.setField(field, value);
+      }
+
+      @java.lang.Override
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+
+      @java.lang.Override
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index,
+          java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.datacommons.proto.Recon.ResolveCoordinatesRequest) {
+          return mergeFrom((org.datacommons.proto.Recon.ResolveCoordinatesRequest) other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.datacommons.proto.Recon.ResolveCoordinatesRequest other) {
+        if (other == org.datacommons.proto.Recon.ResolveCoordinatesRequest.getDefaultInstance())
+          return this;
+        if (coordinatesBuilder_ == null) {
+          if (!other.coordinates_.isEmpty()) {
+            if (coordinates_.isEmpty()) {
+              coordinates_ = other.coordinates_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureCoordinatesIsMutable();
+              coordinates_.addAll(other.coordinates_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.coordinates_.isEmpty()) {
+            if (coordinatesBuilder_.isEmpty()) {
+              coordinatesBuilder_.dispose();
+              coordinatesBuilder_ = null;
+              coordinates_ = other.coordinates_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              coordinatesBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getCoordinatesFieldBuilder()
+                      : null;
+            } else {
+              coordinatesBuilder_.addAllMessages(other.coordinates_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.datacommons.proto.Recon.ResolveCoordinatesRequest parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage =
+              (org.datacommons.proto.Recon.ResolveCoordinatesRequest) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private int bitField0_;
+
+      private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
+          coordinates_ = java.util.Collections.emptyList();
+
+      private void ensureCoordinatesIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          coordinates_ =
+              new java.util.ArrayList<
+                  org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>(coordinates_);
+          bitField0_ |= 0x00000001;
+        }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate,
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder,
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>
+          coordinatesBuilder_;
+
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
+          getCoordinatesList() {
+        if (coordinatesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(coordinates_);
+        } else {
+          return coordinatesBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public int getCoordinatesCount() {
+        if (coordinatesBuilder_ == null) {
+          return coordinates_.size();
+        } else {
+          return coordinatesBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate getCoordinates(
+          int index) {
+        if (coordinatesBuilder_ == null) {
+          return coordinates_.get(index);
+        } else {
+          return coordinatesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public Builder setCoordinates(
+          int index, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate value) {
+        if (coordinatesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCoordinatesIsMutable();
+          coordinates_.set(index, value);
+          onChanged();
+        } else {
+          coordinatesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public Builder setCoordinates(
+          int index,
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder
+              builderForValue) {
+        if (coordinatesBuilder_ == null) {
+          ensureCoordinatesIsMutable();
+          coordinates_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          coordinatesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public Builder addCoordinates(
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate value) {
+        if (coordinatesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCoordinatesIsMutable();
+          coordinates_.add(value);
+          onChanged();
+        } else {
+          coordinatesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public Builder addCoordinates(
+          int index, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate value) {
+        if (coordinatesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCoordinatesIsMutable();
+          coordinates_.add(index, value);
+          onChanged();
+        } else {
+          coordinatesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public Builder addCoordinates(
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder
+              builderForValue) {
+        if (coordinatesBuilder_ == null) {
+          ensureCoordinatesIsMutable();
+          coordinates_.add(builderForValue.build());
+          onChanged();
+        } else {
+          coordinatesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public Builder addCoordinates(
+          int index,
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder
+              builderForValue) {
+        if (coordinatesBuilder_ == null) {
+          ensureCoordinatesIsMutable();
+          coordinates_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          coordinatesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public Builder addAllCoordinates(
+          java.lang.Iterable<
+                  ? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
+              values) {
+        if (coordinatesBuilder_ == null) {
+          ensureCoordinatesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, coordinates_);
+          onChanged();
+        } else {
+          coordinatesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public Builder clearCoordinates() {
+        if (coordinatesBuilder_ == null) {
+          coordinates_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          coordinatesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public Builder removeCoordinates(int index) {
+        if (coordinatesBuilder_ == null) {
+          ensureCoordinatesIsMutable();
+          coordinates_.remove(index);
+          onChanged();
+        } else {
+          coordinatesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder
+          getCoordinatesBuilder(int index) {
+        return getCoordinatesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder
+          getCoordinatesOrBuilder(int index) {
+        if (coordinatesBuilder_ == null) {
+          return coordinates_.get(index);
+        } else {
+          return coordinatesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public java.util.List<
+              ? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>
+          getCoordinatesOrBuilderList() {
+        if (coordinatesBuilder_ != null) {
+          return coordinatesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(coordinates_);
+        }
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder
+          addCoordinatesBuilder() {
+        return getCoordinatesFieldBuilder()
+            .addBuilder(
+                org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+                    .getDefaultInstance());
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder
+          addCoordinatesBuilder(int index) {
+        return getCoordinatesFieldBuilder()
+            .addBuilder(
+                index,
+                org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+                    .getDefaultInstance());
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
+       */
+      public java.util.List<
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder>
+          getCoordinatesBuilderList() {
+        return getCoordinatesFieldBuilder().getBuilderList();
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate,
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder,
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>
+          getCoordinatesFieldBuilder() {
+        if (coordinatesBuilder_ == null) {
+          coordinatesBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate,
+                  org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder,
+                  org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>(
+                  coordinates_,
+                  ((bitField0_ & 0x00000001) != 0),
+                  getParentForChildren(),
+                  isClean());
+          coordinates_ = null;
+        }
+        return coordinatesBuilder_;
+      }
+
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+      // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveCoordinatesRequest)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveCoordinatesRequest)
+    private static final org.datacommons.proto.Recon.ResolveCoordinatesRequest DEFAULT_INSTANCE;
+
+    static {
+      DEFAULT_INSTANCE = new org.datacommons.proto.Recon.ResolveCoordinatesRequest();
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<ResolveCoordinatesRequest> PARSER =
+        new com.google.protobuf.AbstractParser<ResolveCoordinatesRequest>() {
+          @java.lang.Override
+          public ResolveCoordinatesRequest parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new ResolveCoordinatesRequest(input, extensionRegistry);
+          }
+        };
+
+    public static com.google.protobuf.Parser<ResolveCoordinatesRequest> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ResolveCoordinatesRequest> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.datacommons.proto.Recon.ResolveCoordinatesRequest getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+  }
+
+  public interface ResolveCoordinatesResponseOrBuilder
+      extends
+      // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveCoordinatesResponse)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
+     */
+    java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
+        getPlaceCoordinatesList();
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
+     */
+    org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate getPlaceCoordinates(
+        int index);
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
+     */
+    int getPlaceCoordinatesCount();
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
+     */
+    java.util.List<
+            ? extends
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>
+        getPlaceCoordinatesOrBuilderList();
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
+     */
+    org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder
+        getPlaceCoordinatesOrBuilder(int index);
+  }
+  /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse} */
+  public static final class ResolveCoordinatesResponse
+      extends com.google.protobuf.GeneratedMessageV3
+      implements
+      // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesResponse)
+      ResolveCoordinatesResponseOrBuilder {
+    private static final long serialVersionUID = 0L;
+    // Use ResolveCoordinatesResponse.newBuilder() to construct.
+    private ResolveCoordinatesResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+
+    private ResolveCoordinatesResponse() {
+      placeCoordinates_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+      return new ResolveCoordinatesResponse();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+      return this.unknownFields;
+    }
+
+    private ResolveCoordinatesResponse(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10:
+              {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  placeCoordinates_ =
+                      new java.util.ArrayList<
+                          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                placeCoordinates_.add(
+                    input.readMessage(
+                        org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+                            .parser(),
+                        extensionRegistry));
+                break;
+              }
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          placeCoordinates_ = java.util.Collections.unmodifiableList(placeCoordinates_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.class,
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.Builder.class);
+    }
+
+    public interface PlaceCoordinateOrBuilder
+        extends
+        // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>double latitude = 1;</code>
+       *
+       * @return The latitude.
+       */
+      double getLatitude();
+
+      /**
+       * <code>double longitude = 2;</code>
+       *
+       * @return The longitude.
+       */
+      double getLongitude();
+
+      /**
+       * <code>repeated string place_dcids = 3;</code>
+       *
+       * @return A list containing the placeDcids.
+       */
+      java.util.List<java.lang.String> getPlaceDcidsList();
+      /**
+       * <code>repeated string place_dcids = 3;</code>
+       *
+       * @return The count of placeDcids.
+       */
+      int getPlaceDcidsCount();
+      /**
+       * <code>repeated string place_dcids = 3;</code>
+       *
+       * @param index The index of the element to return.
+       * @return The placeDcids at the given index.
+       */
+      java.lang.String getPlaceDcids(int index);
+      /**
+       * <code>repeated string place_dcids = 3;</code>
+       *
+       * @param index The index of the value to return.
+       * @return The bytes of the placeDcids at the given index.
+       */
+      com.google.protobuf.ByteString getPlaceDcidsBytes(int index);
+    }
+    /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate} */
+    public static final class PlaceCoordinate extends com.google.protobuf.GeneratedMessageV3
+        implements
+        // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate)
+        PlaceCoordinateOrBuilder {
+      private static final long serialVersionUID = 0L;
+      // Use PlaceCoordinate.newBuilder() to construct.
+      private PlaceCoordinate(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+
+      private PlaceCoordinate() {
+        placeDcids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      }
+
+      @java.lang.Override
+      @SuppressWarnings({"unused"})
+      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+        return new PlaceCoordinate();
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+        return this.unknownFields;
+      }
+
+      private PlaceCoordinate(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 9:
+                {
+                  latitude_ = input.readDouble();
+                  break;
+                }
+              case 17:
+                {
+                  longitude_ = input.readDouble();
+                  break;
+                }
+              case 26:
+                {
+                  java.lang.String s = input.readStringRequireUtf8();
+                  if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                    placeDcids_ = new com.google.protobuf.LazyStringArrayList();
+                    mutable_bitField0_ |= 0x00000001;
+                  }
+                  placeDcids_.add(s);
+                  break;
+                }
+              default:
+                {
+                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(this);
+        } finally {
+          if (((mutable_bitField0_ & 0x00000001) != 0)) {
+            placeDcids_ = placeDcids_.getUnmodifiableView();
+          }
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.class,
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+                    .class);
+      }
+
+      public static final int LATITUDE_FIELD_NUMBER = 1;
+      private double latitude_;
+      /**
+       * <code>double latitude = 1;</code>
+       *
+       * @return The latitude.
+       */
+      public double getLatitude() {
+        return latitude_;
+      }
+
+      public static final int LONGITUDE_FIELD_NUMBER = 2;
+      private double longitude_;
+      /**
+       * <code>double longitude = 2;</code>
+       *
+       * @return The longitude.
+       */
+      public double getLongitude() {
+        return longitude_;
+      }
+
+      public static final int PLACE_DCIDS_FIELD_NUMBER = 3;
+      private com.google.protobuf.LazyStringList placeDcids_;
+      /**
+       * <code>repeated string place_dcids = 3;</code>
+       *
+       * @return A list containing the placeDcids.
+       */
+      public com.google.protobuf.ProtocolStringList getPlaceDcidsList() {
+        return placeDcids_;
+      }
+      /**
+       * <code>repeated string place_dcids = 3;</code>
+       *
+       * @return The count of placeDcids.
+       */
+      public int getPlaceDcidsCount() {
+        return placeDcids_.size();
+      }
+      /**
+       * <code>repeated string place_dcids = 3;</code>
+       *
+       * @param index The index of the element to return.
+       * @return The placeDcids at the given index.
+       */
+      public java.lang.String getPlaceDcids(int index) {
+        return placeDcids_.get(index);
+      }
+      /**
+       * <code>repeated string place_dcids = 3;</code>
+       *
+       * @param index The index of the value to return.
+       * @return The bytes of the placeDcids at the given index.
+       */
+      public com.google.protobuf.ByteString getPlaceDcidsBytes(int index) {
+        return placeDcids_.getByteString(index);
+      }
+
+      private byte memoizedIsInitialized = -1;
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      @java.lang.Override
+      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+        if (latitude_ != 0D) {
+          output.writeDouble(1, latitude_);
+        }
+        if (longitude_ != 0D) {
+          output.writeDouble(2, longitude_);
+        }
+        for (int i = 0; i < placeDcids_.size(); i++) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 3, placeDcids_.getRaw(i));
+        }
+        unknownFields.writeTo(output);
+      }
+
+      @java.lang.Override
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (latitude_ != 0D) {
+          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(1, latitude_);
+        }
+        if (longitude_ != 0D) {
+          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(2, longitude_);
+        }
+        {
+          int dataSize = 0;
+          for (int i = 0; i < placeDcids_.size(); i++) {
+            dataSize += computeStringSizeNoTag(placeDcids_.getRaw(i));
+          }
+          size += dataSize;
+          size += 1 * getPlaceDcidsList().size();
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+          return true;
+        }
+        if (!(obj
+            instanceof org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate)) {
+          return super.equals(obj);
+        }
+        org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate other =
+            (org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate) obj;
+
+        if (java.lang.Double.doubleToLongBits(getLatitude())
+            != java.lang.Double.doubleToLongBits(other.getLatitude())) return false;
+        if (java.lang.Double.doubleToLongBits(getLongitude())
+            != java.lang.Double.doubleToLongBits(other.getLongitude())) return false;
+        if (!getPlaceDcidsList().equals(other.getPlaceDcidsList())) return false;
+        if (!unknownFields.equals(other.unknownFields)) return false;
+        return true;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        hash = (37 * hash) + LATITUDE_FIELD_NUMBER;
+        hash =
+            (53 * hash)
+                + com.google.protobuf.Internal.hashLong(
+                    java.lang.Double.doubleToLongBits(getLatitude()));
+        hash = (37 * hash) + LONGITUDE_FIELD_NUMBER;
+        hash =
+            (53 * hash)
+                + com.google.protobuf.Internal.hashLong(
+                    java.lang.Double.doubleToLongBits(getLongitude()));
+        if (getPlaceDcidsCount() > 0) {
+          hash = (37 * hash) + PLACE_DCIDS_FIELD_NUMBER;
+          hash = (53 * hash) + getPlaceDcidsList().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(java.nio.ByteBuffer data)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(
+              java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(com.google.protobuf.ByteString data)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(
+              com.google.protobuf.ByteString data,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(
+              java.io.InputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseDelimitedFrom(
+              java.io.InputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      @java.lang.Override
+      public Builder newBuilderForType() {
+        return newBuilder();
+      }
+
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+
+      public static Builder newBuilder(
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+
+      @java.lang.Override
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate} */
+      public static final class Builder
+          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+          implements
+          // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate)
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor;
+        }
+
+        @java.lang.Override
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.class,
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+                      .class);
+        }
+
+        // Construct using
+        // org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+        }
+
+        @java.lang.Override
+        public Builder clear() {
+          super.clear();
+          latitude_ = 0D;
+
+          longitude_ = 0D;
+
+          placeDcids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00000001);
+          return this;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor;
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+            getDefaultInstanceForType() {
+          return org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+              .getDefaultInstance();
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate build() {
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate result =
+              buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        @java.lang.Override
+        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+            buildPartial() {
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate result =
+              new org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate(this);
+          int from_bitField0_ = bitField0_;
+          result.latitude_ = latitude_;
+          result.longitude_ = longitude_;
+          if (((bitField0_ & 0x00000001) != 0)) {
+            placeDcids_ = placeDcids_.getUnmodifiableView();
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.placeDcids_ = placeDcids_;
+          onBuilt();
+          return result;
+        }
+
+        @java.lang.Override
+        public Builder clone() {
+          return super.clone();
+        }
+
+        @java.lang.Override
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          return super.setField(field, value);
+        }
+
+        @java.lang.Override
+        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return super.clearField(field);
+        }
+
+        @java.lang.Override
+        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return super.clearOneof(oneof);
+        }
+
+        @java.lang.Override
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index,
+            java.lang.Object value) {
+          return super.setRepeatedField(field, index, value);
+        }
+
+        @java.lang.Override
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          return super.addRepeatedField(field, value);
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other
+              instanceof org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate) {
+            return mergeFrom(
+                (org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate) other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(
+            org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate other) {
+          if (other
+              == org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+                  .getDefaultInstance()) return this;
+          if (other.getLatitude() != 0D) {
+            setLatitude(other.getLatitude());
+          }
+          if (other.getLongitude() != 0D) {
+            setLongitude(other.getLongitude());
+          }
+          if (!other.placeDcids_.isEmpty()) {
+            if (placeDcids_.isEmpty()) {
+              placeDcids_ = other.placeDcids_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensurePlaceDcidsIsMutable();
+              placeDcids_.addAll(other.placeDcids_);
+            }
+            onChanged();
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final boolean isInitialized() {
+          return true;
+        }
+
+        @java.lang.Override
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parsedMessage =
+              null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage =
+                (org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate)
+                    e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+
+        private int bitField0_;
+
+        private double latitude_;
+        /**
+         * <code>double latitude = 1;</code>
+         *
+         * @return The latitude.
+         */
+        public double getLatitude() {
+          return latitude_;
+        }
+        /**
+         * <code>double latitude = 1;</code>
+         *
+         * @param value The latitude to set.
+         * @return This builder for chaining.
+         */
+        public Builder setLatitude(double value) {
+
+          latitude_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>double latitude = 1;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearLatitude() {
+
+          latitude_ = 0D;
+          onChanged();
+          return this;
+        }
+
+        private double longitude_;
+        /**
+         * <code>double longitude = 2;</code>
+         *
+         * @return The longitude.
+         */
+        public double getLongitude() {
+          return longitude_;
+        }
+        /**
+         * <code>double longitude = 2;</code>
+         *
+         * @param value The longitude to set.
+         * @return This builder for chaining.
+         */
+        public Builder setLongitude(double value) {
+
+          longitude_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>double longitude = 2;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearLongitude() {
+
+          longitude_ = 0D;
+          onChanged();
+          return this;
+        }
+
+        private com.google.protobuf.LazyStringList placeDcids_ =
+            com.google.protobuf.LazyStringArrayList.EMPTY;
+
+        private void ensurePlaceDcidsIsMutable() {
+          if (!((bitField0_ & 0x00000001) != 0)) {
+            placeDcids_ = new com.google.protobuf.LazyStringArrayList(placeDcids_);
+            bitField0_ |= 0x00000001;
+          }
+        }
+        /**
+         * <code>repeated string place_dcids = 3;</code>
+         *
+         * @return A list containing the placeDcids.
+         */
+        public com.google.protobuf.ProtocolStringList getPlaceDcidsList() {
+          return placeDcids_.getUnmodifiableView();
+        }
+        /**
+         * <code>repeated string place_dcids = 3;</code>
+         *
+         * @return The count of placeDcids.
+         */
+        public int getPlaceDcidsCount() {
+          return placeDcids_.size();
+        }
+        /**
+         * <code>repeated string place_dcids = 3;</code>
+         *
+         * @param index The index of the element to return.
+         * @return The placeDcids at the given index.
+         */
+        public java.lang.String getPlaceDcids(int index) {
+          return placeDcids_.get(index);
+        }
+        /**
+         * <code>repeated string place_dcids = 3;</code>
+         *
+         * @param index The index of the value to return.
+         * @return The bytes of the placeDcids at the given index.
+         */
+        public com.google.protobuf.ByteString getPlaceDcidsBytes(int index) {
+          return placeDcids_.getByteString(index);
+        }
+        /**
+         * <code>repeated string place_dcids = 3;</code>
+         *
+         * @param index The index to set the value at.
+         * @param value The placeDcids to set.
+         * @return This builder for chaining.
+         */
+        public Builder setPlaceDcids(int index, java.lang.String value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePlaceDcidsIsMutable();
+          placeDcids_.set(index, value);
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>repeated string place_dcids = 3;</code>
+         *
+         * @param value The placeDcids to add.
+         * @return This builder for chaining.
+         */
+        public Builder addPlaceDcids(java.lang.String value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePlaceDcidsIsMutable();
+          placeDcids_.add(value);
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>repeated string place_dcids = 3;</code>
+         *
+         * @param values The placeDcids to add.
+         * @return This builder for chaining.
+         */
+        public Builder addAllPlaceDcids(java.lang.Iterable<java.lang.String> values) {
+          ensurePlaceDcidsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, placeDcids_);
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>repeated string place_dcids = 3;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearPlaceDcids() {
+          placeDcids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>repeated string place_dcids = 3;</code>
+         *
+         * @param value The bytes of the placeDcids to add.
+         * @return This builder for chaining.
+         */
+        public Builder addPlaceDcidsBytes(com.google.protobuf.ByteString value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          checkByteStringIsUtf8(value);
+          ensurePlaceDcidsIsMutable();
+          placeDcids_.add(value);
+          onChanged();
+          return this;
+        }
+
+        @java.lang.Override
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        @java.lang.Override
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+        // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate)
+      }
+
+      // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate)
+      private static final org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          DEFAULT_INSTANCE;
+
+      static {
+        DEFAULT_INSTANCE =
+            new org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate();
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      private static final com.google.protobuf.Parser<PlaceCoordinate> PARSER =
+          new com.google.protobuf.AbstractParser<PlaceCoordinate>() {
+            @java.lang.Override
+            public PlaceCoordinate parsePartialFrom(
+                com.google.protobuf.CodedInputStream input,
+                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+              return new PlaceCoordinate(input, extensionRegistry);
+            }
+          };
+
+      public static com.google.protobuf.Parser<PlaceCoordinate> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<PlaceCoordinate> getParserForType() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+    }
+
+    public static final int PLACE_COORDINATES_FIELD_NUMBER = 1;
+    private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
+        placeCoordinates_;
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
+     */
+    public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
+        getPlaceCoordinatesList() {
+      return placeCoordinates_;
+    }
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
+     */
+    public java.util.List<
+            ? extends
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>
+        getPlaceCoordinatesOrBuilderList() {
+      return placeCoordinates_;
+    }
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
+     */
+    public int getPlaceCoordinatesCount() {
+      return placeCoordinates_.size();
+    }
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
+     */
+    public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+        getPlaceCoordinates(int index) {
+      return placeCoordinates_.get(index);
+    }
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
+     */
+    public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder
+        getPlaceCoordinatesOrBuilder(int index) {
+      return placeCoordinates_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+      for (int i = 0; i < placeCoordinates_.size(); i++) {
+        output.writeMessage(1, placeCoordinates_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < placeCoordinates_.size(); i++) {
+        size +=
+            com.google.protobuf.CodedOutputStream.computeMessageSize(1, placeCoordinates_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (!(obj instanceof org.datacommons.proto.Recon.ResolveCoordinatesResponse)) {
+        return super.equals(obj);
+      }
+      org.datacommons.proto.Recon.ResolveCoordinatesResponse other =
+          (org.datacommons.proto.Recon.ResolveCoordinatesResponse) obj;
+
+      if (!getPlaceCoordinatesList().equals(other.getPlaceCoordinatesList())) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getPlaceCoordinatesCount() > 0) {
+        hash = (37 * hash) + PLACE_COORDINATES_FIELD_NUMBER;
+        hash = (53 * hash) + getPlaceCoordinatesList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseDelimitedFrom(
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+
+    public static Builder newBuilder(
+        org.datacommons.proto.Recon.ResolveCoordinatesResponse prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
+        // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveCoordinatesResponse)
+        org.datacommons.proto.Recon.ResolveCoordinatesResponseOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.class,
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.Builder.class);
+      }
+
+      // Construct using org.datacommons.proto.Recon.ResolveCoordinatesResponse.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+          getPlaceCoordinatesFieldBuilder();
+        }
+      }
+
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        if (placeCoordinatesBuilder_ == null) {
+          placeCoordinates_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          placeCoordinatesBuilder_.clear();
+        }
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse getDefaultInstanceForType() {
+        return org.datacommons.proto.Recon.ResolveCoordinatesResponse.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse build() {
+        org.datacommons.proto.Recon.ResolveCoordinatesResponse result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse buildPartial() {
+        org.datacommons.proto.Recon.ResolveCoordinatesResponse result =
+            new org.datacommons.proto.Recon.ResolveCoordinatesResponse(this);
+        int from_bitField0_ = bitField0_;
+        if (placeCoordinatesBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) != 0)) {
+            placeCoordinates_ = java.util.Collections.unmodifiableList(placeCoordinates_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.placeCoordinates_ = placeCoordinates_;
+        } else {
+          result.placeCoordinates_ = placeCoordinatesBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.setField(field, value);
+      }
+
+      @java.lang.Override
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+
+      @java.lang.Override
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index,
+          java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.datacommons.proto.Recon.ResolveCoordinatesResponse) {
+          return mergeFrom((org.datacommons.proto.Recon.ResolveCoordinatesResponse) other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.datacommons.proto.Recon.ResolveCoordinatesResponse other) {
+        if (other == org.datacommons.proto.Recon.ResolveCoordinatesResponse.getDefaultInstance())
+          return this;
+        if (placeCoordinatesBuilder_ == null) {
+          if (!other.placeCoordinates_.isEmpty()) {
+            if (placeCoordinates_.isEmpty()) {
+              placeCoordinates_ = other.placeCoordinates_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensurePlaceCoordinatesIsMutable();
+              placeCoordinates_.addAll(other.placeCoordinates_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.placeCoordinates_.isEmpty()) {
+            if (placeCoordinatesBuilder_.isEmpty()) {
+              placeCoordinatesBuilder_.dispose();
+              placeCoordinatesBuilder_ = null;
+              placeCoordinates_ = other.placeCoordinates_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              placeCoordinatesBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getPlaceCoordinatesFieldBuilder()
+                      : null;
+            } else {
+              placeCoordinatesBuilder_.addAllMessages(other.placeCoordinates_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.datacommons.proto.Recon.ResolveCoordinatesResponse parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage =
+              (org.datacommons.proto.Recon.ResolveCoordinatesResponse) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private int bitField0_;
+
+      private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
+          placeCoordinates_ = java.util.Collections.emptyList();
+
+      private void ensurePlaceCoordinatesIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          placeCoordinates_ =
+              new java.util.ArrayList<
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>(
+                  placeCoordinates_);
+          bitField0_ |= 0x00000001;
+        }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate,
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder,
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>
+          placeCoordinatesBuilder_;
+
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
+          getPlaceCoordinatesList() {
+        if (placeCoordinatesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(placeCoordinates_);
+        } else {
+          return placeCoordinatesBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public int getPlaceCoordinatesCount() {
+        if (placeCoordinatesBuilder_ == null) {
+          return placeCoordinates_.size();
+        } else {
+          return placeCoordinatesBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          getPlaceCoordinates(int index) {
+        if (placeCoordinatesBuilder_ == null) {
+          return placeCoordinates_.get(index);
+        } else {
+          return placeCoordinatesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public Builder setPlaceCoordinates(
+          int index, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate value) {
+        if (placeCoordinatesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePlaceCoordinatesIsMutable();
+          placeCoordinates_.set(index, value);
+          onChanged();
+        } else {
+          placeCoordinatesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public Builder setPlaceCoordinates(
+          int index,
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+              builderForValue) {
+        if (placeCoordinatesBuilder_ == null) {
+          ensurePlaceCoordinatesIsMutable();
+          placeCoordinates_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          placeCoordinatesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public Builder addPlaceCoordinates(
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate value) {
+        if (placeCoordinatesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePlaceCoordinatesIsMutable();
+          placeCoordinates_.add(value);
+          onChanged();
+        } else {
+          placeCoordinatesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public Builder addPlaceCoordinates(
+          int index, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate value) {
+        if (placeCoordinatesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePlaceCoordinatesIsMutable();
+          placeCoordinates_.add(index, value);
+          onChanged();
+        } else {
+          placeCoordinatesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public Builder addPlaceCoordinates(
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+              builderForValue) {
+        if (placeCoordinatesBuilder_ == null) {
+          ensurePlaceCoordinatesIsMutable();
+          placeCoordinates_.add(builderForValue.build());
+          onChanged();
+        } else {
+          placeCoordinatesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public Builder addPlaceCoordinates(
+          int index,
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+              builderForValue) {
+        if (placeCoordinatesBuilder_ == null) {
+          ensurePlaceCoordinatesIsMutable();
+          placeCoordinates_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          placeCoordinatesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public Builder addAllPlaceCoordinates(
+          java.lang.Iterable<
+                  ? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
+              values) {
+        if (placeCoordinatesBuilder_ == null) {
+          ensurePlaceCoordinatesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, placeCoordinates_);
+          onChanged();
+        } else {
+          placeCoordinatesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public Builder clearPlaceCoordinates() {
+        if (placeCoordinatesBuilder_ == null) {
+          placeCoordinates_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          placeCoordinatesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public Builder removePlaceCoordinates(int index) {
+        if (placeCoordinatesBuilder_ == null) {
+          ensurePlaceCoordinatesIsMutable();
+          placeCoordinates_.remove(index);
+          onChanged();
+        } else {
+          placeCoordinatesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+          getPlaceCoordinatesBuilder(int index) {
+        return getPlaceCoordinatesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder
+          getPlaceCoordinatesOrBuilder(int index) {
+        if (placeCoordinatesBuilder_ == null) {
+          return placeCoordinates_.get(index);
+        } else {
+          return placeCoordinatesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public java.util.List<
+              ? extends
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>
+          getPlaceCoordinatesOrBuilderList() {
+        if (placeCoordinatesBuilder_ != null) {
+          return placeCoordinatesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(placeCoordinates_);
+        }
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+          addPlaceCoordinatesBuilder() {
+        return getPlaceCoordinatesFieldBuilder()
+            .addBuilder(
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+                    .getDefaultInstance());
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+          addPlaceCoordinatesBuilder(int index) {
+        return getPlaceCoordinatesFieldBuilder()
+            .addBuilder(
+                index,
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+                    .getDefaultInstance());
+      }
+      /**
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
+       */
+      public java.util.List<
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder>
+          getPlaceCoordinatesBuilderList() {
+        return getPlaceCoordinatesFieldBuilder().getBuilderList();
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate,
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder,
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>
+          getPlaceCoordinatesFieldBuilder() {
+        if (placeCoordinatesBuilder_ == null) {
+          placeCoordinatesBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate,
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder,
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>(
+                  placeCoordinates_,
+                  ((bitField0_ & 0x00000001) != 0),
+                  getParentForChildren(),
+                  isClean());
+          placeCoordinates_ = null;
+        }
+        return placeCoordinatesBuilder_;
+      }
+
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+      // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveCoordinatesResponse)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveCoordinatesResponse)
+    private static final org.datacommons.proto.Recon.ResolveCoordinatesResponse DEFAULT_INSTANCE;
+
+    static {
+      DEFAULT_INSTANCE = new org.datacommons.proto.Recon.ResolveCoordinatesResponse();
+    }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<ResolveCoordinatesResponse> PARSER =
+        new com.google.protobuf.AbstractParser<ResolveCoordinatesResponse>() {
+          @java.lang.Override
+          public ResolveCoordinatesResponse parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new ResolveCoordinatesResponse(input, extensionRegistry);
+          }
+        };
+
+    public static com.google.protobuf.Parser<ResolveCoordinatesResponse> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ResolveCoordinatesResponse> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.datacommons.proto.Recon.ResolveCoordinatesResponse getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
       internal_static_org_datacommons_proto_IdWithProperty_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -9876,6 +13090,22 @@ public final class Recon {
       internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_descriptor;
   private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ResolveCoordinatesRequest_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ResolveCoordinatesResponse_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+      internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -9913,7 +13143,16 @@ public final class Recon {
           + "perty\022\023\n\013probability\030\002 \001(\001\032t\n\016ResolvedEn"
           + "tity\022\021\n\tsource_id\030\001 \001(\t\022O\n\014resolved_ids\030"
           + "\002 \003(\01329.org.datacommons.proto.ResolveEnt"
-          + "itiesResponse.ResolvedIdb\006proto3"
+          + "itiesResponse.ResolvedId\"\240\001\n\031ResolveCoor"
+          + "dinatesRequest\022P\n\013coordinates\030\001 \003(\0132;.or"
+          + "g.datacommons.proto.ResolveCoordinatesRe"
+          + "quest.Coordinate\0321\n\nCoordinate\022\020\n\010latitu"
+          + "de\030\001 \001(\001\022\021\n\tlongitude\030\002 \001(\001\"\307\001\n\032ResolveC"
+          + "oordinatesResponse\022\\\n\021place_coordinates\030"
+          + "\001 \003(\0132A.org.datacommons.proto.ResolveCoo"
+          + "rdinatesResponse.PlaceCoordinate\032K\n\017Plac"
+          + "eCoordinate\022\020\n\010latitude\030\001 \001(\001\022\021\n\tlongitu"
+          + "de\030\002 \001(\001\022\023\n\013place_dcids\030\003 \003(\tb\006proto3"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -10014,6 +13253,42 @@ public final class Recon {
             internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_descriptor,
             new java.lang.String[] {
               "SourceId", "ResolvedIds",
+            });
+    internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor =
+        getDescriptor().getMessageTypes().get(8);
+    internal_static_org_datacommons_proto_ResolveCoordinatesRequest_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor,
+            new java.lang.String[] {
+              "Coordinates",
+            });
+    internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor =
+        internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor
+            .getNestedTypes()
+            .get(0);
+    internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor,
+            new java.lang.String[] {
+              "Latitude", "Longitude",
+            });
+    internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor =
+        getDescriptor().getMessageTypes().get(9);
+    internal_static_org_datacommons_proto_ResolveCoordinatesResponse_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor,
+            new java.lang.String[] {
+              "PlaceCoordinates",
+            });
+    internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor =
+        internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor
+            .getNestedTypes()
+            .get(0);
+    internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor,
+            new java.lang.String[] {
+              "Latitude", "Longitude", "PlaceDcids",
             });
     org.datacommons.proto.Mcf.getDescriptor();
   }

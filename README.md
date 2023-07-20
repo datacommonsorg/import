@@ -76,6 +76,12 @@ To build binary: `mvn package`
   java -jar tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar
   ```
 
+> To run the above maven commands on M1 macs ([details][m1]), use the `-Dos.arch=x86_64` option.
+> 
+> e.g. `mvn compile -Dos.arch=x86_64`
+
+[m1]: https://github.com/os72/protoc-jar/pull/94#issuecomment-1271505497
+
 ### Run Server
 
 The repo also hosts an experimental server for private DC.

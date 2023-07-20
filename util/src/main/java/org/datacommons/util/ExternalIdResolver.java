@@ -293,6 +293,7 @@ public class ExternalIdResolver {
     mappedIds.computeIfAbsent(extProp, k -> new HashMap<>()).put(extId, dcid);
   }
 
+  // TODO: Use the generic ReconClient to call the API instead of this method.
   private Recon.ResolveEntitiesResponse callDc(Recon.ResolveEntitiesRequest reconReq)
       throws IOException, InterruptedException {
     logCtx.incrementInfoCounterBy("Resolution_NumDcCalls", 1);

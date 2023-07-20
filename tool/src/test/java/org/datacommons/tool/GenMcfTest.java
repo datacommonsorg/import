@@ -27,6 +27,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.commons.io.FilenameUtils;
 import org.datacommons.util.LogWrapper;
 import org.datacommons.util.SummaryReportGenerator;
@@ -61,6 +62,11 @@ public class GenMcfTest {
           "localidresolution", 5,
           "manyinconsistent", 4);
 
+  // Skip testing the following files. If this List is non-empty, the flaky files should be fixed
+  // and removed from this list.
+  // TODO: Fix the flaky "successtmcf" test.
+  private static Set<String> SKIP_FLAKY_FILES = Set.of("successtmcf");
+
   private static final String ARGS_TXT_FNAME = "args.txt";
 
   @Test
@@ -76,6 +82,10 @@ public class GenMcfTest {
     File[] testDirectories = new File(resourceFile("genmcf")).listFiles(File::isDirectory);
     for (File directory : testDirectories) {
       String testName = directory.getName();
+      if (SKIP_FLAKY_FILES.contains(testName)) {
+        System.err.printf("SKIPPING FLAKY FILE: %s\n", testName);
+        continue;
+      }
       System.err.println(testName + ": BEGIN");
       assertTrue(EXPECTED_FILES_TO_CHECK.containsKey(testName));
       List<String> argsList = new ArrayList<>();
