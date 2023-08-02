@@ -23,73 +23,78 @@ package org.datacommons.proto;
 import "Mcf.proto";
 
 message IdWithProperty {
-    string prop = 1;
-    string val = 2;
+  string prop = 1;
+  string val = 2;
 }
 
 message EntityIds {
-    repeated IdWithProperty ids = 1;
+  repeated IdWithProperty ids = 1;
 }
 
 // An entity is represented by a subgraph, which contains itself and its neighbors.
 message EntitySubGraph {
-    // REQUIRED: source_id must be a key within `sub_graph.nodes`, or one of the `ids`.
-    string source_id = 1;
-    oneof graph_representation {
-        McfGraph sub_graph = 2;
-        EntityIds entity_ids = 3;
-    }
+  // REQUIRED: source_id must be a key within `sub_graph.nodes`, or one of the `ids`.
+  string source_id = 1;
+  oneof graph_representation {
+    McfGraph sub_graph = 2;
+    EntityIds entity_ids = 3;
+  }
 }
 
 message EntityPair {
-    EntitySubGraph entity_one = 1;
-    EntitySubGraph entity_two = 2;
+  EntitySubGraph entity_one = 1;
+  EntitySubGraph entity_two = 2;
 }
 
 message CompareEntitiesRequest {
-    repeated EntityPair entity_pairs = 1;
+  repeated EntityPair entity_pairs = 1;
 }
 
 message CompareEntitiesResponse {
-    message Comparison {
-        // Must have two source_ids, one for each entity.
-        repeated string source_ids = 1;
-        double probability = 2;
-    }
-    repeated Comparison comparisons = 1;
+  message Comparison {
+    // Must have two source_ids, one for each entity.
+    repeated string source_ids = 1;
+    double probability = 2;
+  }
+  repeated Comparison comparisons = 1;
 }
 
 message ResolveEntitiesRequest {
-    repeated EntitySubGraph entities = 1;
-    // The properties of IDs to find. If empty, all known IDs are returned.
-    repeated string wanted_id_properties = 2;
+  repeated EntitySubGraph entities = 1;
+  // The properties of IDs to find. If empty, all known IDs are returned.
+  repeated string wanted_id_properties = 2;
 }
 
 message ResolveEntitiesResponse {
-    message ResolvedId {
-        repeated IdWithProperty ids = 1;
-        double probability = 2;
-    }
-    message ResolvedEntity {
-        string source_id = 1;
-        repeated ResolvedId resolved_ids = 2;
-    }
-    repeated ResolvedEntity resolved_entities = 1;
+  message ResolvedId {
+    repeated IdWithProperty ids = 1;
+    double probability = 2;
+  }
+  message ResolvedEntity {
+    string source_id = 1;
+    repeated ResolvedId resolved_ids = 2;
+  }
+  repeated ResolvedEntity resolved_entities = 1;
 }
 
 message ResolveCoordinatesRequest {
-    message Coordinate {
-        double latitude = 1;
-        double longitude = 2;
-    }
-    repeated Coordinate coordinates = 1;
+  message Coordinate {
+    double latitude = 1;
+    double longitude = 2;
+  }
+  repeated Coordinate coordinates = 1;
 }
 
 message ResolveCoordinatesResponse {
-    message PlaceCoordinate {
-        double latitude = 1;
-        double longitude = 2;
-        repeated string place_dcids = 3;
-    }
-    repeated PlaceCoordinate place_coordinates = 1;
+  message Place {
+    string dcid = 1;
+    string dominant_type = 2;
+  }
+  message PlaceCoordinate {
+    double latitude = 1;
+    double longitude = 2;
+    repeated string place_dcids = 3;
+    repeated Place places = 4;
+  }
+  repeated PlaceCoordinate place_coordinates = 1;
 }

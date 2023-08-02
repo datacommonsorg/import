@@ -21,7 +21,7 @@ public class ReconClientTest {
                     .build())
             .build();
 
-    var result = client.resolveCoordinates(request);
+    var result = client.resolveCoordinates(request).get();
 
     assertThat(result.getPlaceCoordinatesCount()).isEqualTo(1);
     assertThat(result.getPlaceCoordinates(0).getPlaceDcidsList()).contains("country/USA");

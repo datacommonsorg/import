@@ -2,6 +2,7 @@ package org.datacommons.util;
 
 import static java.net.http.HttpClient.Version.HTTP_1_1;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.concurrent.CompletableFuture;
 import org.datacommons.proto.Recon.ResolveCoordinatesRequest;
 import org.datacommons.proto.Recon.ResolveCoordinatesResponse;
 
@@ -28,24 +30,31 @@ public class ReconClient {
     this.httpClient = httpClient;
   }
 
-  public ResolveCoordinatesResponse resolveCoordinates(ResolveCoordinatesRequest request)
-      throws IOException, InterruptedException {
+  public CompletableFuture<ResolveCoordinatesResponse> resolveCoordinates(
+      ResolveCoordinatesRequest request) throws IOException {
     return callApi(
         RESOLVE_COORDINATES_API_URL, request, ResolveCoordinatesResponse.getDefaultInstance());
   }
 
-  private <T extends Message> T callApi(
-      String apiUrl, Message requestMessage, T responseDefaultInstance)
-      throws IOException, InterruptedException {
-    var request =
+  private <T extends Message> CompletableFuture<T> callApi(
+      String apiUrl, Message requestMessage, T responseDefaultInstance) throws IOException {
+    HttpRequest request =
         HttpRequest.newBuilder(URI.create(apiUrl))
             .version(HTTP_1_1)
             .header("accept", "application/json")
             .POST(BodyPublishers.ofString(StringUtil.msgToJson(requestMessage)))
             .build();
-    var response = httpClient.send(request, BodyHandlers.ofString());
-    var responseMessageBuilder = responseDefaultInstance.newBuilderForType();
-    JsonFormat.parser().merge(response.body().trim(), responseMessageBuilder);
-    return (T) responseMessageBuilder.build();
+    return httpClient
+        .sendAsync(request, BodyHandlers.ofString())
+        .thenApply(
+            response -> {
+              Message.Builder responseMessageBuilder = responseDefaultInstance.newBuilderForType();
+              try {
+                JsonFormat.parser().merge(response.body().trim(), responseMessageBuilder);
+              } catch (InvalidProtocolBufferException e) {
+                throw new RuntimeException(e);
+              }
+              return (T) responseMessageBuilder.build();
+            });
   }
 }

@@ -1,9 +1,11 @@
 package org.datacommons.util;
 
+import static java.util.stream.Collectors.toList;
+
+import com.google.common.collect.Lists;
 import java.io.IOException;
-import java.util.LinkedHashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
@@ -12,9 +14,20 @@ import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.proto.Recon.ResolveCoordinatesRequest;
 import org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate;
 import org.datacommons.proto.Recon.ResolveCoordinatesResponse;
+import org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place;
 
-/** Resolves nodes with lat-lngs by calling the DC coordinates resolution API. */
+/**
+ * Resolves nodes with lat-lngs by calling the DC coordinates resolution API.
+ *
+ * <p>The resolver should be called in 3 phases:
+ * <li>1. submitNode - submit nodes to be resolved in this phase.
+ * <li>2. resolve - nodes will be resolved by invoking the recon API in this phase.
+ * <li>3. getResolvedNode - query the resolver to get the resolved DCID in this phase.
+ */
 public class CoordinatesResolver {
+  private static final int DEFAULT_CHUNK_SIZE = 500;
+
+  private final int chunkSize;
   private final AtomicBoolean resolved = new AtomicBoolean(false);
 
   private final Set<Coordinate> resolveCoordinates = ConcurrentHashMap.newKeySet();
@@ -24,8 +37,13 @@ public class CoordinatesResolver {
 
   private final ReconClient client;
 
-  public CoordinatesResolver(ReconClient client) {
+  public CoordinatesResolver(ReconClient client, int chunkSize) {
     this.client = client;
+    this.chunkSize = chunkSize;
+  }
+
+  public CoordinatesResolver(ReconClient client) {
+    this(client, DEFAULT_CHUNK_SIZE);
   }
 
   public void submitNode(PropertyValues node) {
@@ -36,28 +54,42 @@ public class CoordinatesResolver {
   }
 
   // TODO: Pick the ID based on a preferred list.
-  public String resolveNode(PropertyValues node) {
+  public String getResolvedNode(PropertyValues node) {
     return getCoordinate(node)
         .filter(resolvedCoordinates::containsKey)
         .flatMap(coordinate -> resolvedCoordinates.get(coordinate).stream().findFirst())
         .orElse("");
   }
 
-  // TODO: Support chunking in batches of max size 500.
-  public void remoteResolve() throws IOException, InterruptedException {
-    if (resolved.get()) {
-      throw new IllegalStateException("remoteResolve called after remote resolution.");
+  public CompletableFuture<Void> resolve() {
+    if (resolved.getAndSet(true)) {
+      throw new IllegalStateException("execute called after remote resolution.");
     }
-    resolved.set(true);
 
     if (resolveCoordinates.isEmpty()) {
-      return;
+      return CompletableFuture.completedFuture(null);
     }
 
-    ResolveCoordinatesRequest request =
-        ResolveCoordinatesRequest.newBuilder().addAllCoordinates(resolveCoordinates).build();
-    ResolveCoordinatesResponse response = client.resolveCoordinates(request);
-    populateResolvedCandidates(response);
+    List<List<Coordinate>> chunks = Lists.partition(new ArrayList<>(resolveCoordinates), chunkSize);
+    return CompletableFuture.allOf(
+        chunks.stream()
+            .map(
+                chunk -> {
+                  try {
+                    return client
+                        .resolveCoordinates(
+                            ResolveCoordinatesRequest.newBuilder().addAllCoordinates(chunk).build())
+                        .thenApply(
+                            response -> {
+                              populateResolvedCandidates(response);
+                              return null;
+                            });
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                })
+            .collect(toList())
+            .toArray(new CompletableFuture[0]));
   }
 
   boolean isResolved() {
@@ -69,13 +101,16 @@ public class CoordinatesResolver {
         .getPlaceCoordinatesList()
         .forEach(
             placeCoordinate -> {
-              if (placeCoordinate.getPlaceDcidsCount() > 0) {
+              if (placeCoordinate.getPlacesCount() > 0) {
                 resolvedCoordinates.put(
                     Coordinate.newBuilder()
                         .setLatitude(placeCoordinate.getLatitude())
                         .setLongitude(placeCoordinate.getLongitude())
                         .build(),
-                    new LinkedHashSet<>(placeCoordinate.getPlaceDcidsList()));
+                    new LinkedHashSet<>(
+                        placeCoordinate.getPlacesList().stream()
+                            .map(Place::getDcid)
+                            .collect(toList())));
               }
             });
   }

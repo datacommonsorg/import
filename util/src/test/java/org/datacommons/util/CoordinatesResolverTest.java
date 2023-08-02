@@ -37,13 +37,34 @@ public class CoordinatesResolverTest {
 
     assertThat(resolver.isResolved()).isFalse();
 
-    resolver.remoteResolve();
+    resolver.resolve().get();
 
     assertThat(resolver.isResolved()).isTrue();
 
-    assertThat(resolver.resolveNode(SF)).isEqualTo(SF_ZIP_DCID);
-    assertThat(resolver.resolveNode(BIG_BEN)).isEqualTo(BIG_BEN_NUTS_DCID);
-    assertThat(resolver.resolveNode(UNSUBMITTED_NODE)).isEmpty();
+    assertThat(resolver.getResolvedNode(SF)).isEqualTo(SF_ZIP_DCID);
+    assertThat(resolver.getResolvedNode(BIG_BEN)).isEqualTo(BIG_BEN_NUTS_DCID);
+    assertThat(resolver.getResolvedNode(UNSUBMITTED_NODE)).isEmpty();
+  }
+
+  @Test
+  public void endToEnd_chunked() throws Exception {
+    CoordinatesResolver resolver = new CoordinatesResolver(new ReconClient(newHttpClient()), 1);
+
+    assertThat(resolver.isResolved()).isFalse();
+
+    for (PropertyValues node : TEST_NODES) {
+      resolver.submitNode(node);
+    }
+
+    assertThat(resolver.isResolved()).isFalse();
+
+    resolver.resolve().get();
+
+    assertThat(resolver.isResolved()).isTrue();
+
+    assertThat(resolver.getResolvedNode(SF)).isEqualTo(SF_ZIP_DCID);
+    assertThat(resolver.getResolvedNode(BIG_BEN)).isEqualTo(BIG_BEN_NUTS_DCID);
+    assertThat(resolver.getResolvedNode(UNSUBMITTED_NODE)).isEmpty();
   }
 
   private static PropertyValues newNode(String typeOf, Map<String, String> props) {
