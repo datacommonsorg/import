@@ -2,12 +2,9 @@ package org.datacommons.util;
 
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.collect.Lists;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.Values;
 import org.datacommons.proto.Mcf.ValueType;
@@ -16,20 +13,8 @@ import org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate;
 import org.datacommons.proto.Recon.ResolveCoordinatesResponse;
 import org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place;
 
-/**
- * Resolves nodes with lat-lngs by calling the DC coordinates resolution API.
- *
- * <p>The resolver should be called in 3 phases:
- * <li>1. submitNode - submit nodes to be resolved in this phase.
- * <li>2. resolve - nodes will be resolved by invoking the recon API in this phase.
- * <li>3. getResolvedNode - query the resolver to get the resolved DCID in this phase.
- */
-public class CoordinatesResolver {
-  private static final int DEFAULT_CHUNK_SIZE = 500;
-
-  private final int chunkSize;
-  private final AtomicBoolean resolved = new AtomicBoolean(false);
-
+/** Resolves nodes with lat-lngs by calling the DC coordinates resolution API. */
+public class CoordinatesResolver extends Resolver {
   private final Set<Coordinate> resolveCoordinates = ConcurrentHashMap.newKeySet();
 
   private final ConcurrentHashMap<Coordinate, Set<String>> resolvedCoordinates =
@@ -37,63 +22,33 @@ public class CoordinatesResolver {
 
   private final ReconClient client;
 
-  public CoordinatesResolver(ReconClient client, int chunkSize) {
-    this.client = client;
-    this.chunkSize = chunkSize;
-  }
-
   public CoordinatesResolver(ReconClient client) {
-    this(client, DEFAULT_CHUNK_SIZE);
+    this.client = client;
   }
 
-  public void submitNode(PropertyValues node) {
-    if (resolved.get()) {
-      throw new IllegalStateException("submitNode called after remote resolution.");
-    }
-    getCoordinate(node).ifPresent(resolveCoordinates::add);
+  @Override
+  protected boolean submit(PropertyValues node) {
+    return getCoordinate(node).map(resolveCoordinates::add).map(unused -> true).orElse(false);
   }
 
   // TODO: Pick the ID based on a preferred list.
-  public String getResolvedNode(PropertyValues node) {
+  @Override
+  protected Optional<String> getResolved(PropertyValues node) {
     return getCoordinate(node)
         .filter(resolvedCoordinates::containsKey)
-        .flatMap(coordinate -> resolvedCoordinates.get(coordinate).stream().findFirst())
-        .orElse("");
+        .flatMap(coordinate -> resolvedCoordinates.get(coordinate).stream().findFirst());
   }
 
-  public CompletableFuture<Void> resolve() {
-    if (resolved.getAndSet(true)) {
-      throw new IllegalStateException("execute called after remote resolution.");
-    }
-
+  @Override
+  protected CompletableFuture<Void> resolve() {
     if (resolveCoordinates.isEmpty()) {
       return CompletableFuture.completedFuture(null);
     }
 
-    List<List<Coordinate>> chunks = Lists.partition(new ArrayList<>(resolveCoordinates), chunkSize);
-    return CompletableFuture.allOf(
-        chunks.stream()
-            .map(
-                chunk -> {
-                  try {
-                    return client
-                        .resolveCoordinates(
-                            ResolveCoordinatesRequest.newBuilder().addAllCoordinates(chunk).build())
-                        .thenApply(
-                            response -> {
-                              populateResolvedCandidates(response);
-                              return null;
-                            });
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
-                  }
-                })
-            .collect(toList())
-            .toArray(new CompletableFuture[0]));
-  }
-
-  boolean isResolved() {
-    return resolved.get();
+    return client
+        .resolveCoordinates(
+            ResolveCoordinatesRequest.newBuilder().addAllCoordinates(resolveCoordinates).build())
+        .thenAccept(this::populateResolvedCandidates);
   }
 
   private void populateResolvedCandidates(ResolveCoordinatesResponse response) {

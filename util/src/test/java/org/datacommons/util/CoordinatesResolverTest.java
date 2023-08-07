@@ -1,7 +1,9 @@
 package org.datacommons.util;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth8.assertThat;
 import static java.net.http.HttpClient.newHttpClient;
+import static org.datacommons.util.TestUtil.newLogCtx;
 import static org.datacommons.util.Vocabulary.LATITUDE;
 import static org.datacommons.util.Vocabulary.LONGITUDE;
 
@@ -20,14 +22,17 @@ public class CoordinatesResolverTest {
       newNode("Place", Map.of(LATITUDE, "51.510357", LONGITUDE, "-0.116773"));
   private static final String BIG_BEN_NUTS_DCID = "nuts/UKI32";
 
+  private static final PropertyValues NON_LAT_LNG_NODE = newNode("Place", Map.of("isoCode", "IN"));
+
+  private static final List<PropertyValues> TEST_NODES = List.of(SF, BIG_BEN, NON_LAT_LNG_NODE);
+
   private static final PropertyValues UNSUBMITTED_NODE =
       newNode("City", Map.of(LATITUDE, "12.34", LONGITUDE, "56.78"));
 
-  private static final List<PropertyValues> TEST_NODES = List.of(SF, BIG_BEN);
-
   @Test
   public void endToEnd() throws Exception {
-    CoordinatesResolver resolver = new CoordinatesResolver(new ReconClient(newHttpClient()));
+    CoordinatesResolver resolver =
+        new CoordinatesResolver(new ReconClient(newHttpClient(), newLogCtx()));
 
     assertThat(resolver.isResolved()).isFalse();
 
@@ -37,34 +42,23 @@ public class CoordinatesResolverTest {
 
     assertThat(resolver.isResolved()).isFalse();
 
-    resolver.resolve().get();
+    resolver.resolveNodes().get();
 
     assertThat(resolver.isResolved()).isTrue();
 
-    assertThat(resolver.getResolvedNode(SF)).isEqualTo(SF_ZIP_DCID);
-    assertThat(resolver.getResolvedNode(BIG_BEN)).isEqualTo(BIG_BEN_NUTS_DCID);
+    assertThat(resolver.getResolvedNode(SF)).hasValue(SF_ZIP_DCID);
+    assertThat(resolver.getResolvedNode(BIG_BEN)).hasValue(BIG_BEN_NUTS_DCID);
     assertThat(resolver.getResolvedNode(UNSUBMITTED_NODE)).isEmpty();
   }
 
   @Test
-  public void endToEnd_chunked() throws Exception {
-    CoordinatesResolver resolver = new CoordinatesResolver(new ReconClient(newHttpClient()), 1);
+  public void submitNode() {
+    CoordinatesResolver resolver =
+        new CoordinatesResolver(new ReconClient(newHttpClient(), newLogCtx()));
 
-    assertThat(resolver.isResolved()).isFalse();
-
-    for (PropertyValues node : TEST_NODES) {
-      resolver.submitNode(node);
-    }
-
-    assertThat(resolver.isResolved()).isFalse();
-
-    resolver.resolve().get();
-
-    assertThat(resolver.isResolved()).isTrue();
-
-    assertThat(resolver.getResolvedNode(SF)).isEqualTo(SF_ZIP_DCID);
-    assertThat(resolver.getResolvedNode(BIG_BEN)).isEqualTo(BIG_BEN_NUTS_DCID);
-    assertThat(resolver.getResolvedNode(UNSUBMITTED_NODE)).isEmpty();
+    assertThat(resolver.submitNode(SF)).isTrue();
+    assertThat(resolver.submitNode(BIG_BEN)).isTrue();
+    assertThat(resolver.submitNode(NON_LAT_LNG_NODE)).isFalse();
   }
 
   private static PropertyValues newNode(String typeOf, Map<String, String> props) {

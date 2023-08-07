@@ -230,4 +230,20 @@ public class StringUtil {
     // Without the un-escaping something like 'Node' shows up as \u0027Node\u0027
     return StringEscapeUtils.unescapeJson(JsonFormat.printer().print(msg));
   }
+
+  public static String toJson(Message message) {
+    try {
+      return msgToJson(message);
+    } catch (InvalidProtocolBufferException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static void fromJson(String json, Message.Builder builder) {
+    try {
+      JsonFormat.parser().merge(json, builder);
+    } catch (InvalidProtocolBufferException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }
