@@ -1,17 +1,14 @@
 package org.datacommons.util;
 
 import static java.util.stream.Collectors.toList;
+import static org.datacommons.util.McfUtil.getEntities;
 import static org.datacommons.util.McfUtil.newIdWithProperty;
 
-import com.google.common.collect.ImmutableSet;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import org.datacommons.proto.Debug.Log.Level;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
-import org.datacommons.proto.Mcf.McfGraph.TypedValue;
-import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.proto.Recon.IdWithProperty;
 import org.datacommons.proto.Recon.ResolveEntitiesRequest;
 import org.datacommons.proto.Recon.ResolveEntitiesResponse;
@@ -61,28 +58,7 @@ final class EntityResolver extends Resolver {
 
   @Override
   protected Optional<String> getResolved(PropertyValues node) {
-    Set<IdWithProperty> externalEntities = getEntities(node);
-    Set<String> dcids =
-        new LinkedHashSet<>(
-            externalEntities.stream()
-                .filter(resolvedEntities::containsKey)
-                .map(resolvedEntities::get)
-                .collect(toList()));
-
-    if (dcids.isEmpty()) {
-      return Optional.empty();
-    }
-
-    if (dcids.size() > 1) {
-      logWrapper.addEntry(
-          Level.LEVEL_ERROR,
-          "Resolution_DivergingDcidsForExternalIds",
-          String.format("Divergence found. dcids = %s, external ids = %s", dcids, externalEntities),
-          node.getLocationsList());
-      return Optional.empty();
-    }
-
-    return dcids.stream().findFirst();
+    return McfUtil.getResolved(node, resolvedEntities, logWrapper);
   }
 
   private void populateResolvedEntities(ResolveEntitiesResponse response) {
@@ -90,22 +66,6 @@ final class EntityResolver extends Resolver {
       fromResolvedEntity(entity)
           .ifPresent(entry -> resolvedEntities.put(entry.getKey(), entry.getValue()));
     }
-  }
-
-  private static Set<IdWithProperty> getEntities(PropertyValues node) {
-    ImmutableSet.Builder<IdWithProperty> builder = ImmutableSet.builder();
-
-    for (String prop : Vocabulary.PLACE_RESOLVABLE_AND_ASSIGNABLE_IDS) {
-      if (node.containsPvs(prop)) {
-        for (TypedValue typedValue : node.getPvsMap().get(prop).getTypedValuesList()) {
-          if (typedValue.getType() == ValueType.TEXT || typedValue.getType() == ValueType.NUMBER) {
-            builder.add(newIdWithProperty(prop, typedValue.getValue()));
-          }
-        }
-      }
-    }
-
-    return builder.build();
   }
 
   private static Optional<Map.Entry<IdWithProperty, String>> fromResolvedEntity(
