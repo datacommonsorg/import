@@ -14,7 +14,7 @@ import org.datacommons.proto.Recon.ResolveCoordinatesResponse;
 import org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place;
 
 /** Resolves nodes with lat-lngs by calling the DC coordinates resolution API. */
-public class CoordinatesResolver extends Resolver {
+final class CoordinatesResolver extends Resolver {
   private final Set<Coordinate> resolveCoordinates = ConcurrentHashMap.newKeySet();
 
   private final ConcurrentHashMap<Coordinate, Set<String>> resolvedCoordinates =

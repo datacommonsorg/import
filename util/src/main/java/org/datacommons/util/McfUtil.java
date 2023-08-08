@@ -19,6 +19,9 @@ import org.datacommons.proto.LogLocation;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.ValueType;
+import org.datacommons.proto.Recon.EntityIds;
+import org.datacommons.proto.Recon.EntitySubGraph;
+import org.datacommons.proto.Recon.IdWithProperty;
 
 // A container class of MCF related utilities.
 public class McfUtil {
@@ -178,6 +181,23 @@ public class McfUtil {
     return types.contains(Vocabulary.STAT_VAR_OBSERVATION_TYPE)
         && nodeValues.getTypedValuesCount() != 0
         && nodeValues.getTypedValues(0).getType() == ValueType.NUMBER;
+  }
+
+  // Returns a new EntitySubGraph with sourceId = "<property>:<value>" and a single entity ID with
+  // the specified property and value.
+  public static EntitySubGraph newEntitySubGraph(String property, String value) {
+    return newEntitySubGraph(newIdWithProperty(property, value));
+  }
+
+  public static EntitySubGraph newEntitySubGraph(IdWithProperty idWithProperty) {
+    return EntitySubGraph.newBuilder()
+        .setSourceId(String.format("%s:%s", idWithProperty.getProp(), idWithProperty.getVal()))
+        .setEntityIds(EntityIds.newBuilder().addIds(idWithProperty))
+        .build();
+  }
+
+  public static IdWithProperty newIdWithProperty(String property, String value) {
+    return IdWithProperty.newBuilder().setProp(property).setVal(value).build();
   }
 
   private static String getValue(Mcf.McfGraph.TypedValue typedValue) {
