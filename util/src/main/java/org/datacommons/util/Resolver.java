@@ -36,7 +36,6 @@ abstract class Resolver {
     return submit(node);
   }
 
-  // TODO: Pick the ID based on a preferred list.
   Optional<String> getResolvedNode(PropertyValues node) {
     if (!resolved.get()) {
       throw new IllegalStateException("getResolvedNode called before resolution.");
