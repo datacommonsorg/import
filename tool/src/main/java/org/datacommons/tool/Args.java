@@ -11,6 +11,7 @@ import org.datacommons.util.FileGroup;
 class Args {
   public boolean doExistenceChecks = false;
   public ResolutionMode resolutionMode = ResolutionMode.NONE;
+  public boolean doCoordinatesResolution = false;
   public boolean doStatChecks = false;
   public List<String> samplePlaces = null;
   public boolean verbose = false;
@@ -32,6 +33,7 @@ class Args {
     }
     argStr.append(" existence-checks=" + doExistenceChecks);
     argStr.append(", resolution=" + resolutionMode.name());
+    argStr.append(", coordinates-resolution=" + doCoordinatesResolution);
     argStr.append(", num-threads=" + numThreads);
     argStr.append(", stat-checks=" + doStatChecks);
     if (samplePlaces != null) {
@@ -55,6 +57,7 @@ class Args {
     } else if (resolutionMode == ResolutionMode.FULL) {
       argsBuilder.setResolution(Debug.CommandArgs.ResolutionMode.RESOLUTION_MODE_FULL);
     }
+    argsBuilder.setCoordinatesResolution(doCoordinatesResolution);
     argsBuilder.setStatChecks(doStatChecks);
     if (samplePlaces != null) argsBuilder.addAllSamplePlaces(samplePlaces);
     argsBuilder.setObservationAbout(checkObservationAbout);

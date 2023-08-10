@@ -54,13 +54,22 @@ public class GenMcfTest {
   // count here.
   private static Map<String, Integer> EXPECTED_FILES_TO_CHECK =
       Map.of(
-          "fataltmcf", 2,
-          "resolution", 5,
-          "statchecks", 3,
-          "successtmcf", 3,
-          "measurementresult", 4,
-          "localidresolution", 5,
-          "manyinconsistent", 4);
+          "fataltmcf",
+          2,
+          "resolution",
+          5,
+          "latlngresolution",
+          3,
+          "statchecks",
+          3,
+          "successtmcf",
+          3,
+          "measurementresult",
+          4,
+          "localidresolution",
+          5,
+          "manyinconsistent",
+          4);
 
   // Skip testing the following files. If this List is non-empty, the flaky files should be fixed
   // and removed from this list.

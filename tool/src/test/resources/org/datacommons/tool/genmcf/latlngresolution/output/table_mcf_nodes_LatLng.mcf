@@ -1,0 +1,85 @@
+Node: SVTest/E3/1
+latitude: 53
+name: "British–Columbia"
+typeOf: dcid:Place
+longitude: -127
+dcid: "country/CAN"
+
+Node: SVTest/E0/1
+observationDate: 2019
+observationAbout: dcid:country/CAN
+variableMeasured: dcid:SV1
+measurementMethod: dcid:SVTest
+value: 1
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=country/CANvariableMeasured=SV1observationDate=2019value=1measurementMethod=SVTest"
+dcid: "dc/o/6v44zdhbcq8"
+
+Node: SVTest/E3/2
+latitude: 43
+name: "Saskatchewan"
+typeOf: dcid:Place
+longitude: -116
+dcid: "zip/83624"
+
+Node: SVTest/E0/2
+observationDate: 2019
+observationAbout: dcid:zip/83624
+variableMeasured: dcid:SV1
+measurementMethod: dcid:SVTest
+value: 5
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=zip/83624variableMeasured=SV1observationDate=2019value=5measurementMethod=SVTest"
+dcid: "dc/o/tjm0x6y8jv26f"
+
+Node: SVTest/E3/3
+latitude: 37.77493
+name: "San Francisco"
+typeOf: dcid:Place
+longitude: -122.41942
+dcid: "zip/94103"
+
+Node: SVTest/E0/3
+observationDate: 2019
+observationAbout: dcid:zip/94103
+variableMeasured: dcid:SV1
+measurementMethod: dcid:SVTest
+value: 1
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=zip/94103variableMeasured=SV1observationDate=2019value=1measurementMethod=SVTest"
+dcid: "dc/o/1jm50b24f2mg"
+
+Node: SVTest/E3/4
+latitude: 36
+name: "California"
+typeOf: dcid:Place
+longitude: -119.4
+dcid: "zip/93212"
+
+Node: SVTest/E0/4
+observationDate: 2019
+observationAbout: dcid:zip/93212
+variableMeasured: dcid:SV1
+measurementMethod: dcid:SVTest
+value: 1
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=zip/93212variableMeasured=SV1observationDate=2019value=1measurementMethod=SVTest"
+dcid: "dc/o/0r93tc1txjj1h"
+
+Node: SVTest/E3/5
+latitude: 53.9
+name: "Alberta"
+typeOf: dcid:Place
+longitude: -116
+dcid: "ipcc_50/53.75_-115.75_CAN"
+
+Node: SVTest/E0/5
+observationDate: 2019
+observationAbout: dcid:ipcc_50/53.75_-115.75_CAN
+variableMeasured: dcid:SV1
+measurementMethod: dcid:SVTest
+value: 6
+typeOf: dcid:StatVarObservation
+keyString: "observationAbout=ipcc_50/53.75_-115.75_CANvariableMeasured=SV1observationDate=2019value=6measurementMethod=SVTest"
+dcid: "dc/o/bf7wjkynq5sl"
+

@@ -1,5 +1,7 @@
 package org.datacommons.util;
 
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import java.io.IOException;
@@ -40,6 +42,7 @@ public class ExternalIdResolver {
   private final boolean verbose;
   private final LogWrapper logCtx;
   private final HttpClient httpClient;
+  private final CoordinatesResolver coordinatesResolver;
 
   // IDs waiting to be mapped.
   // Key: ID property, Value: set of external IDs
@@ -54,10 +57,17 @@ public class ExternalIdResolver {
   // phase), so we use RW locks.
   private final ReadWriteLock rwlock = new ReentrantReadWriteLock();
 
-  public ExternalIdResolver(HttpClient httpClient, boolean verbose, LogWrapper logCtx) {
+  public ExternalIdResolver(
+      HttpClient httpClient, boolean doCoordinatesResolution, boolean verbose, LogWrapper logCtx) {
     this.httpClient = httpClient;
     this.verbose = verbose;
     this.logCtx = logCtx;
+    if (doCoordinatesResolution) {
+      this.coordinatesResolver =
+          new CoordinatesResolver(new ReconClient(httpClient, logCtx, MAX_RESOLUTION_BATCH_IDS));
+    } else {
+      this.coordinatesResolver = null;
+    }
   }
 
   public void submitNode(Mcf.McfGraph.PropertyValues node)
@@ -89,6 +99,10 @@ public class ExternalIdResolver {
         }
       }
 
+      if (coordinatesResolver != null) {
+        coordinatesResolver.submit(node);
+      }
+
       if (numBatchedIds >= MAX_RESOLUTION_BATCH_IDS) {
         if (verbose) {
           logger.info("Processing batched external-IDs due to MAX_RESOLUTION_BATCH_IDS threshold");
@@ -107,6 +121,11 @@ public class ExternalIdResolver {
         throw new UnexpectedException("drainRemoteCalls() can only be called once!");
       }
       drainRemoteCallsInternal();
+
+      if (coordinatesResolver != null) {
+        coordinatesResolver.drain();
+      }
+
       drained = true;
     } finally {
       rwlock.writeLock().unlock();
@@ -184,7 +203,10 @@ public class ExternalIdResolver {
           foundExternalId = id;
         }
       }
-      return foundDcid;
+      if (!isEmpty(foundDcid)) {
+        return foundDcid;
+      }
+      return coordinatesResolver != null ? coordinatesResolver.resolve(node).orElse("") : foundDcid;
     } finally {
       rwlock.readLock().unlock();
     }

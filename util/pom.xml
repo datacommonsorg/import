@@ -75,6 +75,12 @@
         </dependency>
         <dependency>
             <groupId>com.google.truth.extensions</groupId>
+            <artifactId>truth-java8-extension</artifactId>
+            <version>0.46</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.truth.extensions</groupId>
             <artifactId>truth-proto-extension</artifactId>
             <version>0.46</version>
             <scope>test</scope>

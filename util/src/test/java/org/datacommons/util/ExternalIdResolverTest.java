@@ -1,8 +1,12 @@
 package org.datacommons.util;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.datacommons.util.Vocabulary.LATITUDE;
+import static org.datacommons.util.Vocabulary.LONGITUDE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
@@ -35,13 +39,23 @@ public class ExternalIdResolverTest {
 
   List<McfGraph.PropertyValues> testPlaceNodes = List.of(in, ca, sf, vz, unk, tn);
 
+  McfGraph.PropertyValues bigBenWithLatLng =
+      buildNode("Place", Map.of(LATITUDE, "51.510357", LONGITUDE, "-0.116773"));
+  String bigBenDcid = "nuts/UKI32";
+
+  List<McfGraph.PropertyValues> testPlaceNodesPlusLatLngNodes =
+      ImmutableList.<McfGraph.PropertyValues>builder()
+          .addAll(testPlaceNodes)
+          .add(bigBenWithLatLng)
+          .build();
+
   @Test
   public void endToEndWithApiCalls() throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
     ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 4;
 
-    var resolver = new ExternalIdResolver(HttpClient.newHttpClient(), true, lw);
+    var resolver = new ExternalIdResolver(HttpClient.newHttpClient(), false, true, lw);
     for (var node : testPlaceNodes) {
       resolver.submitNode(node);
     }
@@ -63,7 +77,7 @@ public class ExternalIdResolverTest {
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
     ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS =
         1; // This allows us to count the number of DC calls exactly
-    var resolver = new ExternalIdResolver(HttpClient.newHttpClient(), true, lw);
+    var resolver = new ExternalIdResolver(HttpClient.newHttpClient(), false, true, lw);
 
     // Construct input side MCF where we also provide the DCIDs of the nodes
     var inWithDcid = addDcidToNode(in, inDcid);
@@ -98,6 +112,67 @@ public class ExternalIdResolverTest {
     // There should have been exactly one API call for the node "unk" for which no
     // local data was available
     assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumDcCalls", 1));
+  }
+
+  @Test
+  public void endToEndWithApiCalls_withLatLngNodes_withCoordinatesResolutionDisabled()
+      throws IOException, InterruptedException {
+    Debug.Log.Builder lb = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
+    ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 4;
+
+    var resolver = new ExternalIdResolver(HttpClient.newHttpClient(), false, true, lw);
+    for (var node : testPlaceNodesPlusLatLngNodes) {
+      resolver.submitNode(node);
+    }
+    // Issue 20 more SF calls, which should all be batched.
+    for (int i = 0; i < 20; i++) {
+      resolver.submitNode(sf);
+    }
+    resolver.drainRemoteCalls();
+
+    testAssertionSuiteOnResolverInstance(resolver, lw);
+
+    // There are 7 IDs, and batch-size if 4, so we must have done 2 calls.
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumDcCalls", 2));
+
+    // Coordinates assertions.
+
+    // There is 1 lat-lng node but coordinates resolution is disabled so there should be no counters
+    // (represented as -1).
+    assertThat(TestUtil.getCounter(lw.getLog(), ReconClient.NUM_API_CALLS_COUNTER)).isEqualTo(-1);
+    // Since coordinates resolution is disabled, this won't resolve.
+    assertEquals("", resolver.resolveNode("bigben", bigBenWithLatLng));
+  }
+
+  @Test
+  public void endToEndWithApiCalls_withLatLngNodes_withCoordinatesResolutionEnabled()
+      throws IOException, InterruptedException {
+    Debug.Log.Builder lb = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
+    ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 4;
+
+    var resolver = new ExternalIdResolver(HttpClient.newHttpClient(), true, true, lw);
+    for (var node : testPlaceNodesPlusLatLngNodes) {
+      resolver.submitNode(node);
+    }
+    // Issue 20 more SF calls, which should all be batched.
+    for (int i = 0; i < 20; i++) {
+      resolver.submitNode(sf);
+    }
+    resolver.drainRemoteCalls();
+
+    testAssertionSuiteOnResolverInstance(resolver, lw);
+
+    // There are 7 IDs, and batch-size if 4, so we must have done 2 calls.
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumDcCalls", 2));
+
+    // Coordinates assertions.
+
+    // There is 1 lat-lng node so there should be 1 DC call.
+    assertThat(TestUtil.getCounter(lw.getLog(), ReconClient.NUM_API_CALLS_COUNTER)).isEqualTo(1);
+    // big ben with lat lng should be resolved.
+    assertEquals(bigBenDcid, resolver.resolveNode("bigben", bigBenWithLatLng));
   }
 
   // Runs assertions on the place constants as defined in the class constants.

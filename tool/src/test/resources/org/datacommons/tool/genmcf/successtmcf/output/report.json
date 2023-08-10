@@ -720,6 +720,7 @@
     "numThreads": 1,
     "statChecks": true,
     "observationAbout": false,
-    "allowNanSvobs": true
+    "allowNanSvobs": true,
+    "coordinatesResolution": false
   }
 }
