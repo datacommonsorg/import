@@ -29,9 +29,6 @@ public class ReconClient {
   private static final String RESOLVE_COORDINATES_API_URL =
       "https://api.datacommons.org/v1/recon/resolve/coordinate";
 
-  private static final String RESOLVE_ENTITIES_API_URL =
-      "https://api.datacommons.org/v1/recon/entity/resolve";
-
   static final String NUM_API_CALLS_COUNTER = "ReconClient_NumApiCalls";
 
   private static final int DEFAULT_CHUNK_SIZE = 500;
@@ -68,15 +65,21 @@ public class ReconClient {
     }
 
     return toFutureOfList(
+            // Partition request into chunkSize batches.
+            // e.g. if chunkSize = 3 then Request(C1, C2, C3) will be chunked into [Request(C1, C2),
+            // Request(C3)]
             partition(request.getCoordinatesList(), chunkSize).stream()
                 .map(
                     chunk ->
                         request.toBuilder().clearCoordinates().addAllCoordinates(chunk).build())
                 .map(
+                    // Call API for each chunked request.
                     chunkedRequest ->
                         callApi(RESOLVE_COORDINATES_API_URL, chunkedRequest, defaultResponse))
                 .collect(toList()))
         .thenApply(
+            // Aggregate chunked responses.
+            // e.g. [Response(P1, P2), Response(P3)] will be aggregated into Response(P1, P2, P3)
             chunkedResponses ->
                 ResolveCoordinatesResponse.newBuilder()
                     .addAllPlaceCoordinates(

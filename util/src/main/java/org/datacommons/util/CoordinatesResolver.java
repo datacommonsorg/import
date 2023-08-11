@@ -13,6 +13,7 @@ import org.datacommons.proto.Recon.ResolveCoordinatesResponse;
 import org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place;
 
 /** Resolves nodes with lat-lngs by calling the DC coordinates resolution API. */
+// TODO: Add counters for errors.
 final class CoordinatesResolver {
   private final Set<Coordinate> resolveCoordinates = ConcurrentHashMap.newKeySet();
 
@@ -26,7 +27,12 @@ final class CoordinatesResolver {
   }
 
   boolean submit(PropertyValues node) {
-    return getCoordinate(node).map(resolveCoordinates::add).map(unused -> true).orElse(false);
+    Optional<Coordinate> optionalCoordinate = getCoordinate(node);
+    if (optionalCoordinate.isPresent()) {
+      resolveCoordinates.add(optionalCoordinate.get());
+      return true;
+    }
+    return false;
   }
 
   void drain() {
