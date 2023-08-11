@@ -1,0 +1,13 @@
+Node: E:SVTest->E0
+typeOf: dcs:StatVarObservation
+variableMeasured: dcs:SV1
+measurementMethod: dcs:SVTest
+observationAbout: E:SVTest->E3
+observationDate: C:SVTest->Year
+value: C:SVTest->SV1
+
+Node: E:SVTest->E3
+typeOf: dcid:Place
+name: C:SVTest->Place_Name
+latitude: C:SVTest->Lat
+longitude: C:SVTest->Lng

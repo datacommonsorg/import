@@ -704,6 +704,7 @@
     "numThreads": 1,
     "statChecks": true,
     "observationAbout": false,
-    "allowNanSvobs": false
+    "allowNanSvobs": false,
+    "coordinatesResolution": false
   }
 }

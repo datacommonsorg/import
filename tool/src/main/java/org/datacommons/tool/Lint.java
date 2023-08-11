@@ -56,6 +56,7 @@ class Lint implements Callable<Integer> {
     Args args = new Args();
     args.doExistenceChecks = parent.doExistenceChecks;
     args.resolutionMode = parent.resolutionMode;
+    args.doCoordinatesResolution = parent.doCoordinatesResolution;
     args.doStatChecks = parent.doStatChecks;
     args.samplePlaces = parent.samplePlaces;
     args.numThreads = parent.numThreads;

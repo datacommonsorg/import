@@ -68,6 +68,14 @@ class Main {
   public Args.ResolutionMode resolutionMode = Args.ResolutionMode.NONE;
 
   @CommandLine.Option(
+      names = {"-cr", "--coordinates-resolution"},
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "If set, resolves lat-lng coordinates by making DC Recon API calls. This flag is only application in full resolution mode.")
+  public boolean doCoordinatesResolution;
+
+  @CommandLine.Option(
       names = {"-s", "--stat-checks"},
       defaultValue = "true",
       scope = CommandLine.ScopeType.INHERIT,

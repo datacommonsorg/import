@@ -86,10 +86,15 @@ message ResolveCoordinatesRequest {
 }
 
 message ResolveCoordinatesResponse {
+    message Place {
+        string dcid = 1;
+        string dominant_type = 2;
+    }
     message PlaceCoordinate {
         double latitude = 1;
         double longitude = 2;
         repeated string place_dcids = 3;
+        repeated Place places = 4;
     }
     repeated PlaceCoordinate place_coordinates = 1;
 }

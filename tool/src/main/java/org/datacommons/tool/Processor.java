@@ -131,7 +131,9 @@ public class Processor {
       existenceChecker = new ExistenceChecker(this.httpClient, args.verbose, logCtx);
     }
     if (args.resolutionMode == Args.ResolutionMode.FULL) {
-      idResolver = new ExternalIdResolver(this.httpClient, args.verbose, logCtx);
+      idResolver =
+          new ExternalIdResolver(
+              this.httpClient, args.doCoordinatesResolution, args.verbose, logCtx);
     }
     statVarState = new StatVarState(this.httpClient, logCtx);
     if (args.doStatChecks) {

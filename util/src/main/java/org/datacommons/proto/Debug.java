@@ -4476,6 +4476,19 @@ public final class Debug {
      * @return The checkMeasurementResult.
      */
     boolean getCheckMeasurementResult();
+
+    /**
+     * <code>optional bool coordinates_resolution = 9;</code>
+     *
+     * @return Whether the coordinatesResolution field is set.
+     */
+    boolean hasCoordinatesResolution();
+    /**
+     * <code>optional bool coordinates_resolution = 9;</code>
+     *
+     * @return The coordinatesResolution.
+     */
+    boolean getCoordinatesResolution();
   }
   /** Protobuf type {@code org.datacommons.proto.CommandArgs} */
   public static final class CommandArgs extends com.google.protobuf.GeneratedMessageV3
@@ -4581,6 +4594,12 @@ public final class Debug {
               {
                 bitField0_ |= 0x00000040;
                 checkMeasurementResult_ = input.readBool();
+                break;
+              }
+            case 72:
+              {
+                bitField0_ |= 0x00000080;
+                coordinatesResolution_ = input.readBool();
                 break;
               }
             default:
@@ -4967,6 +4986,25 @@ public final class Debug {
       return checkMeasurementResult_;
     }
 
+    public static final int COORDINATES_RESOLUTION_FIELD_NUMBER = 9;
+    private boolean coordinatesResolution_;
+    /**
+     * <code>optional bool coordinates_resolution = 9;</code>
+     *
+     * @return Whether the coordinatesResolution field is set.
+     */
+    public boolean hasCoordinatesResolution() {
+      return ((bitField0_ & 0x00000080) != 0);
+    }
+    /**
+     * <code>optional bool coordinates_resolution = 9;</code>
+     *
+     * @return The coordinatesResolution.
+     */
+    public boolean getCoordinatesResolution() {
+      return coordinatesResolution_;
+    }
+
     private byte memoizedIsInitialized = -1;
 
     @java.lang.Override
@@ -5005,6 +5043,9 @@ public final class Debug {
       if (((bitField0_ & 0x00000040) != 0)) {
         output.writeBool(8, checkMeasurementResult_);
       }
+      if (((bitField0_ & 0x00000080) != 0)) {
+        output.writeBool(9, coordinatesResolution_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -5042,6 +5083,9 @@ public final class Debug {
       }
       if (((bitField0_ & 0x00000040) != 0)) {
         size += com.google.protobuf.CodedOutputStream.computeBoolSize(8, checkMeasurementResult_);
+      }
+      if (((bitField0_ & 0x00000080) != 0)) {
+        size += com.google.protobuf.CodedOutputStream.computeBoolSize(9, coordinatesResolution_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5087,6 +5131,10 @@ public final class Debug {
       if (hasCheckMeasurementResult()) {
         if (getCheckMeasurementResult() != other.getCheckMeasurementResult()) return false;
       }
+      if (hasCoordinatesResolution() != other.hasCoordinatesResolution()) return false;
+      if (hasCoordinatesResolution()) {
+        if (getCoordinatesResolution() != other.getCoordinatesResolution()) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -5129,6 +5177,10 @@ public final class Debug {
       if (hasCheckMeasurementResult()) {
         hash = (37 * hash) + CHECK_MEASUREMENT_RESULT_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getCheckMeasurementResult());
+      }
+      if (hasCoordinatesResolution()) {
+        hash = (37 * hash) + COORDINATES_RESOLUTION_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getCoordinatesResolution());
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -5285,6 +5337,8 @@ public final class Debug {
         bitField0_ = (bitField0_ & ~0x00000040);
         checkMeasurementResult_ = false;
         bitField0_ = (bitField0_ & ~0x00000080);
+        coordinatesResolution_ = false;
+        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -5346,6 +5400,10 @@ public final class Debug {
         if (((from_bitField0_ & 0x00000080) != 0)) {
           result.checkMeasurementResult_ = checkMeasurementResult_;
           to_bitField0_ |= 0x00000040;
+        }
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          result.coordinatesResolution_ = coordinatesResolution_;
+          to_bitField0_ |= 0x00000080;
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -5429,6 +5487,9 @@ public final class Debug {
         }
         if (other.hasCheckMeasurementResult()) {
           setCheckMeasurementResult(other.getCheckMeasurementResult());
+        }
+        if (other.hasCoordinatesResolution()) {
+          setCoordinatesResolution(other.getCoordinatesResolution());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -5913,6 +5974,47 @@ public final class Debug {
       public Builder clearCheckMeasurementResult() {
         bitField0_ = (bitField0_ & ~0x00000080);
         checkMeasurementResult_ = false;
+        onChanged();
+        return this;
+      }
+
+      private boolean coordinatesResolution_;
+      /**
+       * <code>optional bool coordinates_resolution = 9;</code>
+       *
+       * @return Whether the coordinatesResolution field is set.
+       */
+      public boolean hasCoordinatesResolution() {
+        return ((bitField0_ & 0x00000100) != 0);
+      }
+      /**
+       * <code>optional bool coordinates_resolution = 9;</code>
+       *
+       * @return The coordinatesResolution.
+       */
+      public boolean getCoordinatesResolution() {
+        return coordinatesResolution_;
+      }
+      /**
+       * <code>optional bool coordinates_resolution = 9;</code>
+       *
+       * @param value The coordinatesResolution to set.
+       * @return This builder for chaining.
+       */
+      public Builder setCoordinatesResolution(boolean value) {
+        bitField0_ |= 0x00000100;
+        coordinatesResolution_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool coordinates_resolution = 9;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearCoordinatesResolution() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        coordinatesResolution_ = false;
         onChanged();
         return this;
       }
@@ -12295,33 +12397,34 @@ public final class Debug {
           + " \001(\0132%.org.datacommons.proto.Log.Counter"
           + "Set:\0028\001\"c\n\005Level\022\025\n\021LEVEL_UNSPECIFIED\020\000\022"
           + "\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LE"
-          + "VEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010\002\020\003\"\210\003\n\013C"
+          + "VEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010\002\020\003\"\250\003\n\013C"
           + "ommandArgs\022\030\n\020existence_checks\030\001 \001(\010\022E\n\n"
           + "resolution\030\002 \001(\01621.org.datacommons.proto"
           + ".CommandArgs.ResolutionMode\022\023\n\013num_threa"
           + "ds\030\003 \001(\005\022\023\n\013stat_checks\030\004 \001(\010\022\025\n\rsample_"
           + "places\030\005 \003(\t\022\031\n\021observation_about\030\006 \001(\010\022"
           + "\027\n\017allow_nan_svobs\030\007 \001(\010\022 \n\030check_measur"
-          + "ement_result\030\010 \001(\010\"\200\001\n\016ResolutionMode\022\037\n"
-          + "\033RESOLUTION_MODE_UNSPECIFIED\020\000\022\030\n\024RESOLU"
-          + "TION_MODE_NONE\020\001\022\031\n\025RESOLUTION_MODE_LOCA"
-          + "L\020\002\022\030\n\024RESOLUTION_MODE_FULL\020\003\"\321\001\n\tDataPo"
-          + "int\022\014\n\004date\030\001 \001(\t\022:\n\006values\030\002 \003(\0132*.org."
-          + "datacommons.proto.DataPoint.DataValue\032z\n"
-          + "\tDataValue\0229\n\005value\030\001 \001(\0132*.org.datacomm"
-          + "ons.proto.McfGraph.TypedValue\0222\n\tlocatio"
-          + "ns\030\002 \003(\0132\037.org.datacommons.proto.Locatio"
-          + "n\"\234\003\n\024StatValidationResult\022\022\n\nplace_dcid"
-          + "\030\001 \001(\t\022\025\n\rstat_var_dcid\030\002 \001(\t\022\032\n\022measure"
-          + "ment_method\030\003 \001(\t\022\032\n\022observation_period\030"
-          + "\004 \001(\t\022\026\n\016scaling_factor\030\005 \001(\t\022\014\n\004unit\030\006 "
-          + "\001(\t\022\\\n\023validation_counters\030\007 \003(\0132?.org.d"
-          + "atacommons.proto.StatValidationResult.St"
-          + "atValidationEntry\032\234\001\n\023StatValidationEntr"
-          + "y\022\023\n\013counter_key\030\001 \001(\t\0228\n\016problem_points"
-          + "\030\002 \003(\0132 .org.datacommons.proto.DataPoint"
-          + "\022\032\n\022additional_details\030\003 \001(\t\022\032\n\022percent_"
-          + "difference\030\004 \001(\001"
+          + "ement_result\030\010 \001(\010\022\036\n\026coordinates_resolu"
+          + "tion\030\t \001(\010\"\200\001\n\016ResolutionMode\022\037\n\033RESOLUT"
+          + "ION_MODE_UNSPECIFIED\020\000\022\030\n\024RESOLUTION_MOD"
+          + "E_NONE\020\001\022\031\n\025RESOLUTION_MODE_LOCAL\020\002\022\030\n\024R"
+          + "ESOLUTION_MODE_FULL\020\003\"\321\001\n\tDataPoint\022\014\n\004d"
+          + "ate\030\001 \001(\t\022:\n\006values\030\002 \003(\0132*.org.datacomm"
+          + "ons.proto.DataPoint.DataValue\032z\n\tDataVal"
+          + "ue\0229\n\005value\030\001 \001(\0132*.org.datacommons.prot"
+          + "o.McfGraph.TypedValue\0222\n\tlocations\030\002 \003(\013"
+          + "2\037.org.datacommons.proto.Location\"\234\003\n\024St"
+          + "atValidationResult\022\022\n\nplace_dcid\030\001 \001(\t\022\025"
+          + "\n\rstat_var_dcid\030\002 \001(\t\022\032\n\022measurement_met"
+          + "hod\030\003 \001(\t\022\032\n\022observation_period\030\004 \001(\t\022\026\n"
+          + "\016scaling_factor\030\005 \001(\t\022\014\n\004unit\030\006 \001(\t\022\\\n\023v"
+          + "alidation_counters\030\007 \003(\0132?.org.datacommo"
+          + "ns.proto.StatValidationResult.StatValida"
+          + "tionEntry\032\234\001\n\023StatValidationEntry\022\023\n\013cou"
+          + "nter_key\030\001 \001(\t\0228\n\016problem_points\030\002 \003(\0132 "
+          + ".org.datacommons.proto.DataPoint\022\032\n\022addi"
+          + "tional_details\030\003 \001(\t\022\032\n\022percent_differen"
+          + "ce\030\004 \001(\001"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -12383,6 +12486,7 @@ public final class Debug {
               "ObservationAbout",
               "AllowNanSvobs",
               "CheckMeasurementResult",
+              "CoordinatesResolution",
             });
     internal_static_org_datacommons_proto_DataPoint_descriptor =
         getDescriptor().getMessageTypes().get(2);
