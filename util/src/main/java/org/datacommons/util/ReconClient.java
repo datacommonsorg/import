@@ -72,7 +72,7 @@ public class ReconClient {
 
     return toFutureOfList(
             // Partition request into chunkSize batches.
-            // e.g. if chunkSize = 3 then Request(C1, C2, C3) will be chunked into [Request(C1, C2),
+            // e.g. if chunkSize = 2 then Request(C1, C2, C3) will be chunked into [Request(C1, C2),
             // Request(C3)]
             partition(request.getNodesList(), chunkSize).stream()
                 .map(chunk -> request.toBuilder().clearNodes().addAllNodes(chunk).build())
@@ -109,7 +109,7 @@ public class ReconClient {
 
     return toFutureOfList(
             // Partition request into chunkSize batches.
-            // e.g. if chunkSize = 3 then Request(C1, C2, C3) will be chunked into [Request(C1, C2),
+            // e.g. if chunkSize = 2 then Request(C1, C2, C3) will be chunked into [Request(C1, C2),
             // Request(C3)]
             partition(request.getCoordinatesList(), chunkSize).stream()
                 .map(
