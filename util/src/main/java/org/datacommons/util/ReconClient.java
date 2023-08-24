@@ -158,7 +158,7 @@ public class ReconClient {
         .thenApply(v -> futures.stream().map(CompletableFuture::join).collect(Collectors.toList()));
   }
 
-  private String toJson(Message message) {
+  private static String toJson(Message message) {
     try {
       return msgToJson(message);
     } catch (InvalidProtocolBufferException e) {
