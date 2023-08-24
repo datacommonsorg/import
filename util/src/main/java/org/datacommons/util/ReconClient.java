@@ -18,6 +18,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.datacommons.proto.Recon.ResolveCoordinatesRequest;
 import org.datacommons.proto.Recon.ResolveCoordinatesResponse;
+import org.datacommons.proto.Resolve.ResolveRequest;
+import org.datacommons.proto.Resolve.ResolveResponse;
 
 /**
  * Client to the DC resolution APIs.
@@ -28,6 +30,11 @@ import org.datacommons.proto.Recon.ResolveCoordinatesResponse;
 public class ReconClient {
   private static final String RESOLVE_COORDINATES_API_URL =
       "https://api.datacommons.org/v1/recon/resolve/coordinate";
+
+  // TODO(keyurs): Switch to prod URL once this PR is in prod:
+  // https://github.com/datacommonsorg/mixer/pull/1239
+  private static final String V2_RESOLVE_API_URL =
+      "https://autopush.api.datacommons.org/v2/resolve";
 
   static final String NUM_API_CALLS_COUNTER = "ReconClient_NumApiCalls";
 
@@ -47,6 +54,42 @@ public class ReconClient {
     this.httpClient = httpClient;
     this.logWrapper = logWrapper;
     this.chunkSize = chunkSize;
+  }
+
+  public ResolveResponse resolve(ResolveRequest request) {
+    try {
+      return resolveAsync(request).get();
+    } catch (Exception e) {
+      throw new RuntimeException("Error resolving nodes.", e);
+    }
+  }
+
+  public CompletableFuture<ResolveResponse> resolveAsync(ResolveRequest request) {
+    ResolveResponse defaultResponse = ResolveResponse.getDefaultInstance();
+    if (request.getNodesCount() < 1) {
+      return CompletableFuture.completedFuture(defaultResponse);
+    }
+
+    return toFutureOfList(
+            // Partition request into chunkSize batches.
+            // e.g. if chunkSize = 3 then Request(C1, C2, C3) will be chunked into [Request(C1, C2),
+            // Request(C3)]
+            partition(request.getNodesList(), chunkSize).stream()
+                .map(chunk -> request.toBuilder().clearNodes().addAllNodes(chunk).build())
+                .map(
+                    // Call API for each chunked request.
+                    chunkedRequest -> callApi(V2_RESOLVE_API_URL, chunkedRequest, defaultResponse))
+                .collect(toList()))
+        .thenApply(
+            // Aggregate chunked responses.
+            // e.g. [Response(P1, P2), Response(P3)] will be aggregated into Response(P1, P2, P3)
+            chunkedResponses ->
+                ResolveResponse.newBuilder()
+                    .addAllEntities(
+                        chunkedResponses.stream()
+                            .flatMap(chunkedResponse -> chunkedResponse.getEntitiesList().stream())
+                            .collect(toList()))
+                    .build());
   }
 
   public ResolveCoordinatesResponse resolveCoordinates(ResolveCoordinatesRequest request) {
@@ -115,11 +158,11 @@ public class ReconClient {
         .thenApply(v -> futures.stream().map(CompletableFuture::join).collect(Collectors.toList()));
   }
 
-  private static String toJson(Message message) {
+  private String toJson(Message message) {
     try {
       return msgToJson(message);
     } catch (InvalidProtocolBufferException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException(String.format("Unable to convert proto to json:\n%s", message), e);
     }
   }
 
