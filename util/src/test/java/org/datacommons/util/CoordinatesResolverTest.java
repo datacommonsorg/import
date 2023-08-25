@@ -16,7 +16,7 @@ import org.junit.Test;
 public class CoordinatesResolverTest {
   private static final PropertyValues SF =
       newNode("City", Map.of(LATITUDE, "37.77493", LONGITUDE, "-122.41942"));
-  private static final String SF_ZIP_DCID = "zip/94103";
+  private static final String SF_GEOID_DCID = "geoId/0667000";
 
   private static final PropertyValues BIG_BEN =
       newNode("Place", Map.of(LATITUDE, "51.510357", LONGITUDE, "-0.116773"));
@@ -40,7 +40,7 @@ public class CoordinatesResolverTest {
 
     resolver.drain();
 
-    assertThat(resolver.resolve(SF)).hasValue(SF_ZIP_DCID);
+    assertThat(resolver.resolve(SF)).hasValue(SF_GEOID_DCID);
     assertThat(resolver.resolve(BIG_BEN)).hasValue(BIG_BEN_NUTS_DCID);
     assertThat(resolver.resolve(UNSUBMITTED_NODE)).isEmpty();
   }

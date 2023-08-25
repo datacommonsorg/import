@@ -2,22 +2,34 @@ package org.datacommons.util;
 
 import static java.util.stream.Collectors.toList;
 
-import java.util.*;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.Values;
 import org.datacommons.proto.Mcf.ValueType;
-import org.datacommons.proto.Recon.ResolveCoordinatesRequest;
-import org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate;
-import org.datacommons.proto.Recon.ResolveCoordinatesResponse;
-import org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place;
+import org.datacommons.proto.Resolve.ResolveRequest;
+import org.datacommons.proto.Resolve.ResolveResponse;
+import org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate;
 
 /** Resolves nodes with lat-lngs by calling the DC coordinates resolution API. */
 // TODO: Add counters for errors.
 final class CoordinatesResolver {
-  private final Set<Coordinate> resolveCoordinates = ConcurrentHashMap.newKeySet();
+  // This DecimalFormat instance is used to round coordinates to 6 digits
+  // since the V2Resolve API formats nodes this way.
+  private static final DecimalFormat COORDINATE_NODE_FORMAT = newCoordinateNodeFormat();
 
-  private final ConcurrentHashMap<Coordinate, Set<String>> resolvedCoordinates =
+  // Coordinates to be resolved.
+  // The coordinates are maintained as strings in the following format: "<lat>#<lng>".
+  // This format is used since it is the format used by the V2 resolve API as well.
+  private final Set<String> resolveCoordinates = ConcurrentHashMap.newKeySet();
+
+  // Coordinates that were resolved to DCIDs.
+  // The Map maintains mappings from coordinate string to Set of candidate DCIDs.
+  private final ConcurrentHashMap<String, Set<String>> resolvedCoordinates =
       new ConcurrentHashMap<>();
 
   private final ReconClient client;
@@ -27,7 +39,7 @@ final class CoordinatesResolver {
   }
 
   boolean submit(PropertyValues node) {
-    Optional<Coordinate> optionalCoordinate = getCoordinate(node);
+    Optional<String> optionalCoordinate = getCoordinate(node);
     if (optionalCoordinate.isPresent()) {
       resolveCoordinates.add(optionalCoordinate.get());
       return true;
@@ -38,9 +50,10 @@ final class CoordinatesResolver {
   void drain() {
     if (!resolveCoordinates.isEmpty()) {
       populateResolvedCandidates(
-          client.resolveCoordinates(
-              ResolveCoordinatesRequest.newBuilder()
-                  .addAllCoordinates(resolveCoordinates)
+          client.resolve(
+              ResolveRequest.newBuilder()
+                  .addAllNodes(resolveCoordinates)
+                  .setProperty("<-geoCoordinate->dcid")
                   .build()));
     }
   }
@@ -51,26 +64,23 @@ final class CoordinatesResolver {
         .flatMap(coordinate -> resolvedCoordinates.get(coordinate).stream().findFirst());
   }
 
-  private void populateResolvedCandidates(ResolveCoordinatesResponse response) {
+  private void populateResolvedCandidates(ResolveResponse response) {
     response
-        .getPlaceCoordinatesList()
+        .getEntitiesList()
         .forEach(
-            placeCoordinate -> {
-              if (placeCoordinate.getPlacesCount() > 0) {
+            entity -> {
+              if (entity.getCandidatesCount() > 0) {
                 resolvedCoordinates.put(
-                    Coordinate.newBuilder()
-                        .setLatitude(placeCoordinate.getLatitude())
-                        .setLongitude(placeCoordinate.getLongitude())
-                        .build(),
+                    entity.getNode(),
                     new LinkedHashSet<>(
-                        placeCoordinate.getPlacesList().stream()
-                            .map(Place::getDcid)
+                        entity.getCandidatesList().stream()
+                            .map(Candidate::getDcid)
                             .collect(toList())));
               }
             });
   }
 
-  private static Optional<Coordinate> getCoordinate(PropertyValues node) {
+  private static Optional<String> getCoordinate(PropertyValues node) {
     if (node.containsPvs(Vocabulary.LATITUDE) && node.containsPvs(Vocabulary.LONGITUDE)) {
 
       Optional<Double> optLat = getDoubleValue(node.getPvsMap().get(Vocabulary.LATITUDE));
@@ -81,7 +91,7 @@ final class CoordinatesResolver {
         double lng = optLng.get();
 
         if (!Double.isNaN(lat) && !Double.isNaN(lng)) {
-          return Optional.of(Coordinate.newBuilder().setLatitude(lat).setLongitude(lng).build());
+          return Optional.of(String.format("%s#%s", formatCoordinate(lat), formatCoordinate(lng)));
         }
       }
     }
@@ -98,5 +108,15 @@ final class CoordinatesResolver {
                     || ValueType.TEXT.equals(typedValue.getType()))
         .findFirst()
         .map(typedValue -> Double.parseDouble(typedValue.getValue()));
+  }
+
+  private static String formatCoordinate(double value) {
+    return COORDINATE_NODE_FORMAT.format(value);
+  }
+
+  private static DecimalFormat newCoordinateNodeFormat() {
+    DecimalFormat format = new DecimalFormat("0.000000");
+    format.setRoundingMode(RoundingMode.CEILING);
+    return format;
   }
 }
