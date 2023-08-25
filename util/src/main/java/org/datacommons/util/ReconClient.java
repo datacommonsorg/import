@@ -26,8 +26,6 @@ import org.datacommons.proto.Resolve.ResolveResponse;
  * than {@code chunkSize}, the API calls will be partitioned into max {@code chunkSize}d batches.
  */
 public class ReconClient {
-  private static final String RESOLVE_COORDINATES_API_URL =
-      "https://api.datacommons.org/v1/recon/resolve/coordinate";
 
   // TODO(keyurs): Switch to prod URL once this PR is in prod:
   // https://github.com/datacommonsorg/mixer/pull/1239
