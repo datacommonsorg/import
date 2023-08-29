@@ -48,9 +48,7 @@ final class CoordinatesResolver {
               .addAllNodes(resolveCoordinates)
               .setProperty("<-geoCoordinate->dcid")
               .build();
-      System.out.println(request);
       ResolveResponse response = client.resolve(request);
-      System.out.println(response);
       populateResolvedCandidates(response);
     }
   }
