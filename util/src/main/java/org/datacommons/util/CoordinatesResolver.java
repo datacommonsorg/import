@@ -2,8 +2,6 @@ package org.datacommons.util;
 
 import static java.util.stream.Collectors.toList;
 
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -18,10 +16,6 @@ import org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate;
 /** Resolves nodes with lat-lngs by calling the DC coordinates resolution API. */
 // TODO: Add counters for errors.
 final class CoordinatesResolver {
-  // This DecimalFormat instance is used to round coordinates to 6 digits
-  // since the V2Resolve API formats nodes this way.
-  private static final DecimalFormat COORDINATE_NODE_FORMAT = newCoordinateNodeFormat();
-
   // Coordinates to be resolved.
   // The coordinates are maintained as strings in the following format: "<lat>#<lng>".
   // This format is used since it is the format used by the V2 resolve API as well.
@@ -49,12 +43,15 @@ final class CoordinatesResolver {
 
   void drain() {
     if (!resolveCoordinates.isEmpty()) {
-      populateResolvedCandidates(
-          client.resolve(
-              ResolveRequest.newBuilder()
-                  .addAllNodes(resolveCoordinates)
-                  .setProperty("<-geoCoordinate->dcid")
-                  .build()));
+      ResolveRequest request =
+          ResolveRequest.newBuilder()
+              .addAllNodes(resolveCoordinates)
+              .setProperty("<-geoCoordinate->dcid")
+              .build();
+      System.out.println(request);
+      ResolveResponse response = client.resolve(request);
+      System.out.println(response);
+      populateResolvedCandidates(response);
     }
   }
 
@@ -91,7 +88,7 @@ final class CoordinatesResolver {
         double lng = optLng.get();
 
         if (!Double.isNaN(lat) && !Double.isNaN(lng)) {
-          return Optional.of(String.format("%s#%s", formatCoordinate(lat), formatCoordinate(lng)));
+          return Optional.of(String.format("%s#%s", lat, lng));
         }
       }
     }
@@ -108,15 +105,5 @@ final class CoordinatesResolver {
                     || ValueType.TEXT.equals(typedValue.getType()))
         .findFirst()
         .map(typedValue -> Double.parseDouble(typedValue.getValue()));
-  }
-
-  private static String formatCoordinate(double value) {
-    return COORDINATE_NODE_FORMAT.format(value);
-  }
-
-  private static DecimalFormat newCoordinateNodeFormat() {
-    DecimalFormat format = new DecimalFormat("0.000000");
-    format.setRoundingMode(RoundingMode.CEILING);
-    return format;
   }
 }
