@@ -2,18 +2,18 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "NumRowSuccesses": "5",
-        "NumPVSuccesses": "65",
-        "Existence_NumChecks": "65",
-        "NumNodeSuccesses": "10",
+        "NumRowSuccesses": "4",
+        "NumPVSuccesses": "52",
+        "Existence_NumChecks": "52",
+        "NumNodeSuccesses": "8",
         "ReconClient_NumApiCalls": "1",
         "Existence_NumDcCalls": "1"
       }
     },
     "LEVEL_WARNING": {
       "counters": {
-        "Existence_MissingReference_measurementMethod": "5",
-        "Existence_MissingReference_variableMeasured": "5"
+        "Existence_MissingReference_measurementMethod": "4",
+        "Existence_MissingReference_variableMeasured": "4"
       }
     }
   },
@@ -53,14 +53,6 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "LatLng.csv",
-      "lineNumber": "6"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
-    "counterKey": "Existence_MissingReference_measurementMethod"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "LatLng.csv",
       "lineNumber": "2"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
@@ -86,14 +78,6 @@
     "location": {
       "file": "LatLng.csv",
       "lineNumber": "5"
-    },
-    "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
-    "counterKey": "Existence_MissingReference_variableMeasured"
-  }, {
-    "level": "LEVEL_WARNING",
-    "location": {
-      "file": "LatLng.csv",
-      "lineNumber": "6"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'SV1', property: 'variableMeasured', node: 'E:SVTest->E0'",
     "counterKey": "Existence_MissingReference_variableMeasured"
