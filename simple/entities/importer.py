@@ -25,6 +25,7 @@ sys.path.insert(1, os.path.join(_CODEDIR, "../"))
 from util import dc_client as dc
 
 
+# TODO: Add support for units.
 class SimpleEntitiesImporter:
 
     def __init__(self, input_dir: str, output_dir: str,
