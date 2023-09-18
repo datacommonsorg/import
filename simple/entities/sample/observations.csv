@@ -1,4 +1,4 @@
-entity,variable,date,value
+dcid,variable,date,value
 country/AFG,var1,2023,0.19
 country/YEM,var1,2023,0.21
 country/AGO,var1,2023,0.29
