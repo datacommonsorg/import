@@ -17,7 +17,7 @@ import sys
 from absl import flags
 from absl import app
 import constants
-from importer import SimpleEntitiesImporter
+from importer import SimpleStatsImporter
 
 # For importing util
 _CODEDIR = os.path.dirname(os.path.realpath(__file__))
@@ -36,7 +36,7 @@ flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
 
 
 def main(_):
-    importer = SimpleEntitiesImporter(
+    importer = SimpleStatsImporter(
         input_dir=FLAGS.input_dir,
         output_dir=FLAGS.output_dir,
         entity_type=FLAGS.entity_type,

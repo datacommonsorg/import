@@ -26,7 +26,7 @@ from util import dc_client as dc
 
 
 # TODO: Add support for units.
-class SimpleEntitiesImporter:
+class SimpleStatsImporter:
 
     def __init__(self, input_dir: str, output_dir: str,
                  entity_type: str) -> None:

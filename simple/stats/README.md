@@ -1,6 +1,6 @@
-# Simple Entities Importer
+# Simple Stats Importer
 
-Outputs `observations.csv` for simple entities to be used by [RSI sqlite][sqlite].
+Outputs `observations.csv` for simple stats to be used by [RSI sqlite][sqlite].
 
 [sqlite]: https://github.com/datacommonsorg/mixer/tree/a768446c56095aa23add8c59cf6a0630a17a726b/internal/sqlite
 
