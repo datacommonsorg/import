@@ -17,6 +17,8 @@
 import os
 import requests
 
+from .ngram_matcher import NgramMatcher
+
 # Environment variable for API key.
 _KEY_ENV = "DC_API_KEY"
 
@@ -28,10 +30,25 @@ def get_api_key():
 # REST API endpoint root
 _API_ROOT = "https://api.datacommons.org"
 
+# Place types support by the resolve API.
+_RESOLVE_PLACE_TYPES = set(
+    ["Place", "Continent", "Country", "State", "Province", "City"])
+
 
 # See: https://docs.datacommons.org/api/rest/v2/resolve
 def resolve_entities(entities: list[str],
                      entity_type: str = None) -> dict[str, str]:
+    if not entity_type or entity_type in _RESOLVE_PLACE_TYPES:
+        return resolve_place_entities(entities=entities,
+                                      entity_type=entity_type)
+
+    return resolve_non_place_entities(entities=entities,
+                                      entity_type=entity_type)
+
+
+# See: https://docs.datacommons.org/api/rest/v2/resolve
+def resolve_place_entities(entities: list[str],
+                           entity_type: str = None) -> dict[str, str]:
     type_of = f"{{typeOf:{entity_type}}}" if entity_type else ""
     data = {
         "nodes": entities,
@@ -48,6 +65,46 @@ def resolve_entities(entities: list[str],
             resolved[node] = dcid
 
     return resolved
+
+
+# See: https://docs.datacommons.org/api/rest/v2/node
+def resolve_non_place_entities(entities: list[str],
+                               entity_type: str = None) -> dict[str, str]:
+    all_entities = get_entities_of_type(entity_type=entity_type)
+    ngrams = NgramMatcher()
+    ngrams.add_keys_values(all_entities)
+
+    resolved: dict[str, str] = {}
+    for entity in entities:
+        candidates = ngrams.lookup(key=entity)
+        if candidates:
+            _, dcid = candidates[0]
+            resolved[entity] = dcid
+
+    return resolved
+
+
+# TODO: Support pagination.
+# TODO: Cache results to file and return from cache if present.
+def get_entities_of_type(entity_type: str) -> dict[str, str]:
+    data = {
+        "nodes": [entity_type],
+        "property": "<-typeOf",
+    }
+    response = post(path="/v2/node", data=data)
+
+    result: dict[str, str] = {}
+    nodes = (response.get("data", {}).get(entity_type,
+                                          {}).get("arcs",
+                                                  {}).get("typeOf",
+                                                          {}).get("nodes", []))
+    for node in nodes:
+        name = node.get("name", "")
+        dcid = node.get("dcid", "")
+        if name and dcid:
+            result[name] = dcid
+
+    return result
 
 
 def post(path: str, data={}) -> dict:

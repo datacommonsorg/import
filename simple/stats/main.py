@@ -27,8 +27,11 @@ from util import dc_client as dc
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_enum("entity_type", None, ["Country", "City"],
-                  "The type of entities in the CSV.")
+flags.DEFINE_string(
+    "entity_type",
+    None,
+    "The type of entities in the CSV (e.g. 'City', 'Country', 'Company', etc.).",
+)
 flags.DEFINE_string("input_dir", constants.DEFAULT_INPUT_DIR,
                     "The input directory.")
 flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
