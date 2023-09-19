@@ -32,15 +32,15 @@ flags.DEFINE_string(
     None,
     "The type of entities in the CSV (e.g. 'City', 'Country', 'Company', etc.).",
 )
-flags.DEFINE_string("input_dir", constants.DEFAULT_INPUT_DIR,
-                    "The input directory.")
+flags.DEFINE_string("input_path", constants.DEFAULT_INPUT_PATH,
+                    "The input directory or file.")
 flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
                     "The output directory.")
 
 
 def main(_):
     importer = SimpleStatsImporter(
-        input_dir=FLAGS.input_dir,
+        input_path=FLAGS.input_path,
         output_dir=FLAGS.output_dir,
         entity_type=FLAGS.entity_type,
     )

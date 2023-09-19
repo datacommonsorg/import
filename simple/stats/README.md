@@ -16,6 +16,8 @@ The first 2 columns of input CSVs should be place names (or more generically _en
 
 The output `observations.csv` can be imported directly into sqlite. A sample output CSV can be found [here](sample/countries/observations.csv).
 
+The program also outputs a `debug_resolve.csv` file. This is for debugging whether names were resolved to the correct DCIDs and addressed any unresolved ones. A sample CSV can be found [here](sample/countries/debug_resolve.csv).
+
 ## Other options
 
 To see all parameters and overrides supported by the script:
