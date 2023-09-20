@@ -59,6 +59,9 @@ class NgramMatcher:
         # { '<ngram>': { (id1, pos1), (id2, pos2), ...}, ...}
         self._ngram_dict = {}
 
+    def get_tuples_count(self):
+        return len(self._key_values)
+
     def add_keys_values(self, kvs: dict[str, any]) -> None:
         for key, value in kvs.items():
             self.add_key_value(key, value)
