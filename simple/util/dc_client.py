@@ -16,6 +16,7 @@
 
 import os
 import requests
+from absl import logging
 
 from .ngram_matcher import NgramMatcher
 
@@ -33,6 +34,8 @@ _API_ROOT = "https://api.datacommons.org"
 # Place types support by the resolve API.
 _RESOLVE_PLACE_TYPES = set(
     ["Place", "Continent", "Country", "State", "Province", "City"])
+
+_MAX_NODES = 10_000
 
 
 # See: https://docs.datacommons.org/api/rest/v2/resolve
@@ -70,9 +73,20 @@ def resolve_place_entities(entities: list[str],
 # See: https://docs.datacommons.org/api/rest/v2/node
 def resolve_non_place_entities(entities: list[str],
                                entity_type: str = None) -> dict[str, str]:
-    all_entities = get_entities_of_type(entity_type=entity_type)
     ngrams = NgramMatcher()
-    ngrams.add_keys_values(all_entities)
+
+    all_entities, next_token = get_entities_of_type(entity_type=entity_type)
+    while True:
+        ngrams.add_keys_values(all_entities)
+        if ngrams.get_tuples_count() >= _MAX_NODES:
+            logging.warning("Nodes fetched truncated to: %s",
+                            ngrams.get_tuples_count())
+            break
+        if next_token:
+            all_entities, next_token = get_entities_of_type(
+                entity_type=entity_type, next_token=next_token)
+        else:
+            break
 
     resolved: dict[str, str] = {}
     for entity in entities:
@@ -84,13 +98,17 @@ def resolve_non_place_entities(entities: list[str],
     return resolved
 
 
-# TODO: Support pagination.
 # TODO: Cache results to file and return from cache if present.
-def get_entities_of_type(entity_type: str) -> dict[str, str]:
+def get_entities_of_type(entity_type: str,
+                         next_token: str = None) -> (dict[str, str], str):
     data = {
         "nodes": [entity_type],
         "property": "<-typeOf",
     }
+    if next_token:
+        data["nextToken"] = next_token
+
+    logging.info("Fetching nodes: %s", data)
     response = post(path="/v2/node", data=data)
 
     result: dict[str, str] = {}
@@ -104,7 +122,7 @@ def get_entities_of_type(entity_type: str) -> dict[str, str]:
         if name and dcid:
             result[name] = dcid
 
-    return result
+    return result, response.get("nextToken", "")
 
 
 def post(path: str, data={}) -> dict:
