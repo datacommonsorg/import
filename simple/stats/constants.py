@@ -16,13 +16,24 @@ import os
 
 # Defaults.
 DEFAULT_DATA_DIR = ".data"
-DEFAULT_INPUT_DIR = os.path.join(DEFAULT_DATA_DIR, "input")
+DEFAULT_INPUT_PATH = os.path.join(DEFAULT_DATA_DIR, "input")
 DEFAULT_OUTPUT_DIR = os.path.join(DEFAULT_DATA_DIR, "output")
 
 OBSERVATIONS_FILE_NAME = "observations.csv"
+DEBUG_RESOLVE_FILE_NAME = "debug_resolve.csv"
 
 # Observations CSV columns.
 COLUMN_DCID = "dcid"
 COLUMN_VARIABLE = "variable"
 COLUMN_DATE = "date"
 COLUMN_VALUE = "value"
+
+# Debug CSV columns and values
+DEBUG_COLUMN_NAME = "name"
+DEBUG_COLUMN_DCID = "dcid"
+DEBUG_COLUMN_LINK = "link"
+DEBUG_UNRESOLVED_DCID = "*UNRESOLVED*"
+
+# DC links
+DC_HOME = "https://datacommons.org"
+DC_BROWSER = "https://datacommons.org/browser"
