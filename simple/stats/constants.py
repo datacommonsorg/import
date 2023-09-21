@@ -22,6 +22,8 @@ DEFAULT_OUTPUT_DIR = os.path.join(DEFAULT_DATA_DIR, "output")
 OBSERVATIONS_FILE_NAME = "observations.csv"
 DEBUG_RESOLVE_FILE_NAME = "debug_resolve.csv"
 
+DCID_OVERRIDE_PREFIX = "dcid:"
+
 # Observations CSV columns.
 COLUMN_DCID = "dcid"
 COLUMN_VARIABLE = "variable"

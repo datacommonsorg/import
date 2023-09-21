@@ -5,6 +5,7 @@ country/AGO,var1,2023,0.29
 country/ZMB,var1,2023,0.31
 country/ZWE,var1,2023,0.37
 country/ALB,var1,2023,0.5
+wikidataId/Q22062741,var1,2023,0.5
 country/DZA,var1,2023,0.52
 country/AND,var1,2023,0.76
 country/AFG,var2,2023,6.0
@@ -13,6 +14,7 @@ country/AGO,var2,2023,6.0
 country/ZMB,var2,2023,34.0
 country/ZWE,var2,2023,76.0
 country/ALB,var2,2023,34.0
+wikidataId/Q22062741,var2,2023,97.0
 country/DZA,var2,2023,92.0
 country/AND,var2,2023,9.0
 country/ASM,var2,2023,34.0
