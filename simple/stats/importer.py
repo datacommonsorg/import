@@ -80,29 +80,60 @@ class SimpleStatsImporter:
         df = self.df
         # get first (0th) column
         column = df.iloc[:, 0]
-        entities = column.tolist()
+
+        pre_resolved_entities = {}
+
+        def remove_pre_resolved(entity: str) -> bool:
+            if entity.startswith(constants.DCID_OVERRIDE_PREFIX):
+                pre_resolved_entities[entity] = entity[
+                    len(constants.DCID_OVERRIDE_PREFIX):].strip()
+                return False
+            return True
+
+        entities = list(filter(remove_pre_resolved, column.tolist()))
+
+        logging.info("Found %s entities pre-resolved.",
+                     len(pre_resolved_entities))
+
         logging.info("Resolving %s entities of type %s.", len(entities),
                      self.entity_type)
         dcids = dc.resolve_entities(entities=entities,
                                     entity_type=self.entity_type)
         logging.info("Resolved %s of %s entities.", len(dcids), len(entities))
+
+        # Replace resolved entities.
         column.replace(dcids, inplace=True)
         unresolved = set(entities).difference(set(dcids.keys()))
         unresolved_list = list(unresolved)
+
+        # Replace pre-resolved entities without the "dcid:" prefix.
+        column.replace(pre_resolved_entities, inplace=True)
+
         if unresolved_list:
             logging.warning("# unresolved entities which will be dropped: %s",
                             len(unresolved_list))
             logging.warning("Dropped entities: %s", unresolved_list)
             df.drop(df[df.iloc[:, 0].isin(values=unresolved_list)].index,
                     inplace=True)
-        self._create_debug_resolve_dataframe(resolved=dcids,
-                                             unresolved=unresolved_list)
+        self._create_debug_resolve_dataframe(
+            resolved=dcids,
+            pre_resolved=pre_resolved_entities,
+            unresolved=unresolved_list,
+        )
 
-    def _create_debug_resolve_dataframe(self, resolved: dict[str, str],
-                                        unresolved: list[str]):
+    def _create_debug_resolve_dataframe(
+        self,
+        resolved: dict[str, str],
+        pre_resolved: dict[str, str],
+        unresolved: list[str],
+    ):
         # Add unresolved names first
         names = unresolved[:]
         dcids = [constants.DEBUG_UNRESOLVED_DCID] * len(unresolved)
+
+        # Add pre-resolved next.
+        names.extend(list(pre_resolved.keys()))
+        dcids.extend(list(pre_resolved.values()))
 
         # Add resolved names and dcids
         names.extend(list(resolved.keys()))
