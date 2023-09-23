@@ -24,6 +24,8 @@ DEBUG_RESOLVE_FILE_NAME = "debug_resolve.csv"
 
 DCID_OVERRIDE_PREFIX = "dcid:"
 
+UNPIVOT_VARIABLES = False
+
 # Observations CSV columns.
 COLUMN_DCID = "dcid"
 COLUMN_VARIABLE = "variable"

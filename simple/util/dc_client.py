@@ -17,25 +17,41 @@
 import os
 import requests
 from absl import logging
+import json
 
 from .ngram_matcher import NgramMatcher
 
-# Environment variable for API key.
+# Environment variables.
 _KEY_ENV = "DC_API_KEY"
+_API_ROOT_ENV = "DC_API_ROOT"
+
+# Default REST API endpoint root.
+_DEFAULT_API_ROOT = "https://api.datacommons.org"
 
 
 def get_api_key():
     return os.environ.get(_KEY_ENV, "")
 
 
-# REST API endpoint root
-_API_ROOT = "https://api.datacommons.org"
+def get_api_root():
+    return os.environ.get(_API_ROOT_ENV, _DEFAULT_API_ROOT)
+
+
+_DEBUG = True
+_DEBUG_FOLDER = ".data/debug"
+
+NGRAM_MIN_MATCH_FRACTION = 0.8
 
 # Place types support by the resolve API.
 _RESOLVE_PLACE_TYPES = set(
     ["Place", "Continent", "Country", "State", "Province", "City"])
 
 _MAX_NODES = 10_000
+
+if _DEBUG:
+    logging.info("DC API Root: %s", get_api_root())
+    logging.info("DC API Key: %s", get_api_key())
+    os.makedirs(_DEBUG_FOLDER, exist_ok=True)
 
 
 # See: https://docs.datacommons.org/api/rest/v2/resolve
@@ -73,7 +89,8 @@ def resolve_place_entities(entities: list[str],
 # See: https://docs.datacommons.org/api/rest/v2/node
 def resolve_non_place_entities(entities: list[str],
                                entity_type: str = None) -> dict[str, str]:
-    ngrams = NgramMatcher()
+    ngrams = NgramMatcher(
+        config={"min_match_fraction": NGRAM_MIN_MATCH_FRACTION})
 
     all_entities, next_token = get_entities_of_type(entity_type=entity_type)
     while True:
@@ -87,6 +104,14 @@ def resolve_non_place_entities(entities: list[str],
                 entity_type=entity_type, next_token=next_token)
         else:
             break
+
+    if _DEBUG:
+        entities_file = os.path.join(_DEBUG_FOLDER,
+                                     f"{entity_type}_entities.json")
+        logging.info("Writing %s entities to %s for debugging.", entity_type,
+                     entities_file)
+        with open(entities_file, "w") as file:
+            json.dump(ngrams.get_key_values(), file, indent=1)
 
     resolved: dict[str, str] = {}
     for entity in entities:
@@ -126,7 +151,7 @@ def get_entities_of_type(entity_type: str,
 
 
 def post(path: str, data={}) -> dict:
-    url = _API_ROOT + path
+    url = get_api_root() + path
     headers = {"Content-Type": "application/json"}
     api_key = get_api_key()
     if api_key:

@@ -28,8 +28,13 @@ from util import dc_client as dc
 # TODO: Add support for units.
 class SimpleStatsImporter:
 
-    def __init__(self, input_path: str, output_dir: str,
-                 entity_type: str) -> None:
+    def __init__(
+            self,
+            input_path: str,
+            output_dir: str,
+            entity_type: str,
+            ignore_columns: list[str] = list(),
+    ) -> None:
         self.input_path = input_path
         self.output_dir = output_dir
         self.observations_file = os.path.join(output_dir,
@@ -37,16 +42,21 @@ class SimpleStatsImporter:
         self.debug_resolve_file = os.path.join(
             output_dir, constants.DEBUG_RESOLVE_FILE_NAME)
         self.entity_type = entity_type
+        self.ignore_columns = ignore_columns
         self.df = pd.DataFrame()
         self.debug_resolve_df = None
 
     def do_import(self) -> None:
         self._init()
         self._read_csvs()
+        self._drop_ignored_columns()
         self._rename_columns()
         self._resolve_entities()
-        self._unpivot_variables()
-        self._reorder_columns()
+
+        if constants.UNPIVOT_VARIABLES:
+            self._unpivot_variables()
+            self._reorder_columns()
+
         self._write_csvs()
 
     def _init(self):
@@ -71,10 +81,15 @@ class SimpleStatsImporter:
             df = pd.concat([df, pd.read_csv(file)])
         return df
 
+    def _drop_ignored_columns(self):
+        if self.ignore_columns:
+            self.df.drop(columns=self.ignore_columns, axis=1, inplace=True)
+
     def _rename_columns(self) -> None:
         df = self.df
         df.columns.values[0] = constants.COLUMN_DCID
-        df.columns.values[1] = constants.COLUMN_DATE
+        if constants.UNPIVOT_VARIABLES:
+            df.columns.values[1] = constants.COLUMN_DATE
 
     def _resolve_entities(self) -> None:
         df = self.df
