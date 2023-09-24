@@ -28,15 +28,6 @@ _API_ROOT_ENV = "DC_API_ROOT"
 # Default REST API endpoint root.
 _DEFAULT_API_ROOT = "https://api.datacommons.org"
 
-
-def get_api_key():
-    return os.environ.get(_KEY_ENV, "")
-
-
-def get_api_root():
-    return os.environ.get(_API_ROOT_ENV, _DEFAULT_API_ROOT)
-
-
 _DEBUG = True
 _DEBUG_FOLDER = ".data/debug"
 
@@ -47,6 +38,15 @@ _RESOLVE_PLACE_TYPES = set(
     ["Place", "Continent", "Country", "State", "Province", "City"])
 
 _MAX_NODES = 10_000
+
+
+def get_api_key():
+    return os.environ.get(_KEY_ENV, "")
+
+
+def get_api_root():
+    return os.environ.get(_API_ROOT_ENV, _DEFAULT_API_ROOT)
+
 
 if _DEBUG:
     logging.info("DC API Root: %s", get_api_root())
