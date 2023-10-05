@@ -48,38 +48,19 @@ class SimpleStatsImporter:
 
     def do_import(self) -> None:
         self._init()
-        self._read_csvs()
+        self._read_csv()
         self._drop_ignored_columns()
-        self._rename_columns()
         self._resolve_entities()
-
-        if constants.UNPIVOT_VARIABLES:
-            self._unpivot_variables()
-            self._reorder_columns()
+        self._rename_columns()
 
         self._write_csvs()
 
     def _init(self):
         os.makedirs(self.output_dir, exist_ok=True)
 
-    def _read_csvs(self) -> None:
-        if os.path.isdir(self.input_path):
-            self.df = SimpleStatsImporter._read_csvs_from_dir(self.input_path)
-        else:
-            self.df = pd.read_csv(self.input_path)
-
+    def _read_csv(self) -> None:
+        self.df = pd.read_csv(self.input_path, dtype="str")
         logging.info("Read %s rows.", self.df.index.size)
-
-    @staticmethod
-    def _read_csvs_from_dir(input_dir: str) -> pd.DataFrame:
-        files = [
-            os.path.join(input_dir, filename)
-            for filename in os.listdir(input_dir)
-        ]
-        df = pd.DataFrame()
-        for file in files:
-            df = pd.concat([df, pd.read_csv(file)])
-        return df
 
     def _drop_ignored_columns(self):
         if self.ignore_columns:
@@ -88,8 +69,7 @@ class SimpleStatsImporter:
     def _rename_columns(self) -> None:
         df = self.df
         df.columns.values[0] = constants.COLUMN_DCID
-        if constants.UNPIVOT_VARIABLES:
-            df.columns.values[1] = constants.COLUMN_DATE
+        df.columns.values[1] = constants.COLUMN_DATE
 
     def _resolve_entities(self) -> None:
         df = self.df
@@ -112,8 +92,8 @@ class SimpleStatsImporter:
 
         logging.info("Resolving %s entities of type %s.", len(entities),
                      self.entity_type)
-        dcids = dc.resolve_entities(entities=entities,
-                                    entity_type=self.entity_type)
+        dcids = self._resolve(entity_column_name=df.columns[0],
+                              entities=entities)
         logging.info("Resolved %s of %s entities.", len(dcids), len(entities))
 
         # Replace resolved entities.
@@ -136,22 +116,41 @@ class SimpleStatsImporter:
             unresolved=unresolved_list,
         )
 
+    def _resolve(self, entity_column_name: str,
+                 entities: list[str]) -> dict[str, str]:
+        if entity_column_name.casefold(
+        ) == constants.INPUT_COLUMN_DCID.casefold():
+            return dict(zip(entities, entities))
+
+        if entity_column_name.casefold(
+        ) == constants.INPUT_COLUMN_GEO_ID.casefold():
+            return dict([(geo_id, f"geoId/{geo_id}") for geo_id in entities])
+
+        property_name = constants.PROPERTY_DESCRIPTION
+        if entity_column_name.casefold(
+        ) == constants.INPUT_COLUMN_LAT_LNG.casefold():
+            property_name = constants.PROPERTY_GEO_COORDINATE
+
+        return dc.resolve_entities(entities=entities,
+                                   entity_type=self.entity_type,
+                                   property_name=property_name)
+
     def _create_debug_resolve_dataframe(
         self,
         resolved: dict[str, str],
         pre_resolved: dict[str, str],
         unresolved: list[str],
     ):
-        # Add unresolved names first
-        names = unresolved[:]
+        # Add unresolved inputs first
+        inputs = unresolved[:]
         dcids = [constants.DEBUG_UNRESOLVED_DCID] * len(unresolved)
 
         # Add pre-resolved next.
-        names.extend(list(pre_resolved.keys()))
+        inputs.extend(list(pre_resolved.keys()))
         dcids.extend(list(pre_resolved.values()))
 
-        # Add resolved names and dcids
-        names.extend(list(resolved.keys()))
+        # Add resolved inputs and dcids
+        inputs.extend(list(resolved.keys()))
         dcids.extend(list(resolved.values()))
 
         # Create browser links
@@ -164,25 +163,10 @@ class SimpleStatsImporter:
 
         # Create dataframe
         self.debug_resolve_df = pd.DataFrame({
-            constants.DEBUG_COLUMN_NAME: names,
+            constants.DEBUG_COLUMN_INPUT: inputs,
             constants.DEBUG_COLUMN_DCID: dcids,
             constants.DEBUG_COLUMN_LINK: links,
         })
-
-    def _unpivot_variables(self) -> None:
-        self.df = self.df.melt(
-            id_vars=[constants.COLUMN_DCID, constants.COLUMN_DATE],
-            var_name=constants.COLUMN_VARIABLE,
-            value_name=constants.COLUMN_VALUE,
-        ).dropna()
-
-    def _reorder_columns(self) -> None:
-        self.df = self.df.reindex(columns=[
-            constants.COLUMN_DCID,
-            constants.COLUMN_VARIABLE,
-            constants.COLUMN_DATE,
-            constants.COLUMN_VALUE,
-        ])
 
     def _write_csvs(self) -> None:
         logging.info("Writing %s observations to: %s", self.df.index.size,

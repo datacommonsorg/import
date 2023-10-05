@@ -22,9 +22,15 @@ DEFAULT_OUTPUT_DIR = os.path.join(DEFAULT_DATA_DIR, "output")
 OBSERVATIONS_FILE_NAME = "observations.csv"
 DEBUG_RESOLVE_FILE_NAME = "debug_resolve.csv"
 
-DCID_OVERRIDE_PREFIX = "dcid:"
+# Input columns.
+INPUT_COLUMN_DCID = "dcid"
+INPUT_COLUMN_GEO_ID = "geoId"
+INPUT_COLUMN_LAT_LNG = "lat#lng"
 
-UNPIVOT_VARIABLES = False
+PROPERTY_GEO_COORDINATE = "geoCoordinate"
+PROPERTY_DESCRIPTION = "description"
+
+DCID_OVERRIDE_PREFIX = "dcid:"
 
 # Observations CSV columns.
 COLUMN_DCID = "dcid"
@@ -33,7 +39,7 @@ COLUMN_DATE = "date"
 COLUMN_VALUE = "value"
 
 # Debug CSV columns and values
-DEBUG_COLUMN_NAME = "name"
+DEBUG_COLUMN_INPUT = "input"
 DEBUG_COLUMN_DCID = "dcid"
 DEBUG_COLUMN_LINK = "link"
 DEBUG_UNRESOLVED_DCID = "*UNRESOLVED*"
