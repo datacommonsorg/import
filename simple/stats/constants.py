@@ -22,9 +22,31 @@ DEFAULT_OUTPUT_DIR = os.path.join(DEFAULT_DATA_DIR, "output")
 OBSERVATIONS_FILE_NAME = "observations.csv"
 DEBUG_RESOLVE_FILE_NAME = "debug_resolve.csv"
 
-DCID_OVERRIDE_PREFIX = "dcid:"
+# Input columns.
+INPUT_COLUMN_DCID = "dcid"
+INPUT_COLUMN_GEO_ID = "geoId"
+INPUT_COLUMN_LAT_LNG = "lat#lng"
+"""
+Dictionary of columns names that are considered to be already resolved 
+# to prefixes that the corresponding values should be prefixed with before the CSV is imported.
 
-UNPIVOT_VARIABLES = False
+e.g. if a column is named "geoId" and the values of that column in the CSV are: 01, 02; 
+then the importer will update the values to geoId/01, geoId/02 before importing them.
+
+Note that the lookup into these columns will always be lower-cased so ensure that 
+the keys in the dictionary are lower-case as well.
+
+Also, keep the keys sorted so it's easier to spot check should the list get large.
+"""
+PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES = dict([("dcid", ""),
+                                               ("geoId".lower(), "geoId/"),
+                                               ("wikidataId".lower(),
+                                                "wikidataId/")])
+
+PROPERTY_GEO_COORDINATE = "geoCoordinate"
+PROPERTY_DESCRIPTION = "description"
+
+DCID_OVERRIDE_PREFIX = "dcid:"
 
 # Observations CSV columns.
 COLUMN_DCID = "dcid"
@@ -33,7 +55,7 @@ COLUMN_DATE = "date"
 COLUMN_VALUE = "value"
 
 # Debug CSV columns and values
-DEBUG_COLUMN_NAME = "name"
+DEBUG_COLUMN_INPUT = "input"
 DEBUG_COLUMN_DCID = "dcid"
 DEBUG_COLUMN_LINK = "link"
 DEBUG_UNRESOLVED_DCID = "*UNRESOLVED*"

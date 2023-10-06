@@ -16,7 +16,7 @@
 
 import os
 import requests
-from absl import logging
+import logging
 import json
 
 from .ngram_matcher import NgramMatcher
@@ -56,22 +56,26 @@ if _DEBUG:
 
 # See: https://docs.datacommons.org/api/rest/v2/resolve
 def resolve_entities(entities: list[str],
-                     entity_type: str = None) -> dict[str, str]:
+                     entity_type: str = None,
+                     property_name: str = "description") -> dict[str, str]:
     if not entity_type or entity_type in _RESOLVE_PLACE_TYPES:
         return resolve_place_entities(entities=entities,
-                                      entity_type=entity_type)
+                                      entity_type=entity_type,
+                                      property_name=property_name)
 
     return resolve_non_place_entities(entities=entities,
                                       entity_type=entity_type)
 
 
 # See: https://docs.datacommons.org/api/rest/v2/resolve
-def resolve_place_entities(entities: list[str],
-                           entity_type: str = None) -> dict[str, str]:
+def resolve_place_entities(
+        entities: list[str],
+        entity_type: str = None,
+        property_name: str = "description") -> dict[str, str]:
     type_of = f"{{typeOf:{entity_type}}}" if entity_type else ""
     data = {
         "nodes": entities,
-        "property": f"<-description{type_of}->dcid",
+        "property": f"<-{property_name}{type_of}->dcid",
     }
     response = post(path="/v2/resolve", data=data)
 
@@ -79,7 +83,19 @@ def resolve_place_entities(entities: list[str],
     for entity in response.get("entities", []):
         node = entity.get("node", "")
         candidates = entity.get("candidates", [])
-        dcid = candidates[0].get("dcid", "") if candidates else ""
+        dcid = ""
+        for candidate in candidates:
+            curr_dcid = candidate.get("dcid", "")
+            if curr_dcid:
+                if not dcid:
+                    dcid = curr_dcid
+                    if not entity_type:
+                        break
+                if entity_type and entity_type == candidate.get(
+                        "dominantType", ""):
+                    dcid = curr_dcid
+                    break
+
         if node and dcid:
             resolved[node] = dcid
 
@@ -156,8 +172,12 @@ def post(path: str, data={}) -> dict:
     api_key = get_api_key()
     if api_key:
         headers["x-api-key"] = api_key
+    logging.debug("Request: %s", json.dumps(data, indent=1))
     resp = requests.post(url, json=data, headers=headers)
+    response = resp.json()
+    logging.debug("Response: %s", json.dumps(response, indent=1))
     if resp.status_code != 200:
         raise Exception(
-            f'{resp.status_code}: {resp.reason}\n{resp.json()["message"]}')
-    return resp.json()
+            f'{resp.status_code}: {resp.reason}\n{response["message"]}\nRequest: {path}\n{data}'
+        )
+    return response

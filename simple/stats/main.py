@@ -16,6 +16,7 @@ import os
 import sys
 from absl import flags
 from absl import app
+import logging
 import constants
 from importer import SimpleStatsImporter
 
@@ -40,6 +41,7 @@ flags.DEFINE_list("ignore_columns", [], "List of input columns to be ignored.")
 
 
 def main(_):
+    logging.getLogger().setLevel(logging.INFO)
     importer = SimpleStatsImporter(
         input_path=FLAGS.input_path,
         output_dir=FLAGS.output_dir,
