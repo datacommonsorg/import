@@ -118,20 +118,18 @@ class SimpleStatsImporter:
 
     def _resolve(self, entity_column_name: str,
                  entities: list[str]) -> dict[str, str]:
+        lower_case_entity_name = entity_column_name.lower()
+
         # Check if the entities can be resolved locally.
         # If so, return them by prefixing the values as appropriate.
-        if entity_column_name.lower(
-        ) in constants.PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES:
+        if lower_case_entity_name in constants.PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES:
             prefix = constants.PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES[
-                entity_column_name.lower()]
+                lower_case_entity_name]
             return dict([(entity, f"{prefix}{entity}") for entity in entities])
 
-        # Entities from here on will be externally resolved.
-        property_name = constants.PROPERTY_DESCRIPTION
-        if entity_column_name.casefold(
-        ) == constants.INPUT_COLUMN_LAT_LNG.casefold():
-            property_name = constants.PROPERTY_GEO_COORDINATE
-
+        # Resolve entities externally.
+        property_name = constants.EXTERNALLY_RESOLVED_INPUT_COLUMNS_TO_PREFIXES.get(
+            lower_case_entity_name, constants.PROPERTY_DESCRIPTION)
         return dc.resolve_entities(entities=entities,
                                    entity_type=self.entity_type,
                                    property_name=property_name)
