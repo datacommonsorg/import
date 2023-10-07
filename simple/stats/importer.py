@@ -23,6 +23,7 @@ _CODEDIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(1, os.path.join(_CODEDIR, "../"))
 
 from util import dc_client as dc
+from util.filehandler import create_file_handler
 
 
 # TODO: Add support for units.
@@ -35,12 +36,12 @@ class SimpleStatsImporter:
             entity_type: str,
             ignore_columns: list[str] = list(),
     ) -> None:
-        self.input_path = input_path
-        self.output_dir = output_dir
-        self.observations_file = os.path.join(output_dir,
-                                              constants.OBSERVATIONS_FILE_NAME)
-        self.debug_resolve_file = os.path.join(
-            output_dir, constants.DEBUG_RESOLVE_FILE_NAME)
+        self.input_fh = create_file_handler(input_path)
+        self.output_dir_fh = create_file_handler(output_dir)
+        self.observations_fh = self.output_dir_fh.make_file(
+            constants.OBSERVATIONS_FILE_NAME)
+        self.debug_resolve_fh = self.output_dir_fh.make_file(
+            constants.DEBUG_RESOLVE_FILE_NAME)
         self.entity_type = entity_type
         self.ignore_columns = ignore_columns
         self.df = pd.DataFrame()
@@ -56,10 +57,10 @@ class SimpleStatsImporter:
         self._write_csvs()
 
     def _init(self):
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.output_dir_fh.make_dirs()
 
     def _read_csv(self) -> None:
-        self.df = pd.read_csv(self.input_path, dtype="str")
+        self.df = pd.read_csv(self.input_fh.read_string_io(), dtype="str")
         logging.info("Read %s rows.", self.df.index.size)
 
     def _drop_ignored_columns(self):
@@ -169,9 +170,10 @@ class SimpleStatsImporter:
 
     def _write_csvs(self) -> None:
         logging.info("Writing %s observations to: %s", self.df.index.size,
-                     self.observations_file)
-        self.df.to_csv(self.observations_file, index=False)
+                     self.observations_fh)
+        self.observations_fh.write_string(self.df.to_csv(index=False))
         if self.debug_resolve_df is not None:
             logging.info("Writing resolutions (for debugging) to: %s",
-                         self.debug_resolve_file)
-            self.debug_resolve_df.to_csv(self.debug_resolve_file, index=False)
+                         self.debug_resolve_fh)
+            self.debug_resolve_fh.write_string(
+                self.debug_resolve_df.to_csv(index=False))
