@@ -17,13 +17,13 @@ local and GCS files and directories.
 
 import os
 import io
-import logging
 from google.cloud import storage
 
 _GCS_PATH_PREFIX = "gs://"
 
 
 class FileHandler:
+    """(Abstract) base class that should be extended by concrete implementations."""
 
     def __init__(self, path: str, isdir: bool) -> None:
         self.path = path
@@ -71,7 +71,8 @@ class LocalFileHandler(FileHandler):
 
 class GcsFileHandler(FileHandler):
     gcs_client = storage.Client()
-    logging.info("Using GCP Project: %s", gcs_client.project)
+    # Using print instead of logging since the class is loaded before logging is initialized.
+    print("Using GCP Project:", gcs_client.project)
 
     def __init__(self, path: str) -> None:
         if not path.startswith(_GCS_PATH_PREFIX):
