@@ -47,6 +47,9 @@ class FileHandler:
     def make_dirs(self) -> None:
         pass
 
+    def basename(self) -> str:
+        pass
+
 
 class LocalFileHandler(FileHandler):
 
@@ -68,6 +71,11 @@ class LocalFileHandler(FileHandler):
     def make_dirs(self) -> None:
         return os.makedirs(self.path, exist_ok=True)
 
+    def basename(self) -> str:
+        path = self.path.rstrip(self.path[-1]) if self.path.endswith(
+            os.sep) else self.path
+        return path.split(os.sep)[-1]
+
 
 class GcsFileHandler(FileHandler):
     gcs_client = storage.Client()
@@ -80,7 +88,8 @@ class GcsFileHandler(FileHandler):
         bucket_name, blob_name = path[len(_GCS_PATH_PREFIX):].split('/', 1)
         self.bucket = GcsFileHandler.gcs_client.bucket(bucket_name)
         self.blob = self.bucket.blob(blob_name)
-        super().__init__(path, path.endswith("/"))
+        isdir = path.endswith("/")
+        super().__init__(path, isdir)
 
     def read_string(self) -> str:
         return self.blob.download_as_string().decode("utf-8")
@@ -91,6 +100,11 @@ class GcsFileHandler(FileHandler):
     def make_file(self, file_name: str) -> FileHandler:
         return GcsFileHandler(
             f"{self.path}{'' if self.isdir else '/'}{file_name}")
+
+    def basename(self) -> str:
+        path = self.path.rstrip(
+            self.path[-1]) if self.path.endswith("/") else self.path
+        return path.split("/")[-1]
 
 
 def create_file_handler(path: str) -> FileHandler:
