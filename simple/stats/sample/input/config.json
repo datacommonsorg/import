@@ -1,0 +1,20 @@
+{
+  "inputFiles": {
+    "countries.csv": {
+      "entityType": "Country"
+    },
+    "geoids.csv": {
+      "entityType": "",
+      "ignoreColumns": ["ignore1", "ignore2"]
+    },
+    "latlng.csv": {
+      "entityType": "Country"
+    },
+    "powerplants.csv": {
+      "entityType": "PowerPlant"
+    },
+    "wikidataids.csv": {
+      "entityType": "Country"
+    }
+  }
+}

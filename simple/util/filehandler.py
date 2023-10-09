@@ -50,6 +50,12 @@ class FileHandler:
     def basename(self) -> str:
         pass
 
+    def exists(self) -> bool:
+        pass
+
+    def list_files(self, extension: str = None) -> list[str]:
+        pass
+
 
 class LocalFileHandler(FileHandler):
 
@@ -75,6 +81,16 @@ class LocalFileHandler(FileHandler):
         path = self.path.rstrip(self.path[-1]) if self.path.endswith(
             os.sep) else self.path
         return path.split(os.sep)[-1]
+
+    def exists(self) -> bool:
+        return os.path.exists(self.path)
+
+    def list_files(self, extension: str = None) -> list[str]:
+        all_files = os.listdir(self.path)
+        if not extension:
+            return all_files
+        return filter(lambda name: name.lower().endswith(extension.lower()),
+                      all_files)
 
 
 class GcsFileHandler(FileHandler):
@@ -105,6 +121,21 @@ class GcsFileHandler(FileHandler):
         path = self.path.rstrip(
             self.path[-1]) if self.path.endswith("/") else self.path
         return path.split("/")[-1]
+
+    def exists(self) -> bool:
+        return self.blob.exists()
+
+    def list_files(self, extension: str = None) -> list[str]:
+        prefix = self.blob.name if self.path.endswith(
+            "/") else f"{self.blob.name}/"
+        all_files = [
+            blob.name[len(prefix):]
+            for blob in self.bucket.list_blobs(prefix=prefix, delimiter="/")
+        ]
+        if not extension:
+            return all_files
+        return filter(lambda name: name.lower().endswith(extension.lower()),
+                      all_files)
 
 
 def create_file_handler(path: str) -> FileHandler:
