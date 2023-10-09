@@ -23,41 +23,37 @@ _CODEDIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(1, os.path.join(_CODEDIR, "../"))
 
 from util import dc_client as dc
-from util.filehandler import create_file_handler
+from util.filehandler import FileHandler
 
 
 # TODO: Add support for units.
 class SimpleStatsImporter:
+    """Imports a single input file.
+    """
 
     def __init__(
             self,
-            input_path: str,
-            output_dir: str,
+            input_fh: FileHandler,
+            observations_fh: FileHandler,
+            debug_resolve_fh: FileHandler,
             entity_type: str,
             ignore_columns: list[str] = list(),
     ) -> None:
-        self.input_fh = create_file_handler(input_path)
-        self.output_dir_fh = create_file_handler(output_dir)
-        self.observations_fh = self.output_dir_fh.make_file(
-            constants.OBSERVATIONS_FILE_NAME)
-        self.debug_resolve_fh = self.output_dir_fh.make_file(
-            constants.DEBUG_RESOLVE_FILE_NAME)
+        self.input_fh = input_fh
+        self.observations_fh = observations_fh
+        self.debug_resolve_fh = debug_resolve_fh
         self.entity_type = entity_type
         self.ignore_columns = ignore_columns
         self.df = pd.DataFrame()
         self.debug_resolve_df = None
 
     def do_import(self) -> None:
-        self._init()
         self._read_csv()
         self._drop_ignored_columns()
         self._resolve_entities()
         self._rename_columns()
 
         self._write_csvs()
-
-    def _init(self):
-        self.output_dir_fh.make_dirs()
 
     def _read_csv(self) -> None:
         self.df = pd.read_csv(self.input_fh.read_string_io(), dtype="str")

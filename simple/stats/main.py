@@ -18,7 +18,7 @@ from absl import flags
 from absl import app
 import logging
 import constants
-from importer import SimpleStatsImporter
+from runner import Runner
 
 # For importing util
 _CODEDIR = os.path.dirname(os.path.realpath(__file__))
@@ -42,13 +42,13 @@ flags.DEFINE_list("ignore_columns", [], "List of input columns to be ignored.")
 
 def main(_):
     logging.getLogger().setLevel(logging.INFO)
-    importer = SimpleStatsImporter(
+    runner = Runner(
         input_path=FLAGS.input_path,
         output_dir=FLAGS.output_dir,
         entity_type=FLAGS.entity_type,
         ignore_columns=FLAGS.ignore_columns,
     )
-    importer.do_import()
+    runner.run()
 
 
 if __name__ == "__main__":

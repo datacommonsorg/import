@@ -19,8 +19,9 @@ DEFAULT_DATA_DIR = ".data"
 DEFAULT_INPUT_PATH = os.path.join(DEFAULT_DATA_DIR, "input")
 DEFAULT_OUTPUT_DIR = os.path.join(DEFAULT_DATA_DIR, "output")
 
-OBSERVATIONS_FILE_NAME = "observations.csv"
-DEBUG_RESOLVE_FILE_NAME = "debug_resolve.csv"
+OBSERVATIONS_FILE_NAME_PREFIX = "observations"
+DEBUG_RESOLVE_FILE_NAME_PREFIX = "debug_resolve"
+PROCESS_DIR_NAME = "process"
 
 PROPERTY_DESCRIPTION = "description"
 """
