@@ -11,12 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A generic FileHandler abstraction that allows clients to work seamlessly with 
+"""A generic FileHandler abstraction that allows clients to work seamlessly with
 local and GCS files and directories.
 """
 
-import os
+import logging
 import io
+import os
 from google.cloud import storage
 
 _GCS_PATH_PREFIX = "gs://"
@@ -94,15 +95,15 @@ class LocalFileHandler(FileHandler):
 
 
 class GcsFileHandler(FileHandler):
-    gcs_client = storage.Client()
     # Using print instead of logging since the class is loaded before logging is initialized.
-    print("Using GCP Project:", gcs_client.project)
 
     def __init__(self, path: str) -> None:
         if not path.startswith(_GCS_PATH_PREFIX):
             raise ValueError(f"Expected {_GCS_PATH_PREFIX} prefix, got {path}")
         bucket_name, blob_name = path[len(_GCS_PATH_PREFIX):].split('/', 1)
-        self.bucket = GcsFileHandler.gcs_client.bucket(bucket_name)
+        gcs_client = storage.Client()
+        logging.info("Using GCP Project: %s", gcs_client.project)
+        self.bucket = gcs_client.bucket(bucket_name)
         self.blob = self.bucket.blob(blob_name)
         isdir = path.endswith("/")
         super().__init__(path, isdir)
