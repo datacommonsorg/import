@@ -24,7 +24,6 @@ from runner import Runner
 _CODEDIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(1, os.path.join(_CODEDIR, "../"))
 
-from util import dc_client as dc
 
 FLAGS = flags.FLAGS
 
