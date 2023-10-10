@@ -50,6 +50,7 @@ class SimpleStatsImporter:
     def do_import(self) -> None:
         self._read_csv()
         self._drop_ignored_columns()
+        self._trim_values()
         self._resolve_entities()
         self._rename_columns()
 
@@ -62,6 +63,10 @@ class SimpleStatsImporter:
     def _drop_ignored_columns(self):
         if self.ignore_columns:
             self.df.drop(columns=self.ignore_columns, axis=1, inplace=True)
+
+    def _trim_values(self):
+        self.df = self.df.applymap(lambda value: value.strip()
+                                   if isinstance(value, str) else value)
 
     def _rename_columns(self) -> None:
         df = self.df
