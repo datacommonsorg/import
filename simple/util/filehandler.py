@@ -102,7 +102,6 @@ class GcsFileHandler(FileHandler):
             raise ValueError(f"Expected {_GCS_PATH_PREFIX} prefix, got {path}")
         bucket_name, blob_name = path[len(_GCS_PATH_PREFIX):].split('/', 1)
         gcs_client = storage.Client()
-        logging.info("Using GCP Project: %s", gcs_client.project)
         self.bucket = gcs_client.bucket(bucket_name)
         self.blob = self.bucket.blob(blob_name)
         isdir = path.endswith("/")
