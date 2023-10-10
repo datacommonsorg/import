@@ -65,8 +65,8 @@ class SimpleStatsImporter:
             self.df.drop(columns=self.ignore_columns, axis=1, inplace=True)
 
     def _trim_values(self):
-        self.df = self.df.applymap(lambda value: value.strip()
-                                   if isinstance(value, str) else value)
+        self.df = self.df.map(lambda value: value.strip()
+                              if isinstance(value, str) else value)
 
     def _rename_columns(self) -> None:
         df = self.df
