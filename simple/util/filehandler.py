@@ -94,15 +94,24 @@ class LocalFileHandler(FileHandler):
                       all_files)
 
 
-class GcsFileHandler(FileHandler):
-    # Using print instead of logging since the class is loaded before logging is initialized.
+class GcsMeta(type):
+
+    @property
+    def gcs_client(cls) -> storage.Client:
+        if getattr(cls, "_GCS_CLIENT", None) is None:
+            gcs_client = storage.Client()
+            logging.info("Using GCS project: %s", gcs_client.project)
+            cls._GCS_CLIENT = gcs_client
+        return cls._GCS_CLIENT
+
+
+class GcsFileHandler(FileHandler, metaclass=GcsMeta):
 
     def __init__(self, path: str) -> None:
         if not path.startswith(_GCS_PATH_PREFIX):
             raise ValueError(f"Expected {_GCS_PATH_PREFIX} prefix, got {path}")
         bucket_name, blob_name = path[len(_GCS_PATH_PREFIX):].split('/', 1)
-        gcs_client = storage.Client()
-        self.bucket = gcs_client.bucket(bucket_name)
+        self.bucket = GcsFileHandler.gcs_client.bucket(bucket_name)
         self.blob = self.bucket.blob(blob_name)
         isdir = path.endswith("/")
         super().__init__(path, isdir)
