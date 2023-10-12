@@ -13,6 +13,9 @@
     "powerplants.csv": {
       "entityType": "PowerPlant"
     },
+    "s2cells.csv": {
+      "entityType": "S2CellLevel10"
+    },
     "wikidataids.csv": {
       "entityType": "Country"
     }
