@@ -18,8 +18,10 @@ import os
 import requests
 import logging
 import json
+import re
 
 from .ngram_matcher import NgramMatcher
+from .resolvers import resolve_latlngs_2_s2cells
 
 # Environment variables.
 _KEY_ENV = "DC_API_KEY"
@@ -39,6 +41,10 @@ _RESOLVE_PLACE_TYPES = set(
 
 _MAX_NODES = 10_000
 
+# Entities of type S2CellLevel* are resolved locally by applying a mapping function.
+# Make the implementation more generic if more entity types are resolved via mapping functions.
+_S2CELL_ENTITY_TYPE_PATTERN = r"S2CellLevel(\d+)"
+
 
 def get_api_key():
     return os.environ.get(_KEY_ENV, "")
@@ -54,10 +60,12 @@ if _DEBUG:
     os.makedirs(_DEBUG_FOLDER, exist_ok=True)
 
 
-# See: https://docs.datacommons.org/api/rest/v2/resolve
 def resolve_entities(entities: list[str],
                      entity_type: str = None,
                      property_name: str = "description") -> dict[str, str]:
+    if entity_type and re.match(_S2CELL_ENTITY_TYPE_PATTERN, entity_type):
+        return resolve_latlngs_2_s2cells(entities, entity_type)
+
     if not entity_type or entity_type in _RESOLVE_PLACE_TYPES:
         return resolve_place_entities(entities=entities,
                                       entity_type=entity_type,
