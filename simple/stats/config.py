@@ -18,20 +18,20 @@ _IGNORE_COLUMNS_FIELD = "ignoreColumns"
 
 
 class Config:
-    """A wrapper around the import config specified via config.json.
+  """A wrapper around the import config specified via config.json.
 
     It provides convenience methods for accessing parameters from the config.
     """
 
-    def __init__(self, data: dict) -> None:
-        self.data = data
+  def __init__(self, data: dict) -> None:
+    self.data = data
 
-    def get_entity_type(self, input_file_name: str) -> str:
-        return self.data.get(_INPUT_FILES_FIELD,
-                             {}).get(input_file_name,
-                                     {}).get(_ENTITY_TYPE_FIELD, "")
+  def get_entity_type(self, input_file_name: str) -> str:
+    return self.data.get(_INPUT_FILES_FIELD,
+                         {}).get(input_file_name,
+                                 {}).get(_ENTITY_TYPE_FIELD, "")
 
-    def get_ignore_columns(self, input_file_name: str) -> str:
-        return self.data.get(_INPUT_FILES_FIELD,
-                             {}).get(input_file_name,
-                                     {}).get(_IGNORE_COLUMNS_FIELD, [])
+  def get_ignore_columns(self, input_file_name: str) -> str:
+    return self.data.get(_INPUT_FILES_FIELD,
+                         {}).get(input_file_name,
+                                 {}).get(_IGNORE_COLUMNS_FIELD, [])
