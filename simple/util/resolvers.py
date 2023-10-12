@@ -20,9 +20,10 @@ Resolve methods must be of the form resolve_* and take 2 arguments:
 The result should be a dictionary of input value to resolved entity value.
 Values that could not be resolved should not be included in the result.
 """
-import s2sphere
-import re
 import logging
+import re
+
+import s2sphere
 
 _S2CELL_ENTITY_TYPE_PATTERN = r"S2CellLevel(\d+)"
 _LAT_LNG_PATTERN = r"(.+)#(.+)"
@@ -32,34 +33,34 @@ _LAT_LNG_PATTERN = r"(.+)#(.+)"
 # e.g. "38.7#-119.4" (SF) for type "S2CellLevel10" resolves to "s2CellId/0x80982b0000000000"
 def resolve_latlngs_2_s2cells(latlngs: list[str],
                               entity_type: str) -> dict[str, str]:
-    matcher = re.match(_S2CELL_ENTITY_TYPE_PATTERN, entity_type)
-    assert matcher is not None, f"Unsupported entity type: {entity_type}"
-    level = int(matcher.group(1))
-    result = {}
-    for latlng in latlngs:
-        s2cell = _latlng_2_s2cell_dcid(level, _parse_latlng(latlng))
-        if s2cell:
-            result[latlng] = s2cell
-    return result
+  matcher = re.match(_S2CELL_ENTITY_TYPE_PATTERN, entity_type)
+  assert matcher is not None, f"Unsupported entity type: {entity_type}"
+  level = int(matcher.group(1))
+  result = {}
+  for latlng in latlngs:
+    s2cell = _latlng_2_s2cell_dcid(level, _parse_latlng(latlng))
+    if s2cell:
+      result[latlng] = s2cell
+  return result
 
 
 def _parse_latlng(latlng: str) -> s2sphere.LatLng:
-    matcher = re.match(_LAT_LNG_PATTERN, latlng)
-    if matcher is None:
-        logging.warning("Cannot parse latlng: %s", latlng)
-        return None
-    lat, lng = matcher.group(1).strip(), matcher.group(2).strip()
-    try:
-        return s2sphere.LatLng.from_degrees(float(lat), float(lng))
-    except Exception:
-        logging.warning("Invalid latlng: %s", latlng)
-        return None
+  matcher = re.match(_LAT_LNG_PATTERN, latlng)
+  if matcher is None:
+    logging.warning("Cannot parse latlng: %s", latlng)
+    return None
+  lat, lng = matcher.group(1).strip(), matcher.group(2).strip()
+  try:
+    return s2sphere.LatLng.from_degrees(float(lat), float(lng))
+  except Exception:
+    logging.warning("Invalid latlng: %s", latlng)
+    return None
 
 
 def _latlng_2_s2cell_dcid(level: int, latlng: s2sphere.LatLng) -> str:
-    assert level >= 0 and level <= 30
+  assert level >= 0 and level <= 30
 
-    cell = s2sphere.CellId.from_lat_lng(latlng)
-    if level < 30:
-        cell = cell.parent(level)
-    return 's2CellId/{0:#0{1}x}'.format(cell.id(), 18)
+  cell = s2sphere.CellId.from_lat_lng(latlng)
+  if level < 30:
+    cell = cell.parent(level)
+  return 's2CellId/{0:#0{1}x}'.format(cell.id(), 18)

@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 import sys
-from absl import flags
+
 from absl import app
-import logging
+from absl import flags
 import constants
 from runner import Runner
 
@@ -39,15 +40,15 @@ flags.DEFINE_list("ignore_columns", [], "List of input columns to be ignored.")
 
 
 def main(_):
-    logging.getLogger().setLevel(logging.INFO)
-    runner = Runner(
-        input_path=FLAGS.input_path,
-        output_dir=FLAGS.output_dir,
-        entity_type=FLAGS.entity_type,
-        ignore_columns=FLAGS.ignore_columns,
-    )
-    runner.run()
+  logging.getLogger().setLevel(logging.INFO)
+  runner = Runner(
+      input_path=FLAGS.input_path,
+      output_dir=FLAGS.output_dir,
+      entity_type=FLAGS.entity_type,
+      ignore_columns=FLAGS.ignore_columns,
+  )
+  runner.run()
 
 
 if __name__ == "__main__":
-    app.run(main)
+  app.run(main)
