@@ -1,0 +1,13 @@
+{
+  "status": "SUCCESS",
+  "startTime": "2023-10-16 14:48:17.127171",
+  "lastUpdate": "2023-10-16 14:48:23.417380",
+  "importFiles": [
+    "countries.csv",
+    "geoids.csv",
+    "latlng.csv",
+    "powerplants.csv",
+    "s2cells.csv",
+    "wikidataids.csv"
+  ]
+}

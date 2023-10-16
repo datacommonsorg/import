@@ -20,6 +20,7 @@ import sys
 from config import Config
 import constants
 from importer import SimpleStatsImporter
+from reporter import ImportReporter
 
 # For importing util
 _CODEDIR = os.path.dirname(os.path.realpath(__file__))
@@ -44,6 +45,8 @@ class Runner:
     self.output_dir_fh = create_file_handler(output_dir)
     self.process_dir_fh = self.output_dir_fh.make_file(
         f"{constants.PROCESS_DIR_NAME}/")
+    self.reporter = ImportReporter(report_fh=self.process_dir_fh.make_file(
+        constants.REPORT_JSON_FILE_NAME))
     self.entity_type = entity_type
     self.ignore_columns = ignore_columns
 
@@ -58,19 +61,26 @@ class Runner:
     self.process_dir_fh.make_dirs()
 
   def run(self):
-    if not self.input_fh.isdir:
-      self._run_single_import(input_file_fh=self.input_fh,
-                              entity_type=self.entity_type,
-                              ignore_columns=self.ignore_columns)
-    else:
-      input_files = sorted(self.input_fh.list_files(extension=".csv"))
-      if not input_files:
-        raise RuntimeError("Not input CSVs found.")
-      for input_file in input_files:
-        self._run_single_import(
-            input_file_fh=self.input_fh.make_file(input_file),
-            entity_type=self.config.get_entity_type(input_file),
-            ignore_columns=self.config.get_ignore_columns(input_file))
+    try:
+      if not self.input_fh.isdir:
+        self.reporter.report_started(import_files=[self.input_fh.basename()])
+        self._run_single_import(input_file_fh=self.input_fh,
+                                entity_type=self.entity_type,
+                                ignore_columns=self.ignore_columns)
+      else:
+        input_files = sorted(self.input_fh.list_files(extension=".csv"))
+        self.reporter.report_started(import_files=input_files)
+        if not input_files:
+          raise RuntimeError("Not input CSVs found.")
+        for input_file in input_files:
+          self._run_single_import(
+              input_file_fh=self.input_fh.make_file(input_file),
+              entity_type=self.config.get_entity_type(input_file),
+              ignore_columns=self.config.get_ignore_columns(input_file))
+        self.reporter.report_success()
+    except Exception as e:
+      logging.exception("Error running import")
+      self.reporter.report_failure(error=str(e))
 
   def _run_single_import(self,
                          input_file_fh: FileHandler,
