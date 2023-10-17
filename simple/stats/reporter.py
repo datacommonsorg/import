@@ -124,12 +124,12 @@ class FileImportReporter:
   """Generates a report on every reported change for a single file import.
     """
 
-  def __init__(self, import_file: str, reporter: ImportReporter) -> None:
+  def __init__(self, import_file: str, parent: ImportReporter) -> None:
     self.status = Status.NOT_STARTED
     self.start_time = None
     self.last_update = datetime.now()
     self.import_file = import_file
-    self.reporter = reporter
+    self.parent = parent
     self.data = {}
 
   def _report(func):
@@ -175,4 +175,4 @@ class FileImportReporter:
 
   def report(self) -> None:
     self.last_update = datetime.now()
-    self.reporter.import_file_update(self.import_file)
+    self.parent.import_file_update(self.import_file)
