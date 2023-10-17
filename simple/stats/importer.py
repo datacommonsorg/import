@@ -18,14 +18,14 @@ import sys
 from absl import logging
 import constants
 import pandas as pd
+from reporter import FileImportReporter
 
 # For importing util
 _CODEDIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(1, os.path.join(_CODEDIR, "../"))
 
-from util.filehandler import FileHandler
-
 from util import dc_client as dc
+from util.filehandler import FileHandler
 
 
 # TODO: Add support for units.
@@ -38,23 +38,31 @@ class SimpleStatsImporter:
       input_fh: FileHandler,
       observations_fh: FileHandler,
       debug_resolve_fh: FileHandler,
+      reporter: FileImportReporter,
       entity_type: str,
       ignore_columns: list[str] = list(),
   ) -> None:
     self.input_fh = input_fh
     self.observations_fh = observations_fh
     self.debug_resolve_fh = debug_resolve_fh
+    self.reporter = reporter
     self.entity_type = entity_type
     self.ignore_columns = ignore_columns
     self.df = pd.DataFrame()
     self.debug_resolve_df = None
 
   def do_import(self) -> None:
-    self._read_csv()
-    self._drop_ignored_columns()
-    self._trim_values()
-    self._resolve_entities()
-    self._rename_columns()
+    self.reporter.report_started()
+    try:
+      self._read_csv()
+      self._drop_ignored_columns()
+      self._trim_values()
+      self._resolve_entities()
+      self._rename_columns()
+      self.reporter.report_success()
+    except Exception as e:
+      self.reporter.report_failure(str(e))
+      raise e
 
     self._write_csvs()
 
