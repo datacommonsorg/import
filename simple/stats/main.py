@@ -13,17 +13,11 @@
 # limitations under the License.
 
 import logging
-import os
-import sys
 
 from absl import app
 from absl import flags
 import constants
 from runner import Runner
-
-# For importing util
-_CODEDIR = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(1, os.path.join(_CODEDIR, "../"))
 
 FLAGS = flags.FLAGS
 

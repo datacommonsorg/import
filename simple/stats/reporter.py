@@ -42,10 +42,11 @@ class ImportReporter:
 
   def __init__(self, report_fh: FileHandler) -> None:
     self.status = Status.NOT_STARTED
-    self.start_time = datetime.now()
+    self.start_time = None
     self.last_update = datetime.now()
     self.report_fh = report_fh
     self.data = {}
+    self.import_files: dict[str, FileImportReporter] = {}
 
   def _report(func):
 
@@ -60,7 +61,91 @@ class ImportReporter:
   @_report
   def report_started(self, import_files: list[str]):
     self.status = Status.STARTED
-    self.data["importFiles"] = import_files
+    self.start_time = datetime.now()
+    for import_file in import_files:
+      self.import_files[import_file] = FileImportReporter(import_file, self)
+
+  @_report
+  def report_done(self):
+    self._compute_all_done()
+    self.status = Status.SUCCESS
+
+  @_report
+  def report_failure(self, error: str):
+    self.status = Status.FAILURE
+    self.data["error"] = error
+
+  def import_file(self, import_file: str):
+    return self.import_files[import_file]
+
+  def import_file_update(self, import_file: str):
+    self._compute_all_done()
+    self.save()
+
+  def _compute_all_done(self):
+    if self._all_file_imports(Status.SUCCESS):
+      self.status = Status.SUCCESS
+    elif self._all_file_imports(Status.FAILURE):
+      self.status = Status.FAILURE
+
+  def _all_file_imports(self, status: Status) -> bool:
+    return all(
+        reporter.status == status for reporter in self.import_files.values())
+
+  def json(self) -> dict:
+    report = {}
+
+    def _maybe_report(field: str, func=None):
+      value = self.data.get(field)
+      if value:
+        report[field] = value if not func else func(value)
+
+    report["status"] = self.status.name
+    _maybe_report("error")
+
+    if self.start_time:
+      report["startTime"] = str(self.start_time)
+      report["lastUpdate"] = str(self.last_update)
+
+    import_files = {}
+    for import_file, import_file_reporter in self.import_files.items():
+      import_files[import_file] = import_file_reporter.json()
+
+    report["importFiles"] = import_files
+
+    return report
+
+  def save(self) -> None:
+    self.last_update = datetime.now()
+    self.report_fh.write_string(json.dumps(self.json(), indent=2))
+
+
+class FileImportReporter:
+  """Generates a report on every reported change for a single file import.
+    """
+
+  def __init__(self, import_file: str, reporter: ImportReporter) -> None:
+    self.status = Status.NOT_STARTED
+    self.start_time = None
+    self.last_update = datetime.now()
+    self.import_file = import_file
+    self.reporter = reporter
+    self.data = {}
+
+  def _report(func):
+
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+      result = func(self, *args, **kwargs)
+      FileImportReporter.report(self)
+      return result
+
+    return wrapper
+
+  @_report
+  def report_started(self):
+    self.status = Status.STARTED
+    self.start_time = datetime.now()
 
   @_report
   def report_success(self):
@@ -80,14 +165,14 @@ class ImportReporter:
         report[field] = value if not func else func(value)
 
     report["status"] = self.status.name
-    report["startTime"] = str(self.start_time)
-    report["lastUpdate"] = str(self.last_update)
-
     _maybe_report("error")
-    _maybe_report("importFiles")
+
+    if self.start_time:
+      report["startTime"] = str(self.start_time)
+      report["lastUpdate"] = str(self.last_update)
 
     return report
 
-  def save(self) -> None:
+  def report(self) -> None:
     self.last_update = datetime.now()
-    self.report_fh.write_string(json.dumps(self.json(), indent=2))
+    self.reporter.import_file_update(self.import_file)

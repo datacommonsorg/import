@@ -20,6 +20,7 @@ import sys
 from config import Config
 import constants
 from importer import SimpleStatsImporter
+from reporter import FileImportReporter
 from reporter import ImportReporter
 
 # For importing util
@@ -75,15 +76,17 @@ class Runner:
         for input_file in input_files:
           self._run_single_import(
               input_file_fh=self.input_fh.make_file(input_file),
+              reporter=self.reporter.import_file(input_file),
               entity_type=self.config.get_entity_type(input_file),
               ignore_columns=self.config.get_ignore_columns(input_file))
-        self.reporter.report_success()
+        self.reporter.report_done()
     except Exception as e:
       logging.exception("Error running import")
       self.reporter.report_failure(error=str(e))
 
   def _run_single_import(self,
                          input_file_fh: FileHandler,
+                         reporter: FileImportReporter,
                          entity_type: str = None,
                          ignore_columns: list[str] = []):
     logging.info("Importing file: %s", input_file_fh)
@@ -95,6 +98,7 @@ class Runner:
     importer = SimpleStatsImporter(input_fh=input_file_fh,
                                    observations_fh=observations_fh,
                                    debug_resolve_fh=debug_resolve_fh,
+                                   reporter=reporter,
                                    entity_type=entity_type,
                                    ignore_columns=ignore_columns)
     importer.do_import()
