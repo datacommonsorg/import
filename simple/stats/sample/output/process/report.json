@@ -1,0 +1,37 @@
+{
+  "status": "SUCCESS",
+  "startTime": "2023-10-16 22:35:03.607606",
+  "lastUpdate": "2023-10-16 22:35:11.603683",
+  "importFiles": {
+    "countries.csv": {
+      "status": "SUCCESS",
+      "startTime": "2023-10-16 22:35:03.608635",
+      "lastUpdate": "2023-10-16 22:35:04.503321"
+    },
+    "geoids.csv": {
+      "status": "SUCCESS",
+      "startTime": "2023-10-16 22:35:04.506722",
+      "lastUpdate": "2023-10-16 22:35:04.510294"
+    },
+    "latlng.csv": {
+      "status": "SUCCESS",
+      "startTime": "2023-10-16 22:35:04.511936",
+      "lastUpdate": "2023-10-16 22:35:05.664521"
+    },
+    "powerplants.csv": {
+      "status": "SUCCESS",
+      "startTime": "2023-10-16 22:35:05.665557",
+      "lastUpdate": "2023-10-16 22:35:11.419758"
+    },
+    "s2cells.csv": {
+      "status": "SUCCESS",
+      "startTime": "2023-10-16 22:35:11.420950",
+      "lastUpdate": "2023-10-16 22:35:11.422340"
+    },
+    "wikidataids.csv": {
+      "status": "SUCCESS",
+      "startTime": "2023-10-16 22:35:11.423165",
+      "lastUpdate": "2023-10-16 22:35:11.602376"
+    }
+  }
+}
