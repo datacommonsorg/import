@@ -48,6 +48,8 @@ class ImportReporter:
     self.data = {}
     self.import_files: dict[str, FileImportReporter] = {}
 
+  # Functions decorated with @_report will result in the report being saved
+  # upon function execution.
   def _report(func):
 
     @wraps(func)
@@ -132,6 +134,8 @@ class FileImportReporter:
     self.parent = parent
     self.data = {}
 
+  # Functions decorated with @_report will result in this report being reported to the parent reporter
+  # upon function execution.
   def _report(func):
 
     @wraps(func)
