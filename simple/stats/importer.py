@@ -12,20 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
-
 from absl import logging
-import constants
 import pandas as pd
-from reporter import FileImportReporter
-
-# For importing util
-_CODEDIR = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(1, os.path.join(_CODEDIR, "../"))
+from stats import constants
+from stats.reporter import FileImportReporter
+from util.filehandler import FileHandler
 
 from util import dc_client as dc
-from util.filehandler import FileHandler
 
 
 # TODO: Add support for units.
@@ -50,6 +43,7 @@ class SimpleStatsImporter:
     self.ignore_columns = ignore_columns
     self.df = pd.DataFrame()
     self.debug_resolve_df = None
+    self.sv_names = []
 
   def do_import(self) -> None:
     self.reporter.report_started()
@@ -59,6 +53,7 @@ class SimpleStatsImporter:
       self._trim_values()
       self._resolve_entities()
       self._rename_columns()
+      self._extract_sv_names()
       self.reporter.report_success()
     except Exception as e:
       self.reporter.report_failure(str(e))
@@ -82,6 +77,9 @@ class SimpleStatsImporter:
     df = self.df
     df.columns.values[0] = constants.COLUMN_DCID
     df.columns.values[1] = constants.COLUMN_DATE
+
+  def _extract_sv_names(self):
+    self.sv_names = list(self.df.columns[2:])
 
   def _resolve_entities(self) -> None:
     df = self.df

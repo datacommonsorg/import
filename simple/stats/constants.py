@@ -21,6 +21,7 @@ DEFAULT_OUTPUT_DIR = os.path.join(DEFAULT_DATA_DIR, "output")
 
 CONFIG_JSON_FILE_NAME = "config.json"
 REPORT_JSON_FILE_NAME = "report.json"
+TRIPLES_FILE_NAME = "triples.csv"
 
 OBSERVATIONS_FILE_NAME_PREFIX = "observations"
 DEBUG_RESOLVE_FILE_NAME_PREFIX = "debug_resolve"
