@@ -7,7 +7,7 @@ Outputs `observations.csv` for simple stats to be used by [RSI sqlite][sqlite].
 ## Usage
 
 ```shell
-python3 main.py
+python3 -m stats.main
 ```
 
 It reads inputs CSVs from the `.data/input` folder and outputs `observations.csv` in the `.data/output` folder.
@@ -23,5 +23,5 @@ The program also outputs a `debug_resolve.csv` file. This is for debugging wheth
 To see all parameters and overrides supported by the script:
 
 ```shell
-python3 main.py --help
+python3 -m stats.main --help
 ```
