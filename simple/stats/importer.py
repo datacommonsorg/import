@@ -51,7 +51,7 @@ class SimpleStatsImporter:
     try:
       self._read_csv()
       self._drop_ignored_columns()
-      self._trim_values()
+      self._sanitize_values()
       self._resolve_entities()
       self._rename_columns()
       self._extract_sv_names()
@@ -63,16 +63,23 @@ class SimpleStatsImporter:
     self._write_csvs()
 
   def _read_csv(self) -> None:
-    self.df = pd.read_csv(self.input_fh.read_string_io(), dtype="str")
+    # Read CSVs with the following behaviors:
+    # - Set 1st column (i.e. the entity column) to type str (so that geoIds like "01" are not treated as ints and converted to 1)
+    # - Strip leading whitespaces
+    # - Treat comma as a thousands separator
+    self.df = pd.read_csv(self.input_fh.read_string_io(),
+                          dtype={0: str},
+                          skipinitialspace=True,
+                          thousands=",")
     logging.info("Read %s rows.", self.df.index.size)
 
   def _drop_ignored_columns(self):
     if self.ignore_columns:
       self.df.drop(columns=self.ignore_columns, axis=1, inplace=True)
 
-  def _trim_values(self):
-    self.df = self.df.map(lambda value: value.strip()
-                          if isinstance(value, str) else value)
+  def _sanitize_values(self):
+    # Set date field to type str.
+    self.df = self.df.astype({self.df.columns[1]: str})
 
   def _rename_columns(self) -> None:
     df = self.df
