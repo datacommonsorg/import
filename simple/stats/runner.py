@@ -14,19 +14,13 @@
 
 import json
 import logging
-import os
-import sys
 
-from config import Config
-import constants
-from importer import SimpleStatsImporter
-from reporter import FileImportReporter
-from reporter import ImportReporter
-
-# For importing util
-_CODEDIR = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(1, os.path.join(_CODEDIR, "../"))
-
+from stats import constants
+from stats.config import Config
+from stats.importer import SimpleStatsImporter
+from stats.reporter import FileImportReporter
+from stats.reporter import ImportReporter
+from stats.triples import TriplesGenerator
 from util.filehandler import create_file_handler
 from util.filehandler import FileHandler
 
@@ -50,6 +44,7 @@ class Runner:
         constants.REPORT_JSON_FILE_NAME))
     self.entity_type = entity_type
     self.ignore_columns = ignore_columns
+    self.sv_names = []
 
     if self.input_fh.isdir:
       config_fh = self.input_fh.make_file(constants.CONFIG_JSON_FILE_NAME)
@@ -79,6 +74,12 @@ class Runner:
               reporter=self.reporter.import_file(input_file),
               entity_type=self.config.get_entity_type(input_file),
               ignore_columns=self.config.get_ignore_columns(input_file))
+
+        triples_fh = self.output_dir_fh.make_file(constants.TRIPLES_FILE_NAME)
+        triples_gen = TriplesGenerator(sv_names=self.sv_names,
+                                       triples_fh=triples_fh)
+        triples_gen.generate()
+
         self.reporter.report_done()
     except Exception as e:
       logging.exception("Error running import")
@@ -102,3 +103,4 @@ class Runner:
                                    entity_type=entity_type,
                                    ignore_columns=ignore_columns)
     importer.do_import()
+    self.sv_names.extend(importer.sv_names)

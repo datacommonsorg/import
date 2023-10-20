@@ -16,8 +16,8 @@ import logging
 
 from absl import app
 from absl import flags
-import constants
-from runner import Runner
+from stats import constants
+from stats.runner import Runner
 
 FLAGS = flags.FLAGS
 

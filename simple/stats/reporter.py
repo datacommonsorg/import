@@ -17,12 +17,6 @@ from enum import auto
 from enum import Enum
 from functools import wraps
 import json
-import os
-import sys
-
-# For importing util
-_CODEDIR = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(1, os.path.join(_CODEDIR, "../"))
 
 from util.filehandler import FileHandler
 

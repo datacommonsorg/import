@@ -1,0 +1,9 @@
+subject_id,predicate,object_id,object_value
+custom/statvar_1,typeOf,StatisticalVariable,
+custom/statvar_1,name,,Variable 1
+custom/statvar_2,typeOf,StatisticalVariable,
+custom/statvar_2,name,,Variable 2
+custom/statvar_3,typeOf,StatisticalVariable,
+custom/statvar_3,name,,var1
+custom/statvar_4,typeOf,StatisticalVariable,
+custom/statvar_4,name,,var2
