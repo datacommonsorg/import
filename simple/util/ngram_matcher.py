@@ -32,9 +32,8 @@ Example:
   # ...]
 """
 
+import logging
 import unicodedata
-
-from absl import logging
 
 _DEBUG = False
 

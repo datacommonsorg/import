@@ -6,18 +6,18 @@ The config parameters for the files to be imported should be specified in a `con
 
 ```json
 {
-    "inputFiles": {
-        "countries.csv": {
-            "entityType": "Country",
-            "ignoreColumns": ["ignore1", "ignore2"]
-        },
-        "latlng.csv": {
-            "entityType": "State"
-        },
-        "geoid.csv": {
-            "entityType": ""
-        }
+  "inputFiles": {
+    "countries.csv": {
+      "entityType": "Country",
+      "ignoreColumns": ["ignore1", "ignore2"]
+    },
+    "latlng.csv": {
+      "entityType": "State"
+    },
+    "geoid.csv": {
+      "entityType": ""
     }
+  }
 }
 ```
 
@@ -31,8 +31,9 @@ Currently the only parameter supported for individual input files is `entityType
 
 #### `entityType`
 
-All entities in a given file must be of a specific type. This type should be specified as the value of the `entityType` field. 
-The importer tries to resolve entities to dcids of that type.
+All entities in a given file must be of a specific type. This type should be
+specified as the value of the `entityType` field. The importer tries to resolve
+entities to dcids of that type.
 
 #### `ignoreColumns`
 
