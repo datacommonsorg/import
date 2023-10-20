@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import sys
 
 from absl import app
 from absl import flags
@@ -34,7 +35,12 @@ flags.DEFINE_list("ignore_columns", [], "List of input columns to be ignored.")
 
 
 def main(_):
-  logging.getLogger().setLevel(logging.INFO)
+  # Log to stdout for easy redirect of the output text.
+  logger = logging.getLogger()
+  logger.setLevel(logging.INFO)
+  handler = logging.StreamHandler(sys.stdout)
+  handler.setLevel(logging.INFO)
+  logger.addHandler(handler)
   runner = Runner(
       input_path=FLAGS.input_path,
       output_dir=FLAGS.output_dir,

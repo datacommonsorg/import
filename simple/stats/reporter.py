@@ -30,7 +30,7 @@ class Status(Enum):
 
 class ImportReporter:
   """Generates a report on every reported change.
-    
+
     The report is written to report.json in the process directory.
     """
 

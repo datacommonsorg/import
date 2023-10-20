@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from absl import logging
+import logging
+
 import pandas as pd
 from stats import constants
 from stats.reporter import FileImportReporter
