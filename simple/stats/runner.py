@@ -61,6 +61,8 @@ class Runner:
       if not self.input_fh.isdir:
         self.reporter.report_started(import_files=[self.input_fh.basename()])
         self._run_single_import(input_file_fh=self.input_fh,
+                                reporter=self.reporter.import_file(
+                                    self.input_fh.basename()),
                                 entity_type=self.entity_type,
                                 ignore_columns=self.ignore_columns)
       else:
