@@ -20,7 +20,7 @@ from stats.config import Config
 from stats.importer import SimpleStatsImporter
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
-from stats.triples import TriplesGenerator
+import stats.triples as triples
 from util.filehandler import create_file_handler
 from util.filehandler import FileHandler
 
@@ -46,6 +46,7 @@ class Runner:
     self.ignore_columns = ignore_columns
     self.sv_names = []
 
+    self.config = Config(data={})
     if self.input_fh.isdir:
       config_fh = self.input_fh.make_file(constants.CONFIG_JSON_FILE_NAME)
       if not config_fh.exists():
@@ -74,18 +75,21 @@ class Runner:
           self._run_single_import(
               input_file_fh=self.input_fh.make_file(input_file),
               reporter=self.reporter.import_file(input_file),
-              entity_type=self.config.get_entity_type(input_file),
-              ignore_columns=self.config.get_ignore_columns(input_file))
+              entity_type=self.config.entity_type(input_file),
+              ignore_columns=self.config.ignore_columns(input_file))
 
-        triples_fh = self.output_dir_fh.make_file(constants.TRIPLES_FILE_NAME)
-        triples_gen = TriplesGenerator(sv_names=self.sv_names,
-                                       triples_fh=triples_fh)
-        triples_gen.generate()
+        self._generate_triples()
 
         self.reporter.report_done()
     except Exception as e:
       logging.exception("Error running import")
       self.reporter.report_failure(error=str(e))
+
+  def _generate_triples(self):
+    sv_names = sorted(list(set(self.sv_names)))
+    triples_fh = self.output_dir_fh.make_file(constants.TRIPLES_FILE_NAME)
+    variables, groups = self.config.variables_and_groups(sv_names)
+    triples.generate_and_save(variables, groups, triples_fh)
 
   def _run_single_import(self,
                          input_file_fh: FileHandler,

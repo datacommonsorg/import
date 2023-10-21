@@ -15,46 +15,25 @@
 from dataclasses import dataclass
 
 import pandas as pd
+from stats.config import Config
+from stats.data import StatVar
+from stats.data import StatVarGroup
+from stats.data import Triple
 from util.filehandler import FileHandler
 
-_PREDICATE_TYPE_OF = "typeOf"
-_PREDICATE_NAME = "name"
-_STATISTICAL_VARIABLE = "StatisticalVariable"
-_CUSTOM_SV_ID_PREFIX = "custom/statvar_"
+
+def generate_and_save(variables: list[StatVar], groups: list[StatVarGroup],
+                      triples_fh: FileHandler):
+  triples = generate(variables, groups)
+  df = pd.DataFrame(triples)
+  triples_fh.write_string(df.to_csv(index=False))
 
 
-@dataclass
-class Triple:
-  subject_id: str
-  predicate: str
-  object_id: str = ""
-  object_value: str = ""
-
-
-class TriplesGenerator:
-
-  def __init__(self, sv_names: list[str], triples_fh: FileHandler) -> None:
-    self.sv_names = sorted(list(set(sv_names)))
-    self.triples_fh = triples_fh
-
-  def generate(self):
-    triples: list[Triple] = []
-    triples.extend(self._all_sv_triples())
-    df = pd.DataFrame(triples)
-    self.triples_fh.write_string(df.to_csv(index=False))
-
-  def _all_sv_triples(self) -> list[Triple]:
-    triples: list[Triple] = []
-
-    for index, sv_name in enumerate(self.sv_names):
-      triples.extend(
-          self._sv_triples(f"{_CUSTOM_SV_ID_PREFIX}{index + 1}", sv_name))
-
-    return triples
-
-  def _sv_triples(self, sv_id, sv_name) -> list[Triple]:
-    triples: list[Triple] = []
-    triples.append(
-        Triple(sv_id, _PREDICATE_TYPE_OF, object_id=_STATISTICAL_VARIABLE))
-    triples.append(Triple(sv_id, _PREDICATE_NAME, object_value=sv_name))
-    return triples
+def generate(variables: list[StatVar],
+             groups: list[StatVarGroup]) -> list[Triple]:
+  triples: list[Triple] = []
+  for group in groups:
+    triples.extend(group.triples())
+  for variable in variables:
+    triples.extend(variable.triples())
+  return triples

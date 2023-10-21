@@ -1,9 +1,22 @@
 subject_id,predicate,object_id,object_value
+custom/g/group_1,typeOf,StatVarGroup,
+custom/g/group_1,name,,Parent Group
+custom/g/group_1,specializationOf,dc/g/Root,
+custom/g/group_2,typeOf,StatVarGroup,
+custom/g/group_2,name,,Child Group 1
+custom/g/group_2,specializationOf,custom/g/group_1,
+custom/g/group_3,typeOf,StatVarGroup,
+custom/g/group_3,name,,Child Group 2
+custom/g/group_3,specializationOf,custom/g/group_1,
 custom/statvar_1,typeOf,StatisticalVariable,
 custom/statvar_1,name,,Variable 1
+custom/statvar_1,memberOf,custom/g/group_1,
 custom/statvar_2,typeOf,StatisticalVariable,
 custom/statvar_2,name,,Variable 2
 custom/statvar_3,typeOf,StatisticalVariable,
-custom/statvar_3,name,,var1
+custom/statvar_3,name,,Good var1 name
+custom/statvar_3,description,,Good var1 description
+custom/statvar_3,memberOf,custom/g/group_2,
 custom/statvar_4,typeOf,StatisticalVariable,
-custom/statvar_4,name,,var2
+custom/statvar_4,name,,Good var2 name
+custom/statvar_4,memberOf,custom/g/group_3,
