@@ -20,4 +20,4 @@ steps:
     args:
       - -c
       - |
-        ./run_test.sh
+        ./run_test.sh -f -p
