@@ -1,37 +1,37 @@
 {
   "status": "SUCCESS",
-  "startTime": "2023-10-20 10:28:38.638775",
-  "lastUpdate": "2023-10-20 10:28:45.204995",
+  "startTime": "2023-10-23 10:50:22.644858",
+  "lastUpdate": "2023-10-23 10:50:30.534262",
   "importFiles": {
     "countries.csv": {
       "status": "SUCCESS",
-      "startTime": "2023-10-20 10:28:38.639437",
-      "lastUpdate": "2023-10-20 10:28:39.806087"
+      "startTime": "2023-10-23 10:50:22.645832",
+      "lastUpdate": "2023-10-23 10:50:23.689136"
     },
     "geoids.csv": {
       "status": "SUCCESS",
-      "startTime": "2023-10-20 10:28:39.809142",
-      "lastUpdate": "2023-10-20 10:28:39.811739"
+      "startTime": "2023-10-23 10:50:23.693980",
+      "lastUpdate": "2023-10-23 10:50:23.697093"
     },
     "latlng.csv": {
       "status": "SUCCESS",
-      "startTime": "2023-10-20 10:28:39.812995",
-      "lastUpdate": "2023-10-20 10:28:40.978385"
+      "startTime": "2023-10-23 10:50:23.698691",
+      "lastUpdate": "2023-10-23 10:50:24.975047"
     },
     "powerplants.csv": {
       "status": "SUCCESS",
-      "startTime": "2023-10-20 10:28:40.981051",
-      "lastUpdate": "2023-10-20 10:28:45.052385"
+      "startTime": "2023-10-23 10:50:24.977544",
+      "lastUpdate": "2023-10-23 10:50:30.267462"
     },
     "s2cells.csv": {
       "status": "SUCCESS",
-      "startTime": "2023-10-20 10:28:45.053766",
-      "lastUpdate": "2023-10-20 10:28:45.055263"
+      "startTime": "2023-10-23 10:50:30.268803",
+      "lastUpdate": "2023-10-23 10:50:30.270341"
     },
     "wikidataids.csv": {
       "status": "SUCCESS",
-      "startTime": "2023-10-20 10:28:45.056063",
-      "lastUpdate": "2023-10-20 10:28:45.202713"
+      "startTime": "2023-10-23 10:50:30.271283",
+      "lastUpdate": "2023-10-23 10:50:30.529614"
     }
   }
 }
