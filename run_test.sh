@@ -31,6 +31,29 @@ function run_lint_fix {
   deactivate
 }
 
+# Lint test
+function run_lint_test {
+  python3 -m venv .env
+  source .env/bin/activate
+  pip3 install yapf==0.33.0 -q
+  if ! command -v isort &> /dev/null
+  then
+    pip3 install isort -q
+  fi
+  
+  echo -e "#### Checking Python style"
+  if ! yapf --recursive --diff --style='{based_on_style: google, indent_width: 2}' -p simple/ -e=.env/*; then
+    echo "Fix Python lint errors by running ./run_test.sh -f"
+    exit 1
+  fi
+
+  echo -e "#### Checking Python import order"
+  if ! isort simple/ -c --profile google; then
+    echo "Fix Python import sort orders by running ./run_test.sh -f"
+    exit 1
+  fi
+}
+
 # Fixes python tests
 function run_py_test {
   python3 -m venv .env
@@ -46,15 +69,16 @@ function run_py_test {
 }
 
 function run_all_tests {
-  run_lint_fix
+  run_lint_test
   run_py_test
 }
 
 function help {
-  echo "Usage: $0 -afhp"
+  echo "Usage: $0 -afhlp"
   echo "-a              Run all tests"
   echo "-f              Fix lint"
   echo "-h              This usage"
+  echo "-l              Run lint test"
   echo "-p              Run python tests"
   exit 1
 }
@@ -79,6 +103,11 @@ while [[ "$#" -gt 0 ]]; do
         ;;
     -h)
         help
+        shift 1
+        ;;
+    -l)
+        echo -e "### Run lint test"
+        run_lint_test
         shift 1
         ;;
     -p)
