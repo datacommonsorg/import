@@ -72,13 +72,19 @@ EXPECTED_VARIABLES = [
         nl_sentences=["Sentence 1", "Sentence 2"],
         group_id="custom/g/group_3",
     ),
-    StatVar("custom/statvar_4", "Variable with no config"),
+    StatVar(
+        "custom/statvar_4",
+        "Variable with no config",
+        group_id="dc/g/Root",
+    ),
 ]
 
 
 class TestConfig(unittest.TestCase):
 
   def test_variables_and_groups(self):
+    self.maxDiff = None
+
     config = Config(CONFIG_DATA)
     variables, groups = config.variables_and_groups(TEST_SV_COLUMN_NAMES)
     self.assertListEqual(variables, EXPECTED_VARIABLES)

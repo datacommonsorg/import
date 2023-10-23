@@ -13,6 +13,7 @@ custom/statvar_1,name,,Variable 1
 custom/statvar_1,memberOf,custom/g/group_1,
 custom/statvar_2,typeOf,StatisticalVariable,
 custom/statvar_2,name,,Variable 2
+custom/statvar_2,memberOf,dc/g/Root,
 custom/statvar_3,typeOf,StatisticalVariable,
 custom/statvar_3,name,,Good var1 name
 custom/statvar_3,description,,Good var1 description

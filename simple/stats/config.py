@@ -82,7 +82,7 @@ class Config:
       name = var.get(_NAME_FIELD, sv_name)
       group_path = self._variable_group(sv_name)
       group_id = groups[
-          group_path].id if group_path and group_path in groups else ""
+          group_path].id if group_path and group_path in groups else _ROOT_GROUP_ID
       svs[sv_name] = StatVar(id,
                              name,
                              description=var.get(_DESCRIPTION_FIELD, ""),
