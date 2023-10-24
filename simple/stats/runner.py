@@ -18,9 +18,9 @@ import logging
 from stats import constants
 from stats.config import Config
 from stats.importer import SimpleStatsImporter
+from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
-import stats.triples as triples
 from util.filehandler import create_file_handler
 from util.filehandler import FileHandler
 
@@ -44,7 +44,6 @@ class Runner:
         constants.REPORT_JSON_FILE_NAME))
     self.entity_type = entity_type
     self.ignore_columns = ignore_columns
-    self.sv_names = []
 
     self.config = Config(data={})
     if self.input_fh.isdir:
@@ -53,6 +52,8 @@ class Runner:
         raise FileNotFoundError(
             "Config file must be provided for importing directories.")
       self.config = Config(data=json.loads(config_fh.read_string()))
+
+    self.nodes = Nodes(self.config)
 
     self.output_dir_fh.make_dirs()
     self.process_dir_fh.make_dirs()
@@ -78,18 +79,14 @@ class Runner:
               entity_type=self.config.entity_type(input_file),
               ignore_columns=self.config.ignore_columns(input_file))
 
-        self._generate_triples()
-
-        self.reporter.report_done()
+      # Generate triples.
+      self.nodes.triples(
+          self.output_dir_fh.make_file(constants.TRIPLES_FILE_NAME))
+      # Report done.
+      self.reporter.report_done()
     except Exception as e:
       logging.exception("Error running import")
       self.reporter.report_failure(error=str(e))
-
-  def _generate_triples(self):
-    sv_names = sorted(list(set(self.sv_names)))
-    triples_fh = self.output_dir_fh.make_file(constants.TRIPLES_FILE_NAME)
-    variables, groups = self.config.variables_and_groups(sv_names)
-    triples.generate_and_save(variables, groups, triples_fh)
 
   def _run_single_import(self,
                          input_file_fh: FileHandler,
@@ -106,7 +103,7 @@ class Runner:
                                    observations_fh=observations_fh,
                                    debug_resolve_fh=debug_resolve_fh,
                                    reporter=reporter,
+                                   nodes=self.nodes,
                                    entity_type=entity_type,
                                    ignore_columns=ignore_columns)
     importer.do_import()
-    self.sv_names.extend(importer.sv_names)

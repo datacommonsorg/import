@@ -56,6 +56,7 @@ class StatVar:
   description: str = ""
   nl_sentences: list[str] = field(default_factory=list)
   group_id: str = ""
+  group_path: str = ""
 
   def triples(self) -> list[Triple]:
     triples: list[Triple] = []
