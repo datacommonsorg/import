@@ -23,6 +23,10 @@ from util.filehandler import FileHandler
 
 from util import dc_client as dc
 
+# Number of entity IDs that will be sampled to resolved their entity type, if one is not specified by the user.
+# Note that the importer assumes that all entities in a given CSV are all of the same type.
+_SAMPLE_ENTITY_RESOLUTION_SIZE = 5
+
 
 # TODO: Add support for units.
 class SimpleStatsImporter:
@@ -113,8 +117,9 @@ class SimpleStatsImporter:
 
   def _resolve_entity_type(self) -> str:
     all_entity_dcids = self.df.iloc[:, 0].tolist()
-    sample_entity_dcids = random.sample(all_entity_dcids,
-                                        min(len(all_entity_dcids), 5))
+    sample_entity_dcids = random.sample(
+        all_entity_dcids,
+        min(len(all_entity_dcids), _SAMPLE_ENTITY_RESOLUTION_SIZE))
     logging.info("Resolving entity type from sample entities: %s",
                  sample_entity_dcids)
     return dc.resolve_entity_type(sample_entity_dcids)
@@ -145,7 +150,7 @@ class SimpleStatsImporter:
     # Replace resolved entities.
     column.replace(dcids, inplace=True)
     unresolved = set(entities).difference(set(dcids.keys()))
-    unresolved_list = list(unresolved)
+    unresolved_list = sorted(list(unresolved))
 
     # Replace pre-resolved entities without the "dcid:" prefix.
     column.replace(pre_resolved_entities, inplace=True)
