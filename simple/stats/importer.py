@@ -16,6 +16,7 @@ import logging
 
 import pandas as pd
 from stats import constants
+from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from util.filehandler import FileHandler
 
@@ -33,6 +34,7 @@ class SimpleStatsImporter:
       observations_fh: FileHandler,
       debug_resolve_fh: FileHandler,
       reporter: FileImportReporter,
+      nodes: Nodes,
       entity_type: str,
       ignore_columns: list[str] = list(),
   ) -> None:
@@ -40,11 +42,11 @@ class SimpleStatsImporter:
     self.observations_fh = observations_fh
     self.debug_resolve_fh = debug_resolve_fh
     self.reporter = reporter
+    self.nodes = nodes
     self.entity_type = entity_type
     self.ignore_columns = ignore_columns
     self.df = pd.DataFrame()
     self.debug_resolve_df = None
-    self.sv_names = []
 
   def do_import(self) -> None:
     self.reporter.report_started()
@@ -54,7 +56,6 @@ class SimpleStatsImporter:
       self._sanitize_values()
       self._resolve_entities()
       self._rename_columns()
-      self._extract_sv_names()
       self.reporter.report_success()
     except Exception as e:
       self.reporter.report_failure(str(e))
@@ -82,12 +83,20 @@ class SimpleStatsImporter:
     self.df = self.df.astype({self.df.columns[1]: str})
 
   def _rename_columns(self) -> None:
-    df = self.df
-    df.columns.values[0] = constants.COLUMN_DCID
-    df.columns.values[1] = constants.COLUMN_DATE
+    renamed = {}
+    # Rename dcid and date columns
+    renamed[self.df.columns[0]] = constants.COLUMN_DCID
+    renamed[self.df.columns[1]] = constants.COLUMN_DATE
 
-  def _extract_sv_names(self):
-    self.sv_names = list(self.df.columns[2:])
+    # Rename SV columns to their IDs
+    sv_column_names = self.df.columns[2:]
+    sv_ids = [
+        self.nodes.variable(sv_column_name).id
+        for sv_column_name in sv_column_names
+    ]
+    renamed.update({col: id for col, id in zip(sv_column_names, sv_ids)})
+
+    self.df = self.df.rename(columns=renamed)
 
   def _resolve_entities(self) -> None:
     df = self.df

@@ -16,7 +16,6 @@ import unittest
 
 from stats.config import Config
 from stats.data import StatVar
-from stats.data import StatVarGroup
 
 CONFIG_DATA = {
     "inputFiles": {
@@ -44,48 +43,42 @@ CONFIG_DATA = {
     },
 }
 
-TEST_SV_COLUMN_NAMES = [
-    "Variable 1", "Variable 2", "var3", "Variable with no config"
-]
-
-EXPECTED_GROUPS = [
-    StatVarGroup("custom/g/group_1", "Parent Group", "dc/g/Root"),
-    StatVarGroup("custom/g/group_2", "Child Group 1", "custom/g/group_1"),
-    StatVarGroup("custom/g/group_3", "Child Group 2", "custom/g/group_1"),
-]
-
-EXPECTED_VARIABLES = [
-    StatVar(
-        "custom/statvar_1",
-        "Variable 1",
-        group_id="custom/g/group_2",
-    ),
-    StatVar(
-        "custom/statvar_2",
-        "Variable 2",
-        group_id="custom/g/group_2",
-    ),
-    StatVar(
-        "custom/statvar_3",
-        "Var 3 Name",
-        description="Var 3 Description",
-        nl_sentences=["Sentence 1", "Sentence 2"],
-        group_id="custom/g/group_3",
-    ),
-    StatVar(
-        "custom/statvar_4",
-        "Variable with no config",
-        group_id="dc/g/Root",
-    ),
-]
-
 
 class TestConfig(unittest.TestCase):
 
-  def test_variables_and_groups(self):
-    self.maxDiff = None
-
+  def test_variable(self):
     config = Config(CONFIG_DATA)
-    variables, groups = config.variables_and_groups(TEST_SV_COLUMN_NAMES)
-    self.assertListEqual(variables, EXPECTED_VARIABLES)
-    self.assertListEqual(groups, EXPECTED_GROUPS)
+    self.assertEqual(
+        config.variable("Variable 1"),
+        StatVar("", "Variable 1", group_path="Parent Group/Child Group 1"),
+    )
+    self.assertEqual(
+        config.variable("Variable 2"),
+        StatVar("", "Variable 2", group_path="Parent Group/Child Group 1"),
+    )
+    self.assertEqual(
+        config.variable("var3"),
+        StatVar(
+            "",
+            "Var 3 Name",
+            description="Var 3 Description",
+            nl_sentences=["Sentence 1", "Sentence 2"],
+            group_path="Parent Group/Child Group 2",
+        ),
+    )
+    self.assertEqual(
+        config.variable("Variable with no config"),
+        StatVar("", "Variable with no config"),
+    )
+
+  def test_entity_type(self):
+    config = Config(CONFIG_DATA)
+    self.assertEqual(config.entity_type("a.csv"), "Country")
+    self.assertEqual(config.entity_type("b.csv"), "")
+    self.assertEqual(config.entity_type("not-in-config.csv"), "")
+
+  def test_ignore_columns(self):
+    config = Config(CONFIG_DATA)
+    self.assertEqual(config.ignore_columns("a.csv"), [])
+    self.assertEqual(config.ignore_columns("b.csv"), ["ignore1", "ignore2"])
+    self.assertEqual(config.ignore_columns("not-in-config.csv"), [])
