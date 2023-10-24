@@ -28,6 +28,8 @@ _TEST_DATA_DIR_FH = LocalFileHandler(
 
 _BASIC_EMBEDDINGS_FILE_NAME = "basic_embeddings.csv"
 
+_DCID_SENTENCE_COLUMNS = ["dcid", "sentence"]
+
 _TEST_STAT_VARS = [
     StatVar("foo", "Foo Name", "Foo Description"),
     StatVar("bar",
@@ -42,9 +44,13 @@ class TestData(unittest.TestCase):
   def test_basic_embeddings(self):
     embeddings_fh = _TEST_DATA_DIR_FH.make_file(_BASIC_EMBEDDINGS_FILE_NAME)
     if _TEST_MODE == "write":
-      print("Writing embeddings to:", embeddings_fh)
-      embeddings.build(_TEST_STAT_VARS, embeddings_fh)
+      dataframe = embeddings.build(_TEST_STAT_VARS)
+      print("Writing dcids and sentences from the embeddings dataframe to:",
+            embeddings_fh)
+      embeddings_fh.write_string(
+          dataframe[_DCID_SENTENCE_COLUMNS].to_csv(index=False))
       return
 
     dataframe = embeddings.build(_TEST_STAT_VARS)
-    self.assertEqual(dataframe.to_csv(index=False), embeddings_fh.read_string())
+    self.assertEqual(dataframe[_DCID_SENTENCE_COLUMNS].to_csv(index=False),
+                     embeddings_fh.read_string())
