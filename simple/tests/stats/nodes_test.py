@@ -48,12 +48,18 @@ CONFIG_DATA = {
 
 CONFIG = Config(CONFIG_DATA)
 
-TEST_COLUMN_NAMES = [
+TEST_SV_COLUMN_NAMES = [
     "Variable 1",
     "Variable 2",
     "var3",
     "Variable with no config",
 ]
+
+TEST_ENTITY_DCIDS_1 = ["country/AFG", "country/USA"]
+TEST_ENTITY_TYPE_1 = "Country"
+
+TEST_ENTITY_DCIDS_2 = ["dc/1234"]
+TEST_ENTITY_TYPE_2 = "PowerPlant"
 
 EXPECTED_TRIPLES = [
     Triple(
@@ -181,6 +187,21 @@ EXPECTED_TRIPLES = [
         "memberOf",
         object_id="custom/g/Root",
     ),
+    Triple(
+        "country/AFG",
+        "typeOf",
+        object_id="Country",
+    ),
+    Triple(
+        "country/USA",
+        "typeOf",
+        object_id="Country",
+    ),
+    Triple(
+        "dc/1234",
+        "typeOf",
+        object_id="PowerPlant",
+    ),
 ]
 
 
@@ -249,8 +270,11 @@ class TestNodes(unittest.TestCase):
 
   def test_triples(self):
     nodes = Nodes(CONFIG)
-    for sv_column_name in TEST_COLUMN_NAMES:
+    for sv_column_name in TEST_SV_COLUMN_NAMES:
       nodes.variable(sv_column_name)
+
+    nodes.entities_with_type(TEST_ENTITY_DCIDS_1, TEST_ENTITY_TYPE_1)
+    nodes.entities_with_type(TEST_ENTITY_DCIDS_2, TEST_ENTITY_TYPE_2)
 
     triples = nodes.triples()
 
