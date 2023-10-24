@@ -170,6 +170,38 @@ def get_entities_of_type(entity_type: str,
   return result, response.get("nextToken", "")
 
 
+# Returns a common entity type that the specified entity dcids resolve to.
+# Returns an empty string if there is no common entity type
+def resolve_entity_type(entity_dcids: list[str]) -> str:
+  data = {
+      "nodes": entity_dcids,
+      "property": "->typeOf",
+  }
+
+  logging.info("Fetching entity types: %s", data)
+  response = post(path="/v2/node", data=data)
+
+  results: list[(str, set[str])] = []
+  for entity_dcid, entity_data in response.get("data", {}).items():
+    nodes = entity_data.get("arcs", {}).get("typeOf", {}).get("nodes", [])
+    entity_types = [node.get("dcid") for node in nodes if node.get("dcid")]
+    if entity_types:
+      results.append((entity_dcid, set(entity_types)))
+
+  logging.debug("Entity type results: %s", results)
+  if not results or len(results) != len(entity_dcids):
+    return ""
+
+  common_entity_types: set[str] = set()
+  for _, entity_types in results:
+    if not common_entity_types:
+      common_entity_types = entity_types
+    else:
+      common_entity_types &= entity_types
+
+  return common_entity_types.pop() if common_entity_types else ""
+
+
 def post(path: str, data={}) -> dict:
   url = get_api_root() + path
   headers = {"Content-Type": "application/json"}

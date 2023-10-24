@@ -71,3 +71,15 @@ class StatVar:
       triples.append(
           Triple(self.id, _PREDICATE_MEMBER_OF, object_id=self.group_id))
     return triples
+
+
+@dataclass
+class Entity:
+  entity_dcid: str
+  entity_type: str
+
+  def triples(self) -> list[Triple]:
+    # Currently only 1 triple is generated but could be more in the future (e.g. name)
+    return [
+        Triple(self.entity_dcid, _PREDICATE_TYPE_OF, object_id=self.entity_type)
+    ]

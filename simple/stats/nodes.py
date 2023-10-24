@@ -18,6 +18,7 @@ import re
 
 import pandas as pd
 from stats.config import Config
+from stats.data import Entity
 from stats.data import StatVar
 from stats.data import StatVarGroup
 from stats.data import Triple
@@ -44,6 +45,8 @@ class Nodes:
     self.variables: dict[str, StatVar] = {}
     # Dictionary of SVGs from SVG path to SVG
     self.groups: dict[str, StatVarGroup] = {}
+    # Dictionary of entities from entity DCID to Entity
+    self.entities: dict[str, Entity] = {}
     # Used to generate SV IDs
     self._sv_generated_id_count = 0
 
@@ -93,12 +96,19 @@ class Nodes:
       self.groups[_DEFAULT_CUSTOM_GROUP_PATH] = _DEFAULT_CUSTOM_GROUP
     return self.groups[_DEFAULT_CUSTOM_GROUP_PATH]
 
+  def entities_with_type(self, entity_dcids: list[str], entity_type: str):
+    for entity_dcid in entity_dcids:
+      if entity_dcid not in self.entities:
+        self.entities[entity_dcid] = Entity(entity_dcid, entity_type)
+
   def triples(self, triples_fh: FileHandler | None = None) -> list[Triple]:
     triples: list[Triple] = []
     for group in self.groups.values():
       triples.extend(group.triples())
     for variable in self.variables.values():
       triples.extend(variable.triples())
+    for entities in self.entities.values():
+      triples.extend(entities.triples())
 
     if triples_fh:
       logging.info("Writing %s triples to: %s", len(triples), str(triples_fh))
