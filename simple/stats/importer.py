@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import random
 
 import pandas as pd
 from stats import constants
@@ -56,6 +57,7 @@ class SimpleStatsImporter:
       self._sanitize_values()
       self._resolve_entities()
       self._rename_columns()
+      self._add_entity_nodes()
       self.reporter.report_success()
     except Exception as e:
       self.reporter.report_failure(str(e))
@@ -97,6 +99,25 @@ class SimpleStatsImporter:
     renamed.update({col: id for col, id in zip(sv_column_names, sv_ids)})
 
     self.df = self.df.rename(columns=renamed)
+
+  def _add_entity_nodes(self) -> None:
+    if not self.entity_type:
+      self.entity_type = self._resolve_entity_type()
+      if self.entity_type:
+        logging.info("Resolved entity type: %s", self.entity_type)
+    if not self.entity_type:
+      logging.warning(
+          "Could not resolve entity type. Entity triples will not be imported.")
+      return
+    self.nodes.entities_with_type(self.df.iloc[:, 0].tolist(), self.entity_type)
+
+  def _resolve_entity_type(self) -> str:
+    all_entity_dcids = self.df.iloc[:, 0].tolist()
+    sample_entity_dcids = random.sample(all_entity_dcids,
+                                        min(len(all_entity_dcids), 5))
+    logging.info("Resolving entity type from sample entities: %s",
+                 sample_entity_dcids)
+    return dc.resolve_entity_type(sample_entity_dcids)
 
   def _resolve_entities(self) -> None:
     df = self.df
