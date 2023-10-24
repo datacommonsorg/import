@@ -132,37 +132,37 @@ EXPECTED_TRIPLES = [
         object_id="custom/g/group_2",
     ),
     Triple(
-        "custom/statvar_3",
+        "var3",
         "typeOf",
         object_id="StatisticalVariable",
     ),
     Triple(
-        "custom/statvar_3",
+        "var3",
         "name",
         object_value="Var 3 Name",
     ),
     Triple(
-        "custom/statvar_3",
+        "var3",
         "description",
         object_value="Var 3 Description",
     ),
     Triple(
-        "custom/statvar_3",
+        "var3",
         "memberOf",
         object_id="custom/g/group_3",
     ),
     Triple(
-        "custom/statvar_4",
+        "custom/statvar_3",
         "typeOf",
         object_id="StatisticalVariable",
     ),
     Triple(
-        "custom/statvar_4",
+        "custom/statvar_3",
         "name",
         object_value="Variable with no config",
     ),
     Triple(
-        "custom/statvar_4",
+        "custom/statvar_3",
         "memberOf",
         object_id="dc/g/Root",
     ),
@@ -187,7 +187,7 @@ class TestNodes(unittest.TestCase):
     self.assertEqual(
         sv,
         StatVar(
-            "custom/statvar_1",
+            "var3",
             "Var 3 Name",
             description="Var 3 Description",
             nl_sentences=["Sentence 1", "Sentence 2"],

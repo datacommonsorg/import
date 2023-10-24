@@ -14,6 +14,7 @@
 
 from dataclasses import dataclass
 import logging
+import re
 
 import pandas as pd
 from stats.config import Config
@@ -25,6 +26,10 @@ from util.filehandler import FileHandler
 _CUSTOM_SV_ID_PREFIX = "custom/statvar_"
 _CUSTOM_GROUP_ID_PREFIX = "custom/g/group_"
 _ROOT_GROUP_ID = "dc/g/Root"
+# Pattern to check if a string conforms to that of a valid SV ID.
+# Note that slashes ("/") are intentionally not considered here
+# since it can be confusing for custom DCs.
+_SV_ID_PATTERN = r"^[A-Za-z0-9_]+$"
 
 
 class Nodes:
@@ -35,6 +40,8 @@ class Nodes:
     self.variables: dict[str, StatVar] = {}
     # Dictionary of SVGs from SVG path to SVG
     self.groups: dict[str, StatVarGroup] = {}
+    # Used to generate SV IDs
+    self._sv_generated_id_count = 0
 
   def variable(self, sv_column_name: str) -> StatVar:
     if sv_column_name in self.variables:
@@ -44,13 +51,19 @@ class Nodes:
     group = self.group(var_cfg.group_path)
     group_id = group.id if group else _ROOT_GROUP_ID
     self.variables[sv_column_name] = StatVar(
-        f"{_CUSTOM_SV_ID_PREFIX}{len(self.variables) + 1}",
+        self._sv_id(sv_column_name),
         var_cfg.name,
         description=var_cfg.description,
         nl_sentences=var_cfg.nl_sentences,
         group_id=group_id,
     )
     return self.variables[sv_column_name]
+
+  def _sv_id(self, sv_column_name: str) -> str:
+    if re.fullmatch(_SV_ID_PATTERN, sv_column_name):
+      return sv_column_name
+    self._sv_generated_id_count += 1
+    return f"{_CUSTOM_SV_ID_PREFIX}{self._sv_generated_id_count}"
 
   def group(self, group_path: str) -> StatVarGroup | None:
     if not group_path:
