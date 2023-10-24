@@ -30,6 +30,10 @@ _ROOT_GROUP_ID = "dc/g/Root"
 # Note that slashes ("/") are intentionally not considered here
 # since it can be confusing for custom DCs.
 _SV_ID_PATTERN = r"^[A-Za-z0-9_]+$"
+# If group path for a variable is empty, we'll put it under a default custom group.
+_DEFAULT_CUSTOM_GROUP_PATH = ""
+_DEFAULT_CUSTOM_GROUP = StatVarGroup("custom/g/Root", "Custom Variables",
+                                     _ROOT_GROUP_ID)
 
 
 class Nodes:
@@ -67,7 +71,7 @@ class Nodes:
 
   def group(self, group_path: str) -> StatVarGroup | None:
     if not group_path:
-      return None
+      return self._default_custom_group()
     if group_path in self.groups:
       return self.groups[group_path]
 
@@ -83,6 +87,11 @@ class Nodes:
             parent_id)
 
     return self.groups[group_path]
+
+  def _default_custom_group(self) -> StatVarGroup:
+    if _DEFAULT_CUSTOM_GROUP_PATH not in self.groups:
+      self.groups[_DEFAULT_CUSTOM_GROUP_PATH] = _DEFAULT_CUSTOM_GROUP
+    return self.groups[_DEFAULT_CUSTOM_GROUP_PATH]
 
   def triples(self, triples_fh: FileHandler | None = None) -> list[Triple]:
     triples: list[Triple] = []
