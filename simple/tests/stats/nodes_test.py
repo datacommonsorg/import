@@ -102,6 +102,21 @@ EXPECTED_TRIPLES = [
         object_id="custom/g/group_1",
     ),
     Triple(
+        "custom/g/Root",
+        "typeOf",
+        object_id="StatVarGroup",
+    ),
+    Triple(
+        "custom/g/Root",
+        "name",
+        object_value="Custom Variables",
+    ),
+    Triple(
+        "custom/g/Root",
+        "specializationOf",
+        object_id="dc/g/Root",
+    ),
+    Triple(
         "custom/statvar_1",
         "typeOf",
         object_id="StatisticalVariable",
@@ -164,7 +179,7 @@ EXPECTED_TRIPLES = [
     Triple(
         "custom/statvar_3",
         "memberOf",
-        object_id="dc/g/Root",
+        object_id="custom/g/Root",
     ),
 ]
 
@@ -178,7 +193,7 @@ class TestNodes(unittest.TestCase):
         sv,
         StatVar("custom/statvar_1",
                 "Variable with no config",
-                group_id="dc/g/Root"),
+                group_id="custom/g/Root"),
     )
 
   def test_variable_with_config(self):
