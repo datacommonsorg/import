@@ -44,13 +44,13 @@ class TestData(unittest.TestCase):
   def test_basic_embeddings(self):
     embeddings_fh = _TEST_DATA_DIR_FH.make_file(_BASIC_EMBEDDINGS_FILE_NAME)
     if _TEST_MODE == "write":
-      dataframe = embeddings.build(_TEST_STAT_VARS)
+      dataframe = embeddings.build(_TEST_STAT_VARS, None)
       print("Writing dcids and sentences from the embeddings dataframe to:",
             embeddings_fh)
       embeddings_fh.write_string(
           dataframe[_DCID_SENTENCE_COLUMNS].to_csv(index=False))
       return
 
-    dataframe = embeddings.build(_TEST_STAT_VARS)
+    dataframe = embeddings.build(_TEST_STAT_VARS, None)
     self.assertEqual(dataframe[_DCID_SENTENCE_COLUMNS].to_csv(index=False),
                      embeddings_fh.read_string())

@@ -26,7 +26,7 @@ _SENTENCE_COL = "sentence"
 
 
 def build(svs: list[StatVar],
-          embeddings_fh: FileHandler | None = None) -> pd.DataFrame:
+          embeddings_fh: FileHandler | None) -> pd.DataFrame:
   """Builds embeddings based on the name, description and NL sentences of the specified SVs.
 
     If the embeddings FileHandler is specified, it writes the embeddings to that file.
