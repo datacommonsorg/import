@@ -18,6 +18,7 @@ import os
 DEFAULT_DATA_DIR = ".data"
 DEFAULT_INPUT_PATH = os.path.join(DEFAULT_DATA_DIR, "input")
 DEFAULT_OUTPUT_DIR = os.path.join(DEFAULT_DATA_DIR, "output")
+DEFAULT_FROZEN_TIME = "2023-01-01"
 
 CONFIG_JSON_FILE_NAME = "config.json"
 REPORT_JSON_FILE_NAME = "report.json"
