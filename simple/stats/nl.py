@@ -18,9 +18,9 @@ import pandas as pd
 from stats.data import StatVar
 from util.filehandler import FileHandler
 
-_MODEL_NAME = "all-MiniLM-L6-v2"
 _DCID_COL = "dcid"
 _SENTENCE_COL = "sentence"
+_SENTENCE_SEPARATOR = ";"
 
 
 def generate_sv_sentences(svs: list[StatVar], sentences_fh: FileHandler):
@@ -46,4 +46,4 @@ def _sv_sentences(sv: StatVar) -> str:
   for nl_sentence in sv.nl_sentences:
     if nl_sentence:
       sentences.append(nl_sentence)
-  return ";".join(sentences)
+  return _SENTENCE_SEPARATOR.join(sentences)
