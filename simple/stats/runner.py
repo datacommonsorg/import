@@ -68,9 +68,10 @@ class Runner:
       self.nodes.triples(
           self.output_dir_fh.make_file(constants.TRIPLES_FILE_NAME))
 
-      # Build embeddings.
-      nl.build(list(self.nodes.variables.values()),
-               self.output_dir_fh.make_file(constants.EMBEDDINGS_FILE_NAME))
+      # Generate SV sentences.
+      nl.generate_sv_sentences(
+          list(self.nodes.variables.values()),
+          self.output_dir_fh.make_file(constants.SENTENCES_FILE_NAME))
 
       # Report done.
       self.reporter.report_done()

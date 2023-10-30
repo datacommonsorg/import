@@ -23,7 +23,7 @@ DEFAULT_FROZEN_TIME = "2023-01-01"
 CONFIG_JSON_FILE_NAME = "config.json"
 REPORT_JSON_FILE_NAME = "report.json"
 TRIPLES_FILE_NAME = "triples.csv"
-EMBEDDINGS_FILE_NAME = "embeddings.csv"
+SENTENCES_FILE_NAME = "sentences.csv"
 
 OBSERVATIONS_FILE_NAME_PREFIX = "observations"
 DEBUG_RESOLVE_FILE_NAME_PREFIX = "debug_resolve"
