@@ -17,8 +17,8 @@ import logging
 
 from stats import constants
 from stats.config import Config
-import stats.embeddings as embeddings
 from stats.importer import SimpleStatsImporter
+import stats.nl as nl
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
@@ -68,10 +68,10 @@ class Runner:
       self.nodes.triples(
           self.output_dir_fh.make_file(constants.TRIPLES_FILE_NAME))
 
-      # Build embeddings.
-      embeddings.build(
+      # Generate SV sentences.
+      nl.generate_sv_sentences(
           list(self.nodes.variables.values()),
-          self.output_dir_fh.make_file(constants.EMBEDDINGS_FILE_NAME))
+          self.output_dir_fh.make_file(constants.SENTENCES_FILE_NAME))
 
       # Report done.
       self.reporter.report_done()
