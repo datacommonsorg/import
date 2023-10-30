@@ -15,14 +15,38 @@
 import logging
 
 import pandas as pd
-from sentence_transformers import SentenceTransformer
 from stats.data import StatVar
 from util.filehandler import FileHandler
-from util.filehandler import LocalFileHandler
 
 _MODEL_NAME = "all-MiniLM-L6-v2"
 _DCID_COL = "dcid"
 _SENTENCE_COL = "sentence"
+
+
+def generate_sv_sentences(svs: list[StatVar], sentences_fh: FileHandler):
+  """Generates sentences based on the name, description and NL sentences of the specified SVs.
+
+    The SV dcids and sentences are written to a CSV using the specified FileHandler
+    """
+  rows = []
+  for sv in svs:
+    rows.append({_DCID_COL: sv.id, _SENTENCE_COL: _sv_sentences(sv)})
+
+  dataframe = pd.DataFrame(rows)
+
+  logging.info("Writing %s SV sentences to: %s", dataframe.size, sentences_fh)
+  sentences_fh.write_string(dataframe.to_csv(index=False))
+
+
+def _sv_sentences(sv: StatVar) -> str:
+  sentences = []
+  sentences.append(sv.name)
+  if sv.description:
+    sentences.append(sv.description)
+  for nl_sentence in sv.nl_sentences:
+    if nl_sentence:
+      sentences.append(nl_sentence)
+  return ";".join(sentences)
 
 
 def build(svs: list[StatVar],

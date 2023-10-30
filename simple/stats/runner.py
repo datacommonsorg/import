@@ -17,8 +17,8 @@ import logging
 
 from stats import constants
 from stats.config import Config
-import stats.embeddings as embeddings
 from stats.importer import SimpleStatsImporter
+import stats.nl as nl
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
@@ -69,9 +69,8 @@ class Runner:
           self.output_dir_fh.make_file(constants.TRIPLES_FILE_NAME))
 
       # Build embeddings.
-      embeddings.build(
-          list(self.nodes.variables.values()),
-          self.output_dir_fh.make_file(constants.EMBEDDINGS_FILE_NAME))
+      nl.build(list(self.nodes.variables.values()),
+               self.output_dir_fh.make_file(constants.EMBEDDINGS_FILE_NAME))
 
       # Report done.
       self.reporter.report_done()
