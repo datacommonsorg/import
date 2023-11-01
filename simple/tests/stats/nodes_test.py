@@ -279,3 +279,20 @@ class TestNodes(unittest.TestCase):
     triples = nodes.triples()
 
     self.assertListEqual(triples, EXPECTED_TRIPLES)
+
+  def test_multiple_parent_groups(self):
+    """This is to test a bug fix related to groups.
+    
+    The bug was that if there are multiple custom parent groups and
+    if a variable is inserted inbetween,
+    the second parent is put under custom/g/Root instead of dc/g/Root.
+
+    The fix checks that both parents are under dc/g/Root
+    """
+    nodes = Nodes(Config({}))
+    nodes.group("Parent 1/Child 1")
+    nodes.variable("foo")
+    nodes.group("Parent 2/Child 1")
+
+    self.assertEqual(nodes.groups["Parent 1"].parent_id, "dc/g/Root")
+    self.assertEqual(nodes.groups["Parent 2"].parent_id, "dc/g/Root")

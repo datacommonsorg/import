@@ -32,7 +32,7 @@ _ROOT_GROUP_ID = "dc/g/Root"
 # since it can be confusing for custom DCs.
 _SV_ID_PATTERN = r"^[A-Za-z0-9_]+$"
 # If group path for a variable is empty, we'll put it under a default custom group.
-_DEFAULT_CUSTOM_GROUP_PATH = ""
+_DEFAULT_CUSTOM_GROUP_PATH = "__DEFAULT__"
 _DEFAULT_CUSTOM_GROUP = StatVarGroup("custom/g/Root", "Custom Variables",
                                      _ROOT_GROUP_ID)
 
