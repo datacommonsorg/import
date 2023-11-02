@@ -56,6 +56,10 @@ function run_lint_test {
 
 # Fixes python tests
 function run_py_test {
+  export TEST_MODE=test
+  # Clear api key to catch any spurious API calls.
+  export DC_API_KEY=
+
   python3 -m venv .env
   source .env/bin/activate
   
