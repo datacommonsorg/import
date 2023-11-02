@@ -42,7 +42,7 @@ def _compare_files(test: unittest.TestCase, output_path, expected_path):
 
 def _test_import(test: unittest.TestCase,
                  test_name: str,
-                 entity_type: str = "",
+                 entity_type: str = "__DUMMY__",
                  ignore_columns: list[str] = []):
   test.maxDiff = None
 
