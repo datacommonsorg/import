@@ -18,13 +18,11 @@ import unittest
 
 from stats.data import StatVar
 import stats.nl as nl
+from tests.stats.test_util import is_write_mode
 from util.filehandler import LocalFileHandler
 
-# If $TEST_MODE is set to "write", the test will write the goldens.
-_TEST_MODE = os.getenv("TEST_MODE", "")
-
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                              "test_data")
+                              "test_data", "nl")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 
@@ -50,7 +48,7 @@ class TestData(unittest.TestCase):
   def test_generate_sv_sentences(self):
     expected_sv_sentences_path = os.path.join(_EXPECTED_DIR, "sentences.csv")
 
-    if _TEST_MODE == "write":
+    if is_write_mode():
       expected_sentences_fh = LocalFileHandler(expected_sv_sentences_path)
       print("Writing sv sentences to:", expected_sentences_fh)
       nl.generate_sv_sentences(_TEST_STAT_VARS, expected_sentences_fh)
