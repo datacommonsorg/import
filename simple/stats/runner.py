@@ -39,6 +39,7 @@ class Runner:
   ) -> None:
     self.input_fh = create_file_handler(input_path)
     self.output_dir_fh = create_file_handler(output_dir)
+    self.nl_dir_fh = self.output_dir_fh.make_file(f"{constants.NL_DIR_NAME}/")
     self.process_dir_fh = self.output_dir_fh.make_file(
         f"{constants.PROCESS_DIR_NAME}/")
     self.reporter = ImportReporter(report_fh=self.process_dir_fh.make_file(
@@ -57,6 +58,7 @@ class Runner:
     self.nodes = Nodes(self.config)
 
     self.output_dir_fh.make_dirs()
+    self.nl_dir_fh.make_dirs()
     self.process_dir_fh.make_dirs()
 
   def run(self):
@@ -71,7 +73,7 @@ class Runner:
       # Generate SV sentences.
       nl.generate_sv_sentences(
           list(self.nodes.variables.values()),
-          self.output_dir_fh.make_file(constants.SENTENCES_FILE_NAME))
+          self.nl_dir_fh.make_file(constants.SENTENCES_FILE_NAME))
 
       # Report done.
       self.reporter.report_done()
