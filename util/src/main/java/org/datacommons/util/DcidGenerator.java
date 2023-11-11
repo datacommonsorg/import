@@ -111,6 +111,10 @@ public class DcidGenerator {
           Vocabulary.CONFIDENCE_INTERVAL_UPPER_LIMIT,
           Vocabulary.KURTOSIS,
           Vocabulary.SKEWNESS,
+          Vocabulary.VARIENCE_VALUE,
+          Vocabulary.PALMA_RATIO,
+          Vocabulary.RANKING_VALUE,
+          Vocabulary.DECILE_VALUE,
           Vocabulary.MEASUREMENT_DENOMINATOR,
           Vocabulary.MEASUREMENT_QUALIFIER,
           Vocabulary.SCALING_FACTOR);
