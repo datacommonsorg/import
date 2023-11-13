@@ -83,3 +83,12 @@ class Entity:
     return [
         Triple(self.entity_dcid, _PREDICATE_TYPE_OF, object_id=self.entity_type)
     ]
+
+
+@dataclass
+class Observation:
+  entity: str
+  variable: str
+  date: str
+  value: str
+  provenance: str
