@@ -73,15 +73,3 @@ def to_triple_tuple(triple: Triple):
 def to_observation_tuple(observation: Observation):
   return (observation.entity, observation.variable, observation.date,
           observation.value, observation.provenance)
-
-
-db = Db(".data/datacommons.db")
-print("DB created")
-db.insert_triples([
-    Triple("sub1", "pred1", object_id="objid1"),
-    Triple("sub2", "pred2", object_value="objval1")
-])
-db.insert_observations([
-    Observation("e1", "v1", "2023", "123", "p1"),
-    Observation("e2", "v1", "2023", "456", "p1")
-])
