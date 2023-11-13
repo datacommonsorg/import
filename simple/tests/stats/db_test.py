@@ -37,13 +37,13 @@ _OBSERVATIONS = [
 class TestDb(unittest.TestCase):
 
   def test_db(self):
-    with tempfile.TemporaryDirectory() as temp_dir:
-      db_file_path = os.path.join(temp_dir, "datacommons.db")
-      db = Db(db_file_path)
+    with tempfile.NamedTemporaryFile() as temp_file:
+      db = Db(temp_file.name)
       db.insert_triples(_TRIPLES)
       db.insert_observations(_OBSERVATIONS)
+      db.close()
 
-      sqldb = sqlite3.connect(db_file_path)
+      sqldb = sqlite3.connect(temp_file.name)
 
       triples = sqldb.execute("select * from triples").fetchall()
       self.assertListEqual(triples,
