@@ -155,7 +155,8 @@ public final class Vocabulary {
   public static final String SKEWNESS = "skewnessValue";
   public static final String VARIENCE_VALUE = "varianceValue";
   public static final String PALMA_RATIO = "palmaRatio";
-  public static final String RANKING_VALUE = "rankingValue";
+  public static final String RANK_FROM_TOP = "rankFromTop";
+  public static final String RANK_FROM_BOTTOM = "rankFromBottom";
   public static final String DECILE_VLUE = "decileValue";
   public static final String MEASUREMENT_RESULT = "measurementResult";
 
@@ -338,7 +339,8 @@ public final class Vocabulary {
         || lcVal.endsWith("samplesize")
         || lcVal.endsWith("growthrate")
         || lcVal.endsWith("limit")
-        || lcVal.endsWith("palmaratio");
+        || lcVal.endsWith("palmaratio")
+        || lcVal.startsWith("rank");
 
   }
 
