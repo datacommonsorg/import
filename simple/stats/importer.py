@@ -52,6 +52,7 @@ class SimpleStatsImporter:
     self.ignore_columns = ignore_columns
     self.df = pd.DataFrame()
     self.debug_resolve_df = None
+    self.input_file_name = self.input_fh.basename()
 
   def do_import(self) -> None:
     self.reporter.report_started()
@@ -61,6 +62,7 @@ class SimpleStatsImporter:
       self._sanitize_values()
       self._resolve_entities()
       self._rename_columns()
+      self._add_provenance_column()
       self._add_entity_nodes()
       self.reporter.report_success()
     except Exception as e:
@@ -97,12 +99,16 @@ class SimpleStatsImporter:
     # Rename SV columns to their IDs
     sv_column_names = self.df.columns[2:]
     sv_ids = [
-        self.nodes.variable(sv_column_name).id
+        self.nodes.variable(sv_column_name, self.input_file_name).id
         for sv_column_name in sv_column_names
     ]
     renamed.update({col: id for col, id in zip(sv_column_names, sv_ids)})
 
     self.df = self.df.rename(columns=renamed)
+
+  def _add_provenance_column(self):
+    self.df[constants.COLUMN_PROVENANCE] = self.nodes.provenance(
+        self.input_file_name).id
 
   def _add_entity_nodes(self) -> None:
     if not self.entity_type:

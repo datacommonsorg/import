@@ -1,23 +1,29 @@
 {
   "inputFiles": {
     "countries.csv": {
-      "entityType": "Country"
+      "entityType": "Country",
+      "provenance": "Provenance1 Name"
     },
     "geoids.csv": {
       "entityType": "",
-      "ignoreColumns": ["ignore1", "ignore2"]
+      "ignoreColumns": ["ignore1", "ignore2"],
+      "provenance": "Provenance1 Name"
     },
     "latlng.csv": {
-      "entityType": "Country"
+      "entityType": "Country",
+      "provenance": "Provenance1 Name"
     },
     "powerplants.csv": {
-      "entityType": "PowerPlant"
+      "entityType": "PowerPlant",
+      "provenance": "Provenance2 Name"
     },
     "s2cells.csv": {
-      "entityType": "S2CellLevel10"
+      "entityType": "S2CellLevel10",
+      "provenance": "Provenance2 Name"
     },
     "wikidataids.csv": {
-      "entityType": "Country"
+      "entityType": "Country",
+      "provenance": "Provenance1 Name"
     }
   },
   "variables": {
@@ -36,6 +42,15 @@
     },
     "Variable 1": {
       "group": "Parent Group"
+    }
+  },
+  "sources": {
+    "Source1 Name": {
+      "url": "http://source1.com",
+      "provenances": {
+        "Provenance1 Name": "http://source1.com/provenance1",
+        "Provenance2 Name": "http://source1.com/provenance2"
+      }
     }
   }
 }
