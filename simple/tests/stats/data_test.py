@@ -14,6 +14,7 @@
 
 import unittest
 
+from stats.data import Provenance
 from stats.data import StatVar
 from stats.data import StatVarGroup
 from stats.data import Triple
@@ -66,6 +67,28 @@ class TestData(unittest.TestCase):
         Triple(SV_ID1, "memberOf", object_id=SVG_ID1),
     ]
     self.assertListEqual(result, expected)
+
+  def test_sv_triples_with_provenances(self):
+    sv = StatVar(SV_ID1, SV_NAME1)
+
+    sv.add_provenance(Provenance("p1", "s1", ""))
+    self.assertListEqual(sv.provenance_ids, ["p1"])
+    self.assertListEqual(sv.source_ids, ["s1"])
+
+    # Adding same provenance again should have no effect.
+    sv.add_provenance(Provenance("p1", "s1", ""))
+    self.assertListEqual(sv.provenance_ids, ["p1"])
+    self.assertListEqual(sv.source_ids, ["s1"])
+
+    # Same source, different provenance.
+    sv.add_provenance(Provenance("p2", "s1", ""))
+    self.assertListEqual(sv.provenance_ids, ["p1", "p2"])
+    self.assertListEqual(sv.source_ids, ["s1"])
+
+    # Another source, another provenance.
+    sv.add_provenance(Provenance("p2", "s2", ""))
+    self.assertListEqual(sv.provenance_ids, ["p1", "p2"])
+    self.assertListEqual(sv.source_ids, ["s1", "s2"])
 
   def test_sv_triples_all(self):
     sv = StatVar(

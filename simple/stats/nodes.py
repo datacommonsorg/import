@@ -19,6 +19,8 @@ import re
 import pandas as pd
 from stats.config import Config
 from stats.data import Entity
+from stats.data import Provenance
+from stats.data import Source
 from stats.data import StatVar
 from stats.data import StatVarGroup
 from stats.data import Triple
@@ -36,6 +38,11 @@ _DEFAULT_CUSTOM_GROUP_PATH = "__DEFAULT__"
 _DEFAULT_CUSTOM_GROUP = StatVarGroup("custom/g/Root", "Custom Variables",
                                      _ROOT_GROUP_ID)
 
+_CUSTOM_PROVENANCE_ID_PREFIX = "c/p/"
+_CUSTOM_SOURCE_ID_PREFIX = "c/s/"
+_DEFAULT_SOURCE = Source(f"{_CUSTOM_SOURCE_ID_PREFIX}default",
+                         "Custom Data Commons")
+
 
 class Nodes:
 
@@ -45,26 +52,84 @@ class Nodes:
     self.variables: dict[str, StatVar] = {}
     # Dictionary of SVGs from SVG path to SVG
     self.groups: dict[str, StatVarGroup] = {}
+    # Dictionary of SVGs from SVG id to SVG
+    self.ids_to_groups: dict[str, StatVarGroup] = {}
     # Dictionary of entities from entity DCID to Entity
     self.entities: dict[str, Entity] = {}
+    # dict from provenance name to Provenance
+    self.provenances: dict[str, Provenance] = {}
+    # dict from source name to Source
+    self.sources: dict[str, Source] = {}
+    self._load_provenances_and_sources()
     # Used to generate SV IDs
     self._sv_generated_id_count = 0
 
-  def variable(self, sv_column_name: str) -> StatVar:
-    if sv_column_name in self.variables:
-      return self.variables[sv_column_name]
+  def _load_provenances_and_sources(self):
+    # Load default Source
+    self.sources[_DEFAULT_SOURCE.id] = _DEFAULT_SOURCE
+    # Load from config
+    for prov_cfg in self.config.provenances.values():
+      source_cfg = self.config.provenance_sources.get(prov_cfg.name)
+      source_id = self._source_id(source_cfg)
+      self._provenance(prov_name=prov_cfg.name,
+                       prov_url=prov_cfg.url,
+                       source_id=source_id)
 
-    var_cfg = self.config.variable(sv_column_name)
-    group = self.group(var_cfg.group_path)
-    group_id = group.id if group else _ROOT_GROUP_ID
-    self.variables[sv_column_name] = StatVar(
-        self._sv_id(sv_column_name),
-        var_cfg.name,
-        description=var_cfg.description,
-        nl_sentences=var_cfg.nl_sentences,
-        group_id=group_id,
-    )
-    return self.variables[sv_column_name]
+  def _provenance(self,
+                  prov_name: str,
+                  prov_url: str = "",
+                  source_id: str = _DEFAULT_SOURCE.id) -> Provenance:
+    provenance = self.provenances.get(prov_name)
+    if provenance:
+      return provenance
+
+    provenance = Provenance(
+        id=f"{_CUSTOM_PROVENANCE_ID_PREFIX}{len(self.provenances) + 1}",
+        source_id=source_id,
+        name=prov_name,
+        url=prov_url)
+    self.provenances[provenance.name] = provenance
+
+    return provenance
+
+  def _source_id(self, source_cfg: Source | None) -> str:
+    if not source_cfg:
+      return _DEFAULT_SOURCE.id
+
+    source = self.sources.get(source_cfg.name)
+    if not source:
+      source = Source(id=f"{_CUSTOM_SOURCE_ID_PREFIX}{len(self.sources)}",
+                      name=source_cfg.name,
+                      url=source_cfg.url)
+      self.sources[source.name] = source
+
+    return source.id
+
+  def provenance(self, input_file_name: str) -> Provenance:
+    return self._provenance(self.config.provenance_name(input_file_name))
+
+  def variable(self, sv_column_name: str, input_file_name: str) -> StatVar:
+    if not sv_column_name in self.variables:
+      var_cfg = self.config.variable(sv_column_name)
+      group = self.group(var_cfg.group_path)
+      group_id = group.id if group else _ROOT_GROUP_ID
+      self.variables[sv_column_name] = StatVar(
+          self._sv_id(sv_column_name),
+          var_cfg.name,
+          description=var_cfg.description,
+          nl_sentences=var_cfg.nl_sentences,
+          group_id=group_id)
+
+    return self._add_provenance(self.variables[sv_column_name],
+                                self.provenance(input_file_name))
+
+  def _add_provenance(self, sv: StatVar, provenance: Provenance) -> StatVar:
+    sv.add_provenance(provenance)
+    svg = self.ids_to_groups.get(sv.group_id)
+    while svg:
+      svg.add_provenance(provenance)
+      svg = self.ids_to_groups.get(svg.parent_id)
+    return sv
 
   def _sv_id(self, sv_column_name: str) -> str:
     if re.fullmatch(_SV_ID_PATTERN, sv_column_name):
@@ -85,9 +150,10 @@ class Nodes:
         parent_path = "" if "/" not in path else path[:path.rindex("/")]
         parent_id = (self.groups[parent_path].id
                      if parent_path in self.groups else _ROOT_GROUP_ID)
-        self.groups[path] = StatVarGroup(
-            f"{_CUSTOM_GROUP_ID_PREFIX}{len(self.groups) + 1}", tokens[index],
-            parent_id)
+        svg = StatVarGroup(f"{_CUSTOM_GROUP_ID_PREFIX}{len(self.groups) + 1}",
+                           tokens[index], parent_id)
+        self.groups[path] = svg
+        self.ids_to_groups[svg.id] = svg
 
     return self.groups[group_path]
 
@@ -103,6 +169,10 @@ class Nodes:
 
   def triples(self, triples_fh: FileHandler | None = None) -> list[Triple]:
     triples: list[Triple] = []
+    for source in self.sources.values():
+      triples.extend(source.triples())
+    for provenance in self.provenances.values():
+      triples.extend(provenance.triples())
     for group in self.groups.values():
       triples.extend(group.triples())
     for variable in self.variables.values():

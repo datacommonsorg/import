@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from stats.data import Provenance
+from stats.data import Source
 from stats.data import StatVar
-from stats.data import StatVarGroup
 
 _INPUT_FILES_FIELD = "inputFiles"
 _ENTITY_TYPE_FIELD = "entityType"
@@ -23,10 +24,10 @@ _NAME_FIELD = "name"
 _DESCRIPTION_FIELD = "description"
 _NL_SENTENCES_FIELD = "nlSentences"
 _GROUP_FIELD = "group"
-
-_CUSTOM_SV_ID_PREFIX = "custom/statvar_"
-_CUSTOM_GROUP_ID_PREFIX = "custom/g/group_"
-_ROOT_GROUP_ID = "dc/g/Root"
+_SOURCES_FIELD = "sources"
+_PROVENANCES_FIELD = "provenances"
+_URL_FIELD = "url"
+_PROVENANCE_FIELD = "provenance"
 
 
 class Config:
@@ -37,6 +38,11 @@ class Config:
 
   def __init__(self, data: dict) -> None:
     self.data = data
+    # dict from provenance name to Provenance
+    self.provenances: dict[str, Provenance] = {}
+    # dict from provenance name to Source
+    self.provenance_sources: dict[str, Source] = {}
+    self._parse_provenances_and_sources()
 
   def variable(self, variable_name: str) -> StatVar:
     var_cfg = self.data.get(_VARIABLES_FIELD, {}).get(variable_name, {})
@@ -49,11 +55,29 @@ class Config:
     )
 
   def entity_type(self, input_file_name: str) -> str:
-    return (self.data.get(_INPUT_FILES_FIELD,
-                          {}).get(input_file_name,
-                                  {}).get(_ENTITY_TYPE_FIELD, ""))
+    return self._input_file(input_file_name).get(_ENTITY_TYPE_FIELD, "")
 
   def ignore_columns(self, input_file_name: str) -> str:
-    return (self.data.get(_INPUT_FILES_FIELD,
-                          {}).get(input_file_name,
-                                  {}).get(_IGNORE_COLUMNS_FIELD, []))
+    return self._input_file(input_file_name).get(_IGNORE_COLUMNS_FIELD, [])
+
+  def provenance_name(self, input_file_name: str) -> str:
+    return self._input_file(input_file_name).get(_PROVENANCE_FIELD,
+                                                 input_file_name)
+
+  def _input_file(self, input_file_name: str) -> dict:
+    return self.data.get(_INPUT_FILES_FIELD, {}).get(input_file_name, {})
+
+  def _parse_provenances_and_sources(self):
+    sources_cfg = self.data.get(_SOURCES_FIELD, {})
+    for source_name, source_cfg in sources_cfg.items():
+      source = Source(id="",
+                      name=source_name,
+                      url=source_cfg.get(_URL_FIELD, ""))
+      provenances = source_cfg.get(_PROVENANCES_FIELD, {})
+      for prov_name, prov_url in provenances.items():
+        provenance = Provenance(id="",
+                                source_id="",
+                                name=prov_name,
+                                url=prov_url)
+        self.provenances[prov_name] = provenance
+        self.provenance_sources[prov_name] = source

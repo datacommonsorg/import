@@ -27,6 +27,15 @@ The config parameters for the files to be imported should be specified in a `con
       "nlSentences": ["Sentence 1", "Sentence 2"],
       "group": "Parent Group/Child Group 2",
     },
+  },
+  "sources": {
+    "Source1 Name": {
+      "url": "http://source1.com",
+      "provenances": {
+        "Provenance1 Name": "http://source1.com/provenance1",
+        "Provenance2 Name": "http://source1.com/provenance2"
+      }
+    }
   }
 }
 ```
@@ -46,6 +55,15 @@ entities to dcids of that type.
 #### `ignoreColumns`
 
 The list of column names to be ignored by the importer, if any.
+
+#### `provenance`
+
+The provenance (name) of this input file. 
+Note that provenance details should be specified under `sources` -> `provenances` 
+and this field associates one of the provenances defined there to this file.
+
+Provenances typically map to a dataset from a source.
+e.g. WorldDevelopmentIndicators provenance (or dataset) is from the WorldBank source.
 
 ## `variables`
 
@@ -79,3 +97,17 @@ Use "/" as a separator to specify a multi-level hierarchy.
 
 An array of NL sentences to be used for creating more NL embeddings (in addition to the description)
 for the variable.
+
+## `sources`
+
+The top-level `sources` field should encode the sources and provenances associated with the input dataset.
+
+### Source parameters
+
+#### `url`
+
+The URL of the source.
+
+#### `provenances`
+
+The provenances under a given source should be defined using the `provenances` property as `{provenance-name}:{provenance-url}` pairs.

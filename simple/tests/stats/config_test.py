@@ -15,12 +15,15 @@
 import unittest
 
 from stats.config import Config
+from stats.data import Provenance
+from stats.data import Source
 from stats.data import StatVar
 
 CONFIG_DATA = {
     "inputFiles": {
         "a.csv": {
-            "entityType": "Country"
+            "entityType": "Country",
+            "provenance": "Provenance21 Name"
         },
         "b.csv": {
             "entityType": "",
@@ -41,10 +44,63 @@ CONFIG_DATA = {
             "group": "Parent Group/Child Group 2",
         },
     },
+    "sources": {
+        "Source1 Name": {
+            "url": "http://source1.com",
+            "provenances": {
+                "Provenance11 Name": "http://provenance11.com",
+                "Provenance12 Name": "http://provenance12.com"
+            }
+        },
+        "Source2 Name": {
+            "url": "http://source2.com",
+            "provenances": {
+                "Provenance21 Name": "http://provenance21.com",
+                "Provenance22 Name": "http://provenance22.com"
+            }
+        }
+    },
+}
+
+SOURCE1 = Source(id="", name="Source1 Name", url="http://source1.com")
+SOURCE2 = Source(id="", name="Source2 Name", url="http://source2.com")
+PROVENANCE11 = Provenance(id="",
+                          source_id="",
+                          name="Provenance11 Name",
+                          url="http://provenance11.com")
+PROVENANCE12 = Provenance(id="",
+                          source_id="",
+                          name="Provenance12 Name",
+                          url="http://provenance12.com")
+PROVENANCE21 = Provenance(id="",
+                          source_id="",
+                          name="Provenance21 Name",
+                          url="http://provenance21.com")
+PROVENANCE22 = Provenance(id="",
+                          source_id="",
+                          name="Provenance22 Name",
+                          url="http://provenance22.com")
+
+PROVENANCES = {
+    "Provenance11 Name": PROVENANCE11,
+    "Provenance12 Name": PROVENANCE12,
+    "Provenance21 Name": PROVENANCE21,
+    "Provenance22 Name": PROVENANCE22,
+}
+
+PROVENANCE_SOURCES = {
+    "Provenance11 Name": SOURCE1,
+    "Provenance12 Name": SOURCE1,
+    "Provenance21 Name": SOURCE2,
+    "Provenance22 Name": SOURCE2,
 }
 
 
 class TestConfig(unittest.TestCase):
+
+  def __init__(self, methodName: str = "runTest") -> None:
+    super().__init__(methodName)
+    self.maxDiff = None
 
   def test_variable(self):
     config = Config(CONFIG_DATA)
@@ -82,3 +138,22 @@ class TestConfig(unittest.TestCase):
     self.assertEqual(config.ignore_columns("a.csv"), [])
     self.assertEqual(config.ignore_columns("b.csv"), ["ignore1", "ignore2"])
     self.assertEqual(config.ignore_columns("not-in-config.csv"), [])
+
+  def test_provenances_and_sources(self):
+    config = Config(CONFIG_DATA)
+    self.assertDictEqual(config.provenances, PROVENANCES)
+    self.assertDictEqual(config.provenance_sources, PROVENANCE_SOURCES)
+
+  def test_provenance_name(self):
+    config = Config(CONFIG_DATA)
+    self.assertEqual(config.provenance_name("a.csv"), "Provenance21 Name")
+    self.assertEqual(config.provenance_name("b.csv"), "b.csv")
+
+  def test_empty_config(self):
+    config = Config({})
+    self.assertEqual(config.variable("Variable 1"), StatVar("", "Variable 1"))
+    self.assertEqual(config.entity_type("a.csv"), "")
+    self.assertEqual(config.ignore_columns("a.csv"), [])
+    self.assertDictEqual(config.provenances, {})
+    self.assertDictEqual(config.provenance_sources, {})
+    self.assertEqual(config.provenance_name("a.csv"), "a.csv")

@@ -69,6 +69,7 @@ COLUMN_DCID = "dcid"
 COLUMN_VARIABLE = "variable"
 COLUMN_DATE = "date"
 COLUMN_VALUE = "value"
+COLUMN_PROVENANCE = "provenance"
 
 # Debug CSV columns and values
 DEBUG_COLUMN_INPUT = "input"
