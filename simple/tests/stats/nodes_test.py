@@ -101,8 +101,8 @@ class TestNodes(unittest.TestCase):
             "custom/statvar_1",
             "Variable with no config",
             group_id="custom/g/Root",
-            provenance_id="c/p/1",
-            source_id="c/s/1",
+            provenance_ids=["c/p/1"],
+            source_ids=["c/s/1"],
         ),
     )
 
@@ -117,8 +117,8 @@ class TestNodes(unittest.TestCase):
             description="Var 3 Description",
             nl_sentences=["Sentence 1", "Sentence 2"],
             group_id="custom/g/group_2",
-            provenance_id="c/p/1",
-            source_id="c/s/1",
+            provenance_ids=["c/p/1"],
+            source_ids=["c/s/1"],
         ),
     )
 
@@ -131,8 +131,8 @@ class TestNodes(unittest.TestCase):
             "custom/statvar_1",
             "Variable 1",
             group_id="custom/g/group_2",
-            provenance_id="c/p/1",
-            source_id="c/s/1",
+            provenance_ids=["c/p/1"],
+            source_ids=["c/s/1"],
         ),
     )
     self.assertListEqual(
@@ -142,11 +142,15 @@ class TestNodes(unittest.TestCase):
                 "custom/g/group_1",
                 "Parent Group",
                 "dc/g/Root",
+                provenance_ids=["c/p/1"],
+                source_ids=["c/s/1"],
             ),
             StatVarGroup(
                 "custom/g/group_2",
                 "Child Group 1",
                 "custom/g/group_1",
+                provenance_ids=["c/p/1"],
+                source_ids=["c/s/1"],
             ),
         ],
     )
@@ -160,8 +164,8 @@ class TestNodes(unittest.TestCase):
             "custom/statvar_1",
             "Variable 1",
             group_id="custom/g/group_2",
-            provenance_id="c/p/1",
-            source_id="c/s/1",
+            provenance_ids=["c/p/1"],
+            source_ids=["c/s/1"],
         ),
     )
     sv = nodes.variable("Variable 2", "a.csv")
@@ -171,16 +175,27 @@ class TestNodes(unittest.TestCase):
             "custom/statvar_2",
             "Variable 2",
             group_id="custom/g/group_2",
-            provenance_id="c/p/1",
-            source_id="c/s/1",
+            provenance_ids=["c/p/1"],
+            source_ids=["c/s/1"],
         ),
     )
     self.assertListEqual(
         list(nodes.groups.values()),
         [
-            StatVarGroup("custom/g/group_1", "Parent Group", "dc/g/Root"),
-            StatVarGroup("custom/g/group_2", "Child Group 1",
-                         "custom/g/group_1"),
+            StatVarGroup(
+                "custom/g/group_1",
+                "Parent Group",
+                "dc/g/Root",
+                provenance_ids=["c/p/1"],
+                source_ids=["c/s/1"],
+            ),
+            StatVarGroup(
+                "custom/g/group_2",
+                "Child Group 1",
+                "custom/g/group_1",
+                provenance_ids=["c/p/1"],
+                source_ids=["c/s/1"],
+            ),
         ],
     )
 

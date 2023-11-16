@@ -16,12 +16,21 @@ c/p/2,url,,http://source1.com/provenance2
 custom/g/group_1,typeOf,StatVarGroup,
 custom/g/group_1,name,,Parent Group
 custom/g/group_1,specializationOf,dc/g/Root,
+custom/g/group_1,includedIn,c/p/1,
+custom/g/group_1,includedIn,c/p/2,
+custom/g/group_1,includedIn,c/s/1,
 custom/g/group_2,typeOf,StatVarGroup,
 custom/g/group_2,name,,Child Group 1
 custom/g/group_2,specializationOf,custom/g/group_1,
+custom/g/group_2,includedIn,c/p/1,
+custom/g/group_2,includedIn,c/p/2,
+custom/g/group_2,includedIn,c/s/1,
 custom/g/group_3,typeOf,StatVarGroup,
 custom/g/group_3,name,,Child Group 2
 custom/g/group_3,specializationOf,custom/g/group_1,
+custom/g/group_3,includedIn,c/p/1,
+custom/g/group_3,includedIn,c/p/2,
+custom/g/group_3,includedIn,c/s/1,
 custom/g/Root,typeOf,StatVarGroup,
 custom/g/Root,name,,Custom Variables
 custom/g/Root,specializationOf,dc/g/Root,
@@ -30,11 +39,13 @@ var1,name,,Good var1 name
 var1,description,,Good var1 description
 var1,memberOf,custom/g/group_2,
 var1,includedIn,c/p/1,
+var1,includedIn,c/p/2,
 var1,includedIn,c/s/1,
 var2,typeOf,StatisticalVariable,
 var2,name,,Good var2 name
 var2,memberOf,custom/g/group_3,
 var2,includedIn,c/p/1,
+var2,includedIn,c/p/2,
 var2,includedIn,c/s/1,
 custom/statvar_1,typeOf,StatisticalVariable,
 custom/statvar_1,name,,Variable 1

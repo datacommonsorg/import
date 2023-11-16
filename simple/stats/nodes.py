@@ -52,6 +52,8 @@ class Nodes:
     self.variables: dict[str, StatVar] = {}
     # Dictionary of SVGs from SVG path to SVG
     self.groups: dict[str, StatVarGroup] = {}
+    # Dictionary of SVGs from SVG id to SVG
+    self.ids_to_groups: dict[str, StatVarGroup] = {}
     # Dictionary of entities from entity DCID to Entity
     self.entities: dict[str, Entity] = {}
     # dict from provenance name to Provenance
@@ -107,21 +109,27 @@ class Nodes:
     return self._provenance(self.config.provenance_name(input_file_name))
 
   def variable(self, sv_column_name: str, input_file_name: str) -> StatVar:
-    if sv_column_name in self.variables:
-      return self.variables[sv_column_name]
+    if not sv_column_name in self.variables:
+      var_cfg = self.config.variable(sv_column_name)
+      group = self.group(var_cfg.group_path)
+      group_id = group.id if group else _ROOT_GROUP_ID
+      self.variables[sv_column_name] = StatVar(
+          self._sv_id(sv_column_name),
+          var_cfg.name,
+          description=var_cfg.description,
+          nl_sentences=var_cfg.nl_sentences,
+          group_id=group_id)
 
-    var_cfg = self.config.variable(sv_column_name)
-    group = self.group(var_cfg.group_path)
-    group_id = group.id if group else _ROOT_GROUP_ID
-    provenance = self.provenance(input_file_name)
-    self.variables[sv_column_name] = StatVar(self._sv_id(sv_column_name),
-                                             var_cfg.name,
-                                             description=var_cfg.description,
-                                             nl_sentences=var_cfg.nl_sentences,
-                                             group_id=group_id,
-                                             provenance_id=provenance.id,
-                                             source_id=provenance.source_id)
-    return self.variables[sv_column_name]
+    return self._add_provenance(self.variables[sv_column_name],
+                                self.provenance(input_file_name))
+
+  def _add_provenance(self, sv: StatVar, provenance: Provenance) -> StatVar:
+    sv.add_provenance(provenance)
+    svg = self.ids_to_groups.get(sv.group_id)
+    while svg:
+      svg.add_provenance(provenance)
+      svg = self.ids_to_groups.get(svg.parent_id)
+    return sv
 
   def _sv_id(self, sv_column_name: str) -> str:
     if re.fullmatch(_SV_ID_PATTERN, sv_column_name):
@@ -142,9 +150,10 @@ class Nodes:
         parent_path = "" if "/" not in path else path[:path.rindex("/")]
         parent_id = (self.groups[parent_path].id
                      if parent_path in self.groups else _ROOT_GROUP_ID)
-        self.groups[path] = StatVarGroup(
-            f"{_CUSTOM_GROUP_ID_PREFIX}{len(self.groups) + 1}", tokens[index],
-            parent_id)
+        svg = StatVarGroup(f"{_CUSTOM_GROUP_ID_PREFIX}{len(self.groups) + 1}",
+                           tokens[index], parent_id)
+        self.groups[path] = svg
+        self.ids_to_groups[svg.id] = svg
 
     return self.groups[group_path]
 

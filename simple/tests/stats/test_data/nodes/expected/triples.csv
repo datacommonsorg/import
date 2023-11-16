@@ -18,12 +18,20 @@ c/p/3,source,c/s/default,
 custom/g/group_1,typeOf,StatVarGroup,
 custom/g/group_1,name,,Parent Group
 custom/g/group_1,specializationOf,dc/g/Root,
+custom/g/group_1,includedIn,c/p/1,
+custom/g/group_1,includedIn,c/p/2,
+custom/g/group_1,includedIn,c/s/1,
+custom/g/group_1,includedIn,c/s/default,
 custom/g/group_2,typeOf,StatVarGroup,
 custom/g/group_2,name,,Child Group 1
 custom/g/group_2,specializationOf,custom/g/group_1,
+custom/g/group_2,includedIn,c/p/1,
+custom/g/group_2,includedIn,c/s/1,
 custom/g/group_3,typeOf,StatVarGroup,
 custom/g/group_3,name,,Child Group 2
 custom/g/group_3,specializationOf,custom/g/group_1,
+custom/g/group_3,includedIn,c/p/2,
+custom/g/group_3,includedIn,c/s/default,
 custom/g/Root,typeOf,StatVarGroup,
 custom/g/Root,name,,Custom Variables
 custom/g/Root,specializationOf,dc/g/Root,
