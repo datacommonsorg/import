@@ -5,14 +5,14 @@ custom/s/Source_1,typeOf,Source,
 custom/s/Source_1,name,,Source1 Name
 custom/s/Source_1,url,,http://source1.com
 custom/s/Source_1,domain,,source1.com
-custom/base/Prov_1,typeOf,Provenance,
-custom/base/Prov_1,name,,Provenance1 Name
-custom/base/Prov_1,source,custom/s/Source_1,
-custom/base/Prov_1,url,,http://source1.com/provenance1
-custom/base/Prov_2,typeOf,Provenance,
-custom/base/Prov_2,name,,Provenance2 Name
-custom/base/Prov_2,source,custom/s/Source_1,
-custom/base/Prov_2,url,,http://source1.com/provenance2
+custom/p/Prov_1,typeOf,Provenance,
+custom/p/Prov_1,name,,Provenance1 Name
+custom/p/Prov_1,source,custom/s/Source_1,
+custom/p/Prov_1,url,,http://source1.com/provenance1
+custom/p/Prov_2,typeOf,Provenance,
+custom/p/Prov_2,name,,Provenance2 Name
+custom/p/Prov_2,source,custom/s/Source_1,
+custom/p/Prov_2,url,,http://source1.com/provenance2
 custom/g/group_1,typeOf,StatVarGroup,
 custom/g/group_1,name,,Parent Group
 custom/g/group_1,specializationOf,dc/g/Root,
@@ -29,22 +29,22 @@ var1,typeOf,StatisticalVariable,
 var1,name,,Good var1 name
 var1,description,,Good var1 description
 var1,memberOf,custom/g/group_2,
-var1,includedIn,custom/base/Prov_1,
+var1,includedIn,custom/p/Prov_1,
 var1,includedIn,custom/s/Source_1,
 var2,typeOf,StatisticalVariable,
 var2,name,,Good var2 name
 var2,memberOf,custom/g/group_3,
-var2,includedIn,custom/base/Prov_1,
+var2,includedIn,custom/p/Prov_1,
 var2,includedIn,custom/s/Source_1,
 custom/statvar_1,typeOf,StatisticalVariable,
 custom/statvar_1,name,,Variable 1
 custom/statvar_1,memberOf,custom/g/group_1,
-custom/statvar_1,includedIn,custom/base/Prov_1,
+custom/statvar_1,includedIn,custom/p/Prov_1,
 custom/statvar_1,includedIn,custom/s/Source_1,
 custom/statvar_2,typeOf,StatisticalVariable,
 custom/statvar_2,name,,Variable 2
 custom/statvar_2,memberOf,custom/g/Root,
-custom/statvar_2,includedIn,custom/base/Prov_1,
+custom/statvar_2,includedIn,custom/p/Prov_1,
 custom/statvar_2,includedIn,custom/s/Source_1,
 country/AFG,typeOf,Country,
 country/YEM,typeOf,Country,

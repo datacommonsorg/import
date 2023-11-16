@@ -1,3 +1,3 @@
 dcid,date,var1,var2,provenance
-country/USA,2021,555,666,custom/base/Prov_1
-country/IND,2022,321,123,custom/base/Prov_1
+country/USA,2021,555,666,custom/p/Prov_1
+country/IND,2022,321,123,custom/p/Prov_1

@@ -5,16 +5,16 @@ custom/s/Source_1,typeOf,Source,
 custom/s/Source_1,name,,Source1
 custom/s/Source_1,url,,http://source1.com
 custom/s/Source_1,domain,,source1.com
-custom/base/Prov_1,typeOf,Provenance,
-custom/base/Prov_1,name,,Provenance1
-custom/base/Prov_1,source,custom/s/Source_1,
-custom/base/Prov_1,url,,http://source1.com/provenance1
-custom/base/Prov_2,typeOf,Provenance,
-custom/base/Prov_2,name,,b.csv
-custom/base/Prov_2,source,custom/s/Source_default,
-custom/base/Prov_3,typeOf,Provenance,
-custom/base/Prov_3,name,,x.csv
-custom/base/Prov_3,source,custom/s/Source_default,
+custom/p/Prov_1,typeOf,Provenance,
+custom/p/Prov_1,name,,Provenance1
+custom/p/Prov_1,source,custom/s/Source_1,
+custom/p/Prov_1,url,,http://source1.com/provenance1
+custom/p/Prov_2,typeOf,Provenance,
+custom/p/Prov_2,name,,b.csv
+custom/p/Prov_2,source,custom/s/Source_default,
+custom/p/Prov_3,typeOf,Provenance,
+custom/p/Prov_3,name,,x.csv
+custom/p/Prov_3,source,custom/s/Source_default,
 custom/g/group_1,typeOf,StatVarGroup,
 custom/g/group_1,name,,Parent Group
 custom/g/group_1,specializationOf,dc/g/Root,
@@ -30,23 +30,23 @@ custom/g/Root,specializationOf,dc/g/Root,
 custom/statvar_1,typeOf,StatisticalVariable,
 custom/statvar_1,name,,Variable 1
 custom/statvar_1,memberOf,custom/g/group_2,
-custom/statvar_1,includedIn,custom/base/Prov_1,
+custom/statvar_1,includedIn,custom/p/Prov_1,
 custom/statvar_1,includedIn,custom/s/Source_1,
 custom/statvar_2,typeOf,StatisticalVariable,
 custom/statvar_2,name,,Variable 2
 custom/statvar_2,memberOf,custom/g/group_2,
-custom/statvar_2,includedIn,custom/base/Prov_1,
+custom/statvar_2,includedIn,custom/p/Prov_1,
 custom/statvar_2,includedIn,custom/s/Source_1,
 var3,typeOf,StatisticalVariable,
 var3,name,,Var 3 Name
 var3,description,,Var 3 Description
 var3,memberOf,custom/g/group_3,
-var3,includedIn,custom/base/Prov_2,
+var3,includedIn,custom/p/Prov_2,
 var3,includedIn,custom/s/Source_default,
 custom/statvar_3,typeOf,StatisticalVariable,
 custom/statvar_3,name,,Variable with no config
 custom/statvar_3,memberOf,custom/g/Root,
-custom/statvar_3,includedIn,custom/base/Prov_3,
+custom/statvar_3,includedIn,custom/p/Prov_3,
 custom/statvar_3,includedIn,custom/s/Source_default,
 country/AFG,typeOf,Country,
 country/USA,typeOf,Country,

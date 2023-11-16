@@ -101,7 +101,7 @@ class TestNodes(unittest.TestCase):
             "custom/statvar_1",
             "Variable with no config",
             group_id="custom/g/Root",
-            provenance_id="custom/base/Prov_1",
+            provenance_id="custom/p/Prov_1",
             source_id="custom/s/Source_1",
         ),
     )
@@ -117,7 +117,7 @@ class TestNodes(unittest.TestCase):
             description="Var 3 Description",
             nl_sentences=["Sentence 1", "Sentence 2"],
             group_id="custom/g/group_2",
-            provenance_id="custom/base/Prov_1",
+            provenance_id="custom/p/Prov_1",
             source_id="custom/s/Source_1",
         ),
     )
@@ -131,7 +131,7 @@ class TestNodes(unittest.TestCase):
             "custom/statvar_1",
             "Variable 1",
             group_id="custom/g/group_2",
-            provenance_id="custom/base/Prov_1",
+            provenance_id="custom/p/Prov_1",
             source_id="custom/s/Source_1",
         ),
     )
@@ -160,7 +160,7 @@ class TestNodes(unittest.TestCase):
             "custom/statvar_1",
             "Variable 1",
             group_id="custom/g/group_2",
-            provenance_id="custom/base/Prov_1",
+            provenance_id="custom/p/Prov_1",
             source_id="custom/s/Source_1",
         ),
     )
@@ -171,7 +171,7 @@ class TestNodes(unittest.TestCase):
             "custom/statvar_2",
             "Variable 2",
             group_id="custom/g/group_2",
-            provenance_id="custom/base/Prov_1",
+            provenance_id="custom/p/Prov_1",
             source_id="custom/s/Source_1",
         ),
     )
@@ -210,13 +210,13 @@ class TestNodes(unittest.TestCase):
 
     self.assertEqual(
         nodes.provenance("a.csv"),
-        Provenance(id="custom/base/Prov_1",
+        Provenance(id="custom/p/Prov_1",
                    source_id="custom/s/Source_1",
                    name="Provenance1",
                    url="http://source1.com/provenance1"))
     self.assertEqual(
         nodes.provenance("x.csv"),
-        Provenance(id="custom/base/Prov_2",
+        Provenance(id="custom/p/Prov_2",
                    source_id="custom/s/Source_default",
                    name="x.csv"))
 

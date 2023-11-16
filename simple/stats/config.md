@@ -62,6 +62,9 @@ The provenance (name) of this input file.
 Note that provenance details should be specified under `sources` -> `provenances` 
 and this field associates one of the provenances defined there to this file.
 
+Provenances typically map to a dataset from a source.
+e.g. WorldDevelopmentIndicators provenance (or dataset) is from the WorldBank source.
+
 ## `variables`
 
 The top-level `variables` field can be used to provide more information about variables 
