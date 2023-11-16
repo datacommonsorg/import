@@ -1,20 +1,20 @@
 subject_id,predicate,object_id,object_value
-custom/s/Source_default,typeOf,Source,
-custom/s/Source_default,name,,Custom Data Commons
-custom/s/Source_1,typeOf,Source,
-custom/s/Source_1,name,,Source1
-custom/s/Source_1,url,,http://source1.com
-custom/s/Source_1,domain,,source1.com
-custom/p/Prov_1,typeOf,Provenance,
-custom/p/Prov_1,name,,Provenance1
-custom/p/Prov_1,source,custom/s/Source_1,
-custom/p/Prov_1,url,,http://source1.com/provenance1
-custom/p/Prov_2,typeOf,Provenance,
-custom/p/Prov_2,name,,b.csv
-custom/p/Prov_2,source,custom/s/Source_default,
-custom/p/Prov_3,typeOf,Provenance,
-custom/p/Prov_3,name,,x.csv
-custom/p/Prov_3,source,custom/s/Source_default,
+c/s/default,typeOf,Source,
+c/s/default,name,,Custom Data Commons
+c/s/1,typeOf,Source,
+c/s/1,name,,Source1
+c/s/1,url,,http://source1.com
+c/s/1,domain,,source1.com
+c/p/1,typeOf,Provenance,
+c/p/1,name,,Provenance1
+c/p/1,source,c/s/1,
+c/p/1,url,,http://source1.com/provenance1
+c/p/2,typeOf,Provenance,
+c/p/2,name,,b.csv
+c/p/2,source,c/s/default,
+c/p/3,typeOf,Provenance,
+c/p/3,name,,x.csv
+c/p/3,source,c/s/default,
 custom/g/group_1,typeOf,StatVarGroup,
 custom/g/group_1,name,,Parent Group
 custom/g/group_1,specializationOf,dc/g/Root,
@@ -30,24 +30,24 @@ custom/g/Root,specializationOf,dc/g/Root,
 custom/statvar_1,typeOf,StatisticalVariable,
 custom/statvar_1,name,,Variable 1
 custom/statvar_1,memberOf,custom/g/group_2,
-custom/statvar_1,includedIn,custom/p/Prov_1,
-custom/statvar_1,includedIn,custom/s/Source_1,
+custom/statvar_1,includedIn,c/p/1,
+custom/statvar_1,includedIn,c/s/1,
 custom/statvar_2,typeOf,StatisticalVariable,
 custom/statvar_2,name,,Variable 2
 custom/statvar_2,memberOf,custom/g/group_2,
-custom/statvar_2,includedIn,custom/p/Prov_1,
-custom/statvar_2,includedIn,custom/s/Source_1,
+custom/statvar_2,includedIn,c/p/1,
+custom/statvar_2,includedIn,c/s/1,
 var3,typeOf,StatisticalVariable,
 var3,name,,Var 3 Name
 var3,description,,Var 3 Description
 var3,memberOf,custom/g/group_3,
-var3,includedIn,custom/p/Prov_2,
-var3,includedIn,custom/s/Source_default,
+var3,includedIn,c/p/2,
+var3,includedIn,c/s/default,
 custom/statvar_3,typeOf,StatisticalVariable,
 custom/statvar_3,name,,Variable with no config
 custom/statvar_3,memberOf,custom/g/Root,
-custom/statvar_3,includedIn,custom/p/Prov_3,
-custom/statvar_3,includedIn,custom/s/Source_default,
+custom/statvar_3,includedIn,c/p/3,
+custom/statvar_3,includedIn,c/s/default,
 country/AFG,typeOf,Country,
 country/USA,typeOf,Country,
 dc/1234,typeOf,PowerPlant,

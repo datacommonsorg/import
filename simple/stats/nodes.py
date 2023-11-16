@@ -38,8 +38,8 @@ _DEFAULT_CUSTOM_GROUP_PATH = "__DEFAULT__"
 _DEFAULT_CUSTOM_GROUP = StatVarGroup("custom/g/Root", "Custom Variables",
                                      _ROOT_GROUP_ID)
 
-_CUSTOM_PROVENANCE_ID_PREFIX = "custom/p/Prov_"
-_CUSTOM_SOURCE_ID_PREFIX = "custom/s/Source_"
+_CUSTOM_PROVENANCE_ID_PREFIX = "c/p/"
+_CUSTOM_SOURCE_ID_PREFIX = "c/s/"
 _DEFAULT_SOURCE = Source(f"{_CUSTOM_SOURCE_ID_PREFIX}default",
                          "Custom Data Commons")
 

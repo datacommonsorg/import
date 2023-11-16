@@ -101,8 +101,8 @@ class TestNodes(unittest.TestCase):
             "custom/statvar_1",
             "Variable with no config",
             group_id="custom/g/Root",
-            provenance_id="custom/p/Prov_1",
-            source_id="custom/s/Source_1",
+            provenance_id="c/p/1",
+            source_id="c/s/1",
         ),
     )
 
@@ -117,8 +117,8 @@ class TestNodes(unittest.TestCase):
             description="Var 3 Description",
             nl_sentences=["Sentence 1", "Sentence 2"],
             group_id="custom/g/group_2",
-            provenance_id="custom/p/Prov_1",
-            source_id="custom/s/Source_1",
+            provenance_id="c/p/1",
+            source_id="c/s/1",
         ),
     )
 
@@ -131,8 +131,8 @@ class TestNodes(unittest.TestCase):
             "custom/statvar_1",
             "Variable 1",
             group_id="custom/g/group_2",
-            provenance_id="custom/p/Prov_1",
-            source_id="custom/s/Source_1",
+            provenance_id="c/p/1",
+            source_id="c/s/1",
         ),
     )
     self.assertListEqual(
@@ -160,8 +160,8 @@ class TestNodes(unittest.TestCase):
             "custom/statvar_1",
             "Variable 1",
             group_id="custom/g/group_2",
-            provenance_id="custom/p/Prov_1",
-            source_id="custom/s/Source_1",
+            provenance_id="c/p/1",
+            source_id="c/s/1",
         ),
     )
     sv = nodes.variable("Variable 2", "a.csv")
@@ -171,8 +171,8 @@ class TestNodes(unittest.TestCase):
             "custom/statvar_2",
             "Variable 2",
             group_id="custom/g/group_2",
-            provenance_id="custom/p/Prov_1",
-            source_id="custom/s/Source_1",
+            provenance_id="c/p/1",
+            source_id="c/s/1",
         ),
     )
     self.assertListEqual(
@@ -210,15 +210,13 @@ class TestNodes(unittest.TestCase):
 
     self.assertEqual(
         nodes.provenance("a.csv"),
-        Provenance(id="custom/p/Prov_1",
-                   source_id="custom/s/Source_1",
+        Provenance(id="c/p/1",
+                   source_id="c/s/1",
                    name="Provenance1",
                    url="http://source1.com/provenance1"))
     self.assertEqual(
         nodes.provenance("x.csv"),
-        Provenance(id="custom/p/Prov_2",
-                   source_id="custom/s/Source_default",
-                   name="x.csv"))
+        Provenance(id="c/p/2", source_id="c/s/default", name="x.csv"))
 
   def test_multiple_parent_groups(self):
     """This is to test a bug fix related to groups.
