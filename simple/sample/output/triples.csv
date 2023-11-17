@@ -5,6 +5,10 @@ c/s/1,typeOf,Source,
 c/s/1,name,,Source1 Name
 c/s/1,url,,http://source1.com
 c/s/1,domain,,source1.com
+c/p/default,typeOf,Provenance,
+c/p/default,name,,Custom Import
+c/p/default,source,c/s/default,
+c/p/default,url,,custom-import
 c/p/1,typeOf,Provenance,
 c/p/1,name,,Provenance1 Name
 c/p/1,source,c/s/1,
