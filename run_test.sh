@@ -54,9 +54,19 @@ function run_lint_test {
   fi
 }
 
-# Fixes python tests
+# Run python tests
 function run_py_test {
   export TEST_MODE=test
+  py_test
+}
+
+# Update goldens
+function update_goldens {
+  export TEST_MODE=write
+  py_test
+}
+
+function py_test {
   # Clear api key to catch any spurious API calls.
   export DC_API_KEY=
 
@@ -81,6 +91,7 @@ function help {
   echo "Usage: $0 -afhlp"
   echo "-a              Run all tests"
   echo "-f              Fix lint"
+  echo "-g              Update goldens"
   echo "-h              This usage"
   echo "-l              Run lint test"
   echo "-p              Run python tests"
@@ -103,6 +114,11 @@ while [[ "$#" -gt 0 ]]; do
     -f)
         echo -e "### Fix lint errors"
         run_lint_fix
+        shift 1
+        ;;
+    -g)
+        echo -e "### Updating goldens"
+        update_goldens
         shift 1
         ;;
     -h)
