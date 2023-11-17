@@ -42,6 +42,10 @@ _CUSTOM_PROVENANCE_ID_PREFIX = "c/p/"
 _CUSTOM_SOURCE_ID_PREFIX = "c/s/"
 _DEFAULT_SOURCE = Source(f"{_CUSTOM_SOURCE_ID_PREFIX}default",
                          "Custom Data Commons")
+_DEFAULT_PROVENANCE = Provenance(id=f"{_CUSTOM_PROVENANCE_ID_PREFIX}default",
+                                 source_id=_DEFAULT_SOURCE.id,
+                                 name="Custom Import",
+                                 url="custom-import")
 
 
 class Nodes:
@@ -65,29 +69,21 @@ class Nodes:
     self._sv_generated_id_count = 0
 
   def _load_provenances_and_sources(self):
-    # Load default Source
+    # Load default source and provenance.
     self.sources[_DEFAULT_SOURCE.id] = _DEFAULT_SOURCE
+    self.provenances[_DEFAULT_PROVENANCE.id] = _DEFAULT_PROVENANCE
     # Load from config
     for prov_cfg in self.config.provenances.values():
       source_cfg = self.config.provenance_sources.get(prov_cfg.name)
       source_id = self._source_id(source_cfg)
-      self._provenance(prov_name=prov_cfg.name,
-                       prov_url=prov_cfg.url,
-                       source_id=source_id)
+      self._provenance(prov_cfg, source_id)
 
-  def _provenance(self,
-                  prov_name: str,
-                  prov_url: str = "",
-                  source_id: str = _DEFAULT_SOURCE.id) -> Provenance:
-    provenance = self.provenances.get(prov_name)
-    if provenance:
-      return provenance
-
+  def _provenance(self, prov_cfg: Provenance, source_id: str) -> Provenance:
     provenance = Provenance(
-        id=f"{_CUSTOM_PROVENANCE_ID_PREFIX}{len(self.provenances) + 1}",
+        id=f"{_CUSTOM_PROVENANCE_ID_PREFIX}{len(self.provenances)}",
         source_id=source_id,
-        name=prov_name,
-        url=prov_url or prov_name)
+        name=prov_cfg.name,
+        url=prov_cfg.url)
     self.provenances[provenance.name] = provenance
 
     return provenance
@@ -106,7 +102,8 @@ class Nodes:
     return source.id
 
   def provenance(self, input_file_name: str) -> Provenance:
-    return self._provenance(self.config.provenance_name(input_file_name))
+    prov_name = self.config.provenance_name(input_file_name)
+    return self.provenances.get(prov_name, _DEFAULT_PROVENANCE)
 
   def variable(self, sv_column_name: str, input_file_name: str) -> StatVar:
     if not sv_column_name in self.variables:

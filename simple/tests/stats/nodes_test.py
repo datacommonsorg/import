@@ -231,10 +231,10 @@ class TestNodes(unittest.TestCase):
                    url="http://source1.com/provenance1"))
     self.assertEqual(
         nodes.provenance("x.csv"),
-        Provenance(id="c/p/2",
+        Provenance(id="c/p/default",
                    source_id="c/s/default",
-                   name="x.csv",
-                   url="x.csv"))
+                   name="Custom Import",
+                   url="custom-import"))
 
   def test_multiple_parent_groups(self):
     """This is to test a bug fix related to groups.
