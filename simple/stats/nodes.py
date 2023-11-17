@@ -87,7 +87,7 @@ class Nodes:
         id=f"{_CUSTOM_PROVENANCE_ID_PREFIX}{len(self.provenances) + 1}",
         source_id=source_id,
         name=prov_name,
-        url=prov_url)
+        url=prov_url or prov_name)
     self.provenances[provenance.name] = provenance
 
     return provenance
