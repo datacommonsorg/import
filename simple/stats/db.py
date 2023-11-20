@@ -55,6 +55,11 @@ _INIT_STATEMENTS = [
     _DELETE_OBSERVATIONS_STATEMENT
 ]
 
+# We're temporarily disabling copying the sqlite db to GCS until we support cloud SQL.
+# This is because customers with large amounts of data will likely go the cloud SQL route.
+# We will enable copying to GCS once we add support for cloud sql in RSI.
+_ENABLE_COPY_TO_GCS = False
+
 
 class Db:
   """Class to insert triples and observations into a sqlite DB."""
@@ -86,7 +91,7 @@ class Db:
   def commit_and_close(self):
     self.db.close()
     # Copy file if local and actual DB file paths are different.
-    if self.local_db_file_path != self.db_file_path:
+    if self.local_db_file_path != self.db_file_path and _ENABLE_COPY_TO_GCS:
       local_db = create_file_handler(self.local_db_file_path).read_bytes()
       logging.info("Writing to sqlite db: %s (%s bytes)",
                    self.local_db_file_path, len(local_db))
