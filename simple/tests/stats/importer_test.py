@@ -14,11 +14,14 @@
 
 import os
 import shutil
+import sqlite3
 import tempfile
 import unittest
 
+import pandas as pd
 from stats.config import Config
-from stats.data import StatVar
+from stats.data import Observation
+from stats.db import Db
 from stats.importer import SimpleStatsImporter
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
@@ -40,6 +43,13 @@ def _compare_files(test: unittest.TestCase, output_path, expected_path):
       test.assertEqual(got, want)
 
 
+def _write_observations(db_path: str, output_path: str):
+  with sqlite3.connect(db_path) as db:
+    rows = db.execute("select * from observations").fetchall()
+    observations = [Observation(*row) for row in rows]
+    pd.DataFrame(observations).to_csv(output_path, index=False)
+
+
 def _test_import(test: unittest.TestCase,
                  test_name: str,
                  entity_type: str = "__DUMMY__",
@@ -48,23 +58,31 @@ def _test_import(test: unittest.TestCase,
 
   with tempfile.TemporaryDirectory() as temp_dir:
     input_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
-    output_path = os.path.join(temp_dir, f"observations_{test_name}.csv")
-    expected_path = os.path.join(_EXPECTED_DIR, f"observations_{test_name}.csv")
+    db_path = os.path.join("/tmp", f"{test_name}.db")
+    observations_path = os.path.join(temp_dir, f"observations_{test_name}.csv")
+
+    output_path = os.path.join(temp_dir, f"{test_name}.db.csv")
+    expected_path = os.path.join(_EXPECTED_DIR, f"{test_name}.db.csv")
 
     input_fh = LocalFileHandler(input_path)
-    observations_fh = LocalFileHandler(output_path)
+
+    db = Db(db_path)
+    observations_fh = LocalFileHandler(observations_path)
     debug_resolve_fh = LocalFileHandler(os.path.join(temp_dir, "debug.csv"))
     report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))
     reporter = FileImportReporter(input_path, ImportReporter(report_fh))
     nodes = Nodes(Config({}))
 
     SimpleStatsImporter(input_fh=input_fh,
+                        db=db,
                         observations_fh=observations_fh,
                         debug_resolve_fh=debug_resolve_fh,
                         reporter=reporter,
                         nodes=nodes,
                         entity_type=entity_type,
                         ignore_columns=ignore_columns).do_import()
+
+    _write_observations(db_path, output_path)
 
     if is_write_mode():
       shutil.copy(output_path, expected_path)

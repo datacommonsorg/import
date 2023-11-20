@@ -42,7 +42,7 @@ class TestDb(unittest.TestCase):
       db = Db(db_file_path)
       db.insert_triples(_TRIPLES)
       db.insert_observations(_OBSERVATIONS)
-      db.close()
+      db.commit_and_close()
 
       sqldb = sqlite3.connect(db_file_path)
 

@@ -17,6 +17,7 @@ import logging
 
 from stats import constants
 from stats.config import Config
+from stats.db import Db
 from stats.importer import SimpleStatsImporter
 import stats.nl as nl
 from stats.nodes import Nodes
@@ -39,6 +40,7 @@ class Runner:
   ) -> None:
     self.input_fh = create_file_handler(input_path)
     self.output_dir_fh = create_file_handler(output_dir)
+    self.db = Db(self.output_dir_fh.make_file(constants.DB_FILE_NAME).path)
     self.nl_dir_fh = self.output_dir_fh.make_file(f"{constants.NL_DIR_NAME}/")
     self.process_dir_fh = self.output_dir_fh.make_file(
         f"{constants.PROCESS_DIR_NAME}/")
@@ -67,13 +69,18 @@ class Runner:
       self._run_imports()
 
       # Generate triples.
-      self.nodes.triples(
+      triples = self.nodes.triples(
           self.output_dir_fh.make_file(constants.TRIPLES_FILE_NAME))
+      # Write triples to DB.
+      self.db.insert_triples(triples)
 
       # Generate SV sentences.
       nl.generate_sv_sentences(
           list(self.nodes.variables.values()),
           self.nl_dir_fh.make_file(constants.SENTENCES_FILE_NAME))
+
+      # Commit and close DB.
+      self.db.commit_and_close()
 
       # Report done.
       self.reporter.report_done()
@@ -113,6 +120,7 @@ class Runner:
     debug_resolve_fh = self.process_dir_fh.make_file(
         f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{basename}")
     importer = SimpleStatsImporter(input_fh=input_file_fh,
+                                   db=self.db,
                                    observations_fh=observations_fh,
                                    debug_resolve_fh=debug_resolve_fh,
                                    reporter=reporter,

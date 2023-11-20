@@ -1,0 +1,5 @@
+entity,variable,date,value,provenance
+country/BRA,var1,2023,0.19,c/p/default
+country/JPN,var1,2023,0.21,c/p/default
+country/BRA,var2,2023,6,c/p/default
+country/JPN,var2,2023,56,c/p/default

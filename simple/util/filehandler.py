@@ -43,6 +43,12 @@ class FileHandler:
   def write_string(self, content: str) -> None:
     pass
 
+  def read_bytes(self) -> bytes:
+    pass
+
+  def write_bytes(self, content: bytes) -> None:
+    pass
+
   def make_file(self, file_name: str) -> "FileHandler":
     pass
 
@@ -71,6 +77,14 @@ class LocalFileHandler(FileHandler):
 
   def write_string(self, content: str) -> None:
     with open(self.path, "w") as f:
+      f.write(content)
+
+  def read_bytes(self) -> bytes:
+    with open(self.path, "rb") as f:
+      return f.read()
+
+  def write_bytes(self, content: bytes) -> None:
+    with open(self.path, "wb") as f:
       f.write(content)
 
   def make_file(self, file_name: str) -> FileHandler:
@@ -123,6 +137,13 @@ class GcsFileHandler(FileHandler, metaclass=GcsMeta):
   def write_string(self, content: str) -> None:
     self.blob.upload_from_string(content)
 
+  def read_bytes(self) -> bytes:
+    return self.blob.download_as_bytes()
+
+  def write_bytes(self, content: bytes) -> None:
+    self.blob.upload_from_string(content,
+                                 content_type="application/octet-stream")
+
   def make_file(self, file_name: str) -> FileHandler:
     return GcsFileHandler(f"{self.path}{'' if self.isdir else '/'}{file_name}")
 
@@ -146,7 +167,11 @@ class GcsFileHandler(FileHandler, metaclass=GcsMeta):
                   all_files)
 
 
+def is_gcs_path(path: str) -> bool:
+  return path.startswith(_GCS_PATH_PREFIX)
+
+
 def create_file_handler(path: str) -> FileHandler:
-  if path.startswith(_GCS_PATH_PREFIX):
+  if is_gcs_path(path):
     return GcsFileHandler(path)
   return LocalFileHandler(path)
