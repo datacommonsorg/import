@@ -135,15 +135,15 @@ in the output folder.
 
 The type of database the importer connects to. Currently the importer supports 2 types of databases:
 * A SQLite DB - This is the default and no database config is needed for this.
-* `cloudMySql` - A Google Cloud MySQL instance.
+* `cloudsql` - A Google Cloud SQL instance.
 
 Different set of parameters need to be specified based on the type of database.
 The parameters can be specified using the `params` object described below.
 
 #### `params`
 
-##### Cloud MySQL parameters
-* `instance`: The Cloud MySQL instance to connect to. e.g. `datcom-website-dev:us-central1:dc-graph`
+##### Cloud SQL parameters
+* `instance`: The Cloud SQL instance to connect to. e.g. `datcom-website-dev:us-central1:dc-graph`
 * `user`: The DB user. e.g. `root`
 * `password`: The DB user's password.
 * `db`: The name of the DB. e.g. `dc-graph`
