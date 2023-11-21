@@ -21,6 +21,7 @@ import unittest
 import pandas as pd
 from stats.config import Config
 from stats.data import Observation
+from stats.db import create_sqlite_config
 from stats.db import Db
 from stats.importer import SimpleStatsImporter
 from stats.nodes import Nodes
@@ -66,7 +67,7 @@ def _test_import(test: unittest.TestCase,
 
     input_fh = LocalFileHandler(input_path)
 
-    db = Db(db_path)
+    db = Db(create_sqlite_config(db_path))
     observations_fh = LocalFileHandler(observations_path)
     debug_resolve_fh = LocalFileHandler(os.path.join(temp_dir, "debug.csv"))
     report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))

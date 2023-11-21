@@ -36,7 +36,16 @@ The config parameters for the files to be imported should be specified in a `con
         "Provenance2 Name": "http://source1.com/provenance2"
       }
     }
-  }
+  },
+  "database": {
+    "type": "cloudMySql",
+    "params": {
+        "instance": "datcom-website-dev:us-central1:dc-graph",
+        "user": "root",
+        "password": "secret",
+        "db": "datacommons"
+    }
+}
 }
 ```
 
@@ -111,3 +120,35 @@ The URL of the source.
 #### `provenances`
 
 The provenances under a given source should be defined using the `provenances` property as `{provenance-name}:{provenance-url}` pairs.
+
+## `database`
+
+The top-level `database` field can be used to provide information for the database that the 
+importer should write the imported data to.
+
+If a database config is not specified, it writes to a sqlite db file named `datacommons.db` 
+in the output folder.
+
+### Database parameters
+
+#### `type`
+
+The type of database the importer connects to. Currently the importer supports 2 types of databases:
+* `cloudMySql` - A Google Cloud MySQL instance.
+* `sqlite` - A SQLite DB.
+
+Different set of parameters need to be specified based on the type of database.
+The parameters can be specified using the `params` object described below.
+
+#### `params`
+
+##### Cloud MySQL parameters
+* `instance`: The Cloud MySQL instance to connect to. e.g. `datcom-website-dev:us-central1:dc-graph`
+* `user`: The DB user. e.g. `root`
+* `password`: The DB user's password.
+* `db`: The name of the DB. e.g. `dc-graph`
+
+> Browse or create your Google SQL instances [here](https://pantheon.corp.google.com/sql/instances).
+
+##### SQLite parameters
+* `dbFilePath`: The path of the sqlite db file. e.g. `data/output/datacommons.db`

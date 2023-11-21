@@ -1,6 +1,7 @@
 absl-py==1.4.0
 certifi==2023.7.22
 charset-normalizer==3.2.0
+cloud-sql-python-connector==1.4.3
 freezegun==1.2.2
 google-cloud-storage==2.11.0
 idna==3.4
@@ -8,6 +9,7 @@ importlib-metadata==6.8.0
 numpy==1.25.2
 pandas==2.1.0
 platformdirs==3.10.0
+PyMySQL==1.1.0
 python-dateutil==2.8.2
 pytest==7.4.2
 pytz==2023.3.post1
