@@ -134,8 +134,8 @@ in the output folder.
 #### `type`
 
 The type of database the importer connects to. Currently the importer supports 2 types of databases:
+* A SQLite DB - This is the default and no database config is needed for this.
 * `cloudMySql` - A Google Cloud MySQL instance.
-* `sqlite` - A SQLite DB.
 
 Different set of parameters need to be specified based on the type of database.
 The parameters can be specified using the `params` object described below.
@@ -148,7 +148,4 @@ The parameters can be specified using the `params` object described below.
 * `password`: The DB user's password.
 * `db`: The name of the DB. e.g. `dc-graph`
 
-> Browse or create your Google SQL instances [here](https://pantheon.corp.google.com/sql/instances).
-
-##### SQLite parameters
-* `dbFilePath`: The path of the sqlite db file. e.g. `data/output/datacommons.db`
+> Browse or create your Google SQL instances [here](https://console.cloud.google.com/sql/instances).
