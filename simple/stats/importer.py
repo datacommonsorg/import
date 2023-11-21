@@ -17,6 +17,8 @@ import random
 
 import pandas as pd
 from stats import constants
+from stats.data import Observation
+from stats.db import Db
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from util.filehandler import FileHandler
@@ -36,6 +38,7 @@ class SimpleStatsImporter:
   def __init__(
       self,
       input_fh: FileHandler,
+      db: Db,
       observations_fh: FileHandler,
       debug_resolve_fh: FileHandler,
       reporter: FileImportReporter,
@@ -44,6 +47,7 @@ class SimpleStatsImporter:
       ignore_columns: list[str] = list(),
   ) -> None:
     self.input_fh = input_fh
+    self.db = db
     self.observations_fh = observations_fh
     self.debug_resolve_fh = debug_resolve_fh
     self.reporter = reporter
@@ -64,6 +68,7 @@ class SimpleStatsImporter:
       self._rename_columns()
       self._add_provenance_column()
       self._add_entity_nodes()
+      self._write_observations()
       self.reporter.report_success()
     except Exception as e:
       self.reporter.report_failure(str(e))
@@ -105,6 +110,30 @@ class SimpleStatsImporter:
     renamed.update({col: id for col, id in zip(sv_column_names, sv_ids)})
 
     self.df = self.df.rename(columns=renamed)
+
+  def _write_observations(self) -> None:
+    # Melt dataframe so shape it similar to the observations table.
+    # Convert all values to str first, otherwise it inserts ints as floats.
+    observations_df = self.df.astype(str)
+    observations_df = observations_df.melt(
+        id_vars=[
+            constants.COLUMN_DCID, constants.COLUMN_DATE,
+            constants.COLUMN_PROVENANCE
+        ],
+        var_name=constants.COLUMN_VARIABLE,
+        value_name=constants.COLUMN_VALUE,
+    ).dropna()
+
+    # Reorder columns so they are in the same order as observations
+    observations_df = observations_df.reindex(columns=[
+        constants.COLUMN_DCID, constants.COLUMN_VARIABLE, constants.COLUMN_DATE,
+        constants.COLUMN_VALUE, constants.COLUMN_PROVENANCE
+    ])
+
+    observations: list[Observation] = []
+    for row in observations_df.itertuples(index=False):
+      observations.append(Observation(*row))
+    self.db.insert_observations(observations)
 
   def _add_provenance_column(self):
     self.df[constants.COLUMN_PROVENANCE] = self.nodes.provenance(

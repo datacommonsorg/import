@@ -24,6 +24,7 @@ CONFIG_JSON_FILE_NAME = "config.json"
 REPORT_JSON_FILE_NAME = "report.json"
 TRIPLES_FILE_NAME = "triples.csv"
 SENTENCES_FILE_NAME = "sentences.csv"
+DB_FILE_NAME = "datacommons.db"
 
 OBSERVATIONS_FILE_NAME_PREFIX = "observations"
 DEBUG_RESOLVE_FILE_NAME_PREFIX = "debug_resolve"
