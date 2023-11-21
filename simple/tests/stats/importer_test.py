@@ -59,7 +59,7 @@ def _test_import(test: unittest.TestCase,
 
   with tempfile.TemporaryDirectory() as temp_dir:
     input_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
-    db_path = os.path.join("/tmp", f"{test_name}.db")
+    db_path = os.path.join(temp_dir, f"{test_name}.db")
     observations_path = os.path.join(temp_dir, f"observations_{test_name}.csv")
 
     output_path = os.path.join(temp_dir, f"{test_name}.db.csv")
@@ -82,6 +82,7 @@ def _test_import(test: unittest.TestCase,
                         nodes=nodes,
                         entity_type=entity_type,
                         ignore_columns=ignore_columns).do_import()
+    db.commit_and_close()
 
     _write_observations(db_path, output_path)
 
