@@ -38,12 +38,12 @@ The config parameters for the files to be imported should be specified in a `con
     }
   },
   "database": {
-    "type": "cloudMySql",
+    "type": "cloudsql",
     "params": {
-        "instance": "datcom-website-dev:us-central1:dc-graph",
-        "user": "root",
-        "password": "secret",
-        "db": "datacommons"
+        "instance": "<project:region:instance>",
+        "user": "<your_user_name>",
+        "password": "<your_password>",
+        "db": "<database_name>"
     }
 }
 }

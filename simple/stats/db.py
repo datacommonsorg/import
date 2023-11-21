@@ -26,7 +26,7 @@ from util.filehandler import is_gcs_path
 
 FIELD_DB_TYPE = "type"
 FIELD_DB_PARAMS = "params"
-TYPE_CLOUD_MY_SQL = "cloudMySql"
+TYPE_CLOUD_SQL = "cloudsql"
 TYPE_SQLITE = "sqlite"
 
 SQLITE_DB_FILE_PATH = "dbFilePath"
@@ -158,7 +158,7 @@ _CLOUD_MY_SQL_CONNECT_PARAMS = [
 _CLOUD_MY_SQL_PARAMS = [CLOUD_MY_SQL_INSTANCE] + _CLOUD_MY_SQL_CONNECT_PARAMS
 
 
-class CloudMySqlDbEngine:
+class CloudSqlDbEngine:
 
   def __init__(self, db_params: dict[str, str]) -> None:
     for param in _CLOUD_MY_SQL_PARAMS:
@@ -192,7 +192,7 @@ def _pymysql(sql: str) -> str:
   return sql.replace("?", "%s")
 
 
-_SUPPORTED_DB_TYPES = set([TYPE_CLOUD_MY_SQL, TYPE_SQLITE])
+_SUPPORTED_DB_TYPES = set([TYPE_CLOUD_SQL, TYPE_SQLITE])
 
 
 def create_db_engine(config: dict) -> DbEngine:
@@ -205,8 +205,8 @@ def create_db_engine(config: dict) -> DbEngine:
 
   db_params = config[FIELD_DB_PARAMS]
 
-  if db_type == TYPE_CLOUD_MY_SQL:
-    return CloudMySqlDbEngine(db_params)
+  if db_type == TYPE_CLOUD_SQL:
+    return CloudSqlDbEngine(db_params)
   if db_type == TYPE_SQLITE:
     return SqliteDbEngine(db_params)
 
