@@ -21,6 +21,7 @@ import unittest
 import pandas as pd
 from stats.config import Config
 from stats.data import Observation
+from stats.db import create_sqlite_config
 from stats.db import Db
 from stats.importer import SimpleStatsImporter
 from stats.nodes import Nodes
@@ -58,7 +59,7 @@ def _test_import(test: unittest.TestCase,
 
   with tempfile.TemporaryDirectory() as temp_dir:
     input_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
-    db_path = os.path.join("/tmp", f"{test_name}.db")
+    db_path = os.path.join(temp_dir, f"{test_name}.db")
     observations_path = os.path.join(temp_dir, f"observations_{test_name}.csv")
 
     output_path = os.path.join(temp_dir, f"{test_name}.db.csv")
@@ -66,7 +67,7 @@ def _test_import(test: unittest.TestCase,
 
     input_fh = LocalFileHandler(input_path)
 
-    db = Db(db_path)
+    db = Db(create_sqlite_config(db_path))
     observations_fh = LocalFileHandler(observations_path)
     debug_resolve_fh = LocalFileHandler(os.path.join(temp_dir, "debug.csv"))
     report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))
@@ -81,6 +82,7 @@ def _test_import(test: unittest.TestCase,
                         nodes=nodes,
                         entity_type=entity_type,
                         ignore_columns=ignore_columns).do_import()
+    db.commit_and_close()
 
     _write_observations(db_path, output_path)
 

@@ -17,6 +17,7 @@ import logging
 
 from stats import constants
 from stats.config import Config
+from stats.db import create_sqlite_config
 from stats.db import Db
 from stats.importer import SimpleStatsImporter
 import stats.nl as nl
@@ -40,7 +41,6 @@ class Runner:
   ) -> None:
     self.input_fh = create_file_handler(input_path)
     self.output_dir_fh = create_file_handler(output_dir)
-    self.db = Db(self.output_dir_fh.make_file(constants.DB_FILE_NAME).path)
     self.nl_dir_fh = self.output_dir_fh.make_file(f"{constants.NL_DIR_NAME}/")
     self.process_dir_fh = self.output_dir_fh.make_file(
         f"{constants.PROCESS_DIR_NAME}/")
@@ -57,6 +57,10 @@ class Runner:
             "Config file must be provided for importing directories.")
       self.config = Config(data=json.loads(config_fh.read_string()))
 
+    self.db = Db(
+        self.config.database(
+            create_sqlite_config(
+                self.output_dir_fh.make_file(constants.DB_FILE_NAME).path)))
     self.nodes = Nodes(self.config)
 
     self.output_dir_fh.make_dirs()

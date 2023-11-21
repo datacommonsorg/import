@@ -28,6 +28,7 @@ _SOURCES_FIELD = "sources"
 _PROVENANCES_FIELD = "provenances"
 _URL_FIELD = "url"
 _PROVENANCE_FIELD = "provenance"
+_DATABASE_FIELD = "database"
 
 
 class Config:
@@ -63,6 +64,9 @@ class Config:
   def provenance_name(self, input_file_name: str) -> str:
     return self._input_file(input_file_name).get(_PROVENANCE_FIELD,
                                                  input_file_name)
+
+  def database(self, default_db_config: dict) -> dict:
+    return self.data.get(_DATABASE_FIELD, default_db_config)
 
   def _input_file(self, input_file_name: str) -> dict:
     return self.data.get(_INPUT_FILES_FIELD, {}).get(input_file_name, {})

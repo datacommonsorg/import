@@ -13,14 +13,28 @@
 # limitations under the License.
 
 import logging
-import os
 import sqlite3
 import tempfile
 
+from google.cloud.sql.connector.connector import Connector
+from pymysql.connections import Connection
+from pymysql.cursors import Cursor
 from stats.data import Observation
 from stats.data import Triple
 from util.filehandler import create_file_handler
 from util.filehandler import is_gcs_path
+
+FIELD_DB_TYPE = "type"
+FIELD_DB_PARAMS = "params"
+TYPE_CLOUD_SQL = "cloudsql"
+TYPE_SQLITE = "sqlite"
+
+SQLITE_DB_FILE_PATH = "dbFilePath"
+
+CLOUD_MY_SQL_INSTANCE = "instance"
+CLOUD_MY_SQL_USER = "user"
+CLOUD_MY_SQL_PASSWORD = "password"
+CLOUD_MY_SQL_DB = "db"
 
 _CREATE_TRIPLES_TABLE = """
 create table if not exists triples (
@@ -55,47 +69,24 @@ _INIT_STATEMENTS = [
     _DELETE_OBSERVATIONS_STATEMENT
 ]
 
-# We're temporarily disabling copying the sqlite db to GCS until we support cloud SQL.
-# This is because customers with large amounts of data will likely go the cloud SQL route.
-# We will enable copying to GCS once we add support for cloud sql in RSI.
-_ENABLE_COPY_TO_GCS = False
-
 
 class Db:
-  """Class to insert triples and observations into a sqlite DB."""
+  """Class to insert triples and observations into a DB."""
 
-  def __init__(self, db_file_path: str) -> None:
-    self.db_file_path = db_file_path
-    # If file path is a GCS path, we create the DB in a local temp file
-    # and upload to GCS on commit.
-    self.local_db_file_path: str = db_file_path
-    if is_gcs_path(db_file_path):
-      self.local_db_file_path = tempfile.NamedTemporaryFile().name
-
-    self.db = sqlite3.connect(self.local_db_file_path)
-    for statement in _INIT_STATEMENTS:
-      self.db.execute(statement)
-    pass
+  def __init__(self, config: dict) -> None:
+    self.engine = create_db_engine(config)
 
   def insert_triples(self, triples: list[Triple]):
-    with self.db:
-      self.db.executemany(_INSERT_TRIPLES_STATEMENT,
-                          [to_triple_tuple(triple) for triple in triples])
+    self.engine.executemany(_INSERT_TRIPLES_STATEMENT,
+                            [to_triple_tuple(triple) for triple in triples])
 
   def insert_observations(self, observations: list[Observation]):
-    with self.db:
-      self.db.executemany(
-          _INSERT_OBSERVATIONS_STATEMENT,
-          [to_observation_tuple(observation) for observation in observations])
+    self.engine.executemany(
+        _INSERT_OBSERVATIONS_STATEMENT,
+        [to_observation_tuple(observation) for observation in observations])
 
   def commit_and_close(self):
-    self.db.close()
-    # Copy file if local and actual DB file paths are different.
-    if self.local_db_file_path != self.db_file_path and _ENABLE_COPY_TO_GCS:
-      local_db = create_file_handler(self.local_db_file_path).read_bytes()
-      logging.info("Writing to sqlite db: %s (%s bytes)",
-                   self.local_db_file_path, len(local_db))
-      create_file_handler(self.db_file_path).write_bytes(local_db)
+    self.engine.commit_and_close()
 
 
 def to_triple_tuple(triple: Triple):
@@ -106,3 +97,126 @@ def to_triple_tuple(triple: Triple):
 def to_observation_tuple(observation: Observation):
   return (observation.entity, observation.variable, observation.date,
           observation.value, observation.provenance)
+
+
+class DbEngine:
+
+  def execute(self, sql: str, parameters=None):
+    pass
+
+  def executemany(self, sql: str, parameters=None):
+    pass
+
+  def commit_and_close(self):
+    pass
+
+
+class SqliteDbEngine(DbEngine):
+
+  def __init__(self, db_params: dict) -> None:
+    assert db_params
+    assert SQLITE_DB_FILE_PATH in db_params
+
+    self.db_file_path = db_params[SQLITE_DB_FILE_PATH]
+    # If file path is a GCS path, we create the DB in a local temp file
+    # and upload to GCS on commit.
+    self.local_db_file_path: str = self.db_file_path
+    if is_gcs_path(self.db_file_path):
+      self.local_db_file_path = tempfile.NamedTemporaryFile().name
+
+    self.connection = sqlite3.connect(self.local_db_file_path)
+    self.cursor = self.connection.cursor()
+    for statement in _INIT_STATEMENTS:
+      self.cursor.execute(statement)
+
+  def execute(self, sql: str, parameters=None):
+    if not parameters:
+      self.cursor.execute(sql)
+    else:
+      self.cursor.execute(sql, parameters)
+
+  def executemany(self, sql: str, parameters=None):
+    if not parameters:
+      self.cursor.executemany(sql)
+    else:
+      self.cursor.executemany(sql, parameters)
+
+  def commit_and_close(self):
+    self.connection.commit()
+    self.connection.close()
+    # Copy file if local and actual DB file paths are different.
+    if self.local_db_file_path != self.db_file_path:
+      local_db = create_file_handler(self.local_db_file_path).read_bytes()
+      logging.info("Writing to sqlite db: %s (%s bytes)",
+                   self.local_db_file_path, len(local_db))
+      create_file_handler(self.db_file_path).write_bytes(local_db)
+
+
+_CLOUD_MY_SQL_CONNECT_PARAMS = [
+    CLOUD_MY_SQL_USER, CLOUD_MY_SQL_PASSWORD, CLOUD_MY_SQL_DB
+]
+_CLOUD_MY_SQL_PARAMS = [CLOUD_MY_SQL_INSTANCE] + _CLOUD_MY_SQL_CONNECT_PARAMS
+
+
+class CloudSqlDbEngine:
+
+  def __init__(self, db_params: dict[str, str]) -> None:
+    for param in _CLOUD_MY_SQL_PARAMS:
+      assert param in db_params, f"{param} param not specified"
+    connector = Connector()
+    kwargs = {param: db_params[param] for param in _CLOUD_MY_SQL_CONNECT_PARAMS}
+    logging.info("Connecting to Cloud MySQL: %s (%s)",
+                 db_params[CLOUD_MY_SQL_INSTANCE], db_params[CLOUD_MY_SQL_DB])
+    self.connection: Connection = connector.connect(
+        db_params[CLOUD_MY_SQL_INSTANCE], "pymysql", **kwargs)
+    logging.info("Connected to Cloud MySQL: %s (%s)",
+                 db_params[CLOUD_MY_SQL_INSTANCE], db_params[CLOUD_MY_SQL_DB])
+    self.cursor: Cursor = self.connection.cursor()
+    for statement in _INIT_STATEMENTS:
+      self.cursor.execute(statement)
+
+  def execute(self, sql: str, parameters=None):
+    self.cursor.execute(_pymysql(sql), parameters)
+
+  def executemany(self, sql: str, parameters=None):
+    self.cursor.executemany(_pymysql(sql), parameters)
+
+  def commit_and_close(self):
+    self.cursor.close()
+    self.connection.commit()
+
+
+# PyMySQL uses "%s" as placeholders.
+# This function replaces all "?" placeholders with "%s".
+def _pymysql(sql: str) -> str:
+  return sql.replace("?", "%s")
+
+
+_SUPPORTED_DB_TYPES = set([TYPE_CLOUD_SQL, TYPE_SQLITE])
+
+
+def create_db_engine(config: dict) -> DbEngine:
+  assert config
+  assert FIELD_DB_TYPE in config
+  assert FIELD_DB_PARAMS in config
+
+  db_type = config[FIELD_DB_TYPE]
+  assert db_type in _SUPPORTED_DB_TYPES
+
+  db_params = config[FIELD_DB_PARAMS]
+
+  if db_type == TYPE_CLOUD_SQL:
+    return CloudSqlDbEngine(db_params)
+  if db_type == TYPE_SQLITE:
+    return SqliteDbEngine(db_params)
+
+  assert False
+
+
+def create_sqlite_config(sqlite_db_file_path: str) -> dict:
+  return {
+      FIELD_DB_TYPE: TYPE_SQLITE,
+      FIELD_DB_PARAMS: {
+          SQLITE_DB_FILE_PATH: sqlite_db_file_path
+      }
+  }

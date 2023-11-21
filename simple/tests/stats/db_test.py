@@ -19,6 +19,7 @@ import unittest
 
 from stats.data import Observation
 from stats.data import Triple
+from stats.db import create_sqlite_config
 from stats.db import Db
 from stats.db import to_observation_tuple
 from stats.db import to_triple_tuple
@@ -39,7 +40,7 @@ class TestDb(unittest.TestCase):
   def test_db(self):
     with tempfile.TemporaryDirectory() as temp_dir:
       db_file_path = os.path.join(temp_dir, "datacommons.db")
-      db = Db(db_file_path)
+      db = Db(create_sqlite_config(db_file_path))
       db.insert_triples(_TRIPLES)
       db.insert_observations(_OBSERVATIONS)
       db.commit_and_close()
