@@ -19,6 +19,7 @@ from stats import constants
 from stats.config import Config
 from stats.db import create_sqlite_config
 from stats.db import Db
+from stats.db import get_cloud_sql_config_from_env
 from stats.importer import SimpleStatsImporter
 import stats.nl as nl
 from stats.nodes import Nodes
@@ -57,10 +58,21 @@ class Runner:
             "Config file must be provided for importing directories.")
       self.config = Config(data=json.loads(config_fh.read_string()))
 
-    self.db = Db(
-        self.config.database(
-            create_sqlite_config(
-                self.output_dir_fh.make_file(constants.DB_FILE_NAME).path)))
+    def _get_db_config() -> dict:
+      # Attempt to get from env, then config file, then default.
+      db_cfg = get_cloud_sql_config_from_env()
+      if db_cfg:
+        logging.info("Using DB settings from env.")
+        return db_cfg
+      db_cfg = self.config.database()
+      if db_cfg:
+        logging.info("Using DB settings from config file.")
+        return db_cfg
+      logging.info("Using default DB settings.")
+      return create_sqlite_config(
+          self.output_dir_fh.make_file(constants.DB_FILE_NAME).path)
+
+    self.db = Db(_get_db_config())
     self.nodes = Nodes(self.config)
 
     self.output_dir_fh.make_dirs()

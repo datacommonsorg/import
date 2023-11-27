@@ -65,8 +65,8 @@ class Config:
     return self._input_file(input_file_name).get(_PROVENANCE_FIELD,
                                                  input_file_name)
 
-  def database(self, default_db_config: dict) -> dict:
-    return self.data.get(_DATABASE_FIELD, default_db_config)
+  def database(self) -> dict:
+    return self.data.get(_DATABASE_FIELD)
 
   def _input_file(self, input_file_name: str) -> dict:
     return self.data.get(_INPUT_FILES_FIELD, {}).get(input_file_name, {})

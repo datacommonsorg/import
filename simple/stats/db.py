@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import os
 import sqlite3
 import tempfile
 
@@ -35,6 +36,13 @@ CLOUD_MY_SQL_INSTANCE = "instance"
 CLOUD_MY_SQL_USER = "user"
 CLOUD_MY_SQL_PASSWORD = "password"
 CLOUD_MY_SQL_DB = "db"
+CLOUD_MY_SQL_DEFAULT_DB_NAME = "datacommons"
+
+ENV_USE_CLOUDSQL = "USE_CLOUDSQL"
+ENV_CLOUDSQL_INSTANCE = "CLOUDSQL_INSTANCE"
+ENV_DB_USER = "DB_USER"
+ENV_DB_PASS = "DB_PASS"
+ENV_DB_NAME = "DB_NAME"
 
 _CREATE_TRIPLES_TABLE = """
 create table if not exists triples (
@@ -77,10 +85,13 @@ class Db:
     self.engine = create_db_engine(config)
 
   def insert_triples(self, triples: list[Triple]):
+    logging.info("Writing %s triples to [%s]", len(triples), self.engine)
     self.engine.executemany(_INSERT_TRIPLES_STATEMENT,
                             [to_triple_tuple(triple) for triple in triples])
 
   def insert_observations(self, observations: list[Observation]):
+    logging.info("Writing %s observations to [%s]", len(observations),
+                 self.engine)
     self.engine.executemany(
         _INSERT_OBSERVATIONS_STATEMENT,
         [to_observation_tuple(observation) for observation in observations])
@@ -129,6 +140,9 @@ class SqliteDbEngine(DbEngine):
     for statement in _INIT_STATEMENTS:
       self.cursor.execute(statement)
 
+  def __str__(self) -> str:
+    return f"{TYPE_SQLITE}: {self.db_file_path}"
+
   def execute(self, sql: str, parameters=None):
     if not parameters:
       self.cursor.execute(sql)
@@ -171,9 +185,13 @@ class CloudSqlDbEngine:
         db_params[CLOUD_MY_SQL_INSTANCE], "pymysql", **kwargs)
     logging.info("Connected to Cloud MySQL: %s (%s)",
                  db_params[CLOUD_MY_SQL_INSTANCE], db_params[CLOUD_MY_SQL_DB])
+    self.description = f"{TYPE_CLOUD_SQL}: {db_params[CLOUD_MY_SQL_INSTANCE]} ({db_params[CLOUD_MY_SQL_DB]})"
     self.cursor: Cursor = self.connection.cursor()
     for statement in _INIT_STATEMENTS:
       self.cursor.execute(statement)
+
+  def __str__(self) -> str:
+    return self.description
 
   def execute(self, sql: str, parameters=None):
     self.cursor.execute(_pymysql(sql), parameters)
@@ -218,5 +236,29 @@ def create_sqlite_config(sqlite_db_file_path: str) -> dict:
       FIELD_DB_TYPE: TYPE_SQLITE,
       FIELD_DB_PARAMS: {
           SQLITE_DB_FILE_PATH: sqlite_db_file_path
+      }
+  }
+
+
+def get_cloud_sql_config_from_env() -> dict | None:
+  if os.getenv(ENV_USE_CLOUDSQL, "").lower() != "true":
+    return None
+
+  db_instance = os.getenv(ENV_CLOUDSQL_INSTANCE)
+  db_user = os.getenv(ENV_DB_USER)
+  db_pass = os.getenv(ENV_DB_PASS)
+  db_name = os.getenv(ENV_DB_NAME, CLOUD_MY_SQL_DEFAULT_DB_NAME)
+
+  assert db_instance != None, f"Environment variable {ENV_CLOUDSQL_INSTANCE} not specified."
+  assert db_user != None, f"Environment variable {ENV_DB_USER} not specified."
+  assert db_pass != None, f"Environment variable {ENV_DB_PASS} not specified."
+
+  return {
+      FIELD_DB_TYPE: TYPE_CLOUD_SQL,
+      FIELD_DB_PARAMS: {
+          CLOUD_MY_SQL_INSTANCE: db_instance,
+          CLOUD_MY_SQL_DB: db_name,
+          CLOUD_MY_SQL_USER: db_user,
+          CLOUD_MY_SQL_PASSWORD: db_pass
       }
   }

@@ -1,29 +1,17 @@
 # Simple Stats Importer
 
-Outputs `observations.csv` for simple stats to be used by [RSI sqlite][sqlite].
+This importer imports input CSVs into a database which is subsequently used to serve Custom DCs.
 
 [sqlite]: https://github.com/datacommonsorg/mixer/tree/a768446c56095aa23add8c59cf6a0630a17a726b/internal/sqlite
 
-## Usage
+## Default usage
 
 ```shell
 python3 -m stats.main
 ```
 
-It reads inputs CSVs from the `.data/input` folder and outputs
-`observations.csv` in the `.data/output` folder.
-
-The first 2 columns of input CSVs should be place names (or more generically
-_entity_ names) and observation periods respectively. Each subsequent column
-should be for each individual statvar. A sample input CSV can be found
-[here](sample/countries/input.csv).
-
-The output `observations.csv` can be imported directly into sqlite. A sample
-output CSV can be found [here](sample/countries/observations.csv).
-
-The program also outputs a `debug_resolve.csv` file. This is for debugging
-whether names were resolved to the correct DCIDs and addressed any unresolved
-ones. A sample CSV can be found [here](sample/countries/debug_resolve.csv).
+By default it reads inputs CSVs from the `.data/input` folder and outputs
+a sqlite `datacommons.db` file in the `.data/output` folder.
 
 ## Other options
 
@@ -32,3 +20,42 @@ To see all parameters and overrides supported by the script:
 ```shell
 python3 -m stats.main --help
 ```
+
+## Input files
+
+The first 2 columns of input CSVs should be place names (or more generically
+_entity_ names) and observation periods respectively. Each subsequent column
+should be for each individual statvar. A sample input CSV can be found
+[here](sample/countries/input.csv).
+
+## Debug files
+
+The program also outputs a `debug_resolve.csv` file. This is for debugging
+whether names were resolved to the correct DCIDs and addressed any unresolved
+ones. A sample CSV can be found [here](sample/countries/debug_resolve.csv).
+
+## Database options
+
+As noted above, the importer by default writes to a local sqlite DB.
+It can however be configured to write to a Cloud SQL DB instead as described in this section.
+
+### Cloud SQL options
+
+The importer writes to a Cloud SQL DB if the following environment variables are specified.
+
+* `USE_CLOUDSQL`: To make the importer use Cloud SQL, set `USE_CLOUDSQL` to `true`.
+* `DB_USER`: The DB user. e.g. `root`
+* `DB_PASS`: The DB user's password.
+* `DB_NAME`: [Optional] The name of the DB. Defaults to `datacommons`.
+
+Example environment variables:
+
+```bash
+export USE_CLOUDSQL=true
+export CLOUDSQL_INSTANCE=datcom-website-dev:us-central1:dc-graph
+export DB_USER=root
+export DB_PASS=fake
+```
+
+
+> Browse or create your Google SQL instances [here](https://console.cloud.google.com/sql/instances).

@@ -16,11 +16,13 @@ import os
 import sqlite3
 import tempfile
 import unittest
+from unittest import mock
 
 from stats.data import Observation
 from stats.data import Triple
 from stats.db import create_sqlite_config
 from stats.db import Db
+from stats.db import get_cloud_sql_config_from_env
 from stats.db import to_observation_tuple
 from stats.db import to_triple_tuple
 
@@ -55,3 +57,33 @@ class TestDb(unittest.TestCase):
       self.assertListEqual(
           observations,
           list(map(lambda x: to_observation_tuple(x), _OBSERVATIONS)))
+
+  @mock.patch.dict(os.environ, {})
+  def test_get_cloud_sql_config_from_env_empty(self):
+    self.assertIsNone(get_cloud_sql_config_from_env())
+
+  @mock.patch.dict(
+      os.environ, {
+          "USE_CLOUDSQL": "true",
+          "CLOUDSQL_INSTANCE": "test_instance",
+          "DB_USER": "test_user",
+          "DB_PASS": "test_pass"
+      })
+  def test_get_cloud_sql_config_from_env_valid(self):
+    self.assertDictEqual(
+        get_cloud_sql_config_from_env(), {
+            "type": "cloudsql",
+            "params": {
+                "instance": "test_instance",
+                "db": "datacommons",
+                "user": "test_user",
+                "password": "test_pass"
+            }
+        })
+
+  @mock.patch.dict(os.environ, {"USE_CLOUDSQL": "true"})
+  def test_get_cloud_sql_config_from_env_invalid(self):
+    with self.assertRaisesRegex(
+        AssertionError,
+        "Environment variable CLOUDSQL_INSTANCE not specified."):
+      get_cloud_sql_config_from_env()
