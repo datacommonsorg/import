@@ -146,6 +146,26 @@ The parameters can be specified using the `params` object described below.
 * `instance`: The Cloud SQL instance to connect to. e.g. `datcom-website-dev:us-central1:dc-graph`
 * `user`: The DB user. e.g. `root`
 * `password`: The DB user's password.
-* `db`: The name of the DB. e.g. `dc-graph`
+* `db`: The name of the DB. e.g. `datacommons`
+
+##### Cloud SQL environment variables
+
+Cloud sql parameters can either be specified as config file parameters as described above or as environment variables as described in this section.
+Environment variables take precedence over config file parameters.
+
+* `USE_CLOUDSQL`: To use cloud sql parameters from the environment, set `USE_CLOUDSQL` to `true`.
+* `DB_USER`: The DB user. e.g. `root`
+* `DB_PASS`: The DB user's password.
+* `DB_NAME`: The name of the DB. Defaults to `datacommons`.
+
+Example environment variables:
+
+```bash
+export USE_CLOUDSQL=true
+export CLOUDSQL_INSTANCE=datcom-website-dev:us-central1:dc-graph
+export DB_USER=root
+export DB_PASS=fake
+```
+
 
 > Browse or create your Google SQL instances [here](https://console.cloud.google.com/sql/instances).
