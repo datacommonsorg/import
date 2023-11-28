@@ -123,10 +123,10 @@ class ImportReporter:
 
   def save(self) -> None:
     self.last_update = datetime.now()
-    report = not self.last_reported or time.time(
+    should_report = not self.last_reported or time.time(
     ) - self.last_reported >= _REPORT_SAVE_INTERVAL_SECONDS or _is_done_status(
         self.status)
-    if report:
+    if should_report:
       self.last_reported = time.time()
       self.report_fh.write_string(json.dumps(self.json(), indent=2))
 
