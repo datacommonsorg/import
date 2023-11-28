@@ -45,6 +45,11 @@ class Runner:
     self.nl_dir_fh = self.output_dir_fh.make_file(f"{constants.NL_DIR_NAME}/")
     self.process_dir_fh = self.output_dir_fh.make_file(
         f"{constants.PROCESS_DIR_NAME}/")
+
+    self.output_dir_fh.make_dirs()
+    self.nl_dir_fh.make_dirs()
+    self.process_dir_fh.make_dirs()
+
     self.reporter = ImportReporter(report_fh=self.process_dir_fh.make_file(
         constants.REPORT_JSON_FILE_NAME))
     self.entity_type = entity_type
@@ -74,10 +79,6 @@ class Runner:
 
     self.db = Db(_get_db_config())
     self.nodes = Nodes(self.config)
-
-    self.output_dir_fh.make_dirs()
-    self.nl_dir_fh.make_dirs()
-    self.process_dir_fh.make_dirs()
 
   def run(self):
     try:
