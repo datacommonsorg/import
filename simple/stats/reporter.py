@@ -17,8 +17,13 @@ from enum import auto
 from enum import Enum
 from functools import wraps
 import json
+import time
 
 from util.filehandler import FileHandler
+
+# Minimum interval before a report should be saved to disk or cloud.
+# This keeps it from reporting too frequently and running into GCS rate limit issues.
+_REPORT_SAVE_INTERVAL_SECONDS = 10.0
 
 
 class Status(Enum):
@@ -26,6 +31,10 @@ class Status(Enum):
   STARTED = auto()
   SUCCESS = auto()
   FAILURE = auto()
+
+
+def _is_done_status(status: Status) -> bool:
+  return status == Status.SUCCESS or status == Status.FAILURE
 
 
 class ImportReporter:
@@ -38,6 +47,7 @@ class ImportReporter:
     self.status = Status.NOT_STARTED
     self.start_time = None
     self.last_update = datetime.now()
+    self.last_reported: float | None = None
     self.report_fh = report_fh
     self.data = {}
     self.import_files: dict[str, FileImportReporter] = {}
@@ -113,7 +123,12 @@ class ImportReporter:
 
   def save(self) -> None:
     self.last_update = datetime.now()
-    self.report_fh.write_string(json.dumps(self.json(), indent=2))
+    should_report = not self.last_reported or time.time(
+    ) - self.last_reported >= _REPORT_SAVE_INTERVAL_SECONDS or _is_done_status(
+        self.status)
+    if should_report:
+      self.last_reported = time.time()
+      self.report_fh.write_string(json.dumps(self.json(), indent=2))
 
 
 class FileImportReporter:
