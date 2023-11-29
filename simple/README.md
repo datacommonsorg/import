@@ -26,13 +26,13 @@ python3 -m stats.main --help
 The first 2 columns of input CSVs should be place names (or more generically
 _entity_ names) and observation periods respectively. Each subsequent column
 should be for each individual statvar. A sample input CSV can be found
-[here](sample/countries/input.csv).
+[here](sample/input/countries.csv).
 
 ## Debug files
 
 The program also outputs a `debug_resolve.csv` file. This is for debugging
 whether names were resolved to the correct DCIDs and addressed any unresolved
-ones. A sample CSV can be found [here](sample/countries/debug_resolve.csv).
+ones. A sample CSV can be found [here](sample/output/process/debug_resolve_countries.csv).
 
 ## Database options
 
