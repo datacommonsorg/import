@@ -44,6 +44,8 @@ ENV_DB_USER = "DB_USER"
 ENV_DB_PASS = "DB_PASS"
 ENV_DB_NAME = "DB_NAME"
 
+ENV_SQLITE_PATH = "SQLITE_PATH"
+
 _CREATE_TRIPLES_TABLE = """
 create table if not exists triples (
     subject_id TEXT,
@@ -135,7 +137,10 @@ class SqliteDbEngine(DbEngine):
     if is_gcs_path(self.db_file_path):
       self.local_db_file_path = tempfile.NamedTemporaryFile().name
 
+    logging.info("Connecting to SQLite: %s", self.local_db_file_path)
     self.connection = sqlite3.connect(self.local_db_file_path)
+    logging.info("Connected to SQLite: %s", self.local_db_file_path)
+
     self.cursor = self.connection.cursor()
     for statement in _INIT_STATEMENTS:
       self.cursor.execute(statement)
@@ -240,6 +245,13 @@ def create_sqlite_config(sqlite_db_file_path: str) -> dict:
   }
 
 
+def get_sqlite_config_from_env() -> dict | None:
+  sqlite_db_file_path = os.getenv(ENV_SQLITE_PATH)
+  if not sqlite_db_file_path:
+    return None
+  return create_sqlite_config(sqlite_db_file_path)
+
+
 def get_cloud_sql_config_from_env() -> dict | None:
   if os.getenv(ENV_USE_CLOUDSQL, "").lower() != "true":
     return None
@@ -249,8 +261,8 @@ def get_cloud_sql_config_from_env() -> dict | None:
   db_pass = os.getenv(ENV_DB_PASS)
   db_name = os.getenv(ENV_DB_NAME, CLOUD_MY_SQL_DEFAULT_DB_NAME)
 
-  assert db_instance != None, f"Environment variable {ENV_CLOUDSQL_INSTANCE} not specified."
-  assert db_user != None, f"Environment variable {ENV_DB_USER} not specified."
+  assert db_instance, f"Environment variable {ENV_CLOUDSQL_INSTANCE} not specified."
+  assert db_user, f"Environment variable {ENV_DB_USER} not specified."
   assert db_pass != None, f"Environment variable {ENV_DB_PASS} not specified."
 
   return {
