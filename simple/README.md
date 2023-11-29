@@ -13,7 +13,7 @@ python3 -m stats.main
 By default it reads inputs CSVs from the `.data/input` folder and outputs
 a sqlite `datacommons.db` file in the `.data/output` folder.
 
-a DC_API_KEY environment variable can be passed in, to enable API lookups.
+To enable Data Commons API lookups, set a DC_API_KEY environment variable. See [API documentation](https://docs.datacommons.org/api/rest/v1/getting_started#authentication) to learn more about getting and using API keys.
 
 ## Other options
 
