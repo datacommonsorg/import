@@ -20,6 +20,7 @@ from stats.config import Config
 from stats.db import create_sqlite_config
 from stats.db import Db
 from stats.db import get_cloud_sql_config_from_env
+from stats.db import get_sqlite_config_from_env
 from stats.importer import SimpleStatsImporter
 import stats.nl as nl
 from stats.nodes import Nodes
@@ -64,10 +65,15 @@ class Runner:
       self.config = Config(data=json.loads(config_fh.read_string()))
 
     def _get_db_config() -> dict:
-      # Attempt to get from env, then config file, then default.
+      # Attempt to get from env (cloud sql, then sqlite),
+      # then config file, then default.
       db_cfg = get_cloud_sql_config_from_env()
       if db_cfg:
-        logging.info("Using DB settings from env.")
+        logging.info("Using Cloud SQL settings from env.")
+        return db_cfg
+      db_cfg = get_sqlite_config_from_env()
+      if db_cfg:
+        logging.info("Using SQLite settings from env.")
         return db_cfg
       db_cfg = self.config.database()
       if db_cfg:

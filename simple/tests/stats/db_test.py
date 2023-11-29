@@ -23,6 +23,7 @@ from stats.data import Triple
 from stats.db import create_sqlite_config
 from stats.db import Db
 from stats.db import get_cloud_sql_config_from_env
+from stats.db import get_sqlite_config_from_env
 from stats.db import to_observation_tuple
 from stats.db import to_triple_tuple
 
@@ -81,9 +82,25 @@ class TestDb(unittest.TestCase):
             }
         })
 
-  @mock.patch.dict(os.environ, {"USE_CLOUDSQL": "true"})
+  @mock.patch.dict(os.environ, {
+      "USE_CLOUDSQL": "true",
+      "CLOUDSQL_INSTANCE": ""
+  })
   def test_get_cloud_sql_config_from_env_invalid(self):
     with self.assertRaisesRegex(
         AssertionError,
         "Environment variable CLOUDSQL_INSTANCE not specified."):
       get_cloud_sql_config_from_env()
+
+  @mock.patch.dict(os.environ, {})
+  def test_get_sqlite_config_from_env_empty(self):
+    self.assertIsNone(get_sqlite_config_from_env())
+
+  @mock.patch.dict(os.environ, {"SQLITE_PATH": "/path/datacommons.db"})
+  def test_get_sqlite_config_from_env(self):
+    self.assertDictEqual(get_sqlite_config_from_env(), {
+        "type": "sqlite",
+        "params": {
+            "dbFilePath": "/path/datacommons.db"
+        }
+    })
