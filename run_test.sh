@@ -87,6 +87,18 @@ function run_all_tests {
   run_py_test
 }
 
+function run_sample {
+  python3 -m venv .env
+  source .env/bin/activate
+  
+  cd simple
+  pip3 install -r requirements.txt
+
+  python3 -m stats.main --input_path=sample/input --output_dir=sample/output --freeze_time
+
+  deactivate
+}
+
 function help {
   echo "Usage: $0 -afhlp"
   echo "-a              Run all tests"
@@ -95,6 +107,7 @@ function help {
   echo "-h              This usage"
   echo "-l              Run lint test"
   echo "-p              Run python tests"
+  echo "-s              Run and generate sample output"
   exit 1
 }
 
@@ -133,6 +146,11 @@ while [[ "$#" -gt 0 ]]; do
     -p)
         echo -e "### Running python tests"
         run_py_test
+        shift 1
+        ;;
+    -s)
+        echo -e "### Running sample"
+        run_sample
         shift 1
         ;;
     *)
