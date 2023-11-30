@@ -132,7 +132,9 @@ class SimpleStatsImporter:
 
     observations: list[Observation] = []
     for row in observations_df.itertuples(index=False):
-      observations.append(Observation(*row))
+      observation = Observation(*row)
+      if observation.value and observation.value.casefold() != "nan":
+        observations.append(Observation(*row))
     self.db.insert_observations(observations)
 
   def _add_provenance_column(self):
