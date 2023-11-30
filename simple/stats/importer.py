@@ -92,6 +92,8 @@ class SimpleStatsImporter:
       self.df.drop(columns=self.ignore_columns, axis=1, inplace=True)
 
   def _sanitize_values(self):
+    # Convert to best possible dtypes (i.e. keep ints as ints even when some values are NaN)
+    self.df = self.df.convert_dtypes()
     # Set date field to type str.
     self.df = self.df.astype({self.df.columns[1]: str})
 
@@ -122,7 +124,7 @@ class SimpleStatsImporter:
         ],
         var_name=constants.COLUMN_VARIABLE,
         value_name=constants.COLUMN_VALUE,
-    ).dropna()
+    )
 
     # Reorder columns so they are in the same order as observations
     observations_df = observations_df.reindex(columns=[
@@ -133,7 +135,7 @@ class SimpleStatsImporter:
     observations: list[Observation] = []
     for row in observations_df.itertuples(index=False):
       observation = Observation(*row)
-      if observation.value and observation.value.casefold() != "nan":
+      if observation.value and observation.value != "<NA>":
         observations.append(Observation(*row))
     self.db.insert_observations(observations)
 
