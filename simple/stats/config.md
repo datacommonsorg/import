@@ -9,13 +9,16 @@ The config parameters for the files to be imported should be specified in a `con
   "inputFiles": {
     "countries.csv": {
       "entityType": "Country",
-      "ignoreColumns": ["ignore1", "ignore2"]
+      "ignoreColumns": ["ignore1", "ignore2"],
+      "provenance": "Provenance1 Name"
     },
     "latlng.csv": {
-      "entityType": "State"
+      "entityType": "State",
+      "provenance": "Provenance1 Name"
     },
     "geoid.csv": {
-      "entityType": ""
+      "entityType": "",
+      "provenance": "Provenance2 Name"
     }
   },
   "variables": {
