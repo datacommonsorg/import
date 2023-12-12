@@ -21,6 +21,7 @@ from stats.db import create_sqlite_config
 from stats.db import Db
 from stats.db import get_cloud_sql_config_from_env
 from stats.db import get_sqlite_config_from_env
+from stats.db import ImportStatus
 from stats.importer import SimpleStatsImporter
 import stats.nl as nl
 from stats.nodes import Nodes
@@ -101,6 +102,9 @@ class Runner:
       nl.generate_sv_sentences(
           list(self.nodes.variables.values()),
           self.nl_dir_fh.make_file(constants.SENTENCES_FILE_NAME))
+
+      # Write import info to DB.
+      self.db.insert_import_info(status=ImportStatus.SUCCESS)
 
       # Commit and close DB.
       self.db.commit_and_close()

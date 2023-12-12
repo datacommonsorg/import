@@ -69,6 +69,8 @@ function update_goldens {
 function py_test {
   # Clear api key to catch any spurious API calls.
   export DC_API_KEY=
+  # Do not use Cloud SQL.
+  export USE_CLOUDSQL=false
 
   python3 -m venv .env
   source .env/bin/activate
@@ -88,6 +90,9 @@ function run_all_tests {
 }
 
 function run_sample {
+  # Do not use Cloud SQL.
+  export USE_CLOUDSQL=false
+
   python3 -m venv .env
   source .env/bin/activate
   
