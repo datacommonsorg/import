@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import datetime
+from enum import auto
+from enum import Enum
+import json
 import logging
 import os
 import sqlite3
@@ -71,13 +75,29 @@ create table if not exists observations (
 _DELETE_OBSERVATIONS_STATEMENT = "delete from observations"
 _INSERT_OBSERVATIONS_STATEMENT = "insert into observations values(?, ?, ?, ?, ?)"
 
+_CREATE_IMPORTS_TABLE = """
+create table if not exists imports (
+    imported_at datetime,
+    status varchar(16),
+    metadata text
+);
+"""
+
+_INSERT_IMPORTS_STATEMENT = "insert into imports values(?, ?, ?)"
+
 _INIT_STATEMENTS = [
     _CREATE_TRIPLES_TABLE,
     _CREATE_OBSERVATIONS_TABLE,
-    # Clearing tables for now.
+    _CREATE_IMPORTS_TABLE,
+    # Clearing tables for now (not the import tables though since we want to maintain its history).
     _DELETE_TRIPLES_STATEMENT,
     _DELETE_OBSERVATIONS_STATEMENT
 ]
+
+
+class ImportStatus(Enum):
+  SUCCESS = auto()
+  FAILURE = auto()
 
 
 class Db:
@@ -85,6 +105,8 @@ class Db:
 
   def __init__(self, config: dict) -> None:
     self.engine = create_db_engine(config)
+    self.num_observations = 0
+    self.variables: set[str] = set()
 
   def insert_triples(self, triples: list[Triple]):
     logging.info("Writing %s triples to [%s]", len(triples), self.engine)
@@ -94,12 +116,30 @@ class Db:
   def insert_observations(self, observations: list[Observation]):
     logging.info("Writing %s observations to [%s]", len(observations),
                  self.engine)
-    self.engine.executemany(
-        _INSERT_OBSERVATIONS_STATEMENT,
-        [to_observation_tuple(observation) for observation in observations])
+    self.num_observations += len(observations)
+    tuples = []
+    for observation in observations:
+      tuples.append(to_observation_tuple(observation))
+      self.variables.add(observation.variable)
+
+    self.engine.executemany(_INSERT_OBSERVATIONS_STATEMENT, tuples)
+
+  def insert_import_info(self, status: ImportStatus):
+    metadata = self._import_metadata()
+    logging.info("Writing import: status = %s, metadata = %s", status.name,
+                 metadata)
+    self.engine.execute(
+        _INSERT_IMPORTS_STATEMENT,
+        (str(datetime.now()), status.name, json.dumps(metadata)))
 
   def commit_and_close(self):
     self.engine.commit_and_close()
+
+  def _import_metadata(self) -> dict:
+    return {
+        "numVars": len(self.variables),
+        "numObs": self.num_observations,
+    }
 
 
 def to_triple_tuple(triple: Triple):
