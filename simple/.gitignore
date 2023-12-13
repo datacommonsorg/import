@@ -2,3 +2,6 @@
 .vscode/
 __pycache__/
 .data/
+# Don't check in sqlite db files since they can change from run to run
+# even for the same content.
+datacommons.db

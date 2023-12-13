@@ -142,13 +142,10 @@ class Runner:
                          ignore_columns: list[str] = []):
     logging.info("Importing file: %s", input_file_fh)
     basename = input_file_fh.basename()
-    observations_fh = self.output_dir_fh.make_file(
-        f"{constants.OBSERVATIONS_FILE_NAME_PREFIX}_{basename}")
     debug_resolve_fh = self.process_dir_fh.make_file(
         f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{basename}")
     importer = SimpleStatsImporter(input_fh=input_file_fh,
                                    db=self.db,
-                                   observations_fh=observations_fh,
                                    debug_resolve_fh=debug_resolve_fh,
                                    reporter=reporter,
                                    nodes=self.nodes,
