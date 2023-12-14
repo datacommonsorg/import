@@ -60,7 +60,6 @@ def _test_import(test: unittest.TestCase,
   with tempfile.TemporaryDirectory() as temp_dir:
     input_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
     db_path = os.path.join(temp_dir, f"{test_name}.db")
-    observations_path = os.path.join(temp_dir, f"observations_{test_name}.csv")
 
     output_path = os.path.join(temp_dir, f"{test_name}.db.csv")
     expected_path = os.path.join(_EXPECTED_DIR, f"{test_name}.db.csv")
@@ -68,7 +67,6 @@ def _test_import(test: unittest.TestCase,
     input_fh = LocalFileHandler(input_path)
 
     db = Db(create_sqlite_config(db_path))
-    observations_fh = LocalFileHandler(observations_path)
     debug_resolve_fh = LocalFileHandler(os.path.join(temp_dir, "debug.csv"))
     report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))
     reporter = FileImportReporter(input_path, ImportReporter(report_fh))
@@ -76,7 +74,6 @@ def _test_import(test: unittest.TestCase,
 
     SimpleStatsImporter(input_fh=input_fh,
                         db=db,
-                        observations_fh=observations_fh,
                         debug_resolve_fh=debug_resolve_fh,
                         reporter=reporter,
                         nodes=nodes,

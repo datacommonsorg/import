@@ -39,7 +39,6 @@ class SimpleStatsImporter:
       self,
       input_fh: FileHandler,
       db: Db,
-      observations_fh: FileHandler,
       debug_resolve_fh: FileHandler,
       reporter: FileImportReporter,
       nodes: Nodes,
@@ -48,7 +47,6 @@ class SimpleStatsImporter:
   ) -> None:
     self.input_fh = input_fh
     self.db = db
-    self.observations_fh = observations_fh
     self.debug_resolve_fh = debug_resolve_fh
     self.reporter = reporter
     self.nodes = nodes
@@ -74,7 +72,7 @@ class SimpleStatsImporter:
       self.reporter.report_failure(str(e))
       raise e
 
-    self._write_csvs()
+    self._write_debug_csvs()
 
   def _read_csv(self) -> None:
     # Read CSVs with the following behaviors:
@@ -257,10 +255,7 @@ class SimpleStatsImporter:
         constants.DEBUG_COLUMN_LINK: links,
     })
 
-  def _write_csvs(self) -> None:
-    logging.info("Writing %s observations to: %s", self.df.index.size,
-                 self.observations_fh)
-    self.observations_fh.write_string(self.df.to_csv(index=False))
+  def _write_debug_csvs(self) -> None:
     if self.debug_resolve_df is not None:
       logging.info("Writing resolutions (for debugging) to: %s",
                    self.debug_resolve_fh)

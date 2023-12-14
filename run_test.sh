@@ -99,7 +99,17 @@ function run_sample {
   cd simple
   pip3 install -r requirements.txt
 
+  echo "Deleting existing datacommons.db file."
+  rm -f sample/output/datacommons.db
+
+  echo "Running sample."
   python3 -m stats.main --input_path=sample/input --output_dir=sample/output --freeze_time
+
+  echo "Writing tables to CSVs."
+  mkdir -p sample/output/debug
+  sqlite3 -header -csv sample/output/datacommons.db "select * from observations;" > sample/output/debug/observations.csv
+  sqlite3 -header -csv sample/output/datacommons.db "select * from triples;" > sample/output/debug/triples.csv
+  sqlite3 -header -csv sample/output/datacommons.db "select * from imports;" > sample/output/debug/imports.csv
 
   deactivate
 }
@@ -112,7 +122,7 @@ function help {
   echo "-h              This usage"
   echo "-l              Run lint test"
   echo "-p              Run python tests"
-  echo "-s              Run and generate sample output"
+  echo "-s              Run sample and generate debug output"
   exit 1
 }
 
