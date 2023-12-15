@@ -103,7 +103,7 @@ function run_sample {
   rm -f sample/output/datacommons.db
 
   echo "Running sample."
-  python3 -m stats.main --input_path=sample/input --output_dir=sample/output --freeze_time
+  python3 -m stats.main --input_dir=sample/input --output_dir=sample/output --freeze_time
 
   echo "Writing tables to CSVs."
   mkdir -p sample/output/debug

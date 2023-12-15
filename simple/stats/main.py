@@ -23,16 +23,10 @@ from stats.runner import Runner
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string(
-    "entity_type",
-    None,
-    "The type of entities in the CSV (e.g. 'City', 'Country', 'Company', etc.).",
-)
-flags.DEFINE_string("input_path", constants.DEFAULT_INPUT_PATH,
-                    "The input directory or file.")
+flags.DEFINE_string("input_dir", constants.DEFAULT_INPUT_DIR,
+                    "The input directory.")
 flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
                     "The output directory.")
-flags.DEFINE_list("ignore_columns", [], "List of input columns to be ignored.")
 flags.DEFINE_bool(
     "freeze_time",
     False,
@@ -60,10 +54,8 @@ def _init_logger():
 
 def _run():
   Runner(
-      input_path=FLAGS.input_path,
+      input_dir=FLAGS.input_dir,
       output_dir=FLAGS.output_dir,
-      entity_type=FLAGS.entity_type,
-      ignore_columns=FLAGS.ignore_columns,
   ).run()
 
 
