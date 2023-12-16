@@ -35,14 +35,13 @@ class Runner:
   """Runs and coordinates all imports.
     """
 
-  def __init__(
-      self,
-      input_path: str,
-      output_dir: str,
-      entity_type: str = None,
-      ignore_columns: list[str] = list(),
-  ) -> None:
-    self.input_fh = create_file_handler(input_path)
+  def __init__(self, input_dir: str, output_dir: str) -> None:
+    self.input_dir_fh = create_file_handler(input_dir)
+    if not self.input_dir_fh.isdir:
+      raise NotADirectoryError(
+          f"Input path must be a directory: {input_dir}. If it is a GCS path, ensure it ends with a '/'."
+      )
+
     self.output_dir_fh = create_file_handler(output_dir)
     self.nl_dir_fh = self.output_dir_fh.make_file(f"{constants.NL_DIR_NAME}/")
     self.process_dir_fh = self.output_dir_fh.make_file(
@@ -54,16 +53,11 @@ class Runner:
 
     self.reporter = ImportReporter(report_fh=self.process_dir_fh.make_file(
         constants.REPORT_JSON_FILE_NAME))
-    self.entity_type = entity_type
-    self.ignore_columns = ignore_columns
 
-    self.config = Config(data={})
-    if self.input_fh.isdir:
-      config_fh = self.input_fh.make_file(constants.CONFIG_JSON_FILE_NAME)
-      if not config_fh.exists():
-        raise FileNotFoundError(
-            "Config file must be provided for importing directories.")
-      self.config = Config(data=json.loads(config_fh.read_string()))
+    config_fh = self.input_dir_fh.make_file(constants.CONFIG_JSON_FILE_NAME)
+    if not config_fh.exists():
+      raise FileNotFoundError("Config file must be provided.")
+    self.config = Config(data=json.loads(config_fh.read_string()))
 
     def _get_db_config() -> dict:
       # Attempt to get from env (cloud sql, then sqlite),
@@ -116,24 +110,16 @@ class Runner:
       self.reporter.report_failure(error=str(e))
 
   def _run_imports(self):
-    if not self.input_fh.isdir:
-      self.reporter.report_started(import_files=[self.input_fh.basename()])
-      self._run_single_import(input_file_fh=self.input_fh,
-                              reporter=self.reporter.import_file(
-                                  self.input_fh.basename()),
-                              entity_type=self.entity_type,
-                              ignore_columns=self.ignore_columns)
-    else:
-      input_files = sorted(self.input_fh.list_files(extension=".csv"))
-      self.reporter.report_started(import_files=input_files)
-      if not input_files:
-        raise RuntimeError("Not input CSVs found.")
-      for input_file in input_files:
-        self._run_single_import(
-            input_file_fh=self.input_fh.make_file(input_file),
-            reporter=self.reporter.import_file(input_file),
-            entity_type=self.config.entity_type(input_file),
-            ignore_columns=self.config.ignore_columns(input_file))
+    input_files = sorted(self.input_dir_fh.list_files(extension=".csv"))
+    self.reporter.report_started(import_files=input_files)
+    if not input_files:
+      raise RuntimeError("Not input CSVs found.")
+    for input_file in input_files:
+      self._run_single_import(
+          input_file_fh=self.input_dir_fh.make_file(input_file),
+          reporter=self.reporter.import_file(input_file),
+          entity_type=self.config.entity_type(input_file),
+          ignore_columns=self.config.ignore_columns(input_file))
 
   def _run_single_import(self,
                          input_file_fh: FileHandler,
