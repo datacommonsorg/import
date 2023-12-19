@@ -14,6 +14,7 @@
 
 from dataclasses import dataclass
 from dataclasses import field
+from enum import StrEnum
 from urllib.parse import urlparse
 
 _PREDICATE_TYPE_OF = "typeOf"
@@ -178,3 +179,8 @@ class Observation:
   date: str
   value: str
   provenance: str
+
+
+class ImportType(StrEnum):
+  OBSERVATIONS = "observations"
+  EVENTS = "events"

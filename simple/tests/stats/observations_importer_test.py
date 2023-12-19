@@ -23,15 +23,15 @@ from stats.config import Config
 from stats.data import Observation
 from stats.db import create_sqlite_config
 from stats.db import Db
-from stats.importer import SimpleStatsImporter
 from stats.nodes import Nodes
+from stats.observations_importer import ObservationsImporter
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from tests.stats.test_util import is_write_mode
 from util.filehandler import LocalFileHandler
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                              "test_data", "importer")
+                              "test_data", "observations_importer")
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
@@ -58,7 +58,8 @@ def _test_import(test: unittest.TestCase,
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
-    input_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
+    input_file = f"{test_name}.csv"
+    input_path = os.path.join(_INPUT_DIR, input_file)
     db_path = os.path.join(temp_dir, f"{test_name}.db")
 
     output_path = os.path.join(temp_dir, f"{test_name}.db.csv")
@@ -70,15 +71,21 @@ def _test_import(test: unittest.TestCase,
     debug_resolve_fh = LocalFileHandler(os.path.join(temp_dir, "debug.csv"))
     report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))
     reporter = FileImportReporter(input_path, ImportReporter(report_fh))
-    nodes = Nodes(Config({}))
+    nodes = Nodes(
+        Config({
+            "inputFiles": {
+                input_file: {
+                    "entityType": entity_type,
+                    "ignoreColumns": ignore_columns
+                }
+            }
+        }))
 
-    SimpleStatsImporter(input_fh=input_fh,
-                        db=db,
-                        debug_resolve_fh=debug_resolve_fh,
-                        reporter=reporter,
-                        nodes=nodes,
-                        entity_type=entity_type,
-                        ignore_columns=ignore_columns).do_import()
+    ObservationsImporter(input_fh=input_fh,
+                         db=db,
+                         debug_resolve_fh=debug_resolve_fh,
+                         reporter=reporter,
+                         nodes=nodes).do_import()
     db.commit_and_close()
 
     _write_observations(db_path, output_path)
@@ -90,7 +97,7 @@ def _test_import(test: unittest.TestCase,
     _compare_files(test, output_path, expected_path)
 
 
-class TestImporter(unittest.TestCase):
+class TestObservationsImporter(unittest.TestCase):
 
   def test_countryalpha3codes(self):
     _test_import(self, "countryalpha3codes")
