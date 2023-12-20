@@ -17,18 +17,18 @@ import logging
 
 from stats import constants
 from stats.config import Config
+from stats.data import ImportType
 from stats.db import create_sqlite_config
 from stats.db import Db
 from stats.db import get_cloud_sql_config_from_env
 from stats.db import get_sqlite_config_from_env
 from stats.db import ImportStatus
-from stats.importer import SimpleStatsImporter
+from stats.importer import Importer
 import stats.nl as nl
 from stats.nodes import Nodes
-from stats.reporter import FileImportReporter
+from stats.observations_importer import ObservationsImporter
 from stats.reporter import ImportReporter
 from util.filehandler import create_file_handler
-from util.filehandler import FileHandler
 
 
 class Runner:
@@ -115,26 +115,24 @@ class Runner:
     if not input_files:
       raise RuntimeError("Not input CSVs found.")
     for input_file in input_files:
-      self._run_single_import(
-          input_file_fh=self.input_dir_fh.make_file(input_file),
-          reporter=self.reporter.import_file(input_file),
-          entity_type=self.config.entity_type(input_file),
-          ignore_columns=self.config.ignore_columns(input_file))
+      self._run_single_import(input_file)
 
-  def _run_single_import(self,
-                         input_file_fh: FileHandler,
-                         reporter: FileImportReporter,
-                         entity_type: str = None,
-                         ignore_columns: list[str] = []):
-    logging.info("Importing file: %s", input_file_fh)
-    basename = input_file_fh.basename()
-    debug_resolve_fh = self.process_dir_fh.make_file(
-        f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{basename}")
-    importer = SimpleStatsImporter(input_fh=input_file_fh,
-                                   db=self.db,
-                                   debug_resolve_fh=debug_resolve_fh,
-                                   reporter=reporter,
-                                   nodes=self.nodes,
-                                   entity_type=entity_type,
-                                   ignore_columns=ignore_columns)
-    importer.do_import()
+  def _run_single_import(self, input_file: str):
+    logging.info("Importing file: %s", input_file)
+    self._create_importer(input_file).do_import()
+
+  def _create_importer(self, input_file: str) -> Importer:
+    import_type = self.config.import_type(input_file)
+
+    if import_type == ImportType.OBSERVATIONS:
+      return ObservationsImporter(
+          input_fh=self.input_dir_fh.make_file(input_file),
+          db=self.db,
+          debug_resolve_fh=self.process_dir_fh.make_file(
+              f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{input_file}"),
+          reporter=self.reporter.import_file(input_file),
+          nodes=self.nodes)
+
+    # TODO: Add support for an EventsImporter for ImportType.EVENTS
+
+    raise ValueError(f"Unsupported import type: {import_type} ({input_file})")

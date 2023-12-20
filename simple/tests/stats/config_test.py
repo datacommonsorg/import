@@ -15,6 +15,7 @@
 import unittest
 
 from stats.config import Config
+from stats.data import ImportType
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
@@ -28,6 +29,15 @@ CONFIG_DATA = {
         "b.csv": {
             "entityType": "",
             "ignoreColumns": ["ignore1", "ignore2"]
+        },
+        "observations.csv": {
+            "importType": "observations"
+        },
+        "events.csv": {
+            "importType": "events"
+        },
+        "invalid_import_type.csv": {
+            "importType": "eVeNtS"
         },
     },
     "variables": {
@@ -148,6 +158,17 @@ class TestConfig(unittest.TestCase):
     config = Config(CONFIG_DATA)
     self.assertEqual(config.provenance_name("a.csv"), "Provenance21 Name")
     self.assertEqual(config.provenance_name("b.csv"), "b.csv")
+
+  def test_import_type(self):
+    config = Config(CONFIG_DATA)
+    self.assertEqual(config.import_type("a.csv"), ImportType.OBSERVATIONS,
+                     "default import type")
+    self.assertEqual(config.import_type("observations.csv"),
+                     ImportType.OBSERVATIONS, "observations import type")
+    self.assertEqual(config.import_type("events.csv"), ImportType.EVENTS,
+                     "events import type")
+    with self.assertRaisesRegex(ValueError, "Unsupported import type"):
+      config.import_type("invalid_import_type.csv")
 
   def test_empty_config(self):
     config = Config({})
