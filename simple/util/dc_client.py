@@ -13,11 +13,15 @@
 # limitations under the License.
 """ Data Commons REST API Client."""
 
+import asyncio
+from itertools import islice
 import json
 import logging
 import os
 import re
 
+from httpx import AsyncClient
+from httpx import Limits
 import requests
 
 from .ngram_matcher import NgramMatcher
@@ -44,6 +48,11 @@ _MAX_NODES = 10_000
 # Entities of type S2CellLevel* are resolved locally by applying a mapping function.
 # Make the implementation more generic if more entity types are resolved via mapping functions.
 _S2CELL_ENTITY_TYPE_PATTERN = r"S2CellLevel(\d+)"
+
+# The maximum number of entities to include in a single DC resolve call.
+_RESOLVE_BATCH_SIZE = 500
+
+_HTTPX_LIMITS = Limits(max_keepalive_connections=5, max_connections=10)
 
 
 def get_api_key():
@@ -79,13 +88,39 @@ def resolve_place_entities(
     entities: list[str],
     entity_type: str = None,
     property_name: str = "description") -> dict[str, str]:
+  return asyncio.run(
+      resolve_place_entities_async(entities, entity_type, property_name))
+
+
+async def resolve_place_entities_async(
+    entities: list[str],
+    entity_type: str = None,
+    property_name: str = "description") -> dict[str, str]:
+
+  chunks = chunked(entities, _RESOLVE_BATCH_SIZE)
+
+  resolved: dict[str, str] = {}
+  async with AsyncClient(limits=_HTTPX_LIMITS) as client:
+    futures: dict[str, str] = [
+        _resolve_place_entities_chunk(client, chunk, entity_type, property_name)
+        for chunk in chunks
+    ]
+    for resolved_chunk in await asyncio.gather(*futures):
+      resolved.update(resolved_chunk)
+
+  return resolved
+
+
+async def _resolve_place_entities_chunk(client: AsyncClient,
+                                        entities_chunk: list[str],
+                                        entity_type: str,
+                                        property_name: str) -> dict[str, str]:
   type_of = f"{{typeOf:{entity_type}}}" if entity_type else ""
   data = {
-      "nodes": entities,
+      "nodes": entities_chunk,
       "property": f"<-{property_name}{type_of}->dcid",
   }
-  response = post(path="/v2/resolve", data=data)
-
+  response = await post_async(client, path="/v2/resolve", data=data)
   resolved: dict[str, str] = {}
   for entity in response.get("entities", []):
     node = entity.get("node", "")
@@ -217,3 +252,28 @@ def post(path: str, data={}) -> dict:
         f'{resp.status_code}: {resp.reason}\n{response["message"]}\nRequest: {path}\n{data}'
     )
   return response
+
+
+async def post_async(client: AsyncClient, path: str, data={}) -> dict:
+  url = get_api_root() + path
+  headers = {"Content-Type": "application/json"}
+  api_key = get_api_key()
+  if api_key:
+    headers["x-api-key"] = api_key
+  logging.debug("Request: %s", json.dumps(data, indent=1))
+  resp = await client.post(url, json=data, headers=headers)
+  response = resp.json()
+  logging.debug("Response: %s", json.dumps(response, indent=1))
+  if resp.status_code != 200:
+    raise Exception(
+        f'{resp.status_code}: {resp.reason}\n{response["message"]}\nRequest: {path}\n{data}'
+    )
+  return response
+
+
+def chunked(elements: list, chunk_size: int) -> list[list]:
+  iterator = iter(elements)
+  chunks = list()
+  while chunk := list(islice(iterator, chunk_size)):
+    chunks.append(chunk)
+  return chunks
