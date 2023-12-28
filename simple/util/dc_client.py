@@ -13,18 +13,19 @@
 # limitations under the License.
 """ Data Commons REST API Client."""
 
+import asyncio
+from itertools import islice
 import json
 import logging
 import os
 import re
 
+from httpx import AsyncClient
+from httpx import Limits
 import requests
 
 from .ngram_matcher import NgramMatcher
 from .resolvers import resolve_latlngs_2_s2cells
-from itertools import islice
-from httpx import AsyncClient, Limits
-import asyncio
 
 # Environment variables.
 _KEY_ENV = "DC_API_KEY"
