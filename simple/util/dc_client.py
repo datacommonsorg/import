@@ -23,7 +23,6 @@ import requests
 from .ngram_matcher import NgramMatcher
 from .resolvers import resolve_latlngs_2_s2cells
 from itertools import islice
-from multiprocessing import Pool
 from httpx import AsyncClient, Limits
 import asyncio
 
