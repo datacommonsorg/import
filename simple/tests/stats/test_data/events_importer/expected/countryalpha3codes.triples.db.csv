@@ -1,0 +1,253 @@
+subject_id,predicate,object_id,object_value
+CrimeEvent_0,typeOf,CrimeEvent,
+CrimeEvent_0,Country,country/USA,
+CrimeEvent_0,observationDate,,11/08/2023 8:50:00 PM
+CrimeEvent_0,includedIn,c/p/1,
+CrimeEvent_0,CASE,,JG497095
+CrimeEvent_0,IUCR,,810
+CrimeEvent_0,PRIMARY_DESCRIPTION,,THEFT
+CrimeEvent_0,SECONDARY_DESCRIPTION,,OVER $500
+CrimeEvent_0,typeOf,CrimeEvent,
+CrimeEvent_0,Country,country/USA,
+CrimeEvent_0,observationDate,,11/08/2023 8:50:00 PM
+CrimeEvent_0,includedIn,c/p/1,
+CrimeEvent_0,CASE,,JG497095
+CrimeEvent_0,IUCR,,810
+CrimeEvent_0,PRIMARY_DESCRIPTION,,THEFT
+CrimeEvent_0,SECONDARY_DESCRIPTION,,OVER $500
+CrimeEvent_1,typeOf,CrimeEvent,
+CrimeEvent_1,Country,country/BRA,
+CrimeEvent_1,observationDate,,11/08/2023 3:14:00 PM
+CrimeEvent_1,includedIn,c/p/1,
+CrimeEvent_1,CASE,,JG496991
+CrimeEvent_1,IUCR,,560
+CrimeEvent_1,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_1,SECONDARY_DESCRIPTION,,SIMPLE
+CrimeEvent_0,typeOf,CrimeEvent,
+CrimeEvent_0,Country,country/USA,
+CrimeEvent_0,observationDate,,11/08/2023 8:50:00 PM
+CrimeEvent_0,includedIn,c/p/1,
+CrimeEvent_0,CASE,,JG497095
+CrimeEvent_0,IUCR,,810
+CrimeEvent_0,PRIMARY_DESCRIPTION,,THEFT
+CrimeEvent_0,SECONDARY_DESCRIPTION,,OVER $500
+CrimeEvent_1,typeOf,CrimeEvent,
+CrimeEvent_1,Country,country/BRA,
+CrimeEvent_1,observationDate,,11/08/2023 3:14:00 PM
+CrimeEvent_1,includedIn,c/p/1,
+CrimeEvent_1,CASE,,JG496991
+CrimeEvent_1,IUCR,,560
+CrimeEvent_1,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_1,SECONDARY_DESCRIPTION,,SIMPLE
+CrimeEvent_2,typeOf,CrimeEvent,
+CrimeEvent_2,Country,country/CHN,
+CrimeEvent_2,observationDate,,11/08/2023 10:55:00 PM
+CrimeEvent_2,includedIn,c/p/1,
+CrimeEvent_2,CASE,,JG497145
+CrimeEvent_2,IUCR,,051A
+CrimeEvent_2,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_2,SECONDARY_DESCRIPTION,,AGGRAVATED - HANDGUN
+CrimeEvent_0,typeOf,CrimeEvent,
+CrimeEvent_0,Country,country/USA,
+CrimeEvent_0,observationDate,,11/08/2023 8:50:00 PM
+CrimeEvent_0,includedIn,c/p/1,
+CrimeEvent_0,CASE,,JG497095
+CrimeEvent_0,IUCR,,810
+CrimeEvent_0,PRIMARY_DESCRIPTION,,THEFT
+CrimeEvent_0,SECONDARY_DESCRIPTION,,OVER $500
+CrimeEvent_1,typeOf,CrimeEvent,
+CrimeEvent_1,Country,country/BRA,
+CrimeEvent_1,observationDate,,11/08/2023 3:14:00 PM
+CrimeEvent_1,includedIn,c/p/1,
+CrimeEvent_1,CASE,,JG496991
+CrimeEvent_1,IUCR,,560
+CrimeEvent_1,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_1,SECONDARY_DESCRIPTION,,SIMPLE
+CrimeEvent_2,typeOf,CrimeEvent,
+CrimeEvent_2,Country,country/CHN,
+CrimeEvent_2,observationDate,,11/08/2023 10:55:00 PM
+CrimeEvent_2,includedIn,c/p/1,
+CrimeEvent_2,CASE,,JG497145
+CrimeEvent_2,IUCR,,051A
+CrimeEvent_2,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_2,SECONDARY_DESCRIPTION,,AGGRAVATED - HANDGUN
+CrimeEvent_3,typeOf,CrimeEvent,
+CrimeEvent_3,Country,country/USA,
+CrimeEvent_3,observationDate,,11/08/2023 8:25:00 AM
+CrimeEvent_3,includedIn,c/p/1,
+CrimeEvent_3,CASE,,JG498494
+CrimeEvent_3,IUCR,,560
+CrimeEvent_3,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_3,SECONDARY_DESCRIPTION,,SIMPLE
+CrimeEvent_0,typeOf,CrimeEvent,
+CrimeEvent_0,Country,country/USA,
+CrimeEvent_0,observationDate,,11/08/2023 8:50:00 PM
+CrimeEvent_0,includedIn,c/p/1,
+CrimeEvent_0,CASE,,JG497095
+CrimeEvent_0,IUCR,,810
+CrimeEvent_0,PRIMARY_DESCRIPTION,,THEFT
+CrimeEvent_0,SECONDARY_DESCRIPTION,,OVER $500
+CrimeEvent_1,typeOf,CrimeEvent,
+CrimeEvent_1,Country,country/BRA,
+CrimeEvent_1,observationDate,,11/08/2023 3:14:00 PM
+CrimeEvent_1,includedIn,c/p/1,
+CrimeEvent_1,CASE,,JG496991
+CrimeEvent_1,IUCR,,560
+CrimeEvent_1,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_1,SECONDARY_DESCRIPTION,,SIMPLE
+CrimeEvent_2,typeOf,CrimeEvent,
+CrimeEvent_2,Country,country/CHN,
+CrimeEvent_2,observationDate,,11/08/2023 10:55:00 PM
+CrimeEvent_2,includedIn,c/p/1,
+CrimeEvent_2,CASE,,JG497145
+CrimeEvent_2,IUCR,,051A
+CrimeEvent_2,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_2,SECONDARY_DESCRIPTION,,AGGRAVATED - HANDGUN
+CrimeEvent_3,typeOf,CrimeEvent,
+CrimeEvent_3,Country,country/USA,
+CrimeEvent_3,observationDate,,11/08/2023 8:25:00 AM
+CrimeEvent_3,includedIn,c/p/1,
+CrimeEvent_3,CASE,,JG498494
+CrimeEvent_3,IUCR,,560
+CrimeEvent_3,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_3,SECONDARY_DESCRIPTION,,SIMPLE
+CrimeEvent_4,typeOf,CrimeEvent,
+CrimeEvent_4,Country,country/BRA,
+CrimeEvent_4,observationDate,,11/08/2023 2:38:00 PM
+CrimeEvent_4,includedIn,c/p/1,
+CrimeEvent_4,CASE,,JG496575
+CrimeEvent_4,IUCR,,860
+CrimeEvent_4,PRIMARY_DESCRIPTION,,THEFT
+CrimeEvent_4,SECONDARY_DESCRIPTION,,RETAIL THEFT
+CrimeEvent_0,typeOf,CrimeEvent,
+CrimeEvent_0,Country,country/USA,
+CrimeEvent_0,observationDate,,11/08/2023 8:50:00 PM
+CrimeEvent_0,includedIn,c/p/1,
+CrimeEvent_0,CASE,,JG497095
+CrimeEvent_0,IUCR,,810
+CrimeEvent_0,PRIMARY_DESCRIPTION,,THEFT
+CrimeEvent_0,SECONDARY_DESCRIPTION,,OVER $500
+CrimeEvent_1,typeOf,CrimeEvent,
+CrimeEvent_1,Country,country/BRA,
+CrimeEvent_1,observationDate,,11/08/2023 3:14:00 PM
+CrimeEvent_1,includedIn,c/p/1,
+CrimeEvent_1,CASE,,JG496991
+CrimeEvent_1,IUCR,,560
+CrimeEvent_1,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_1,SECONDARY_DESCRIPTION,,SIMPLE
+CrimeEvent_2,typeOf,CrimeEvent,
+CrimeEvent_2,Country,country/CHN,
+CrimeEvent_2,observationDate,,11/08/2023 10:55:00 PM
+CrimeEvent_2,includedIn,c/p/1,
+CrimeEvent_2,CASE,,JG497145
+CrimeEvent_2,IUCR,,051A
+CrimeEvent_2,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_2,SECONDARY_DESCRIPTION,,AGGRAVATED - HANDGUN
+CrimeEvent_3,typeOf,CrimeEvent,
+CrimeEvent_3,Country,country/USA,
+CrimeEvent_3,observationDate,,11/08/2023 8:25:00 AM
+CrimeEvent_3,includedIn,c/p/1,
+CrimeEvent_3,CASE,,JG498494
+CrimeEvent_3,IUCR,,560
+CrimeEvent_3,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_3,SECONDARY_DESCRIPTION,,SIMPLE
+CrimeEvent_4,typeOf,CrimeEvent,
+CrimeEvent_4,Country,country/BRA,
+CrimeEvent_4,observationDate,,11/08/2023 2:38:00 PM
+CrimeEvent_4,includedIn,c/p/1,
+CrimeEvent_4,CASE,,JG496575
+CrimeEvent_4,IUCR,,860
+CrimeEvent_4,PRIMARY_DESCRIPTION,,THEFT
+CrimeEvent_4,SECONDARY_DESCRIPTION,,RETAIL THEFT
+CrimeEvent_5,typeOf,CrimeEvent,
+CrimeEvent_5,Country,country/CHN,
+CrimeEvent_5,observationDate,,09/17/2023 3:00:00 AM
+CrimeEvent_5,includedIn,c/p/1,
+CrimeEvent_5,CASE,,JG427641
+CrimeEvent_5,IUCR,,820
+CrimeEvent_5,PRIMARY_DESCRIPTION,,THEFT
+CrimeEvent_5,SECONDARY_DESCRIPTION,,$500 AND UNDER
+CrimeEvent_0,typeOf,CrimeEvent,
+CrimeEvent_0,Country,country/USA,
+CrimeEvent_0,observationDate,,11/08/2023 8:50:00 PM
+CrimeEvent_0,includedIn,c/p/1,
+CrimeEvent_0,CASE,,JG497095
+CrimeEvent_0,IUCR,,810
+CrimeEvent_0,PRIMARY_DESCRIPTION,,THEFT
+CrimeEvent_0,SECONDARY_DESCRIPTION,,OVER $500
+CrimeEvent_1,typeOf,CrimeEvent,
+CrimeEvent_1,Country,country/BRA,
+CrimeEvent_1,observationDate,,11/08/2023 3:14:00 PM
+CrimeEvent_1,includedIn,c/p/1,
+CrimeEvent_1,CASE,,JG496991
+CrimeEvent_1,IUCR,,560
+CrimeEvent_1,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_1,SECONDARY_DESCRIPTION,,SIMPLE
+CrimeEvent_2,typeOf,CrimeEvent,
+CrimeEvent_2,Country,country/CHN,
+CrimeEvent_2,observationDate,,11/08/2023 10:55:00 PM
+CrimeEvent_2,includedIn,c/p/1,
+CrimeEvent_2,CASE,,JG497145
+CrimeEvent_2,IUCR,,051A
+CrimeEvent_2,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_2,SECONDARY_DESCRIPTION,,AGGRAVATED - HANDGUN
+CrimeEvent_3,typeOf,CrimeEvent,
+CrimeEvent_3,Country,country/USA,
+CrimeEvent_3,observationDate,,11/08/2023 8:25:00 AM
+CrimeEvent_3,includedIn,c/p/1,
+CrimeEvent_3,CASE,,JG498494
+CrimeEvent_3,IUCR,,560
+CrimeEvent_3,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_3,SECONDARY_DESCRIPTION,,SIMPLE
+CrimeEvent_4,typeOf,CrimeEvent,
+CrimeEvent_4,Country,country/BRA,
+CrimeEvent_4,observationDate,,11/08/2023 2:38:00 PM
+CrimeEvent_4,includedIn,c/p/1,
+CrimeEvent_4,CASE,,JG496575
+CrimeEvent_4,IUCR,,860
+CrimeEvent_4,PRIMARY_DESCRIPTION,,THEFT
+CrimeEvent_4,SECONDARY_DESCRIPTION,,RETAIL THEFT
+CrimeEvent_5,typeOf,CrimeEvent,
+CrimeEvent_5,Country,country/CHN,
+CrimeEvent_5,observationDate,,09/17/2023 3:00:00 AM
+CrimeEvent_5,includedIn,c/p/1,
+CrimeEvent_5,CASE,,JG427641
+CrimeEvent_5,IUCR,,820
+CrimeEvent_5,PRIMARY_DESCRIPTION,,THEFT
+CrimeEvent_5,SECONDARY_DESCRIPTION,,$500 AND UNDER
+CrimeEvent_6,typeOf,CrimeEvent,
+CrimeEvent_6,Country,country/USA,
+CrimeEvent_6,observationDate,,08/02/2023 9:25:00 AM
+CrimeEvent_6,includedIn,c/p/1,
+CrimeEvent_6,CASE,,JG365961
+CrimeEvent_6,IUCR,,530
+CrimeEvent_6,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeEvent_6,SECONDARY_DESCRIPTION,,AGGRAVATED - OTHER DANGEROUS WEAPON
+c/s/default,typeOf,Source,
+c/s/default,name,,Custom Data Commons
+c/s/1,typeOf,Source,
+c/s/1,name,,Test Source
+c/s/1,url,,http://source.com
+c/s/1,domain,,source.com
+c/p/default,typeOf,Provenance,
+c/p/default,name,,Custom Import
+c/p/default,source,c/s/default,
+c/p/default,url,,custom-import
+c/p/1,typeOf,Provenance,
+c/p/1,name,,Test Provenance
+c/p/1,source,c/s/1,
+c/p/1,url,,http://source.com/provenance
+CrimeEvent,typeOf,Class,
+CrimeEvent,subClassOf,Event,
+CrimeEvent,name,,Crime Event
+CrimeEvent,description,,Crime Event description
+CrimeEvent,includedIn,c/p/1,
+CrimeEvent,includedIn,c/s/1,
+CASE,typeOf,Property,
+CASE,name,,CASE
+IUCR,typeOf,Property,
+IUCR,name,,IUCR
+PRIMARY_DESCRIPTION,typeOf,Property,
+PRIMARY_DESCRIPTION,name,,PRIMARY DESCRIPTION
+SECONDARY_DESCRIPTION,typeOf,Property,
+SECONDARY_DESCRIPTION,name,,SECONDARY DESCRIPTION

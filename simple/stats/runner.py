@@ -94,7 +94,7 @@ class Runner:
 
       # Generate SV sentences.
       nl.generate_sv_sentences(
-          list(self.nodes.variables.values()),
+          list(self.nodes.properties.values()),
           self.nl_dir_fh.make_file(constants.SENTENCES_FILE_NAME))
 
       # Write import info to DB.

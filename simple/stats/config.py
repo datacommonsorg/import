@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from stats.data import EventType
 from stats.data import ImportType
 from stats.data import Provenance
 from stats.data import Source
@@ -31,6 +32,9 @@ _PROVENANCES_FIELD = "provenances"
 _URL_FIELD = "url"
 _PROVENANCE_FIELD = "provenance"
 _DATABASE_FIELD = "database"
+_EVENT_TYPE_FIELD = "eventType"
+_ID_COLUMN_FIELD = "idColumn"
+_EVENTS_FIELD = "events"
 
 
 class Config:
@@ -65,6 +69,18 @@ class Config:
         nl_sentences=var_cfg.get(_NL_SENTENCES_FIELD, []),
         group_path=var_cfg.get(_GROUP_FIELD, ""),
     )
+
+  def event_type(self, input_file_name: str) -> str:
+    return self._input_file(input_file_name).get(_EVENT_TYPE_FIELD, "")
+
+  def event(self, event_type_name: str) -> EventType:
+    event_type_cfg = self.data.get(_EVENTS_FIELD, {}).get(event_type_name, {})
+    return EventType("",
+                     event_type_cfg.get(_NAME_FIELD, event_type_name),
+                     description=event_type_cfg.get(_DESCRIPTION_FIELD, ""))
+
+  def id_column(self, input_file_name: str) -> str:
+    return self._input_file(input_file_name).get(_ID_COLUMN_FIELD, "")
 
   def entity_type(self, input_file_name: str) -> str:
     return self._input_file(input_file_name).get(_ENTITY_TYPE_FIELD, "")

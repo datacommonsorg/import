@@ -14,6 +14,7 @@
 
 import unittest
 
+from stats.data import Event
 from stats.data import Provenance
 from stats.data import StatVar
 from stats.data import StatVarGroup
@@ -26,6 +27,17 @@ SV_SENTENCES1 = ["SV Sentence1", "SV SENTENCE2"]
 SVG_ID1 = "svg_id1"
 SVG_NAME1 = "SVG NAME1"
 SVG_PARENT_ID1 = "svg_parent_id1"
+
+EVENT_ID1 = "event1"
+EVENT_TYPE1 = "EventType1"
+EVENT_ENTITY_TYPE1 = "EntityType1"
+EVENT_ENTITY1 = "entity1"
+EVENT_DATE1 = "2024-01"
+EVENT_PROVENANCE1 = "prov1"
+EVENT_PROP1_TYPE = "prop1"
+EVENT_PROP1_VALUE1 = "prop1_value1"
+EVENT_PROP2_TYPE = "prop2"
+EVENT_PROP2_VALUE1 = "prop2_value1"
 
 
 class TestData(unittest.TestCase):
@@ -114,5 +126,27 @@ class TestData(unittest.TestCase):
         Triple(SVG_ID1, "typeOf", object_id="StatVarGroup"),
         Triple(SVG_ID1, "name", object_value=SVG_NAME1),
         Triple(SVG_ID1, "specializationOf", object_id=SVG_PARENT_ID1)
+    ]
+    self.assertListEqual(result, expected)
+
+  def test_event_triples(self):
+    event = Event(EVENT_ID1,
+                  EVENT_TYPE1,
+                  entity_type=EVENT_ENTITY_TYPE1,
+                  entity=EVENT_ENTITY1,
+                  date=EVENT_DATE1,
+                  provenance_id=EVENT_PROVENANCE1,
+                  properties={
+                      EVENT_PROP1_TYPE: EVENT_PROP1_VALUE1,
+                      EVENT_PROP2_TYPE: EVENT_PROP2_VALUE1
+                  })
+    result = event.triples()
+    expected = [
+        Triple(EVENT_ID1, "typeOf", object_id=EVENT_TYPE1),
+        Triple(EVENT_ID1, EVENT_ENTITY_TYPE1, object_id=EVENT_ENTITY1),
+        Triple(EVENT_ID1, "observationDate", object_value=EVENT_DATE1),
+        Triple(EVENT_ID1, "includedIn", object_id=EVENT_PROVENANCE1),
+        Triple(EVENT_ID1, EVENT_PROP1_TYPE, object_value=EVENT_PROP1_VALUE1),
+        Triple(EVENT_ID1, EVENT_PROP2_TYPE, object_value=EVENT_PROP2_VALUE1)
     ]
     self.assertListEqual(result, expected)
