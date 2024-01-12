@@ -18,10 +18,10 @@ import tempfile
 import unittest
 
 from stats.config import Config
+from stats.data import Property
 from stats.data import Provenance
 from stats.data import StatVar
 from stats.data import StatVarGroup
-from stats.data import Triple
 from stats.nodes import Nodes
 from tests.stats.test_util import is_write_mode
 from util.filehandler import LocalFileHandler
@@ -49,6 +49,11 @@ CONFIG_DATA = {
             "entityType": "",
             "ignoreColumns": ["ignore1", "ignore2"]
         },
+        "events.csv": {
+            "entityType": "Country",
+            "provenance": "Provenance1",
+            "eventType": "CrimeEvent"
+        }
     },
     "variables": {
         "Variable 1": {
@@ -63,6 +68,12 @@ CONFIG_DATA = {
             "nlSentences": ["Sentence 1", "Sentence 2"],
             "group": "Parent Group/Child Group 2",
         },
+    },
+    "events": {
+        "CrimeEvent": {
+            "name": "Crime Event",
+            "description": "Crime Event description"
+        }
     },
     "sources": {
         "Source1": {
@@ -89,8 +100,38 @@ TEST_ENTITY_TYPE_1 = "Country"
 TEST_ENTITY_DCIDS_2 = ["dc/1234"]
 TEST_ENTITY_TYPE_2 = "PowerPlant"
 
+TEST_EVENT_TYPE_INPUT_FILE_NAMES = [("CrimeEvent", "events.csv"),
+                                    ("Event no config", "x.csv")]
+
+TEST_PROPERTY_COLUMNS = ["foo", "foo bar"]
+
 
 class TestNodes(unittest.TestCase):
+
+  def test_triples(self):
+    nodes = Nodes(CONFIG)
+    for sv_column_name, input_file_name in TEST_SV_COLUMN_AND_INPUT_FILE_NAMES:
+      nodes.variable(sv_column_name, input_file_name)
+
+    nodes.entities_with_type(TEST_ENTITY_DCIDS_1, TEST_ENTITY_TYPE_1)
+    nodes.entities_with_type(TEST_ENTITY_DCIDS_2, TEST_ENTITY_TYPE_2)
+
+    for event_type_name, input_file_name in TEST_EVENT_TYPE_INPUT_FILE_NAMES:
+      nodes.event_type(event_type_name, input_file_name)
+
+    for property_column_name in TEST_PROPERTY_COLUMNS:
+      nodes.property(property_column_name)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+      output_path = os.path.join(temp_dir, f"triples.csv")
+      expected_path = os.path.join(_EXPECTED_DIR, f"triples.csv")
+      nodes.triples(LocalFileHandler(output_path))
+
+      if is_write_mode():
+        shutil.copy(output_path, expected_path)
+        return
+
+      _compare_files(self, output_path, expected_path)
 
   def test_variable_with_no_config(self):
     nodes = Nodes(CONFIG)
@@ -199,25 +240,6 @@ class TestNodes(unittest.TestCase):
         ],
     )
 
-  def test_triples(self):
-    nodes = Nodes(CONFIG)
-    for sv_column_name, input_file_name in TEST_SV_COLUMN_AND_INPUT_FILE_NAMES:
-      nodes.variable(sv_column_name, input_file_name)
-
-    nodes.entities_with_type(TEST_ENTITY_DCIDS_1, TEST_ENTITY_TYPE_1)
-    nodes.entities_with_type(TEST_ENTITY_DCIDS_2, TEST_ENTITY_TYPE_2)
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-      output_path = os.path.join(temp_dir, f"triples.csv")
-      expected_path = os.path.join(_EXPECTED_DIR, f"triples.csv")
-      nodes.triples(LocalFileHandler(output_path))
-
-      if is_write_mode():
-        shutil.copy(output_path, expected_path)
-        return
-
-      _compare_files(self, output_path, expected_path)
-
   def test_provenance(self):
     nodes = Nodes(CONFIG)
     nodes.variable("Variable 1", "a.csv")
@@ -252,3 +274,46 @@ class TestNodes(unittest.TestCase):
 
     self.assertEqual(nodes.groups["Parent 1"].parent_id, "dc/g/Root")
     self.assertEqual(nodes.groups["Parent 2"].parent_id, "dc/g/Root")
+
+  def test_properties(self):
+    nodes = Nodes(CONFIG)
+    property = nodes.property("foo")
+    self.assertEqual(
+        property,
+        Property(
+            "foo",
+            "foo",
+        ),
+    )
+    property = nodes.property("foo bar")
+    self.assertEqual(
+        property,
+        Property(
+            "foo_bar",
+            "foo bar",
+        ),
+    )
+    property = nodes.property("bar-foo")
+    self.assertEqual(
+        property,
+        Property(
+            "bar_foo",
+            "bar-foo",
+        ),
+    )
+    property = nodes.property("fooहिंदीbar")
+    self.assertEqual(
+        property,
+        Property(
+            "c/prop/1",
+            "fooहिंदीbar",
+        ),
+    )
+    property = nodes.property("barहिंदीfoo")
+    self.assertEqual(
+        property,
+        Property(
+            "c/prop/2",
+            "barहिंदीfoo",
+        ),
+    )

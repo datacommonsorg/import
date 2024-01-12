@@ -1,0 +1,29 @@
+{
+  "inputFiles": {
+    "countryalpha3codes.csv": {
+      "eventType": "CrimeEvent",
+      "entityType": "Country",
+      "provenance": "Test Provenance"
+    },
+    "idcolumns.csv": {
+      "eventType": "CrimeEvent2",
+      "entityType": "Country",
+      "provenance": "Test Provenance",
+      "idColumn": "CASE"
+    }
+  },
+  "events": {
+    "CrimeEvent": {
+      "name": "Crime Event",
+      "description": "Crime Event description"
+    }
+  },
+  "sources": {
+    "Test Source": {
+      "url": "http://source.com",
+      "provenances": {
+        "Test Provenance": "http://source.com/provenance"
+      }
+    }
+  }
+}

@@ -54,6 +54,21 @@ custom/statvar_3,name,,Variable with no config
 custom/statvar_3,memberOf,custom/g/Root,
 custom/statvar_3,includedIn,c/p/default,
 custom/statvar_3,includedIn,c/s/default,
+CrimeEvent,typeOf,Class,
+CrimeEvent,subClassOf,Event,
+CrimeEvent,name,,Crime Event
+CrimeEvent,description,,Crime Event description
+CrimeEvent,includedIn,c/p/1,
+CrimeEvent,includedIn,c/s/1,
+Event_no_config,typeOf,Class,
+Event_no_config,subClassOf,Event,
+Event_no_config,name,,Event no config
+Event_no_config,includedIn,c/p/default,
+Event_no_config,includedIn,c/s/default,
+foo,typeOf,Property,
+foo,name,,foo
+foo_bar,typeOf,Property,
+foo_bar,name,,foo bar
 country/AFG,typeOf,Country,
 country/USA,typeOf,Country,
 dc/1234,typeOf,PowerPlant,

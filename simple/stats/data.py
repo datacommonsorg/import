@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import defaultdict
 from dataclasses import dataclass
 from dataclasses import field
 from enum import StrEnum
+from typing import Self
 from urllib.parse import urlparse
 
 _PREDICATE_TYPE_OF = "typeOf"
@@ -26,11 +28,17 @@ _PREDICATE_URL = "url"
 _PREDICATE_SOURCE = "source"
 _PREDICATE_DOMAIN = "domain"
 _PREDICATE_INCLUDED_IN = "includedIn"
+_PREDICATE_SUB_CLASS_OF = "subClassOf"
+_PREDICATE_OBSERVATION_DATE = "observationDate"
+_PREDICATE_LOCATION = "location"
 
 _STATISTICAL_VARIABLE = "StatisticalVariable"
 _STAT_VAR_GROUP = "StatVarGroup"
 _SOURCE = "Source"
 _PROVENANCE = "Provenance"
+_PROPERTY = "Property"
+_CLASS = "Class"
+_EVENT = "Event"
 
 
 @dataclass
@@ -179,6 +187,81 @@ class Observation:
   date: str
   value: str
   provenance: str
+
+
+@dataclass
+class Property:
+  dcid: str
+  name: str
+
+  def triples(self) -> list[Triple]:
+    return [
+        Triple(self.dcid, _PREDICATE_TYPE_OF, object_id=_PROPERTY),
+        Triple(self.dcid, _PREDICATE_NAME, object_value=self.name),
+    ]
+
+
+@dataclass
+class EventType:
+  id: str
+  name: str
+  description: str = ""
+  provenance_ids: list[str] = field(default_factory=list)
+  source_ids: list[str] = field(default_factory=list)
+
+  def add_provenance(self, provenance: Provenance) -> Self:
+    provenance_id = provenance.id
+    source_id = provenance.source_id
+    if not provenance_id in self.provenance_ids:
+      self.provenance_ids.append(provenance_id)
+    if not source_id in self.source_ids:
+      self.source_ids.append(source_id)
+
+    return self
+
+  def triples(self) -> list[Triple]:
+    triples: list[Triple] = []
+    triples.append(Triple(self.id, _PREDICATE_TYPE_OF, object_id=_CLASS))
+    triples.append(Triple(self.id, _PREDICATE_SUB_CLASS_OF, object_id=_EVENT))
+    triples.append(Triple(self.id, _PREDICATE_NAME, object_value=self.name))
+    if self.description:
+      triples.append(
+          Triple(self.id, _PREDICATE_DESCRIPTION,
+                 object_value=self.description))
+    for provenance_id in self.provenance_ids:
+      triples.append(
+          Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=provenance_id))
+    for source_id in self.source_ids:
+      triples.append(
+          Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=source_id))
+    return triples
+
+
+@dataclass
+class Event:
+  id: str
+  event_type: str
+  entity: str = ""
+  date: str = ""
+  provenance_id: str = ""
+  properties: dict[str, str] = field(default_factory=lambda: defaultdict(dict))
+
+  def triples(self) -> list[Triple]:
+    triples: list[Triple] = []
+    triples.append(
+        Triple(self.id, _PREDICATE_TYPE_OF, object_id=self.event_type))
+    if self.entity:
+      triples.append(Triple(self.id, _PREDICATE_LOCATION,
+                            object_id=self.entity))
+    if self.date:
+      triples.append(
+          Triple(self.id, _PREDICATE_OBSERVATION_DATE, object_value=self.date))
+    if self.provenance_id:
+      triples.append(
+          Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=self.provenance_id))
+    for prop, value in self.properties.items():
+      triples.append(Triple(self.id, prop, object_value=value))
+    return triples
 
 
 class ImportType(StrEnum):
