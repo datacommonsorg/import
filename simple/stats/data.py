@@ -16,6 +16,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from dataclasses import field
 from enum import StrEnum
+from typing import Self
 from urllib.parse import urlparse
 
 _PREDICATE_TYPE_OF = "typeOf"
@@ -29,6 +30,7 @@ _PREDICATE_DOMAIN = "domain"
 _PREDICATE_INCLUDED_IN = "includedIn"
 _PREDICATE_SUB_CLASS_OF = "subClassOf"
 _PREDICATE_OBSERVATION_DATE = "observationDate"
+_PREDICATE_LOCATION = "location"
 
 _STATISTICAL_VARIABLE = "StatisticalVariable"
 _STAT_VAR_GROUP = "StatVarGroup"
@@ -207,7 +209,7 @@ class EventType:
   provenance_ids: list[str] = field(default_factory=list)
   source_ids: list[str] = field(default_factory=list)
 
-  def add_provenance(self, provenance: "Provenance") -> "EventType":
+  def add_provenance(self, provenance: Provenance) -> Self:
     provenance_id = provenance.id
     source_id = provenance.source_id
     if not provenance_id in self.provenance_ids:
@@ -239,7 +241,6 @@ class EventType:
 class Event:
   id: str
   event_type: str
-  entity_type: str = ""
   entity: str = ""
   date: str = ""
   provenance_id: str = ""
@@ -249,8 +250,9 @@ class Event:
     triples: list[Triple] = []
     triples.append(
         Triple(self.id, _PREDICATE_TYPE_OF, object_id=self.event_type))
-    if self.entity and self.entity_type:
-      triples.append(Triple(self.id, self.entity_type, object_id=self.entity))
+    if self.entity:
+      triples.append(Triple(self.id, _PREDICATE_LOCATION,
+                            object_id=self.entity))
     if self.date:
       triples.append(
           Triple(self.id, _PREDICATE_OBSERVATION_DATE, object_value=self.date))

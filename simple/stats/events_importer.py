@@ -1,4 +1,4 @@
-# Copyright 2023 Google Inc.
+# Copyright 2024 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -134,15 +134,6 @@ class EventsImporter(Importer):
     id_column_name = self.nodes.property(
         self.id_column).dcid if self.id_column else ""
 
-    if not self.entity_type:
-      self.entity_type = self._resolve_entity_type()
-      if self.entity_type:
-        logging.info("Resolved entity type: %s", self.entity_type)
-    if not self.entity_type:
-      logging.warning(
-          "Could not resolve entity type. Event triples will not be associated with any entity."
-      )
-
     triples: list[Triple] = []
     for index, row in self.df.iterrows():
       # If id column is configured, use it as the event dcid else generate based on row index.
@@ -160,7 +151,6 @@ class EventsImporter(Importer):
 
       event = Event(dcid,
                     self.event_type,
-                    entity_type=self.entity_type,
                     entity=entity,
                     date=date,
                     provenance_id=self.provenance,
@@ -168,15 +158,6 @@ class EventsImporter(Importer):
       triples.extend(event.triples())
 
       self.db.insert_triples(triples)
-
-  def _resolve_entity_type(self) -> str:
-    all_entity_dcids = self.df.iloc[:, 0].tolist()
-    sample_entity_dcids = random.sample(
-        all_entity_dcids,
-        min(len(all_entity_dcids), _SAMPLE_ENTITY_RESOLUTION_SIZE))
-    logging.info("Resolving entity type from sample entities: %s",
-                 sample_entity_dcids)
-    return dc.resolve_entity_type(sample_entity_dcids)
 
   def _resolve_entities(self) -> None:
     df = self.df

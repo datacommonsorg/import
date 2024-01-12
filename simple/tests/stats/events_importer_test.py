@@ -1,4 +1,4 @@
-# Copyright 2023 Google Inc.
+# Copyright 2024 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -108,7 +108,7 @@ def _test_import(test: unittest.TestCase, test_name: str):
     _compare_files(test, output_observations_path, expected_observations_path)
 
 
-class TestObservationsImporter(unittest.TestCase):
+class TestEventsImporter(unittest.TestCase):
 
   def test_countryalpha3codes(self):
     _test_import(self, "countryalpha3codes")
