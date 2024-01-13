@@ -19,6 +19,8 @@ import re
 import pandas as pd
 from stats.config import Config
 from stats.data import Entity
+from stats.data import EventType
+from stats.data import Property
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
@@ -28,18 +30,20 @@ from util.filehandler import FileHandler
 
 _CUSTOM_SV_ID_PREFIX = "custom/statvar_"
 _CUSTOM_GROUP_ID_PREFIX = "custom/g/group_"
+_CUSTOM_PROVENANCE_ID_PREFIX = "c/p/"
+_CUSTOM_SOURCE_ID_PREFIX = "c/s/"
+_CUSTOM_PROPERTY_ID_PREFIX = "c/prop/"
+_CUSTOM_EVENT_TYPE_ID_PREFIX = "c/e/"
 _ROOT_GROUP_ID = "dc/g/Root"
-# Pattern to check if a string conforms to that of a valid SV ID.
+# Pattern to check if a string conforms to that of a valid DCID.
 # Note that slashes ("/") are intentionally not considered here
 # since it can be confusing for custom DCs.
-_SV_ID_PATTERN = r"^[A-Za-z0-9_]+$"
+_DCID_PATTERN = r"^[A-Za-z0-9_]+$"
 # If group path for a variable is empty, we'll put it under a default custom group.
 _DEFAULT_CUSTOM_GROUP_PATH = "__DEFAULT__"
 _DEFAULT_CUSTOM_GROUP = StatVarGroup("custom/g/Root", "Custom Variables",
                                      _ROOT_GROUP_ID)
 
-_CUSTOM_PROVENANCE_ID_PREFIX = "c/p/"
-_CUSTOM_SOURCE_ID_PREFIX = "c/s/"
 _DEFAULT_SOURCE = Source(f"{_CUSTOM_SOURCE_ID_PREFIX}default",
                          "Custom Data Commons")
 _DEFAULT_PROVENANCE = Provenance(id=f"{_CUSTOM_PROVENANCE_ID_PREFIX}default",
@@ -64,9 +68,17 @@ class Nodes:
     self.provenances: dict[str, Provenance] = {}
     # dict from source name to Source
     self.sources: dict[str, Source] = {}
+    # dict from property column name to Property
+    self.properties: dict[str, Property] = {}
+    # dict from event type name to EventType
+    self.event_types: dict[str, EventType] = {}
     self._load_provenances_and_sources()
     # Used to generate SV IDs
     self._sv_generated_id_count = 0
+    # Used to generate property IDs
+    self._property_generated_id_count = 0
+    # Used to generate event type IDs
+    self._event_type_generated_id_count = 0
 
   def _load_provenances_and_sources(self):
     # Load default source and provenance.
@@ -120,6 +132,24 @@ class Nodes:
     return self._add_provenance(self.variables[sv_column_name],
                                 self.provenance(input_file_name))
 
+  def property(self, property_column_name: str) -> Property:
+    if not property_column_name in self.properties:
+      self.properties[property_column_name] = Property(
+          self._property_id(property_column_name), property_column_name)
+
+    return self.properties[property_column_name]
+
+  def event_type(self, event_type_name: str, input_file_name: str) -> EventType:
+    if not event_type_name in self.event_types:
+      event_type_cfg = self.config.event(event_type_name)
+      self.event_types[event_type_name] = EventType(
+          self._event_type_id(event_type_name),
+          event_type_cfg.name,
+          description=event_type_cfg.description)
+
+    return self.event_types[event_type_name].add_provenance(
+        self.provenance(input_file_name))
+
   def _add_provenance(self, sv: StatVar, provenance: Provenance) -> StatVar:
     sv.add_provenance(provenance)
     svg = self.ids_to_groups.get(sv.group_id)
@@ -129,10 +159,34 @@ class Nodes:
     return sv
 
   def _sv_id(self, sv_column_name: str) -> str:
-    if re.fullmatch(_SV_ID_PATTERN, sv_column_name):
+    if re.fullmatch(_DCID_PATTERN, sv_column_name):
       return sv_column_name
     self._sv_generated_id_count += 1
     return f"{_CUSTOM_SV_ID_PREFIX}{self._sv_generated_id_count}"
+
+  def _property_id(self, property_column_name: str) -> str:
+    dcid = property_column_name
+    if re.fullmatch(_DCID_PATTERN, dcid):
+      return dcid
+    # Convert spaces and dashes to underscores and check if that
+    # is a valid DCID pattern
+    dcid = re.sub(r"[ -]", "_", dcid)
+    if re.fullmatch(_DCID_PATTERN, dcid):
+      return dcid
+    self._property_generated_id_count += 1
+    return f"{_CUSTOM_PROPERTY_ID_PREFIX}{self._property_generated_id_count}"
+
+  def _event_type_id(self, event_type_name: str) -> str:
+    dcid = event_type_name
+    if re.fullmatch(_DCID_PATTERN, dcid):
+      return dcid
+    # Convert spaces and dashes to underscores and check if that
+    # is a valid DCID pattern
+    dcid = re.sub(r"[ -]", "_", dcid)
+    if re.fullmatch(_DCID_PATTERN, dcid):
+      return dcid
+    self._event_type_generated_id_count += 1
+    return f"{_CUSTOM_EVENT_TYPE_ID_PREFIX}{self._event_type_generated_id_count}"
 
   def group(self, group_path: str) -> StatVarGroup | None:
     if not group_path:
@@ -159,10 +213,13 @@ class Nodes:
       self.groups[_DEFAULT_CUSTOM_GROUP_PATH] = _DEFAULT_CUSTOM_GROUP
     return self.groups[_DEFAULT_CUSTOM_GROUP_PATH]
 
+  def entity_with_type(self, entity_dcid: str, entity_type: str):
+    if entity_dcid not in self.entities:
+      self.entities[entity_dcid] = Entity(entity_dcid, entity_type)
+
   def entities_with_type(self, entity_dcids: list[str], entity_type: str):
     for entity_dcid in entity_dcids:
-      if entity_dcid not in self.entities:
-        self.entities[entity_dcid] = Entity(entity_dcid, entity_type)
+      self.entity_with_type(entity_dcid, entity_type)
 
   def triples(self, triples_fh: FileHandler | None = None) -> list[Triple]:
     triples: list[Triple] = []
@@ -174,6 +231,10 @@ class Nodes:
       triples.extend(group.triples())
     for variable in self.variables.values():
       triples.extend(variable.triples())
+    for event_type in self.event_types.values():
+      triples.extend(event_type.triples())
+    for property in self.properties.values():
+      triples.extend(property.triples())
     for entities in self.entities.values():
       triples.extend(entities.triples())
 
