@@ -71,7 +71,6 @@ class EventsImporter(Importer):
       self._drop_ignored_columns()
       self._sanitize_values()
       self._resolve_entities()
-      self._parse_dates()
       self._rename_columns()
       self._write_event_triples()
       self._write_observations()
@@ -120,10 +119,6 @@ class EventsImporter(Importer):
     })
 
     self.df = self.df.rename(columns=renamed)
-
-  def _parse_dates(self) -> None:
-    # TODO: parse dates and update value if needed (e.g. year, month, day).
-    pass
 
   def _write_observations(self) -> None:
     sv_names = self.config.computed_variables(self.input_file_name)
