@@ -12,12 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import datetime
 import logging
 import random
 
+from dateutil.parser import parse as date_parse
 import pandas as pd
 from stats import constants
+from stats.data import AggregationConfig
+from stats.data import AggregationMethod
 from stats.data import Event
+from stats.data import Observation
+from stats.data import TimePeriod
 from stats.data import Triple
 from stats.db import Db
 from stats.importer import Importer
@@ -120,8 +126,48 @@ class EventsImporter(Importer):
     pass
 
   def _write_observations(self) -> None:
-    # TODO: compute aggregated observations and insert in DB.
-    pass
+    sv_names = self.config.computed_variables(self.input_file_name)
+    if not sv_names:
+      logging.warning("No computed variables specified: %s",
+                      self.input_file_name)
+
+    for sv_name in sv_names:
+      sv_dcid = self.nodes.variable(sv_name, self.input_file_name).id
+      aggr_cfg = self.config.aggregation(sv_name)
+      observations = self._compute_sv_observations(sv_dcid, aggr_cfg)
+      self.db.insert_observations(observations)
+
+  def _compute_sv_observations(
+      self, sv_dcid: str, aggr_cfg: AggregationConfig = AggregationConfig()
+  ) -> list[Observation]:
+    # Create df with only dcid and date columns.
+    obs_df = self.df.loc[:, [constants.COLUMN_DCID, constants.COLUMN_DATE]]
+
+    # Convert date to aggregation period
+    obs_df[constants.COLUMN_DATE] = obs_df[constants.COLUMN_DATE].apply(
+        lambda x: _time_period(x, aggr_cfg.period))
+
+    # Group by entity (dcid) and date, count each group and drop duplicates.
+    # NOTE: currently we only support count per entity and date.
+    # The groupby columns and transform functions will need to change
+    # to support for more functions (sum, average, etc.)
+    obs_df[constants.COLUMN_VALUE] = obs_df.groupby(
+        [constants.COLUMN_DCID,
+         constants.COLUMN_DATE])[constants.COLUMN_DCID].transform("count")
+    obs_df.drop_duplicates(inplace=True, ignore_index=True)
+
+    # Add variable and provenance columns.
+    obs_df[constants.COLUMN_VARIABLE] = sv_dcid
+    obs_df[constants.COLUMN_PROVENANCE] = self.provenance
+
+    # Reorder columns so they are in the same order as observations
+    obs_df = obs_df.reindex(columns=[
+        constants.COLUMN_DCID, constants.COLUMN_VARIABLE, constants.COLUMN_DATE,
+        constants.COLUMN_VALUE, constants.COLUMN_PROVENANCE
+    ])
+
+    # Map each row to an Observation object and return the list of observations.
+    return [Observation(*row) for row in obs_df.itertuples(index=False)]
 
   def _write_event_triples(self) -> None:
     # Add event type node - it will be written to DB later.
@@ -259,3 +305,14 @@ class EventsImporter(Importer):
                    self.debug_resolve_fh)
       self.debug_resolve_fh.write_string(
           self.debug_resolve_df.to_csv(index=False))
+
+
+# Utility methods
+def _time_period(date_str: str, period: TimePeriod) -> str:
+  date = date_parse(date_str)
+  if period == TimePeriod.DAY:
+    return date.strftime("%Y-%m-%d")
+  if period == TimePeriod.YEAR:
+    return date.strftime("%Y")
+  # Default to month
+  return date.strftime("%Y-%m")

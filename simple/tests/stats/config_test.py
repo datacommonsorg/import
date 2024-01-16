@@ -15,10 +15,13 @@
 import unittest
 
 from stats.config import Config
+from stats.data import AggregationConfig
+from stats.data import AggregationMethod
 from stats.data import ImportType
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
+from stats.data import TimePeriod
 
 CONFIG_DATA = {
     "inputFiles": {
@@ -42,10 +45,18 @@ CONFIG_DATA = {
     },
     "variables": {
         "Variable 1": {
-            "group": "Parent Group/Child Group 1"
+            "group": "Parent Group/Child Group 1",
+            "aggregation": {
+                "period": "year",
+                "method": "count"
+            }
         },
         "Variable 2": {
-            "group": "Parent Group/Child Group 1"
+            "group": "Parent Group/Child Group 1",
+            "aggregation": {
+                "period": "INVALID",
+                "method": "count"
+            }
         },
         "var3": {
             "name": "Var 3 Name",
@@ -169,6 +180,19 @@ class TestConfig(unittest.TestCase):
                      "events import type")
     with self.assertRaisesRegex(ValueError, "Unsupported import type"):
       config.import_type("invalid_import_type.csv")
+
+  def test_aggregation(self):
+    config = Config(CONFIG_DATA)
+    self.assertEqual(
+        config.aggregation("Variable 1"),
+        AggregationConfig(TimePeriod.YEAR, AggregationMethod.COUNT),
+        "valid date config")
+    self.assertEqual(
+        config.aggregation("var3"),
+        AggregationConfig(TimePeriod.MONTH, AggregationMethod.COUNT),
+        "default date config")
+    with self.assertRaisesRegex(ValueError, "invalid period"):
+      config.aggregation("Variable 2")
 
   def test_empty_config(self):
     config = Config({})

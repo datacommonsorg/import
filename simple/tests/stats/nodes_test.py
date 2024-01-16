@@ -139,7 +139,7 @@ class TestNodes(unittest.TestCase):
     self.assertEqual(
         sv,
         StatVar(
-            "custom/statvar_1",
+            "Variable_with_no_config",
             "Variable with no config",
             group_id="custom/g/Root",
             provenance_ids=["c/p/1"],
@@ -169,7 +169,7 @@ class TestNodes(unittest.TestCase):
     self.assertEqual(
         sv,
         StatVar(
-            "custom/statvar_1",
+            "Variable_1",
             "Variable 1",
             group_id="custom/g/group_2",
             provenance_ids=["c/p/1"],
@@ -202,7 +202,7 @@ class TestNodes(unittest.TestCase):
     self.assertEqual(
         sv,
         StatVar(
-            "custom/statvar_1",
+            "Variable_1",
             "Variable 1",
             group_id="custom/g/group_2",
             provenance_ids=["c/p/1"],
@@ -213,7 +213,7 @@ class TestNodes(unittest.TestCase):
     self.assertEqual(
         sv,
         StatVar(
-            "custom/statvar_2",
+            "Variable_2",
             "Variable 2",
             group_id="custom/g/group_2",
             provenance_ids=["c/p/1"],

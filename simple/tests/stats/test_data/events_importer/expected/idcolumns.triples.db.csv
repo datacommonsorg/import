@@ -237,6 +237,14 @@ c/p/1,typeOf,Provenance,
 c/p/1,name,,Test Provenance
 c/p/1,source,c/s/1,
 c/p/1,url,,http://source.com/provenance
+custom/g/Root,typeOf,StatVarGroup,
+custom/g/Root,name,,Custom Variables
+custom/g/Root,specializationOf,dc/g/Root,
+Crime_Event2_Count,typeOf,StatisticalVariable,
+Crime_Event2_Count,name,,Number of Crime2 Events
+Crime_Event2_Count,memberOf,custom/g/Root,
+Crime_Event2_Count,includedIn,c/p/1,
+Crime_Event2_Count,includedIn,c/s/1,
 CrimeEvent2,typeOf,Class,
 CrimeEvent2,subClassOf,Event,
 CrimeEvent2,name,,CrimeEvent2

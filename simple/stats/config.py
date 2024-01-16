@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from stats.data import AggregationConfig
 from stats.data import EventType
 from stats.data import ImportType
 from stats.data import Provenance
@@ -35,6 +36,8 @@ _DATABASE_FIELD = "database"
 _EVENT_TYPE_FIELD = "eventType"
 _ID_COLUMN_FIELD = "idColumn"
 _EVENTS_FIELD = "events"
+_COMPUTED_VARIABLES_FIELD = "computedVariables"
+_AGGREGATION_FIELD = "aggregation"
 
 
 class Config:
@@ -60,6 +63,9 @@ class Config:
           f"Unsupported import type: {import_type_str} ({input_file_name})")
     return ImportType(import_type_str)
 
+  def computed_variables(self, input_file_name: str) -> list[str]:
+    return self._input_file(input_file_name).get(_COMPUTED_VARIABLES_FIELD, [])
+
   def variable(self, variable_name: str) -> StatVar:
     var_cfg = self.data.get(_VARIABLES_FIELD, {}).get(variable_name, {})
     return StatVar(
@@ -69,6 +75,12 @@ class Config:
         nl_sentences=var_cfg.get(_NL_SENTENCES_FIELD, []),
         group_path=var_cfg.get(_GROUP_FIELD, ""),
     )
+
+  def aggregation(self, variable_name: str) -> AggregationConfig:
+    aggregation_cfg = self.data.get(_VARIABLES_FIELD,
+                                    {}).get(variable_name,
+                                            {}).get(_AGGREGATION_FIELD, {})
+    return AggregationConfig(**aggregation_cfg)
 
   def event_type(self, input_file_name: str) -> str:
     return self._input_file(input_file_name).get(_EVENT_TYPE_FIELD, "")
