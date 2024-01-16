@@ -130,6 +130,7 @@ class EventsImporter(Importer):
     if not sv_names:
       logging.warning("No computed variables specified: %s",
                       self.input_file_name)
+      return
 
     for sv_name in sv_names:
       sv_dcid = self.nodes.variable(sv_name, self.input_file_name).id
@@ -150,7 +151,7 @@ class EventsImporter(Importer):
     # Group by entity (dcid) and date, count each group and drop duplicates.
     # NOTE: currently we only support count per entity and date.
     # The groupby columns and transform functions will need to change
-    # to support for more functions (sum, average, etc.)
+    # when we add support for more aggregation methods (sum, average, etc.)
     obs_df[constants.COLUMN_VALUE] = obs_df.groupby(
         [constants.COLUMN_DCID,
          constants.COLUMN_DATE])[constants.COLUMN_DCID].transform("count")
