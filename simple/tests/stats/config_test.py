@@ -47,7 +47,7 @@ CONFIG_DATA = {
         "Variable 1": {
             "group": "Parent Group/Child Group 1",
             "aggregation": {
-                "period": "year",
+                "period": "month",
                 "method": "count"
             }
         },
@@ -185,11 +185,11 @@ class TestConfig(unittest.TestCase):
     config = Config(CONFIG_DATA)
     self.assertEqual(
         config.aggregation("Variable 1"),
-        AggregationConfig(TimePeriod.YEAR, AggregationMethod.COUNT),
+        AggregationConfig(TimePeriod.MONTH, AggregationMethod.COUNT),
         "valid date config")
     self.assertEqual(
         config.aggregation("var3"),
-        AggregationConfig(TimePeriod.MONTH, AggregationMethod.COUNT),
+        AggregationConfig(TimePeriod.YEAR, AggregationMethod.COUNT),
         "default date config")
     with self.assertRaisesRegex(ValueError, "invalid period"):
       config.aggregation("Variable 2")

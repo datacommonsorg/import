@@ -77,9 +77,9 @@ class Config:
     )
 
   def aggregation(self, variable_name: str) -> AggregationConfig:
-    aggregation_cfg = self.data.get(_VARIABLES_FIELD,
-                                    {}).get(variable_name,
-                                            {}).get(_AGGREGATION_FIELD, {})
+    aggregation_cfg = self.data.get(_VARIABLES_FIELD, {}) \
+      .get(variable_name, {}) \
+      .get(_AGGREGATION_FIELD, {})
     return AggregationConfig(**aggregation_cfg)
 
   def event_type(self, input_file_name: str) -> str:

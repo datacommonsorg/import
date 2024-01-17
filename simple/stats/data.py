@@ -281,7 +281,7 @@ class AggregationMethod(StrEnum):
 
 @dataclass
 class AggregationConfig:
-  period: TimePeriod = TimePeriod.MONTH
+  period: TimePeriod = TimePeriod.YEAR
   method: AggregationMethod = AggregationMethod.COUNT
 
   def __post_init__(self):
