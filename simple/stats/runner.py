@@ -23,6 +23,7 @@ from stats.db import Db
 from stats.db import get_cloud_sql_config_from_env
 from stats.db import get_sqlite_config_from_env
 from stats.db import ImportStatus
+from stats.events_importer import EventsImporter
 from stats.importer import Importer
 import stats.nl as nl
 from stats.nodes import Nodes
@@ -123,16 +124,23 @@ class Runner:
 
   def _create_importer(self, input_file: str) -> Importer:
     import_type = self.config.import_type(input_file)
+    input_fh = self.input_dir_fh.make_file(input_file)
+    debug_resolve_fh = self.process_dir_fh.make_file(
+        f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{input_file}")
+    reporter = self.reporter.import_file(input_file)
 
     if import_type == ImportType.OBSERVATIONS:
-      return ObservationsImporter(
-          input_fh=self.input_dir_fh.make_file(input_file),
-          db=self.db,
-          debug_resolve_fh=self.process_dir_fh.make_file(
-              f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{input_file}"),
-          reporter=self.reporter.import_file(input_file),
-          nodes=self.nodes)
+      return ObservationsImporter(input_fh=input_fh,
+                                  db=self.db,
+                                  debug_resolve_fh=debug_resolve_fh,
+                                  reporter=reporter,
+                                  nodes=self.nodes)
 
-    # TODO: Add support for an EventsImporter for ImportType.EVENTS
+    if import_type == ImportType.EVENTS:
+      return EventsImporter(input_fh=input_fh,
+                            db=self.db,
+                            debug_resolve_fh=debug_resolve_fh,
+                            reporter=reporter,
+                            nodes=self.nodes)
 
     raise ValueError(f"Unsupported import type: {import_type} ({input_file})")

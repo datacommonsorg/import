@@ -40,8 +40,10 @@ _DEBUG_FOLDER = ".data/debug"
 NGRAM_MIN_MATCH_FRACTION = 0.8
 
 # Place types support by the resolve API.
-_RESOLVE_PLACE_TYPES = set(
-    ["Place", "Continent", "Country", "State", "Province", "City"])
+_RESOLVE_PLACE_TYPES = set([
+    "Place", "Continent", "Country", "State", "Province", "City",
+    "CensusZipCodeTabulationArea"
+])
 
 _MAX_NODES = 10_000
 

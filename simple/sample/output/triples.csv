@@ -61,6 +61,21 @@ Variable_2,name,,Variable 2
 Variable_2,memberOf,custom/g/Root,
 Variable_2,includedIn,c/p/1,
 Variable_2,includedIn,c/s/1,
+Crime_Count,typeOf,StatisticalVariable,
+Crime_Count,name,,Crime Count
+Crime_Count,description,,Number of crimes
+Crime_Count,memberOf,custom/g/Root,
+Crime_Count,includedIn,c/p/1,
+Crime_Count,includedIn,c/s/1,
+CrimeEvent,typeOf,Class,
+CrimeEvent,subClassOf,Event,
+CrimeEvent,name,,CrimeEvent
+CrimeEvent,includedIn,c/p/1,
+CrimeEvent,includedIn,c/s/1,
+CASE,typeOf,Property,
+CASE,name,,CASE
+PRIMARY_DESCRIPTION,typeOf,Property,
+PRIMARY_DESCRIPTION,name,,PRIMARY DESCRIPTION
 country/AFG,typeOf,Country,
 country/YEM,typeOf,Country,
 country/AGO,typeOf,Country,
