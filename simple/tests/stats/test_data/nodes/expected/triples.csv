@@ -33,27 +33,27 @@ custom/g/group_3,includedIn,c/s/default,
 custom/g/Root,typeOf,StatVarGroup,
 custom/g/Root,name,,Custom Variables
 custom/g/Root,specializationOf,dc/g/Root,
-custom/statvar_1,typeOf,StatisticalVariable,
-custom/statvar_1,name,,Variable 1
-custom/statvar_1,memberOf,custom/g/group_2,
-custom/statvar_1,includedIn,c/p/1,
-custom/statvar_1,includedIn,c/s/1,
-custom/statvar_2,typeOf,StatisticalVariable,
-custom/statvar_2,name,,Variable 2
-custom/statvar_2,memberOf,custom/g/group_2,
-custom/statvar_2,includedIn,c/p/1,
-custom/statvar_2,includedIn,c/s/1,
+Variable_1,typeOf,StatisticalVariable,
+Variable_1,name,,Variable 1
+Variable_1,memberOf,custom/g/group_2,
+Variable_1,includedIn,c/p/1,
+Variable_1,includedIn,c/s/1,
+Variable_2,typeOf,StatisticalVariable,
+Variable_2,name,,Variable 2
+Variable_2,memberOf,custom/g/group_2,
+Variable_2,includedIn,c/p/1,
+Variable_2,includedIn,c/s/1,
 var3,typeOf,StatisticalVariable,
 var3,name,,Var 3 Name
 var3,description,,Var 3 Description
 var3,memberOf,custom/g/group_3,
 var3,includedIn,c/p/default,
 var3,includedIn,c/s/default,
-custom/statvar_3,typeOf,StatisticalVariable,
-custom/statvar_3,name,,Variable with no config
-custom/statvar_3,memberOf,custom/g/Root,
-custom/statvar_3,includedIn,c/p/default,
-custom/statvar_3,includedIn,c/s/default,
+Variable_with_no_config,typeOf,StatisticalVariable,
+Variable_with_no_config,name,,Variable with no config
+Variable_with_no_config,memberOf,custom/g/Root,
+Variable_with_no_config,includedIn,c/p/default,
+Variable_with_no_config,includedIn,c/s/default,
 CrimeEvent,typeOf,Class,
 CrimeEvent,subClassOf,Event,
 CrimeEvent,name,,Crime Event

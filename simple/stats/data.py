@@ -267,3 +267,25 @@ class Event:
 class ImportType(StrEnum):
   OBSERVATIONS = "observations"
   EVENTS = "events"
+
+
+class TimePeriod(StrEnum):
+  DAY = "day"
+  MONTH = "month"
+  YEAR = "year"
+
+
+class AggregationMethod(StrEnum):
+  COUNT = "count"
+
+
+@dataclass
+class AggregationConfig:
+  period: TimePeriod = TimePeriod.YEAR
+  method: AggregationMethod = AggregationMethod.COUNT
+
+  def __post_init__(self):
+    if self.period not in TimePeriod._member_map_.values():
+      raise ValueError(f"invalid period: {self.period}")
+    if self.method not in AggregationMethod._member_map_.values():
+      raise ValueError(f"invalid method: {self.method}")

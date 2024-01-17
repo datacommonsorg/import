@@ -159,8 +159,14 @@ class Nodes:
     return sv
 
   def _sv_id(self, sv_column_name: str) -> str:
-    if re.fullmatch(_DCID_PATTERN, sv_column_name):
-      return sv_column_name
+    dcid = sv_column_name
+    if re.fullmatch(_DCID_PATTERN, dcid):
+      return dcid
+    # Convert spaces and dashes to underscores and check if that
+    # is a valid DCID pattern
+    dcid = re.sub(r"[ -]", "_", dcid)
+    if re.fullmatch(_DCID_PATTERN, dcid):
+      return dcid
     self._sv_generated_id_count += 1
     return f"{_CUSTOM_SV_ID_PREFIX}{self._sv_generated_id_count}"
 

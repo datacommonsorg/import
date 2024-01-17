@@ -21,10 +21,10 @@ country/ASM,var2,2023,34,c/p/1
 country/AIA,var2,2023,42,c/p/1
 country/WLF,var2,2023,75,c/p/1
 country/ESH,var2,2023,65,c/p/1
-geoId/01,custom/statvar_1,2021,555,c/p/1
-geoId/122,custom/statvar_1,2022,321,c/p/1
-geoId/01,custom/statvar_2,2021,666,c/p/1
-geoId/122,custom/statvar_2,2022,123456,c/p/1
+geoId/01,Variable_1,2021,555,c/p/1
+geoId/122,Variable_1,2022,321,c/p/1
+geoId/01,Variable_2,2021,666,c/p/1
+geoId/122,Variable_2,2022,123456,c/p/1
 country/USA,var1,2021,555,c/p/1
 country/IND,var1,2022,321,c/p/1
 country/USA,var2,2021,666,c/p/1

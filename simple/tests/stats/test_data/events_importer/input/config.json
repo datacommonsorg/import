@@ -3,19 +3,29 @@
     "countryalpha3codes.csv": {
       "eventType": "CrimeEvent",
       "entityType": "Country",
-      "provenance": "Test Provenance"
+      "provenance": "Test Provenance",
+      "computedVariables": ["Count_CrimeEvent"]
     },
     "idcolumns.csv": {
       "eventType": "CrimeEvent2",
       "entityType": "Country",
       "provenance": "Test Provenance",
-      "idColumn": "CASE"
+      "idColumn": "CASE",
+      "computedVariables": ["Crime Event2 Count"]
     }
   },
   "events": {
     "CrimeEvent": {
       "name": "Crime Event",
       "description": "Crime Event description"
+    }
+  },
+  "variables": {
+    "Crime Event2 Count": {
+      "name": "Number of Crime2 Events",
+      "aggregation": {
+        "period": "day"
+      }
     }
   },
   "sources": {
