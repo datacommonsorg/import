@@ -88,8 +88,7 @@ class Runner:
       self._run_imports()
 
       # Generate triples.
-      triples = self.nodes.triples(
-          self.output_dir_fh.make_file(constants.TRIPLES_FILE_NAME))
+      triples = self.nodes.triples()
       # Write triples to DB.
       self.db.insert_triples(triples)
 
