@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -71,7 +72,7 @@ public class ServerCommand implements Callable<Integer> {
   // If input files are from GCS, download the files locally and update
   // file paths.
   private void processGcsFiles() throws StorageException {
-    if (bucket == "") {
+    if (Objects.equals(bucket, "")) {
       return;
     }
     Storage storage = StorageOptions.newBuilder().build().getService();
