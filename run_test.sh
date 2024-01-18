@@ -106,10 +106,10 @@ function run_sample {
   python3 -m stats.main --input_dir=sample/input --output_dir=sample/output --freeze_time
 
   echo "Writing tables to CSVs."
-  mkdir -p sample/output/debug
-  sqlite3 -header -csv sample/output/datacommons.db "select * from observations;" > sample/output/debug/observations.csv
-  sqlite3 -header -csv sample/output/datacommons.db "select * from triples;" > sample/output/debug/triples.csv
-  sqlite3 -header -csv sample/output/datacommons.db "select * from imports;" > sample/output/debug/imports.csv
+  mkdir -p sample/output/tables
+  sqlite3 -header -csv sample/output/datacommons.db "select * from observations;" > sample/output/tables/observations.csv
+  sqlite3 -header -csv sample/output/datacommons.db "select * from triples;" > sample/output/tables/triples.csv
+  sqlite3 -header -csv sample/output/datacommons.db "select * from imports;" > sample/output/tables/imports.csv
 
   deactivate
 }

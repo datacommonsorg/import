@@ -199,7 +199,7 @@ class EventsImporter(Importer):
                     properties=properties)
       triples.extend(event.triples())
 
-      self.db.insert_triples(triples)
+    self.db.insert_triples(triples)
 
   def _resolve_entities(self) -> None:
     df = self.df

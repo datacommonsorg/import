@@ -18,6 +18,11 @@
       "startTime": "2023-01-01 00:00:00",
       "lastUpdate": "2023-01-01 00:00:00"
     },
+    "latlng_events.csv": {
+      "status": "SUCCESS",
+      "startTime": "2023-01-01 00:00:00",
+      "lastUpdate": "2023-01-01 00:00:00"
+    },
     "powerplants.csv": {
       "status": "SUCCESS",
       "startTime": "2023-01-01 00:00:00",
