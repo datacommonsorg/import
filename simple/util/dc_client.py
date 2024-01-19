@@ -40,9 +40,14 @@ _DEBUG_FOLDER = ".data/debug"
 NGRAM_MIN_MATCH_FRACTION = 0.8
 
 # Place types support by the resolve API.
+# Reference: https://source.corp.google.com/piper///depot/google3/datacommons/import/otherids/dc_ke_recon.cc;l=123
 _RESOLVE_PLACE_TYPES = set([
-    "Place", "Continent", "Country", "State", "Province", "City",
-    "CensusZipCodeTabulationArea"
+    "Country", "State", "County", "City", "Village", "CensusCountyDivision",
+    "SchoolDistrict", "ElementarySchoolDistrict", "HighSchoolDistrict",
+    "UnifiedSchoolDistrict", "CensusZipCodeTabulationArea", "EurostatNUTS1",
+    "EurostatNUTS2", "EurostatNUTS3", "AdministrativeArea1",
+    "AdministrativeArea2", "AdministrativeArea3", "AdministrativeArea4",
+    "AdministrativeArea5", "Neighborhood", "AdministrativeArea", "Place"
 ])
 
 _MAX_NODES = 10_000
@@ -102,7 +107,7 @@ async def resolve_place_entities_async(
   chunks = chunked(entities, _RESOLVE_BATCH_SIZE)
 
   resolved: dict[str, str] = {}
-  async with AsyncClient(limits=_HTTPX_LIMITS) as client:
+  async with AsyncClient(limits=_HTTPX_LIMITS, timeout=None) as client:
     futures: dict[str, str] = [
         _resolve_place_entities_chunk(client, chunk, entity_type, property_name)
         for chunk in chunks
@@ -263,12 +268,13 @@ async def post_async(client: AsyncClient, path: str, data={}) -> dict:
   if api_key:
     headers["x-api-key"] = api_key
   logging.debug("Request: %s", json.dumps(data, indent=1))
-  resp = await client.post(url, json=data, headers=headers)
+  async with asyncio.Semaphore(_HTTPX_LIMITS.max_connections):
+    resp = await client.post(url, json=data, headers=headers)
   response = resp.json()
   logging.debug("Response: %s", json.dumps(response, indent=1))
   if resp.status_code != 200:
     raise Exception(
-        f'{resp.status_code}: {resp.reason}\n{response["message"]}\nRequest: {path}\n{data}'
+        f'{resp.status_code}: {resp.reason_phrase}\n{response["message"]}\nRequest: {path}\n{data}'
     )
   return response
 
