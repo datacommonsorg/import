@@ -187,7 +187,7 @@ class EventsImporter(Importer):
       properties: dict[str, str] = {}
 
       for i, (k, v) in enumerate(row.items()):
-        if i < 2:
+        if i < 2 or pd.isna(v):
           continue
         properties[k] = v
 
