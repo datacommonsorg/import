@@ -130,7 +130,7 @@ class ObservationsImporter(Importer):
       observation = Observation(*row)
       if observation.value and observation.value != "<NA>":
         observations.append(Observation(*row))
-    self.db.insert_observations(observations)
+    self.db.insert_observations(observations, self.input_file_name)
 
   def _add_provenance_column(self):
     self.df[constants.COLUMN_PROVENANCE] = self.nodes.provenance(

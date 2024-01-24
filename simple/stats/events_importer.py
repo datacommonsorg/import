@@ -131,7 +131,7 @@ class EventsImporter(Importer):
       sv_dcid = self.nodes.variable(sv_name, self.input_file_name).id
       aggr_cfg = self.config.aggregation(sv_name)
       observations = self._compute_sv_observations(sv_dcid, aggr_cfg)
-      self.db.insert_observations(observations)
+      self.db.insert_observations(observations, self.input_file_name)
 
   def _compute_sv_observations(
       self, sv_dcid: str, aggr_cfg: AggregationConfig = AggregationConfig()

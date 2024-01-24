@@ -22,6 +22,7 @@ import sqlite3
 import tempfile
 
 from google.cloud.sql.connector.connector import Connector
+import pandas as pd
 from pymysql.connections import Connection
 from pymysql.cursors import Cursor
 from stats.data import Observation
@@ -33,6 +34,7 @@ FIELD_DB_TYPE = "type"
 FIELD_DB_PARAMS = "params"
 TYPE_CLOUD_SQL = "cloudsql"
 TYPE_SQLITE = "sqlite"
+TYPE_MAIN_DC = "maindc"
 
 SQLITE_DB_FILE_PATH = "dbFilePath"
 
@@ -49,6 +51,8 @@ ENV_DB_PASS = "DB_PASS"
 ENV_DB_NAME = "DB_NAME"
 
 ENV_SQLITE_PATH = "SQLITE_PATH"
+
+MAIN_DC_OUTPUT_DIR = "mainDcOutputDir"
 
 _CREATE_TRIPLES_TABLE = """
 create table if not exists triples (
@@ -94,6 +98,15 @@ _INIT_STATEMENTS = [
     _DELETE_OBSERVATIONS_STATEMENT
 ]
 
+OBSERVATIONS_TMCF = """Node: E:Table->E0
+typeOf: dcs:StatVarObservation
+variableMeasured: C:Table->variable
+observationDate: C:Table->date
+observationAbout: C:Table->entity
+value: C:Table->value"""
+
+OBSERVATIONS_TMCF_FILE_NAME = "observations.tmcf"
+
 
 class ImportStatus(Enum):
   SUCCESS = auto()
@@ -101,7 +114,60 @@ class ImportStatus(Enum):
 
 
 class Db:
-  """Class to insert triples and observations into a DB."""
+  """Abstract class to insert triples and observations into a DB.
+  The "DB" could be a traditional sql db or a file system with the output being files.
+  """
+
+  def insert_triples(self, triples: list[Triple]):
+    pass
+
+  def insert_observations(self, observations: list[Observation],
+                          input_file_name: str):
+    pass
+
+  def insert_import_info(self, status: ImportStatus):
+    pass
+
+  def commit_and_close(self):
+    pass
+
+
+class MainDcDb(Db):
+  """Generates output for main DC.
+  Observations will be output as TMCF + CSVs.
+  Triples will be output as schema MCF.
+  """
+
+  def __init__(self, db_params: dict) -> None:
+    assert db_params
+    assert MAIN_DC_OUTPUT_DIR in db_params
+
+    self.output_dir_fh = create_file_handler(db_params[MAIN_DC_OUTPUT_DIR])
+
+  def insert_triples(self, triples: list[Triple]):
+    # TODO: generate schema mcf
+    pass
+
+  def insert_observations(self, observations: list[Observation],
+                          input_file_name: str):
+    df = pd.DataFrame(observations)
+    # Drop the provenance column. It is specified differently for main dc.
+    df = df.drop(columns=["provenance"])
+    self.output_dir_fh.make_file(input_file_name).write_string(
+        df.to_csv(index=False))
+
+  def insert_import_info(self, status: ImportStatus):
+    # No-op for now.
+    pass
+
+  def commit_and_close(self):
+    self.output_dir_fh.make_file(OBSERVATIONS_TMCF_FILE_NAME).write_string(
+        OBSERVATIONS_TMCF)
+    pass
+
+
+class SqlDb(Db):
+  """Class to insert triples and observations into a SQL DB."""
 
   def __init__(self, config: dict) -> None:
     self.engine = create_db_engine(config)
@@ -113,7 +179,8 @@ class Db:
     self.engine.executemany(_INSERT_TRIPLES_STATEMENT,
                             [to_triple_tuple(triple) for triple in triples])
 
-  def insert_observations(self, observations: list[Observation]):
+  def insert_observations(self, observations: list[Observation],
+                          input_file_name: str):
     logging.info("Writing %s observations to [%s]", len(observations),
                  self.engine)
     self.num_observations += len(observations)
@@ -276,6 +343,13 @@ def create_db_engine(config: dict) -> DbEngine:
   assert False
 
 
+def create_db(config: dict) -> Db:
+  db_type = config[FIELD_DB_TYPE]
+  if db_type and db_type == TYPE_MAIN_DC:
+    return MainDcDb(config)
+  return SqlDb(config)
+
+
 def create_sqlite_config(sqlite_db_file_path: str) -> dict:
   return {
       FIELD_DB_TYPE: TYPE_SQLITE,
@@ -283,6 +357,10 @@ def create_sqlite_config(sqlite_db_file_path: str) -> dict:
           SQLITE_DB_FILE_PATH: sqlite_db_file_path
       }
   }
+
+
+def create_main_dc_config(output_dir: str) -> dict:
+  return {FIELD_DB_TYPE: TYPE_MAIN_DC, MAIN_DC_OUTPUT_DIR: output_dir}
 
 
 def get_sqlite_config_from_env() -> dict | None:
