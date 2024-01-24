@@ -21,8 +21,8 @@ import unittest
 import pandas as pd
 from stats.config import Config
 from stats.data import Observation
+from stats.db import create_db
 from stats.db import create_sqlite_config
-from stats.db import Db
 from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
 from stats.reporter import FileImportReporter
@@ -67,7 +67,7 @@ def _test_import(test: unittest.TestCase,
 
     input_fh = LocalFileHandler(input_path)
 
-    db = Db(create_sqlite_config(db_path))
+    db = create_db(create_sqlite_config(db_path))
     debug_resolve_fh = LocalFileHandler(os.path.join(temp_dir, "debug.csv"))
     report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))
     reporter = FileImportReporter(input_path, ImportReporter(report_fh))

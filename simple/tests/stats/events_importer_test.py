@@ -23,8 +23,8 @@ import pandas as pd
 from stats.config import Config
 from stats.data import Observation
 from stats.data import Triple
+from stats.db import create_db
 from stats.db import create_sqlite_config
-from stats.db import Db
 from stats.events_importer import EventsImporter
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
@@ -83,7 +83,7 @@ def _test_import(test: unittest.TestCase, test_name: str):
     config = Config(data=json.loads(input_config_fh.read_string()))
     nodes = Nodes(config)
 
-    db = Db(create_sqlite_config(db_path))
+    db = create_db(create_sqlite_config(db_path))
     debug_resolve_fh = LocalFileHandler(os.path.join(temp_dir, "debug.csv"))
     report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))
     reporter = FileImportReporter(input_path, ImportReporter(report_fh))

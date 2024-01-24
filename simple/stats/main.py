@@ -19,6 +19,7 @@ from absl import app
 from absl import flags
 from freezegun import freeze_time
 from stats import constants
+from stats.runner import RunMode
 from stats.runner import Runner
 
 FLAGS = flags.FLAGS
@@ -27,6 +28,12 @@ flags.DEFINE_string("input_dir", constants.DEFAULT_INPUT_DIR,
                     "The input directory.")
 flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
                     "The output directory.")
+flags.DEFINE_enum(
+    "mode",
+    RunMode.CUSTOM_DC,
+    list(RunMode._member_map_.values()),
+    f"Mode of operation",
+)
 flags.DEFINE_bool(
     "freeze_time",
     False,
@@ -53,10 +60,9 @@ def _init_logger():
 
 
 def _run():
-  Runner(
-      input_dir=FLAGS.input_dir,
-      output_dir=FLAGS.output_dir,
-  ).run()
+  Runner(input_dir=FLAGS.input_dir,
+         output_dir=FLAGS.output_dir,
+         mode=FLAGS.mode).run()
 
 
 def main(_):

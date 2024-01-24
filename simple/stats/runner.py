@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import StrEnum
 import json
 import logging
 
 from stats import constants
 from stats.config import Config
 from stats.data import ImportType
+from stats.db import create_db
+from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
-from stats.db import Db
 from stats.db import get_cloud_sql_config_from_env
 from stats.db import get_sqlite_config_from_env
 from stats.db import ImportStatus
@@ -32,11 +34,20 @@ from stats.reporter import ImportReporter
 from util.filehandler import create_file_handler
 
 
+class RunMode(StrEnum):
+  CUSTOM_DC = "customdc"
+  MAIN_DC = "maindc"
+
+
 class Runner:
   """Runs and coordinates all imports.
     """
 
-  def __init__(self, input_dir: str, output_dir: str) -> None:
+  def __init__(self,
+               input_dir: str,
+               output_dir: str,
+               mode: RunMode = RunMode.CUSTOM_DC) -> None:
+    self.mode = mode
     self.input_dir_fh = create_file_handler(input_dir)
     if not self.input_dir_fh.isdir:
       raise NotADirectoryError(
@@ -61,6 +72,9 @@ class Runner:
     self.config = Config(data=json.loads(config_fh.read_string()))
 
     def _get_db_config() -> dict:
+      if self.mode == RunMode.MAIN_DC:
+        logging.info("Using Main DC config.")
+        return create_main_dc_config(self.output_dir_fh.path)
       # Attempt to get from env (cloud sql, then sqlite),
       # then config file, then default.
       db_cfg = get_cloud_sql_config_from_env()
@@ -71,15 +85,11 @@ class Runner:
       if db_cfg:
         logging.info("Using SQLite settings from env.")
         return db_cfg
-      db_cfg = self.config.database()
-      if db_cfg:
-        logging.info("Using DB settings from config file.")
-        return db_cfg
       logging.info("Using default DB settings.")
       return create_sqlite_config(
           self.output_dir_fh.make_file(constants.DB_FILE_NAME).path)
 
-    self.db = Db(_get_db_config())
+    self.db = create_db(_get_db_config())
     self.nodes = Nodes(self.config)
 
   def run(self):

@@ -1,0 +1,5 @@
+entity,variable,date,value
+geoId/01,Variable_1,2021,555
+geoId/122,Variable_1,2022,321
+geoId/01,Variable_2,2021,666
+geoId/122,Variable_2,2022,123456
