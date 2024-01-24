@@ -25,7 +25,10 @@ from google.cloud.sql.connector.connector import Connector
 import pandas as pd
 from pymysql.connections import Connection
 from pymysql.cursors import Cursor
+from stats.data import McfNode
 from stats.data import Observation
+from stats.data import STAT_VAR_GROUP
+from stats.data import STATISTICAL_VARIABLE
 from stats.data import Triple
 from util.filehandler import create_file_handler
 from util.filehandler import is_gcs_path
@@ -106,6 +109,9 @@ observationAbout: C:Table->entity
 value: C:Table->value"""
 
 OBSERVATIONS_TMCF_FILE_NAME = "observations.tmcf"
+SCHEMA_MCF_FILE_NAME = "schema.mcf"
+
+MCF_NODE_TYPES_ALLOWLIST = set([STATISTICAL_VARIABLE, STAT_VAR_GROUP])
 
 
 class ImportStatus(Enum):
@@ -143,10 +149,12 @@ class MainDcDb(Db):
     assert MAIN_DC_OUTPUT_DIR in db_params
 
     self.output_dir_fh = create_file_handler(db_params[MAIN_DC_OUTPUT_DIR])
+    # dcid to node dict
+    self.nodes: dict[str, McfNode] = {}
 
   def insert_triples(self, triples: list[Triple]):
-    # TODO: generate schema mcf
-    pass
+    for triple in triples:
+      self._add_triple(triple)
 
   def insert_observations(self, observations: list[Observation],
                           input_file_name: str):
@@ -161,9 +169,22 @@ class MainDcDb(Db):
     pass
 
   def commit_and_close(self):
+    # MCF
+    filtered = filter(lambda node: node.node_type in MCF_NODE_TYPES_ALLOWLIST,
+                      self.nodes.values())
+    mcf = "\n\n".join(map(lambda node: node.to_mcf(), filtered))
+    self.output_dir_fh.make_file(SCHEMA_MCF_FILE_NAME).write_string(mcf)
+
+    # TMCF
     self.output_dir_fh.make_file(OBSERVATIONS_TMCF_FILE_NAME).write_string(
         OBSERVATIONS_TMCF)
-    pass
+
+  def _add_triple(self, triple: Triple):
+    node = self.nodes.get(triple.subject_id)
+    if not node:
+      node = McfNode(triple.subject_id)
+      self.nodes[triple.subject_id] = node
+    node.add_triple(triple)
 
 
 class SqlDb(Db):

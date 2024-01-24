@@ -129,6 +129,7 @@ function run_main_dc_sample {
 
 function run_all_samples {
   run_sample
+  cd ..
   run_main_dc_sample
 }
 
