@@ -38,22 +38,30 @@ Variable_1,name,,Variable 1
 Variable_1,memberOf,custom/g/group_2,
 Variable_1,includedIn,c/p/1,
 Variable_1,includedIn,c/s/1,
+Variable_1,populationType,schema:Thing,
+Variable_1,measuredProperty,Variable_1,
 Variable_2,typeOf,StatisticalVariable,
 Variable_2,name,,Variable 2
 Variable_2,memberOf,custom/g/group_2,
 Variable_2,includedIn,c/p/1,
 Variable_2,includedIn,c/s/1,
+Variable_2,populationType,schema:Thing,
+Variable_2,measuredProperty,Variable_2,
 var3,typeOf,StatisticalVariable,
 var3,name,,Var 3 Name
 var3,description,,Var 3 Description
 var3,memberOf,custom/g/group_3,
 var3,includedIn,c/p/default,
 var3,includedIn,c/s/default,
+var3,populationType,schema:Thing,
+var3,measuredProperty,var3,
 Variable_with_no_config,typeOf,StatisticalVariable,
 Variable_with_no_config,name,,Variable with no config
 Variable_with_no_config,memberOf,custom/g/Root,
 Variable_with_no_config,includedIn,c/p/default,
 Variable_with_no_config,includedIn,c/s/default,
+Variable_with_no_config,populationType,schema:Thing,
+Variable_with_no_config,measuredProperty,Variable_with_no_config,
 CrimeEvent,typeOf,Class,
 CrimeEvent,subClassOf,Event,
 CrimeEvent,name,,Crime Event

@@ -77,6 +77,8 @@ Count_CrimeEvent,name,,Count_CrimeEvent
 Count_CrimeEvent,memberOf,custom/g/Root,
 Count_CrimeEvent,includedIn,c/p/1,
 Count_CrimeEvent,includedIn,c/s/1,
+Count_CrimeEvent,populationType,schema:Thing,
+Count_CrimeEvent,measuredProperty,Count_CrimeEvent,
 CrimeEvent,typeOf,Class,
 CrimeEvent,subClassOf,Event,
 CrimeEvent,name,,Crime Event

@@ -31,6 +31,8 @@ _PREDICATE_INCLUDED_IN = "includedIn"
 _PREDICATE_SUB_CLASS_OF = "subClassOf"
 _PREDICATE_OBSERVATION_DATE = "observationDate"
 _PREDICATE_LOCATION = "location"
+_PREDICATE_POPULATION_TYPE = "populationType"
+_PREDICATE_MEASURED_PROPERTY = "measuredProperty"
 
 STATISTICAL_VARIABLE = "StatisticalVariable"
 STAT_VAR_GROUP = "StatVarGroup"
@@ -39,6 +41,7 @@ _PROVENANCE = "Provenance"
 _PROPERTY = "Property"
 _CLASS = "Class"
 _EVENT = "Event"
+_THING = "schema:Thing"
 
 _MCF_PREDICATE_BLOCKLIST = set([_PREDICATE_INCLUDED_IN])
 
@@ -124,6 +127,10 @@ class StatVar:
     for source_id in self.source_ids:
       triples.append(
           Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=source_id))
+    triples.append(Triple(self.id, _PREDICATE_POPULATION_TYPE,
+                          object_id=_THING))
+    triples.append(
+        Triple(self.id, _PREDICATE_MEASURED_PROPERTY, object_id=self.id))
     return triples
 
 
