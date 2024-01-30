@@ -31,14 +31,19 @@ _PREDICATE_INCLUDED_IN = "includedIn"
 _PREDICATE_SUB_CLASS_OF = "subClassOf"
 _PREDICATE_OBSERVATION_DATE = "observationDate"
 _PREDICATE_LOCATION = "location"
+_PREDICATE_POPULATION_TYPE = "populationType"
+_PREDICATE_MEASURED_PROPERTY = "measuredProperty"
 
-_STATISTICAL_VARIABLE = "StatisticalVariable"
-_STAT_VAR_GROUP = "StatVarGroup"
+STATISTICAL_VARIABLE = "StatisticalVariable"
+STAT_VAR_GROUP = "StatVarGroup"
 _SOURCE = "Source"
 _PROVENANCE = "Provenance"
 _PROPERTY = "Property"
 _CLASS = "Class"
 _EVENT = "Event"
+_THING = "schema:Thing"
+
+_MCF_PREDICATE_BLOCKLIST = set([_PREDICATE_INCLUDED_IN])
 
 
 @dataclass
@@ -69,8 +74,8 @@ class StatVarGroup:
 
   def triples(self) -> list[Triple]:
     triples: list[Triple] = []
-    triples.append(
-        Triple(self.id, _PREDICATE_TYPE_OF, object_id=_STAT_VAR_GROUP))
+    triples.append(Triple(self.id, _PREDICATE_TYPE_OF,
+                          object_id=STAT_VAR_GROUP))
     triples.append(Triple(self.id, _PREDICATE_NAME, object_value=self.name))
     triples.append(
         Triple(self.id, _PREDICATE_SPECIALIZATION_OF, object_id=self.parent_id))
@@ -107,7 +112,7 @@ class StatVar:
   def triples(self) -> list[Triple]:
     triples: list[Triple] = []
     triples.append(
-        Triple(self.id, _PREDICATE_TYPE_OF, object_id=_STATISTICAL_VARIABLE))
+        Triple(self.id, _PREDICATE_TYPE_OF, object_id=STATISTICAL_VARIABLE))
     triples.append(Triple(self.id, _PREDICATE_NAME, object_value=self.name))
     if self.description:
       triples.append(
@@ -122,6 +127,10 @@ class StatVar:
     for source_id in self.source_ids:
       triples.append(
           Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=source_id))
+    triples.append(Triple(self.id, _PREDICATE_POPULATION_TYPE,
+                          object_id=_THING))
+    triples.append(
+        Triple(self.id, _PREDICATE_MEASURED_PROPERTY, object_id=self.id))
     return triples
 
 
@@ -289,3 +298,30 @@ class AggregationConfig:
       raise ValueError(f"invalid period: {self.period}")
     if self.method not in AggregationMethod._member_map_.values():
       raise ValueError(f"invalid method: {self.method}")
+
+
+@dataclass
+class McfNode:
+  id: str
+  node_type: str = ""
+  properties: dict[str, str] = field(default_factory=lambda: defaultdict(dict))
+
+  def add_triple(self, triple: Triple) -> Self:
+    if triple.predicate in _MCF_PREDICATE_BLOCKLIST:
+      return self
+
+    if triple.predicate == _PREDICATE_TYPE_OF:
+      self.node_type = triple.object_id
+
+    if triple.object_id:
+      self.properties[triple.predicate] = triple.object_id
+    elif triple.object_value:
+      self.properties[triple.predicate] = f'"{triple.object_value}"'
+
+    return self
+
+  def to_mcf(self) -> str:
+    parts: list[str] = []
+    parts.append(f"Node: dcid:{self.id}")
+    parts.extend([f"{p}: {v}" for p, v in self.properties.items()])
+    return "\n".join(parts)

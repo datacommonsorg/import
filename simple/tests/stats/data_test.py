@@ -15,6 +15,7 @@
 import unittest
 
 from stats.data import Event
+from stats.data import McfNode
 from stats.data import Provenance
 from stats.data import StatVar
 from stats.data import StatVarGroup
@@ -47,6 +48,8 @@ class TestData(unittest.TestCase):
     expected = [
         Triple(SV_ID1, "typeOf", object_id="StatisticalVariable"),
         Triple(SV_ID1, "name", object_value=SV_NAME1),
+        Triple(SV_ID1, "populationType", object_id="schema:Thing"),
+        Triple(SV_ID1, "measuredProperty", object_id=SV_ID1),
     ]
     self.assertListEqual(result, expected)
 
@@ -57,6 +60,8 @@ class TestData(unittest.TestCase):
         Triple(SV_ID1, "typeOf", object_id="StatisticalVariable"),
         Triple(SV_ID1, "name", object_value=SV_NAME1),
         Triple(SV_ID1, "description", object_value=SV_DESCRIPTION1),
+        Triple(SV_ID1, "populationType", object_id="schema:Thing"),
+        Triple(SV_ID1, "measuredProperty", object_id=SV_ID1),
     ]
     self.assertListEqual(result, expected)
 
@@ -66,6 +71,8 @@ class TestData(unittest.TestCase):
     expected = [
         Triple(SV_ID1, "typeOf", object_id="StatisticalVariable"),
         Triple(SV_ID1, "name", object_value=SV_NAME1),
+        Triple(SV_ID1, "populationType", object_id="schema:Thing"),
+        Triple(SV_ID1, "measuredProperty", object_id=SV_ID1),
     ]
     self.assertListEqual(result, expected)
 
@@ -76,6 +83,8 @@ class TestData(unittest.TestCase):
         Triple(SV_ID1, "typeOf", object_id="StatisticalVariable"),
         Triple(SV_ID1, "name", object_value=SV_NAME1),
         Triple(SV_ID1, "memberOf", object_id=SVG_ID1),
+        Triple(SV_ID1, "populationType", object_id="schema:Thing"),
+        Triple(SV_ID1, "measuredProperty", object_id=SV_ID1),
     ]
     self.assertListEqual(result, expected)
 
@@ -115,6 +124,8 @@ class TestData(unittest.TestCase):
         Triple(SV_ID1, "name", object_value=SV_NAME1),
         Triple(SV_ID1, "description", object_value=SV_DESCRIPTION1),
         Triple(SV_ID1, "memberOf", object_id=SVG_ID1),
+        Triple(SV_ID1, "populationType", object_id="schema:Thing"),
+        Triple(SV_ID1, "measuredProperty", object_id=SV_ID1),
     ]
     self.assertListEqual(result, expected)
 
@@ -148,3 +159,25 @@ class TestData(unittest.TestCase):
         Triple(EVENT_ID1, EVENT_PROP2_TYPE, object_value=EVENT_PROP2_VALUE1)
     ]
     self.assertListEqual(result, expected)
+
+  def test_mcf_node(self):
+    triples: list[Triple] = [
+        Triple("sv1", "typeOf", object_id="StatisticalVariable"),
+        Triple("sv1", "name", object_value="sv name"),
+        Triple("sv1", "description", object_value="sv desc"),
+        Triple("sv1", "memberOf", object_id="svg1"),
+        Triple("sv1", "includedIn", object_id="prov1")
+    ]
+
+    node = McfNode("sv1")
+    for triple in triples:
+      node.add_triple(triple)
+
+    expected = """
+Node: dcid:sv1
+typeOf: StatisticalVariable
+name: "sv name"
+description: "sv desc"
+memberOf: svg1""".strip()
+
+    self.assertEqual(node.to_mcf(), expected)
