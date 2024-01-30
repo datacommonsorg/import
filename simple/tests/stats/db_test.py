@@ -46,8 +46,8 @@ def _compare_files(test: unittest.TestCase, output_path, expected_path):
 
 
 _TRIPLES = [
-    Triple("sub1", "pred1", object_id="objid1"),
-    Triple("sub2", "pred2", object_value="objval1")
+    Triple("sub1", "typeOf", object_id="StatisticalVariable"),
+    Triple("sub1", "pred1", object_value="objval1")
 ]
 
 _OBSERVATIONS = [
@@ -92,6 +92,8 @@ class TestDb(unittest.TestCase):
                                                 "observations.csv")
       tmcf_file = os.path.join(temp_dir, "observations.tmcf")
       expected_tmcf_file = os.path.join(_EXPECTED_DIR, "observations.tmcf")
+      mcf_file = os.path.join(temp_dir, "schema.mcf")
+      expected_mcf_file = os.path.join(_EXPECTED_DIR, "schema.mcf")
 
       db = create_db(create_main_dc_config(temp_dir))
       db.insert_triples(_TRIPLES)
@@ -102,10 +104,12 @@ class TestDb(unittest.TestCase):
       if is_write_mode():
         shutil.copy(observations_file, expected_observations_file)
         shutil.copy(tmcf_file, expected_tmcf_file)
+        shutil.copy(mcf_file, expected_mcf_file)
         return
 
       _compare_files(self, observations_file, expected_observations_file)
       _compare_files(self, tmcf_file, expected_tmcf_file)
+      _compare_files(self, mcf_file, expected_mcf_file)
 
   @mock.patch.dict(os.environ, {})
   def test_get_cloud_sql_config_from_env_empty(self):
