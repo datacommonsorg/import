@@ -1,6 +1,6 @@
-# Run RSI Docker image locally
+# Run Simple Import Docker image locally
 
-`run_docker.sh` is an example script illustrating how the RSI docker image
+`run_simple.sh` is an example script illustrating how the simple import docker image
 can be run locally.
 
 In the `env.list` file, specify the `DC_API_KEY`.

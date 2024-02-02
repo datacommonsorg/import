@@ -1,4 +1,3 @@
-#!/bin/bash
 # Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -o allexport
-source env.list
-set +o allexport
 
-docker run -it \
-    --env-file env.list \
-    -v $INPUT_DIR:/input \
-    -v $OUTPUT_DIR:/output \
-    -e GOOGLE_APPLICATION_CREDENTIALS=/gcp/creds.json \
-    -v $HOME/.config/gcloud/application_default_credentials.json:/gcp/creds.json:ro \
-    gcr.io/datcom-ci/datacommons-rsi:latest
+FROM python:3.11.4-slim as base
+
+ARG ENV
+ARG PIP_DISABLE_PIP_VERSION_CHECK=1
+ARG PIP_NO_CACHE_DIR=1
+ENV ENV=${ENV}
+
+WORKDIR /workspace
+
+COPY simple/ .
+COPY build/simple/run.sh .
+
+RUN pip3 install -r /workspace/requirements.txt
+CMD ./run.sh
