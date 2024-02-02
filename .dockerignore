@@ -1,0 +1,6 @@
+Dockerfile
+simple/sample/
+simple/tests/
+**/.data
+**/.pytest_cache
+**/__pycache__
