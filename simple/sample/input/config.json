@@ -48,7 +48,13 @@
         "Natural language sentence 1",
         "Natural language sentence 2"
       ],
-      "group": "Parent Group/Child Group 1"
+      "group": "Parent Group/Child Group 1",
+      "properties": {
+        "populationType": "schema:Person",
+        "measuredProperty": "age",
+        "statType": "medianValue",
+        "gender": "Female"
+      }
     },
     "var2": {
       "name": "Good var2 name",

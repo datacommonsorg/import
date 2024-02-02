@@ -29,6 +29,12 @@ The config parameters for the files to be imported should be specified in a `con
       "description": "Var 3 Description",
       "nlSentences": ["Sentence 1", "Sentence 2"],
       "group": "Parent Group/Child Group 2",
+      "properties": {
+        "populationType": "schema:Person",
+        "measuredProperty": "age",
+        "statType": "medianValue",
+        "gender": "Female"
+      }
     },
   },
   "sources": {
@@ -89,6 +95,13 @@ If not specified, the column name will be used as the display name.
 The long form description of the variable.
 
 The description will also be used to create NL embeddings for the variable.
+
+#### `properties`
+
+The properties of this variable.
+
+These are DC property entities encoded as a dictionary.
+More information on the properties that can be associated with variables can be found [here](https://github.com/datacommonsorg/data/blob/master/docs/representing_statistics.md#statisticalvariable).
 
 #### `group`
 

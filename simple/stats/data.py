@@ -33,6 +33,7 @@ _PREDICATE_OBSERVATION_DATE = "observationDate"
 _PREDICATE_LOCATION = "location"
 _PREDICATE_POPULATION_TYPE = "populationType"
 _PREDICATE_MEASURED_PROPERTY = "measuredProperty"
+_PREDICATE_STAT_TYPE = "statType"
 
 STATISTICAL_VARIABLE = "StatisticalVariable"
 STAT_VAR_GROUP = "StatVarGroup"
@@ -42,6 +43,7 @@ _PROPERTY = "Property"
 _CLASS = "Class"
 _EVENT = "Event"
 _THING = "schema:Thing"
+_MEASURED_VALUE = "measuredValue"
 
 _MCF_PREDICATE_BLOCKLIST = set([_PREDICATE_INCLUDED_IN])
 
@@ -98,6 +100,15 @@ class StatVar:
   group_path: str = ""
   provenance_ids: list[str] = field(default_factory=list)
   source_ids: list[str] = field(default_factory=list)
+  properties: dict[str, str] = field(default_factory=dict)
+
+  def __post_init__(self):
+    if _PREDICATE_POPULATION_TYPE not in self.properties:
+      self.properties[_PREDICATE_POPULATION_TYPE] = _THING
+    if _PREDICATE_MEASURED_PROPERTY not in self.properties and self.id:
+      self.properties[_PREDICATE_MEASURED_PROPERTY] = self.id
+    if _PREDICATE_STAT_TYPE not in self.properties:
+      self.properties[_PREDICATE_STAT_TYPE] = _MEASURED_VALUE
 
   def add_provenance(self, provenance: "Provenance") -> "StatVar":
     provenance_id = provenance.id
@@ -127,10 +138,8 @@ class StatVar:
     for source_id in self.source_ids:
       triples.append(
           Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=source_id))
-    triples.append(Triple(self.id, _PREDICATE_POPULATION_TYPE,
-                          object_id=_THING))
-    triples.append(
-        Triple(self.id, _PREDICATE_MEASURED_PROPERTY, object_id=self.id))
+    for p, v in self.properties.items():
+      triples.append(Triple(self.id, p, object_id=v))
     return triples
 
 
