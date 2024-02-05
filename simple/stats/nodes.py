@@ -127,7 +127,8 @@ class Nodes:
           var_cfg.name,
           description=var_cfg.description,
           nl_sentences=var_cfg.nl_sentences,
-          group_id=group_id)
+          group_id=group_id,
+          properties=var_cfg.properties)
 
     return self._add_provenance(self.variables[sv_column_name],
                                 self.provenance(input_file_name))

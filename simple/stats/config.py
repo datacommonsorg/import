@@ -38,6 +38,7 @@ _ID_COLUMN_FIELD = "idColumn"
 _EVENTS_FIELD = "events"
 _COMPUTED_VARIABLES_FIELD = "computedVariables"
 _AGGREGATION_FIELD = "aggregation"
+_PROPERTIES_FIELD = "properties"
 
 
 class Config:
@@ -74,6 +75,7 @@ class Config:
         description=var_cfg.get(_DESCRIPTION_FIELD, ""),
         nl_sentences=var_cfg.get(_NL_SENTENCES_FIELD, []),
         group_path=var_cfg.get(_GROUP_FIELD, ""),
+        properties=var_cfg.get(_PROPERTIES_FIELD, {}),
     )
 
   def aggregation(self, variable_name: str) -> AggregationConfig:

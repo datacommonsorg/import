@@ -23,14 +23,17 @@ typeOf: StatisticalVariable
 name: "Good var1 name"
 description: "Good var1 description"
 memberOf: custom/g/group_2
-populationType: schema:Thing
-measuredProperty: var1
+populationType: Person
+measuredProperty: age
+statType: medianValue
+gender: Female
 
 Node: dcid:var2
 typeOf: StatisticalVariable
 name: "Good var2 name"
 memberOf: custom/g/group_3
 populationType: schema:Thing
+statType: measuredValue
 measuredProperty: var2
 
 Node: dcid:Variable_1
@@ -38,6 +41,7 @@ typeOf: StatisticalVariable
 name: "Variable 1"
 memberOf: custom/g/group_1
 populationType: schema:Thing
+statType: measuredValue
 measuredProperty: Variable_1
 
 Node: dcid:Variable_2
@@ -45,6 +49,7 @@ typeOf: StatisticalVariable
 name: "Variable 2"
 memberOf: custom/g/Root
 populationType: schema:Thing
+statType: measuredValue
 measuredProperty: Variable_2
 
 Node: dcid:Crime_Count
@@ -53,4 +58,5 @@ name: "Crime Count"
 description: "Number of crimes"
 memberOf: custom/g/Root
 populationType: schema:Thing
+statType: measuredValue
 measuredProperty: Crime_Count
