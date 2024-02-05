@@ -23,7 +23,7 @@ typeOf: StatisticalVariable
 name: "Good var1 name"
 description: "Good var1 description"
 memberOf: custom/g/group_2
-populationType: schema:Person
+populationType: Person
 measuredProperty: age
 statType: medianValue
 gender: Female

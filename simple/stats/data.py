@@ -105,6 +105,8 @@ class StatVar:
   def __post_init__(self):
     if _PREDICATE_POPULATION_TYPE not in self.properties:
       self.properties[_PREDICATE_POPULATION_TYPE] = _THING
+    # If measuredProperty is not specified, we set it to the SV dcid,
+    # thereby making it schema-less.
     if _PREDICATE_MEASURED_PROPERTY not in self.properties and self.id:
       self.properties[_PREDICATE_MEASURED_PROPERTY] = self.id
     if _PREDICATE_STAT_TYPE not in self.properties:

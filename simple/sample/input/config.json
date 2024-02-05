@@ -50,7 +50,7 @@
       ],
       "group": "Parent Group/Child Group 1",
       "properties": {
-        "populationType": "schema:Person",
+        "populationType": "Person",
         "measuredProperty": "age",
         "statType": "medianValue",
         "gender": "Female"
