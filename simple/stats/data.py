@@ -47,6 +47,8 @@ _MEASURED_VALUE = "measuredValue"
 
 _MCF_PREDICATE_BLOCKLIST = set([_PREDICATE_INCLUDED_IN])
 
+_DCS_PREFIX = "dcs:"
+
 
 @dataclass
 class Triple:
@@ -111,6 +113,11 @@ class StatVar:
       self.properties[_PREDICATE_MEASURED_PROPERTY] = self.id
     if _PREDICATE_STAT_TYPE not in self.properties:
       self.properties[_PREDICATE_STAT_TYPE] = _MEASURED_VALUE
+
+    # Add dcs: prefix to prop values if not specified.
+    for p, v in self.properties.items():
+      if not ":" in v:
+        self.properties[p] = f"{_DCS_PREFIX}{v}"
 
   def add_provenance(self, provenance: "Provenance") -> "StatVar":
     provenance_id = provenance.id

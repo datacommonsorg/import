@@ -49,8 +49,8 @@ class TestData(unittest.TestCase):
         Triple(SV_ID1, "typeOf", object_id="StatisticalVariable"),
         Triple(SV_ID1, "name", object_value=SV_NAME1),
         Triple(SV_ID1, "populationType", object_id="schema:Thing"),
-        Triple(SV_ID1, "measuredProperty", object_id=SV_ID1),
-        Triple(SV_ID1, "statType", object_id="measuredValue"),
+        Triple(SV_ID1, "measuredProperty", object_id=f"dcs:{SV_ID1}"),
+        Triple(SV_ID1, "statType", object_id="dcs:measuredValue"),
     ]
     self.assertListEqual(result, expected)
 
@@ -62,8 +62,8 @@ class TestData(unittest.TestCase):
         Triple(SV_ID1, "name", object_value=SV_NAME1),
         Triple(SV_ID1, "description", object_value=SV_DESCRIPTION1),
         Triple(SV_ID1, "populationType", object_id="schema:Thing"),
-        Triple(SV_ID1, "measuredProperty", object_id=SV_ID1),
-        Triple(SV_ID1, "statType", object_id="measuredValue"),
+        Triple(SV_ID1, "measuredProperty", object_id=f"dcs:{SV_ID1}"),
+        Triple(SV_ID1, "statType", object_id="dcs:measuredValue"),
     ]
     self.assertListEqual(result, expected)
 
@@ -74,8 +74,8 @@ class TestData(unittest.TestCase):
         Triple(SV_ID1, "typeOf", object_id="StatisticalVariable"),
         Triple(SV_ID1, "name", object_value=SV_NAME1),
         Triple(SV_ID1, "populationType", object_id="schema:Thing"),
-        Triple(SV_ID1, "measuredProperty", object_id=SV_ID1),
-        Triple(SV_ID1, "statType", object_id="measuredValue"),
+        Triple(SV_ID1, "measuredProperty", object_id=f"dcs:{SV_ID1}"),
+        Triple(SV_ID1, "statType", object_id="dcs:measuredValue"),
     ]
     self.assertListEqual(result, expected)
 
@@ -87,8 +87,8 @@ class TestData(unittest.TestCase):
         Triple(SV_ID1, "name", object_value=SV_NAME1),
         Triple(SV_ID1, "memberOf", object_id=SVG_ID1),
         Triple(SV_ID1, "populationType", object_id="schema:Thing"),
-        Triple(SV_ID1, "measuredProperty", object_id=SV_ID1),
-        Triple(SV_ID1, "statType", object_id="measuredValue"),
+        Triple(SV_ID1, "measuredProperty", object_id=f"dcs:{SV_ID1}"),
+        Triple(SV_ID1, "statType", object_id="dcs:measuredValue"),
     ]
     self.assertListEqual(result, expected)
 
@@ -129,8 +129,8 @@ class TestData(unittest.TestCase):
         Triple(SV_ID1, "description", object_value=SV_DESCRIPTION1),
         Triple(SV_ID1, "memberOf", object_id=SVG_ID1),
         Triple(SV_ID1, "populationType", object_id="schema:Thing"),
-        Triple(SV_ID1, "measuredProperty", object_id=SV_ID1),
-        Triple(SV_ID1, "statType", object_id="measuredValue"),
+        Triple(SV_ID1, "measuredProperty", object_id=f"dcs:{SV_ID1}"),
+        Triple(SV_ID1, "statType", object_id="dcs:measuredValue"),
     ]
     self.assertListEqual(result, expected)
 
