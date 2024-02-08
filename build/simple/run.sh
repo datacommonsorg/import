@@ -25,6 +25,10 @@ else
     export OUTPUT_DIR=/output/
 fi
 
+echo "DC_API_KEY=$DC_API_KEY"
+echo "INPUT_DIR=$INPUT_DIR"
+echo "OUTPUT_DIR=$INPUT_DIR"
+
 python3 -m stats.main \
     --mode=maindc \
     --input_dir=$INPUT_DIR \

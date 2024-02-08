@@ -21,6 +21,7 @@ steps:
       - |
         set -e
         docker build -f build/simple/Dockerfile \
+          --network=cloudbuild \
           -t gcr.io/datcom-ci/datacommons-simple:$SHORT_SHA \
           -t gcr.io/datcom-ci/datacommons-simple:latest \
           .
