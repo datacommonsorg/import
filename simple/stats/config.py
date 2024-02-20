@@ -39,6 +39,7 @@ _EVENTS_FIELD = "events"
 _COMPUTED_VARIABLES_FIELD = "computedVariables"
 _AGGREGATION_FIELD = "aggregation"
 _PROPERTIES_FIELD = "properties"
+_DATA_DOWNLOAD_URL_FIELD = "dataDownloadUrl"
 
 
 class Config:
@@ -54,6 +55,17 @@ class Config:
     # dict from provenance name to Source
     self.provenance_sources: dict[str, Source] = {}
     self._parse_provenances_and_sources()
+
+  def data_download_urls(self) -> list[str]:
+    cfg = self.data.get(_DATA_DOWNLOAD_URL_FIELD)
+    if not cfg:
+      return []
+    if isinstance(cfg, str):
+      return [cfg]
+    if isinstance(cfg, list):
+      return cfg
+    raise ValueError(
+        f"{_DATA_DOWNLOAD_URL_FIELD} can only be a str or a list, found: {cfg}")
 
   def import_type(self, input_file_name: str) -> ImportType:
     import_type_str = self._input_file(input_file_name).get(_IMPORT_TYPE_FIELD)

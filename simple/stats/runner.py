@@ -32,6 +32,7 @@ from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
 from stats.reporter import ImportReporter
 from util.filehandler import create_file_handler
+from util.filehandler import FileHandler
 
 
 class RunMode(StrEnum):
@@ -44,16 +45,44 @@ class Runner:
     """
 
   def __init__(self,
+               config_file: str,
                input_dir: str,
                output_dir: str,
                mode: RunMode = RunMode.CUSTOM_DC) -> None:
-    self.mode = mode
-    self.input_dir_fh = create_file_handler(input_dir, is_dir=True)
-    if not self.input_dir_fh.isdir:
-      raise NotADirectoryError(
-          f"Input path must be a directory: {input_dir}. If it is a GCS path, ensure it ends with a '/'."
-      )
+    assert config_file or input_dir, "One of config_file or input_dir must be specified"
+    assert output_dir, "output_dir must be specified"
 
+    self.mode = mode
+    self.input_handlers: list[FileHandler] = []
+
+    # Config file driven.
+    if config_file:
+      config_fh = create_file_handler(config_file, is_dir=False)
+      if not config_fh.exists():
+        raise FileNotFoundError("Config file must be provided.")
+      self.config = Config(data=json.loads(config_fh.read_string()))
+
+      input_urls = self.config.data_download_urls()
+      if not input_urls:
+        raise ValueError("Data Download URLs not found in config.")
+      for input_url in input_urls:
+        self.input_handlers.append(create_file_handler(input_url, is_dir=True))
+
+    #Input dir driven.
+    else:
+      input_dir_fh = create_file_handler(input_dir, is_dir=True)
+      if not input_dir_fh.isdir:
+        raise NotADirectoryError(
+            f"Input path must be a directory: {input_dir}. If it is a GCS path, ensure it ends with a '/'."
+        )
+      self.input_handlers.append(input_dir_fh)
+
+      config_fh = input_dir_fh.make_file(constants.CONFIG_JSON_FILE_NAME)
+      if not config_fh.exists():
+        raise FileNotFoundError("Config file must be provided.")
+      self.config = Config(data=json.loads(config_fh.read_string()))
+
+    # Output directories
     self.output_dir_fh = create_file_handler(output_dir, is_dir=True)
     self.nl_dir_fh = self.output_dir_fh.make_file(f"{constants.NL_DIR_NAME}/")
     self.process_dir_fh = self.output_dir_fh.make_file(
@@ -63,14 +92,11 @@ class Runner:
     self.nl_dir_fh.make_dirs()
     self.process_dir_fh.make_dirs()
 
+    # Reporter.
     self.reporter = ImportReporter(report_fh=self.process_dir_fh.make_file(
         constants.REPORT_JSON_FILE_NAME))
 
-    config_fh = self.input_dir_fh.make_file(constants.CONFIG_JSON_FILE_NAME)
-    if not config_fh.exists():
-      raise FileNotFoundError("Config file must be provided.")
-    self.config = Config(data=json.loads(config_fh.read_string()))
-
+    # DB setup.
     def _get_db_config() -> dict:
       if self.mode == RunMode.MAIN_DC:
         logging.info("Using Main DC config.")
@@ -120,20 +146,28 @@ class Runner:
       self.reporter.report_failure(error=str(e))
 
   def _run_imports(self):
-    input_files = sorted(self.input_dir_fh.list_files(extension=".csv"))
-    self.reporter.report_started(import_files=input_files)
-    if not input_files:
-      raise RuntimeError("Not input CSVs found.")
-    for input_file in input_files:
-      self._run_single_import(input_file)
+    input_fhs: list[FileHandler] = []
+    for input_handler in self.input_handlers:
+      if not input_handler.isdir:
+        input_fhs.append(input_handler)
+      else:
+        for input_file in sorted(input_handler.list_files(extension=".csv")):
+          input_fhs.append(input_handler.make_file(input_file))
 
-  def _run_single_import(self, input_file: str):
-    logging.info("Importing file: %s", input_file)
-    self._create_importer(input_file).do_import()
+      self.reporter.report_started(
+          import_files=list(map(lambda fh: fh.basename(), input_fhs)))
+      if not input_fhs:
+        raise RuntimeError("Not input CSVs found.")
+      for input_fh in input_fhs:
+        self._run_single_import(input_fh)
 
-  def _create_importer(self, input_file: str) -> Importer:
+  def _run_single_import(self, input_fh: FileHandler):
+    logging.info("Importing file: %s", input_fh.basename())
+    self._create_importer(input_fh).do_import()
+
+  def _create_importer(self, input_fh: FileHandler) -> Importer:
+    input_file = input_fh.basename()
     import_type = self.config.import_type(input_file)
-    input_fh = self.input_dir_fh.make_file(input_file)
     debug_resolve_fh = self.process_dir_fh.make_file(
         f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{input_file}")
     reporter = self.reporter.import_file(input_file)
