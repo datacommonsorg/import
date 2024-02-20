@@ -122,13 +122,24 @@ class GcsMeta(type):
 
 class GcsFileHandler(FileHandler, metaclass=GcsMeta):
 
-  def __init__(self, path: str) -> None:
+  def __init__(self, path: str, is_dir: bool = None) -> None:
     if not path.startswith(_GCS_PATH_PREFIX):
       raise ValueError(f"Expected {_GCS_PATH_PREFIX} prefix, got {path}")
+
+    # If is_dir is specified, use that to set the isdir property.
+    if is_dir is not None:
+      isdir = is_dir
+      # If it is a dir, suffix with "/" if needed.
+      if isdir:
+        if not path.endswith("/"):
+          path = f"{path}/"
+    else:
+      isdir = path.endswith("/")
+
     bucket_name, blob_name = path[len(_GCS_PATH_PREFIX):].split('/', 1)
     self.bucket = GcsFileHandler.gcs_client.bucket(bucket_name)
     self.blob = self.bucket.blob(blob_name)
-    isdir = path.endswith("/")
+
     super().__init__(path, isdir)
 
   def read_string(self) -> str:
@@ -171,7 +182,7 @@ def is_gcs_path(path: str) -> bool:
   return path.startswith(_GCS_PATH_PREFIX)
 
 
-def create_file_handler(path: str) -> FileHandler:
+def create_file_handler(path: str, is_dir: bool = None) -> FileHandler:
   if is_gcs_path(path):
-    return GcsFileHandler(path)
+    return GcsFileHandler(path, is_dir)
   return LocalFileHandler(path)

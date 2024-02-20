@@ -48,13 +48,13 @@ class Runner:
                output_dir: str,
                mode: RunMode = RunMode.CUSTOM_DC) -> None:
     self.mode = mode
-    self.input_dir_fh = create_file_handler(input_dir)
+    self.input_dir_fh = create_file_handler(input_dir, is_dir=True)
     if not self.input_dir_fh.isdir:
       raise NotADirectoryError(
           f"Input path must be a directory: {input_dir}. If it is a GCS path, ensure it ends with a '/'."
       )
 
-    self.output_dir_fh = create_file_handler(output_dir)
+    self.output_dir_fh = create_file_handler(output_dir, is_dir=True)
     self.nl_dir_fh = self.output_dir_fh.make_file(f"{constants.NL_DIR_NAME}/")
     self.process_dir_fh = self.output_dir_fh.make_file(
         f"{constants.PROCESS_DIR_NAME}/")

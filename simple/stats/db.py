@@ -148,7 +148,8 @@ class MainDcDb(Db):
     assert db_params
     assert MAIN_DC_OUTPUT_DIR in db_params
 
-    self.output_dir_fh = create_file_handler(db_params[MAIN_DC_OUTPUT_DIR])
+    self.output_dir_fh = create_file_handler(db_params[MAIN_DC_OUTPUT_DIR],
+                                             is_dir=True)
     # dcid to node dict
     self.nodes: dict[str, McfNode] = {}
 
@@ -293,10 +294,11 @@ class SqliteDbEngine(DbEngine):
     self.connection.close()
     # Copy file if local and actual DB file paths are different.
     if self.local_db_file_path != self.db_file_path:
-      local_db = create_file_handler(self.local_db_file_path).read_bytes()
+      local_db = create_file_handler(self.local_db_file_path,
+                                     is_dir=False).read_bytes()
       logging.info("Writing to sqlite db: %s (%s bytes)",
                    self.local_db_file_path, len(local_db))
-      create_file_handler(self.db_file_path).write_bytes(local_db)
+      create_file_handler(self.db_file_path, is_dir=False).write_bytes(local_db)
 
 
 _CLOUD_MY_SQL_CONNECT_PARAMS = [
