@@ -138,7 +138,7 @@ One can specify one (as a string) or multiple (as an array) download URLs. The U
 
 ### Examples
 
-Web URLs:
+Web URLs _(coming soon)_:
 
 ```json
 {
