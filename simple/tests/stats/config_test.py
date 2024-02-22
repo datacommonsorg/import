@@ -202,3 +202,14 @@ class TestConfig(unittest.TestCase):
     self.assertDictEqual(config.provenances, {})
     self.assertDictEqual(config.provenance_sources, {})
     self.assertEqual(config.provenance_name("a.csv"), "a.csv")
+
+  def test_data_download_urls(self):
+    self.assertListEqual(Config({}).data_download_urls(), [], "empty")
+    self.assertListEqual(
+        Config({
+            "dataDownloadUrl": ["foo"]
+        }).data_download_urls(), ["foo"], "one url")
+    self.assertListEqual(
+        Config({
+            "dataDownloadUrl": ["foo", "bar"]
+        }).data_download_urls(), ["foo", "bar"], "two urls")

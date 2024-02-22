@@ -24,6 +24,7 @@ from stats.runner import Runner
 
 FLAGS = flags.FLAGS
 
+flags.DEFINE_string("config_file", None, "The config file.")
 flags.DEFINE_string("input_dir", constants.DEFAULT_INPUT_DIR,
                     "The input directory.")
 flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
@@ -60,7 +61,8 @@ def _init_logger():
 
 
 def _run():
-  Runner(input_dir=FLAGS.input_dir,
+  Runner(config_file=FLAGS.config_file,
+         input_dir=FLAGS.input_dir,
          output_dir=FLAGS.output_dir,
          mode=FLAGS.mode).run()
 

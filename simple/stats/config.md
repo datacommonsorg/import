@@ -128,3 +128,39 @@ The URL of the source.
 
 The provenances under a given source should be defined using the `provenances` property as `{provenance-name}:{provenance-url}` pairs.
 
+## `dataDownloadUrl`
+
+The simple importer can be bootstrapped either by an input directory or by a config file.
+
+For config driven imports, the import files are specified using a `dataDownloadUrl` field.
+
+This is a repeated field, in that the value should be an array of download URLs. The URLs can be web urls (`http://` or `https://`), GCS directories (`gs://`) or local directories.
+
+### Examples
+
+Web URLs _(coming soon)_:
+
+```json
+{
+  "dataDownloadUrl": [
+    "http://domain/path/1.csv",
+    "https://domain/path/2.csv"
+  ]
+}
+```
+
+GCS directory:
+
+```json
+{
+  "dataDownloadUrl": ["gs://bucket/path/to/dir"]
+}
+```
+
+Local directory:
+
+```json
+{
+  "dataDownloadUrl": ["//local/path/to/dir"]
+}
+```
