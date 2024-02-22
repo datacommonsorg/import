@@ -60,12 +60,10 @@ class Config:
     cfg = self.data.get(_DATA_DOWNLOAD_URL_FIELD)
     if not cfg:
       return []
-    if isinstance(cfg, str):
-      return [cfg]
     if isinstance(cfg, list):
       return cfg
     raise ValueError(
-        f"{_DATA_DOWNLOAD_URL_FIELD} can only be a str or a list, found: {cfg}")
+        f"{_DATA_DOWNLOAD_URL_FIELD} can only be a list, found: {cfg}")
 
   def import_type(self, input_file_name: str) -> ImportType:
     import_type_str = self._input_file(input_file_name).get(_IMPORT_TYPE_FIELD)

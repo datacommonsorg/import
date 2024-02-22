@@ -207,9 +207,9 @@ class TestConfig(unittest.TestCase):
     self.assertListEqual(Config({}).data_download_urls(), [], "empty")
     self.assertListEqual(
         Config({
-            "dataDownloadUrl": "foo"
-        }).data_download_urls(), ["foo"], "string")
+            "dataDownloadUrl": ["foo"]
+        }).data_download_urls(), ["foo"], "one url")
     self.assertListEqual(
         Config({
             "dataDownloadUrl": ["foo", "bar"]
-        }).data_download_urls(), ["foo", "bar"], "string")
+        }).data_download_urls(), ["foo", "bar"], "two urls")

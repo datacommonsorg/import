@@ -134,7 +134,7 @@ The simple importer can be bootstrapped either by an input directory or by a con
 
 For config driven imports, the import files are specified using a `dataDownloadUrl` field.
 
-One can specify one (as a string) or multiple (as an array) download URLs. The URLs can be web urls (`http://` or `https://`), GCS directories (`gs://`) or local directories.
+This is a repeated field, in that the value should be an array of download URLs. The URLs can be web urls (`http://` or `https://`), GCS directories (`gs://`) or local directories.
 
 ### Examples
 
@@ -153,7 +153,7 @@ GCS directory:
 
 ```json
 {
-  "dataDownloadUrl": "gs://bucket/path/to/dir"
+  "dataDownloadUrl": ["gs://bucket/path/to/dir"]
 }
 ```
 
@@ -161,13 +161,6 @@ Local directory:
 
 ```json
 {
-  "dataDownloadUrl": "//local/path/to/dir"
+  "dataDownloadUrl": ["//local/path/to/dir"]
 }
 ```
-
-
-
-
-
-
-
