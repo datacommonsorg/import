@@ -17,10 +17,18 @@ set -o allexport
 source env.list
 set +o allexport
 
-docker run -it \
-    --env-file env.list \
-    -v $INPUT_DIR:/input \
-    -v $OUTPUT_DIR:/output \
-    -e GOOGLE_APPLICATION_CREDENTIALS=/gcp/creds.json \
-    -v $HOME/.config/gcloud/application_default_credentials.json:/gcp/creds.json:ro \
-    gcr.io/datcom-ci/datacommons-simple:latest
+if [[ $CONFIG_FILE != "" ]]; then
+    docker run -it \
+        --env-file env.list \
+        -e GOOGLE_APPLICATION_CREDENTIALS=/gcp/creds.json \
+        -v $HOME/.config/gcloud/application_default_credentials.json:/gcp/creds.json:ro \
+        -e CONFIG_FILE=/config.json \
+        -v $CONFIG_FILE:/config.json:ro \
+        gcr.io/datcom-ci/datacommons-simple:latest
+else
+    docker run -it \
+        --env-file env.list \
+        -e GOOGLE_APPLICATION_CREDENTIALS=/gcp/creds.json \
+        -v $HOME/.config/gcloud/application_default_credentials.json:/gcp/creds.json:ro \
+        gcr.io/datcom-ci/datacommons-simple:latest
+fi
