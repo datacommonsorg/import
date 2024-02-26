@@ -13,13 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [[ $GCS_OUTPUT_DIR != "" ]]; then
-    export OUTPUT_DIR=$GCS_OUTPUT_DIR
-else
+if [ "$OUTPUT_DIR" = "" ]; then
     export OUTPUT_DIR=/output/
 fi
 
-if [[ $CONFIG_FILE != "" ]]; then
+if [ "$CONFIG_FILE" != "" ]; then
     echo "DC_API_KEY=$DC_API_KEY"
     echo "CONFIG_FILE=$CONFIG_FILE"
     echo "OUTPUT_DIR=$OUTPUT_DIR"
@@ -29,9 +27,7 @@ if [[ $CONFIG_FILE != "" ]]; then
         --config_file=$CONFIG_FILE \
         --output_dir=$OUTPUT_DIR
 else
-    if [[ $GCS_INPUT_DIR != "" ]]; then
-        export INPUT_DIR=$GCS_INPUT_DIR
-    else
+    if [ "$INPUT_DIR" = "" ]; then
         export INPUT_DIR=/input/
     fi
 
@@ -44,4 +40,3 @@ else
         --input_dir=$INPUT_DIR \
         --output_dir=$OUTPUT_DIR
 fi
-

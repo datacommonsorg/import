@@ -7,6 +7,6 @@ can be run locally.
 * If using GCS:
   * Run `gcloud beta auth application-default login`.
   * Specify your cloud project via the `GOOGLE_CLOUD_PROJECT` variable.
-* If using config file and output dirs, specify `CONFIG_FILE` and `GCS_OUTPUT_DIR` (or `OUTPUT_DIR`) respectively.
-* If using local input and output dirs, specify `INPUT_DIR` and `OUTPUT_DIR` respectively.
-* If using GCS input and output dirs, specify `GCS_INPUT_DIR` and `GCS_OUTPUT_DIR` respectively.
+* If using config file and output dir, specify `CONFIG_FILE` and `OUTPUT_DIR` respectively.
+* If using input dir and output dir, specify `INPUT_DIR` and `OUTPUT_DIR` respectively.
+* Note that `CONFIG_FILE`, `INPUT_DIR` and `OUTPUT_DIR` can be GCS paths or local file system paths.
