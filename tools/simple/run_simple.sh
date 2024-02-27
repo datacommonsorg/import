@@ -17,18 +17,23 @@ set -o allexport
 source env.list
 set +o allexport
 
-if [[ $CONFIG_FILE != "" ]]; then
-    docker run -it \
-        --env-file env.list \
-        -e GOOGLE_APPLICATION_CREDENTIALS=/gcp/creds.json \
-        -v $HOME/.config/gcloud/application_default_credentials.json:/gcp/creds.json:ro \
-        -e CONFIG_FILE=/config.json \
-        -v $CONFIG_FILE:/config.json:ro \
-        gcr.io/datcom-ci/datacommons-simple:latest
-else
-    docker run -it \
-        --env-file env.list \
-        -e GOOGLE_APPLICATION_CREDENTIALS=/gcp/creds.json \
-        -v $HOME/.config/gcloud/application_default_credentials.json:/gcp/creds.json:ro \
-        gcr.io/datcom-ci/datacommons-simple:latest
+ARGS=""
+
+if [ "$CONFIG_FILE" != "" && "$CONFIG_FILE" != "gs://"* ]; then
+    ARGS+="-e CONFIG_FILE=/config.json -v $CONFIG_FILE:/config.json "
 fi
+
+if [[ "$INPUT_DIR" != "" && "$INPUT_DIR" != "gs://"* ]]; then
+    ARGS+="-e INPUT_DIR=/input -v $INPUT_DIR:/input "
+fi
+
+if [[ "$OUTPUT_DIR" != "" && "$OUTPUT_DIR" != "gs://"* ]]; then
+    ARGS+="-e OUTPUT_DIR=/output -v $OUTPUT_DIR:/output "
+fi
+
+docker run -it \
+    --env-file env.list \
+    -e GOOGLE_APPLICATION_CREDENTIALS=/gcp/creds.json \
+    -v $HOME/.config/gcloud/application_default_credentials.json:/gcp/creds.json:ro \
+    $ARGS \
+    gcr.io/datcom-ci/datacommons-simple:latest
