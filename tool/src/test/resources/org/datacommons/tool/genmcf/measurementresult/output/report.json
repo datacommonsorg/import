@@ -5,7 +5,7 @@
         "NumRowSuccesses": "5",
         "NumPVSuccesses": "105",
         "StatVarState_NumDcCalls": "2",
-        "Existence_NumChecks": "110",
+        "Existence_NumChecks": "125",
         "NumNodeSuccesses": "15",
         "Existence_NumDcCalls": "4"
       }
@@ -131,7 +131,7 @@
     "resolution": "RESOLUTION_MODE_FULL",
     "numThreads": 1,
     "statChecks": true,
-    "observationAbout": false,
+    "observationAbout": true,
     "allowNanSvobs": true,
     "coordinatesResolution": false
   }

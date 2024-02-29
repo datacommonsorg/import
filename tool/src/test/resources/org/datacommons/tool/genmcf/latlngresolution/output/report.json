@@ -4,7 +4,7 @@
       "counters": {
         "NumRowSuccesses": "4",
         "NumPVSuccesses": "52",
-        "Existence_NumChecks": "52",
+        "Existence_NumChecks": "56",
         "NumNodeSuccesses": "8",
         "ReconClient_NumApiCalls": "1",
         "Existence_NumDcCalls": "1"
@@ -14,6 +14,11 @@
       "counters": {
         "Existence_MissingReference_measurementMethod": "4",
         "Existence_MissingReference_variableMeasured": "4"
+      }
+    },
+    "LEVEL_ERROR": {
+      "counters": {
+        "Existence_MissingReference_observationAbout": "4"
       }
     }
   },
@@ -49,6 +54,38 @@
     },
     "userMessage": "Failed reference existence check :: value-ref: 'SVTest', property: 'measurementMethod', node: 'E:SVTest->E0'",
     "counterKey": "Existence_MissingReference_measurementMethod"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LatLng.csv",
+      "lineNumber": "2"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:SVTest/E3/1'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LatLng.csv",
+      "lineNumber": "3"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:SVTest/E3/2'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LatLng.csv",
+      "lineNumber": "4"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:SVTest/E3/3'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "LatLng.csv",
+      "lineNumber": "5"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:SVTest/E3/4'",
+    "counterKey": "Existence_MissingReference_observationAbout"
   }, {
     "level": "LEVEL_WARNING",
     "location": {
@@ -87,7 +124,7 @@
     "resolution": "RESOLUTION_MODE_FULL",
     "numThreads": 1,
     "statChecks": true,
-    "observationAbout": false,
+    "observationAbout": true,
     "allowNanSvobs": false,
     "coordinatesResolution": true
   }

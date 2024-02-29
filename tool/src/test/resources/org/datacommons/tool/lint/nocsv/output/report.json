@@ -703,7 +703,7 @@
     "resolution": "RESOLUTION_MODE_LOCAL",
     "numThreads": 1,
     "statChecks": true,
-    "observationAbout": false,
+    "observationAbout": true,
     "allowNanSvobs": false,
     "coordinatesResolution": false
   }
