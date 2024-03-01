@@ -592,6 +592,7 @@ public final class Debug {
        *
        * <code>map&lt;string, int64&gt; counters = 1;</code>
        */
+      @java.lang.Override
       public boolean containsCounters(java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -599,6 +600,7 @@ public final class Debug {
         return internalGetCounters().getMap().containsKey(key);
       }
       /** Use {@link #getCountersMap()} instead. */
+      @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
         return getCountersMap();
@@ -612,6 +614,7 @@ public final class Debug {
        *
        * <code>map&lt;string, int64&gt; counters = 1;</code>
        */
+      @java.lang.Override
       public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
         return internalGetCounters().getMap();
       }
@@ -624,6 +627,7 @@ public final class Debug {
        *
        * <code>map&lt;string, int64&gt; counters = 1;</code>
        */
+      @java.lang.Override
       public long getCountersOrDefault(java.lang.String key, long defaultValue) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -640,6 +644,7 @@ public final class Debug {
        *
        * <code>map&lt;string, int64&gt; counters = 1;</code>
        */
+      @java.lang.Override
       public long getCountersOrThrow(java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -1028,6 +1033,7 @@ public final class Debug {
          *
          * <code>map&lt;string, int64&gt; counters = 1;</code>
          */
+        @java.lang.Override
         public boolean containsCounters(java.lang.String key) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -1035,6 +1041,7 @@ public final class Debug {
           return internalGetCounters().getMap().containsKey(key);
         }
         /** Use {@link #getCountersMap()} instead. */
+        @java.lang.Override
         @java.lang.Deprecated
         public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
           return getCountersMap();
@@ -1048,6 +1055,7 @@ public final class Debug {
          *
          * <code>map&lt;string, int64&gt; counters = 1;</code>
          */
+        @java.lang.Override
         public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
           return internalGetCounters().getMap();
         }
@@ -1060,6 +1068,7 @@ public final class Debug {
          *
          * <code>map&lt;string, int64&gt; counters = 1;</code>
          */
+        @java.lang.Override
         public long getCountersOrDefault(java.lang.String key, long defaultValue) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -1076,6 +1085,7 @@ public final class Debug {
          *
          * <code>map&lt;string, int64&gt; counters = 1;</code>
          */
+        @java.lang.Override
         public long getCountersOrThrow(java.lang.String key) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -1519,6 +1529,7 @@ public final class Debug {
        *
        * @return Whether the level field is set.
        */
+      @java.lang.Override
       public boolean hasLevel() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -1527,6 +1538,7 @@ public final class Debug {
        *
        * @return The level.
        */
+      @java.lang.Override
       public org.datacommons.proto.Debug.Log.Level getLevel() {
         @SuppressWarnings("deprecation")
         org.datacommons.proto.Debug.Log.Level result =
@@ -1541,6 +1553,7 @@ public final class Debug {
        *
        * @return Whether the location field is set.
        */
+      @java.lang.Override
       public boolean hasLocation() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -1549,12 +1562,14 @@ public final class Debug {
        *
        * @return The location.
        */
+      @java.lang.Override
       public org.datacommons.proto.LogLocation.Location getLocation() {
         return location_ == null
             ? org.datacommons.proto.LogLocation.Location.getDefaultInstance()
             : location_;
       }
       /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
+      @java.lang.Override
       public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationOrBuilder() {
         return location_ == null
             ? org.datacommons.proto.LogLocation.Location.getDefaultInstance()
@@ -1574,6 +1589,7 @@ public final class Debug {
        *
        * @return Whether the userMessage field is set.
        */
+      @java.lang.Override
       public boolean hasUserMessage() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -1588,6 +1604,7 @@ public final class Debug {
        *
        * @return The userMessage.
        */
+      @java.lang.Override
       public java.lang.String getUserMessage() {
         java.lang.Object ref = userMessage_;
         if (ref instanceof java.lang.String) {
@@ -1612,6 +1629,7 @@ public final class Debug {
        *
        * @return The bytes for userMessage.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getUserMessageBytes() {
         java.lang.Object ref = userMessage_;
         if (ref instanceof java.lang.String) {
@@ -1637,6 +1655,7 @@ public final class Debug {
        *
        * @return Whether the counterKey field is set.
        */
+      @java.lang.Override
       public boolean hasCounterKey() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -1651,6 +1670,7 @@ public final class Debug {
        *
        * @return The counterKey.
        */
+      @java.lang.Override
       public java.lang.String getCounterKey() {
         java.lang.Object ref = counterKey_;
         if (ref instanceof java.lang.String) {
@@ -1675,6 +1695,7 @@ public final class Debug {
        *
        * @return The bytes for counterKey.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getCounterKeyBytes() {
         java.lang.Object ref = counterKey_;
         if (ref instanceof java.lang.String) {
@@ -2210,6 +2231,7 @@ public final class Debug {
          *
          * @return Whether the level field is set.
          */
+        @java.lang.Override
         public boolean hasLevel() {
           return ((bitField0_ & 0x00000001) != 0);
         }
@@ -2218,6 +2240,7 @@ public final class Debug {
          *
          * @return The level.
          */
+        @java.lang.Override
         public org.datacommons.proto.Debug.Log.Level getLevel() {
           @SuppressWarnings("deprecation")
           org.datacommons.proto.Debug.Log.Level result =
@@ -2893,6 +2916,7 @@ public final class Debug {
      *
      * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
+    @java.lang.Override
     public boolean containsLevelSummary(java.lang.String key) {
       if (key == null) {
         throw new java.lang.NullPointerException();
@@ -2900,6 +2924,7 @@ public final class Debug {
       return internalGetLevelSummary().getMap().containsKey(key);
     }
     /** Use {@link #getLevelSummaryMap()} instead. */
+    @java.lang.Override
     @java.lang.Deprecated
     public java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
         getLevelSummary() {
@@ -2914,6 +2939,7 @@ public final class Debug {
      *
      * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
+    @java.lang.Override
     public java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
         getLevelSummaryMap() {
       return internalGetLevelSummary().getMap();
@@ -2927,6 +2953,7 @@ public final class Debug {
      *
      * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Debug.Log.CounterSet getLevelSummaryOrDefault(
         java.lang.String key, org.datacommons.proto.Debug.Log.CounterSet defaultValue) {
       if (key == null) {
@@ -2945,6 +2972,7 @@ public final class Debug {
      *
      * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Debug.Log.CounterSet getLevelSummaryOrThrow(java.lang.String key) {
       if (key == null) {
         throw new java.lang.NullPointerException();
@@ -2960,23 +2988,28 @@ public final class Debug {
     public static final int ENTRIES_FIELD_NUMBER = 3;
     private java.util.List<org.datacommons.proto.Debug.Log.Entry> entries_;
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    @java.lang.Override
     public java.util.List<org.datacommons.proto.Debug.Log.Entry> getEntriesList() {
       return entries_;
     }
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    @java.lang.Override
     public java.util.List<? extends org.datacommons.proto.Debug.Log.EntryOrBuilder>
         getEntriesOrBuilderList() {
       return entries_;
     }
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    @java.lang.Override
     public int getEntriesCount() {
       return entries_.size();
     }
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Debug.Log.Entry getEntries(int index) {
       return entries_.get(index);
     }
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Debug.Log.EntryOrBuilder getEntriesOrBuilder(int index) {
       return entries_.get(index);
     }
@@ -2986,6 +3019,7 @@ public final class Debug {
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
+    @java.lang.Override
     public java.util.List<org.datacommons.proto.Debug.StatValidationResult>
         getStatsCheckSummaryList() {
       return statsCheckSummary_;
@@ -2993,6 +3027,7 @@ public final class Debug {
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.datacommons.proto.Debug.StatValidationResultOrBuilder>
         getStatsCheckSummaryOrBuilderList() {
       return statsCheckSummary_;
@@ -3000,18 +3035,21 @@ public final class Debug {
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
+    @java.lang.Override
     public int getStatsCheckSummaryCount() {
       return statsCheckSummary_.size();
     }
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Debug.StatValidationResult getStatsCheckSummary(int index) {
       return statsCheckSummary_.get(index);
     }
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Debug.StatValidationResultOrBuilder getStatsCheckSummaryOrBuilder(
         int index) {
       return statsCheckSummary_.get(index);
@@ -3024,6 +3062,7 @@ public final class Debug {
      *
      * @return Whether the commandArgs field is set.
      */
+    @java.lang.Override
     public boolean hasCommandArgs() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -3032,12 +3071,14 @@ public final class Debug {
      *
      * @return The commandArgs.
      */
+    @java.lang.Override
     public org.datacommons.proto.Debug.CommandArgs getCommandArgs() {
       return commandArgs_ == null
           ? org.datacommons.proto.Debug.CommandArgs.getDefaultInstance()
           : commandArgs_;
     }
     /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Debug.CommandArgsOrBuilder getCommandArgsOrBuilder() {
       return commandArgs_ == null
           ? org.datacommons.proto.Debug.CommandArgs.getDefaultInstance()
@@ -3573,6 +3614,7 @@ public final class Debug {
        *
        * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
        */
+      @java.lang.Override
       public boolean containsLevelSummary(java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -3580,6 +3622,7 @@ public final class Debug {
         return internalGetLevelSummary().getMap().containsKey(key);
       }
       /** Use {@link #getLevelSummaryMap()} instead. */
+      @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
           getLevelSummary() {
@@ -3594,6 +3637,7 @@ public final class Debug {
        *
        * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
        */
+      @java.lang.Override
       public java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
           getLevelSummaryMap() {
         return internalGetLevelSummary().getMap();
@@ -3607,6 +3651,7 @@ public final class Debug {
        *
        * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Debug.Log.CounterSet getLevelSummaryOrDefault(
           java.lang.String key, org.datacommons.proto.Debug.Log.CounterSet defaultValue) {
         if (key == null) {
@@ -3625,6 +3670,7 @@ public final class Debug {
        *
        * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Debug.Log.CounterSet getLevelSummaryOrThrow(
           java.lang.String key) {
         if (key == null) {
@@ -4794,6 +4840,7 @@ public final class Debug {
      *
      * @return Whether the existenceChecks field is set.
      */
+    @java.lang.Override
     public boolean hasExistenceChecks() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -4802,6 +4849,7 @@ public final class Debug {
      *
      * @return The existenceChecks.
      */
+    @java.lang.Override
     public boolean getExistenceChecks() {
       return existenceChecks_;
     }
@@ -4813,6 +4861,7 @@ public final class Debug {
      *
      * @return Whether the resolution field is set.
      */
+    @java.lang.Override
     public boolean hasResolution() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -4821,6 +4870,7 @@ public final class Debug {
      *
      * @return The resolution.
      */
+    @java.lang.Override
     public org.datacommons.proto.Debug.CommandArgs.ResolutionMode getResolution() {
       @SuppressWarnings("deprecation")
       org.datacommons.proto.Debug.CommandArgs.ResolutionMode result =
@@ -4837,6 +4887,7 @@ public final class Debug {
      *
      * @return Whether the numThreads field is set.
      */
+    @java.lang.Override
     public boolean hasNumThreads() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -4845,6 +4896,7 @@ public final class Debug {
      *
      * @return The numThreads.
      */
+    @java.lang.Override
     public int getNumThreads() {
       return numThreads_;
     }
@@ -4856,6 +4908,7 @@ public final class Debug {
      *
      * @return Whether the statChecks field is set.
      */
+    @java.lang.Override
     public boolean hasStatChecks() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -4864,6 +4917,7 @@ public final class Debug {
      *
      * @return The statChecks.
      */
+    @java.lang.Override
     public boolean getStatChecks() {
       return statChecks_;
     }
@@ -4912,6 +4966,7 @@ public final class Debug {
      *
      * @return Whether the observationAbout field is set.
      */
+    @java.lang.Override
     public boolean hasObservationAbout() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -4920,6 +4975,7 @@ public final class Debug {
      *
      * @return The observationAbout.
      */
+    @java.lang.Override
     public boolean getObservationAbout() {
       return observationAbout_;
     }
@@ -4937,6 +4993,7 @@ public final class Debug {
      *
      * @return Whether the allowNanSvobs field is set.
      */
+    @java.lang.Override
     public boolean hasAllowNanSvobs() {
       return ((bitField0_ & 0x00000020) != 0);
     }
@@ -4951,6 +5008,7 @@ public final class Debug {
      *
      * @return The allowNanSvobs.
      */
+    @java.lang.Override
     public boolean getAllowNanSvobs() {
       return allowNanSvobs_;
     }
@@ -4968,6 +5026,7 @@ public final class Debug {
      *
      * @return Whether the checkMeasurementResult field is set.
      */
+    @java.lang.Override
     public boolean hasCheckMeasurementResult() {
       return ((bitField0_ & 0x00000040) != 0);
     }
@@ -4982,6 +5041,7 @@ public final class Debug {
      *
      * @return The checkMeasurementResult.
      */
+    @java.lang.Override
     public boolean getCheckMeasurementResult() {
       return checkMeasurementResult_;
     }
@@ -4993,6 +5053,7 @@ public final class Debug {
      *
      * @return Whether the coordinatesResolution field is set.
      */
+    @java.lang.Override
     public boolean hasCoordinatesResolution() {
       return ((bitField0_ & 0x00000080) != 0);
     }
@@ -5001,6 +5062,7 @@ public final class Debug {
      *
      * @return The coordinatesResolution.
      */
+    @java.lang.Override
     public boolean getCoordinatesResolution() {
       return coordinatesResolution_;
     }
@@ -5528,6 +5590,7 @@ public final class Debug {
        *
        * @return Whether the existenceChecks field is set.
        */
+      @java.lang.Override
       public boolean hasExistenceChecks() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -5536,6 +5599,7 @@ public final class Debug {
        *
        * @return The existenceChecks.
        */
+      @java.lang.Override
       public boolean getExistenceChecks() {
         return existenceChecks_;
       }
@@ -5569,6 +5633,7 @@ public final class Debug {
        *
        * @return Whether the resolution field is set.
        */
+      @java.lang.Override
       public boolean hasResolution() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -5577,6 +5642,7 @@ public final class Debug {
        *
        * @return The resolution.
        */
+      @java.lang.Override
       public org.datacommons.proto.Debug.CommandArgs.ResolutionMode getResolution() {
         @SuppressWarnings("deprecation")
         org.datacommons.proto.Debug.CommandArgs.ResolutionMode result =
@@ -5618,6 +5684,7 @@ public final class Debug {
        *
        * @return Whether the numThreads field is set.
        */
+      @java.lang.Override
       public boolean hasNumThreads() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -5626,6 +5693,7 @@ public final class Debug {
        *
        * @return The numThreads.
        */
+      @java.lang.Override
       public int getNumThreads() {
         return numThreads_;
       }
@@ -5659,6 +5727,7 @@ public final class Debug {
        *
        * @return Whether the statChecks field is set.
        */
+      @java.lang.Override
       public boolean hasStatChecks() {
         return ((bitField0_ & 0x00000008) != 0);
       }
@@ -5667,6 +5736,7 @@ public final class Debug {
        *
        * @return The statChecks.
        */
+      @java.lang.Override
       public boolean getStatChecks() {
         return statChecks_;
       }
@@ -5813,6 +5883,7 @@ public final class Debug {
        *
        * @return Whether the observationAbout field is set.
        */
+      @java.lang.Override
       public boolean hasObservationAbout() {
         return ((bitField0_ & 0x00000020) != 0);
       }
@@ -5821,6 +5892,7 @@ public final class Debug {
        *
        * @return The observationAbout.
        */
+      @java.lang.Override
       public boolean getObservationAbout() {
         return observationAbout_;
       }
@@ -5860,6 +5932,7 @@ public final class Debug {
        *
        * @return Whether the allowNanSvobs field is set.
        */
+      @java.lang.Override
       public boolean hasAllowNanSvobs() {
         return ((bitField0_ & 0x00000040) != 0);
       }
@@ -5874,6 +5947,7 @@ public final class Debug {
        *
        * @return The allowNanSvobs.
        */
+      @java.lang.Override
       public boolean getAllowNanSvobs() {
         return allowNanSvobs_;
       }
@@ -5925,6 +5999,7 @@ public final class Debug {
        *
        * @return Whether the checkMeasurementResult field is set.
        */
+      @java.lang.Override
       public boolean hasCheckMeasurementResult() {
         return ((bitField0_ & 0x00000080) != 0);
       }
@@ -5939,6 +6014,7 @@ public final class Debug {
        *
        * @return The checkMeasurementResult.
        */
+      @java.lang.Override
       public boolean getCheckMeasurementResult() {
         return checkMeasurementResult_;
       }
@@ -5984,6 +6060,7 @@ public final class Debug {
        *
        * @return Whether the coordinatesResolution field is set.
        */
+      @java.lang.Override
       public boolean hasCoordinatesResolution() {
         return ((bitField0_ & 0x00000100) != 0);
       }
@@ -5992,6 +6069,7 @@ public final class Debug {
        *
        * @return The coordinatesResolution.
        */
+      @java.lang.Override
       public boolean getCoordinatesResolution() {
         return coordinatesResolution_;
       }
@@ -6440,6 +6518,7 @@ public final class Debug {
        *
        * @return Whether the value field is set.
        */
+      @java.lang.Override
       public boolean hasValue() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -6448,12 +6527,14 @@ public final class Debug {
        *
        * @return The value.
        */
+      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.TypedValue getValue() {
         return value_ == null
             ? org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()
             : value_;
       }
       /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
+      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getValueOrBuilder() {
         return value_ == null
             ? org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()
@@ -6471,6 +6552,7 @@ public final class Debug {
        *
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
+      @java.lang.Override
       public java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList() {
         return locations_;
       }
@@ -6483,6 +6565,7 @@ public final class Debug {
        *
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
+      @java.lang.Override
       public java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder>
           getLocationsOrBuilderList() {
         return locations_;
@@ -6496,6 +6579,7 @@ public final class Debug {
        *
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
+      @java.lang.Override
       public int getLocationsCount() {
         return locations_.size();
       }
@@ -6508,6 +6592,7 @@ public final class Debug {
        *
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.LogLocation.Location getLocations(int index) {
         return locations_.get(index);
       }
@@ -6520,6 +6605,7 @@ public final class Debug {
        *
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(int index) {
         return locations_.get(index);
       }
@@ -7449,6 +7535,7 @@ public final class Debug {
      *
      * @return Whether the date field is set.
      */
+    @java.lang.Override
     public boolean hasDate() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -7457,6 +7544,7 @@ public final class Debug {
      *
      * @return The date.
      */
+    @java.lang.Override
     public java.lang.String getDate() {
       java.lang.Object ref = date_;
       if (ref instanceof java.lang.String) {
@@ -7475,6 +7563,7 @@ public final class Debug {
      *
      * @return The bytes for date.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getDateBytes() {
       java.lang.Object ref = date_;
       if (ref instanceof java.lang.String) {
@@ -7498,6 +7587,7 @@ public final class Debug {
      *
      * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<org.datacommons.proto.Debug.DataPoint.DataValue> getValuesList() {
       return values_;
     }
@@ -7510,6 +7600,7 @@ public final class Debug {
      *
      * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
      */
+    @java.lang.Override
     public java.util.List<? extends org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder>
         getValuesOrBuilderList() {
       return values_;
@@ -7523,6 +7614,7 @@ public final class Debug {
      *
      * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
      */
+    @java.lang.Override
     public int getValuesCount() {
       return values_.size();
     }
@@ -7535,6 +7627,7 @@ public final class Debug {
      *
      * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Debug.DataPoint.DataValue getValues(int index) {
       return values_.get(index);
     }
@@ -7547,6 +7640,7 @@ public final class Debug {
      *
      * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder getValuesOrBuilder(int index) {
       return values_.get(index);
     }
@@ -9073,6 +9167,7 @@ public final class Debug {
        *
        * @return Whether the counterKey field is set.
        */
+      @java.lang.Override
       public boolean hasCounterKey() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -9087,6 +9182,7 @@ public final class Debug {
        *
        * @return The counterKey.
        */
+      @java.lang.Override
       public java.lang.String getCounterKey() {
         java.lang.Object ref = counterKey_;
         if (ref instanceof java.lang.String) {
@@ -9111,6 +9207,7 @@ public final class Debug {
        *
        * @return The bytes for counterKey.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getCounterKeyBytes() {
         java.lang.Object ref = counterKey_;
         if (ref instanceof java.lang.String) {
@@ -9134,6 +9231,7 @@ public final class Debug {
        *
        * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
        */
+      @java.lang.Override
       public java.util.List<org.datacommons.proto.Debug.DataPoint> getProblemPointsList() {
         return problemPoints_;
       }
@@ -9146,6 +9244,7 @@ public final class Debug {
        *
        * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
        */
+      @java.lang.Override
       public java.util.List<? extends org.datacommons.proto.Debug.DataPointOrBuilder>
           getProblemPointsOrBuilderList() {
         return problemPoints_;
@@ -9159,6 +9258,7 @@ public final class Debug {
        *
        * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
        */
+      @java.lang.Override
       public int getProblemPointsCount() {
         return problemPoints_.size();
       }
@@ -9171,6 +9271,7 @@ public final class Debug {
        *
        * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Debug.DataPoint getProblemPoints(int index) {
         return problemPoints_.get(index);
       }
@@ -9183,6 +9284,7 @@ public final class Debug {
        *
        * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Debug.DataPointOrBuilder getProblemPointsOrBuilder(int index) {
         return problemPoints_.get(index);
       }
@@ -9200,6 +9302,7 @@ public final class Debug {
        *
        * @return Whether the additionalDetails field is set.
        */
+      @java.lang.Override
       public boolean hasAdditionalDetails() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -9214,6 +9317,7 @@ public final class Debug {
        *
        * @return The additionalDetails.
        */
+      @java.lang.Override
       public java.lang.String getAdditionalDetails() {
         java.lang.Object ref = additionalDetails_;
         if (ref instanceof java.lang.String) {
@@ -9238,6 +9342,7 @@ public final class Debug {
        *
        * @return The bytes for additionalDetails.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getAdditionalDetailsBytes() {
         java.lang.Object ref = additionalDetails_;
         if (ref instanceof java.lang.String) {
@@ -9263,6 +9368,7 @@ public final class Debug {
        *
        * @return Whether the percentDifference field is set.
        */
+      @java.lang.Override
       public boolean hasPercentDifference() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -9277,6 +9383,7 @@ public final class Debug {
        *
        * @return The percentDifference.
        */
+      @java.lang.Override
       public double getPercentDifference() {
         return percentDifference_;
       }
@@ -10347,6 +10454,7 @@ public final class Debug {
          *
          * @return Whether the percentDifference field is set.
          */
+        @java.lang.Override
         public boolean hasPercentDifference() {
           return ((bitField0_ & 0x00000008) != 0);
         }
@@ -10361,6 +10469,7 @@ public final class Debug {
          *
          * @return The percentDifference.
          */
+        @java.lang.Override
         public double getPercentDifference() {
           return percentDifference_;
         }
@@ -10471,6 +10580,7 @@ public final class Debug {
      *
      * @return Whether the placeDcid field is set.
      */
+    @java.lang.Override
     public boolean hasPlaceDcid() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -10485,6 +10595,7 @@ public final class Debug {
      *
      * @return The placeDcid.
      */
+    @java.lang.Override
     public java.lang.String getPlaceDcid() {
       java.lang.Object ref = placeDcid_;
       if (ref instanceof java.lang.String) {
@@ -10509,6 +10620,7 @@ public final class Debug {
      *
      * @return The bytes for placeDcid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getPlaceDcidBytes() {
       java.lang.Object ref = placeDcid_;
       if (ref instanceof java.lang.String) {
@@ -10534,6 +10646,7 @@ public final class Debug {
      *
      * @return Whether the statVarDcid field is set.
      */
+    @java.lang.Override
     public boolean hasStatVarDcid() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -10548,6 +10661,7 @@ public final class Debug {
      *
      * @return The statVarDcid.
      */
+    @java.lang.Override
     public java.lang.String getStatVarDcid() {
       java.lang.Object ref = statVarDcid_;
       if (ref instanceof java.lang.String) {
@@ -10572,6 +10686,7 @@ public final class Debug {
      *
      * @return The bytes for statVarDcid.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getStatVarDcidBytes() {
       java.lang.Object ref = statVarDcid_;
       if (ref instanceof java.lang.String) {
@@ -10598,6 +10713,7 @@ public final class Debug {
      *
      * @return Whether the measurementMethod field is set.
      */
+    @java.lang.Override
     public boolean hasMeasurementMethod() {
       return ((bitField0_ & 0x00000004) != 0);
     }
@@ -10613,6 +10729,7 @@ public final class Debug {
      *
      * @return The measurementMethod.
      */
+    @java.lang.Override
     public java.lang.String getMeasurementMethod() {
       java.lang.Object ref = measurementMethod_;
       if (ref instanceof java.lang.String) {
@@ -10638,6 +10755,7 @@ public final class Debug {
      *
      * @return The bytes for measurementMethod.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getMeasurementMethodBytes() {
       java.lang.Object ref = measurementMethod_;
       if (ref instanceof java.lang.String) {
@@ -10657,6 +10775,7 @@ public final class Debug {
      *
      * @return Whether the observationPeriod field is set.
      */
+    @java.lang.Override
     public boolean hasObservationPeriod() {
       return ((bitField0_ & 0x00000008) != 0);
     }
@@ -10665,6 +10784,7 @@ public final class Debug {
      *
      * @return The observationPeriod.
      */
+    @java.lang.Override
     public java.lang.String getObservationPeriod() {
       java.lang.Object ref = observationPeriod_;
       if (ref instanceof java.lang.String) {
@@ -10683,6 +10803,7 @@ public final class Debug {
      *
      * @return The bytes for observationPeriod.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getObservationPeriodBytes() {
       java.lang.Object ref = observationPeriod_;
       if (ref instanceof java.lang.String) {
@@ -10702,6 +10823,7 @@ public final class Debug {
      *
      * @return Whether the scalingFactor field is set.
      */
+    @java.lang.Override
     public boolean hasScalingFactor() {
       return ((bitField0_ & 0x00000010) != 0);
     }
@@ -10710,6 +10832,7 @@ public final class Debug {
      *
      * @return The scalingFactor.
      */
+    @java.lang.Override
     public java.lang.String getScalingFactor() {
       java.lang.Object ref = scalingFactor_;
       if (ref instanceof java.lang.String) {
@@ -10728,6 +10851,7 @@ public final class Debug {
      *
      * @return The bytes for scalingFactor.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getScalingFactorBytes() {
       java.lang.Object ref = scalingFactor_;
       if (ref instanceof java.lang.String) {
@@ -10747,6 +10871,7 @@ public final class Debug {
      *
      * @return Whether the unit field is set.
      */
+    @java.lang.Override
     public boolean hasUnit() {
       return ((bitField0_ & 0x00000020) != 0);
     }
@@ -10755,6 +10880,7 @@ public final class Debug {
      *
      * @return The unit.
      */
+    @java.lang.Override
     public java.lang.String getUnit() {
       java.lang.Object ref = unit_;
       if (ref instanceof java.lang.String) {
@@ -10773,6 +10899,7 @@ public final class Debug {
      *
      * @return The bytes for unit.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getUnitBytes() {
       java.lang.Object ref = unit_;
       if (ref instanceof java.lang.String) {
@@ -10793,6 +10920,7 @@ public final class Debug {
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
      * </code>
      */
+    @java.lang.Override
     public java.util.List<org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry>
         getValidationCountersList() {
       return validationCounters_;
@@ -10802,6 +10930,7 @@ public final class Debug {
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
      * </code>
      */
+    @java.lang.Override
     public java.util.List<
             ? extends org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder>
         getValidationCountersOrBuilderList() {
@@ -10812,6 +10941,7 @@ public final class Debug {
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
      * </code>
      */
+    @java.lang.Override
     public int getValidationCountersCount() {
       return validationCounters_.size();
     }
@@ -10820,6 +10950,7 @@ public final class Debug {
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
      * </code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
         getValidationCounters(int index) {
       return validationCounters_.get(index);
@@ -10829,6 +10960,7 @@ public final class Debug {
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
      * </code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder
         getValidationCountersOrBuilder(int index) {
       return validationCounters_.get(index);

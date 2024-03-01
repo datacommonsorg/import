@@ -191,6 +191,7 @@ public final class LogLocation {
      *
      * @return Whether the file field is set.
      */
+    @java.lang.Override
     public boolean hasFile() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -206,6 +207,7 @@ public final class LogLocation {
      *
      * @return The file.
      */
+    @java.lang.Override
     public java.lang.String getFile() {
       java.lang.Object ref = file_;
       if (ref instanceof java.lang.String) {
@@ -231,6 +233,7 @@ public final class LogLocation {
      *
      * @return The bytes for file.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getFileBytes() {
       java.lang.Object ref = file_;
       if (ref instanceof java.lang.String) {
@@ -257,6 +260,7 @@ public final class LogLocation {
      *
      * @return Whether the lineNumber field is set.
      */
+    @java.lang.Override
     public boolean hasLineNumber() {
       return ((bitField0_ & 0x00000002) != 0);
     }
@@ -272,6 +276,7 @@ public final class LogLocation {
      *
      * @return The lineNumber.
      */
+    @java.lang.Override
     public long getLineNumber() {
       return lineNumber_;
     }
@@ -765,6 +770,7 @@ public final class LogLocation {
        *
        * @return Whether the lineNumber field is set.
        */
+      @java.lang.Override
       public boolean hasLineNumber() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -780,6 +786,7 @@ public final class LogLocation {
        *
        * @return The lineNumber.
        */
+      @java.lang.Override
       public long getLineNumber() {
         return lineNumber_;
       }

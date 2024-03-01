@@ -218,6 +218,7 @@ public final class Resolve {
      *
      * @return The property.
      */
+    @java.lang.Override
     public java.lang.String getProperty() {
       java.lang.Object ref = property_;
       if (ref instanceof java.lang.String) {
@@ -234,6 +235,7 @@ public final class Resolve {
      *
      * @return The bytes for property.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getPropertyBytes() {
       java.lang.Object ref = property_;
       if (ref instanceof java.lang.String) {
@@ -1320,6 +1322,7 @@ public final class Resolve {
          *
          * @return The dcid.
          */
+        @java.lang.Override
         public java.lang.String getDcid() {
           java.lang.Object ref = dcid_;
           if (ref instanceof java.lang.String) {
@@ -1336,6 +1339,7 @@ public final class Resolve {
          *
          * @return The bytes for dcid.
          */
+        @java.lang.Override
         public com.google.protobuf.ByteString getDcidBytes() {
           java.lang.Object ref = dcid_;
           if (ref instanceof java.lang.String) {
@@ -1355,6 +1359,7 @@ public final class Resolve {
          *
          * @return The dominantType.
          */
+        @java.lang.Override
         public java.lang.String getDominantType() {
           java.lang.Object ref = dominantType_;
           if (ref instanceof java.lang.String) {
@@ -1371,6 +1376,7 @@ public final class Resolve {
          *
          * @return The bytes for dominantType.
          */
+        @java.lang.Override
         public com.google.protobuf.ByteString getDominantTypeBytes() {
           java.lang.Object ref = dominantType_;
           if (ref instanceof java.lang.String) {
@@ -1939,6 +1945,7 @@ public final class Resolve {
        *
        * @return The node.
        */
+      @java.lang.Override
       public java.lang.String getNode() {
         java.lang.Object ref = node_;
         if (ref instanceof java.lang.String) {
@@ -1955,6 +1962,7 @@ public final class Resolve {
        *
        * @return The bytes for node.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getNodeBytes() {
         java.lang.Object ref = node_;
         if (ref instanceof java.lang.String) {
@@ -2039,6 +2047,7 @@ public final class Resolve {
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
        */
+      @java.lang.Override
       public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>
           getCandidatesList() {
         return candidates_;
@@ -2047,6 +2056,7 @@ public final class Resolve {
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
        */
+      @java.lang.Override
       public java.util.List<
               ? extends org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder>
           getCandidatesOrBuilderList() {
@@ -2056,6 +2066,7 @@ public final class Resolve {
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
        */
+      @java.lang.Override
       public int getCandidatesCount() {
         return candidates_.size();
       }
@@ -2063,6 +2074,7 @@ public final class Resolve {
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate getCandidates(
           int index) {
         return candidates_.get(index);
@@ -2071,6 +2083,7 @@ public final class Resolve {
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder
           getCandidatesOrBuilder(int index) {
         return candidates_.get(index);
@@ -3078,23 +3091,28 @@ public final class Resolve {
     public static final int ENTITIES_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity> entities_;
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+    @java.lang.Override
     public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity> getEntitiesList() {
       return entities_;
     }
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+    @java.lang.Override
     public java.util.List<? extends org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder>
         getEntitiesOrBuilderList() {
       return entities_;
     }
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+    @java.lang.Override
     public int getEntitiesCount() {
       return entities_.size();
     }
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Resolve.ResolveResponse.Entity getEntities(int index) {
       return entities_.get(index);
     }
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder getEntitiesOrBuilder(
         int index) {
       return entities_.get(index);

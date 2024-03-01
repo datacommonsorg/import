@@ -803,6 +803,7 @@ public final class Mcf {
        *
        * @return Whether the type field is set.
        */
+      @java.lang.Override
       public boolean hasType() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -811,6 +812,7 @@ public final class Mcf {
        *
        * @return The type.
        */
+      @java.lang.Override
       public org.datacommons.proto.Mcf.ValueType getType() {
         @SuppressWarnings("deprecation")
         org.datacommons.proto.Mcf.ValueType result =
@@ -825,6 +827,7 @@ public final class Mcf {
        *
        * @return Whether the value field is set.
        */
+      @java.lang.Override
       public boolean hasValue() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -833,6 +836,7 @@ public final class Mcf {
        *
        * @return The value.
        */
+      @java.lang.Override
       public java.lang.String getValue() {
         java.lang.Object ref = value_;
         if (ref instanceof java.lang.String) {
@@ -851,6 +855,7 @@ public final class Mcf {
        *
        * @return The bytes for value.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getValueBytes() {
         java.lang.Object ref = value_;
         if (ref instanceof java.lang.String) {
@@ -877,6 +882,7 @@ public final class Mcf {
        *
        * @return Whether the column field is set.
        */
+      @java.lang.Override
       public boolean hasColumn() {
         return ((bitField0_ & 0x00000004) != 0);
       }
@@ -892,6 +898,7 @@ public final class Mcf {
        *
        * @return The column.
        */
+      @java.lang.Override
       public java.lang.String getColumn() {
         java.lang.Object ref = column_;
         if (ref instanceof java.lang.String) {
@@ -917,6 +924,7 @@ public final class Mcf {
        *
        * @return The bytes for column.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getColumnBytes() {
         java.lang.Object ref = column_;
         if (ref instanceof java.lang.String) {
@@ -1319,6 +1327,7 @@ public final class Mcf {
          *
          * @return Whether the type field is set.
          */
+        @java.lang.Override
         public boolean hasType() {
           return ((bitField0_ & 0x00000001) != 0);
         }
@@ -1327,6 +1336,7 @@ public final class Mcf {
          *
          * @return The type.
          */
+        @java.lang.Override
         public org.datacommons.proto.Mcf.ValueType getType() {
           @SuppressWarnings("deprecation")
           org.datacommons.proto.Mcf.ValueType result =
@@ -1796,6 +1806,7 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
+      @java.lang.Override
       public java.util.List<org.datacommons.proto.Mcf.McfGraph.TypedValue> getTypedValuesList() {
         return typedValues_;
       }
@@ -1808,6 +1819,7 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
+      @java.lang.Override
       public java.util.List<? extends org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>
           getTypedValuesOrBuilderList() {
         return typedValues_;
@@ -1821,6 +1833,7 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
+      @java.lang.Override
       public int getTypedValuesCount() {
         return typedValues_.size();
       }
@@ -1833,6 +1846,7 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.TypedValue getTypedValues(int index) {
         return typedValues_.get(index);
       }
@@ -1845,6 +1859,7 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getTypedValuesOrBuilder(
           int index) {
         return typedValues_.get(index);
@@ -3007,6 +3022,7 @@ public final class Mcf {
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
+      @java.lang.Override
       public boolean containsPvs(java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -3014,6 +3030,7 @@ public final class Mcf {
         return internalGetPvs().getMap().containsKey(key);
       }
       /** Use {@link #getPvsMap()} instead. */
+      @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvs() {
         return getPvsMap();
@@ -3027,6 +3044,7 @@ public final class Mcf {
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
+      @java.lang.Override
       public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
           getPvsMap() {
         return internalGetPvs().getMap();
@@ -3040,6 +3058,7 @@ public final class Mcf {
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrDefault(
           java.lang.String key, org.datacommons.proto.Mcf.McfGraph.Values defaultValue) {
         if (key == null) {
@@ -3058,6 +3077,7 @@ public final class Mcf {
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrThrow(java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -3082,6 +3102,7 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
+      @java.lang.Override
       public java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList() {
         return locations_;
       }
@@ -3095,6 +3116,7 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
+      @java.lang.Override
       public java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder>
           getLocationsOrBuilderList() {
         return locations_;
@@ -3109,6 +3131,7 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
+      @java.lang.Override
       public int getLocationsCount() {
         return locations_.size();
       }
@@ -3122,6 +3145,7 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.LogLocation.Location getLocations(int index) {
         return locations_.get(index);
       }
@@ -3135,6 +3159,7 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(int index) {
         return locations_.get(index);
       }
@@ -3152,6 +3177,7 @@ public final class Mcf {
        *
        * @return Whether the templateNode field is set.
        */
+      @java.lang.Override
       public boolean hasTemplateNode() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -3166,6 +3192,7 @@ public final class Mcf {
        *
        * @return The templateNode.
        */
+      @java.lang.Override
       public java.lang.String getTemplateNode() {
         java.lang.Object ref = templateNode_;
         if (ref instanceof java.lang.String) {
@@ -3190,6 +3217,7 @@ public final class Mcf {
        *
        * @return The bytes for templateNode.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getTemplateNodeBytes() {
         java.lang.Object ref = templateNode_;
         if (ref instanceof java.lang.String) {
@@ -3215,6 +3243,7 @@ public final class Mcf {
        *
        * @return Whether the errorMessage field is set.
        */
+      @java.lang.Override
       public boolean hasErrorMessage() {
         return ((bitField0_ & 0x00000002) != 0);
       }
@@ -3229,6 +3258,7 @@ public final class Mcf {
        *
        * @return The errorMessage.
        */
+      @java.lang.Override
       public java.lang.String getErrorMessage() {
         java.lang.Object ref = errorMessage_;
         if (ref instanceof java.lang.String) {
@@ -3253,6 +3283,7 @@ public final class Mcf {
        *
        * @return The bytes for errorMessage.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getErrorMessageBytes() {
         java.lang.Object ref = errorMessage_;
         if (ref instanceof java.lang.String) {
@@ -3763,6 +3794,7 @@ public final class Mcf {
          *
          * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
          */
+        @java.lang.Override
         public boolean containsPvs(java.lang.String key) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -3770,6 +3802,7 @@ public final class Mcf {
           return internalGetPvs().getMap().containsKey(key);
         }
         /** Use {@link #getPvsMap()} instead. */
+        @java.lang.Override
         @java.lang.Deprecated
         public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvs() {
           return getPvsMap();
@@ -3783,6 +3816,7 @@ public final class Mcf {
          *
          * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
          */
+        @java.lang.Override
         public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
             getPvsMap() {
           return internalGetPvs().getMap();
@@ -3796,6 +3830,7 @@ public final class Mcf {
          *
          * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
          */
+        @java.lang.Override
         public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrDefault(
             java.lang.String key, org.datacommons.proto.Mcf.McfGraph.Values defaultValue) {
           if (key == null) {
@@ -3814,6 +3849,7 @@ public final class Mcf {
          *
          * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
          */
+        @java.lang.Override
         public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrThrow(java.lang.String key) {
           if (key == null) {
             throw new java.lang.NullPointerException();
@@ -4569,6 +4605,7 @@ public final class Mcf {
      *
      * @return Whether the type field is set.
      */
+    @java.lang.Override
     public boolean hasType() {
       return ((bitField0_ & 0x00000001) != 0);
     }
@@ -4583,6 +4620,7 @@ public final class Mcf {
      *
      * @return The type.
      */
+    @java.lang.Override
     public org.datacommons.proto.Mcf.McfType getType() {
       @SuppressWarnings("deprecation")
       org.datacommons.proto.Mcf.McfType result = org.datacommons.proto.Mcf.McfType.valueOf(type_);
@@ -4631,6 +4669,7 @@ public final class Mcf {
      *
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
+    @java.lang.Override
     public boolean containsNodes(java.lang.String key) {
       if (key == null) {
         throw new java.lang.NullPointerException();
@@ -4638,6 +4677,7 @@ public final class Mcf {
       return internalGetNodes().getMap().containsKey(key);
     }
     /** Use {@link #getNodesMap()} instead. */
+    @java.lang.Override
     @java.lang.Deprecated
     public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
         getNodes() {
@@ -4652,6 +4692,7 @@ public final class Mcf {
      *
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
+    @java.lang.Override
     public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
         getNodesMap() {
       return internalGetNodes().getMap();
@@ -4665,6 +4706,7 @@ public final class Mcf {
      *
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrDefault(
         java.lang.String key, org.datacommons.proto.Mcf.McfGraph.PropertyValues defaultValue) {
       if (key == null) {
@@ -4683,6 +4725,7 @@ public final class Mcf {
      *
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrThrow(java.lang.String key) {
       if (key == null) {
         throw new java.lang.NullPointerException();
@@ -5078,6 +5121,7 @@ public final class Mcf {
        *
        * @return Whether the type field is set.
        */
+      @java.lang.Override
       public boolean hasType() {
         return ((bitField0_ & 0x00000001) != 0);
       }
@@ -5092,6 +5136,7 @@ public final class Mcf {
        *
        * @return The type.
        */
+      @java.lang.Override
       public org.datacommons.proto.Mcf.McfType getType() {
         @SuppressWarnings("deprecation")
         org.datacommons.proto.Mcf.McfType result = org.datacommons.proto.Mcf.McfType.valueOf(type_);
@@ -5175,6 +5220,7 @@ public final class Mcf {
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
+      @java.lang.Override
       public boolean containsNodes(java.lang.String key) {
         if (key == null) {
           throw new java.lang.NullPointerException();
@@ -5182,6 +5228,7 @@ public final class Mcf {
         return internalGetNodes().getMap().containsKey(key);
       }
       /** Use {@link #getNodesMap()} instead. */
+      @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
           getNodes() {
@@ -5196,6 +5243,7 @@ public final class Mcf {
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
+      @java.lang.Override
       public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
           getNodesMap() {
         return internalGetNodes().getMap();
@@ -5209,6 +5257,7 @@ public final class Mcf {
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrDefault(
           java.lang.String key, org.datacommons.proto.Mcf.McfGraph.PropertyValues defaultValue) {
         if (key == null) {
@@ -5227,6 +5276,7 @@ public final class Mcf {
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrThrow(
           java.lang.String key) {
         if (key == null) {
