@@ -106,5 +106,8 @@ class TestRunner(unittest.TestCase):
   def test_config_driven(self):
     _test_runner(self, "config_driven")
 
+  def test_config_with_wildcards(self):
+    _test_runner(self, "config_with_wildcards")
+
   def test_input_dir_driven(self):
     _test_runner(self, "input_dir_driven", is_config_driven=False)
