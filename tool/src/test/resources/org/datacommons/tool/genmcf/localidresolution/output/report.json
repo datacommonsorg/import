@@ -4,13 +4,14 @@
       "counters": {
         "NumRowSuccesses": "2",
         "NumPVSuccesses": "11",
-        "Existence_NumChecks": "33",
+        "Existence_NumChecks": "35",
         "NumNodeSuccesses": "2",
         "Existence_NumDcCalls": "2"
       }
     },
     "LEVEL_ERROR": {
       "counters": {
+        "Existence_MissingReference_observationAbout": "2",
         "Resolution_DivergingDcidsForExternalIds_isoCode_wikidataId": "1",
         "Resolution_IrreplaceableLocalRef": "1",
         "Resolution_DcidAssignmentFailure_Place": "1",
@@ -19,6 +20,22 @@
     }
   },
   "entries": [{
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "covid.csv",
+      "lineNumber": "2"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:COVID19_cases_india/E1/1'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "covid.csv",
+      "lineNumber": "3"
+    },
+    "userMessage": "Failed reference existence check :: property-ref: 'observationAbout', node: 'l:COVID19_cases_india/E1/2'",
+    "counterKey": "Existence_MissingReference_observationAbout"
+  }, {
     "level": "LEVEL_ERROR",
     "location": {
       "file": "covid.csv",
@@ -56,7 +73,7 @@
     "resolution": "RESOLUTION_MODE_FULL",
     "numThreads": 1,
     "statChecks": true,
-    "observationAbout": false,
+    "observationAbout": true,
     "allowNanSvobs": false,
     "coordinatesResolution": false
   }

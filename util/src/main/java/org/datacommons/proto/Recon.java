@@ -143,6 +143,7 @@ public final class Recon {
      *
      * @return The prop.
      */
+    @java.lang.Override
     public java.lang.String getProp() {
       java.lang.Object ref = prop_;
       if (ref instanceof java.lang.String) {
@@ -159,6 +160,7 @@ public final class Recon {
      *
      * @return The bytes for prop.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getPropBytes() {
       java.lang.Object ref = prop_;
       if (ref instanceof java.lang.String) {
@@ -178,6 +180,7 @@ public final class Recon {
      *
      * @return The val.
      */
+    @java.lang.Override
     public java.lang.String getVal() {
       java.lang.Object ref = val_;
       if (ref instanceof java.lang.String) {
@@ -194,6 +197,7 @@ public final class Recon {
      *
      * @return The bytes for val.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getValBytes() {
       java.lang.Object ref = val_;
       if (ref instanceof java.lang.String) {
@@ -850,23 +854,28 @@ public final class Recon {
     public static final int IDS_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Recon.IdWithProperty> ids_;
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+    @java.lang.Override
     public java.util.List<org.datacommons.proto.Recon.IdWithProperty> getIdsList() {
       return ids_;
     }
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+    @java.lang.Override
     public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
         getIdsOrBuilderList() {
       return ids_;
     }
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+    @java.lang.Override
     public int getIdsCount() {
       return ids_.size();
     }
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Recon.IdWithProperty getIds(int index) {
       return ids_.get(index);
     }
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index) {
       return ids_.get(index);
     }
@@ -1731,6 +1740,7 @@ public final class Recon {
      *
      * @return The sourceId.
      */
+    @java.lang.Override
     public java.lang.String getSourceId() {
       java.lang.Object ref = sourceId_;
       if (ref instanceof java.lang.String) {
@@ -1753,6 +1763,7 @@ public final class Recon {
      *
      * @return The bytes for sourceId.
      */
+    @java.lang.Override
     public com.google.protobuf.ByteString getSourceIdBytes() {
       java.lang.Object ref = sourceId_;
       if (ref instanceof java.lang.String) {
@@ -1771,6 +1782,7 @@ public final class Recon {
      *
      * @return Whether the subGraph field is set.
      */
+    @java.lang.Override
     public boolean hasSubGraph() {
       return graphRepresentationCase_ == 2;
     }
@@ -1779,6 +1791,7 @@ public final class Recon {
      *
      * @return The subGraph.
      */
+    @java.lang.Override
     public org.datacommons.proto.Mcf.McfGraph getSubGraph() {
       if (graphRepresentationCase_ == 2) {
         return (org.datacommons.proto.Mcf.McfGraph) graphRepresentation_;
@@ -1786,6 +1799,7 @@ public final class Recon {
       return org.datacommons.proto.Mcf.McfGraph.getDefaultInstance();
     }
     /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Mcf.McfGraphOrBuilder getSubGraphOrBuilder() {
       if (graphRepresentationCase_ == 2) {
         return (org.datacommons.proto.Mcf.McfGraph) graphRepresentation_;
@@ -1799,6 +1813,7 @@ public final class Recon {
      *
      * @return Whether the entityIds field is set.
      */
+    @java.lang.Override
     public boolean hasEntityIds() {
       return graphRepresentationCase_ == 3;
     }
@@ -1807,6 +1822,7 @@ public final class Recon {
      *
      * @return The entityIds.
      */
+    @java.lang.Override
     public org.datacommons.proto.Recon.EntityIds getEntityIds() {
       if (graphRepresentationCase_ == 3) {
         return (org.datacommons.proto.Recon.EntityIds) graphRepresentation_;
@@ -1814,6 +1830,7 @@ public final class Recon {
       return org.datacommons.proto.Recon.EntityIds.getDefaultInstance();
     }
     /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Recon.EntityIdsOrBuilder getEntityIdsOrBuilder() {
       if (graphRepresentationCase_ == 3) {
         return (org.datacommons.proto.Recon.EntityIds) graphRepresentation_;
@@ -2343,6 +2360,7 @@ public final class Recon {
        *
        * @return Whether the subGraph field is set.
        */
+      @java.lang.Override
       public boolean hasSubGraph() {
         return graphRepresentationCase_ == 2;
       }
@@ -2351,6 +2369,7 @@ public final class Recon {
        *
        * @return The subGraph.
        */
+      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph getSubGraph() {
         if (subGraphBuilder_ == null) {
           if (graphRepresentationCase_ == 2) {
@@ -2434,6 +2453,7 @@ public final class Recon {
         return getSubGraphFieldBuilder().getBuilder();
       }
       /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
+      @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraphOrBuilder getSubGraphOrBuilder() {
         if ((graphRepresentationCase_ == 2) && (subGraphBuilder_ != null)) {
           return subGraphBuilder_.getMessageOrBuilder();
@@ -2480,6 +2500,7 @@ public final class Recon {
        *
        * @return Whether the entityIds field is set.
        */
+      @java.lang.Override
       public boolean hasEntityIds() {
         return graphRepresentationCase_ == 3;
       }
@@ -2488,6 +2509,7 @@ public final class Recon {
        *
        * @return The entityIds.
        */
+      @java.lang.Override
       public org.datacommons.proto.Recon.EntityIds getEntityIds() {
         if (entityIdsBuilder_ == null) {
           if (graphRepresentationCase_ == 3) {
@@ -2572,6 +2594,7 @@ public final class Recon {
         return getEntityIdsFieldBuilder().getBuilder();
       }
       /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
+      @java.lang.Override
       public org.datacommons.proto.Recon.EntityIdsOrBuilder getEntityIdsOrBuilder() {
         if ((graphRepresentationCase_ == 3) && (entityIdsBuilder_ != null)) {
           return entityIdsBuilder_.getMessageOrBuilder();
@@ -2810,6 +2833,7 @@ public final class Recon {
      *
      * @return Whether the entityOne field is set.
      */
+    @java.lang.Override
     public boolean hasEntityOne() {
       return entityOne_ != null;
     }
@@ -2818,12 +2842,14 @@ public final class Recon {
      *
      * @return The entityOne.
      */
+    @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraph getEntityOne() {
       return entityOne_ == null
           ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance()
           : entityOne_;
     }
     /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityOneOrBuilder() {
       return getEntityOne();
     }
@@ -2835,6 +2861,7 @@ public final class Recon {
      *
      * @return Whether the entityTwo field is set.
      */
+    @java.lang.Override
     public boolean hasEntityTwo() {
       return entityTwo_ != null;
     }
@@ -2843,12 +2870,14 @@ public final class Recon {
      *
      * @return The entityTwo.
      */
+    @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraph getEntityTwo() {
       return entityTwo_ == null
           ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance()
           : entityTwo_;
     }
     /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityTwoOrBuilder() {
       return getEntityTwo();
     }
@@ -3605,23 +3634,28 @@ public final class Recon {
     public static final int ENTITY_PAIRS_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Recon.EntityPair> entityPairs_;
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+    @java.lang.Override
     public java.util.List<org.datacommons.proto.Recon.EntityPair> getEntityPairsList() {
       return entityPairs_;
     }
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+    @java.lang.Override
     public java.util.List<? extends org.datacommons.proto.Recon.EntityPairOrBuilder>
         getEntityPairsOrBuilderList() {
       return entityPairs_;
     }
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+    @java.lang.Override
     public int getEntityPairsCount() {
       return entityPairs_.size();
     }
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Recon.EntityPair getEntityPairs(int index) {
       return entityPairs_.get(index);
     }
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Recon.EntityPairOrBuilder getEntityPairsOrBuilder(int index) {
       return entityPairs_.get(index);
     }
@@ -4604,6 +4638,7 @@ public final class Recon {
        *
        * @return The probability.
        */
+      @java.lang.Override
       public double getProbability() {
         return probability_;
       }
@@ -5145,6 +5180,7 @@ public final class Recon {
          *
          * @return The probability.
          */
+        @java.lang.Override
         public double getProbability() {
           return probability_;
         }
@@ -5234,6 +5270,7 @@ public final class Recon {
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
      */
+    @java.lang.Override
     public java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison>
         getComparisonsList() {
       return comparisons_;
@@ -5242,6 +5279,7 @@ public final class Recon {
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
      */
+    @java.lang.Override
     public java.util.List<
             ? extends org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder>
         getComparisonsOrBuilderList() {
@@ -5251,6 +5289,7 @@ public final class Recon {
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
      */
+    @java.lang.Override
     public int getComparisonsCount() {
       return comparisons_.size();
     }
@@ -5258,6 +5297,7 @@ public final class Recon {
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison getComparisons(
         int index) {
       return comparisons_.get(index);
@@ -5266,6 +5306,7 @@ public final class Recon {
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder
         getComparisonsOrBuilder(int index) {
       return comparisons_.get(index);
@@ -6142,23 +6183,28 @@ public final class Recon {
     public static final int ENTITIES_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Recon.EntitySubGraph> entities_;
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+    @java.lang.Override
     public java.util.List<org.datacommons.proto.Recon.EntitySubGraph> getEntitiesList() {
       return entities_;
     }
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+    @java.lang.Override
     public java.util.List<? extends org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
         getEntitiesOrBuilderList() {
       return entities_;
     }
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+    @java.lang.Override
     public int getEntitiesCount() {
       return entities_.size();
     }
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraph getEntities(int index) {
       return entities_.get(index);
     }
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+    @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntitiesOrBuilder(int index) {
       return entities_.get(index);
     }
@@ -7304,23 +7350,28 @@ public final class Recon {
       public static final int IDS_FIELD_NUMBER = 1;
       private java.util.List<org.datacommons.proto.Recon.IdWithProperty> ids_;
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      @java.lang.Override
       public java.util.List<org.datacommons.proto.Recon.IdWithProperty> getIdsList() {
         return ids_;
       }
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      @java.lang.Override
       public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
           getIdsOrBuilderList() {
         return ids_;
       }
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      @java.lang.Override
       public int getIdsCount() {
         return ids_.size();
       }
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      @java.lang.Override
       public org.datacommons.proto.Recon.IdWithProperty getIds(int index) {
         return ids_.get(index);
       }
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      @java.lang.Override
       public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index) {
         return ids_.get(index);
       }
@@ -7332,6 +7383,7 @@ public final class Recon {
        *
        * @return The probability.
        */
+      @java.lang.Override
       public double getProbability() {
         return probability_;
       }
@@ -7932,6 +7984,7 @@ public final class Recon {
          *
          * @return The probability.
          */
+        @java.lang.Override
         public double getProbability() {
           return probability_;
         }
@@ -8174,6 +8227,7 @@ public final class Recon {
        *
        * @return The sourceId.
        */
+      @java.lang.Override
       public java.lang.String getSourceId() {
         java.lang.Object ref = sourceId_;
         if (ref instanceof java.lang.String) {
@@ -8190,6 +8244,7 @@ public final class Recon {
        *
        * @return The bytes for sourceId.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getSourceIdBytes() {
         java.lang.Object ref = sourceId_;
         if (ref instanceof java.lang.String) {
@@ -8209,6 +8264,7 @@ public final class Recon {
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
        */
+      @java.lang.Override
       public java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId>
           getResolvedIdsList() {
         return resolvedIds_;
@@ -8217,6 +8273,7 @@ public final class Recon {
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
        */
+      @java.lang.Override
       public java.util.List<
               ? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder>
           getResolvedIdsOrBuilderList() {
@@ -8226,6 +8283,7 @@ public final class Recon {
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
        */
+      @java.lang.Override
       public int getResolvedIdsCount() {
         return resolvedIds_.size();
       }
@@ -8233,6 +8291,7 @@ public final class Recon {
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId getResolvedIds(
           int index) {
         return resolvedIds_.get(index);
@@ -8241,6 +8300,7 @@ public final class Recon {
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder
           getResolvedIdsOrBuilder(int index) {
         return resolvedIds_.get(index);
@@ -9074,6 +9134,7 @@ public final class Recon {
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
      * </code>
      */
+    @java.lang.Override
     public java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity>
         getResolvedEntitiesList() {
       return resolvedEntities_;
@@ -9083,6 +9144,7 @@ public final class Recon {
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
      * </code>
      */
+    @java.lang.Override
     public java.util.List<
             ? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder>
         getResolvedEntitiesOrBuilderList() {
@@ -9093,6 +9155,7 @@ public final class Recon {
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
      * </code>
      */
+    @java.lang.Override
     public int getResolvedEntitiesCount() {
       return resolvedEntities_.size();
     }
@@ -9101,6 +9164,7 @@ public final class Recon {
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
      * </code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity getResolvedEntities(
         int index) {
       return resolvedEntities_.get(index);
@@ -9110,6 +9174,7 @@ public final class Recon {
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
      * </code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder
         getResolvedEntitiesOrBuilder(int index) {
       return resolvedEntities_.get(index);
@@ -10076,6 +10141,7 @@ public final class Recon {
        *
        * @return The latitude.
        */
+      @java.lang.Override
       public double getLatitude() {
         return latitude_;
       }
@@ -10087,6 +10153,7 @@ public final class Recon {
        *
        * @return The longitude.
        */
+      @java.lang.Override
       public double getLongitude() {
         return longitude_;
       }
@@ -10443,6 +10510,7 @@ public final class Recon {
          *
          * @return The latitude.
          */
+        @java.lang.Override
         public double getLatitude() {
           return latitude_;
         }
@@ -10476,6 +10544,7 @@ public final class Recon {
          *
          * @return The longitude.
          */
+        @java.lang.Override
         public double getLongitude() {
           return longitude_;
         }
@@ -10565,6 +10634,7 @@ public final class Recon {
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
      */
+    @java.lang.Override
     public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
         getCoordinatesList() {
       return coordinates_;
@@ -10573,6 +10643,7 @@ public final class Recon {
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
      */
+    @java.lang.Override
     public java.util.List<
             ? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>
         getCoordinatesOrBuilderList() {
@@ -10582,6 +10653,7 @@ public final class Recon {
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
      */
+    @java.lang.Override
     public int getCoordinatesCount() {
       return coordinates_.size();
     }
@@ -10589,6 +10661,7 @@ public final class Recon {
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate getCoordinates(
         int index) {
       return coordinates_.get(index);
@@ -10597,6 +10670,7 @@ public final class Recon {
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder
         getCoordinatesOrBuilder(int index) {
       return coordinates_.get(index);
@@ -11571,6 +11645,7 @@ public final class Recon {
        *
        * @return The dcid.
        */
+      @java.lang.Override
       public java.lang.String getDcid() {
         java.lang.Object ref = dcid_;
         if (ref instanceof java.lang.String) {
@@ -11587,6 +11662,7 @@ public final class Recon {
        *
        * @return The bytes for dcid.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getDcidBytes() {
         java.lang.Object ref = dcid_;
         if (ref instanceof java.lang.String) {
@@ -11606,6 +11682,7 @@ public final class Recon {
        *
        * @return The dominantType.
        */
+      @java.lang.Override
       public java.lang.String getDominantType() {
         java.lang.Object ref = dominantType_;
         if (ref instanceof java.lang.String) {
@@ -11622,6 +11699,7 @@ public final class Recon {
        *
        * @return The bytes for dominantType.
        */
+      @java.lang.Override
       public com.google.protobuf.ByteString getDominantTypeBytes() {
         java.lang.Object ref = dominantType_;
         if (ref instanceof java.lang.String) {
@@ -12375,6 +12453,7 @@ public final class Recon {
        *
        * @return The latitude.
        */
+      @java.lang.Override
       public double getLatitude() {
         return latitude_;
       }
@@ -12386,6 +12465,7 @@ public final class Recon {
        *
        * @return The longitude.
        */
+      @java.lang.Override
       public double getLongitude() {
         return longitude_;
       }
@@ -12432,6 +12512,7 @@ public final class Recon {
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
+      @java.lang.Override
       public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place>
           getPlacesList() {
         return places_;
@@ -12439,6 +12520,7 @@ public final class Recon {
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
+      @java.lang.Override
       public java.util.List<
               ? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder>
           getPlacesOrBuilderList() {
@@ -12447,18 +12529,21 @@ public final class Recon {
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
+      @java.lang.Override
       public int getPlacesCount() {
         return places_.size();
       }
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place getPlaces(int index) {
         return places_.get(index);
       }
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
+      @java.lang.Override
       public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder
           getPlacesOrBuilder(int index) {
         return places_.get(index);
@@ -12919,6 +13004,7 @@ public final class Recon {
          *
          * @return The latitude.
          */
+        @java.lang.Override
         public double getLatitude() {
           return latitude_;
         }
@@ -12952,6 +13038,7 @@ public final class Recon {
          *
          * @return The longitude.
          */
+        @java.lang.Override
         public double getLongitude() {
           return longitude_;
         }
@@ -13419,6 +13506,7 @@ public final class Recon {
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
      * </code>
      */
+    @java.lang.Override
     public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
         getPlaceCoordinatesList() {
       return placeCoordinates_;
@@ -13428,6 +13516,7 @@ public final class Recon {
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
      * </code>
      */
+    @java.lang.Override
     public java.util.List<
             ? extends
                 org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>
@@ -13439,6 +13528,7 @@ public final class Recon {
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
      * </code>
      */
+    @java.lang.Override
     public int getPlaceCoordinatesCount() {
       return placeCoordinates_.size();
     }
@@ -13447,6 +13537,7 @@ public final class Recon {
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
      * </code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
         getPlaceCoordinates(int index) {
       return placeCoordinates_.get(index);
@@ -13456,6 +13547,7 @@ public final class Recon {
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
      * </code>
      */
+    @java.lang.Override
     public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder
         getPlaceCoordinatesOrBuilder(int index) {
       return placeCoordinates_.get(index);

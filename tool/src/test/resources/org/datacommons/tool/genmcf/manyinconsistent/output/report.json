@@ -4,7 +4,7 @@
       "counters": {
         "NumRowSuccesses": "1",
         "NumPVSuccesses": "7",
-        "Existence_NumChecks": "23",
+        "Existence_NumChecks": "26",
         "NumNodeSuccesses": "1",
         "Existence_NumDcCalls": "2"
       }
@@ -105,7 +105,7 @@
     "resolution": "RESOLUTION_MODE_FULL",
     "numThreads": 1,
     "statChecks": true,
-    "observationAbout": false,
+    "observationAbout": true,
     "allowNanSvobs": false,
     "coordinatesResolution": false
   }
