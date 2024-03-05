@@ -99,6 +99,7 @@ public final class Vocabulary {
   public static final String GEO_DCID_PREFIX = "latLong";
   public static final String CONTAINED_IN_PLACE = "containedInPlace";
   public static final String CONTAINED_IN = "containedIn"; // Superseded by "containedInPlace".
+  public static final String UN_DATA_CODE = "unDataCode";
   public static final String GEO_ID = "geoId";
   public static final String WIKIDATA_ID = "wikidataId";
   public static final String GEO_NAMES_ID = "geoNamesId";
@@ -270,6 +271,7 @@ public final class Vocabulary {
   // (https://github.com/datacommonsorg/mixer/blob/master/internal/server/recon/resolve.go)
   public static final List<String> PLACE_RESOLVABLE_AND_ASSIGNABLE_IDS =
       List.of(
+          Vocabulary.UN_DATA_CODE,
           Vocabulary.GEO_ID,
           Vocabulary.ISO_CODE,
           Vocabulary.NUTS_CODE,
