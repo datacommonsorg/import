@@ -52,6 +52,24 @@ The config parameters for the files to be imported should be specified in a `con
 ## `inputFiles`
 
 The top-level `inputFiles` field should encode a map from input file name to parameters specific to that file.
+Keys can be individual file names or wildcard patterns if the same config applies to multiple files.
+
+If files match multiple wildcard patterns, the first match as specified in the config will be used.
+
+Example:
+
+```json
+{
+  "inputFiles": {
+    // Applies only to "foo.csv".
+    "foo.csv": {...},
+    // Applies to bar.csv, bar1.csv, bar2.csv, etc.
+    "bar*.csv": {...},
+    // Applies to all CSVs except "foo.csv" and "bar*.csv".
+    "*.csv": {...}
+  }
+}
+```
 
 ### Input file parameters
 
