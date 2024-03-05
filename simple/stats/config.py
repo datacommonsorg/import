@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+
 from stats.data import AggregationConfig
 from stats.data import EventType
 from stats.data import ImportType
@@ -50,6 +52,13 @@ class Config:
 
   def __init__(self, data: dict) -> None:
     self.data = data
+    self._input_files_config: dict[str, dict] = self.data.get(
+        _INPUT_FILES_FIELD, {})
+    # If input file names are specified with wildcards - e.g. "foo*.csv",
+    # this dict maintains a mapping from actual file name to the wildcard key
+    # for fast lookup.
+    # e.g. "foo1.csv" -> "foo*.csv", "foo2.csv" -> "foo*.csv", etc.
+    self._input_file_name_keys: dict[str, str] = {}
     # dict from provenance name to Provenance
     self.provenances: dict[str, Provenance] = {}
     # dict from provenance name to Source
@@ -120,7 +129,32 @@ class Config:
     return self.data.get(_DATABASE_FIELD)
 
   def _input_file(self, input_file_name: str) -> dict:
-    return self.data.get(_INPUT_FILES_FIELD, {}).get(input_file_name, {})
+    # Exact match.
+    input_file_config = self._input_files_config.get(input_file_name, {})
+    if input_file_config:
+      return input_file_config
+
+    # Wildcard match
+    if input_file_name not in self._input_file_name_keys.keys():
+      self._input_file_name_keys[input_file_name] = self._input_file_name_match(
+          input_file_name)
+    return self._input_files_config.get(
+        self._input_file_name_keys[input_file_name], {})
+
+  def _input_file_name_match(self, input_file_name: str) -> str | None:
+    for input_file_pattern in self._input_files_config.keys():
+      if "*" not in input_file_pattern:
+        continue
+      regex = self._input_file_pattern_to_regex(input_file_pattern)
+      if re.match(regex, input_file_name) is not None:
+        return input_file_pattern
+    return None
+
+  def _input_file_pattern_to_regex(self, input_file_pattern: str) -> str:
+    """
+    Transforms a string of the form "a*b.c" to the regex "a.*b\.c".
+    """
+    return input_file_pattern.replace(".", r"\.").replace("*", ".*")
 
   def _parse_provenances_and_sources(self):
     sources_cfg = self.data.get(_SOURCES_FIELD, {})

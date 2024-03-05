@@ -213,3 +213,38 @@ class TestConfig(unittest.TestCase):
         Config({
             "dataDownloadUrl": ["foo", "bar"]
         }).data_download_urls(), ["foo", "bar"], "two urls")
+
+  def test_input_file(self):
+    self.assertDictEqual(Config({})._input_file("foo.csv"), {}, "empty")
+    self.assertDictEqual(
+        Config({
+            "inputFiles": {
+                "foo.csv": {
+                    "x": "y"
+                }
+            }
+        })._input_file("foo.csv"), {"x": "y"}, "exact match")
+    self.assertDictEqual(
+        Config({
+            "inputFiles": {
+                "foo*.csv": {
+                    "x": "y"
+                }
+            }
+        })._input_file("foo1.csv"), {"x": "y"}, "wildcard match")
+    self.assertDictEqual(
+        Config({
+            "inputFiles": {
+                "bar.csv": {
+                    "x": "y"
+                }
+            }
+        })._input_file("foo.csv"), {}, "no exact match")
+    self.assertDictEqual(
+        Config({
+            "inputFiles": {
+                "bar*.csv": {
+                    "x": "y"
+                }
+            }
+        })._input_file("foo1.csv"), {}, "no wildcard match")
