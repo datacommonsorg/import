@@ -296,6 +296,10 @@ class ImportType(StrEnum):
   EVENTS = "events"
 
 
+class InputFileFormat(StrEnum):
+  VARIABLE_PER_ROW = "variablePerRow"
+
+
 class TimePeriod(StrEnum):
   DAY = "day"
   MONTH = "month"

@@ -9,6 +9,12 @@
       "importType": "observations",
       "entityType": "Country",
       "provenance": "Provenance1 Name"
+    },
+    "svobs.csv": {
+      "importType": "observations",
+      "format": "variablePerRow",
+      "entityType": "Country",
+      "provenance": "Provenance1 Name"
     }
   },
   "sources": {

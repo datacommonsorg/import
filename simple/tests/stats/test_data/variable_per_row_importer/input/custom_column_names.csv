@@ -1,0 +1,7 @@
+Observed Variable,Observed Location,date,value
+var1,country/BRA,2023,0.19
+var2,country/BRA,2023,6
+var1,country/JPN,2023,0.21
+var2,country/JPN,2023,56
+var2,country/USA,2023,66
+var1,country/CHN,2022,-123.456

@@ -17,6 +17,7 @@ import re
 from stats.data import AggregationConfig
 from stats.data import EventType
 from stats.data import ImportType
+from stats.data import InputFileFormat
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
@@ -42,6 +43,8 @@ _COMPUTED_VARIABLES_FIELD = "computedVariables"
 _AGGREGATION_FIELD = "aggregation"
 _PROPERTIES_FIELD = "properties"
 _DATA_DOWNLOAD_URL_FIELD = "dataDownloadUrl"
+_FORMAT_FIELD = "format"
+_COLUMN_MAPPINGS_FIELD = "columnMappings"
 
 
 class Config:
@@ -82,6 +85,17 @@ class Config:
       raise ValueError(
           f"Unsupported import type: {import_type_str} ({input_file_name})")
     return ImportType(import_type_str)
+
+  def format(self, input_file_name: str) -> ImportType | None:
+    format_str = self._input_file(input_file_name).get(_FORMAT_FIELD)
+    if not format_str:
+      return None
+    if format_str not in iter(InputFileFormat):
+      raise ValueError(f"Unsupported format: {format_str} ({input_file_name})")
+    return InputFileFormat(format_str)
+
+  def column_mappings(self, input_file_name: str) -> dict[str, str]:
+    return self._input_file(input_file_name).get(_COLUMN_MAPPINGS_FIELD, {})
 
   def computed_variables(self, input_file_name: str) -> list[str]:
     return self._input_file(input_file_name).get(_COMPUTED_VARIABLES_FIELD, [])

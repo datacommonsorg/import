@@ -19,6 +19,7 @@ import logging
 from stats import constants
 from stats.config import Config
 from stats.data import ImportType
+from stats.data import InputFileFormat
 from stats.db import create_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
@@ -31,6 +32,7 @@ import stats.nl as nl
 from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
 from stats.reporter import ImportReporter
+from stats.variable_per_row_importer import VariablePerRowImporter
 from util.filehandler import create_file_handler
 from util.filehandler import FileHandler
 
@@ -173,6 +175,12 @@ class Runner:
     reporter = self.reporter.import_file(input_file)
 
     if import_type == ImportType.OBSERVATIONS:
+      input_file_format = self.config.format(input_file)
+      if input_file_format == InputFileFormat.VARIABLE_PER_ROW:
+        return VariablePerRowImporter(input_fh=input_fh,
+                                      db=self.db,
+                                      reporter=reporter,
+                                      nodes=self.nodes)
       return ObservationsImporter(input_fh=input_fh,
                                   db=self.db,
                                   debug_resolve_fh=debug_resolve_fh,

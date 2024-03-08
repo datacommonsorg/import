@@ -18,6 +18,7 @@ from stats.config import Config
 from stats.data import AggregationConfig
 from stats.data import AggregationMethod
 from stats.data import ImportType
+from stats.data import InputFileFormat
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
@@ -248,3 +249,21 @@ class TestConfig(unittest.TestCase):
                 }
             }
         })._input_file("foo1.csv"), {}, "no wildcard match")
+
+  def test_input_file_format(self):
+    config = Config({})
+    self.assertEqual(config.format("foo.csv"), None, "empty")
+
+    config = Config({"inputFiles": {"foo.csv": {"format": "variablePerRow"}}})
+    self.assertEqual(config.format("foo.csv"), InputFileFormat.VARIABLE_PER_ROW)
+
+    config = Config({"inputFiles": {"foo.csv": {"format": "INVALID"}}})
+    with self.assertRaisesRegex(ValueError, "Unsupported format"):
+      config.format("foo.csv")
+
+  def test_column_mappings(self):
+    config = Config({})
+    self.assertDictEqual(config.column_mappings("foo.csv"), {}, "empty")
+
+    config = Config({"inputFiles": {"foo.csv": {"columnMappings": {"x": "y"}}}})
+    self.assertDictEqual(config.column_mappings("foo.csv"), {"x": "y"})
