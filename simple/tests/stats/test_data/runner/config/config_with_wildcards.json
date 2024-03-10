@@ -3,7 +3,7 @@
     "tests/stats/test_data/runner/input/config_with_wildcards"
   ],
   "inputFiles": {
-    "svobs.csv": {
+    "variable_per_row.csv": {
       "importType": "observations",
       "format": "variablePerRow",
       "entityType": "Country",

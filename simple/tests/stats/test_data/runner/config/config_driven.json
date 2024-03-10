@@ -11,7 +11,7 @@
       "entityType": "Country",
       "provenance": "Provenance1 Name"
     },
-    "svobs.csv": {
+    "variable_per_row.csv": {
       "importType": "observations",
       "format": "variablePerRow",
       "entityType": "Country",
