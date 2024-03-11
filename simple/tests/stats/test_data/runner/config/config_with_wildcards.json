@@ -11,6 +11,7 @@
     },
     "*.csv": {
       "importType": "observations",
+      "format": "variablePerColumn",
       "entityType": "Country",
       "provenance": "Provenance1 Name"
     }

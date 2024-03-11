@@ -298,6 +298,7 @@ class ImportType(StrEnum):
 
 class InputFileFormat(StrEnum):
   VARIABLE_PER_ROW = "variablePerRow"
+  VARIABLE_PER_COLUMN = "variablePerColumn"
 
 
 class TimePeriod(StrEnum):

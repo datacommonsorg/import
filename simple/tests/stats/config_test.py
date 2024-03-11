@@ -257,6 +257,15 @@ class TestConfig(unittest.TestCase):
     config = Config({"inputFiles": {"foo.csv": {"format": "variablePerRow"}}})
     self.assertEqual(config.format("foo.csv"), InputFileFormat.VARIABLE_PER_ROW)
 
+    config = Config(
+        {"inputFiles": {
+            "foo.csv": {
+                "format": "variablePerColumn"
+            }
+        }})
+    self.assertEqual(config.format("foo.csv"),
+                     InputFileFormat.VARIABLE_PER_COLUMN)
+
     config = Config({"inputFiles": {"foo.csv": {"format": "INVALID"}}})
     with self.assertRaisesRegex(ValueError, "Unsupported format"):
       config.format("foo.csv")

@@ -3,11 +3,13 @@
   "inputFiles": {
     "countries.csv": {
       "importType": "observations",
+      "format": "variablePerColumn",
       "entityType": "Country",
       "provenance": "Provenance1 Name"
     },
     "wikidataids.csv": {
       "importType": "observations",
+      "format": "variablePerColumn",
       "entityType": "Country",
       "provenance": "Provenance1 Name"
     },
