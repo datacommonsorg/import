@@ -3,8 +3,15 @@
     "tests/stats/test_data/runner/input/config_with_wildcards"
   ],
   "inputFiles": {
+    "variable_per_row.csv": {
+      "importType": "observations",
+      "format": "variablePerRow",
+      "entityType": "Country",
+      "provenance": "Provenance1 Name"
+    },
     "*.csv": {
       "importType": "observations",
+      "format": "variablePerColumn",
       "entityType": "Country",
       "provenance": "Provenance1 Name"
     }
