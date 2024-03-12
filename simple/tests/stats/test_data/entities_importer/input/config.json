@@ -1,0 +1,33 @@
+{
+  "inputFiles": {
+    "without_id_column.csv": {
+      "rowEntityType": "CrimeCase",
+      "provenance": "Test Provenance"
+    },
+    "with_id_column.csv": {
+      "rowEntityType": "CrimeCase",
+      "idColumn": "CASE",
+      "provenance": "Test Provenance"
+    },
+    "with_entity_columns.csv": {
+      "rowEntityType": "CrimeCase",
+      "idColumn": "CASE",
+      "entityColumns": ["OFFICERS", "DEPARTMENT"],
+      "provenance": "Test Provenance"
+    }
+  },
+  "entities": {
+    "CrimeCase": {
+      "name": "Crime Case",
+      "description": "Crime Case description"
+    }
+  },
+  "sources": {
+    "Test Source": {
+      "url": "http://source.com",
+      "provenances": {
+        "Test Provenance": "http://source.com/provenance"
+      }
+    }
+  }
+}

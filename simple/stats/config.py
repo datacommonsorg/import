@@ -15,6 +15,7 @@
 import re
 
 from stats.data import AggregationConfig
+from stats.data import EntityType
 from stats.data import EventType
 from stats.data import ImportType
 from stats.data import InputFileFormat
@@ -45,6 +46,9 @@ _PROPERTIES_FIELD = "properties"
 _DATA_DOWNLOAD_URL_FIELD = "dataDownloadUrl"
 _FORMAT_FIELD = "format"
 _COLUMN_MAPPINGS_FIELD = "columnMappings"
+_ROW_ENTITY_TYPE_FIELD = "rowEntityType"
+_ENTITY_COLUMNS = "entityColumns"
+_ENTITIES_FIELD = "entities"
 
 
 class Config:
@@ -126,6 +130,13 @@ class Config:
                      event_type_cfg.get(_NAME_FIELD, event_type_name),
                      description=event_type_cfg.get(_DESCRIPTION_FIELD, ""))
 
+  def entity(self, entity_type_name: str) -> EntityType:
+    entity_type_cfg = self.data.get(_ENTITIES_FIELD,
+                                    {}).get(entity_type_name, {})
+    return EntityType("",
+                      entity_type_cfg.get(_NAME_FIELD, entity_type_name),
+                      description=entity_type_cfg.get(_DESCRIPTION_FIELD, ""))
+
   def id_column(self, input_file_name: str) -> str:
     return self._input_file(input_file_name).get(_ID_COLUMN_FIELD, "")
 
@@ -138,6 +149,12 @@ class Config:
   def provenance_name(self, input_file_name: str) -> str:
     return self._input_file(input_file_name).get(_PROVENANCE_FIELD,
                                                  input_file_name)
+
+  def row_entity_type(self, input_file_name: str) -> str:
+    return self._input_file(input_file_name).get(_ROW_ENTITY_TYPE_FIELD, "")
+
+  def entity_columns(self, input_file_name: str) -> list[str]:
+    return self._input_file(input_file_name).get(_ENTITY_COLUMNS, [])
 
   def database(self) -> dict:
     return self.data.get(_DATABASE_FIELD)

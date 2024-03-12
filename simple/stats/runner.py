@@ -26,6 +26,7 @@ from stats.db import create_sqlite_config
 from stats.db import get_cloud_sql_config_from_env
 from stats.db import get_sqlite_config_from_env
 from stats.db import ImportStatus
+from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
 from stats.importer import Importer
 import stats.nl as nl
@@ -193,5 +194,11 @@ class Runner:
                             debug_resolve_fh=debug_resolve_fh,
                             reporter=reporter,
                             nodes=self.nodes)
+
+    if import_type == ImportType.ENTITIES:
+      return EntitiesImporter(input_fh=input_fh,
+                              db=self.db,
+                              reporter=reporter,
+                              nodes=self.nodes)
 
     raise ValueError(f"Unsupported import type: {import_type} ({input_file})")

@@ -276,3 +276,28 @@ class TestConfig(unittest.TestCase):
 
     config = Config({"inputFiles": {"foo.csv": {"columnMappings": {"x": "y"}}}})
     self.assertDictEqual(config.column_mappings("foo.csv"), {"x": "y"})
+
+  def test_row_entity_type(self):
+    config = Config({})
+    self.assertEqual(config.row_entity_type("foo.csv"), "", "empty")
+
+    config = Config({"inputFiles": {"foo.csv": {"rowEntityType": "Foo"}}})
+    self.assertEqual(config.row_entity_type("foo.csv"), "Foo")
+
+    config = Config({"inputFiles": {"foo.csv": {}}})
+    self.assertEqual(config.row_entity_type("foo.csv"), "", "unspecified")
+
+  def test_entity_columns(self):
+    config = Config({})
+    self.assertListEqual(config.entity_columns("foo.csv"), [], "empty")
+
+    config = Config(
+        {"inputFiles": {
+            "foo.csv": {
+                "entityColumns": ["foo", "bar"]
+            }
+        }})
+    self.assertListEqual(config.entity_columns("foo.csv"), ["foo", "bar"])
+
+    config = Config({"inputFiles": {"foo.csv": {}}})
+    self.assertListEqual(config.entity_columns("foo.csv"), [], "unspecified")

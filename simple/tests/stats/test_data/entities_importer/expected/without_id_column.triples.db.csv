@@ -1,0 +1,46 @@
+subject_id,predicate,object_id,object_value
+CrimeCase_0,typeOf,CrimeCase,
+CrimeCase_0,includedIn,c/p/1,
+CrimeCase_0,CASE,,JG497095
+CrimeCase_0,IUCR,,810
+CrimeCase_0,PRIMARY_DESCRIPTION,,THEFT
+CrimeCase_0,SECONDARY_DESCRIPTION,,OVER $500
+CrimeCase_1,typeOf,CrimeCase,
+CrimeCase_1,includedIn,c/p/1,
+CrimeCase_1,CASE,,JG496991
+CrimeCase_1,IUCR,,560
+CrimeCase_1,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeCase_1,SECONDARY_DESCRIPTION,,SIMPLE
+CrimeCase_2,typeOf,CrimeCase,
+CrimeCase_2,includedIn,c/p/1,
+CrimeCase_2,CASE,,JG497145
+CrimeCase_2,IUCR,,051A
+CrimeCase_2,PRIMARY_DESCRIPTION,,ASSAULT
+CrimeCase_2,SECONDARY_DESCRIPTION,,AGGRAVATED - HANDGUN
+c/s/default,typeOf,Source,
+c/s/default,name,,Custom Data Commons
+c/s/1,typeOf,Source,
+c/s/1,name,,Test Source
+c/s/1,url,,http://source.com
+c/s/1,domain,,source.com
+c/p/default,typeOf,Provenance,
+c/p/default,name,,Custom Import
+c/p/default,source,c/s/default,
+c/p/default,url,,custom-import
+c/p/1,typeOf,Provenance,
+c/p/1,name,,Test Provenance
+c/p/1,source,c/s/1,
+c/p/1,url,,http://source.com/provenance
+CrimeCase,typeOf,Class,
+CrimeCase,name,,Crime Case
+CrimeCase,description,,Crime Case description
+CrimeCase,includedIn,c/p/1,
+CrimeCase,includedIn,c/s/1,
+CASE,typeOf,Property,
+CASE,name,,CASE
+IUCR,typeOf,Property,
+IUCR,name,,IUCR
+PRIMARY_DESCRIPTION,typeOf,Property,
+PRIMARY_DESCRIPTION,name,,PRIMARY DESCRIPTION
+SECONDARY_DESCRIPTION,typeOf,Property,
+SECONDARY_DESCRIPTION,name,,SECONDARY DESCRIPTION
