@@ -19,20 +19,6 @@ The config parameters for the files to be imported should be specified in a `con
     "geoid.csv": {
       "entityType": "",
       "provenance": "Provenance2 Name"
-    },
-    "author_entities.csv": {
-      "importType": "entities",
-      "rowEntityType": "Author",
-      "idColumn": "author_id",
-      "entityColumns": ["author_country"],
-      "provenance": "Provenance1 Name"
-    },
-    "article_entities.csv": {
-      "importType": "entities",
-      "rowEntityType": "Article",
-      "idColumn": "article_id",
-      "entityColumns": ["article_author"],
-      "provenance": "Provenance1 Name"
     }
   },
   "variables": {
@@ -50,12 +36,6 @@ The config parameters for the files to be imported should be specified in a `con
         "gender": "Female"
       }
     },
-  },
-  "entities": {
-    "Article": {
-      "name": "Published Article",
-      "description": "Article published for Foo Journal."
-    }
   },
   "sources": {
     "Source1 Name": {
@@ -78,7 +58,7 @@ If files match multiple wildcard patterns, the first match as specified in the c
 
 Example:
 
-```javascript
+```json
 {
   "inputFiles": {
     // Applies only to "foo.csv".
@@ -93,19 +73,11 @@ Example:
 
 ### Input file parameters
 
-#### `importType`
-
-This importer supports importing observations, events and entities.
-The type of import can be specified with the `importType` parameter.
-Possible values: `observations` (default), `events`, `entities`.
-
 #### `entityType`
 
-All entities in a given file must be of one specific type. This type should be
+All entities in a given file must be of a specific type. This type should be
 specified as the value of the `entityType` field. The importer tries to resolve
 entities to dcids of that type.
-
-Applies to observation and event imports. See `rowEntityType` for entities.
 
 #### `ignoreColumns`
 
@@ -119,32 +91,6 @@ and this field associates one of the provenances defined there to this file.
 
 Provenances typically map to a dataset from a source.
 e.g. WorldDevelopmentIndicators provenance (or dataset) is from the WorldBank source.
-
-#### `rowEntityType`
-
-For entity imports, every row represents an entity.
-The type of entity that each row represents can be specified using `rowEntityType`.
-This is a mandatory field for entity imports.
-
-#### `idColumn`
-
-Applicable to events and entities.
-
-Every event and entity is identified by a unique ID.
-If one of the columns encodes that ID, it can be indicated with the `idColumn` field.
-If none is specified, IDs will be auto generated.
-
-#### `entityColumns`
-
-Applicable to entities.
-
-All columns of entity CSVs (except the `ignoreColumns` ones) are encoded as properties of that entity.
-Properties can be terminal values (e.g. names, urls, etc.) or they can be references to other entities.
-`entityColumns` can be used to indicate columns that are the latter.
-
-Note that the CSV values for entity columns should be DCIDs to the referenced entities.
-
-To reference multiple entities, separate them with commas.
 
 ## `variables`
 
@@ -185,28 +131,6 @@ Use "/" as a separator to specify a multi-level hierarchy.
 
 An array of NL sentences to be used for creating more NL embeddings (in addition to the description)
 for the variable.
-
-## `entities`
-
-The top-level `entities` field can be used to provide more information about entities 
-in the input entity CSVs.
-
-If not specified, the `rowEntityType`s specified for the input CSVs will be used as their names.
-
-Names can be overriden and a description can be provided using the parameters described below.
-
-### Entity parameters
-
-#### `name`
-
-The display name of the entity.
-If not specified, the `rowEntityType` specified for the input CSVs will be used as the display name.
-
-#### `description`
-
-The long form description of the entity.
-
-The description will be displayed in the entity browser further describing the entity.
 
 ## `sources`
 
