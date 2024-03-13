@@ -101,7 +101,7 @@ Possible values: `observations` (default), `events`, `entities`.
 
 #### `entityType`
 
-All entities in a given file must be of a specific type. This type should be
+All entities in a given file must be of one specific type. This type should be
 specified as the value of the `entityType` field. The importer tries to resolve
 entities to dcids of that type.
 
