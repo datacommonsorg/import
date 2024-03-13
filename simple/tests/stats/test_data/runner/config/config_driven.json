@@ -18,6 +18,20 @@
       "format": "variablePerRow",
       "entityType": "Country",
       "provenance": "Provenance1 Name"
+    },
+    "author_entities.csv": {
+      "importType": "entities",
+      "rowEntityType": "Author",
+      "idColumn": "author_id",
+      "entityColumns": ["author_country"],
+      "provenance": "Provenance1 Name"
+    },
+    "article_entities.csv": {
+      "importType": "entities",
+      "rowEntityType": "Article",
+      "idColumn": "article_id",
+      "entityColumns": ["article_author"],
+      "provenance": "Provenance1 Name"
     }
   },
   "sources": {

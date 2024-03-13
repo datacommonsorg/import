@@ -53,6 +53,10 @@ CONFIG_DATA = {
             "entityType": "Country",
             "provenance": "Provenance1",
             "eventType": "CrimeEvent"
+        },
+        "entities.csv": {
+            "rowEntityType": "FooEntity",
+            "provenance": "Provenance1"
         }
     },
     "variables": {
@@ -73,6 +77,12 @@ CONFIG_DATA = {
         "CrimeEvent": {
             "name": "Crime Event",
             "description": "Crime Event description"
+        }
+    },
+    "entities": {
+        "FooEntity": {
+            "name": "Foo Entity",
+            "description": "Foo Entity description"
         }
     },
     "sources": {
@@ -103,6 +113,9 @@ TEST_ENTITY_TYPE_2 = "PowerPlant"
 TEST_EVENT_TYPE_INPUT_FILE_NAMES = [("CrimeEvent", "events.csv"),
                                     ("Event no config", "x.csv")]
 
+TEST_ENTITY_TYPE_INPUT_FILE_NAMES = [("FooEntity", "entities.csv"),
+                                     ("Entity no config", "x.csv")]
+
 TEST_PROPERTY_COLUMNS = ["foo", "foo bar"]
 
 
@@ -118,6 +131,9 @@ class TestNodes(unittest.TestCase):
 
     for event_type_name, input_file_name in TEST_EVENT_TYPE_INPUT_FILE_NAMES:
       nodes.event_type(event_type_name, input_file_name)
+
+    for entity_type_name, input_file_name in TEST_ENTITY_TYPE_INPUT_FILE_NAMES:
+      nodes.entity_type(entity_type_name, input_file_name)
 
     for property_column_name in TEST_PROPERTY_COLUMNS:
       nodes.property(property_column_name)

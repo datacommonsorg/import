@@ -77,6 +77,15 @@ Event_no_config,subClassOf,Event,
 Event_no_config,name,,Event no config
 Event_no_config,includedIn,c/p/default,
 Event_no_config,includedIn,c/s/default,
+FooEntity,typeOf,Class,
+FooEntity,name,,Foo Entity
+FooEntity,description,,Foo Entity description
+FooEntity,includedIn,c/p/1,
+FooEntity,includedIn,c/s/1,
+Entity_no_config,typeOf,Class,
+Entity_no_config,name,,Entity no config
+Entity_no_config,includedIn,c/p/default,
+Entity_no_config,includedIn,c/s/default,
 foo,typeOf,Property,
 foo,name,,foo
 foo_bar,typeOf,Property,

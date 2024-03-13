@@ -291,9 +291,73 @@ class Event:
     return triples
 
 
+@dataclass
+class RowEntity:
+  id: str
+  row_entity_type: str
+  provenance_id: str = ""
+  prop_object_values: dict[str, str] = field(
+      default_factory=lambda: defaultdict(dict))
+  prop_object_ids: dict[str, str | list[str]] = field(
+      default_factory=lambda: defaultdict(dict))
+
+  def triples(self) -> list[Triple]:
+    triples: list[Triple] = []
+    triples.append(
+        Triple(self.id, _PREDICATE_TYPE_OF, object_id=self.row_entity_type))
+    if self.provenance_id:
+      triples.append(
+          Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=self.provenance_id))
+    for prop, object_value in self.prop_object_values.items():
+      triples.append(Triple(self.id, prop, object_value=object_value))
+    for prop, object_id in self.prop_object_ids.items():
+      if isinstance(object_id, list):
+        for id in object_id:
+          triples.append(Triple(self.id, prop, object_id=id))
+      else:
+        triples.append(Triple(self.id, prop, object_id=object_id))
+    return triples
+
+
+@dataclass
+class EntityType:
+  id: str
+  name: str
+  description: str = ""
+  provenance_ids: list[str] = field(default_factory=list)
+  source_ids: list[str] = field(default_factory=list)
+
+  def add_provenance(self, provenance: Provenance) -> Self:
+    provenance_id = provenance.id
+    source_id = provenance.source_id
+    if not provenance_id in self.provenance_ids:
+      self.provenance_ids.append(provenance_id)
+    if not source_id in self.source_ids:
+      self.source_ids.append(source_id)
+
+    return self
+
+  def triples(self) -> list[Triple]:
+    triples: list[Triple] = []
+    triples.append(Triple(self.id, _PREDICATE_TYPE_OF, object_id=_CLASS))
+    triples.append(Triple(self.id, _PREDICATE_NAME, object_value=self.name))
+    if self.description:
+      triples.append(
+          Triple(self.id, _PREDICATE_DESCRIPTION,
+                 object_value=self.description))
+    for provenance_id in self.provenance_ids:
+      triples.append(
+          Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=provenance_id))
+    for source_id in self.source_ids:
+      triples.append(
+          Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=source_id))
+    return triples
+
+
 class ImportType(StrEnum):
   OBSERVATIONS = "observations"
   EVENTS = "events"
+  ENTITIES = "entities"
 
 
 class InputFileFormat(StrEnum):
