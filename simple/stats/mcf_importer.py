@@ -26,6 +26,7 @@ from stats.reporter import FileImportReporter
 from util.filehandler import FileHandler
 
 _ID = 'ID'
+_DCID = 'dcid'
 
 
 class McfImporter(Importer):
@@ -51,20 +52,29 @@ class McfImporter(Importer):
       if self.is_main_dc:
         self.output_fh.write_string(self.input_fh.read_string())
       else:
-        triples = list(
-            map(lambda x: _to_triple(x),
-                mcf_to_triples(self.input_fh.read_string_io())))
+        parser_triples: list[list[str]] = []
+        # DCID references
+        dcids: dict[str, str] = {}
+        for parser_triple in mcf_to_triples(self.input_fh.read_string_io()):
+          [subject_id, predicate, value, _] = parser_triple
+          if predicate == _DCID:
+            dcids[subject_id] = value
+          parser_triples.append(parser_triple)
+
+        triples = list(map(lambda x: _to_triple(x, dcids), parser_triples))
         logging.info("Inserting %s triples from %s", len(triples),
                      self.input_file_name)
         self.db.insert_triples(triples)
+
       self.reporter.report_success()
     except Exception as e:
       self.reporter.report_failure(str(e))
       raise e
 
 
-def _to_triple(parser_triple: list[str]) -> Triple:
+def _to_triple(parser_triple: list[str], dcids: dict[str, str]) -> Triple:
   [subject_id, predicate, value, value_type] = parser_triple
+  subject_id = dcids.get(subject_id, subject_id)
   if value_type == _ID:
     return Triple(subject_id, predicate, object_id=value)
   else:
