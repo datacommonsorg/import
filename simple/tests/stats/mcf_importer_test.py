@@ -52,7 +52,10 @@ def _write_triples(db_path: str, output_path: str):
     pd.DataFrame(triples).to_csv(output_path, index=False)
 
 
-def _test_import(test: unittest.TestCase, test_name: str, is_main_dc: bool):
+def _test_import(test: unittest.TestCase,
+                 test_name: str,
+                 is_main_dc: bool,
+                 raises_error: bool = False):
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
@@ -73,11 +76,18 @@ def _test_import(test: unittest.TestCase, test_name: str, is_main_dc: bool):
     report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))
     reporter = FileImportReporter(input_mcf_path, ImportReporter(report_fh))
 
-    McfImporter(input_fh=input_fh,
-                output_fh=output_fh,
-                db=db,
-                reporter=reporter,
-                is_main_dc=is_main_dc).do_import()
+    importer = McfImporter(input_fh=input_fh,
+                           output_fh=output_fh,
+                           db=db,
+                           reporter=reporter,
+                           is_main_dc=is_main_dc)
+
+    if raises_error:
+      with test.assertRaises(ValueError):
+        importer.do_import()
+      return
+
+    importer.do_import()
 
     db.commit_and_close()
     _write_triples(db_path, output_triples_path)
@@ -101,3 +111,4 @@ class TestMcfImporter(unittest.TestCase):
   def test_basic_mcf(self):
     _test_import(self, "basic_mcf", is_main_dc=False)
     _test_import(self, "basic_mcf_main_dc", is_main_dc=True)
+    _test_import(self, "invalid_mcf", is_main_dc=False, raises_error=True)

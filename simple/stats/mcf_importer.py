@@ -54,14 +54,15 @@ class McfImporter(Importer):
       else:
         parser_triples: list[list[str]] = []
         # DCID references
-        dcids: dict[str, str] = {}
+        local2dcid: dict[str, str] = {}
         for parser_triple in mcf_to_triples(self.input_fh.read_string_io()):
           [subject_id, predicate, value, _] = parser_triple
           if predicate == _DCID:
-            dcids[subject_id] = value
-          parser_triples.append(parser_triple)
+            local2dcid[subject_id] = value
+          else:
+            parser_triples.append(parser_triple)
 
-        triples = list(map(lambda x: _to_triple(x, dcids), parser_triples))
+        triples = _to_triples(parser_triples, local2dcid)
         logging.info("Inserting %s triples from %s", len(triples),
                      self.input_file_name)
         self.db.insert_triples(triples)
@@ -72,9 +73,18 @@ class McfImporter(Importer):
       raise e
 
 
-def _to_triple(parser_triple: list[str], dcids: dict[str, str]) -> Triple:
+def _to_triples(parser_triples: list[list[str]],
+                local2dcid: dict[str, str]) -> list[Triple]:
+  return list(map(lambda x: _to_triple(x, local2dcid), parser_triples))
+
+
+def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
   [subject_id, predicate, value, value_type] = parser_triple
-  subject_id = dcids.get(subject_id, subject_id)
+
+  if subject_id not in local2dcid:
+    raise ValueError(f"dcid not specified for node: {subject_id}")
+
+  subject_id = local2dcid[subject_id]
   if value_type == _ID:
     return Triple(subject_id, predicate, object_id=value)
   else:

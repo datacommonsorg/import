@@ -35,12 +35,10 @@ some_var1,typeOf,StatisticalVariable,
 some_var1,measuredProperty,value,
 some_var1,name,,Some Variable 1 Name
 some_var1,description,,Some Variable 1 Description
-some_var1,dcid,,some_var1
 some_var2,typeOf,StatisticalVariable,
 some_var2,measuredProperty,value,
 some_var2,name,,Some Variable 2 Name
 some_var2,description,,Some Variable 2 Description
-some_var2,dcid,,some_var2
 c/s/default,typeOf,Source,
 c/s/default,name,,Custom Data Commons
 c/s/1,typeOf,Source,

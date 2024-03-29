@@ -5,7 +5,6 @@ who/AIR_10.ENVCAUSE--ENVCAUSE039,name,,Ambient air pollution attributable disabi
 who/AIR_10.ENVCAUSE--ENVCAUSE039,populationType,WHO_AIR_10,
 who/AIR_10.ENVCAUSE--ENVCAUSE039,statType,measuredValue,
 who/AIR_10.ENVCAUSE--ENVCAUSE039,who_envcause,WHO_EnvcauseEnum_ENVCAUSE039,
-who/AIR_10.ENVCAUSE--ENVCAUSE039,dcid,,who/AIR_10.ENVCAUSE--ENVCAUSE039
 who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--F,typeOf,StatisticalVariable,
 who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--F,measuredProperty,value,
 who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--F,name,,"Ambient air pollution attributable disability-adjusted life years per 100'000 children under 5 years [Lower respiratory infections, Female]"
@@ -13,7 +12,6 @@ who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--F,populationType,WHO_AIR_10,
 who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--F,statType,measuredValue,
 who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--F,who_envcause,WHO_EnvcauseEnum_ENVCAUSE039,
 who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--F,who_sex,WHO_SexEnum_F,
-who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--F,dcid,,who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--F
 who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--M,typeOf,StatisticalVariable,
 who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--M,measuredProperty,value,
 who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--M,name,,"Ambient air pollution attributable disability-adjusted life years per 100'000 children under 5 years [Lower respiratory infections, Male]"
@@ -21,4 +19,3 @@ who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--M,populationType,WHO_AIR_10,
 who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--M,statType,measuredValue,
 who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--M,who_envcause,WHO_EnvcauseEnum_ENVCAUSE039,
 who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--M,who_sex,WHO_SexEnum_M,
-who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--M,dcid,,who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--M
