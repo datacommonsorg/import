@@ -113,6 +113,8 @@ SCHEMA_MCF_FILE_NAME = "schema.mcf"
 
 MCF_NODE_TYPES_ALLOWLIST = set([STATISTICAL_VARIABLE, STAT_VAR_GROUP])
 
+_NAMESPACE_DELIMITER = ':'
+
 
 class ImportStatus(Enum):
   SUCCESS = auto()
@@ -232,13 +234,17 @@ class SqlDb(Db):
 
 
 def to_triple_tuple(triple: Triple):
-  return (triple.subject_id, triple.predicate, triple.object_id,
-          triple.object_value)
+  return (_strip_namespace(triple.subject_id), triple.predicate,
+          _strip_namespace(triple.object_id), triple.object_value)
 
 
 def to_observation_tuple(observation: Observation):
   return (observation.entity, observation.variable, observation.date,
           observation.value, observation.provenance)
+
+
+def _strip_namespace(v: str) -> str:
+  return v[v.find(_NAMESPACE_DELIMITER) + 1:]
 
 
 class DbEngine:

@@ -14,16 +14,18 @@
 
 import logging
 
+from kg_util.mcf_parser import mcf_to_triples
 import pandas as pd
 from stats import constants
 from stats.data import RowEntity
 from stats.data import Triple
 from stats.db import Db
 from stats.importer import Importer
-from stats.mcf_parser import mcf_to_triples
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from util.filehandler import FileHandler
+
+_ID = 'ID'
 
 
 class McfImporter(Importer):
@@ -49,7 +51,9 @@ class McfImporter(Importer):
       if self.is_main_dc:
         self.output_fh.write_string(self.input_fh.read_string())
       else:
-        triples = mcf_to_triples(self.input_fh.read_string_io())
+        triples = list(
+            map(lambda x: _to_triple(x),
+                mcf_to_triples(self.input_fh.read_string_io())))
         logging.info("Inserting %s triples from %s", len(triples),
                      self.input_file_name)
         self.db.insert_triples(triples)
@@ -57,3 +61,11 @@ class McfImporter(Importer):
     except Exception as e:
       self.reporter.report_failure(str(e))
       raise e
+
+
+def _to_triple(parser_triple: list[str]) -> Triple:
+  [subject_id, predicate, value, value_type] = parser_triple
+  if value_type == _ID:
+    return Triple(subject_id, predicate, object_id=value)
+  else:
+    return Triple(subject_id, predicate, object_value=value)

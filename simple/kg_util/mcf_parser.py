@@ -13,13 +13,15 @@
 # limitations under the License.
 """Library to parse an MCF file into triples."""
 
-from collections.abc import Iterator
+# TODO: Support TMCF parsing.
+# TODO: Support properties from non-DC/-schema.org namespace.
+# TODO: Support complex values enclosed in [] (LatLng, Quantity, QuantityRange).
+# TODO: Support provenance and other props in Context block.
+# TODO: Add API that returns a map-like structure.
+
 from csv import reader
 import dataclasses
-import io
 import sys
-
-from stats.data import Triple
 
 _VALUE = 'VALUE'
 _ID = 'ID'
@@ -38,22 +40,22 @@ _delim = ':'
 #
 
 
-def _strip_quotes(s: str) -> str:
+def _strip_quotes(s):
   if s.startswith('"') and s.endswith('"'):
     return s[1:-1]
   return s
 
 
-def _strip_ns(v: str) -> str:
+def _strip_ns(v):
   return v[v.find(_delim) + 1:]
 
 
-def _is_schema_ref_property(prop: str) -> bool:
+def _is_schema_ref_property(prop):
   return prop in ('typeOf', 'subClassOf', 'subPropertyOf', 'rangeIncludes',
                   'domainIncludes', 'specializationOf')
 
 
-def _is_common_ref_property(prop: str) -> bool:
+def _is_common_ref_property(prop):
   return (_is_schema_ref_property(prop) or
           prop in ('location', 'observedNode', 'containedInPlace',
                    'containedIn', 'populationType', 'measuredProperty',
@@ -61,17 +63,17 @@ def _is_common_ref_property(prop: str) -> bool:
                    'constraintProperties', 'measurementMethod', 'comparedNode'))
 
 
-def _is_global_ref(value: str) -> bool:
+def _is_global_ref(value):
   return (value.startswith(_dcid_prefix) or value.startswith(_dcs_prefix) or
           value.startswith(_schema_prefix))
 
 
-def _is_local_ref(value: str) -> bool:
+def _is_local_ref(value):
   return value.startswith(_local_prefix)
 
 
 @dataclasses.dataclass
-class _ParseContext:
+class ParseContext:
   """Context used for parser"""
   # MCF file line number.
   lno: int = 0
@@ -81,16 +83,15 @@ class _ParseContext:
   ns_map: dict = dataclasses.field(default_factory=dict)
   # Current Node block name.
   node: str = ''
-  node_without_ns: str = ''
   # Indicates whether the current Node block includes dcid property.
   has_dcid: bool = False
 
 
-def _as_err(msg: str, pc: _ParseContext) -> str:
+def _as_err(msg, pc):
   return 'Line ' + str(pc.lno) + ': ' + msg
 
 
-def _parse_value(prop: str, value: str, pc: _ParseContext) -> tuple[str, str]:
+def _parse_value(prop, value, pc):
   """Parses an MCF value string into a pair of value and type.
 
     Args:
@@ -132,8 +133,7 @@ def _parse_value(prop: str, value: str, pc: _ParseContext) -> tuple[str, str]:
   return (value, _VALUE)
 
 
-def _parse_values(prop: str, values_str: str,
-                  pc: _ParseContext) -> list[tuple[str, str]]:
+def _parse_values(prop, values_str, pc):
   value_pairs = []
   for values in reader([values_str]):
     for value in values:
@@ -142,7 +142,7 @@ def _parse_values(prop: str, values_str: str,
   return value_pairs
 
 
-def _update_ns_map(values_str: str, pc: _ParseContext):
+def _update_ns_map(values_str, pc):
   """Updates the namespace map with namespace values.
 
     Args:
@@ -161,28 +161,26 @@ def _update_ns_map(values_str: str, pc: _ParseContext):
     break
 
 
-def _to_triple(subject_id: str, predicate: str, value: str,
-               value_type: str) -> Triple:
-  if value_type == _ID:
-    return Triple(subject_id, predicate, object_id=value)
-  else:
-    return Triple(subject_id, predicate, object_value=value)
+#
+# Public Functions
+#
 
 
-def _mcf_to_triples(mcf_file: io.StringIO) -> Iterator[Triple]:
+def mcf_to_triples(mcf_file):
   """ Parses the file containing a Node MCF graph into triples.
 
   Args:
     mcf_file: Node MCF file object opened for read.
 
   Returns:
-    An Iterable of triples.
+    An Iterable of triples. Each triple has four values:
+      [<subject-id>, <property>, <object-id or object-value>, <'ID' | 'VALUE'>]
 
   On parse failures, throws AssertionError with a reference to offending line
   number in the MCF file.
   """
 
-  pc = _ParseContext()
+  pc = ParseContext()
   for line in mcf_file:
     pc.lno += 1
 
@@ -210,11 +208,10 @@ def _mcf_to_triples(mcf_file: io.StringIO) -> Iterator[Triple]:
 
       # Finalize current node.
       if (pc.node and not pc.has_dcid and _is_global_ref(pc.node)):
-        yield _to_triple(pc.node, _dcid, _strip_ns(pc.node), _VALUE)
+        yield [pc.node, _dcid, _strip_ns(pc.node), _VALUE]
 
       # Update to new node.
       pc.node = val_str
-      pc.node_without_ns = _strip_ns(pc.node)
       pc.in_context = False
       pc.has_dcid = False
 
@@ -229,18 +226,14 @@ def _mcf_to_triples(mcf_file: io.StringIO) -> Iterator[Triple]:
       assert pc.node, _as_err('Prop-Values before Node or Context block', pc)
 
       for vp in _parse_values(prop, val_str, pc):
-        yield _to_triple(pc.node_without_ns, prop, vp[0], vp[1])
+        yield [pc.node, prop, vp[0], vp[1]]
 
       if prop == _dcid:
         pc.has_dcid = True
 
   # Finalize current node.
   if (pc.node and not pc.has_dcid and _is_global_ref(pc.node)):
-    yield _to_triple(pc.node, _dcid, _strip_ns(pc.node), _VALUE)
-
-
-def mcf_to_triples(mcf_file: io.StringIO) -> list[Triple]:
-  return list(_mcf_to_triples(mcf_file))
+    yield [pc.node, _dcid, _strip_ns(pc.node), _VALUE]
 
 
 if __name__ == '__main__':
