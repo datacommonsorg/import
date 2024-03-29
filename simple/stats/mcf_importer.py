@@ -52,17 +52,7 @@ class McfImporter(Importer):
       if self.is_main_dc:
         self.output_fh.write_string(self.input_fh.read_string())
       else:
-        parser_triples: list[list[str]] = []
-        # DCID references
-        local2dcid: dict[str, str] = {}
-        for parser_triple in mcf_to_triples(self.input_fh.read_string_io()):
-          [subject_id, predicate, value, _] = parser_triple
-          if predicate == _DCID:
-            local2dcid[subject_id] = value
-          else:
-            parser_triples.append(parser_triple)
-
-        triples = _to_triples(parser_triples, local2dcid)
+        triples = self._mcf_to_triples()
         logging.info("Inserting %s triples from %s", len(triples),
                      self.input_file_name)
         self.db.insert_triples(triples)
@@ -72,10 +62,18 @@ class McfImporter(Importer):
       self.reporter.report_failure(str(e))
       raise e
 
+  def _mcf_to_triples(self) -> list[Triple]:
+    parser_triples: list[list[str]] = []
+    # DCID references
+    local2dcid: dict[str, str] = {}
+    for parser_triple in mcf_to_triples(self.input_fh.read_string_io()):
+      [subject_id, predicate, value, _] = parser_triple
+      if predicate == _DCID:
+        local2dcid[subject_id] = value
+      else:
+        parser_triples.append(parser_triple)
 
-def _to_triples(parser_triples: list[list[str]],
-                local2dcid: dict[str, str]) -> list[Triple]:
-  return list(map(lambda x: _to_triple(x, local2dcid), parser_triples))
+    return list(map(lambda x: _to_triple(x, local2dcid), parser_triples))
 
 
 def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
