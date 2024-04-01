@@ -1,0 +1,7 @@
+Node: no_dcid_specified
+typeOf: dcs:StatisticalVariable
+measuredProperty: dcs:value
+name: "Ambient air pollution attributable disability-adjusted life years per 100'000 children under 5 years [Lower respiratory infections]"
+populationType: dcs:WHO_AIR_10
+statType: dcs:measuredValue
+who_envcause: dcs:WHO_EnvcauseEnum_ENVCAUSE039

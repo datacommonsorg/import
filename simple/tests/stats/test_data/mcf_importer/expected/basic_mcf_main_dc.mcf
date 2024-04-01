@@ -1,0 +1,25 @@
+Node: dcid:who/AIR_10.ENVCAUSE--ENVCAUSE039
+typeOf: dcs:StatisticalVariable
+measuredProperty: dcs:value
+name: "Ambient air pollution attributable disability-adjusted life years per 100'000 children under 5 years [Lower respiratory infections]"
+populationType: dcs:WHO_AIR_10
+statType: dcs:measuredValue
+who_envcause: dcs:WHO_EnvcauseEnum_ENVCAUSE039
+
+Node: dcid:who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--F
+typeOf: dcs:StatisticalVariable
+measuredProperty: dcs:value
+name: "Ambient air pollution attributable disability-adjusted life years per 100'000 children under 5 years [Lower respiratory infections, Female]"
+populationType: dcs:WHO_AIR_10
+statType: dcs:measuredValue
+who_envcause: dcs:WHO_EnvcauseEnum_ENVCAUSE039
+who_sex: dcs:WHO_SexEnum_F
+
+Node: dcid:who/AIR_10.ENVCAUSE--ENVCAUSE039__SEX--M
+typeOf: dcs:StatisticalVariable
+measuredProperty: dcs:value
+name: "Ambient air pollution attributable disability-adjusted life years per 100'000 children under 5 years [Lower respiratory infections, Male]"
+populationType: dcs:WHO_AIR_10
+statType: dcs:measuredValue
+who_envcause: dcs:WHO_EnvcauseEnum_ENVCAUSE039
+who_sex: dcs:WHO_SexEnum_M

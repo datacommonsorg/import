@@ -31,6 +31,14 @@ author3,includedIn,c/p/1,
 author3,author_id,,author3
 author3,author_name,,Jane Smith
 author3,author_country,country/USA,
+some_var1,typeOf,StatisticalVariable,
+some_var1,measuredProperty,value,
+some_var1,name,,Some Variable 1 Name
+some_var1,description,,Some Variable 1 Description
+some_var2,typeOf,StatisticalVariable,
+some_var2,measuredProperty,value,
+some_var2,name,,Some Variable 2 Name
+some_var2,description,,Some Variable 2 Description
 c/s/default,typeOf,Source,
 c/s/default,name,,Custom Data Commons
 c/s/1,typeOf,Source,
@@ -53,17 +61,17 @@ var1,name,,var1
 var1,memberOf,custom/g/Root,
 var1,includedIn,c/p/1,
 var1,includedIn,c/s/1,
-var1,populationType,schema:Thing,
-var1,statType,dcs:measuredValue,
-var1,measuredProperty,dcs:var1,
+var1,populationType,Thing,
+var1,statType,measuredValue,
+var1,measuredProperty,var1,
 var2,typeOf,StatisticalVariable,
 var2,name,,var2
 var2,memberOf,custom/g/Root,
 var2,includedIn,c/p/1,
 var2,includedIn,c/s/1,
-var2,populationType,schema:Thing,
-var2,statType,dcs:measuredValue,
-var2,measuredProperty,dcs:var2,
+var2,populationType,Thing,
+var2,statType,measuredValue,
+var2,measuredProperty,var2,
 Article,typeOf,Class,
 Article,name,,Article
 Article,includedIn,c/p/1,

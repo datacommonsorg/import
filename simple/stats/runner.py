@@ -29,6 +29,7 @@ from stats.db import ImportStatus
 from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
 from stats.importer import Importer
+from stats.mcf_importer import McfImporter
 import stats.nl as nl
 from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
@@ -150,23 +151,47 @@ class Runner:
 
   def _run_imports(self):
     input_fhs: list[FileHandler] = []
+    input_mcf_fhs: list[FileHandler] = []
     for input_handler in self.input_handlers:
       if not input_handler.isdir:
-        input_fhs.append(input_handler)
+        input_file_name = input_handler.basename()
+        if input_file_name.endswith(".mcf"):
+          input_mcf_fhs.append(input_handler)
+        else:
+          input_fhs.append(input_handler)
       else:
         for input_file in sorted(input_handler.list_files(extension=".csv")):
           input_fhs.append(input_handler.make_file(input_file))
+        for input_file in sorted(input_handler.list_files(extension=".mcf")):
+          input_mcf_fhs.append(input_handler.make_file(input_file))
 
-      self.reporter.report_started(
-          import_files=list(map(lambda fh: fh.basename(), input_fhs)))
-      if not input_fhs:
-        raise RuntimeError("Not input CSVs found.")
+      self.reporter.report_started(import_files=list(
+          map(lambda fh: fh.basename(), input_fhs + input_mcf_fhs)))
       for input_fh in input_fhs:
         self._run_single_import(input_fh)
+      for input_mcf_fh in input_mcf_fhs:
+        self._run_single_mcf_import(input_mcf_fh)
 
   def _run_single_import(self, input_fh: FileHandler):
     logging.info("Importing file: %s", input_fh.basename())
     self._create_importer(input_fh).do_import()
+
+  def _run_single_mcf_import(self, input_mcf_fh: FileHandler):
+    logging.info("Importing MCF file: %s", input_mcf_fh.basename())
+    self._create_mcf_importer(input_mcf_fh, self.output_dir_fh,
+                              self.mode == RunMode.MAIN_DC).do_import()
+
+  def _create_mcf_importer(self, input_fh: FileHandler,
+                           output_dir_fh: FileHandler,
+                           is_main_dc: bool) -> Importer:
+    mcf_file_name = input_fh.basename()
+    output_fh = output_dir_fh.make_file(mcf_file_name)
+    reporter = self.reporter.import_file(mcf_file_name)
+    return McfImporter(input_fh=input_fh,
+                       output_fh=output_fh,
+                       db=self.db,
+                       reporter=reporter,
+                       is_main_dc=is_main_dc)
 
   def _create_importer(self, input_fh: FileHandler) -> Importer:
     input_file = input_fh.basename()
