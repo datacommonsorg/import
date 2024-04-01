@@ -59,9 +59,9 @@ MAIN_DC_OUTPUT_DIR = "mainDcOutputDir"
 
 _CREATE_TRIPLES_TABLE = """
 create table if not exists triples (
-    subject_id TEXT,
-    predicate TEXT,
-    object_id TEXT,
+    subject_id varchar(255),
+    predicate varchar(255),
+    object_id varchar(255),
     object_value TEXT
 );
 """
@@ -71,11 +71,11 @@ _INSERT_TRIPLES_STATEMENT = "insert into triples values(?, ?, ?, ?)"
 
 _CREATE_OBSERVATIONS_TABLE = """
 create table if not exists observations (
-    entity TEXT,
-    variable TEXT,
-    date TEXT,
-    value TEXT,
-    provenance TEXT
+    entity varchar(255),
+    variable varchar(255),
+    date varchar(255),
+    value varchar(255),
+    provenance varchar(255)
 );
 """
 
