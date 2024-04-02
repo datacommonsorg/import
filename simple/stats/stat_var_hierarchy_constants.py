@@ -13,6 +13,9 @@
 # limitations under the License.
 
 # Set of properties that should not be considered for building the hierarchy.
+# Ref[1]: https://source.corp.google.com/piper///depot/google3/datacommons/import/mcf_vocab.cc;l=142;rcl=621036089
+# Includes a subset of props from [1] relevant to Custom DCs.
+# Also includes a Custom DC specific property "includedIn".
 SV_HIERARCHY_PROPS_BLOCKLIST: set[str] = {
     "dcid", "typeOf", "provenance", "populationType", "name", "label",
     "alternateName", "description", "memberOf", "utteranceTemplate", "source",
