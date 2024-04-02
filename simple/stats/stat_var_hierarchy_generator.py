@@ -14,8 +14,8 @@
 
 import logging
 
+from stats import schema_constants
 from stats.data import Triple
-import stats.stat_var_hierarchy_constants as svh_constants
 
 
 class StatVarHierarchyGenerator:
@@ -57,17 +57,17 @@ class StatVarPVs:
                         str(triple))
         continue
 
-      if triple.predicate == svh_constants.PREDICATE_TYPE_OF:
-        if value == svh_constants.TYPE_STATISTICAL_VARIABLE:
+      if triple.predicate == schema_constants.PREDICATE_TYPE_OF:
+        if value == schema_constants.TYPE_STATISTICAL_VARIABLE:
           sv_ids[triple.subject_id] = True
-      elif triple.predicate == svh_constants.PREDICATE_POPULATION_TYPE:
+      elif triple.predicate == schema_constants.PREDICATE_POPULATION_TYPE:
         dcid2poptype[triple.subject_id] = value
-      elif triple.predicate not in svh_constants.SV_HIERARCHY_PROPS_BLOCKLIST:
+      elif triple.predicate not in schema_constants.SV_HIERARCHY_PROPS_BLOCKLIST:
         pvs = dcid2pvs.setdefault(triple.subject_id, {})
         pvs[triple.predicate] = value
 
     # Filter SVs.
     for sv_id in sv_ids.keys():
       self.sv_id_2_population_type[sv_id] = dcid2poptype.get(
-          sv_id, svh_constants.DEFAULT_POPULATION_TYPE)
+          sv_id, schema_constants.DEFAULT_POPULATION_TYPE)
       self.sv_id_2_pvs[sv_id] = dcid2pvs.get(sv_id, {})
