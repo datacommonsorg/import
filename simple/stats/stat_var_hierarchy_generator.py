@@ -46,6 +46,7 @@ class StatVarPVs:
     # Also collect SV DCIDs for filtering subsequently.
 
     # Using dict instead of set to maintain order.
+    # Maintaining order maintains results consistency and helps with tests.
     sv_ids: dict[str, bool] = {}
     dcid2poptype: dict[str, str] = {}
     dcid2pvs: dict[str, dict[str, str]] = {}
