@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import unittest
 
 from stats.data import Triple
@@ -60,3 +61,54 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
     self.assertDictEqual(sv_pvs.sv_id_2_population_type,
                          expected_sv_id_2_population_type)
     self.assertDictEqual(sv_pvs.sv_id_2_pvs, expected_sv_id_2_pvs)
+
+  def test_svg_tree(self):
+    tree = SVGTree(parent_svg_id="", pv=PropVal("populationType", "Person"))
+    tree.insert_sv(sv_id="sv1", pvs={"gender": "Female", "race": "Asian"})
+
+    expected = """
+{
+ "svg_id": "c/g/Person",
+ "svg_name": "Person",
+ "parent_svg_id": "",
+ "sv_ids": [],
+ "child_svgs": [
+  {
+   "svg_id": "c/g/Person_gender-Female",
+   "svg_name": "Female",
+   "parent_svg_id": "c/g/Person",
+   "sv_ids": [],
+   "child_svgs": [
+    {
+     "svg_id": "c/g/Person_gender-Female_race-Asian",
+     "svg_name": "Asian",
+     "parent_svg_id": "c/g/Person_gender-Female",
+     "sv_ids": [
+      "sv1"
+     ],
+     "child_svgs": []
+    }
+   ]
+  },
+  {
+   "svg_id": "c/g/Person_race-Asian",
+   "svg_name": "Asian",
+   "parent_svg_id": "c/g/Person",
+   "sv_ids": [],
+   "child_svgs": [
+    {
+     "svg_id": "c/g/Person_race-Asian_gender-Female",
+     "svg_name": "Female",
+     "parent_svg_id": "c/g/Person_race-Asian",
+     "sv_ids": [
+      "sv1"
+     ],
+     "child_svgs": []
+    }
+   ]
+  }
+ ]
+}
+"""
+    expected_json = json.loads(expected)
+    self.assertDictEqual(tree.json(), expected_json)
