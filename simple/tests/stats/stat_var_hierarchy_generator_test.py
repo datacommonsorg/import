@@ -55,7 +55,7 @@ def _test_generate_internal(test: unittest.TestCase, test_name: str):
     input_triples = _read_triples_csv(input_triples_path)
 
     hierarchy = generate_internal(input_triples)
-    svgs_json = dict({k: v.json() for k, v in hierarchy.svgs.items()})
+    svgs_json = [svg.json() for svg in hierarchy.svgs.values()]
     with open(output_svgs_json_path, "w") as out:
       json.dump(svgs_json, out, indent=1)
 

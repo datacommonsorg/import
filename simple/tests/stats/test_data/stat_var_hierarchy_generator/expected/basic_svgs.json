@@ -1,5 +1,5 @@
-{
- "c/g/Person_Gender-Female_Race-Asian": {
+[
+ {
   "svg_id": "c/g/Person_Gender-Female_Race-Asian",
   "svg_name": "Person With Gender = Female, Race = Asian",
   "sv_ids": [
@@ -11,7 +11,7 @@
   ],
   "child_svg_ids": []
  },
- "c/g/Coal_EnergySource-CokeCoal": {
+ {
   "svg_id": "c/g/Coal_EnergySource-CokeCoal",
   "svg_name": "Coal With EnergySource = CokeCoal",
   "sv_ids": [
@@ -22,7 +22,7 @@
   ],
   "child_svg_ids": []
  },
- "c/g/Thing": {
+ {
   "svg_id": "c/g/Thing",
   "svg_name": "Thing",
   "sv_ids": [
@@ -33,7 +33,7 @@
   ],
   "child_svg_ids": []
  },
- "c/g/Person_Gender_Race-Asian": {
+ {
   "svg_id": "c/g/Person_Gender_Race-Asian",
   "svg_name": "Person With Gender = , Race = Asian",
   "sv_ids": [],
@@ -44,7 +44,7 @@
    "c/g/Person_Gender-Female_Race-Asian"
   ]
  },
- "c/g/Person_Race-Asian": {
+ {
   "svg_id": "c/g/Person_Race-Asian",
   "svg_name": "Person With Race = Asian",
   "sv_ids": [],
@@ -55,7 +55,7 @@
    "c/g/Person_Gender_Race-Asian"
   ]
  },
- "c/g/Person_Race": {
+ {
   "svg_id": "c/g/Person_Race",
   "svg_name": "Person With Race = ",
   "sv_ids": [],
@@ -66,7 +66,7 @@
    "c/g/Person_Race-Asian"
   ]
  },
- "c/g/Person": {
+ {
   "svg_id": "c/g/Person",
   "svg_name": "Person",
   "sv_ids": [],
@@ -78,7 +78,7 @@
    "c/g/Person_Gender"
   ]
  },
- "c/g/Person_Gender-Female_Race": {
+ {
   "svg_id": "c/g/Person_Gender-Female_Race",
   "svg_name": "Person With Gender = Female, Race = ",
   "sv_ids": [],
@@ -89,7 +89,7 @@
    "c/g/Person_Gender-Female_Race-Asian"
   ]
  },
- "c/g/Person_Gender-Female": {
+ {
   "svg_id": "c/g/Person_Gender-Female",
   "svg_name": "Person With Gender = Female",
   "sv_ids": [],
@@ -100,7 +100,7 @@
    "c/g/Person_Gender-Female_Race"
   ]
  },
- "c/g/Person_Gender": {
+ {
   "svg_id": "c/g/Person_Gender",
   "svg_name": "Person With Gender = ",
   "sv_ids": [],
@@ -111,7 +111,7 @@
    "c/g/Person_Gender-Female"
   ]
  },
- "c/g/Coal_EnergySource": {
+ {
   "svg_id": "c/g/Coal_EnergySource",
   "svg_name": "Coal With EnergySource = ",
   "sv_ids": [],
@@ -122,7 +122,7 @@
    "c/g/Coal_EnergySource-CokeCoal"
   ]
  },
- "c/g/Coal": {
+ {
   "svg_id": "c/g/Coal",
   "svg_name": "Coal",
   "sv_ids": [],
@@ -133,4 +133,4 @@
    "c/g/Coal_EnergySource"
   ]
  }
-}
+]
