@@ -112,10 +112,11 @@ class SVG:
     self.has_prop_without_val: bool = False
     self.sample_sv: SVPropVals | None = None
 
-  def from_sv(sv: SVPropVals, insert_sv_id: bool = False) -> "SVG":
+  def from_sv(sv: SVPropVals, is_leaf_svg: bool = False) -> Self:
     svg = SVG(svg_id=sv.gen_svg_id(), svg_name=sv.gen_svg_name())
     svg.sample_sv = sv
-    if insert_sv_id:
+    # Insert SVG IDs into leaf svgs.
+    if is_leaf_svg:
       svg.sv_ids[sv.sv_id] = True
     return svg
 
@@ -151,7 +152,7 @@ def create_all_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
 def create_leaf_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
   svgs: dict[str, SVG] = {}
   for sv in svs:
-    svg: SVG = SVG.from_sv(sv, insert_sv_id=True)
+    svg: SVG = SVG.from_sv(sv, is_leaf_svg=True)
     svgs[svg.svg_id] = svg
   return svgs
 
