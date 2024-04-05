@@ -17,6 +17,7 @@ from dataclasses import replace
 import json
 import logging
 import re
+from typing import Self
 
 from stats import schema_constants
 from stats.data import Triple
@@ -27,13 +28,13 @@ def generate(triples: list[Triple]) -> list[Triple]:
 generates a SV hierarchy and returns a list of output triples
 representing the hierarchy.
 """
-  return generate_internal(triples).svg_triples
+  return _generate_internal(triples).svg_triples
 
 
 # Helper functions and classes
 
 
-def generate_internal(triples: list[Triple]) -> "StatVarHierarchy":
+def _generate_internal(triples: list[Triple]) -> "StatVarHierarchy":
   """Given a list of input triples (including stat vars), 
 generates a SV hierarchy and returns a list of output triples
 representing the hierarchy.
@@ -63,10 +64,14 @@ class PropVal:
     return capitalize(self.prop)
 
 
+# TODO: DPV handling.
 @dataclass
 class SVPropVals:
   sv_id: str
   population_type: str
+  # The PVs here are ordered by prop.
+  # They are originally ordered in the extract_svs method
+  # and maintain the order thereafter.
   pvs: list[PropVal]
 
   def gen_svg_id(self):
@@ -78,11 +83,13 @@ class SVPropVals:
   def gen_svg_name(self):
     svg_name = capitalize(self.population_type)
     if self.pvs:
-      pvs_str = ", ".join(f"{pv.gen_pv_name()}" for pv in self.pvs)
+      pvs_str = ", ".join(map(lambda pv: pv.gen_pv_name(), self.pvs))
       svg_name = f"{svg_name} With {pvs_str}"
     return svg_name
 
-  def with_pvs(self, pvs: list[PropVal]) -> "SVPropVals":
+  # Creates and returns a new SVPropVals object with the same fields as this object
+  # except for PVs which are set to the specified list.
+  def with_pvs(self, pvs: list[PropVal]) -> Self:
     return replace(self, pvs=pvs)
 
 
@@ -93,11 +100,15 @@ class SVG:
     self.svg_name = svg_name
 
     # Using dict instead of sets below to maintain insertion order.
+    # Maintaining order maintains results consistency and helps with tests.
     self.sv_ids: dict[str, bool] = {}
     self.parent_svg_ids: dict[str, bool] = {}
     self.child_svg_ids: dict[str, bool] = {}
 
     self.parent_svgs_processed: bool = False
+    # Only relevant for PV hierarchy.
+    # Indicates whether this SVG is for PVs where
+    # one of the PVs does not have a value.
     self.has_prop_without_val: bool = False
     self.sample_sv: SVPropVals | None = None
 
@@ -124,6 +135,7 @@ class SVG:
 
 @dataclass
 class StatVarHierarchy:
+  # Dict from SVG dcid to SVG.
   svgs: dict[str, SVG]
   svg_triples: list[Triple]
 
@@ -147,7 +159,11 @@ def create_leaf_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
 def create_parent_svg(parent_sv: SVPropVals, svg: SVG, svgs: dict[str, SVG],
                       svg_has_prop_without_val: bool):
   parent_svg_id = parent_sv.gen_svg_id()
-  parent_svg = svgs.setdefault(parent_svg_id, SVG.from_sv(parent_sv))
+  parent_svg = svgs.get(parent_svg_id)
+  if not parent_svg:
+    parent_svg = SVG.from_sv(parent_sv)
+    svgs[parent_svg_id] = parent_svg
+
   svg.parent_svg_ids[parent_svg_id] = True
   parent_svg.child_svg_ids[svg.svg_id] = True
   if not parent_svg.parent_svgs_processed:
@@ -159,13 +175,16 @@ def create_parent_svgs(svg_id: str, svgs: dict[str, SVG]):
   svg = svgs[svg_id]
   sv = svg.sample_sv
 
-  # If not PVs left, we've reached the top of the population type hierarchy.
+  # If no PVs left, we've reached the top of the population type hierarchy.
   # Attach it to the DC root and return.
   if not sv.pvs:
     svg.parent_svg_ids[schema_constants.ROOT_SVG_ID] = True
     return
 
   # Process SVGs without a val
+  # e.g. The SVG c/g/Person_Gender_Race-Asian represents a SVG for
+  # persons of all genders with race = Asian. In this case,
+  # the prop gender does not have a val.
   if svg.has_prop_without_val:
     parent_pvs: list[PropVal] = []
     for pv in sv.pvs:
@@ -203,19 +222,9 @@ def capitalize(s: str) -> str:
   return s[0].upper() + s[1:]
 
 
-def strip_namespace(s: str) -> str:
-  # Trivially strip namespaces.
-  # This could strip out something like "http:" in this case but we are not expecting URLs here
-  # and stripping them out may still be ok for generating IDs.
-  return s[s.find(":") + 1:]
-
-
 def to_dcid_token(token: str) -> str:
-  # Strip namespace.
-  result = strip_namespace(token)
-
   # Remove all non-alphanumeric characters.
-  result = re.sub("[^0-9a-zA-Z]+", "", result)
+  result = re.sub("[^0-9a-zA-Z]+", "", token)
   return capitalize(result)
 
 

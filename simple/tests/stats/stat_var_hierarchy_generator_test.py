@@ -21,6 +21,7 @@ import unittest
 import pandas as pd
 from stats.data import Triple
 from stats.stat_var_hierarchy_generator import *
+from stats.stat_var_hierarchy_generator import _generate_internal
 from tests.stats.test_util import is_write_mode
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -54,7 +55,7 @@ def _test_generate_internal(test: unittest.TestCase, test_name: str):
 
     input_triples = _read_triples_csv(input_triples_path)
 
-    hierarchy = generate_internal(input_triples)
+    hierarchy = _generate_internal(input_triples)
     svgs_json = [svg.json() for svg in hierarchy.svgs.values()]
     with open(output_svgs_json_path, "w") as out:
       json.dump(svgs_json, out, indent=1)
