@@ -23,7 +23,8 @@ _SENTENCE_COL = "sentence"
 _SENTENCE_SEPARATOR = ";"
 
 
-def generate_sv_sentences(svs: list[StatVar], sentences_fh: FileHandler):
+def generate_sv_sentences(svs: list[StatVar], sentences_fh: FileHandler,
+                          incremental: bool):
   """Generates sentences based on the name, description and NL sentences of the specified SVs.
 
     The SV dcids and sentences are written to a CSV using the specified FileHandler
@@ -35,6 +36,11 @@ def generate_sv_sentences(svs: list[StatVar], sentences_fh: FileHandler):
   dataframe = pd.DataFrame(rows)
 
   logging.info("Writing %s SV sentences to: %s", dataframe.size, sentences_fh)
+  if incremental:
+    data = sentences_fh.read_string_io()
+    existing_df = pd.read_csv(data)
+    dataframe = pd.concat([existing_df, dataframe], ignore_index=True)
+    dataframe.drop_duplicates(inplace=True)
   sentences_fh.write_string(dataframe.to_csv(index=False))
 
 

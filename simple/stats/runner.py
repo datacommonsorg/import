@@ -52,11 +52,13 @@ class Runner:
                config_file: str,
                input_dir: str,
                output_dir: str,
-               mode: RunMode = RunMode.CUSTOM_DC) -> None:
+               mode: RunMode = RunMode.CUSTOM_DC,
+               incremental: bool = False) -> None:
     assert config_file or input_dir, "One of config_file or input_dir must be specified"
     assert output_dir, "output_dir must be specified"
 
     self.mode = mode
+    self.incremental = incremental
     self.input_handlers: list[FileHandler] = []
 
     # Config file driven.
@@ -119,7 +121,7 @@ class Runner:
       return create_sqlite_config(
           self.output_dir_fh.make_file(constants.DB_FILE_NAME).path)
 
-    self.db = create_db(_get_db_config())
+    self.db = create_db(_get_db_config(), self.incremental)
     self.nodes = Nodes(self.config)
 
   def run(self):
@@ -135,7 +137,8 @@ class Runner:
       # Generate SV sentences.
       nl.generate_sv_sentences(
           list(self.nodes.variables.values()),
-          self.nl_dir_fh.make_file(constants.SENTENCES_FILE_NAME))
+          self.nl_dir_fh.make_file(constants.SENTENCES_FILE_NAME),
+          self.incremental)
 
       # Write import info to DB.
       self.db.insert_import_info(status=ImportStatus.SUCCESS)

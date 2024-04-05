@@ -69,6 +69,31 @@ create table if not exists triples (
 _DELETE_TRIPLES_STATEMENT = "delete from triples"
 _INSERT_TRIPLES_STATEMENT = "insert into triples values(?, ?, ?, ?)"
 
+_CREATE_TEMP_TRIPLES_TABLE = """
+create table if not exists temp_triples (
+    subject_id varchar(255),
+    predicate varchar(255),
+    object_id varchar(255),
+    object_value TEXT
+);
+"""
+
+_INSERT_TEMP_TRIPLES_STATEMENT = "insert into temp_triples values(?, ?, ?, ?)"
+
+_DELETE_MATCHING_TRIPLES_STATEMENT = """
+    DELETE FROM triples
+    WHERE (subject_id, predicate) IN (
+        SELECT subject_id, predicate FROM temp_triples
+    )
+"""
+
+_INSERT_FROM_TEMP_TRIPLES_STATEMENT = """
+    INSERT INTO triples
+    SELECT * FROM temp_triples
+"""
+
+_DROP_TEMP_TRIPLES_TABLE = "DROP TABLE IF EXISTS temp_triples"
+
 _CREATE_OBSERVATIONS_TABLE = """
 create table if not exists observations (
     entity varchar(255),
@@ -81,6 +106,32 @@ create table if not exists observations (
 
 _DELETE_OBSERVATIONS_STATEMENT = "delete from observations"
 _INSERT_OBSERVATIONS_STATEMENT = "insert into observations values(?, ?, ?, ?, ?)"
+
+_CREATE_TEMP_OBSERVATIONS_TABLE = """
+create table if not exists temp_observations (
+    entity varchar(255),
+    variable varchar(255),
+    date varchar(255),
+    value varchar(255),
+    provenance varchar(255)
+);
+"""
+
+_INSERT_TEMP_OBSERVATIONS_STATEMENT = "insert into temp_observations values(?, ?, ?, ?, ?)"
+
+_DELETE_MATCHING_OBSERVATIONS_STATEMENT = """
+    DELETE FROM observations
+    WHERE (entity, variable, date) IN (
+        SELECT entity, variable, date FROM temp_observations
+    )
+"""
+
+_INSERT_FROM_TEMP_OBSERVATIONS_STATEMENT = """
+    INSERT INTO observations
+    SELECT * FROM temp_observations
+"""
+
+_DROP_TEMP_OBSERVATIONS_TABLE = "DROP TABLE IF EXISTS temp_observations"
 
 _CREATE_IMPORTS_TABLE = """
 create table if not exists imports (
@@ -99,6 +150,14 @@ _INIT_STATEMENTS = [
     # Clearing tables for now (not the import tables though since we want to maintain its history).
     _DELETE_TRIPLES_STATEMENT,
     _DELETE_OBSERVATIONS_STATEMENT
+]
+
+_INIT_STATEMENTS_INCREMENTAL = [
+    _CREATE_TRIPLES_TABLE,
+    _CREATE_OBSERVATIONS_TABLE,
+    _CREATE_IMPORTS_TABLE,
+    _CREATE_TEMP_TRIPLES_TABLE,
+    _CREATE_TEMP_OBSERVATIONS_TABLE,
 ]
 
 OBSERVATIONS_TMCF = """Node: E:Table->E0
@@ -146,9 +205,10 @@ class MainDcDb(Db):
   Triples will be output as schema MCF.
   """
 
-  def __init__(self, db_params: dict) -> None:
+  def __init__(self, db_params: dict, incremental: bool) -> None:
     assert db_params
     assert MAIN_DC_OUTPUT_DIR in db_params
+    assert not incremental, "Incremental mode not supported for main DC."
 
     self.output_dir_fh = create_file_handler(db_params[MAIN_DC_OUTPUT_DIR],
                                              is_dir=True)
@@ -193,15 +253,26 @@ class MainDcDb(Db):
 class SqlDb(Db):
   """Class to insert triples and observations into a SQL DB."""
 
-  def __init__(self, config: dict) -> None:
+  def __init__(self, config: dict, incremental: bool) -> None:
     self.engine = create_db_engine(config)
     self.num_observations = 0
     self.variables: set[str] = set()
+    self.incremental = incremental
+    if self.incremental:
+      for statement in _INIT_STATEMENTS_INCREMENTAL:
+        self.engine.execute(statement)
+    else:
+      for statement in _INIT_STATEMENTS:
+        self.engine.execute(statement)
 
   def insert_triples(self, triples: list[Triple]):
     logging.info("Writing %s triples to [%s]", len(triples), self.engine)
-    self.engine.executemany(_INSERT_TRIPLES_STATEMENT,
-                            [to_triple_tuple(triple) for triple in triples])
+    if self.incremental:
+      self.engine.executemany(_INSERT_TEMP_TRIPLES_STATEMENT,
+                              [to_triple_tuple(triple) for triple in triples])
+    else:
+      self.engine.executemany(_INSERT_TRIPLES_STATEMENT,
+                              [to_triple_tuple(triple) for triple in triples])
 
   def insert_observations(self, observations: list[Observation],
                           input_file_name: str):
@@ -212,8 +283,10 @@ class SqlDb(Db):
     for observation in observations:
       tuples.append(to_observation_tuple(observation))
       self.variables.add(observation.variable)
-
-    self.engine.executemany(_INSERT_OBSERVATIONS_STATEMENT, tuples)
+    if self.incremental:
+      self.engine.executemany(_INSERT_TEMP_OBSERVATIONS_STATEMENT, tuples)
+    else:
+      self.engine.executemany(_INSERT_OBSERVATIONS_STATEMENT, tuples)
 
   def insert_import_info(self, status: ImportStatus):
     metadata = self._import_metadata()
@@ -224,13 +297,25 @@ class SqlDb(Db):
         (str(datetime.now()), status.name, json.dumps(metadata)))
 
   def commit_and_close(self):
+    if self.incremental:
+      self._update_observations_and_triples()
     self.engine.commit_and_close()
 
   def _import_metadata(self) -> dict:
     return {
         "numVars": len(self.variables),
         "numObs": self.num_observations,
+        "incremental": self.incremental,
     }
+
+  def _update_observations_and_triples(self):
+    self.engine.execute(_DELETE_MATCHING_OBSERVATIONS_STATEMENT)
+    self.engine.execute(_INSERT_FROM_TEMP_OBSERVATIONS_STATEMENT)
+    self.engine.execute(_DROP_TEMP_OBSERVATIONS_TABLE)
+
+    self.engine.execute(_DELETE_MATCHING_TRIPLES_STATEMENT)
+    self.engine.execute(_INSERT_FROM_TEMP_TRIPLES_STATEMENT)
+    self.engine.execute(_DROP_TEMP_TRIPLES_TABLE)
 
 
 def to_triple_tuple(triple: Triple):
@@ -277,8 +362,6 @@ class SqliteDbEngine(DbEngine):
     logging.info("Connected to SQLite: %s", self.local_db_file_path)
 
     self.cursor = self.connection.cursor()
-    for statement in _INIT_STATEMENTS:
-      self.cursor.execute(statement)
 
   def __str__(self) -> str:
     return f"{TYPE_SQLITE}: {self.db_file_path}"
@@ -313,7 +396,7 @@ _CLOUD_MY_SQL_CONNECT_PARAMS = [
 _CLOUD_MY_SQL_PARAMS = [CLOUD_MY_SQL_INSTANCE] + _CLOUD_MY_SQL_CONNECT_PARAMS
 
 
-class CloudSqlDbEngine:
+class CloudSqlDbEngine(DbEngine):
 
   def __init__(self, db_params: dict[str, str]) -> None:
     for param in _CLOUD_MY_SQL_PARAMS:
@@ -328,8 +411,6 @@ class CloudSqlDbEngine:
                  db_params[CLOUD_MY_SQL_INSTANCE], db_params[CLOUD_MY_SQL_DB])
     self.description = f"{TYPE_CLOUD_SQL}: {db_params[CLOUD_MY_SQL_INSTANCE]} ({db_params[CLOUD_MY_SQL_DB]})"
     self.cursor: Cursor = self.connection.cursor()
-    for statement in _INIT_STATEMENTS:
-      self.cursor.execute(statement)
 
   def __str__(self) -> str:
     return self.description
@@ -372,11 +453,11 @@ def create_db_engine(config: dict) -> DbEngine:
   assert False
 
 
-def create_db(config: dict) -> Db:
+def create_db(config: dict, incremental: bool) -> Db:
   db_type = config[FIELD_DB_TYPE]
   if db_type and db_type == TYPE_MAIN_DC:
-    return MainDcDb(config)
-  return SqlDb(config)
+    return MainDcDb(config, incremental)
+  return SqlDb(config, incremental)
 
 
 def create_sqlite_config(sqlite_db_file_path: str) -> dict:

@@ -45,6 +45,12 @@ flags.DEFINE_string(
     constants.DEFAULT_FROZEN_TIME,
     "If freeze_time is True, the time that the run is frozen at.",
 )
+flags.DEFINE_bool(
+    "incremental",
+    False,
+    "If True, update existing records in the database and only add new records. "
+    "If False, delete all existing records and insert new records.",
+)
 
 # If running with time frozen, the packages to be ignored.
 # i.e. packages where time should not be frozen if it leads to errant behavior.
@@ -64,7 +70,8 @@ def _run():
   Runner(config_file=FLAGS.config_file,
          input_dir=FLAGS.input_dir,
          output_dir=FLAGS.output_dir,
-         mode=FLAGS.mode).run()
+         mode=FLAGS.mode,
+         incremental=FLAGS.incremental).run()
 
 
 def main(_):

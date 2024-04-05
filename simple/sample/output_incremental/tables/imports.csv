@@ -1,0 +1,3 @@
+imported_at,status,metadata
+"2023-01-01 00:00:00",SUCCESS,"{""numVars"": 5, ""numObs"": 67, ""incremental"": false}"
+"2023-01-01 00:00:00",SUCCESS,"{""numVars"": 2, ""numObs"": 32, ""incremental"": true}"
