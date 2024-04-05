@@ -12,6 +12,18 @@
   "child_svg_ids": []
  },
  {
+  "svg_id": "c/g/Person_Gender-Male_Race-Asian",
+  "svg_name": "Person With Gender = Male, Race = Asian",
+  "sv_ids": [
+   "sv2"
+  ],
+  "parent_svg_ids": [
+   "c/g/Person_Gender_Race-Asian",
+   "c/g/Person_Gender-Male_Race"
+  ],
+  "child_svg_ids": []
+ },
+ {
   "svg_id": "c/g/Person_Gender_Race-Asian",
   "svg_name": "Person With Gender, Race = Asian",
   "sv_ids": [],
@@ -19,7 +31,8 @@
    "c/g/Person_Race-Asian"
   ],
   "child_svg_ids": [
-   "c/g/Person_Gender-Female_Race-Asian"
+   "c/g/Person_Gender-Female_Race-Asian",
+   "c/g/Person_Gender-Male_Race-Asian"
   ]
  },
  {
@@ -86,7 +99,30 @@
    "c/g/Person"
   ],
   "child_svg_ids": [
-   "c/g/Person_Gender-Female"
+   "c/g/Person_Gender-Female",
+   "c/g/Person_Gender-Male"
+  ]
+ },
+ {
+  "svg_id": "c/g/Person_Gender-Male_Race",
+  "svg_name": "Person With Gender = Male, Race",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person_Gender-Male"
+  ],
+  "child_svg_ids": [
+   "c/g/Person_Gender-Male_Race-Asian"
+  ]
+ },
+ {
+  "svg_id": "c/g/Person_Gender-Male",
+  "svg_name": "Person With Gender = Male",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person_Gender"
+  ],
+  "child_svg_ids": [
+   "c/g/Person_Gender-Male_Race"
   ]
  }
 ]

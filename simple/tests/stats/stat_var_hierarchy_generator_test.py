@@ -75,6 +75,12 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
   def test_generate_internal_basic(self):
     _test_generate_internal(self, "basic")
 
+  def test_generate_internal_three_unrelated_svs(self):
+    _test_generate_internal(self, "three_unrelated_svs")
+
+  def test_generate_internal_two_related_svs(self):
+    _test_generate_internal(self, "two_related_svs")
+
   def test_extract_svs(self):
     input_triples: list[Triple] = [
         Triple("sv1", "typeOf", "StatisticalVariable", ""),

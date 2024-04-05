@@ -12,6 +12,28 @@
   "child_svg_ids": []
  },
  {
+  "svg_id": "c/g/Coal_EnergySource-CokeCoal",
+  "svg_name": "Coal With EnergySource = CokeCoal",
+  "sv_ids": [
+   "sv2"
+  ],
+  "parent_svg_ids": [
+   "c/g/Coal_EnergySource"
+  ],
+  "child_svg_ids": []
+ },
+ {
+  "svg_id": "c/g/Thing",
+  "svg_name": "Thing",
+  "sv_ids": [
+   "sv3"
+  ],
+  "parent_svg_ids": [
+   "dc/g/Root"
+  ],
+  "child_svg_ids": []
+ },
+ {
   "svg_id": "c/g/Person_Gender_Race-Asian",
   "svg_name": "Person With Gender, Race = Asian",
   "sv_ids": [],
@@ -87,6 +109,28 @@
   ],
   "child_svg_ids": [
    "c/g/Person_Gender-Female"
+  ]
+ },
+ {
+  "svg_id": "c/g/Coal_EnergySource",
+  "svg_name": "Coal With EnergySource",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Coal"
+  ],
+  "child_svg_ids": [
+   "c/g/Coal_EnergySource-CokeCoal"
+  ]
+ },
+ {
+  "svg_id": "c/g/Coal",
+  "svg_name": "Coal",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "dc/g/Root"
+  ],
+  "child_svg_ids": [
+   "c/g/Coal_EnergySource"
   ]
  }
 ]

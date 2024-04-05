@@ -52,6 +52,16 @@ class PropVal:
   prop: str
   val: str
 
+  def gen_pv_id(self) -> str:
+    if self.val:
+      return f"{to_dcid_token(self.prop)}-{to_dcid_token(self.val)}"
+    return to_dcid_token(self.prop)
+
+  def gen_pv_name(self) -> str:
+    if self.val:
+      return f"{capitalize(self.prop)} = {capitalize(self.val)}"
+    return capitalize(self.prop)
+
 
 @dataclass
 class SVPropVals:
@@ -62,17 +72,13 @@ class SVPropVals:
   def gen_svg_id(self):
     svg_id = f"{schema_constants.CUSTOM_SVG_PREFIX}{to_dcid_token(self.population_type)}"
     for pv in self.pvs:
-      if pv.val:
-        svg_id = f"{svg_id}_{to_dcid_token(pv.prop)}-{to_dcid_token(pv.val)}"
-      else:
-        svg_id = f"{svg_id}_{to_dcid_token(pv.prop)}"
+      svg_id = f"{svg_id}_{pv.gen_pv_id()}"
     return svg_id
 
   def gen_svg_name(self):
     svg_name = capitalize(self.population_type)
     if self.pvs:
-      pvs_str = ", ".join(
-          f"{capitalize(pv.prop)} = {capitalize(pv.val)}" for pv in self.pvs)
+      pvs_str = ", ".join(f"{pv.gen_pv_name()}" for pv in self.pvs)
       svg_name = f"{svg_name} With {pvs_str}"
     return svg_name
 
