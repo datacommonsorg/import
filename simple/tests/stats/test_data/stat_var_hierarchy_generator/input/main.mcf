@@ -1,0 +1,50 @@
+Node: dcid:Count_Person
+typeOf: dcs:StatisticalVariable
+populationType: schema:Person
+measuredProperty: dcs:count
+statType: dcs:measuredValue
+
+# This should be ignored.
+Node: dcid:dc/population
+typeOf: dcs:StatisticalVariable
+populationType: schema:Person
+measuredProperty: dcs:count
+statType: dcs:measuredValue
+
+# This SV should not cause dc/g/Person_PovertyStatus SVG to go under
+# Uncategorized
+Node: dcid:UnknownMProp_Person_BelowPovertyLevelInThePast12Months_WhiteAlone
+typeOf: dcs:StatisticalVariable
+populationType: schema:Person
+measuredProperty: dcs:unknownMProp
+statType: dcs:measuredValue
+race: dcs:WhiteAlone
+povertyStatus: dcs:BelowPovertyLevelInThePast12Months
+constraintProperties: dcs:race, dcs:povertyStatus
+
+Node: dcid:Count_Person_WhiteAlone
+typeOf: dcs:StatisticalVariable
+populationType: schema:Person
+measuredProperty: dcs:count
+statType: dcs:measuredValue
+race: dcs:WhiteAlone
+constraintProperties: dcs:race
+
+Node: dcid:Count_Person_BelowPovertyLevelInThePast12Months_WhiteAlone
+typeOf: dcs:StatisticalVariable
+populationType: schema:Person
+measuredProperty: dcs:count
+statType: dcs:measuredValue
+race: dcs:WhiteAlone
+povertyStatus: dcs:BelowPovertyLevelInThePast12Months
+constraintProperties: dcs:race, dcs:povertyStatus
+description: "Population of white people living below poverty line"
+
+Node: dcid:Count_Person_AbovePovertyLevelInThePast12Months_WhiteAlone
+typeOf: dcs:StatisticalVariable
+populationType: schema:Person
+measuredProperty: dcs:count
+statType: dcs:measuredValue
+race: dcs:WhiteAlone
+povertyStatus: dcs:AbovePovertyLevelInThePast12Months
+constraintProperties: dcs:race, dcs:povertyStatus

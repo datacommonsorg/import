@@ -61,8 +61,8 @@ class PropVal:
 
   def gen_pv_name(self) -> str:
     if self.val:
-      return f"{_capitalize(self.prop)} = {_capitalize(self.val)}"
-    return _capitalize(self.prop)
+      return f"{_capitalize_and_split(self.prop)} = {_capitalize_and_split(self.val)}"
+    return _capitalize_and_split(self.prop)
 
 
 # TODO: DPV handling.
@@ -82,7 +82,7 @@ class SVPropVals:
     return svg_id
 
   def gen_svg_name(self):
-    svg_name = _capitalize(self.population_type)
+    svg_name = _capitalize_and_split(self.population_type)
     if self.pvs:
       pvs_str = ", ".join(map(lambda pv: pv.gen_pv_name(), self.pvs))
       svg_name = f"{svg_name} With {pvs_str}"
@@ -113,14 +113,6 @@ class SVG:
     self.has_prop_without_val: bool = False
     self.sample_sv: SVPropVals | None = None
 
-  def from_sv(sv: SVPropVals, is_leaf_svg: bool = False) -> Self:
-    svg = SVG(svg_id=sv.gen_svg_id(), svg_name=sv.gen_svg_name())
-    svg.sample_sv = sv
-    # Insert SVG IDs into leaf svgs.
-    if is_leaf_svg:
-      svg.sv_ids[sv.sv_id] = True
-    return svg
-
   # For testing.
   def json(self) -> dict:
     return {
@@ -142,6 +134,16 @@ class StatVarHierarchy:
   svg_triples: list[Triple]
 
 
+def _get_or_create_svg(svgs: dict[str, SVG], sv: SVPropVals) -> SVG:
+  svg_id = sv.gen_svg_id()
+  svg = svgs.get(svg_id)
+  if not svg:
+    svg = SVG(svg_id=svg_id, svg_name=sv.gen_svg_name())
+    svg.sample_sv = sv
+    svgs[svg_id] = svg
+  return svg
+
+
 def _create_all_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
   svgs = _create_leaf_svgs(svs)
   for svg_id in list(svgs.keys()):
@@ -153,24 +155,23 @@ def _create_all_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
 def _create_leaf_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
   svgs: dict[str, SVG] = {}
   for sv in svs:
-    svg: SVG = SVG.from_sv(sv, is_leaf_svg=True)
-    svgs[svg.svg_id] = svg
+    svg = _get_or_create_svg(svgs, sv)
+    # Insert SV into SVG.
+    svg.sv_ids[sv.sv_id] = True
   return svgs
 
 
 def _create_parent_svg(parent_sv: SVPropVals, svg: SVG, svgs: dict[str, SVG],
                        svg_has_prop_without_val: bool):
-  parent_svg_id = parent_sv.gen_svg_id()
-  parent_svg = svgs.get(parent_svg_id)
-  if not parent_svg:
-    parent_svg = SVG.from_sv(parent_sv)
-    svgs[parent_svg_id] = parent_svg
+  parent_svg = _get_or_create_svg(svgs, parent_sv)
 
-  svg.parent_svg_ids[parent_svg_id] = True
+  # Add parent child relationships.
+  svg.parent_svg_ids[parent_svg.svg_id] = True
   parent_svg.child_svg_ids[svg.svg_id] = True
+
   if not parent_svg.parent_svgs_processed:
     parent_svg.has_prop_without_val = svg_has_prop_without_val
-    _create_parent_svgs(parent_svg_id, svgs)
+    _create_parent_svgs(parent_svg.svg_id, svgs)
 
 
 def _create_parent_svgs(svg_id: str, svgs: dict[str, SVG]):
@@ -218,12 +219,26 @@ def _create_parent_svgs(svg_id: str, svgs: dict[str, SVG]):
   svg.parent_svgs_processed = True
 
 
+def _split_camel_case(s: str) -> str:
+  """Splits camel case strings into separate words with spaces.
+
+  e.g. "CamelCaseString" => "Camel Case String"
+  """
+  return re.sub(r"([A-Z])", r" \1", s).strip()
+
+
 # s.capitalize() turns "energySource" into "Energysource" instead of "EnergySource"
 # hence this method.
 def _capitalize(s: str) -> str:
   if not s:
     return s
   return s[0].upper() + s[1:]
+
+
+# Capitalizes the first list and then splits any camel case strings.
+# e.g. "energySource" -> "EnergySource" -> "Energy Source"
+def _capitalize_and_split(s: str) -> str:
+  return _split_camel_case(_capitalize(s))
 
 
 def _to_dcid_token(token: str) -> str:
