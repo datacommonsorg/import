@@ -1,0 +1,5 @@
+subject_id,predicate,object_id,object_value
+sv1,typeOf,StatisticalVariable,
+sv1,populationType,Person,
+sv1,race,Asian,
+sv1,gender,Female,

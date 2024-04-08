@@ -1,0 +1,15 @@
+subject_id,predicate,object_id,object_value
+sv1,typeOf,StatisticalVariable,
+sv1,populationType,Person,
+sv1,race,Asian,
+sv1,gender,Female,
+sv1,utteranceTemplate,,SV1 utterance
+non_sv1,typeOf,Person,
+non_sv1,gender,Male,
+non_sv1,race,AmericanIndianOrAlaskaNative,
+non_sv1,name,,Joe Doe
+sv2,typeOf,StatisticalVariable,
+sv2,populationType,Coal,
+sv2,energySource,CokeCoal,
+sv2,statType,measuredValue,
+sv3,typeOf,StatisticalVariable,

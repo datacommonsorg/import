@@ -30,3 +30,6 @@ PREDICATE_TYPE_OF = "typeOf"
 PREDICATE_POPULATION_TYPE = "populationType"
 TYPE_STATISTICAL_VARIABLE = "StatisticalVariable"
 DEFAULT_POPULATION_TYPE = "Thing"
+
+CUSTOM_SVG_PREFIX = "c/g/"
+ROOT_SVG_ID = "dc/g/Root"
