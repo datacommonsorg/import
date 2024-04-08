@@ -235,7 +235,7 @@ def _capitalize(s: str) -> str:
   return s[0].upper() + s[1:]
 
 
-# Capitalizes the first list and then splits any camel case strings.
+# Capitalizes the first letter and then splits any camel case strings.
 # e.g. "energySource" -> "EnergySource" -> "Energy Source"
 def _capitalize_and_split(s: str) -> str:
   return _split_camel_case(_capitalize(s))
