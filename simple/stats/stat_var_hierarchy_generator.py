@@ -34,6 +34,7 @@ representing the hierarchy.
 # Helper functions and classes
 
 
+# TODO: Pruning (e.g. ignore Thing).
 def _generate_internal(triples: list[Triple]) -> "StatVarHierarchy":
   """Given a list of input triples (including stat vars), 
 generates a SV hierarchy and returns a list of output triples
@@ -41,9 +42,9 @@ representing the hierarchy.
 """
 
   # Extract SVs.
-  svs = extract_svs(triples)
+  svs = _extract_svs(triples)
   # TODO: Create SVGs.
-  svgs = create_all_svgs(svs)
+  svgs = _create_all_svgs(svs)
   # TODO: Generate SVG triples.
   return StatVarHierarchy(svgs=svgs, svg_triples=[])
 
@@ -55,13 +56,13 @@ class PropVal:
 
   def gen_pv_id(self) -> str:
     if self.val:
-      return f"{to_dcid_token(self.prop)}-{to_dcid_token(self.val)}"
-    return to_dcid_token(self.prop)
+      return f"{_to_dcid_token(self.prop)}-{_to_dcid_token(self.val)}"
+    return _to_dcid_token(self.prop)
 
   def gen_pv_name(self) -> str:
     if self.val:
-      return f"{capitalize(self.prop)} = {capitalize(self.val)}"
-    return capitalize(self.prop)
+      return f"{_capitalize(self.prop)} = {_capitalize(self.val)}"
+    return _capitalize(self.prop)
 
 
 # TODO: DPV handling.
@@ -75,13 +76,13 @@ class SVPropVals:
   pvs: list[PropVal]
 
   def gen_svg_id(self):
-    svg_id = f"{schema_constants.CUSTOM_SVG_PREFIX}{to_dcid_token(self.population_type)}"
+    svg_id = f"{schema_constants.CUSTOM_SVG_PREFIX}{_to_dcid_token(self.population_type)}"
     for pv in self.pvs:
       svg_id = f"{svg_id}_{pv.gen_pv_id()}"
     return svg_id
 
   def gen_svg_name(self):
-    svg_name = capitalize(self.population_type)
+    svg_name = _capitalize(self.population_type)
     if self.pvs:
       pvs_str = ", ".join(map(lambda pv: pv.gen_pv_name(), self.pvs))
       svg_name = f"{svg_name} With {pvs_str}"
@@ -141,15 +142,15 @@ class StatVarHierarchy:
   svg_triples: list[Triple]
 
 
-def create_all_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
-  svgs = create_leaf_svgs(svs)
+def _create_all_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
+  svgs = _create_leaf_svgs(svs)
   for svg_id in list(svgs.keys()):
-    create_parent_svgs(svg_id, svgs)
+    _create_parent_svgs(svg_id, svgs)
   return svgs
 
 
 # Create SVGs that the SVs are directly attached to.
-def create_leaf_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
+def _create_leaf_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
   svgs: dict[str, SVG] = {}
   for sv in svs:
     svg: SVG = SVG.from_sv(sv, is_leaf_svg=True)
@@ -157,8 +158,8 @@ def create_leaf_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
   return svgs
 
 
-def create_parent_svg(parent_sv: SVPropVals, svg: SVG, svgs: dict[str, SVG],
-                      svg_has_prop_without_val: bool):
+def _create_parent_svg(parent_sv: SVPropVals, svg: SVG, svgs: dict[str, SVG],
+                       svg_has_prop_without_val: bool):
   parent_svg_id = parent_sv.gen_svg_id()
   parent_svg = svgs.get(parent_svg_id)
   if not parent_svg:
@@ -169,10 +170,10 @@ def create_parent_svg(parent_sv: SVPropVals, svg: SVG, svgs: dict[str, SVG],
   parent_svg.child_svg_ids[svg.svg_id] = True
   if not parent_svg.parent_svgs_processed:
     parent_svg.has_prop_without_val = svg_has_prop_without_val
-    create_parent_svgs(parent_svg_id, svgs)
+    _create_parent_svgs(parent_svg_id, svgs)
 
 
-def create_parent_svgs(svg_id: str, svgs: dict[str, SVG]):
+def _create_parent_svgs(svg_id: str, svgs: dict[str, SVG]):
   svg = svgs[svg_id]
   sv = svg.sample_sv
 
@@ -194,10 +195,10 @@ def create_parent_svgs(svg_id: str, svgs: dict[str, SVG]):
         continue
       else:
         parent_pvs.append(pv)
-    create_parent_svg(parent_sv=sv.with_pvs(parent_pvs),
-                      svg=svg,
-                      svgs=svgs,
-                      svg_has_prop_without_val=False)
+    _create_parent_svg(parent_sv=sv.with_pvs(parent_pvs),
+                       svg=svg,
+                       svgs=svgs,
+                       svg_has_prop_without_val=False)
   # Process SVGs with vals.
   else:
     for pv1 in sv.pvs:
@@ -209,27 +210,29 @@ def create_parent_svgs(svg_id: str, svgs: dict[str, SVG]):
         else:
           parent_pvs.append(pv2)
       # Create parent SVG for each combination.
-      create_parent_svg(parent_sv=sv.with_pvs(parent_pvs),
-                        svg=svg,
-                        svgs=svgs,
-                        svg_has_prop_without_val=True)
+      _create_parent_svg(parent_sv=sv.with_pvs(parent_pvs),
+                         svg=svg,
+                         svgs=svgs,
+                         svg_has_prop_without_val=True)
 
   svg.parent_svgs_processed = True
 
 
-def capitalize(s: str) -> str:
+# s.capitalize() turns "energySource" into "Energysource" instead of "EnergySource"
+# hence this method.
+def _capitalize(s: str) -> str:
   if not s:
     return s
   return s[0].upper() + s[1:]
 
 
-def to_dcid_token(token: str) -> str:
+def _to_dcid_token(token: str) -> str:
   # Remove all non-alphanumeric characters.
   result = re.sub("[^0-9a-zA-Z]+", "", token)
-  return capitalize(result)
+  return _capitalize(result)
 
 
-def extract_svs(triples: list[Triple]) -> list[SVPropVals]:
+def _extract_svs(triples: list[Triple]) -> list[SVPropVals]:
   """Extracts SVs from the input triples.
   The following SV properties used for generating the SV hierarchy are extracted:
   - dcid

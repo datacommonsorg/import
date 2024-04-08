@@ -21,6 +21,7 @@ import unittest
 import pandas as pd
 from stats.data import Triple
 from stats.stat_var_hierarchy_generator import *
+from stats.stat_var_hierarchy_generator import _extract_svs
 from stats.stat_var_hierarchy_generator import _generate_internal
 from tests.stats.test_util import is_write_mode
 
@@ -111,6 +112,6 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
         SVPropVals(sv_id="sv3", population_type="Thing", pvs=[])
     ]
 
-    svs = extract_svs(input_triples)
+    svs = _extract_svs(input_triples)
 
     self.assertListEqual(svs, expected_svs)
