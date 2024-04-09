@@ -18,6 +18,7 @@ import shutil
 import tempfile
 import unittest
 
+from kg_util import mcf_parser
 import pandas as pd
 from stats.data import Triple
 from stats.stat_var_hierarchy_generator import *
@@ -44,20 +45,45 @@ def _read_triples_csv(path: str) -> list[Triple]:
   return [Triple(**kwargs) for kwargs in df.to_dict(orient='records')]
 
 
-def _test_generate_internal(test: unittest.TestCase, test_name: str):
+def _strip_ns(v):
+  return v[v.find(":") + 1:]
+
+
+def _to_triple(mcf_triple: list[str]) -> Triple:
+  mcf_triple = list(map(lambda x: _strip_ns(x), mcf_triple))
+  [subject_id, predicate, value, value_type] = mcf_triple
+  if value_type == mcf_parser.ID:
+    return Triple(subject_id, predicate, object_id=value)
+  return Triple(subject_id, predicate, object_value=value)
+
+
+def _mcf_to_triples(mcf_path: str) -> list[Triple]:
+  with open(mcf_path, "r") as mcf_file:
+    return list(
+        map(lambda mcf_triple: _to_triple(mcf_triple),
+            mcf_parser.mcf_to_triples(mcf_file)))
+
+
+def _test_generate_internal(test: unittest.TestCase,
+                            test_name: str,
+                            is_mcf_input: bool = False):
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
-    input_triples_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
+    if is_mcf_input:
+      input_mcf_path = os.path.join(_INPUT_DIR, f"{test_name}.mcf")
+      input_triples = _mcf_to_triples(input_mcf_path)
+    else:
+      input_triples_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
+      input_triples = _read_triples_csv(input_triples_path)
 
     output_svgs_json_path = os.path.join(temp_dir, f"{test_name}_svgs.json")
     expected_svgs_json_path = os.path.join(_EXPECTED_DIR,
                                            f"{test_name}_svgs.json")
 
-    input_triples = _read_triples_csv(input_triples_path)
-
     hierarchy = _generate_internal(input_triples)
-    svgs_json = [svg.json() for svg in hierarchy.svgs.values()]
+    # Sorting by SVG ID before writing to file so it's easier to follow the hierarchy.
+    svgs_json = [svg.json() for _, svg in sorted(hierarchy.svgs.items())]
     with open(output_svgs_json_path, "w") as out:
       json.dump(svgs_json, out, indent=1)
 
@@ -73,6 +99,9 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
   def __init__(self, methodName: str = "runTest") -> None:
     super().__init__(methodName)
     self.maxDiff = None
+
+  def test_generate_internal_main_mcf(self):
+    _test_generate_internal(self, "main", is_mcf_input=True)
 
   def test_generate_internal_basic(self):
     _test_generate_internal(self, "basic")

@@ -1,0 +1,134 @@
+[
+ {
+  "svg_id": "c/g/Person",
+  "svg_name": "Person",
+  "sv_ids": [
+   "Count_Person",
+   "dc/population"
+  ],
+  "parent_svg_ids": [
+   "dc/g/Root"
+  ],
+  "child_svg_ids": [
+   "c/g/Person_Race",
+   "c/g/Person_PovertyStatus"
+  ]
+ },
+ {
+  "svg_id": "c/g/Person_PovertyStatus",
+  "svg_name": "Person With Poverty Status",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person"
+  ],
+  "child_svg_ids": [
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months",
+   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months"
+  ]
+ },
+ {
+  "svg_id": "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months",
+  "svg_name": "Person With Poverty Status = Above Poverty Level In The Past12 Months",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person_PovertyStatus"
+  ],
+  "child_svg_ids": [
+   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race"
+  ]
+ },
+ {
+  "svg_id": "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race",
+  "svg_name": "Person With Poverty Status = Above Poverty Level In The Past12 Months, Race",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months"
+  ],
+  "child_svg_ids": [
+   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race-WhiteAlone"
+  ]
+ },
+ {
+  "svg_id": "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race-WhiteAlone",
+  "svg_name": "Person With Poverty Status = Above Poverty Level In The Past12 Months, Race = White Alone",
+  "sv_ids": [
+   "Count_Person_AbovePovertyLevelInThePast12Months_WhiteAlone"
+  ],
+  "parent_svg_ids": [
+   "c/g/Person_PovertyStatus_Race-WhiteAlone",
+   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race"
+  ],
+  "child_svg_ids": []
+ },
+ {
+  "svg_id": "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months",
+  "svg_name": "Person With Poverty Status = Below Poverty Level In The Past12 Months",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person_PovertyStatus"
+  ],
+  "child_svg_ids": [
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race"
+  ]
+ },
+ {
+  "svg_id": "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race",
+  "svg_name": "Person With Poverty Status = Below Poverty Level In The Past12 Months, Race",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months"
+  ],
+  "child_svg_ids": [
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-WhiteAlone"
+  ]
+ },
+ {
+  "svg_id": "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-WhiteAlone",
+  "svg_name": "Person With Poverty Status = Below Poverty Level In The Past12 Months, Race = White Alone",
+  "sv_ids": [
+   "UnknownMProp_Person_BelowPovertyLevelInThePast12Months_WhiteAlone",
+   "Count_Person_BelowPovertyLevelInThePast12Months_WhiteAlone"
+  ],
+  "parent_svg_ids": [
+   "c/g/Person_PovertyStatus_Race-WhiteAlone",
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race"
+  ],
+  "child_svg_ids": []
+ },
+ {
+  "svg_id": "c/g/Person_PovertyStatus_Race-WhiteAlone",
+  "svg_name": "Person With Poverty Status, Race = White Alone",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person_Race-WhiteAlone"
+  ],
+  "child_svg_ids": [
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-WhiteAlone",
+   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race-WhiteAlone"
+  ]
+ },
+ {
+  "svg_id": "c/g/Person_Race",
+  "svg_name": "Person With Race",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person"
+  ],
+  "child_svg_ids": [
+   "c/g/Person_Race-WhiteAlone"
+  ]
+ },
+ {
+  "svg_id": "c/g/Person_Race-WhiteAlone",
+  "svg_name": "Person With Race = White Alone",
+  "sv_ids": [
+   "Count_Person_WhiteAlone"
+  ],
+  "parent_svg_ids": [
+   "c/g/Person_Race"
+  ],
+  "child_svg_ids": [
+   "c/g/Person_PovertyStatus_Race-WhiteAlone"
+  ]
+ }
+]

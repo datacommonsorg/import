@@ -23,8 +23,8 @@ from csv import reader
 import dataclasses
 import sys
 
-_VALUE = 'VALUE'
-_ID = 'ID'
+VALUE = 'VALUE'
+ID = 'ID'
 _node = 'Node'
 _context = 'Context'
 _dcid = 'dcid'
@@ -109,28 +109,28 @@ def _parse_value(prop, value, pc):
         _as_err('malformed string', pc)
     value = _strip_quotes(value)
     if not expect_ref:
-      return (value, _VALUE)
+      return (value, VALUE)
 
   if _is_global_ref(value):
-    return (_strip_ns(value), _ID)
+    return (_strip_ns(value), ID)
 
   if _is_local_ref(value):
     # For local ref, we retain the prefix.
-    return (value, _ID)
+    return (value, ID)
 
   ns_prefix = value.split(':', 1)[0] + _delim
   if ns_prefix != value and ns_prefix in pc.ns_map:
     value = value.replace(ns_prefix, pc.ns_map[ns_prefix], 1)
-    return (value, _ID)
+    return (value, ID)
 
   if expect_ref:
     # If we're here, user likely forgot to add a "dcid:", "dcs:" or
     # "schema:" prefix.  We cannot tell apart if they failed to add an local
     # ref ('l:'), but we err on the side of user being careful about adding
     # local refs and accept the MCF without failing.
-    return (value, _ID)
+    return (value, ID)
 
-  return (value, _VALUE)
+  return (value, VALUE)
 
 
 def _parse_values(prop, values_str, pc):
@@ -208,7 +208,7 @@ def mcf_to_triples(mcf_file):
 
       # Finalize current node.
       if (pc.node and not pc.has_dcid and _is_global_ref(pc.node)):
-        yield [pc.node, _dcid, _strip_ns(pc.node), _VALUE]
+        yield [pc.node, _dcid, _strip_ns(pc.node), VALUE]
 
       # Update to new node.
       pc.node = val_str
@@ -233,7 +233,7 @@ def mcf_to_triples(mcf_file):
 
   # Finalize current node.
   if (pc.node and not pc.has_dcid and _is_global_ref(pc.node)):
-    yield [pc.node, _dcid, _strip_ns(pc.node), _VALUE]
+    yield [pc.node, _dcid, _strip_ns(pc.node), VALUE]
 
 
 if __name__ == '__main__':
