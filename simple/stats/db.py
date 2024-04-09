@@ -239,8 +239,9 @@ def to_triple_tuple(triple: Triple):
 
 
 def to_observation_tuple(observation: Observation):
-  return (observation.entity, observation.variable, observation.date,
-          observation.value, observation.provenance)
+  return (_strip_namespace(observation.entity),
+          _strip_namespace(observation.variable), observation.date,
+          observation.value, _strip_namespace(observation.provenance))
 
 
 def _strip_namespace(v: str) -> str:
