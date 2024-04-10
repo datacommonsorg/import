@@ -1,0 +1,7 @@
+variable,entity,date,value
+dcs:var1,dcid:country/BRA,2023,0.19
+dcs:var2,dcid:country/BRA,2023,6
+var1,dcid:country/JPN,2023,0.21
+var2,dcid:country/JPN,2023,56
+var2,country/USA,2023,66
+var1,country/CHN,2022,-123.456

@@ -104,3 +104,6 @@ class TestVariablePerRowImporter(unittest.TestCase):
                      "variable": "Observed Variable",
                      "entity": "Observed Location"
                  })
+
+  def test_namespace_prefixes(self):
+    _test_import(self, "namespace_prefixes")
