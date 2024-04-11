@@ -123,7 +123,7 @@ class SVG:
     triples.append(
         Triple(self.svg_id,
                sc.PREDICATE_TYPE_OF,
-               object_id=sc.TYPE_STATISTICAL_STAT_VAR_GROUP))
+               object_id=sc.TYPE_STATISTICAL_VARIABLE_GROUP))
     triples.append(
         Triple(self.svg_id, sc.PREDICATE_NAME, object_value=self.svg_name))
 
