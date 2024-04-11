@@ -32,12 +32,17 @@ _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 
-def _compare_files(test: unittest.TestCase, output_path, expected_path):
+def _compare_files(test: unittest.TestCase, output_path, expected_path,
+                   message):
   with open(output_path) as gotf:
     got = gotf.read()
     with open(expected_path) as wantf:
       want = wantf.read()
-      test.assertEqual(got, want)
+      test.assertEqual(got, want, message)
+
+
+def _write_triples_csv(triples: list[Triple], path: str):
+  pd.DataFrame(triples).to_csv(path, index=False)
 
 
 def _read_triples_csv(path: str) -> list[Triple]:
@@ -81,17 +86,27 @@ def _test_generate_internal(test: unittest.TestCase,
     expected_svgs_json_path = os.path.join(_EXPECTED_DIR,
                                            f"{test_name}_svgs.json")
 
+    output_triples_csv_path = os.path.join(temp_dir, f"{test_name}_triples.csv")
+    expected_triples_csv_path = os.path.join(_EXPECTED_DIR,
+                                             f"{test_name}_triples.csv")
+
     hierarchy = _generate_internal(input_triples)
-    # Sorting by SVG ID before writing to file so it's easier to follow the hierarchy.
-    svgs_json = [svg.json() for _, svg in sorted(hierarchy.svgs.items())]
+    # Write SVGs json
+    svgs_json = [svg.json() for _, svg in hierarchy.svgs.items()]
     with open(output_svgs_json_path, "w") as out:
       json.dump(svgs_json, out, indent=1)
+    # Write SVG triples
+    _write_triples_csv(hierarchy.svg_triples, output_triples_csv_path)
 
     if is_write_mode():
       shutil.copy(output_svgs_json_path, expected_svgs_json_path)
+      shutil.copy(output_triples_csv_path, expected_triples_csv_path)
       return
 
-    _compare_files(test, output_svgs_json_path, expected_svgs_json_path)
+    _compare_files(test, output_svgs_json_path, expected_svgs_json_path,
+                   f"Comparing SVGS JSON: {test_name}")
+    _compare_files(test, output_triples_csv_path, expected_triples_csv_path,
+                   f"Comparing SVG TRIPLES: {test_name}")
 
 
 class TestStatVarHierarchyGenerator(unittest.TestCase):

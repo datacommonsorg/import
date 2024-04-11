@@ -1,0 +1,42 @@
+subject_id,predicate,object_id,object_value
+c/g/Person,typeOf,StatVarGroup,
+c/g/Person,name,,Person
+c/g/Person,specializationOf,dc/g/Root,
+Count_Person,memberOf,c/g/Person,
+dc/population,memberOf,c/g/Person,
+c/g/Person_PovertyStatus,typeOf,StatVarGroup,
+c/g/Person_PovertyStatus,name,,Person With Poverty Status
+c/g/Person_PovertyStatus,specializationOf,c/g/Person,
+c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months,typeOf,StatVarGroup,
+c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months,name,,Person With Poverty Status = Above Poverty Level In The Past12 Months
+c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months,specializationOf,c/g/Person_PovertyStatus,
+c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race,typeOf,StatVarGroup,
+c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race,name,,"Person With Poverty Status = Above Poverty Level In The Past12 Months, Race"
+c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race,specializationOf,c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months,
+c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race-WhiteAlone,typeOf,StatVarGroup,
+c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race-WhiteAlone,name,,"Person With Poverty Status = Above Poverty Level In The Past12 Months, Race = White Alone"
+c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race-WhiteAlone,specializationOf,c/g/Person_PovertyStatus_Race-WhiteAlone,
+c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race-WhiteAlone,specializationOf,c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race,
+Count_Person_AbovePovertyLevelInThePast12Months_WhiteAlone,memberOf,c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race-WhiteAlone,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months,typeOf,StatVarGroup,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months,name,,Person With Poverty Status = Below Poverty Level In The Past12 Months
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months,specializationOf,c/g/Person_PovertyStatus,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race,typeOf,StatVarGroup,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race,name,,"Person With Poverty Status = Below Poverty Level In The Past12 Months, Race"
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race,specializationOf,c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-WhiteAlone,typeOf,StatVarGroup,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-WhiteAlone,name,,"Person With Poverty Status = Below Poverty Level In The Past12 Months, Race = White Alone"
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-WhiteAlone,specializationOf,c/g/Person_PovertyStatus_Race-WhiteAlone,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-WhiteAlone,specializationOf,c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race,
+UnknownMProp_Person_BelowPovertyLevelInThePast12Months_WhiteAlone,memberOf,c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-WhiteAlone,
+Count_Person_BelowPovertyLevelInThePast12Months_WhiteAlone,memberOf,c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-WhiteAlone,
+c/g/Person_PovertyStatus_Race-WhiteAlone,typeOf,StatVarGroup,
+c/g/Person_PovertyStatus_Race-WhiteAlone,name,,"Person With Poverty Status, Race = White Alone"
+c/g/Person_PovertyStatus_Race-WhiteAlone,specializationOf,c/g/Person_Race-WhiteAlone,
+c/g/Person_Race,typeOf,StatVarGroup,
+c/g/Person_Race,name,,Person With Race
+c/g/Person_Race,specializationOf,c/g/Person,
+c/g/Person_Race-WhiteAlone,typeOf,StatVarGroup,
+c/g/Person_Race-WhiteAlone,name,,Person With Race = White Alone
+c/g/Person_Race-WhiteAlone,specializationOf,c/g/Person_Race,
+Count_Person_WhiteAlone,memberOf,c/g/Person_Race-WhiteAlone,
