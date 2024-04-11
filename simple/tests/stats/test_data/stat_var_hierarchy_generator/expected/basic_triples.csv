@@ -1,0 +1,27 @@
+subject_id,predicate,object_id,object_value
+c/g/Person,typeOf,StatVarGroup,
+c/g/Person,name,,Person
+c/g/Person,specializationOf,dc/g/Root,
+c/g/Person_Gender,typeOf,StatVarGroup,
+c/g/Person_Gender,name,,Person With Gender
+c/g/Person_Gender,specializationOf,c/g/Person,
+c/g/Person_Gender-Female,typeOf,StatVarGroup,
+c/g/Person_Gender-Female,name,,Person With Gender = Female
+c/g/Person_Gender-Female,specializationOf,c/g/Person_Gender,
+c/g/Person_Gender-Female_Race,typeOf,StatVarGroup,
+c/g/Person_Gender-Female_Race,name,,"Person With Gender = Female, Race"
+c/g/Person_Gender-Female_Race,specializationOf,c/g/Person_Gender-Female,
+c/g/Person_Gender-Female_Race-Asian,typeOf,StatVarGroup,
+c/g/Person_Gender-Female_Race-Asian,name,,"Person With Gender = Female, Race = Asian"
+c/g/Person_Gender-Female_Race-Asian,specializationOf,c/g/Person_Gender_Race-Asian,
+c/g/Person_Gender-Female_Race-Asian,specializationOf,c/g/Person_Gender-Female_Race,
+sv1,memberOf,c/g/Person_Gender-Female_Race-Asian,
+c/g/Person_Gender_Race-Asian,typeOf,StatVarGroup,
+c/g/Person_Gender_Race-Asian,name,,"Person With Gender, Race = Asian"
+c/g/Person_Gender_Race-Asian,specializationOf,c/g/Person_Race-Asian,
+c/g/Person_Race,typeOf,StatVarGroup,
+c/g/Person_Race,name,,Person With Race
+c/g/Person_Race,specializationOf,c/g/Person,
+c/g/Person_Race-Asian,typeOf,StatVarGroup,
+c/g/Person_Race-Asian,name,,Person With Race = Asian
+c/g/Person_Race-Asian,specializationOf,c/g/Person_Race,

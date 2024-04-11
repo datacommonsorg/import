@@ -19,7 +19,7 @@ import logging
 import re
 from typing import Self
 
-from stats import schema_constants
+from stats import schema_constants as sc
 from stats.data import Triple
 
 
@@ -43,10 +43,13 @@ representing the hierarchy.
 
   # Extract SVs.
   svs = _extract_svs(triples)
-  # TODO: Create SVGs.
+  # Create SVGs.
   svgs = _create_all_svgs(svs)
-  # TODO: Generate SVG triples.
-  return StatVarHierarchy(svgs=svgs, svg_triples=[])
+  # Sort by SVG ID so it's easier to follow the hierarchy.
+  svgs = dict(sorted(svgs.items()))
+  # Generate SVG triples.
+  svg_triples = _create_all_svg_triples(svgs)
+  return StatVarHierarchy(svgs=svgs, svg_triples=svg_triples)
 
 
 @dataclass(eq=True, frozen=True)
@@ -76,7 +79,7 @@ class SVPropVals:
   pvs: list[PropVal]
 
   def gen_svg_id(self):
-    svg_id = f"{schema_constants.CUSTOM_SVG_PREFIX}{_to_dcid_token(self.population_type)}"
+    svg_id = f"{sc.CUSTOM_SVG_PREFIX}{_to_dcid_token(self.population_type)}"
     for pv in self.pvs:
       svg_id = f"{svg_id}_{pv.gen_pv_id()}"
     return svg_id
@@ -113,6 +116,31 @@ class SVG:
     self.has_prop_without_val: bool = False
     self.sample_sv: SVPropVals | None = None
 
+  def triples(self) -> list[Triple]:
+    triples: list[Triple] = []
+
+    # SVG info
+    triples.append(
+        Triple(self.svg_id,
+               sc.PREDICATE_TYPE_OF,
+               object_id=sc.TYPE_STATISTICAL_STAT_VAR_GROUP))
+    triples.append(
+        Triple(self.svg_id, sc.PREDICATE_NAME, object_value=self.svg_name))
+
+    # SVG parents ("specializationOf")
+    for parent_svg_id in self.parent_svg_ids.keys():
+      triples.append(
+          Triple(self.svg_id,
+                 sc.PREDICATE_SPECIALIZATION_OF,
+                 object_id=parent_svg_id))
+
+    # SV members ("memberOf")
+    for sv_id in self.sv_ids:
+      triples.append(
+          Triple(sv_id, sc.PREDICATE_MEMBER_OF, object_id=self.svg_id))
+
+    return triples
+
   # For testing.
   def json(self) -> dict:
     return {
@@ -142,6 +170,13 @@ def _get_or_create_svg(svgs: dict[str, SVG], sv: SVPropVals) -> SVG:
     svg.sample_sv = sv
     svgs[svg_id] = svg
   return svg
+
+
+def _create_all_svg_triples(svgs: dict[str, SVG]):
+  triples: list[Triple] = []
+  for svg in svgs.values():
+    triples.extend(svg.triples())
+  return triples
 
 
 def _create_all_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
@@ -181,7 +216,7 @@ def _create_parent_svgs(svg_id: str, svgs: dict[str, SVG]):
   # If no PVs left, we've reached the top of the population type hierarchy.
   # Attach it to the DC root and return.
   if not sv.pvs:
-    svg.parent_svg_ids[schema_constants.ROOT_SVG_ID] = True
+    svg.parent_svg_ids[sc.ROOT_SVG_ID] = True
     return
 
   # Process SVGs without a val
@@ -268,19 +303,19 @@ def _extract_svs(triples: list[Triple]) -> list[SVPropVals]:
       logging.warning("Skipping, no value found for triple (%s).", str(triple))
       continue
 
-    if triple.predicate == schema_constants.PREDICATE_TYPE_OF:
-      if value == schema_constants.TYPE_STATISTICAL_VARIABLE:
+    if triple.predicate == sc.PREDICATE_TYPE_OF:
+      if value == sc.TYPE_STATISTICAL_VARIABLE:
         sv_ids[triple.subject_id] = True
-    elif triple.predicate == schema_constants.PREDICATE_POPULATION_TYPE:
+    elif triple.predicate == sc.PREDICATE_POPULATION_TYPE:
       dcid2poptype[triple.subject_id] = value
-    elif triple.predicate not in schema_constants.SV_HIERARCHY_PROPS_BLOCKLIST:
+    elif triple.predicate not in sc.SV_HIERARCHY_PROPS_BLOCKLIST:
       pvs = dcid2pvs.setdefault(triple.subject_id, {})
       pvs[triple.predicate] = value
 
   svs = []
   # Filter and populate SVs.
   for sv_id in sv_ids.keys():
-    pop_type = dcid2poptype.get(sv_id, schema_constants.DEFAULT_POPULATION_TYPE)
+    pop_type = dcid2poptype.get(sv_id, sc.DEFAULT_POPULATION_TYPE)
     prop_vals: list[PropVal] = []
     # Sort prop vals by keys since we use this order to generate SVG IDs later.
     for (p, v) in sorted(dcid2pvs.get(sv_id, {}).items()):
