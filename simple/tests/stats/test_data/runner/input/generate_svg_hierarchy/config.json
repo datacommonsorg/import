@@ -14,5 +14,5 @@
       }
     }
   },
-  "generateHierarchy": true
+  "groupStatVarByProperty": true
 }

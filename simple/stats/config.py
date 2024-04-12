@@ -49,7 +49,7 @@ _COLUMN_MAPPINGS_FIELD = "columnMappings"
 _ROW_ENTITY_TYPE_FIELD = "rowEntityType"
 _ENTITY_COLUMNS = "entityColumns"
 _ENTITIES_FIELD = "entities"
-_GENERATE_HIERARCHY = "generateHierarchy"
+_GENERATE_HIERARCHY = "groupStatVarByProperty"
 
 
 class Config:

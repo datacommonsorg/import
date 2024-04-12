@@ -80,5 +80,5 @@
       }
     }
   },
-  "generateHierarchy": true
+  "groupStatVarByProperty": true
 }

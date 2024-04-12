@@ -135,7 +135,7 @@ class Runner:
       self.db.insert_triples(triples)
 
       # Generate SVG hierarchy.
-      self._generate_svg__hierarchy()
+      self._generate_svg_hierarchy()
 
       # Generate SV sentences.
       nl.generate_sv_sentences(
@@ -154,7 +154,7 @@ class Runner:
       logging.exception("Error running import")
       self.reporter.report_failure(error=str(e))
 
-  def _generate_svg__hierarchy(self):
+  def _generate_svg_hierarchy(self):
     if self.mode == RunMode.MAIN_DC:
       logging.info("Hierarchy generation not supported for main dc, skipping.")
       return

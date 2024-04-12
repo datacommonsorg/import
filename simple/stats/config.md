@@ -183,8 +183,8 @@ Local directory:
 }
 ```
 
-## `generateHierarchy`
+## `groupStatVarByProperty`
 
-If `true`, auto generates a variable group hierarchy based on properties of variables in the dataset. Default is `false`.
+If `true`, auto generates a hierarchy of groups based on properties of variables in the dataset. Default is `false`.
 
 > TODO: Add more details.
