@@ -20,6 +20,7 @@ import logging
 import os
 import sqlite3
 import tempfile
+from typing import Any
 
 from google.cloud.sql.connector.connector import Connector
 import pandas as pd
@@ -92,6 +93,8 @@ create table if not exists imports (
 
 _INSERT_IMPORTS_STATEMENT = "insert into imports values(?, ?, ?)"
 
+_SELECT_TRIPLES_WITH_TYPE_OF = "select * from triples where subject_id in (select subject_id from triples where predicate = 'typeOf' and object_id = ?)"
+
 _INIT_STATEMENTS = [
     _CREATE_TRIPLES_TABLE,
     _CREATE_OBSERVATIONS_TABLE,
@@ -139,6 +142,10 @@ class Db:
   def commit_and_close(self):
     pass
 
+  # Returns all triples of nodes with the specified "typeOf" predicate.
+  def select_triples_with_type_of(self, type_of: str) -> list[Triple]:
+    pass
+
 
 class MainDcDb(Db):
   """Generates output for main DC.
@@ -181,6 +188,10 @@ class MainDcDb(Db):
     # TMCF
     self.output_dir_fh.make_file(OBSERVATIONS_TMCF_FILE_NAME).write_string(
         OBSERVATIONS_TMCF)
+
+    # Not supported for main DC at this time.
+    def select_triples_with_type_of(self, type_of: str) -> list[Triple]:
+      return []
 
   def _add_triple(self, triple: Triple):
     node = self.nodes.get(triple.subject_id)
@@ -226,11 +237,19 @@ class SqlDb(Db):
   def commit_and_close(self):
     self.engine.commit_and_close()
 
+  def select_triples_with_type_of(self, type_of: str) -> list[Triple]:
+    tuples = self.engine.fetch_all(_SELECT_TRIPLES_WITH_TYPE_OF, (type_of,))
+    return list(map(lambda tuple: from_triple_tuple(tuple), tuples))
+
   def _import_metadata(self) -> dict:
     return {
         "numVars": len(self.variables),
         "numObs": self.num_observations,
     }
+
+
+def from_triple_tuple(tuple: tuple) -> Triple:
+  return Triple(*tuple)
 
 
 def to_triple_tuple(triple: Triple):
@@ -254,6 +273,9 @@ class DbEngine:
     pass
 
   def executemany(self, sql: str, parameters=None):
+    pass
+
+  def fetch_all(self, sql: str, parameters=None) -> list[Any]:
     pass
 
   def commit_and_close(self):
@@ -296,6 +318,12 @@ class SqliteDbEngine(DbEngine):
     else:
       self.cursor.executemany(sql, parameters)
 
+  def fetch_all(self, sql: str, parameters=None) -> list[Any]:
+    if not parameters:
+      return self.cursor.execute(sql).fetchall()
+    else:
+      return self.cursor.execute(sql, parameters).fetchall()
+
   def commit_and_close(self):
     self.connection.commit()
     self.connection.close()
@@ -314,7 +342,7 @@ _CLOUD_MY_SQL_CONNECT_PARAMS = [
 _CLOUD_MY_SQL_PARAMS = [CLOUD_MY_SQL_INSTANCE] + _CLOUD_MY_SQL_CONNECT_PARAMS
 
 
-class CloudSqlDbEngine:
+class CloudSqlDbEngine(DbEngine):
 
   def __init__(self, db_params: dict[str, str]) -> None:
     for param in _CLOUD_MY_SQL_PARAMS:
@@ -340,6 +368,10 @@ class CloudSqlDbEngine:
 
   def executemany(self, sql: str, parameters=None):
     self.cursor.executemany(_pymysql(sql), parameters)
+
+  def fetch_all(self, sql: str, parameters=None):
+    self.cursor.execute(_pymysql(sql), parameters)
+    return self.cursor.fetchall()
 
   def commit_and_close(self):
     self.cursor.close()

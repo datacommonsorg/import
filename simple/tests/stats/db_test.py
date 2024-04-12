@@ -66,6 +66,13 @@ class TestDb(unittest.TestCase):
       db.insert_triples(_TRIPLES)
       db.insert_observations(_OBSERVATIONS, "foo.csv")
       db.insert_import_info(status=ImportStatus.SUCCESS)
+
+      sv_triples = db.select_triples_with_type_of("StatisticalVariable")
+      self.assertListEqual(sv_triples, _TRIPLES)
+
+      svg_triples = db.select_triples_with_type_of("StatVarGroup")
+      self.assertListEqual(svg_triples, [])
+
       db.commit_and_close()
 
       sqldb = sqlite3.connect(db_file_path)

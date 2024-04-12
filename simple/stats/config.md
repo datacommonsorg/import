@@ -182,3 +182,9 @@ Local directory:
   "dataDownloadUrl": ["//local/path/to/dir"]
 }
 ```
+
+## `generateHierarchy`
+
+If `true`, auto generates a variable group hierarchy based on properties of variables in the dataset. Default is `false`.
+
+> TODO: Add more details.

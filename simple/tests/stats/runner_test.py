@@ -111,3 +111,6 @@ class TestRunner(unittest.TestCase):
 
   def test_input_dir_driven(self):
     _test_runner(self, "input_dir_driven", is_config_driven=False)
+
+  def test_generate_svg_hierarchy(self):
+    _test_runner(self, "generate_svg_hierarchy", is_config_driven=False)

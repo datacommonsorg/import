@@ -1,0 +1,16 @@
+Node: v1
+dcid:"some_var1"
+typeOf: dcs:StatisticalVariable
+measuredProperty: dcs:value
+name: "Some Variable 1 Name"
+description: "Some Variable 1 Description"
+populationType: schema:Person
+gender: dcs:Female
+
+Node: dcid:some_var2
+typeOf: dcs:StatisticalVariable
+measuredProperty: dcs:value
+name: "Some Variable 2 Name"
+description: "Some Variable 2 Description"
+populationType: schema:Person
+gender: dcs:Male

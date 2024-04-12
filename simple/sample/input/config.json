@@ -79,5 +79,6 @@
         "Provenance2 Name": "http://source1.com/provenance2"
       }
     }
-  }
+  },
+  "generateHierarchy": true
 }

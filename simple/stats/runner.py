@@ -17,6 +17,7 @@ import json
 import logging
 
 from stats import constants
+from stats import stat_var_hierarchy_generator
 from stats.config import Config
 from stats.data import ImportType
 from stats.data import InputFileFormat
@@ -34,6 +35,7 @@ import stats.nl as nl
 from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
 from stats.reporter import ImportReporter
+import stats.schema_constants as sc
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.filehandler import create_file_handler
 from util.filehandler import FileHandler
@@ -132,6 +134,9 @@ class Runner:
       # Write triples to DB.
       self.db.insert_triples(triples)
 
+      # Generate SVG hierarchy.
+      self._generate_svg__hierarchy()
+
       # Generate SV sentences.
       nl.generate_sv_sentences(
           list(self.nodes.variables.values()),
@@ -148,6 +153,25 @@ class Runner:
     except Exception as e:
       logging.exception("Error running import")
       self.reporter.report_failure(error=str(e))
+
+  def _generate_svg__hierarchy(self):
+    if self.mode == RunMode.MAIN_DC:
+      logging.info("Hierarchy generation not supported for main dc, skipping.")
+      return
+    if not self.config.generate_hierarchy():
+      logging.info("Hierarchy generation not enabled, skipping.")
+      return
+
+    logging.info("Generating SVG hierarchy.")
+    sv_triples = self.db.select_triples_with_type_of(
+        sc.TYPE_STATISTICAL_VARIABLE)
+    if not sv_triples:
+      logging.info("No SV triples found, skipping SVG generating hierarchy.")
+    logging.info("Generating SVG hierarchy for %s SV triples.", len(sv_triples))
+
+    svg_triples = stat_var_hierarchy_generator.generate(sv_triples)
+    logging.info("Inserting %s SVG triples into DB.", len(svg_triples))
+    self.db.insert_triples(svg_triples)
 
   def _run_imports(self):
     input_fhs: list[FileHandler] = []
