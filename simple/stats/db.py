@@ -93,7 +93,7 @@ create table if not exists imports (
 
 _INSERT_IMPORTS_STATEMENT = "insert into imports values(?, ?, ?)"
 
-_SELECT_TRIPLES_WITH_TYPE_OF = "select * from triples where subject_id in (select subject_id from triples where predicate = 'typeOf' and object_id = ?)"
+_SELECT_TRIPLES_BY_SUBJECT_TYPE = "select * from triples where subject_id in (select subject_id from triples where predicate = 'typeOf' and object_id = ?)"
 
 _INIT_STATEMENTS = [
     _CREATE_TRIPLES_TABLE,
@@ -143,7 +143,7 @@ class Db:
     pass
 
   # Returns all triples of nodes with the specified "typeOf" predicate.
-  def select_triples_with_type_of(self, type_of: str) -> list[Triple]:
+  def select_triples_by_subject_type(self, subject_type: str) -> list[Triple]:
     pass
 
 
@@ -237,8 +237,9 @@ class SqlDb(Db):
   def commit_and_close(self):
     self.engine.commit_and_close()
 
-  def select_triples_with_type_of(self, type_of: str) -> list[Triple]:
-    tuples = self.engine.fetch_all(_SELECT_TRIPLES_WITH_TYPE_OF, (type_of,))
+  def select_triples_by_subject_type(self, subject_type: str) -> list[Triple]:
+    tuples = self.engine.fetch_all(_SELECT_TRIPLES_BY_SUBJECT_TYPE,
+                                   (subject_type,))
     return list(map(lambda tuple: from_triple_tuple(tuple), tuples))
 
   def _import_metadata(self) -> dict:

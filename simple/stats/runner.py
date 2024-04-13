@@ -163,7 +163,7 @@ class Runner:
       return
 
     logging.info("Generating SVG hierarchy.")
-    sv_triples = self.db.select_triples_with_type_of(
+    sv_triples = self.db.select_triples_by_subject_type(
         sc.TYPE_STATISTICAL_VARIABLE)
     if not sv_triples:
       logging.info("No SV triples found, skipping SVG generating hierarchy.")

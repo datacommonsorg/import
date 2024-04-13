@@ -67,10 +67,10 @@ class TestDb(unittest.TestCase):
       db.insert_observations(_OBSERVATIONS, "foo.csv")
       db.insert_import_info(status=ImportStatus.SUCCESS)
 
-      sv_triples = db.select_triples_with_type_of("StatisticalVariable")
+      sv_triples = db.select_triples_by_subject_type("StatisticalVariable")
       self.assertListEqual(sv_triples, _TRIPLES)
 
-      svg_triples = db.select_triples_with_type_of("StatVarGroup")
+      svg_triples = db.select_triples_by_subject_type("StatVarGroup")
       self.assertListEqual(svg_triples, [])
 
       db.commit_and_close()

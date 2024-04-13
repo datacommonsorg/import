@@ -49,7 +49,7 @@ _COLUMN_MAPPINGS_FIELD = "columnMappings"
 _ROW_ENTITY_TYPE_FIELD = "rowEntityType"
 _ENTITY_COLUMNS = "entityColumns"
 _ENTITIES_FIELD = "entities"
-_GENERATE_HIERARCHY = "groupStatVarByProperty"
+_GROUP_STAT_VARS_BY_PROPERTY = "groupStatVarsByProperty"
 
 
 class Config:
@@ -161,7 +161,7 @@ class Config:
     return self.data.get(_DATABASE_FIELD)
 
   def generate_hierarchy(self) -> bool:
-    return self.data.get(_GENERATE_HIERARCHY) or False
+    return self.data.get(_GROUP_STAT_VARS_BY_PROPERTY) or False
 
   def _input_file(self, input_file_name: str) -> dict:
     # Exact match.

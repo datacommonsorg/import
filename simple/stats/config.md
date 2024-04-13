@@ -183,7 +183,7 @@ Local directory:
 }
 ```
 
-## `groupStatVarByProperty`
+## `groupStatVarsByProperty`
 
 If `true`, auto generates a hierarchy of groups based on properties of variables in the dataset. Default is `false`.
 
