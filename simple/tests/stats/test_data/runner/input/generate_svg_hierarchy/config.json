@@ -1,0 +1,18 @@
+{
+  "inputFiles": {
+    "*.csv": {
+      "importType": "observations",
+      "format": "variablePerRow",
+      "provenance": "Provenance1"
+    }
+  },
+  "sources": {
+    "Source1": {
+      "url": "http://source1.com",
+      "provenances": {
+        "Provenance1": "http://source1.com/provenance1"
+      }
+    }
+  },
+  "groupStatVarsByProperty": true
+}

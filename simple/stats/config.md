@@ -182,3 +182,9 @@ Local directory:
   "dataDownloadUrl": ["//local/path/to/dir"]
 }
 ```
+
+## `groupStatVarsByProperty`
+
+If `true`, auto generates a hierarchy of groups based on properties of variables in the dataset. Default is `false`.
+
+> TODO: Add more details.
