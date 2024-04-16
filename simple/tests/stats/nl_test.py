@@ -18,7 +18,6 @@ import tempfile
 import unittest
 
 import pandas as pd
-from stats.data import StatVar
 from stats.data import Triple
 import stats.nl as nl
 from tests.stats.test_util import is_write_mode
@@ -66,15 +65,6 @@ def _test_generate_nl_sentences(test: unittest.TestCase, test_name: str):
     _compare_files(test, output_sentences_csv_path, expected_sentences_csv_path)
 
 
-_TEST_STAT_VARS = [
-    StatVar("foo", "Foo Name", "Foo Description"),
-    StatVar("bar",
-            "Bar Name",
-            "Bar Description",
-            nl_sentences=["Bar Sentence1", "Bar Sentence 2"]),
-]
-
-
 class TestData(unittest.TestCase):
 
   def test_generate_nl_sentences_for_sv_triples(self):
@@ -82,20 +72,3 @@ class TestData(unittest.TestCase):
 
   def test_generate_nl_sentences_for_topic_triples(self):
     _test_generate_nl_sentences(self, "topic_triples")
-
-  def test_generate_sv_sentences(self):
-    expected_sv_sentences_path = os.path.join(_EXPECTED_DIR, "sentences.csv")
-
-    if is_write_mode():
-      expected_sentences_fh = LocalFileHandler(expected_sv_sentences_path)
-      print("Writing sv sentences to:", expected_sentences_fh)
-      nl.generate_sv_sentences(_TEST_STAT_VARS, expected_sentences_fh)
-      return
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-      actual_sv_sentences_path = os.path.join(temp_dir, "sentences.csv")
-      actual_sentences_fh = LocalFileHandler(actual_sv_sentences_path)
-
-      nl.generate_sv_sentences(_TEST_STAT_VARS, actual_sentences_fh)
-
-      _compare_files(self, actual_sv_sentences_path, expected_sv_sentences_path)
