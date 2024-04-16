@@ -21,6 +21,7 @@ from stats import stat_var_hierarchy_generator
 from stats.config import Config
 from stats.data import ImportType
 from stats.data import InputFileFormat
+from stats.data import Triple
 from stats.db import create_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
@@ -137,10 +138,8 @@ class Runner:
       # Generate SVG hierarchy.
       self._generate_svg_hierarchy()
 
-      # Generate SV sentences.
-      nl.generate_sv_sentences(
-          list(self.nodes.variables.values()),
-          self.nl_dir_fh.make_file(constants.SENTENCES_FILE_NAME))
+      # Generate NL sentences for creating embeddings.
+      self._generate_nl_sentences()
 
       # Write import info to DB.
       self.db.insert_import_info(status=ImportStatus.SUCCESS)
@@ -153,6 +152,19 @@ class Runner:
     except Exception as e:
       logging.exception("Error running import")
       self.reporter.report_failure(error=str(e))
+
+  def _generate_nl_sentences(self):
+    triples: list[Triple] = []
+    # Get topic triples if generating topics else get SV triples.
+    if self.config.generate_topics():
+      triples = self.db.select_triples_by_subject_type(sc.TYPE_TOPIC)
+    else:
+      triples = self.db.select_triples_by_subject_type(
+          sc.TYPE_STATISTICAL_VARIABLE)
+
+    # Generate sentences.
+    nl.generate_nl_sentences(
+        triples, self.nl_dir_fh.make_file(constants.SENTENCES_FILE_NAME))
 
   def _generate_svg_hierarchy(self):
     if self.mode == RunMode.MAIN_DC:

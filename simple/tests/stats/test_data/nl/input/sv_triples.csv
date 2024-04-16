@@ -1,0 +1,9 @@
+subject_id,predicate,object_id,object_value
+sv_with_utterances,typeOf,StatisticalVariable,
+sv_with_utterances,name,,Name should NOT be used
+sv_with_utterances,utteranceTemplate,,SV utterance1
+sv_with_utterances,utteranceTemplate,,SV utterance2
+sv_with_name_only,typeOf,StatisticalVariable,
+sv_with_name_only,name,,Name should be used
+sv_with_no_sentence_props,typeOf,StatisticalVariable,
+sv_with_no_sentence_props,description,,Descriptions are NOT used for embeddings

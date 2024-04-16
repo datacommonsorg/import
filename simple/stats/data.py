@@ -34,6 +34,7 @@ _PREDICATE_LOCATION = "location"
 _PREDICATE_POPULATION_TYPE = "populationType"
 _PREDICATE_MEASURED_PROPERTY = "measuredProperty"
 _PREDICATE_STAT_TYPE = "statType"
+_PREDICATE_UTTERANCE_TEMPLATE = "utteranceTemplate"
 
 STATISTICAL_VARIABLE = "StatisticalVariable"
 STAT_VAR_GROUP = "StatVarGroup"
@@ -138,6 +139,14 @@ class StatVar:
       triples.append(
           Triple(self.id, _PREDICATE_DESCRIPTION,
                  object_value=self.description))
+
+    # Encode NL sentences as utteranceTemplate triples.
+    for nl_sentence in self.nl_sentences:
+      triples.append(
+          Triple(self.id,
+                 _PREDICATE_UTTERANCE_TEMPLATE,
+                 object_value=nl_sentence))
+
     if self.group_id:
       triples.append(
           Triple(self.id, _PREDICATE_MEMBER_OF, object_id=self.group_id))

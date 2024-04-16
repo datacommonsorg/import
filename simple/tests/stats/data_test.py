@@ -24,7 +24,8 @@ from stats.data import Triple
 SV_ID1 = "sv_id1"
 SV_NAME1 = "SV Name1"
 SV_DESCRIPTION1 = "SV Description1"
-SV_SENTENCES1 = ["SV Sentence1", "SV SENTENCE2"]
+SV_SENTENCE1 = "SV Sentence1"
+SV_SENTENCE2 = "SV SENTENCE2"
 SVG_ID1 = "svg_id1"
 SVG_NAME1 = "SVG NAME1"
 SVG_PARENT_ID1 = "svg_parent_id1"
@@ -68,11 +69,13 @@ class TestData(unittest.TestCase):
     self.assertListEqual(result, expected)
 
   def test_sv_triples_with_nl_sentences(self):
-    sv = StatVar(SV_ID1, SV_NAME1, nl_sentences=SV_SENTENCES1)
+    sv = StatVar(SV_ID1, SV_NAME1, nl_sentences=[SV_SENTENCE1, SV_SENTENCE2])
     result = sv.triples()
     expected = [
         Triple(SV_ID1, "typeOf", object_id="StatisticalVariable"),
         Triple(SV_ID1, "name", object_value=SV_NAME1),
+        Triple(SV_ID1, "utteranceTemplate", object_value=SV_SENTENCE1),
+        Triple(SV_ID1, "utteranceTemplate", object_value=SV_SENTENCE2),
         Triple(SV_ID1, "populationType", object_id="schema:Thing"),
         Triple(SV_ID1, "measuredProperty", object_id=f"dcs:{SV_ID1}"),
         Triple(SV_ID1, "statType", object_id="dcs:measuredValue"),
@@ -119,7 +122,7 @@ class TestData(unittest.TestCase):
         SV_ID1,
         SV_NAME1,
         description=SV_DESCRIPTION1,
-        nl_sentences=SV_SENTENCES1,
+        nl_sentences=[SV_SENTENCE1, SV_SENTENCE2],
         group_id=SVG_ID1,
     )
     result = sv.triples()
@@ -127,6 +130,8 @@ class TestData(unittest.TestCase):
         Triple(SV_ID1, "typeOf", object_id="StatisticalVariable"),
         Triple(SV_ID1, "name", object_value=SV_NAME1),
         Triple(SV_ID1, "description", object_value=SV_DESCRIPTION1),
+        Triple(SV_ID1, "utteranceTemplate", object_value=SV_SENTENCE1),
+        Triple(SV_ID1, "utteranceTemplate", object_value=SV_SENTENCE2),
         Triple(SV_ID1, "memberOf", object_id=SVG_ID1),
         Triple(SV_ID1, "populationType", object_id="schema:Thing"),
         Triple(SV_ID1, "measuredProperty", object_id=f"dcs:{SV_ID1}"),
