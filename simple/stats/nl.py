@@ -60,19 +60,19 @@ def generate_nl_sentences(triples: list[Triple], sentences_fh: FileHandler):
 @dataclass
 class SentenceCandidates:
   name: str = ""
-  utteranceTemplates: list[str] = field(default_factory=list)
+  searchDescriptions: list[str] = field(default_factory=list)
 
   def maybe_add(self, triple: Triple):
     if triple.predicate == sc.PREDICATE_SEARCH_DESCRIPTION:
-      self.utteranceTemplates.append(triple.object_value)
+      self.searchDescriptions.append(triple.object_value)
     elif triple.predicate == sc.PREDICATE_NAME:
       self.name = triple.object_value
 
   def sentences(self) -> str:
     sentences: list[str] = []
 
-    if self.utteranceTemplates:
-      sentences = self.utteranceTemplates
+    if self.searchDescriptions:
+      sentences = self.searchDescriptions
     elif self.name:
       sentences = [self.name]
 
