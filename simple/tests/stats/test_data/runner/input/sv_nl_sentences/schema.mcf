@@ -7,8 +7,8 @@ Node: dcid:var2
 typeOf: dcs:StatisticalVariable
 name: "Variable2 Name"
 description: "Variable2 Description"
-utteranceTemplate: "Variable2 Utterance1"
-utteranceTemplate: "Variable2 Utterance2"
+searchDescription: "Variable2 Search Description1"
+searchDescription: "Variable2 Search Description2"
 
 Node: dcid:topic1
 typeOf: dcs:Topic
@@ -17,5 +17,5 @@ name: "Topic1 Name"
 Node: dcid:topic2
 typeOf: dcs:Topic
 name: "Topic2 Name"
-utteranceTemplate: "Topic2 Utterance1"
-utteranceTemplate: "Topic2 Utterance2"
+searchDescription: "Topic2 Search Description1"
+searchDescription: "Topic2 Search Description2"

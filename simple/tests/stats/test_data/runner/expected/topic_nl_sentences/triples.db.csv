@@ -5,14 +5,14 @@ var1,description,,Variable1 Description
 var2,typeOf,StatisticalVariable,
 var2,name,,Variable2 Name
 var2,description,,Variable2 Description
-var2,utteranceTemplate,,Variable2 Utterance1
-var2,utteranceTemplate,,Variable2 Utterance2
+var2,searchDescription,,Variable2 Search Description1
+var2,searchDescription,,Variable2 Search Description2
 topic1,typeOf,Topic,
 topic1,name,,Topic1 Name
 topic2,typeOf,Topic,
 topic2,name,,Topic2 Name
-topic2,utteranceTemplate,,Topic2 Utterance1
-topic2,utteranceTemplate,,Topic2 Utterance2
+topic2,searchDescription,,Topic2 Search Description1
+topic2,searchDescription,,Topic2 Search Description2
 c/s/default,typeOf,Source,
 c/s/default,name,,Custom Data Commons
 c/s/1,typeOf,Source,

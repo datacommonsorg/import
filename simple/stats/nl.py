@@ -27,7 +27,7 @@ _SENTENCE_SEPARATOR = ";"
 
 
 def generate_nl_sentences(triples: list[Triple], sentences_fh: FileHandler):
-  """Generates NL sentences based on name and utteranceTemplate triples.
+  """Generates NL sentences based on name and searchDescription triples.
 
   This method should only be called for triples of types for which NL sentences
   should be generated. Currently it is StatisticalVariable and Topic.
@@ -63,7 +63,7 @@ class SentenceCandidates:
   utteranceTemplates: list[str] = field(default_factory=list)
 
   def maybe_add(self, triple: Triple):
-    if triple.predicate == sc.PREDICATE_UTTERANCE_TEMPLATE:
+    if triple.predicate == sc.PREDICATE_SEARCH_DESCRIPTION:
       self.utteranceTemplates.append(triple.object_value)
     elif triple.predicate == sc.PREDICATE_NAME:
       self.name = triple.object_value

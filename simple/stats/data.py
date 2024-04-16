@@ -34,7 +34,7 @@ _PREDICATE_LOCATION = "location"
 _PREDICATE_POPULATION_TYPE = "populationType"
 _PREDICATE_MEASURED_PROPERTY = "measuredProperty"
 _PREDICATE_STAT_TYPE = "statType"
-_PREDICATE_UTTERANCE_TEMPLATE = "utteranceTemplate"
+_PREDICATE_SEARCH_DESCRIPTION = "searchDescription"
 
 STATISTICAL_VARIABLE = "StatisticalVariable"
 STAT_VAR_GROUP = "StatVarGroup"
@@ -140,11 +140,11 @@ class StatVar:
           Triple(self.id, _PREDICATE_DESCRIPTION,
                  object_value=self.description))
 
-    # Encode NL sentences as utteranceTemplate triples.
+    # Encode NL sentences as searchDescription triples.
     for nl_sentence in self.nl_sentences:
       triples.append(
           Triple(self.id,
-                 _PREDICATE_UTTERANCE_TEMPLATE,
+                 _PREDICATE_SEARCH_DESCRIPTION,
                  object_value=nl_sentence))
 
     if self.group_id:

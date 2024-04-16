@@ -52,8 +52,8 @@ Variable_2,measuredProperty,dcs:Variable_2,
 var3,typeOf,StatisticalVariable,
 var3,name,,Var 3 Name
 var3,description,,Var 3 Description
-var3,utteranceTemplate,,Sentence 1
-var3,utteranceTemplate,,Sentence 2
+var3,searchDescription,,Sentence 1
+var3,searchDescription,,Sentence 2
 var3,memberOf,custom/g/group_3,
 var3,includedIn,c/p/default,
 var3,includedIn,c/s/default,

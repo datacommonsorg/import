@@ -19,11 +19,11 @@
 SV_HIERARCHY_PROPS_BLOCKLIST: set[str] = {
     "dcid", "typeOf", "isPublic", "provenance", "resMCFFile", "keyString",
     "populationType", "constraintProperties", "name", "label", "alternateName",
-    "description", "descriptionUrl", "memberOf", "utteranceTemplate", "source",
-    "footnote", "isNormalizable", "denominatorForNormalization",
-    "measuredProperty", "measurementMethod", "measurementDenominator",
-    "measurementQualifier", "scalingFactor", "unit", "statType",
-    "censusACSTableId", "includedIn"
+    "description", "descriptionUrl", "memberOf", "utteranceTemplate",
+    "searchDescription", "source", "footnote", "isNormalizable",
+    "denominatorForNormalization", "measuredProperty", "measurementMethod",
+    "measurementDenominator", "measurementQualifier", "scalingFactor", "unit",
+    "statType", "censusACSTableId", "includedIn"
 }
 
 PREDICATE_TYPE_OF = "typeOf"
@@ -31,7 +31,7 @@ PREDICATE_POPULATION_TYPE = "populationType"
 PREDICATE_MEMBER_OF = "memberOf"
 PREDICATE_SPECIALIZATION_OF = "specializationOf"
 PREDICATE_NAME = "name"
-PREDICATE_UTTERANCE_TEMPLATE = "utteranceTemplate"
+PREDICATE_SEARCH_DESCRIPTION = "searchDescription"
 
 TYPE_STATISTICAL_VARIABLE = "StatisticalVariable"
 TYPE_STATISTICAL_VARIABLE_GROUP = "StatVarGroup"

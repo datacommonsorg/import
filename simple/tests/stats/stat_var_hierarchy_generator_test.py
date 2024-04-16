@@ -133,7 +133,7 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
         Triple("sv1", "populationType", "Person", ""),
         Triple("sv1", "race", "Asian", ""),
         Triple("sv1", "gender", "Female", ""),
-        Triple("sv1", "utteranceTemplate", "", "SV1 utterance"),
+        Triple("sv1", "searchDescription", "", "SV1 search description"),
         Triple("non_sv1", "typeOf", "Person", ""),
         Triple("non_sv1", "gender", "Male", ""),
         Triple("non_sv1", "race", "AmericanIndianOrAlaskaNative", ""),

@@ -1,8 +1,8 @@
 subject_id,predicate,object_id,object_value
-topic_with_utterances,typeOf,Topic,
-topic_with_utterances,name,,Name should NOT be used
-topic_with_utterances,utteranceTemplate,,Topic utterance1
-topic_with_utterances,utteranceTemplate,,Topic utterance2
+topic_with_search_descriptions,typeOf,Topic,
+topic_with_search_descriptions,name,,Name should NOT be used
+topic_with_search_descriptions,searchDescription,,Topic search description1
+topic_with_search_descriptions,searchDescription,,Topic search description2
 topic_with_name_only,typeOf,Topic,
 topic_with_name_only,name,,Name should be used
 topic_with_no_sentence_props,typeOf,Topic,
