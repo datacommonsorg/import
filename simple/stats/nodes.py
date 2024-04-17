@@ -132,7 +132,7 @@ class Nodes:
           self._sv_id(sv_column_name),
           var_cfg.name,
           description=var_cfg.description,
-          nl_sentences=var_cfg.nl_sentences,
+          search_descriptions=var_cfg.search_descriptions,
           group_id=group_id,
           properties=var_cfg.properties)
 

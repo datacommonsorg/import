@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import os
 from pathlib import Path
 import shutil
@@ -21,17 +20,11 @@ import tempfile
 import unittest
 
 import pandas as pd
-from stats.config import Config
+from stats import constants
 from stats.data import Observation
 from stats.data import Triple
-from stats.db import create_db
-from stats.db import create_sqlite_config
-from stats.nodes import Nodes
-from stats.reporter import FileImportReporter
-from stats.reporter import ImportReporter
 from stats.runner import Runner
 from tests.stats.test_util import is_write_mode
-from util.filehandler import LocalFileHandler
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "runner")
@@ -78,13 +71,19 @@ def _test_runner(test: unittest.TestCase,
     db_path = os.path.join(temp_dir, "datacommons.db")
 
     expected_dir = os.path.join(_EXPECTED_DIR, test_name)
-    Path(expected_dir).mkdir(parents=True, exist_ok=True)
+    expected_nl_dir = os.path.join(expected_dir, constants.NL_DIR_NAME)
+    Path(expected_nl_dir).mkdir(parents=True, exist_ok=True)
 
     output_triples_path = os.path.join(temp_dir, "triples.db.csv")
     expected_triples_path = os.path.join(expected_dir, "triples.db.csv")
     output_observations_path = os.path.join(temp_dir, "observations.db.csv")
     expected_observations_path = os.path.join(expected_dir,
                                               "observations.db.csv")
+    output_nl_sentences_path = os.path.join(temp_dir, constants.NL_DIR_NAME,
+                                            constants.SENTENCES_FILE_NAME)
+    expected_nl_sentences_path = os.path.join(expected_dir,
+                                              constants.NL_DIR_NAME,
+                                              constants.SENTENCES_FILE_NAME)
 
     Runner(config_file=config_path, input_dir=input_dir,
            output_dir=temp_dir).run()
@@ -95,10 +94,12 @@ def _test_runner(test: unittest.TestCase,
     if is_write_mode():
       shutil.copy(output_triples_path, expected_triples_path)
       shutil.copy(output_observations_path, expected_observations_path)
+      shutil.copy(output_nl_sentences_path, expected_nl_sentences_path)
       return
 
     _compare_files(test, output_triples_path, expected_triples_path)
     _compare_files(test, output_observations_path, expected_observations_path)
+    _compare_files(test, output_nl_sentences_path, expected_nl_sentences_path)
 
 
 class TestRunner(unittest.TestCase):
@@ -114,3 +115,9 @@ class TestRunner(unittest.TestCase):
 
   def test_generate_svg_hierarchy(self):
     _test_runner(self, "generate_svg_hierarchy", is_config_driven=False)
+
+  def test_sv_nl_sentences(self):
+    _test_runner(self, "sv_nl_sentences", is_config_driven=False)
+
+  def test_topic_nl_sentences(self):
+    _test_runner(self, "topic_nl_sentences", is_config_driven=False)

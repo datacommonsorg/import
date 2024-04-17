@@ -13,17 +13,25 @@
 # limitations under the License.
 
 import os
+import shutil
 import tempfile
 import unittest
 
-from stats.data import StatVar
+import pandas as pd
+from stats.data import Triple
 import stats.nl as nl
 from tests.stats.test_util import is_write_mode
 from util.filehandler import LocalFileHandler
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "nl")
+_INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
+
+
+def _read_triples_csv(path: str) -> list[Triple]:
+  df = pd.read_csv(path)
+  return [Triple(**kwargs) for kwargs in df.to_dict(orient='records')]
 
 
 def _compare_files(test: unittest.TestCase, output_path, expected_path):
@@ -34,30 +42,33 @@ def _compare_files(test: unittest.TestCase, output_path, expected_path):
       test.assertEqual(got, want)
 
 
-_TEST_STAT_VARS = [
-    StatVar("foo", "Foo Name", "Foo Description"),
-    StatVar("bar",
-            "Bar Name",
-            "Bar Description",
-            nl_sentences=["Bar Sentence1", "Bar Sentence 2"]),
-]
+def _test_generate_nl_sentences(test: unittest.TestCase, test_name: str):
+  test.maxDiff = None
+
+  with tempfile.TemporaryDirectory() as temp_dir:
+    input_triples_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
+    input_triples = _read_triples_csv(input_triples_path)
+
+    output_sentences_csv_path = os.path.join(temp_dir,
+                                             f"{test_name}_sentences.csv")
+    expected_sentences_csv_path = os.path.join(_EXPECTED_DIR,
+                                               f"{test_name}_sentences.csv")
+
+    output_sentences_csv_fh = LocalFileHandler(output_sentences_csv_path)
+
+    nl.generate_nl_sentences(input_triples, output_sentences_csv_fh)
+
+    if is_write_mode():
+      shutil.copy(output_sentences_csv_path, expected_sentences_csv_path)
+      return
+
+    _compare_files(test, output_sentences_csv_path, expected_sentences_csv_path)
 
 
 class TestData(unittest.TestCase):
 
-  def test_generate_sv_sentences(self):
-    expected_sv_sentences_path = os.path.join(_EXPECTED_DIR, "sentences.csv")
+  def test_generate_nl_sentences_for_sv_triples(self):
+    _test_generate_nl_sentences(self, "sv_triples")
 
-    if is_write_mode():
-      expected_sentences_fh = LocalFileHandler(expected_sv_sentences_path)
-      print("Writing sv sentences to:", expected_sentences_fh)
-      nl.generate_sv_sentences(_TEST_STAT_VARS, expected_sentences_fh)
-      return
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-      actual_sv_sentences_path = os.path.join(temp_dir, "sentences.csv")
-      actual_sentences_fh = LocalFileHandler(actual_sv_sentences_path)
-
-      nl.generate_sv_sentences(_TEST_STAT_VARS, actual_sentences_fh)
-
-      _compare_files(self, actual_sv_sentences_path, expected_sv_sentences_path)
+  def test_generate_nl_sentences_for_topic_triples(self):
+    _test_generate_nl_sentences(self, "topic_triples")

@@ -30,6 +30,8 @@ _IGNORE_COLUMNS_FIELD = "ignoreColumns"
 _VARIABLES_FIELD = "variables"
 _NAME_FIELD = "name"
 _DESCRIPTION_FIELD = "description"
+_SEARCH_DESCRIPTIONS_FIELD = "searchDescriptions"
+# DEPRECATED: Use searchDescriptions instead.
 _NL_SENTENCES_FIELD = "nlSentences"
 _GROUP_FIELD = "group"
 _SOURCES_FIELD = "sources"
@@ -50,6 +52,7 @@ _ROW_ENTITY_TYPE_FIELD = "rowEntityType"
 _ENTITY_COLUMNS = "entityColumns"
 _ENTITIES_FIELD = "entities"
 _GROUP_STAT_VARS_BY_PROPERTY = "groupStatVarsByProperty"
+_GENERATE_TOPICS = "generateTopics"
 
 
 class Config:
@@ -107,11 +110,14 @@ class Config:
 
   def variable(self, variable_name: str) -> StatVar:
     var_cfg = self.data.get(_VARIABLES_FIELD, {}).get(variable_name, {})
+    # Combine search descriptions and the deprecated NL sentences until the latter is removed.
+    search_descriptions = var_cfg.get(_SEARCH_DESCRIPTIONS_FIELD,
+                                      []) + var_cfg.get(_NL_SENTENCES_FIELD, [])
     return StatVar(
         "",
         var_cfg.get(_NAME_FIELD, variable_name),
         description=var_cfg.get(_DESCRIPTION_FIELD, ""),
-        nl_sentences=var_cfg.get(_NL_SENTENCES_FIELD, []),
+        search_descriptions=search_descriptions,
         group_path=var_cfg.get(_GROUP_FIELD, ""),
         properties=var_cfg.get(_PROPERTIES_FIELD, {}),
     )
@@ -162,6 +168,9 @@ class Config:
 
   def generate_hierarchy(self) -> bool:
     return self.data.get(_GROUP_STAT_VARS_BY_PROPERTY) or False
+
+  def generate_topics(self) -> bool:
+    return self.data.get(_GENERATE_TOPICS) or False
 
   def _input_file(self, input_file_name: str) -> dict:
     # Exact match.

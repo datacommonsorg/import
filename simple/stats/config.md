@@ -27,7 +27,7 @@ The config parameters for the files to be imported should be specified in a `con
     "var3": {
       "name": "Var 3 Name",
       "description": "Var 3 Description",
-      "nlSentences": ["Sentence 1", "Sentence 2"],
+      "searchDescriptions": ["Sentence 1", "Sentence 2"],
       "group": "Parent Group/Child Group 2",
       "properties": {
         "populationType": "schema:Person",
@@ -127,10 +127,12 @@ Variables can be arranged in groups.
 The group hierarchy can be specified using the `group` property.
 Use "/" as a separator to specify a multi-level hierarchy.
 
-#### `nlSentences`
+#### `searchDescriptions` _(formerly `nlSentences`)_
 
-An array of NL sentences to be used for creating more NL embeddings (in addition to the description)
-for the variable.
+An array of search descriptions to be used for creating more NL embeddings for the variable.
+If not specified, the variable name will be used for creating these embeddings.
+
+Note that `nlSentences` is deprecated and will be removed in the future.
 
 ## `sources`
 

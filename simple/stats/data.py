@@ -34,6 +34,7 @@ _PREDICATE_LOCATION = "location"
 _PREDICATE_POPULATION_TYPE = "populationType"
 _PREDICATE_MEASURED_PROPERTY = "measuredProperty"
 _PREDICATE_STAT_TYPE = "statType"
+_PREDICATE_SEARCH_DESCRIPTION = "searchDescription"
 
 STATISTICAL_VARIABLE = "StatisticalVariable"
 STAT_VAR_GROUP = "StatVarGroup"
@@ -97,7 +98,7 @@ class StatVar:
   id: str
   name: str
   description: str = ""
-  nl_sentences: list[str] = field(default_factory=list)
+  search_descriptions: list[str] = field(default_factory=list)
   group_id: str = ""
   group_path: str = ""
   provenance_ids: list[str] = field(default_factory=list)
@@ -138,6 +139,14 @@ class StatVar:
       triples.append(
           Triple(self.id, _PREDICATE_DESCRIPTION,
                  object_value=self.description))
+
+    # Encode search descriptions as searchDescription triples.
+    for search_description in self.search_descriptions:
+      triples.append(
+          Triple(self.id,
+                 _PREDICATE_SEARCH_DESCRIPTION,
+                 object_value=search_description))
+
     if self.group_id:
       triples.append(
           Triple(self.id, _PREDICATE_MEMBER_OF, object_id=self.group_id))
