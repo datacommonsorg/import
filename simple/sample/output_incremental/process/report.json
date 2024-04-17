@@ -1,0 +1,27 @@
+{
+  "status": "SUCCESS",
+  "startTime": "2023-01-01 00:00:00",
+  "lastUpdate": "2023-01-01 00:00:00",
+  "importFiles": {
+    "latlng.csv": {
+      "status": "SUCCESS",
+      "startTime": "2023-01-01 00:00:00",
+      "lastUpdate": "2023-01-01 00:00:00"
+    },
+    "powerplants.csv": {
+      "status": "SUCCESS",
+      "startTime": "2023-01-01 00:00:00",
+      "lastUpdate": "2023-01-01 00:00:00"
+    },
+    "s2cells.csv": {
+      "status": "SUCCESS",
+      "startTime": "2023-01-01 00:00:00",
+      "lastUpdate": "2023-01-01 00:00:00"
+    },
+    "wikidataids.csv": {
+      "status": "SUCCESS",
+      "startTime": "2023-01-01 00:00:00",
+      "lastUpdate": "2023-01-01 00:00:00"
+    }
+  }
+}

@@ -37,6 +37,7 @@ def _is_done_status(status: Status) -> bool:
   return status == Status.SUCCESS or status == Status.FAILURE
 
 
+# TODO: Fix ImportReporter for incremental mode.
 class ImportReporter:
   """Generates a report on every reported change.
 

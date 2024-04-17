@@ -114,6 +114,33 @@ function run_sample {
   deactivate
 }
 
+function run_sample_incremental {
+  # Do not use Cloud SQL.
+  export USE_CLOUDSQL=false
+
+  python3 -m venv .env
+  source .env/bin/activate
+  
+  cd simple
+  pip3 install -r requirements.txt
+
+  echo "Deleting existing datacommons.db file."
+  rm -f sample/output_incremental/datacommons.db
+
+  echo "Running sample."
+  python3 -m stats.main --input_dir=sample/input_incremental_1 --output_dir=sample/output_incremental --freeze_time
+  echo "Running sample again."
+  python3 -m stats.main --input_dir=sample/input_incremental_2 --output_dir=sample/output_incremental --freeze_time --incremental
+
+  echo "Writing tables to CSVs."
+  mkdir -p sample/output_incremental/tables
+  sqlite3 -header -csv sample/output_incremental/datacommons.db "select * from observations;" > sample/output_incremental/tables/observations.csv
+  sqlite3 -header -csv sample/output_incremental/datacommons.db "select * from triples;" > sample/output_incremental/tables/triples.csv
+  sqlite3 -header -csv sample/output_incremental/datacommons.db "select * from imports;" > sample/output_incremental/tables/imports.csv
+
+  deactivate
+}
+
 function run_main_dc_sample {
   python3 -m venv .env
   source .env/bin/activate
@@ -199,6 +226,11 @@ while [[ "$#" -gt 0 ]]; do
         run_sample
         shift 1
         ;;
+    -i)
+    echo -e "### Running sample incremental"
+    run_sample_incremental
+    shift 1
+    ;;
     *)
         help
         exit 1

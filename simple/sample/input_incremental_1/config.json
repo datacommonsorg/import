@@ -1,0 +1,68 @@
+{
+  "inputFiles": {
+    "countries.csv": {
+      "importType": "observations",
+      "entityType": "Country",
+      "provenance": "Provenance1 Name"
+    },
+    "geoids.csv": {
+      "importType": "observations",
+      "entityType": "",
+      "ignoreColumns": [
+        "ignore1",
+        "ignore2"
+      ],
+      "provenance": "Provenance1 Name"
+    },
+    "latlng_events.csv": {
+      "importType": "events",
+      "eventType": "CrimeEvent",
+      "entityType": "CensusZipCodeTabulationArea",
+      "provenance": "Provenance1 Name",
+      "idColumn": "CASE",
+      "computedVariables": [
+        "Crime Count"
+      ]
+    }
+  },
+  "variables": {
+    "var1": {
+      "name": "Good var1 name",
+      "description": "Good var1 description",
+      "nlSentences": [
+        "Natural language sentence 1",
+        "Natural language sentence 2"
+      ],
+      "group": "Parent Group/Child Group 1",
+      "properties": {
+        "populationType": "Person",
+        "measuredProperty": "age",
+        "statType": "medianValue",
+        "gender": "Female"
+      }
+    },
+    "var2": {
+      "name": "Good var2 name",
+      "group": "Parent Group/Child Group 2"
+    },
+    "Variable 1": {
+      "group": "Parent Group"
+    },
+    "Crime Count": {
+      "description": "Number of crimes",
+      "aggregation": {
+        "period": "month",
+        "method": "count"
+      }
+    }
+  },
+  "sources": {
+    "Source1 Name": {
+      "url": "http://source1.com",
+      "provenances": {
+        "Provenance1 Name": "http://source1.com/provenance1",
+        "Provenance2 Name": "http://source1.com/provenance2"
+      }
+    }
+  }
+}

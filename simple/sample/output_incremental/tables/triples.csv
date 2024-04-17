@@ -1,0 +1,429 @@
+subject_id,predicate,object_id,object_value
+JG497095,typeOf,CrimeEvent,""
+JG497095,location,zip/60647,""
+JG497095,observationDate,"","11/08/2023 8:50:00 PM"
+JG497095,includedIn,c/p/1,""
+JG497095,CASE,"",JG497095
+JG497095,PRIMARY_DESCRIPTION,"",THEFT
+JG496991,typeOf,CrimeEvent,""
+JG496991,location,zip/60654,""
+JG496991,observationDate,"","11/08/2023 3:14:00 PM"
+JG496991,includedIn,c/p/1,""
+JG496991,CASE,"",JG496991
+JG496991,PRIMARY_DESCRIPTION,"",ASSAULT
+JG497145,typeOf,CrimeEvent,""
+JG497145,location,zip/60609,""
+JG497145,observationDate,"","11/08/2023 10:55:00 PM"
+JG497145,includedIn,c/p/1,""
+JG497145,CASE,"",JG497145
+JG497145,PRIMARY_DESCRIPTION,"",ASSAULT
+JG496701,typeOf,CrimeEvent,""
+JG496701,location,zip/60625,""
+JG496701,observationDate,"","11/08/2023 4:39:00 PM"
+JG496701,includedIn,c/p/1,""
+JG496701,CASE,"",JG496701
+JG496701,PRIMARY_DESCRIPTION,"","OTHER OFFENSE"
+JG484195,typeOf,CrimeEvent,""
+JG484195,location,zip/60621,""
+JG484195,observationDate,"","10/28/2023 7:30:00 PM"
+JG484195,includedIn,c/p/1,""
+JG484195,CASE,"",JG484195
+JG484195,PRIMARY_DESCRIPTION,"",THEFT
+JG483131,typeOf,CrimeEvent,""
+JG483131,location,zip/60659,""
+JG483131,observationDate,"","10/28/2023 5:00:00 PM"
+JG483131,includedIn,c/p/1,""
+JG483131,CASE,"",JG483131
+JG483131,PRIMARY_DESCRIPTION,"","CRIMINAL DAMAGE"
+JG498494,typeOf,CrimeEvent,""
+JG498494,location,zip/60617,""
+JG498494,observationDate,"","11/08/2023 8:25:00 AM"
+JG498494,includedIn,c/p/1,""
+JG498494,CASE,"",JG498494
+JG498494,PRIMARY_DESCRIPTION,"",ASSAULT
+JG496575,typeOf,CrimeEvent,""
+JG496575,location,zip/60613,""
+JG496575,observationDate,"","11/08/2023 2:38:00 PM"
+JG496575,includedIn,c/p/1,""
+JG496575,CASE,"",JG496575
+JG496575,PRIMARY_DESCRIPTION,"",THEFT
+JG427641,typeOf,CrimeEvent,""
+JG427641,location,zip/60628,""
+JG427641,observationDate,"","09/17/2023 3:00:00 AM"
+JG427641,includedIn,c/p/1,""
+JG427641,CASE,"",JG427641
+JG427641,PRIMARY_DESCRIPTION,"",THEFT
+JG365961,typeOf,CrimeEvent,""
+JG365961,location,zip/60606,""
+JG365961,observationDate,"","08/02/2023 9:25:00 AM"
+JG365961,includedIn,c/p/1,""
+JG365961,CASE,"",JG365961
+JG365961,PRIMARY_DESCRIPTION,"",ASSAULT
+JG496115,typeOf,CrimeEvent,""
+JG496115,location,zip/60620,""
+JG496115,observationDate,"","11/08/2023 9:00:00 AM"
+JG496115,includedIn,c/p/1,""
+JG496115,CASE,"",JG496115
+JG496115,PRIMARY_DESCRIPTION,"",THEFT
+JG496955,typeOf,CrimeEvent,""
+JG496955,location,zip/60630,""
+JG496955,observationDate,"","11/08/2023 7:45:00 PM"
+JG496955,includedIn,c/p/1,""
+JG496955,CASE,"",JG496955
+JG496955,PRIMARY_DESCRIPTION,"",ROBBERY
+JG501047,typeOf,CrimeEvent,""
+JG501047,location,zip/60615,""
+JG501047,observationDate,"","11/08/2023 3:00:00 PM"
+JG501047,includedIn,c/p/1,""
+JG501047,CASE,"",JG501047
+JG501047,PRIMARY_DESCRIPTION,"",BURGLARY
+JG496779,typeOf,CrimeEvent,""
+JG496779,location,zip/60643,""
+JG496779,observationDate,"","11/08/2023 1:00:00 PM"
+JG496779,includedIn,c/p/1,""
+JG496779,CASE,"",JG496779
+JG496779,PRIMARY_DESCRIPTION,"",ASSAULT
+JG496296,typeOf,CrimeEvent,""
+JG496296,location,zip/60601,""
+JG496296,observationDate,"","11/08/2023 11:00:00 AM"
+JG496296,includedIn,c/p/1,""
+JG496296,CASE,"",JG496296
+JG496296,PRIMARY_DESCRIPTION,"",THEFT
+JG504330,typeOf,CrimeEvent,""
+JG504330,location,zip/60637,""
+JG504330,observationDate,"","11/05/2023 6:00:00 PM"
+JG504330,includedIn,c/p/1,""
+JG504330,CASE,"",JG504330
+JG504330,PRIMARY_DESCRIPTION,"","OFFENSE INVOLVING CHILDREN"
+JG496568,typeOf,CrimeEvent,""
+JG496568,location,zip/60623,""
+JG496568,observationDate,"","11/08/2023 1:49:00 PM"
+JG496568,includedIn,c/p/1,""
+JG496568,CASE,"",JG496568
+JG496568,PRIMARY_DESCRIPTION,"",ASSAULT
+JG496295,typeOf,CrimeEvent,""
+JG496295,location,zip/60643,""
+JG496295,observationDate,"","11/08/2023 11:30:00 AM"
+JG496295,includedIn,c/p/1,""
+JG496295,CASE,"",JG496295
+JG496295,PRIMARY_DESCRIPTION,"",ROBBERY
+JG488191,typeOf,CrimeEvent,""
+JG488191,location,zip/60661,""
+JG488191,observationDate,"","10/28/2023 9:00:00 AM"
+JG488191,includedIn,c/p/1,""
+JG488191,CASE,"",JG488191
+JG488191,PRIMARY_DESCRIPTION,"","MOTOR VEHICLE THEFT"
+JG482122,typeOf,CrimeEvent,""
+JG482122,location,zip/60601,""
+JG482122,observationDate,"","10/28/2023 12:10:00 PM"
+JG482122,includedIn,c/p/1,""
+JG482122,CASE,"",JG482122
+JG482122,PRIMARY_DESCRIPTION,"",ROBBERY
+JG481621,typeOf,CrimeEvent,""
+JG481621,location,zip/60644,""
+JG481621,observationDate,"","10/28/2023 1:30:00 AM"
+JG481621,includedIn,c/p/1,""
+JG481621,CASE,"",JG481621
+JG481621,PRIMARY_DESCRIPTION,"","CRIMINAL DAMAGE"
+JG499040,typeOf,CrimeEvent,""
+JG499040,location,zip/60613,""
+JG499040,observationDate,"","11/08/2023 6:30:00 PM"
+JG499040,includedIn,c/p/1,""
+JG499040,CASE,"",JG499040
+JG499040,PRIMARY_DESCRIPTION,"","CRIMINAL TRESPASS"
+JG497052,typeOf,CrimeEvent,""
+JG497052,location,zip/60613,""
+JG497052,observationDate,"","11/08/2023 9:01:00 PM"
+JG497052,includedIn,c/p/1,""
+JG497052,CASE,"",JG497052
+JG497052,PRIMARY_DESCRIPTION,"",BURGLARY
+JF511492,typeOf,CrimeEvent,""
+JF511492,location,zip/60605,""
+JF511492,observationDate,"","12/14/2022 7:00:00 PM"
+JF511492,includedIn,c/p/1,""
+JF511492,CASE,"",JF511492
+JF511492,PRIMARY_DESCRIPTION,"",THEFT
+JG498785,typeOf,CrimeEvent,""
+JG498785,location,zip/60630,""
+JG498785,observationDate,"","11/08/2023 10:40:00 PM"
+JG498785,includedIn,c/p/1,""
+JG498785,CASE,"",JG498785
+JG498785,PRIMARY_DESCRIPTION,"",THEFT
+JG496372,typeOf,CrimeEvent,""
+JG496372,location,zip/60609,""
+JG496372,observationDate,"","11/08/2023 12:02:00 PM"
+JG496372,includedIn,c/p/1,""
+JG496372,CASE,"",JG496372
+JG496372,PRIMARY_DESCRIPTION,"",BURGLARY
+JG481891,typeOf,CrimeEvent,""
+JG481891,location,zip/60660,""
+JG481891,observationDate,"","10/28/2023 9:15:00 AM"
+JG481891,includedIn,c/p/1,""
+JG481891,CASE,"",JG481891
+JG481891,PRIMARY_DESCRIPTION,"",THEFT
+JG482300,typeOf,CrimeEvent,""
+JG482300,location,zip/60623,""
+JG482300,observationDate,"","10/28/2023 2:29:00 PM"
+JG482300,includedIn,c/p/1,""
+JG482300,CASE,"",JG482300
+JG482300,PRIMARY_DESCRIPTION,"","OTHER OFFENSE"
+JG482034,typeOf,CrimeEvent,""
+JG482034,location,zip/60644,""
+JG482034,observationDate,"","10/28/2023 2:00:00 AM"
+JG482034,includedIn,c/p/1,""
+JG482034,CASE,"",JG482034
+JG482034,PRIMARY_DESCRIPTION,"",THEFT
+JG406115,typeOf,CrimeEvent,""
+JG406115,location,zip/60629,""
+JG406115,observationDate,"","08/31/2023 7:00:00 PM"
+JG406115,includedIn,c/p/1,""
+JG406115,CASE,"",JG406115
+JG406115,PRIMARY_DESCRIPTION,"",BATTERY
+JG416492,typeOf,CrimeEvent,""
+JG416492,location,zip/60605,""
+JG416492,observationDate,"","09/08/2023 8:00:00 AM"
+JG416492,includedIn,c/p/1,""
+JG416492,CASE,"",JG416492
+JG416492,PRIMARY_DESCRIPTION,"","DECEPTIVE PRACTICE"
+JG405111,typeOf,CrimeEvent,""
+JG405111,location,zip/60609,""
+JG405111,observationDate,"","08/31/2023 10:52:00 AM"
+JG405111,includedIn,c/p/1,""
+JG405111,CASE,"",JG405111
+JG405111,PRIMARY_DESCRIPTION,"",BATTERY
+JF501686,typeOf,CrimeEvent,""
+JF501686,location,zip/60605,""
+JF501686,observationDate,"","12/07/2022 1:39:00 PM"
+JF501686,includedIn,c/p/1,""
+JF501686,CASE,"",JF501686
+JF501686,PRIMARY_DESCRIPTION,"","CRIMINAL TRESPASS"
+JG484000,typeOf,CrimeEvent,""
+JG484000,location,zip/60657,""
+JG484000,observationDate,"","10/28/2023 7:41:00 AM"
+JG484000,includedIn,c/p/1,""
+JG484000,CASE,"",JG484000
+JG484000,PRIMARY_DESCRIPTION,"",THEFT
+JG482660,typeOf,CrimeEvent,""
+JG482660,location,zip/60643,""
+JG482660,observationDate,"","10/28/2023 10:40:00 PM"
+JG482660,includedIn,c/p/1,""
+JG482660,CASE,"",JG482660
+JG482660,PRIMARY_DESCRIPTION,"",ASSAULT
+JG464444,typeOf,CrimeEvent,""
+JG464444,location,zip/60642,""
+JG464444,observationDate,"","10/15/2023 2:30:00 AM"
+JG464444,includedIn,c/p/1,""
+JG464444,CASE,"",JG464444
+JG464444,PRIMARY_DESCRIPTION,"",ROBBERY
+JF254640,typeOf,CrimeEvent,""
+JF254640,location,zip/60611,""
+JF254640,observationDate,"","12/08/2022 3:38:00 PM"
+JF254640,includedIn,c/p/1,""
+JF254640,CASE,"",JF254640
+JF254640,PRIMARY_DESCRIPTION,"",HOMICIDE
+JG483104,typeOf,CrimeEvent,""
+JG483104,location,zip/60651,""
+JG483104,observationDate,"","10/28/2023 4:00:00 PM"
+JG483104,includedIn,c/p/1,""
+JG483104,CASE,"",JG483104
+JG483104,PRIMARY_DESCRIPTION,"",THEFT
+JG412467,typeOf,CrimeEvent,""
+JG412467,location,zip/60619,""
+JG412467,observationDate,"","08/31/2023 9:13:00 PM"
+JG412467,includedIn,c/p/1,""
+JG412467,CASE,"",JG412467
+JG412467,PRIMARY_DESCRIPTION,"","MOTOR VEHICLE THEFT"
+JG453780,typeOf,CrimeEvent,""
+JG453780,location,zip/60621,""
+JG453780,observationDate,"","09/29/2023 12:00:00 AM"
+JG453780,includedIn,c/p/1,""
+JG453780,CASE,"",JG453780
+JG453780,PRIMARY_DESCRIPTION,"",THEFT
+JG445684,typeOf,CrimeEvent,""
+JG445684,location,zip/60616,""
+JG445684,observationDate,"","09/30/2023 11:45:00 PM"
+JG445684,includedIn,c/p/1,""
+JG445684,CASE,"",JG445684
+JG445684,PRIMARY_DESCRIPTION,"",BATTERY
+JG495860,typeOf,CrimeEvent,""
+JG495860,location,zip/60637,""
+JG495860,observationDate,"","11/08/2023 3:00:00 AM"
+JG495860,includedIn,c/p/1,""
+JG495860,CASE,"",JG495860
+JG495860,PRIMARY_DESCRIPTION,"","CRIMINAL DAMAGE"
+JG497647,typeOf,CrimeEvent,""
+JG497647,location,zip/60616,""
+JG497647,observationDate,"","11/08/2023 3:00:00 PM"
+JG497647,includedIn,c/p/1,""
+JG497647,CASE,"",JG497647
+JG497647,PRIMARY_DESCRIPTION,"","MOTOR VEHICLE THEFT"
+JG445669,typeOf,CrimeEvent,""
+JG445669,location,zip/60620,""
+JG445669,observationDate,"","09/30/2023 9:30:00 PM"
+JG445669,includedIn,c/p/1,""
+JG445669,CASE,"",JG445669
+JG445669,PRIMARY_DESCRIPTION,"",ASSAULT
+JG445052,typeOf,CrimeEvent,""
+JG445052,location,zip/60618,""
+JG445052,observationDate,"","09/30/2023 10:01:00 AM"
+JG445052,includedIn,c/p/1,""
+JG445052,CASE,"",JG445052
+JG445052,PRIMARY_DESCRIPTION,"",THEFT
+JG481737,typeOf,CrimeEvent,""
+JG481737,location,zip/60611,""
+JG481737,observationDate,"","10/28/2023 3:34:00 AM"
+JG481737,includedIn,c/p/1,""
+JG481737,CASE,"",JG481737
+JG481737,PRIMARY_DESCRIPTION,"",BATTERY
+JG503521,typeOf,CrimeEvent,""
+JG503521,location,zip/60637,""
+JG503521,observationDate,"","11/13/2023 9:30:00 AM"
+JG503521,includedIn,c/p/1,""
+JG503521,CASE,"",JG503521
+JG503521,PRIMARY_DESCRIPTION,"",BURGLARY
+JG468840,typeOf,CrimeEvent,""
+JG468840,location,zip/60617,""
+JG468840,observationDate,"","10/15/2023 3:00:00 AM"
+JG468840,includedIn,c/p/1,""
+JG468840,CASE,"",JG468840
+JG468840,PRIMARY_DESCRIPTION,"","CRIMINAL DAMAGE"
+JG465660,typeOf,CrimeEvent,""
+JG465660,location,zip/60652,""
+JG465660,observationDate,"","10/15/2023 8:00:00 PM"
+JG465660,includedIn,c/p/1,""
+JG465660,CASE,"",JG465660
+JG465660,PRIMARY_DESCRIPTION,"",THEFT
+JG464615,typeOf,CrimeEvent,""
+JG464615,location,zip/60649,""
+JG464615,observationDate,"","10/15/2023 11:01:00 AM"
+JG464615,includedIn,c/p/1,""
+JG464615,CASE,"",JG464615
+JG464615,PRIMARY_DESCRIPTION,"","MOTOR VEHICLE THEFT"
+JG497095,typeOf,CrimeEvent,""
+JG497095,location,zip/60647,""
+JG497095,observationDate,"","11/08/2023 8:50:00 PM"
+JG497095,includedIn,c/p/1,""
+JG497095,CASE,"",JG497095
+JG497095,PRIMARY_DESCRIPTION,"",dfbdshfbj
+custom/g/Root,typeOf,StatVarGroup,""
+custom/g/Root,name,"","Custom Variables"
+custom/g/Root,specializationOf,dc/g/Root,""
+Variable_1,typeOf,StatisticalVariable,""
+Variable_1,name,"","Variable 1"
+Variable_1,memberOf,custom/g/group_1,""
+Variable_1,includedIn,c/p/1,""
+Variable_1,includedIn,c/s/1,""
+Variable_1,populationType,Thing,""
+Variable_1,statType,measuredValue,""
+Variable_1,measuredProperty,Variable_1,""
+Variable_2,typeOf,StatisticalVariable,""
+Variable_2,name,"","Variable 2"
+Variable_2,memberOf,custom/g/Root,""
+Variable_2,includedIn,c/p/1,""
+Variable_2,includedIn,c/s/1,""
+Variable_2,populationType,Thing,""
+Variable_2,statType,measuredValue,""
+Variable_2,measuredProperty,Variable_2,""
+Crime_Count,typeOf,StatisticalVariable,""
+Crime_Count,name,"","Crime Count"
+Crime_Count,description,"","Number of crimes"
+Crime_Count,memberOf,custom/g/Root,""
+Crime_Count,includedIn,c/p/1,""
+Crime_Count,includedIn,c/s/1,""
+Crime_Count,populationType,Thing,""
+Crime_Count,statType,measuredValue,""
+Crime_Count,measuredProperty,Crime_Count,""
+CrimeEvent,typeOf,Class,""
+CrimeEvent,subClassOf,Event,""
+CrimeEvent,name,"",CrimeEvent
+CrimeEvent,includedIn,c/p/1,""
+CrimeEvent,includedIn,c/s/1,""
+CASE,typeOf,Property,""
+CASE,name,"",CASE
+PRIMARY_DESCRIPTION,typeOf,Property,""
+PRIMARY_DESCRIPTION,name,"","PRIMARY DESCRIPTION"
+country/AFG,typeOf,Country,""
+country/YEM,typeOf,Country,""
+country/AGO,typeOf,Country,""
+country/ZMB,typeOf,Country,""
+country/ZWE,typeOf,Country,""
+country/ALB,typeOf,Country,""
+wikidataId/Q22062741,typeOf,Country,""
+country/DZA,typeOf,Country,""
+country/AND,typeOf,Country,""
+country/ASM,typeOf,Country,""
+country/AIA,typeOf,Country,""
+country/WLF,typeOf,Country,""
+country/ESH,typeOf,Country,""
+c/s/default,typeOf,Source,""
+c/s/default,name,"","Custom Data Commons"
+c/s/1,typeOf,Source,""
+c/s/1,name,"","Source1 Name"
+c/s/1,url,"",http://source1.com
+c/s/1,domain,"",source1.com
+c/p/default,typeOf,Provenance,""
+c/p/default,name,"","Custom Import"
+c/p/default,source,c/s/default,""
+c/p/default,url,"",custom-import
+c/p/1,typeOf,Provenance,""
+c/p/1,name,"","Provenance1 Name"
+c/p/1,source,c/s/1,""
+c/p/1,url,"",http://source1.com/provenance1
+c/p/2,typeOf,Provenance,""
+c/p/2,name,"","Provenance2 Name"
+c/p/2,source,c/s/1,""
+c/p/2,url,"",http://source1.com/provenance2
+custom/g/group_1,typeOf,StatVarGroup,""
+custom/g/group_1,name,"","Parent Group"
+custom/g/group_1,specializationOf,dc/g/Root,""
+custom/g/group_1,includedIn,c/p/1,""
+custom/g/group_1,includedIn,c/p/2,""
+custom/g/group_1,includedIn,c/s/1,""
+custom/g/group_2,typeOf,StatVarGroup,""
+custom/g/group_2,name,"","Child Group 1"
+custom/g/group_2,specializationOf,custom/g/group_1,""
+custom/g/group_2,includedIn,c/p/1,""
+custom/g/group_2,includedIn,c/p/2,""
+custom/g/group_2,includedIn,c/s/1,""
+custom/g/group_3,typeOf,StatVarGroup,""
+custom/g/group_3,name,"","Child Group 2"
+custom/g/group_3,specializationOf,custom/g/group_1,""
+custom/g/group_3,includedIn,c/p/1,""
+custom/g/group_3,includedIn,c/p/2,""
+custom/g/group_3,includedIn,c/s/1,""
+var1,typeOf,StatisticalVariable,""
+var1,name,"","Good var1 name"
+var1,description,"","Good var1 description"
+var1,memberOf,custom/g/group_2,""
+var1,includedIn,c/p/1,""
+var1,includedIn,c/p/2,""
+var1,includedIn,c/s/1,""
+var1,populationType,Person,""
+var1,measuredProperty,age,""
+var1,statType,medianValue,""
+var1,gender,Female,""
+var2,typeOf,StatisticalVariable,""
+var2,name,"","Good var2 name"
+var2,memberOf,custom/g/group_3,""
+var2,includedIn,c/p/1,""
+var2,includedIn,c/p/2,""
+var2,includedIn,c/s/1,""
+var2,populationType,Thing,""
+var2,statType,measuredValue,""
+var2,measuredProperty,var2,""
+country/USA,typeOf,Country,""
+country/IND,typeOf,Country,""
+dc/000qxlm93vn93,typeOf,PowerPlant,""
+dc/5c7tz3lbln3p,typeOf,PowerPlant,""
+dc/8zmh7ctlkbsc4,typeOf,PowerPlant,""
+dc/2ysvc67fk1162,typeOf,PowerPlant,""
+dc/00w9rbw8yn7x7,typeOf,PowerPlant,""
+dc/00zjgb4rjchx3,typeOf,PowerPlant,""
+dc/011s19rm0mzh1,typeOf,PowerPlant,""
+dc/017y3py1dzkmg,typeOf,PowerPlant,""
+dc/4359q0h458f01,typeOf,PowerPlant,""
+dc/3kds7zgl4wz26,typeOf,PowerPlant,""
+dc/02b53twnh3fx,typeOf,PowerPlant,""
+dc/dk2p9l3l8x1b6,typeOf,PowerPlant,""
+s2CellId/0x80982b0000000000,typeOf,S2CellLevel10,""
+s2CellId/0x3be7c90000000000,typeOf,S2CellLevel10,""
