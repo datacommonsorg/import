@@ -62,7 +62,7 @@ CONFIG_DATA = {
         "var3": {
             "name": "Var 3 Name",
             "description": "Var 3 Description",
-            "nlSentences": ["Sentence 1", "Sentence 2"],
+            "searchDescriptions": ["Sentence 1", "Sentence 2"],
             "group": "Parent Group/Child Group 2",
         },
     },
@@ -140,7 +140,7 @@ class TestConfig(unittest.TestCase):
             "",
             "Var 3 Name",
             description="Var 3 Description",
-            nl_sentences=["Sentence 1", "Sentence 2"],
+            search_descriptions=["Sentence 1", "Sentence 2"],
             group_path="Parent Group/Child Group 2",
         ),
     )

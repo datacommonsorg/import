@@ -69,7 +69,7 @@ CONFIG_DATA = {
         "var3": {
             "name": "Var 3 Name",
             "description": "Var 3 Description",
-            "nlSentences": ["Sentence 1", "Sentence 2"],
+            "searchDescriptions": ["Sentence 1", "Sentence 2"],
             "group": "Parent Group/Child Group 2",
         },
     },
@@ -172,7 +172,7 @@ class TestNodes(unittest.TestCase):
             "var3",
             "Var 3 Name",
             description="Var 3 Description",
-            nl_sentences=["Sentence 1", "Sentence 2"],
+            search_descriptions=["Sentence 1", "Sentence 2"],
             group_id="custom/g/group_2",
             provenance_ids=["c/p/1"],
             source_ids=["c/s/1"],

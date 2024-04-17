@@ -69,7 +69,9 @@ class TestData(unittest.TestCase):
     self.assertListEqual(result, expected)
 
   def test_sv_triples_with_nl_sentences(self):
-    sv = StatVar(SV_ID1, SV_NAME1, nl_sentences=[SV_SENTENCE1, SV_SENTENCE2])
+    sv = StatVar(SV_ID1,
+                 SV_NAME1,
+                 search_descriptions=[SV_SENTENCE1, SV_SENTENCE2])
     result = sv.triples()
     expected = [
         Triple(SV_ID1, "typeOf", object_id="StatisticalVariable"),
@@ -122,7 +124,7 @@ class TestData(unittest.TestCase):
         SV_ID1,
         SV_NAME1,
         description=SV_DESCRIPTION1,
-        nl_sentences=[SV_SENTENCE1, SV_SENTENCE2],
+        search_descriptions=[SV_SENTENCE1, SV_SENTENCE2],
         group_id=SVG_ID1,
     )
     result = sv.triples()

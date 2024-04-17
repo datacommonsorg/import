@@ -98,7 +98,7 @@ class StatVar:
   id: str
   name: str
   description: str = ""
-  nl_sentences: list[str] = field(default_factory=list)
+  search_descriptions: list[str] = field(default_factory=list)
   group_id: str = ""
   group_path: str = ""
   provenance_ids: list[str] = field(default_factory=list)
@@ -140,12 +140,12 @@ class StatVar:
           Triple(self.id, _PREDICATE_DESCRIPTION,
                  object_value=self.description))
 
-    # Encode NL sentences as searchDescription triples.
-    for nl_sentence in self.nl_sentences:
+    # Encode search descriptions as searchDescription triples.
+    for search_description in self.search_descriptions:
       triples.append(
           Triple(self.id,
                  _PREDICATE_SEARCH_DESCRIPTION,
-                 object_value=nl_sentence))
+                 object_value=search_description))
 
     if self.group_id:
       triples.append(
