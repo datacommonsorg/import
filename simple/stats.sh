@@ -93,6 +93,11 @@ function setup {
   # Get dir for simple
   SIMPLE_DIR=$(echo $0 | sed -e 's,/simple.*,/simple,')
   SIMPLE_DIR=$(readlink -f $SIMPLE_DIR)
+
+  # Fork a process to display log
+  tail -f $LOG &
+  # Kill forked processes on exit
+  trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
   setup_python
   setup_dc_import
 }
@@ -130,7 +135,7 @@ To get a key, please refer to https://docs.datacommons.org/api/rest/v2/getting_s
   cd "$SIMPLE_DIR"
   cmd="python -m stats.main $importer_options"
   echo_log "Running command: $cmd"
-  $cmd
+  $cmd >> $LOG 2>&1
   cmd_status=$?
   cd "$cwd"
   if [[ "$cmd_status" != "0" ]]; then
@@ -174,7 +179,7 @@ function validate_output {
   # Run dc-import genmcf
   cmd="java -jar $DC_IMPORT_JAR genmcf -n 20 -r FULL $OUTPUT_DIR/*.csv $tmcf -o $OUTPUT_DIR/dc_generated"
   echo_log "Running dc-import validation: $cmd"
-  $cmd >> $LOG
+  $cmd >> $LOG 2>&1
   status="$?"
   [[ "$status" == "0" ]] || echo_fatal "Failed to run dc-import: $cmd"
   echo_log "Output of validiton in $OUTPUT_DIR/dc_generated/report.json"
