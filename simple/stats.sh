@@ -1,17 +1,21 @@
 #!/bin/bash
 # Script to process stats using simple stats loader.
 # Defaults
-OUTPUT_DIR=".data/output"
+MODE="maindc"
+OUTPUT_DIR=".data/output_$MODE"
 USAGE="Script to process stats with simple importer.
 Usgae: $(basename $0) [Options]
 Options:
-  -c <file>   Json config file for stats importer
-  -k <api-key> DataCommons API Key
-  -i <dir>    Input directory to process
-  -o <dir>    Output folder for stats importer. Default: $OUTPUT_DIR
-  -m <customdc|maindc> Mode of operation for simple importer
-  -j <jar>    DC Import java jar file.
-                Download latest from https://github.com/datacommonsorg/import/releases/
+  -c <file>       Json config file for stats importer
+  -k <api-key>    DataCommons API Key
+  -i <dir>        Input directory to process
+  -o <dir>        Output folder for stats importer. Default: $OUTPUT_DIR
+  -m <customdc|maindc> Mode of operation for simple importer. Default: $MODE
+  -j <jar>        DC Import java jar file.
+                    Download latest from https://github.com/datacommonsorg/import/releases/
+  -r <steps>      Steps to run. Can be one or more from:
+                    stats, validate
+  -s <cloud_sql>  Cloud SQL instance
 
 For more, please refer to https://github.com/datacommonsorg/import/tree/master/simple
 "
@@ -21,20 +25,24 @@ DC_IMPORT_JAR=${DC_IMPORT_JAR:-"$TMP_DIR/dc-import-tool.jar"}
 RUN_STEPS="stats,validate"
 
 function echo_log {
-  local msg="[$(date +%Y-%m-%d:%H:%M:%S)] $@"
-  echo -e "$msg" >> $LOG
-  [[ -z "$QUIET" ]] && echo -e "$msg" >&2
+  echo -e "[$(date +%Y-%m-%d:%H:%M:%S)] $@" >> $LOG
 }
 
 function echo_error {
-  local msg="[$(date +%Y-%m-%d:%H:%M:%S): ERROR] $@"
-  echo -e "$msg" >> $LOG
-  echo -e "$msg" >&2
+  echo "[$(date +%Y-%m-%d:%H:%M:%S): ERROR] $@" >> $LOG
 }
 
 function echo_fatal {
-  echo_error "$@"
+  echo_error "FATAL: $@"
   exit 1
+}
+
+function run_cmd {
+  local cmd="$@"
+  echo_log "Running command: $cmd"
+  $cmd >> $LOG 2>&1
+  status=$?
+  [[ "$status" == "0" ]] || echo_fatal "Failed to run command: $cmd"
 }
 
 # Parse command line options
@@ -47,7 +55,8 @@ function parse_options {
       -o) shift; OUTPUT_DIR="$1";;
       -m) shift; MODE="$1";;
       -j) shift; DC_IMPORT_JAR="$1";;
-      -s) shift; RUN_STEPS="$1";;
+      -r) shift; RUN_STEPS="$1";;
+      -s) shift; USE_CLOUDSQL=true; CLOUDSQL_INSTANCE="$1";;
       -q) QUIET="1";;
       -h) echo "$USAGE" >&2 && exit 0;;
       -x) set -x;;
@@ -90,21 +99,36 @@ function setup_dc_import {
 
 function setup {
   parse_options "$@"
-  # Get dir for simple
-  SIMPLE_DIR=$(echo $0 | sed -e 's,/simple.*,/simple,')
-  SIMPLE_DIR=$(readlink -f $SIMPLE_DIR)
+
+  # Set additional options
+  GCS_OUTPUT_DIR=""
+  is_output_gcs=$(echo "$OUTPUT_DIR" | grep "gs://" )
+  if [[ -n "$is_output_gcs" ]]; then
+    # Generate output locally and copy to GCS
+    GCS_OUTPUT_DIR="$OUTPUT_DIR"
+    OUTPUT_DIR="$TMP_DIR/$(basename $OUTPUT_DIR)-$(date +%Y%m%d)"
+    echo_log "Generating output to: $OUTPUT_DIR and will be copied to GCS: $GCS_OUTPUT_DIR"
+  fi
 
   # Fork a process to display log
-  tail -f $LOG &
-  # Kill forked processes on exit
-  trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+  touch $LOG
+  if [[ -z "$QUIET" ]]; then
+    tail -f $LOG &
+    # Kill forked processes on exit
+    trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+  fi
+
+  # Get dir for simple stats importer
+  SIMPLE_DIR=$(dirname $0 | sed -e 's,/simple.*,/simple,')
+  SIMPLE_DIR=$(readlink -f $SIMPLE_DIR)
+
+  # Setup other modules
   setup_python
   setup_dc_import
 }
 
-# Run the simple import on the specified config/input files.
-# Geneates output into OUTPUT_DIR
-function simple_import {
+# Check parameters for simple_import
+function check_simple_import {
   if [[ "$INPUT_DIR$CONFIG" == "" ]]; then
     echo_fatal "No input directory or config. Specify one of '-i' or '-c' command line options.\n$USAGE"
   fi
@@ -115,7 +139,19 @@ function simple_import {
 Set a DataCommons API key with '-k' option.
 To get a key, please refer to https://docs.datacommons.org/api/rest/v2/getting_started#authentication"
   fi
-  export DC_API_KEY="$DC_API_KEY"
+}
+
+# Run the simple import on the specified config/input files.
+# Geneates output into OUTPUT_DIR
+function simple_import {
+  check_simple_import
+
+  # Export env variables for simple stats importer
+  export DC_API_KEY=${DC_API_KEY}
+  export USE_CLOUDSQL=${USE_CLOUDSQL}
+  export CLOUDSQL_INSTANCE=${CLOUDSQL_INSTANCE}
+  export DB_USER=${DB_USER}
+  export DB_PASS=${DB_PASS}
 
   # Build options for simple importer
   local importer_options=""
@@ -157,6 +193,7 @@ function get_or_generate_tmcf {
   # Create a new tmcf for columns in csv
   csv=$(ls $dir/*.csv | head -1)
   tmcf=$(echo "$csv" | sed -e 's/.csv$/.tmcf/')
+  # TODO: generate tmcf based on csv columns
   cat <<END_TMCF > $tmcf
 Node: E:Stats->E0
 typeOf: dcs:StatVarObservation
@@ -171,18 +208,31 @@ END_TMCF
 
 # Run dc-import genmcf to validate generated csv/mcf files.
 function validate_output {
+  #TODO: For customdc validate data in sql triples db and observations db
   echo_log "Validating output in $OUTPUT_DIR"
 
   # Get the tmcf file to validate csv stats.
   tmcf=$(get_or_generate_tmcf "$OUTPUT_DIR")
 
-  # Run dc-import genmcf
-  cmd="java -jar $DC_IMPORT_JAR genmcf -n 20 -r FULL $OUTPUT_DIR/*.csv $tmcf -o $OUTPUT_DIR/dc_generated"
-  echo_log "Running dc-import validation: $cmd"
-  $cmd >> $LOG 2>&1
-  status="$?"
-  [[ "$status" == "0" ]] || echo_fatal "Failed to run dc-import: $cmd"
-  echo_log "Output of validiton in $OUTPUT_DIR/dc_generated/report.json"
+  # Run dc-import
+  DC_IMPORT_CMD="genmcf"
+  [[ "$MODE" == "customdc" ]] && DC_IMPORT_CMD="lint"
+  cmd="java -jar $DC_IMPORT_JAR $DC_IMPORT_CMD -n 20 -r FULL $OUTPUT_DIR/*.csv $tmcf -o $OUTPUT_DIR/dc_generated"
+  run_cmd $cmd
+  echo_log "Output of validaton in $OUTPUT_DIR/dc_generated/report.json"
+}
+
+# Copy files from local folder to GCS
+function copy_to_gcs {
+  local dir="$1"; shift
+  local gcs_dir="$1"; shift
+
+  [[ -z "$gcs_dir" ]] && return
+
+  cmd="gsutil -m cp -r $dir $gcs_dir"
+  run_cmd $cmd
+  echo_log "Copied output files to $gcs_dir"
+  run_cmd gsutil ls -l "$gcs_dir"
 }
 
 # Return if being sourced
@@ -193,14 +243,15 @@ function run_step {
   local step_name="$1"; shift
   local step_fn="$1"; shift
 
-  has_stage=$(echo "$RUN_STEPS" | grep "$step_name")
+  has_stage=$(echo "$RUN_STEPS" | egrep -i "$step_name")
   [[ -n "$has_stage" ]] && $step_fn
 }
 
 function main {
   setup "$@"
-  run_step "stats" simple_import
+  run_step "stats|simple" simple_import
   run_step "validate" validate_output
+  copy_to_gcs "$OUTPUT_DIR" "$GCS_OUTPUT_DIR"
 }
 
 main "$@"
