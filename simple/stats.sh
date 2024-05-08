@@ -4,20 +4,18 @@
 MODE="maindc"
 OUTPUT_DIR=".data/output_$MODE"
 USAGE="Script to process stats with simple importer.
-Usage: $(basename $0) [Options]
+Usgae: $(basename $0) [Options]
 Options:
   -c <file>       Json config file for stats importer
+  -k <api-key>    DataCommons API Key
   -i <dir>        Input directory to process
   -o <dir>        Output folder for stats importer. Default: $OUTPUT_DIR
   -m <customdc|maindc> Mode of operation for simple importer. Default: $MODE
-  -k <api-key>    DataCommons API Key
   -j <jar>        DC Import java jar file.
                     Download latest from https://github.com/datacommonsorg/import/releases/
   -r <steps>      Steps to run. Can be one or more from:
                     stats, validate
-  -s <cloud_sql>  Cloud SQL instance. Also set DB_USER and DB_PASS with -u, -p
-  -u <username>   DB username for cloud SQL. Default: $DB_USER.
-  -p <password>   DB password for cloud SQL. Default: $DB_PASS.
+  -s <cloud_sql>  Cloud SQL instance
 
 For more, please refer to https://github.com/datacommonsorg/import/tree/master/simple
 "
@@ -36,6 +34,7 @@ function echo_error {
 
 function echo_fatal {
   echo_error "FATAL: $@"
+  echo -e "@" >&2
   exit 1
 }
 
@@ -59,8 +58,6 @@ function parse_options {
       -j) shift; DC_IMPORT_JAR="$1";;
       -r) shift; RUN_STEPS="$1";;
       -s) shift; USE_CLOUDSQL=true; CLOUDSQL_INSTANCE="$1";;
-      -u) shift; DB_USER="$1";;
-      -p) shift; DB_PASS="$1";;
       -q) QUIET="1";;
       -h) echo -e "$USAGE" >&2 && exit 0;;
       -x) set -x;;
@@ -127,6 +124,9 @@ function setup {
   SIMPLE_DIR=$(dirname $0 | sed -e 's,/simple.*,/simple,')
   SIMPLE_DIR=$(readlink -f $SIMPLE_DIR)
 
+  # Setup other modules
+  setup_python
+  setup_dc_import
 }
 
 # Check parameters for simple_import
@@ -148,7 +148,6 @@ To get a key, please refer to https://docs.datacommons.org/api/rest/v2/getting_s
 # Geneates output into OUTPUT_DIR
 function simple_import {
   check_simple_import
-  setup_python
 
   # Export env variables for simple stats importer
   export DC_API_KEY=${DC_API_KEY}
@@ -213,7 +212,6 @@ END_TMCF
 # Run dc-import genmcf to validate generated csv/mcf files.
 function validate_output {
   #TODO: For customdc validate data in sql triples db and observations db
-  setup_dc_import
   echo_log "Validating output in $OUTPUT_DIR"
 
   # Get the tmcf file to validate csv stats.
@@ -224,7 +222,7 @@ function validate_output {
   [[ "$MODE" == "customdc" ]] && DC_IMPORT_CMD="lint"
   cmd="java -jar $DC_IMPORT_JAR $DC_IMPORT_CMD -n 20 -r FULL $OUTPUT_DIR/*.csv $tmcf -o $OUTPUT_DIR/dc_generated"
   run_cmd $cmd
-  echo_log "Output of validation in $OUTPUT_DIR/dc_generated/report.json"
+  echo_log "Output of validaton in $OUTPUT_DIR/dc_generated/report.json"
 }
 
 # Copy files from local folder to GCS
