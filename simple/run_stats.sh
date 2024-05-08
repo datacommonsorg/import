@@ -18,6 +18,7 @@ Options:
   -s <cloud_sql>  Cloud SQL instance. Also set DB_USER and DB_PASS with -u, -p
   -u <username>   DB username for cloud SQL. Default: $DB_USER.
   -p <password>   DB password for cloud SQL. Default: $DB_PASS.
+  -e <file>       Load environment variables from file.
 
 For more, please refer to https://github.com/datacommonsorg/import/tree/master/simple
 "
@@ -61,6 +62,7 @@ function parse_options {
       -s) shift; USE_CLOUDSQL=true; CLOUDSQL_INSTANCE="$1";;
       -u) shift; DB_USER="$1";;
       -p) shift; DB_PASS="$1";;
+      -e) shift; ENV_FILE=$1; source $ENV_FILE;;
       -q) QUIET="1";;
       -h) echo -e "$USAGE" >&2 && exit 0;;
       -x) set -x;;
@@ -104,6 +106,15 @@ Please download manually and set command line option '-j'"
 
 function setup {
   parse_options "$@"
+
+  # Source env file variables
+  if [[ -n "$ENV_FILE" ]]; then
+    echo_log "Loading env variables from $ENV_FILE"
+    set -a
+    source $ENV_FILE
+    set +a
+  fi
+
 
   # Set additional options
   GCS_OUTPUT_DIR=""
@@ -237,7 +248,7 @@ function copy_to_gcs {
   cmd="gsutil -m cp -r $dir $gcs_dir"
   run_cmd $cmd
   echo_log "Copied output files to $gcs_dir"
-  run_cmd gsutil ls -l "$gcs_dir"
+  run_cmd gsutil ls -l -r "$gcs_dir"
 }
 
 # Return if being sourced
