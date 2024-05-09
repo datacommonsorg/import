@@ -1,5 +1,16 @@
 [
  {
+  "svg_id": "c/g/hierarchy",
+  "svg_name": "Hierarchy",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "dc/g/Root"
+  ],
+  "child_svg_ids": [
+   "c/g/Person"
+  ]
+ },
+ {
   "svg_id": "c/g/Person",
   "svg_name": "Person",
   "sv_ids": [
@@ -7,7 +18,7 @@
    "dc/population"
   ],
   "parent_svg_ids": [
-   "dc/g/Root"
+   "c/g/hierarchy"
   ],
   "child_svg_ids": [
    "c/g/Person_Race",

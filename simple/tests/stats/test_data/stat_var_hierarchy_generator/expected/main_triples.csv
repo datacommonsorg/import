@@ -1,7 +1,10 @@
 subject_id,predicate,object_id,object_value
+c/g/hierarchy,typeOf,StatVarGroup,
+c/g/hierarchy,name,,Hierarchy
+c/g/hierarchy,specializationOf,dc/g/Root,
 c/g/Person,typeOf,StatVarGroup,
 c/g/Person,name,,Person
-c/g/Person,specializationOf,dc/g/Root,
+c/g/Person,specializationOf,c/g/hierarchy,
 Count_Person,memberOf,c/g/Person,
 dc/population,memberOf,c/g/Person,
 c/g/Person_PovertyStatus,typeOf,StatVarGroup,

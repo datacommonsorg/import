@@ -41,3 +41,7 @@ DEFAULT_POPULATION_TYPE = "Thing"
 
 CUSTOM_SVG_PREFIX = "c/g/"
 ROOT_SVG_ID = "dc/g/Root"
+
+# SV hierarchy groups will be put under this root.
+HIERARCHY_ROOT_SVG_ID = f"{CUSTOM_SVG_PREFIX}hierarchy"
+HIERARCHY_ROOT_SVG_NAME = "Hierarchy"

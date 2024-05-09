@@ -1,7 +1,10 @@
 subject_id,predicate,object_id,object_value
+c/g/hierarchy,typeOf,StatVarGroup,
+c/g/hierarchy,name,,Hierarchy
+c/g/hierarchy,specializationOf,dc/g/Root,
 c/g/Coal,typeOf,StatVarGroup,
 c/g/Coal,name,,Coal
-c/g/Coal,specializationOf,dc/g/Root,
+c/g/Coal,specializationOf,c/g/hierarchy,
 c/g/Coal_EnergySource,typeOf,StatVarGroup,
 c/g/Coal_EnergySource,name,,Coal With Energy Source
 c/g/Coal_EnergySource,specializationOf,c/g/Coal,
@@ -11,7 +14,7 @@ c/g/Coal_EnergySource-CokeCoal,specializationOf,c/g/Coal_EnergySource,
 sv2,memberOf,c/g/Coal_EnergySource-CokeCoal,
 c/g/Person,typeOf,StatVarGroup,
 c/g/Person,name,,Person
-c/g/Person,specializationOf,dc/g/Root,
+c/g/Person,specializationOf,c/g/hierarchy,
 c/g/Person_Gender,typeOf,StatVarGroup,
 c/g/Person_Gender,name,,Person With Gender
 c/g/Person_Gender,specializationOf,c/g/Person,
@@ -37,5 +40,5 @@ c/g/Person_Race-Asian,name,,Person With Race = Asian
 c/g/Person_Race-Asian,specializationOf,c/g/Person_Race,
 c/g/Thing,typeOf,StatVarGroup,
 c/g/Thing,name,,Thing
-c/g/Thing,specializationOf,dc/g/Root,
+c/g/Thing,specializationOf,c/g/hierarchy,
 sv3,memberOf,c/g/Thing,
