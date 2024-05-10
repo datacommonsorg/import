@@ -25,9 +25,12 @@ c/p/1,typeOf,Provenance,
 c/p/1,name,,Provenance1
 c/p/1,source,c/s/1,
 c/p/1,url,,http://source1.com/provenance1
+c/g/Root,typeOf,StatVarGroup,
+c/g/Root,name,,Custom Variables
+c/g/Root,specializationOf,dc/g/Root,
 c/g/Person,typeOf,StatVarGroup,
 c/g/Person,name,,Person
-c/g/Person,specializationOf,dc/g/Root,
+c/g/Person,specializationOf,c/g/Root,
 c/g/Person_Gender,typeOf,StatVarGroup,
 c/g/Person_Gender,name,,Person With Gender
 c/g/Person_Gender,specializationOf,c/g/Person,

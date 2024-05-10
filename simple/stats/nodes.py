@@ -27,6 +27,7 @@ from stats.data import Source
 from stats.data import StatVar
 from stats.data import StatVarGroup
 from stats.data import Triple
+import stats.schema_constants as sc
 from util.filehandler import FileHandler
 
 _CUSTOM_SV_ID_PREFIX = "custom/statvar_"
@@ -36,15 +37,15 @@ _CUSTOM_SOURCE_ID_PREFIX = "c/s/"
 _CUSTOM_PROPERTY_ID_PREFIX = "c/prop/"
 _CUSTOM_EVENT_TYPE_ID_PREFIX = "c/e/"
 _CUSTOM_ENTITY_TYPE_ID_PREFIX = "c/n/"
-_ROOT_GROUP_ID = "dc/g/Root"
 # Pattern to check if a string conforms to that of a valid DCID.
 # Note that slashes ("/") are intentionally not considered here
 # since it can be confusing for custom DCs.
 _DCID_PATTERN = r"^[A-Za-z0-9_]+$"
 # If group path for a variable is empty, we'll put it under a default custom group.
 _DEFAULT_CUSTOM_GROUP_PATH = "__DEFAULT__"
-_DEFAULT_CUSTOM_GROUP = StatVarGroup("custom/g/Root", "Custom Variables",
-                                     _ROOT_GROUP_ID)
+_DEFAULT_CUSTOM_GROUP = StatVarGroup(sc.DEFAULT_CUSTOM_ROOT_SVG_ID,
+                                     sc.DEFAULT_CUSTOM_ROOT_SVG_NAME,
+                                     sc.ROOT_SVG_ID)
 
 _DEFAULT_SOURCE = Source(f"{_CUSTOM_SOURCE_ID_PREFIX}default",
                          "Custom Data Commons")
@@ -85,6 +86,9 @@ class Nodes:
     self._event_type_generated_id_count = 0
     # Used to generate entity type IDs
     self._entity_type_generated_id_count = 0
+    # If generating SV hierarchy, create default custom dc group at the outset.
+    if config.generate_hierarchy():
+      self.group("")
 
   def _load_provenances_and_sources(self):
     # Load default source and provenance.
@@ -127,7 +131,7 @@ class Nodes:
     if not sv_column_name in self.variables:
       var_cfg = self.config.variable(sv_column_name)
       group = self.group(var_cfg.group_path)
-      group_id = group.id if group else _ROOT_GROUP_ID
+      group_id = group.id if group else sc.ROOT_SVG_ID
       self.variables[sv_column_name] = StatVar(
           self._sv_id(sv_column_name),
           var_cfg.name,
@@ -237,7 +241,7 @@ class Nodes:
       if path not in self.groups:
         parent_path = "" if "/" not in path else path[:path.rindex("/")]
         parent_id = (self.groups[parent_path].id
-                     if parent_path in self.groups else _ROOT_GROUP_ID)
+                     if parent_path in self.groups else sc.ROOT_SVG_ID)
         svg = StatVarGroup(f"{_CUSTOM_GROUP_ID_PREFIX}{len(self.groups) + 1}",
                            tokens[index], parent_id)
         self.groups[path] = svg

@@ -47,9 +47,21 @@ representing the hierarchy.
   svgs = _create_all_svgs(svs)
   # Sort by SVG ID so it's easier to follow the hierarchy.
   svgs = dict(sorted(svgs.items()))
+
+  # Get pop type svgs (they don't have a parent set at this stage).
+  pop_type_svgs = _get_svgs_with_no_parent(svgs)
+  # Attach verticals to pop type svgs.
+  _attach_verticals(pop_type_svgs)
+
+  # Combine all SVGs - verticals (TODO) and hierarchy.
+  final_svgs: dict[str, SVG] = {}
+  # TODO: add verticals.
+  # Add hierarchy.
+  final_svgs.update(svgs)
+
   # Generate SVG triples.
-  svg_triples = _create_all_svg_triples(svgs)
-  return StatVarHierarchy(svgs=svgs, svg_triples=svg_triples)
+  svg_triples = _create_all_svg_triples(final_svgs)
+  return StatVarHierarchy(svgs=final_svgs, svg_triples=svg_triples)
 
 
 @dataclass(eq=True, frozen=True)
@@ -162,6 +174,23 @@ class StatVarHierarchy:
   svg_triples: list[Triple]
 
 
+def _attach_verticals(pop_type_svgs: list[SVG]):
+  # For now, we put all pop type svgs under the root svg.
+  # TODO: pass vertical specs to this function and implement vertical tagging here.
+  for svg in pop_type_svgs:
+    svg.parent_svg_ids[sc.DEFAULT_CUSTOM_ROOT_SVG_ID] = True
+
+
+def _create_hierarchy_root_svg() -> SVG:
+  svg = SVG(sc.DEFAULT_CUSTOM_ROOT_SVG_ID, sc.DEFAULT_CUSTOM_ROOT_SVG_NAME)
+  svg.parent_svg_ids[sc.ROOT_SVG_ID] = True
+  return svg
+
+
+def _get_svgs_with_no_parent(svgs: dict[str, SVG]) -> list[SVG]:
+  return list(filter(lambda svg: not svg.parent_svg_ids, svgs.values()))
+
+
 def _get_or_create_svg(svgs: dict[str, SVG], sv: SVPropVals) -> SVG:
   svg_id = sv.gen_svg_id()
   svg = svgs.get(svg_id)
@@ -213,10 +242,9 @@ def _create_parent_svgs(svg_id: str, svgs: dict[str, SVG]):
   svg = svgs[svg_id]
   sv = svg.sample_sv
 
-  # If no PVs left, we've reached the top of the population type hierarchy.
-  # Attach it to the DC root and return.
+  # If no PVs left, we've reached the top of the population type hierarchy and we simply return.
+  # We'll attach it to verticals or the root upstream.
   if not sv.pvs:
-    svg.parent_svg_ids[sc.ROOT_SVG_ID] = True
     return
 
   # Process SVGs without a val

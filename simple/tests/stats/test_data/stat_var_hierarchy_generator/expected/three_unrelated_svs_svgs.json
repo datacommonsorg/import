@@ -4,7 +4,7 @@
   "svg_name": "Coal",
   "sv_ids": [],
   "parent_svg_ids": [
-   "dc/g/Root"
+   "c/g/Root"
   ],
   "child_svg_ids": [
    "c/g/Coal_EnergySource"
@@ -37,7 +37,7 @@
   "svg_name": "Person",
   "sv_ids": [],
   "parent_svg_ids": [
-   "dc/g/Root"
+   "c/g/Root"
   ],
   "child_svg_ids": [
    "c/g/Person_Race",
@@ -129,7 +129,7 @@
    "sv3"
   ],
   "parent_svg_ids": [
-   "dc/g/Root"
+   "c/g/Root"
   ],
   "child_svg_ids": []
  }
