@@ -69,12 +69,12 @@ c/p/1,typeOf,Provenance,
 c/p/1,name,,Test Provenance
 c/p/1,source,c/s/1,
 c/p/1,url,,http://source.com/provenance
-custom/g/Root,typeOf,StatVarGroup,
-custom/g/Root,name,,Custom Variables
-custom/g/Root,specializationOf,dc/g/Root,
+c/g/Root,typeOf,StatVarGroup,
+c/g/Root,name,,Custom Variables
+c/g/Root,specializationOf,dc/g/Root,
 Count_CrimeEvent,typeOf,StatisticalVariable,
 Count_CrimeEvent,name,,Count_CrimeEvent
-Count_CrimeEvent,memberOf,custom/g/Root,
+Count_CrimeEvent,memberOf,c/g/Root,
 Count_CrimeEvent,includedIn,c/p/1,
 Count_CrimeEvent,includedIn,c/s/1,
 Count_CrimeEvent,populationType,Thing,

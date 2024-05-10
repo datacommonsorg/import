@@ -184,6 +184,10 @@ class Runner:
     svg_triples = stat_var_hierarchy_generator.generate(sv_triples)
     logging.info("Inserting %s SVG triples into DB.", len(svg_triples))
     self.db.insert_triples(svg_triples)
+    # SVG triples are put under the default custom dc root group.
+    # Ensure that the default group is always created in that case.
+    if svg_triples:
+      self.nodes.group("")
 
   def _run_imports(self):
     input_fhs: list[FileHandler] = []

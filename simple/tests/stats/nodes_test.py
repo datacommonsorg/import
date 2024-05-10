@@ -157,7 +157,7 @@ class TestNodes(unittest.TestCase):
         StatVar(
             "Variable_with_no_config",
             "Variable with no config",
-            group_id="custom/g/Root",
+            group_id="c/g/Root",
             provenance_ids=["c/p/1"],
             source_ids=["c/s/1"],
         ),

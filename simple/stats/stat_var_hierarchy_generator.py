@@ -47,18 +47,14 @@ representing the hierarchy.
   svgs = _create_all_svgs(svs)
   # Sort by SVG ID so it's easier to follow the hierarchy.
   svgs = dict(sorted(svgs.items()))
-  # Create hierarchy root SVG.
-  root_svg = _create_hierarchy_root_svg()
 
   # Get pop type svgs (they don't have a parent set at this stage).
   pop_type_svgs = _get_svgs_with_no_parent(svgs)
   # Attach verticals to pop type svgs.
-  _attach_verticals(pop_type_svgs, root_svg)
+  _attach_verticals(pop_type_svgs)
 
-  # Combine all SVGs - root, verticals (TODO) and hierarchy.
+  # Combine all SVGs - verticals (TODO) and hierarchy.
   final_svgs: dict[str, SVG] = {}
-  # Add root.
-  final_svgs[root_svg.svg_id] = root_svg
   # TODO: add verticals.
   # Add hierarchy.
   final_svgs.update(svgs)
@@ -178,16 +174,15 @@ class StatVarHierarchy:
   svg_triples: list[Triple]
 
 
-def _attach_verticals(pop_type_svgs: list[SVG], root_svg: SVG):
+def _attach_verticals(pop_type_svgs: list[SVG]):
   # For now, we put all pop type svgs under the root svg.
   # TODO: pass vertical specs to this function and implement vertical tagging here.
   for svg in pop_type_svgs:
-    svg.parent_svg_ids[sc.HIERARCHY_ROOT_SVG_ID] = True
-    root_svg.child_svg_ids[svg.svg_id] = True
+    svg.parent_svg_ids[sc.DEFAULT_CUSTOM_ROOT_SVG_ID] = True
 
 
 def _create_hierarchy_root_svg() -> SVG:
-  svg = SVG(sc.HIERARCHY_ROOT_SVG_ID, sc.HIERARCHY_ROOT_SVG_NAME)
+  svg = SVG(sc.DEFAULT_CUSTOM_ROOT_SVG_ID, sc.DEFAULT_CUSTOM_ROOT_SVG_NAME)
   svg.parent_svg_ids[sc.ROOT_SVG_ID] = True
   return svg
 

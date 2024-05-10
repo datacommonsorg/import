@@ -1,23 +1,10 @@
 [
  {
-  "svg_id": "c/g/hierarchy",
-  "svg_name": "Hierarchy",
-  "sv_ids": [],
-  "parent_svg_ids": [
-   "dc/g/Root"
-  ],
-  "child_svg_ids": [
-   "c/g/Coal",
-   "c/g/Person",
-   "c/g/Thing"
-  ]
- },
- {
   "svg_id": "c/g/Coal",
   "svg_name": "Coal",
   "sv_ids": [],
   "parent_svg_ids": [
-   "c/g/hierarchy"
+   "c/g/Root"
   ],
   "child_svg_ids": [
    "c/g/Coal_EnergySource"
@@ -50,7 +37,7 @@
   "svg_name": "Person",
   "sv_ids": [],
   "parent_svg_ids": [
-   "c/g/hierarchy"
+   "c/g/Root"
   ],
   "child_svg_ids": [
    "c/g/Person_Race",
@@ -142,7 +129,7 @@
    "sv3"
   ],
   "parent_svg_ids": [
-   "c/g/hierarchy"
+   "c/g/Root"
   ],
   "child_svg_ids": []
  }
