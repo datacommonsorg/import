@@ -86,6 +86,9 @@ class Nodes:
     self._event_type_generated_id_count = 0
     # Used to generate entity type IDs
     self._entity_type_generated_id_count = 0
+    # If generating SV hierarchy, create default custom dc group at the outset.
+    if config.generate_hierarchy():
+      self.group("")
 
   def _load_provenances_and_sources(self):
     # Load default source and provenance.
