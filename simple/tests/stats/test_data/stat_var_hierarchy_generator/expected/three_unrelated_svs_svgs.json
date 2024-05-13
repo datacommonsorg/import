@@ -8,7 +8,8 @@
   ],
   "child_svg_ids": [
    "c/g/Coal_EnergySource"
-  ]
+  ],
+  "mprops": []
  },
  {
   "svg_id": "c/g/Coal_EnergySource",
@@ -19,7 +20,8 @@
   ],
   "child_svg_ids": [
    "c/g/Coal_EnergySource-CokeCoal"
-  ]
+  ],
+  "mprops": []
  },
  {
   "svg_id": "c/g/Coal_EnergySource-CokeCoal",
@@ -30,7 +32,8 @@
   "parent_svg_ids": [
    "c/g/Coal_EnergySource"
   ],
-  "child_svg_ids": []
+  "child_svg_ids": [],
+  "mprops": []
  },
  {
   "svg_id": "c/g/Person",
@@ -42,7 +45,8 @@
   "child_svg_ids": [
    "c/g/Person_Race",
    "c/g/Person_Gender"
-  ]
+  ],
+  "mprops": []
  },
  {
   "svg_id": "c/g/Person_Gender",
@@ -53,7 +57,8 @@
   ],
   "child_svg_ids": [
    "c/g/Person_Gender-Female"
-  ]
+  ],
+  "mprops": []
  },
  {
   "svg_id": "c/g/Person_Gender-Female",
@@ -64,7 +69,8 @@
   ],
   "child_svg_ids": [
    "c/g/Person_Gender-Female_Race"
-  ]
+  ],
+  "mprops": []
  },
  {
   "svg_id": "c/g/Person_Gender-Female_Race",
@@ -75,7 +81,8 @@
   ],
   "child_svg_ids": [
    "c/g/Person_Gender-Female_Race-Asian"
-  ]
+  ],
+  "mprops": []
  },
  {
   "svg_id": "c/g/Person_Gender-Female_Race-Asian",
@@ -87,7 +94,8 @@
    "c/g/Person_Gender_Race-Asian",
    "c/g/Person_Gender-Female_Race"
   ],
-  "child_svg_ids": []
+  "child_svg_ids": [],
+  "mprops": []
  },
  {
   "svg_id": "c/g/Person_Gender_Race-Asian",
@@ -98,7 +106,8 @@
   ],
   "child_svg_ids": [
    "c/g/Person_Gender-Female_Race-Asian"
-  ]
+  ],
+  "mprops": []
  },
  {
   "svg_id": "c/g/Person_Race",
@@ -109,7 +118,8 @@
   ],
   "child_svg_ids": [
    "c/g/Person_Race-Asian"
-  ]
+  ],
+  "mprops": []
  },
  {
   "svg_id": "c/g/Person_Race-Asian",
@@ -120,7 +130,8 @@
   ],
   "child_svg_ids": [
    "c/g/Person_Gender_Race-Asian"
-  ]
+  ],
+  "mprops": []
  },
  {
   "svg_id": "c/g/Thing",
@@ -131,6 +142,7 @@
   "parent_svg_ids": [
    "c/g/Root"
   ],
-  "child_svg_ids": []
+  "child_svg_ids": [],
+  "mprops": []
  }
 ]

@@ -89,6 +89,7 @@ class SVPropVals:
   # They are originally ordered in the extract_svs method
   # and maintain the order thereafter.
   pvs: list[PropVal]
+  measured_property: str
 
   def gen_svg_id(self):
     svg_id = f"{sc.CUSTOM_SVG_PREFIX}{_to_dcid_token(self.population_type)}"
@@ -120,6 +121,7 @@ class SVG:
     self.sv_ids: dict[str, bool] = {}
     self.parent_svg_ids: dict[str, bool] = {}
     self.child_svg_ids: dict[str, bool] = {}
+    self.measured_properties: dict[str, bool] = {}
 
     self.parent_svgs_processed: bool = False
     # Only relevant for PV hierarchy.
@@ -160,7 +162,8 @@ class SVG:
         "svg_name": self.svg_name,
         "sv_ids": list(self.sv_ids.keys()),
         "parent_svg_ids": list(self.parent_svg_ids.keys()),
-        "child_svg_ids": list(self.child_svg_ids.keys())
+        "child_svg_ids": list(self.child_svg_ids.keys()),
+        "mprops": sorted(list(self.measured_properties.keys()))
     }
 
   def __str__(self) -> str:
@@ -198,6 +201,9 @@ def _get_or_create_svg(svgs: dict[str, SVG], sv: SVPropVals) -> SVG:
     svg = SVG(svg_id=svg_id, svg_name=sv.gen_svg_name())
     svg.sample_sv = sv
     svgs[svg_id] = svg
+  # Add SV mprop to the SVG.
+  if sv.measured_property:
+    svg.measured_properties[sv.measured_property] = True
   return svg
 
 
@@ -225,6 +231,18 @@ def _create_leaf_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
   return svgs
 
 
+def _add_measured_properties_to_parent_svgs(mprops: dict[str, bool],
+                                            parent_svg_ids: dict[str, bool],
+                                            svgs: dict[str, SVG]):
+  if not mprops or not parent_svg_ids:
+    return
+  for parent_svg_id in parent_svg_ids:
+    parent_svg = svgs[parent_svg_id]
+    parent_svg.measured_properties.update(mprops)
+    _add_measured_properties_to_parent_svgs(mprops, parent_svg.parent_svg_ids,
+                                            svgs)
+
+
 def _create_parent_svg(parent_sv: SVPropVals, svg: SVG, svgs: dict[str, SVG],
                        svg_has_prop_without_val: bool):
   parent_svg = _get_or_create_svg(svgs, parent_sv)
@@ -232,6 +250,10 @@ def _create_parent_svg(parent_sv: SVPropVals, svg: SVG, svgs: dict[str, SVG],
   # Add parent child relationships.
   svg.parent_svg_ids[parent_svg.svg_id] = True
   parent_svg.child_svg_ids[svg.svg_id] = True
+
+  # Add child mprops to all parents recursively.
+  _add_measured_properties_to_parent_svgs(svg.measured_properties,
+                                          svg.parent_svg_ids, svgs)
 
   if not parent_svg.parent_svgs_processed:
     parent_svg.has_prop_without_val = svg_has_prop_without_val
@@ -316,6 +338,7 @@ def _extract_svs(triples: list[Triple]) -> list[SVPropVals]:
   - dcid
   - population type
   - PVs not in SV_HIERARCHY_PROPS_BLOCKLIST
+  - measured property
   """
 
   # Using dict instead of set to maintain order.
@@ -324,6 +347,7 @@ def _extract_svs(triples: list[Triple]) -> list[SVPropVals]:
 
   dcid2poptype: dict[str, str] = {}
   dcid2pvs: dict[str, dict[str, str]] = {}
+  dcid2mprop: dict[str, str] = {}
 
   for triple in triples:
     value = triple.object_id or triple.object_value
@@ -336,6 +360,8 @@ def _extract_svs(triples: list[Triple]) -> list[SVPropVals]:
         sv_ids[triple.subject_id] = True
     elif triple.predicate == sc.PREDICATE_POPULATION_TYPE:
       dcid2poptype[triple.subject_id] = value
+    elif triple.predicate == sc.PREDICATE_MEASURED_PROPERTY:
+      dcid2mprop[triple.subject_id] = value
     elif triple.predicate not in sc.SV_HIERARCHY_PROPS_BLOCKLIST:
       pvs = dcid2pvs.setdefault(triple.subject_id, {})
       pvs[triple.predicate] = value
@@ -345,9 +371,10 @@ def _extract_svs(triples: list[Triple]) -> list[SVPropVals]:
   for sv_id in sv_ids.keys():
     pop_type = dcid2poptype.get(sv_id, sc.DEFAULT_POPULATION_TYPE)
     prop_vals: list[PropVal] = []
+    mprop = dcid2mprop.get(sv_id, "")
     # Sort prop vals by keys since we use this order to generate SVG IDs later.
     for (p, v) in sorted(dcid2pvs.get(sv_id, {}).items()):
       prop_vals.append(PropVal(p, v))
-    svs.append(SVPropVals(sv_id, pop_type, prop_vals))
+    svs.append(SVPropVals(sv_id, pop_type, prop_vals, mprop))
 
   return svs
