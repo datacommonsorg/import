@@ -127,12 +127,16 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
   def test_generate_internal_two_related_svs(self):
     _test_generate_internal(self, "two_related_svs")
 
+  def test_generate_internal_svs_with_mprops(self):
+    _test_generate_internal(self, "svs_with_mprops")
+
   def test_extract_svs(self):
     input_triples: list[Triple] = [
         Triple("sv1", "typeOf", "StatisticalVariable", ""),
         Triple("sv1", "populationType", "Person", ""),
         Triple("sv1", "race", "Asian", ""),
         Triple("sv1", "gender", "Female", ""),
+        Triple("sv1", "measuredProperty", "count", ""),
         Triple("sv1", "searchDescription", "", "SV1 search description"),
         Triple("non_sv1", "typeOf", "Person", ""),
         Triple("non_sv1", "gender", "Male", ""),
@@ -149,11 +153,16 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
         SVPropVals(sv_id="sv1",
                    population_type="Person",
                    pvs=[PropVal("gender", "Female"),
-                        PropVal("race", "Asian")]),
+                        PropVal("race", "Asian")],
+                   measured_property="count"),
         SVPropVals(sv_id="sv2",
                    population_type="Coal",
-                   pvs=[PropVal("energySource", "CokeCoal")]),
-        SVPropVals(sv_id="sv3", population_type="Thing", pvs=[])
+                   pvs=[PropVal("energySource", "CokeCoal")],
+                   measured_property=""),
+        SVPropVals(sv_id="sv3",
+                   population_type="Thing",
+                   pvs=[],
+                   measured_property="")
     ]
 
     svs = _extract_svs(input_triples)
