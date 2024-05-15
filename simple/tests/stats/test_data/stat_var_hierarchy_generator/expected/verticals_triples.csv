@@ -46,3 +46,7 @@ c/g/Person_Race,specializationOf,c/g/Person,
 c/g/Person_Race-Asian,typeOf,StatVarGroup,
 c/g/Person_Race-Asian,name,,Person With Race = Asian
 c/g/Person_Race-Asian,specializationOf,c/g/Person_Race,
+c/g/Thing,typeOf,StatVarGroup,
+c/g/Thing,name,,Thing
+c/g/Thing,specializationOf,c/g/Root,
+sv4,memberOf,c/g/Thing,

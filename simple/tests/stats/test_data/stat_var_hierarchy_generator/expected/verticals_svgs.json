@@ -204,5 +204,19 @@
    "age",
    "count"
   ]
+ },
+ {
+  "svg_id": "c/g/Thing",
+  "svg_name": "Thing",
+  "sv_ids": [
+   "sv4"
+  ],
+  "parent_svg_ids": [
+   "c/g/Root"
+  ],
+  "child_svg_ids": [],
+  "mprops": [
+   "count"
+  ]
  }
 ]
