@@ -22,6 +22,7 @@ from stats.config import Config
 from stats.data import ImportType
 from stats.data import InputFileFormat
 from stats.data import Triple
+from stats.data import VerticalSpec
 from stats.db import create_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
@@ -181,7 +182,10 @@ class Runner:
       logging.info("No SV triples found, skipping SVG generating hierarchy.")
     logging.info("Generating SVG hierarchy for %s SV triples.", len(sv_triples))
 
-    svg_triples = stat_var_hierarchy_generator.generate(sv_triples)
+    # TODO: Load vertical specs from if a "dc.vertical_specs.json" file exists.
+    vertical_specs: list[VerticalSpec] = []
+    svg_triples = stat_var_hierarchy_generator.generate(sv_triples,
+                                                        vertical_specs)
     logging.info("Inserting %s SVG triples into DB.", len(svg_triples))
     self.db.insert_triples(svg_triples)
 

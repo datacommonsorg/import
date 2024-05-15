@@ -1,0 +1,14 @@
+{
+  "specs": [
+    {
+      "populationType": "Person",
+      "measuredProperties": ["count"],
+      "verticals": ["PersonCountVertical"]
+    },
+    {
+      "populationType": "Coal",
+      "measuredProperties": ["count"],
+      "verticals": ["CoalCountVertical"]
+    }
+  ]
+}

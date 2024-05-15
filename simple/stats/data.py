@@ -421,3 +421,15 @@ class McfNode:
     parts.append(f"Node: dcid:{self.id}")
     parts.extend([f"{p}: {v}" for p, v in self.properties.items()])
     return "\n".join(parts)
+
+
+@dataclass
+class VerticalSpec:
+  population_type: str
+  measured_properties: list[str] = field(default_factory=list)
+  verticals: set[str] = field(default_factory=set)
+
+  def from_json(json: dict) -> Self:
+    return VerticalSpec(population_type=json.get("populationType", ""),
+                        measured_properties=json.get("measuredProperties", []),
+                        verticals=set(json.get("verticals", [])))
