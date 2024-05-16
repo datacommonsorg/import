@@ -1,0 +1,14 @@
+{
+  "specs": [
+    {
+      "populationType": "Person",
+      "measuredProperties": ["count"],
+      "verticals": ["PersonCountVertical"]
+    },
+    {
+      "populationType": "Person",
+      "measuredProperties": ["age"],
+      "verticals": ["PersonAgeVertical"]
+    }
+  ]
+}
