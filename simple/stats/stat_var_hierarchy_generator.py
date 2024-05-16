@@ -21,21 +21,34 @@ from typing import Self
 
 from stats import schema_constants as sc
 from stats.data import Triple
+from stats.data import VerticalSpec
 
 
-def generate(triples: list[Triple]) -> list[Triple]:
+def generate(triples: list[Triple],
+             vertical_specs: list[VerticalSpec]) -> list[Triple]:
   """Given a list of input triples (including stat vars), 
 generates a SV hierarchy and returns a list of output triples
 representing the hierarchy.
 """
-  return _generate_internal(triples).svg_triples
+  return _generate_internal(triples, vertical_specs).svg_triples
+
+
+def load_vertical_specs(data: str) -> list[VerticalSpec]:
+  vertical_specs: list[VerticalSpec] = []
+
+  for spec_json in json.loads(data).get("specs", []):
+    vertical_specs.append(VerticalSpec.from_json(spec_json))
+
+  return vertical_specs
 
 
 # Helper functions and classes
 
 
 # TODO: Pruning (e.g. ignore Thing).
-def _generate_internal(triples: list[Triple]) -> "StatVarHierarchy":
+def _generate_internal(
+    triples: list[Triple],
+    vertical_specs: list[VerticalSpec]) -> "StatVarHierarchy":
   """Given a list of input triples (including stat vars), 
 generates a SV hierarchy and returns a list of output triples
 representing the hierarchy.
@@ -49,13 +62,16 @@ representing the hierarchy.
   svgs = dict(sorted(svgs.items()))
 
   # Get pop type svgs (they don't have a parent set at this stage).
-  pop_type_svgs = _get_svgs_with_no_parent(svgs)
+  pop_type_svgs = _get_pop_type_svgs(svgs)
   # Attach verticals to pop type svgs.
-  _attach_verticals(pop_type_svgs)
+  vertical_svgs = _attach_verticals(pop_type_svgs, vertical_specs)
+  # Sort by SVG ID so it's easier to follow the verticals.
+  vertical_svgs = dict(sorted(vertical_svgs.items()))
 
-  # Combine all SVGs - verticals (TODO) and hierarchy.
+  # Combine all SVGs - verticals and hierarchy.
   final_svgs: dict[str, SVG] = {}
-  # TODO: add verticals.
+  # Add verticals.
+  final_svgs.update(vertical_svgs)
   # Add hierarchy.
   final_svgs.update(svgs)
 
@@ -177,21 +193,54 @@ class StatVarHierarchy:
   svg_triples: list[Triple]
 
 
-def _attach_verticals(pop_type_svgs: list[SVG]):
-  # For now, we put all pop type svgs under the root svg.
-  # TODO: pass vertical specs to this function and implement vertical tagging here.
-  for svg in pop_type_svgs:
-    svg.parent_svg_ids[sc.DEFAULT_CUSTOM_ROOT_SVG_ID] = True
+# Attaches matching pop type svgs to vertical svgs, creates those vertical svgs and returns them.
+def _attach_verticals(poptype2svg: dict[str, SVG],
+                      vertical_specs: list[VerticalSpec]) -> dict[str, SVG]:
+  vertical_svgs: dict[str, SVG] = {}
+  for vertical_spec in vertical_specs:
+    pop_type_svg = poptype2svg.get(vertical_spec.population_type)
+    # If no matching pop type svg, skip.
+    if not pop_type_svg:
+      continue
+    # If no vertical spec mprop in svg mprops, skip.
+    if not (vertical_spec.measured_properties &
+            pop_type_svg.measured_properties.keys()):
+      continue
+    # Put pop type svg under all verticals in the spec.
+    for vertical in vertical_spec.verticals:
+      vertical_svg = _get_or_create_vertical_svg(vertical, vertical_svgs)
+      vertical_svgs[vertical_svg.svg_id] = vertical_svg
+      vertical_svg.child_svg_ids[pop_type_svg.svg_id] = True
+      pop_type_svg.parent_svg_ids[vertical_svg.svg_id] = True
+      for mprop in vertical_spec.measured_properties:
+        vertical_svg.measured_properties[mprop] = True
+
+  # Any pop type svgs that were not attached to a vertical (i.e. with no parent)
+  # should be put under custom dc root.
+  for svg in poptype2svg.values():
+    if not svg.parent_svg_ids:
+      svg.parent_svg_ids[sc.DEFAULT_CUSTOM_ROOT_SVG_ID] = True
+  return vertical_svgs
 
 
-def _create_hierarchy_root_svg() -> SVG:
-  svg = SVG(sc.DEFAULT_CUSTOM_ROOT_SVG_ID, sc.DEFAULT_CUSTOM_ROOT_SVG_NAME)
-  svg.parent_svg_ids[sc.ROOT_SVG_ID] = True
-  return svg
+def _get_or_create_vertical_svg(vertical: str, vertical_svgs: dict[str,
+                                                                   SVG]) -> SVG:
+  vertical_svg_id = f"{sc.CUSTOM_SVG_PREFIX}{vertical}"
+  vertical_svg = vertical_svgs.get(vertical_svg_id)
+  if not vertical_svg:
+    vertical_svg = SVG(vertical_svg_id, _capitalize_and_split(vertical))
+    vertical_svg.parent_svg_ids[sc.DEFAULT_CUSTOM_ROOT_SVG_ID] = True
+  return vertical_svg
 
 
-def _get_svgs_with_no_parent(svgs: dict[str, SVG]) -> list[SVG]:
-  return list(filter(lambda svg: not svg.parent_svg_ids, svgs.values()))
+# Returns a dict from population type to SVG.
+def _get_pop_type_svgs(svgs: dict[str, SVG]) -> dict[str, SVG]:
+  poptype2svg: dict[str, SVG] = {}
+  for svg in svgs.values():
+    if not svg.parent_svg_ids and (svg.sample_sv and
+                                   svg.sample_sv.population_type):
+      poptype2svg[svg.sample_sv.population_type] = svg
+  return poptype2svg
 
 
 def _get_or_create_svg(svgs: dict[str, SVG], sv: SVPropVals) -> SVG:

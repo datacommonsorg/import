@@ -71,7 +71,8 @@ def _mcf_to_triples(mcf_path: str) -> list[Triple]:
 
 def _test_generate_internal(test: unittest.TestCase,
                             test_name: str,
-                            is_mcf_input: bool = False):
+                            is_mcf_input: bool = False,
+                            has_vertical_specs: bool = False):
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
@@ -82,6 +83,13 @@ def _test_generate_internal(test: unittest.TestCase,
       input_triples_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
       input_triples = _read_triples_csv(input_triples_path)
 
+    vertical_specs: list[VerticalSpec] = []
+    if has_vertical_specs:
+      input_vertical_specs_path = os.path.join(
+          _INPUT_DIR, f"{test_name}.vertical_specs.json")
+      with open(input_vertical_specs_path, "r") as file:
+        vertical_specs = load_vertical_specs(file.read())
+
     output_svgs_json_path = os.path.join(temp_dir, f"{test_name}_svgs.json")
     expected_svgs_json_path = os.path.join(_EXPECTED_DIR,
                                            f"{test_name}_svgs.json")
@@ -90,7 +98,7 @@ def _test_generate_internal(test: unittest.TestCase,
     expected_triples_csv_path = os.path.join(_EXPECTED_DIR,
                                              f"{test_name}_triples.csv")
 
-    hierarchy = _generate_internal(input_triples)
+    hierarchy = _generate_internal(input_triples, vertical_specs)
     # Write SVGs json
     svgs_json = [svg.json() for _, svg in hierarchy.svgs.items()]
     with open(output_svgs_json_path, "w") as out:
@@ -129,6 +137,9 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
 
   def test_generate_internal_svs_with_mprops(self):
     _test_generate_internal(self, "svs_with_mprops")
+
+  def test_generate_internal_verticals(self):
+    _test_generate_internal(self, "verticals", has_vertical_specs=True)
 
   def test_extract_svs(self):
     input_triples: list[Triple] = [

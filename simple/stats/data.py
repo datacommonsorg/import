@@ -19,6 +19,8 @@ from enum import StrEnum
 from typing import Self
 from urllib.parse import urlparse
 
+from stats import schema_constants as sc
+
 _PREDICATE_TYPE_OF = "typeOf"
 _PREDICATE_NAME = "name"
 _PREDICATE_DESCRIPTION = "description"
@@ -421,3 +423,17 @@ class McfNode:
     parts.append(f"Node: dcid:{self.id}")
     parts.extend([f"{p}: {v}" for p, v in self.properties.items()])
     return "\n".join(parts)
+
+
+@dataclass
+class VerticalSpec:
+  population_type: str
+  measured_properties: set[str] = field(default_factory=set)
+  verticals: set[str] = field(default_factory=set)
+
+  def from_json(json: dict) -> Self:
+    return VerticalSpec(population_type=json.get("populationType",
+                                                 sc.DEFAULT_POPULATION_TYPE),
+                        measured_properties=set(
+                            json.get("measuredProperties", [])),
+                        verticals=set(json.get("verticals", [])))
