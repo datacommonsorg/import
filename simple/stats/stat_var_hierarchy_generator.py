@@ -203,8 +203,8 @@ def _attach_verticals(poptype2svg: dict[str, SVG],
     if not pop_type_svg:
       continue
     # If no vertical spec mprop in svg mprops, skip.
-    if not any(mprop in vertical_spec.measured_properties
-               for mprop in pop_type_svg.measured_properties):
+    if not (vertical_spec.measured_properties &
+            pop_type_svg.measured_properties.keys()):
       continue
     # Put pop type svg under all verticals in the spec.
     for vertical in vertical_spec.verticals:
@@ -236,7 +236,7 @@ def _get_or_create_vertical_svg(vertical: str, vertical_svgs: dict[str,
 # Returns a dict from population type to SVG.
 def _get_pop_type_svgs(svgs: dict[str, SVG]) -> dict[str, SVG]:
   poptype2svg: dict[str, SVG] = {}
-  for _, svg in svgs.items():
+  for svg in svgs.values():
     if not svg.parent_svg_ids and (svg.sample_sv and
                                    svg.sample_sv.population_type):
       poptype2svg[svg.sample_sv.population_type] = svg
