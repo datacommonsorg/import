@@ -198,9 +198,9 @@ class Runner:
     logging.info("Inserting %s SVG triples into DB.", len(svg_triples))
     self.db.insert_triples(svg_triples)
 
-  # Returns true if the file is a "special" file.
-  # If it is, as a side effect, it appends it to the self.special_handlers dict as well.
-  def _is_special_file_handler(self, fh: FileHandler) -> bool:
+  # If the fh is a "special" file, append it to the self.special_handlers dict.
+  # Returns true if it is, otherwise false.
+  def _maybe_set_special_fh(self, fh: FileHandler) -> bool:
     file_name = fh.basename()
     if file_name in constants.SPECIAL_FILE_NAMES:
       self.special_handlers[file_name] = fh
@@ -212,7 +212,7 @@ class Runner:
     input_mcf_fhs: list[FileHandler] = []
     for input_handler in self.input_handlers:
       if not input_handler.isdir:
-        if self._is_special_file_handler(input_handler):
+        if self._maybe_set_special_fh(input_handler):
           continue
         input_file_name = input_handler.basename()
         if input_file_name.endswith(".mcf"):
@@ -222,15 +222,15 @@ class Runner:
       else:
         for input_file in sorted(input_handler.list_files(extension=".csv")):
           fh = input_handler.make_file(input_file)
-          if not self._is_special_file_handler(fh):
+          if not self._maybe_set_special_fh(fh):
             input_fhs.append(fh)
         for input_file in sorted(input_handler.list_files(extension=".mcf")):
           fh = input_handler.make_file(input_file)
-          if not self._is_special_file_handler(fh):
+          if not self._maybe_set_special_fh(fh):
             input_mcf_fhs.append(fh)
         for input_file in sorted(input_handler.list_files(extension=".json")):
           fh = input_handler.make_file(input_file)
-          self._is_special_file_handler(fh)
+          self._maybe_set_special_fh(fh)
 
       self.reporter.report_started(import_files=list(
           map(lambda fh: fh.basename(), input_fhs + input_mcf_fhs)))
