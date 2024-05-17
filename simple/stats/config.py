@@ -54,7 +54,6 @@ _ENTITY_COLUMNS = "entityColumns"
 _ENTITIES_FIELD = "entities"
 _GROUP_STAT_VARS_BY_PROPERTY = "groupStatVarsByProperty"
 _GENERATE_TOPICS = "generateTopics"
-_VERTICAL_SPECS_FILE = "verticalSpecsFile"
 
 
 class Config:
