@@ -1,12 +1,12 @@
 subject_id,predicate,object_id,object_value
 some_var1,typeOf,StatisticalVariable,
-some_var1,measuredProperty,value,
+some_var1,measuredProperty,count,
 some_var1,name,,Some Variable 1 Name
 some_var1,description,,Some Variable 1 Description
 some_var1,populationType,Person,
 some_var1,gender,Female,
 some_var2,typeOf,StatisticalVariable,
-some_var2,measuredProperty,value,
+some_var2,measuredProperty,age,
 some_var2,name,,Some Variable 2 Name
 some_var2,description,,Some Variable 2 Description
 some_var2,populationType,Person,
@@ -28,9 +28,16 @@ c/p/1,url,,http://source1.com/provenance1
 c/g/Root,typeOf,StatVarGroup,
 c/g/Root,name,,Custom Variables
 c/g/Root,specializationOf,dc/g/Root,
+c/g/PersonAgeVertical,typeOf,StatVarGroup,
+c/g/PersonAgeVertical,name,,Person Age Vertical
+c/g/PersonAgeVertical,specializationOf,c/g/Root,
+c/g/PersonCountVertical,typeOf,StatVarGroup,
+c/g/PersonCountVertical,name,,Person Count Vertical
+c/g/PersonCountVertical,specializationOf,c/g/Root,
 c/g/Person,typeOf,StatVarGroup,
 c/g/Person,name,,Person
-c/g/Person,specializationOf,c/g/Root,
+c/g/Person,specializationOf,c/g/PersonCountVertical,
+c/g/Person,specializationOf,c/g/PersonAgeVertical,
 c/g/Person_Gender,typeOf,StatVarGroup,
 c/g/Person_Gender,name,,Person With Gender
 c/g/Person_Gender,specializationOf,c/g/Person,

@@ -14,5 +14,6 @@
       }
     }
   },
-  "groupStatVarsByProperty": true
+  "groupStatVarsByProperty": true,
+  "verticalSpecsFile": "vertical_specs.json"
 }

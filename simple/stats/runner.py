@@ -62,6 +62,9 @@ class Runner:
 
     self.mode = mode
     self.input_handlers: list[FileHandler] = []
+    # "Special" file handlers.
+    # i.e. if files of these types are present, they are handled in specific ways.
+    self.special_handlers: dict[str, FileHandler] = {}
 
     # Config file driven.
     if config_file:
@@ -89,6 +92,8 @@ class Runner:
       if not config_fh.exists():
         raise FileNotFoundError("Config file must be provided.")
       self.config = Config(data=json.loads(config_fh.read_string()))
+
+    self.special_file_to_type = self.config.special_files()
 
     # Output directories
     self.output_dir_fh = create_file_handler(output_dir, is_dir=True)
@@ -182,18 +187,36 @@ class Runner:
       logging.info("No SV triples found, skipping SVG generating hierarchy.")
     logging.info("Generating SVG hierarchy for %s SV triples.", len(sv_triples))
 
-    # TODO: Load vertical specs from if a "dc.vertical_specs.json" file exists.
     vertical_specs: list[VerticalSpec] = []
+    vertical_specs_fh = self.special_handlers.get(
+        constants.VERTICAL_SPECS_FILE_TYPE)
+    if vertical_specs_fh:
+      logging.info("Loading vertical specs from: %s",
+                   vertical_specs_fh.basename())
+      vertical_specs = stat_var_hierarchy_generator.load_vertical_specs(
+          vertical_specs_fh.read_string())
     svg_triples = stat_var_hierarchy_generator.generate(sv_triples,
                                                         vertical_specs)
     logging.info("Inserting %s SVG triples into DB.", len(svg_triples))
     self.db.insert_triples(svg_triples)
+
+  # If the fh is a "special" file, append it to the self.special_handlers dict.
+  # Returns true if it is, otherwise false.
+  def _maybe_set_special_fh(self, fh: FileHandler) -> bool:
+    file_name = fh.basename()
+    file_type = self.special_file_to_type.get(file_name)
+    if file_type:
+      self.special_handlers[file_type] = fh
+      return True
+    return False
 
   def _run_imports(self):
     input_fhs: list[FileHandler] = []
     input_mcf_fhs: list[FileHandler] = []
     for input_handler in self.input_handlers:
       if not input_handler.isdir:
+        if self._maybe_set_special_fh(input_handler):
+          continue
         input_file_name = input_handler.basename()
         if input_file_name.endswith(".mcf"):
           input_mcf_fhs.append(input_handler)
@@ -201,9 +224,16 @@ class Runner:
           input_fhs.append(input_handler)
       else:
         for input_file in sorted(input_handler.list_files(extension=".csv")):
-          input_fhs.append(input_handler.make_file(input_file))
+          fh = input_handler.make_file(input_file)
+          if not self._maybe_set_special_fh(fh):
+            input_fhs.append(fh)
         for input_file in sorted(input_handler.list_files(extension=".mcf")):
-          input_mcf_fhs.append(input_handler.make_file(input_file))
+          fh = input_handler.make_file(input_file)
+          if not self._maybe_set_special_fh(fh):
+            input_mcf_fhs.append(fh)
+        for input_file in sorted(input_handler.list_files(extension=".json")):
+          fh = input_handler.make_file(input_file)
+          self._maybe_set_special_fh(fh)
 
       self.reporter.report_started(import_files=list(
           map(lambda fh: fh.basename(), input_fhs + input_mcf_fhs)))

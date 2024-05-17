@@ -82,3 +82,8 @@ DEBUG_UNRESOLVED_DCID = "*UNRESOLVED*"
 # DC links
 DC_HOME = "https://datacommons.org"
 DC_BROWSER = "https://datacommons.org/browser"
+
+# "Special" file types.
+# i.e. files of these types will be handled in specific ways.
+VERTICAL_SPECS_FILE_TYPE = "verticalSpecsFile"
+SPECIAL_FILE_TYPES = set([VERTICAL_SPECS_FILE_TYPE])

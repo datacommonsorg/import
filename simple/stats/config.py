@@ -14,6 +14,7 @@
 
 import re
 
+from stats import constants
 from stats.data import AggregationConfig
 from stats.data import EntityType
 from stats.data import EventType
@@ -168,6 +169,14 @@ class Config:
 
   def generate_hierarchy(self) -> bool:
     return self.data.get(_GROUP_STAT_VARS_BY_PROPERTY) or False
+
+  def special_files(self) -> dict[str, str]:
+    special_files: dict[str, str] = {}
+    for special_file_type in constants.SPECIAL_FILE_TYPES:
+      special_file = self.data.get(special_file_type, "")
+      if special_file:
+        special_files[special_file] = special_file_type
+    return special_files
 
   def generate_topics(self) -> bool:
     return self.data.get(_GENERATE_TOPICS) or False
