@@ -83,7 +83,7 @@ DEBUG_UNRESOLVED_DCID = "*UNRESOLVED*"
 DC_HOME = "https://datacommons.org"
 DC_BROWSER = "https://datacommons.org/browser"
 
-# "Special" filenames.
-# i.e. if files have these names, they are handled in specific ways.
-VERTICAL_SPECS_FILE_NAME = "dc.vertical_specs.json"
-SPECIAL_FILE_NAMES = set([VERTICAL_SPECS_FILE_NAME])
+# "Special" file types.
+# i.e. files of these types will be handled in specific ways.
+VERTICAL_SPECS_FILE_TYPE = "verticalSpecsFile"
+SPECIAL_FILE_TYPES = set([VERTICAL_SPECS_FILE_TYPE])

@@ -63,7 +63,7 @@ class Runner:
     self.mode = mode
     self.input_handlers: list[FileHandler] = []
     # "Special" file handlers.
-    # i.e. if files have certain names, they are handled in specific ways.
+    # i.e. if files of these types are present, they are handled in specific ways.
     self.special_handlers: dict[str, FileHandler] = {}
 
     # Config file driven.
@@ -92,6 +92,8 @@ class Runner:
       if not config_fh.exists():
         raise FileNotFoundError("Config file must be provided.")
       self.config = Config(data=json.loads(config_fh.read_string()))
+
+    self.special_file_to_type = self.config.special_files()
 
     # Output directories
     self.output_dir_fh = create_file_handler(output_dir, is_dir=True)
@@ -187,7 +189,7 @@ class Runner:
 
     vertical_specs: list[VerticalSpec] = []
     vertical_specs_fh = self.special_handlers.get(
-        constants.VERTICAL_SPECS_FILE_NAME)
+        constants.VERTICAL_SPECS_FILE_TYPE)
     if vertical_specs_fh:
       logging.info("Loading vertical specs from: %s",
                    vertical_specs_fh.basename())
@@ -202,8 +204,9 @@ class Runner:
   # Returns true if it is, otherwise false.
   def _maybe_set_special_fh(self, fh: FileHandler) -> bool:
     file_name = fh.basename()
-    if file_name in constants.SPECIAL_FILE_NAMES:
-      self.special_handlers[file_name] = fh
+    file_type = self.special_file_to_type.get(file_name)
+    if file_type:
+      self.special_handlers[file_type] = fh
       return True
     return False
 
