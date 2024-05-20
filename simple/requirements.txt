@@ -9,6 +9,7 @@ idna==3.4
 importlib-metadata==6.8.0
 numpy==1.25.2
 pandas==2.1.0
+parameterized==0.9.0
 platformdirs==3.10.0
 PyMySQL==1.1.0
 python-dateutil==2.8.2
