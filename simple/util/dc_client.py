@@ -127,7 +127,6 @@ async def _resolve_place_entities_chunk(client: AsyncClient,
       "nodes": entities_chunk,
       "property": f"<-{property_name}{type_of}->dcid",
   }
-  # TODO: handle pagination.
   response = await post_async(client, path="/v2/resolve", data=data)
   resolved: dict[str, str] = {}
   for entity in response.get("entities", []):
@@ -275,7 +274,8 @@ async def _get_property_of_entities_chunk(client: AsyncClient,
       "property": f"->{property_name}",
   }
 
-  logging.info("Fetching nodes: %s", data)
+  logging.debug("Fetching nodes: %s", data)
+  # TODO: handle pagination.
   response = await post_async(client, path="/v2/node", data=data)
 
   result_chunk: dict[str, str] = {}
