@@ -179,3 +179,37 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
     svs = _extract_svs(input_triples)
 
     self.assertListEqual(svs, expected_svs)
+
+  def test_gen_specialized_name(self):
+    # Each test is a tuple (parent, child, want)
+    tests: list[tuple[SVPropVals, SVPropVals, str]] = [
+        (
+            SVPropVals(sv_id="",
+                       population_type="",
+                       pvs=[PropVal("gender", ""),
+                            PropVal("race", "Asian")],
+                       measured_property=""),
+            SVPropVals(
+                sv_id="",
+                population_type="",
+                pvs=[PropVal("gender", "Female"),
+                     PropVal("race", "Asian")],
+                measured_property=""),
+            "Female",
+        ),
+        (
+            SVPropVals(sv_id="",
+                       population_type="",
+                       pvs=[PropVal("gender", "Female")],
+                       measured_property=""),
+            SVPropVals(sv_id="",
+                       population_type="",
+                       pvs=[PropVal("gender", "Female"),
+                            PropVal("race", "")],
+                       measured_property=""),
+            "Race",
+        )
+    ]
+
+    for parent, child, want in tests:
+      self.assertEqual(child.gen_specialized_name(parent), want)

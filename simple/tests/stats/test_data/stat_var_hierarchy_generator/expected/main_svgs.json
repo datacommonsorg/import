@@ -9,10 +9,10 @@
   "parent_svg_ids": [
    "c/g/Root"
   ],
-  "child_svg_ids": [
-   "c/g/Person_Race",
-   "c/g/Person_PovertyStatus"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_Race": "Race",
+   "c/g/Person_PovertyStatus": "Poverty Status"
+  },
   "mprops": [
    "count",
    "unknownMProp"
@@ -25,10 +25,10 @@
   "parent_svg_ids": [
    "c/g/Person"
   ],
-  "child_svg_ids": [
-   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months",
-   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months": "Below Poverty Level In The Past12 Months",
+   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months": "Above Poverty Level In The Past12 Months"
+  },
   "mprops": [
    "count",
    "unknownMProp"
@@ -41,9 +41,9 @@
   "parent_svg_ids": [
    "c/g/Person_PovertyStatus"
   ],
-  "child_svg_ids": [
-   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race": "Race"
+  },
   "mprops": [
    "count"
   ]
@@ -55,9 +55,9 @@
   "parent_svg_ids": [
    "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months"
   ],
-  "child_svg_ids": [
-   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race-WhiteAlone"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race-WhiteAlone": "White Alone"
+  },
   "mprops": [
    "count"
   ]
@@ -72,7 +72,7 @@
    "c/g/Person_PovertyStatus_Race-WhiteAlone",
    "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race"
   ],
-  "child_svg_ids": [],
+  "child_svg_specialized_names": {},
   "mprops": [
    "count"
   ]
@@ -84,9 +84,9 @@
   "parent_svg_ids": [
    "c/g/Person_PovertyStatus"
   ],
-  "child_svg_ids": [
-   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race": "Race"
+  },
   "mprops": [
    "count",
    "unknownMProp"
@@ -99,9 +99,9 @@
   "parent_svg_ids": [
    "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months"
   ],
-  "child_svg_ids": [
-   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-WhiteAlone"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-WhiteAlone": "White Alone"
+  },
   "mprops": [
    "count",
    "unknownMProp"
@@ -118,7 +118,7 @@
    "c/g/Person_PovertyStatus_Race-WhiteAlone",
    "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race"
   ],
-  "child_svg_ids": [],
+  "child_svg_specialized_names": {},
   "mprops": [
    "count",
    "unknownMProp"
@@ -131,10 +131,10 @@
   "parent_svg_ids": [
    "c/g/Person_Race-WhiteAlone"
   ],
-  "child_svg_ids": [
-   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-WhiteAlone",
-   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race-WhiteAlone"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-WhiteAlone": "Below Poverty Level In The Past12 Months",
+   "c/g/Person_PovertyStatus-AbovePovertyLevelInThePast12Months_Race-WhiteAlone": "Above Poverty Level In The Past12 Months"
+  },
   "mprops": [
    "count",
    "unknownMProp"
@@ -147,9 +147,9 @@
   "parent_svg_ids": [
    "c/g/Person"
   ],
-  "child_svg_ids": [
-   "c/g/Person_Race-WhiteAlone"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_Race-WhiteAlone": "White Alone"
+  },
   "mprops": [
    "count",
    "unknownMProp"
@@ -164,9 +164,9 @@
   "parent_svg_ids": [
    "c/g/Person_Race"
   ],
-  "child_svg_ids": [
-   "c/g/Person_PovertyStatus_Race-WhiteAlone"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_PovertyStatus_Race-WhiteAlone": "Poverty Status"
+  },
   "mprops": [
    "count",
    "unknownMProp"

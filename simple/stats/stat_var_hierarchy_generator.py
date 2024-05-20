@@ -120,10 +120,26 @@ class SVPropVals:
       svg_name = f"{svg_name} With {pvs_str}"
     return svg_name
 
+  def gen_specialized_name(self, parent_pvs: Self) -> str:
+    parent_parts = parent_pvs._get_pv_parts()
+    child_parts = self._get_pv_parts()
+    parts = [part for part in child_parts if part not in parent_parts]
+    return ", ".join(map(lambda part: _capitalize_and_split(part), parts))
+
   # Creates and returns a new SVPropVals object with the same fields as this object
   # except for PVs which are set to the specified list.
   def with_pvs(self, pvs: list[PropVal]) -> Self:
     return replace(self, pvs=pvs)
+
+  # Returns an ordered set of PVs as a dict (since sets don't maintain order).
+  def _get_pv_parts(self) -> dict[str, bool]:
+    parts: dict[str, bool] = {}
+    for pv in self.pvs:
+      if pv.prop:
+        parts[pv.prop] = True
+      if pv.val:
+        parts[pv.val] = True
+    return parts
 
 
 class SVG:
@@ -136,7 +152,7 @@ class SVG:
     # Maintaining order maintains results consistency and helps with tests.
     self.sv_ids: dict[str, bool] = {}
     self.parent_svg_ids: dict[str, bool] = {}
-    self.child_svg_ids: dict[str, bool] = {}
+    self.child_svg_id_2_specialized_name: dict[str, str] = {}
     self.measured_properties: dict[str, bool] = {}
 
     self.parent_svgs_processed: bool = False
@@ -171,6 +187,11 @@ class SVG:
 
     return triples
 
+  def gen_specialized_name(self, parent_svg: Self) -> str:
+    if self.sample_sv and parent_svg.sample_sv:
+      return self.sample_sv.gen_specialized_name(parent_svg.sample_sv)
+    return ""
+
   # For testing.
   def json(self) -> dict:
     return {
@@ -178,7 +199,7 @@ class SVG:
         "svg_name": self.svg_name,
         "sv_ids": list(self.sv_ids.keys()),
         "parent_svg_ids": list(self.parent_svg_ids.keys()),
-        "child_svg_ids": list(self.child_svg_ids.keys()),
+        "child_svg_specialized_names": self.child_svg_id_2_specialized_name,
         "mprops": sorted(list(self.measured_properties.keys()))
     }
 
@@ -210,7 +231,7 @@ def _attach_verticals(poptype2svg: dict[str, SVG],
     for vertical in vertical_spec.verticals:
       vertical_svg = _get_or_create_vertical_svg(vertical, vertical_svgs)
       vertical_svgs[vertical_svg.svg_id] = vertical_svg
-      vertical_svg.child_svg_ids[pop_type_svg.svg_id] = True
+      vertical_svg.child_svg_id_2_specialized_name[pop_type_svg.svg_id] = ""
       pop_type_svg.parent_svg_ids[vertical_svg.svg_id] = True
       for mprop in vertical_spec.measured_properties:
         vertical_svg.measured_properties[mprop] = True
@@ -298,7 +319,8 @@ def _create_parent_svg(parent_sv: SVPropVals, svg: SVG, svgs: dict[str, SVG],
 
   # Add parent child relationships.
   svg.parent_svg_ids[parent_svg.svg_id] = True
-  parent_svg.child_svg_ids[svg.svg_id] = True
+  parent_svg.child_svg_id_2_specialized_name[
+      svg.svg_id] = svg.gen_specialized_name(parent_svg)
 
   # Add child mprops to all parents recursively.
   _add_measured_properties_to_parent_svgs(svg.measured_properties,

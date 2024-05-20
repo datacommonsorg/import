@@ -6,9 +6,9 @@
   "parent_svg_ids": [
    "c/g/Root"
   ],
-  "child_svg_ids": [
-   "c/g/Coal"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Coal": ""
+  },
   "mprops": [
    "count"
   ]
@@ -20,9 +20,9 @@
   "parent_svg_ids": [
    "c/g/Root"
   ],
-  "child_svg_ids": [
-   "c/g/Person"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person": ""
+  },
   "mprops": [
    "count"
   ]
@@ -36,7 +36,7 @@
   "parent_svg_ids": [
    "c/g/CoalCountVertical"
   ],
-  "child_svg_ids": [],
+  "child_svg_specialized_names": {},
   "mprops": [
    "count"
   ]
@@ -48,10 +48,10 @@
   "parent_svg_ids": [
    "c/g/PersonCountVertical"
   ],
-  "child_svg_ids": [
-   "c/g/Person_Race",
-   "c/g/Person_Gender"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_Race": "Race",
+   "c/g/Person_Gender": "Gender"
+  },
   "mprops": [
    "age",
    "count"
@@ -64,10 +64,10 @@
   "parent_svg_ids": [
    "c/g/Person"
   ],
-  "child_svg_ids": [
-   "c/g/Person_Gender-Female",
-   "c/g/Person_Gender-Male"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_Gender-Female": "Female",
+   "c/g/Person_Gender-Male": "Male"
+  },
   "mprops": [
    "age",
    "count"
@@ -80,9 +80,9 @@
   "parent_svg_ids": [
    "c/g/Person_Gender"
   ],
-  "child_svg_ids": [
-   "c/g/Person_Gender-Female_Race"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_Gender-Female_Race": "Race"
+  },
   "mprops": [
    "count"
   ]
@@ -94,9 +94,9 @@
   "parent_svg_ids": [
    "c/g/Person_Gender-Female"
   ],
-  "child_svg_ids": [
-   "c/g/Person_Gender-Female_Race-Asian"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_Gender-Female_Race-Asian": "Asian"
+  },
   "mprops": [
    "count"
   ]
@@ -111,7 +111,7 @@
    "c/g/Person_Gender_Race-Asian",
    "c/g/Person_Gender-Female_Race"
   ],
-  "child_svg_ids": [],
+  "child_svg_specialized_names": {},
   "mprops": [
    "count"
   ]
@@ -123,9 +123,9 @@
   "parent_svg_ids": [
    "c/g/Person_Gender"
   ],
-  "child_svg_ids": [
-   "c/g/Person_Gender-Male_Race"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_Gender-Male_Race": "Race"
+  },
   "mprops": [
    "age"
   ]
@@ -137,9 +137,9 @@
   "parent_svg_ids": [
    "c/g/Person_Gender-Male"
   ],
-  "child_svg_ids": [
-   "c/g/Person_Gender-Male_Race-Asian"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_Gender-Male_Race-Asian": "Asian"
+  },
   "mprops": [
    "age"
   ]
@@ -154,7 +154,7 @@
    "c/g/Person_Gender_Race-Asian",
    "c/g/Person_Gender-Male_Race"
   ],
-  "child_svg_ids": [],
+  "child_svg_specialized_names": {},
   "mprops": [
    "age"
   ]
@@ -166,10 +166,10 @@
   "parent_svg_ids": [
    "c/g/Person_Race-Asian"
   ],
-  "child_svg_ids": [
-   "c/g/Person_Gender-Female_Race-Asian",
-   "c/g/Person_Gender-Male_Race-Asian"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_Gender-Female_Race-Asian": "Female",
+   "c/g/Person_Gender-Male_Race-Asian": "Male"
+  },
   "mprops": [
    "age",
    "count"
@@ -182,9 +182,9 @@
   "parent_svg_ids": [
    "c/g/Person"
   ],
-  "child_svg_ids": [
-   "c/g/Person_Race-Asian"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_Race-Asian": "Asian"
+  },
   "mprops": [
    "age",
    "count"
@@ -197,9 +197,9 @@
   "parent_svg_ids": [
    "c/g/Person_Race"
   ],
-  "child_svg_ids": [
-   "c/g/Person_Gender_Race-Asian"
-  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_Gender_Race-Asian": "Gender"
+  },
   "mprops": [
    "age",
    "count"
@@ -214,7 +214,7 @@
   "parent_svg_ids": [
    "c/g/Root"
   ],
-  "child_svg_ids": [],
+  "child_svg_specialized_names": {},
   "mprops": [
    "count"
   ]
