@@ -95,6 +95,8 @@ _INSERT_IMPORTS_STATEMENT = "insert into imports values(?, ?, ?)"
 
 _SELECT_TRIPLES_BY_SUBJECT_TYPE = "select * from triples where subject_id in (select subject_id from triples where predicate = 'typeOf' and object_id = ?)"
 
+_SELECT_ENTITY_NAMES = "select subject_id, object_value from triples where subject_id in (%s) and predicate = 'name' and object_value <> ''"
+
 _INIT_STATEMENTS = [
     _CREATE_TRIPLES_TABLE,
     _CREATE_OBSERVATIONS_TABLE,
@@ -190,8 +192,12 @@ class MainDcDb(Db):
         OBSERVATIONS_TMCF)
 
     # Not supported for main DC at this time.
-    def select_triples_with_type_of(self, type_of: str) -> list[Triple]:
+    def select_triples_by_subject_type(self, type_of: str) -> list[Triple]:
       return []
+
+    # Not supported for main DC at this time.
+    def select_entity_names(self, dcids: list[str]) -> dict[str, str]:
+      return {}
 
   def _add_triple(self, triple: Triple):
     node = self.nodes.get(triple.subject_id)
@@ -241,6 +247,13 @@ class SqlDb(Db):
     tuples = self.engine.fetch_all(_SELECT_TRIPLES_BY_SUBJECT_TYPE,
                                    (subject_type,))
     return list(map(lambda tuple: from_triple_tuple(tuple), tuples))
+
+  def select_entity_names(self, dcids: list[str]) -> dict[str, str]:
+    if not dcids:
+      return {}
+    query = _SELECT_ENTITY_NAMES % ", ".join("?" * len(dcids))
+    tuples = self.engine.fetch_all(query, dcids)
+    return {dcid: name for dcid, name in tuples}
 
   def _import_metadata(self) -> dict:
     return {

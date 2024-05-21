@@ -47,7 +47,10 @@ def _compare_files(test: unittest.TestCase, output_path, expected_path):
 
 _TRIPLES = [
     Triple("sub1", "typeOf", object_id="StatisticalVariable"),
-    Triple("sub1", "pred1", object_value="objval1")
+    Triple("sub1", "pred1", object_value="objval1"),
+    Triple("sub1", "name", object_value="name1"),
+    Triple("sub2", "typeOf", object_id="StatisticalVariable"),
+    Triple("sub2", "name", object_value="name2")
 ]
 
 _OBSERVATIONS = [
@@ -72,6 +75,9 @@ class TestDb(unittest.TestCase):
 
       svg_triples = db.select_triples_by_subject_type("StatVarGroup")
       self.assertListEqual(svg_triples, [])
+
+      entity_names = db.select_entity_names(["sub1", "sub2", "sub3"])
+      self.assertDictEqual(entity_names, {"sub1": "name1", "sub2": "name2"})
 
       db.commit_and_close()
 
