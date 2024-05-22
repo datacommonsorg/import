@@ -20,6 +20,7 @@ import unittest
 
 from kg_util import mcf_parser
 import pandas as pd
+from parameterized import parameterized
 from stats.data import Triple
 from stats.stat_var_hierarchy_generator import *
 from stats.stat_var_hierarchy_generator import _extract_svs
@@ -179,3 +180,28 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
     svs = _extract_svs(input_triples)
 
     self.assertListEqual(svs, expected_svs)
+
+  @parameterized.expand([
+      (SVPropVals(sv_id="",
+                  population_type="",
+                  pvs=[PropVal("gender", ""),
+                       PropVal("race", "Asian")],
+                  measured_property=""),
+       SVPropVals(sv_id="",
+                  population_type="",
+                  pvs=[PropVal("gender", "Female"),
+                       PropVal("race", "Asian")],
+                  measured_property=""), "Female"),
+      (SVPropVals(sv_id="",
+                  population_type="",
+                  pvs=[PropVal("gender", "Female")],
+                  measured_property=""),
+       SVPropVals(sv_id="",
+                  population_type="",
+                  pvs=[PropVal("gender", "Female"),
+                       PropVal("race", "")],
+                  measured_property=""), "Race")
+  ])
+  def test_gen_specialized_name(self, parent: SVPropVals, child: SVPropVals,
+                                expected: str):
+    self.assertEqual(child.gen_specialized_name(parent), expected)
