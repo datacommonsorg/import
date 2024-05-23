@@ -73,7 +73,8 @@ def _mcf_to_triples(mcf_path: str) -> list[Triple]:
 def _test_generate_internal(test: unittest.TestCase,
                             test_name: str,
                             is_mcf_input: bool = False,
-                            has_vertical_specs: bool = False):
+                            has_vertical_specs: bool = False,
+                            has_schema_names: bool = False):
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
@@ -91,6 +92,13 @@ def _test_generate_internal(test: unittest.TestCase,
       with open(input_vertical_specs_path, "r") as file:
         vertical_specs = load_vertical_specs(file.read())
 
+    dcid2name: dict[str, str] = {}
+    if has_schema_names:
+      input_schema_names_path = os.path.join(_INPUT_DIR,
+                                             f"{test_name}.schema_names.json")
+      with open(input_schema_names_path, "r") as file:
+        dcid2name = json.load(file)
+
     output_svgs_json_path = os.path.join(temp_dir, f"{test_name}_svgs.json")
     expected_svgs_json_path = os.path.join(_EXPECTED_DIR,
                                            f"{test_name}_svgs.json")
@@ -99,7 +107,7 @@ def _test_generate_internal(test: unittest.TestCase,
     expected_triples_csv_path = os.path.join(_EXPECTED_DIR,
                                              f"{test_name}_triples.csv")
 
-    hierarchy = _generate_internal(input_triples, vertical_specs)
+    hierarchy = _generate_internal(input_triples, vertical_specs, dcid2name)
     # Write SVGs json
     svgs_json = [svg.json() for _, svg in hierarchy.svgs.items()]
     with open(output_svgs_json_path, "w") as out:
@@ -141,6 +149,9 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
 
   def test_generate_internal_verticals(self):
     _test_generate_internal(self, "verticals", has_vertical_specs=True)
+
+  def test_generate_internal_schema_names(self):
+    _test_generate_internal(self, "schema_names", has_schema_names=True)
 
   def test_extract_svs(self):
     input_triples: list[Triple] = [
@@ -191,7 +202,7 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
                   population_type="",
                   pvs=[PropVal("gender", "Female"),
                        PropVal("race", "Asian")],
-                  measured_property=""), "Female"),
+                  measured_property=""), {}, "Female"),
       (SVPropVals(sv_id="",
                   population_type="",
                   pvs=[PropVal("gender", "Female")],
@@ -200,8 +211,39 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
                   population_type="",
                   pvs=[PropVal("gender", "Female"),
                        PropVal("race", "")],
-                  measured_property=""), "Race")
+                  measured_property=""), {}, "Race"),
+      (SVPropVals(sv_id="",
+                  population_type="",
+                  pvs=[PropVal("gender", "Female")],
+                  measured_property=""),
+       SVPropVals(
+           sv_id="",
+           population_type="",
+           pvs=[PropVal("gender", "Female"),
+                PropVal("povertyStatus", "")],
+           measured_property=""), {
+               "povertyStatus": "State of poverty"
+           }, "State of poverty"),
+      (SVPropVals(
+          sv_id="",
+          population_type="",
+          pvs=[PropVal("gender", "Female"),
+               PropVal("povertyStatus", "")],
+          measured_property=""),
+       SVPropVals(sv_id="",
+                  population_type="",
+                  pvs=[
+                      PropVal("gender", "Female"),
+                      PropVal("povertyStatus",
+                              "BelowPovertyLevelInThePast12Months")
+                  ],
+                  measured_property=""), {
+                      "povertyStatus":
+                          "State of poverty",
+                      "BelowPovertyLevelInThePast12Months":
+                          "BelowPovertyLevel in the last year"
+                  }, "Below Poverty Level in the last year")
   ])
   def test_gen_specialized_name(self, parent: SVPropVals, child: SVPropVals,
-                                expected: str):
-    self.assertEqual(child.gen_specialized_name(parent), expected)
+                                dcid2name: dict[str, str], expected: str):
+    self.assertEqual(child.gen_specialized_name(parent, dcid2name), expected)
