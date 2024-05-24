@@ -84,6 +84,19 @@ class TestSchema(unittest.TestCase):
               "prop1": "Property 1"
           },
       ),
+      (
+          "prefer db value",
+          {
+              "var1": "DB Var 1"
+          },
+          {
+              "var1": "Remote Var 1"
+          },
+          ["var1", "prop1"],
+          {
+              "var1": "DB Var 1"
+          },
+      ),
   ])
   @mock.patch("util.dc_client.get_property_of_entities")
   def test_get_schema_names(self, desc: str, db_names: dict[str, str],
