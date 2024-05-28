@@ -20,6 +20,7 @@ import re
 from typing import Self
 
 from stats import schema_constants as sc
+from stats.data import ParentSVG2ChildSpecializedNames
 from stats.data import StatVarHierarchyResult
 from stats.data import Triple
 from stats.data import VerticalSpec
@@ -220,8 +221,8 @@ class StatVarHierarchy:
     return StatVarHierarchyResult(self.svg_triples,
                                   self._get_svg_specialized_names())
 
-  def _get_svg_specialized_names(self) -> dict[str, dict[str, str]]:
-    specialized_names: dict[str, dict[str, str]] = {}
+  def _get_svg_specialized_names(self) -> ParentSVG2ChildSpecializedNames:
+    specialized_names: ParentSVG2ChildSpecializedNames = {}
     for svg_id, svg in self.svgs.items():
       specialized_names[svg_id] = svg.child_svg_id_2_specialized_name
     return specialized_names

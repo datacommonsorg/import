@@ -22,6 +22,7 @@ from stats import stat_var_hierarchy_generator
 from stats.config import Config
 from stats.data import ImportType
 from stats.data import InputFileFormat
+from stats.data import ParentSVG2ChildSpecializedNames
 from stats.data import Triple
 from stats.data import VerticalSpec
 from stats.db import create_db
@@ -66,8 +67,7 @@ class Runner:
     # "Special" file handlers.
     # i.e. if files of these types are present, they are handled in specific ways.
     self.special_handlers: dict[str, FileHandler] = {}
-    # dict[parent svg id, dict[child svg id, child specialized name]]
-    self.svg_specialized_names: dict[str, dict[str, str]] = {}
+    self.svg_specialized_names: ParentSVG2ChildSpecializedNames = {}
 
     # Config file driven.
     if config_file:
