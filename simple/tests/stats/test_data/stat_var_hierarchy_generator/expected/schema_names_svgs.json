@@ -1,0 +1,100 @@
+[
+ {
+  "svg_id": "c/g/Person",
+  "svg_name": "Person",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Root"
+  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_Race": "Race",
+   "c/g/Person_PovertyStatus": "State of poverty"
+  },
+  "mprops": []
+ },
+ {
+  "svg_id": "c/g/Person_PovertyStatus",
+  "svg_name": "Person With State of poverty",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person"
+  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months": "Under poverty level in the last year"
+  },
+  "mprops": []
+ },
+ {
+  "svg_id": "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months",
+  "svg_name": "Person With State of poverty = Under poverty level in the last year",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person_PovertyStatus"
+  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race": "Race"
+  },
+  "mprops": []
+ },
+ {
+  "svg_id": "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race",
+  "svg_name": "Person With State of poverty = Under poverty level in the last year, Race",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months"
+  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-Asian": "Asian"
+  },
+  "mprops": []
+ },
+ {
+  "svg_id": "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-Asian",
+  "svg_name": "Person With State of poverty = Under poverty level in the last year, Race = Asian",
+  "sv_ids": [
+   "sv1"
+  ],
+  "parent_svg_ids": [
+   "c/g/Person_PovertyStatus_Race-Asian",
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race"
+  ],
+  "child_svg_specialized_names": {},
+  "mprops": []
+ },
+ {
+  "svg_id": "c/g/Person_PovertyStatus_Race-Asian",
+  "svg_name": "Person With State of poverty, Race = Asian",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person_Race-Asian"
+  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-Asian": "Under poverty level in the last year"
+  },
+  "mprops": []
+ },
+ {
+  "svg_id": "c/g/Person_Race",
+  "svg_name": "Person With Race",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person"
+  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_Race-Asian": "Asian"
+  },
+  "mprops": []
+ },
+ {
+  "svg_id": "c/g/Person_Race-Asian",
+  "svg_name": "Person With Race = Asian",
+  "sv_ids": [],
+  "parent_svg_ids": [
+   "c/g/Person_Race"
+  ],
+  "child_svg_specialized_names": {
+   "c/g/Person_PovertyStatus_Race-Asian": "State of poverty"
+  },
+  "mprops": []
+ }
+]

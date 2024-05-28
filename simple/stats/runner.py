@@ -195,8 +195,9 @@ class Runner:
                    vertical_specs_fh.basename())
       vertical_specs = stat_var_hierarchy_generator.load_vertical_specs(
           vertical_specs_fh.read_string())
-    svg_triples = stat_var_hierarchy_generator.generate(sv_triples,
-                                                        vertical_specs)
+    # TODO: get dcid to name mappings and pass to generator.
+    svg_triples = stat_var_hierarchy_generator.generate(
+        triples=sv_triples, vertical_specs=vertical_specs, dcid2name={})
     logging.info("Inserting %s SVG triples into DB.", len(svg_triples))
     self.db.insert_triples(svg_triples)
 
