@@ -148,6 +148,10 @@ class Db:
   def select_triples_by_subject_type(self, subject_type: str) -> list[Triple]:
     pass
 
+  # Returns names of the corresponding dcids.
+  def select_entity_names(self, dcids: list[str]) -> dict[str, str]:
+    pass
+
 
 class MainDcDb(Db):
   """Generates output for main DC.
@@ -217,8 +221,9 @@ class SqlDb(Db):
 
   def insert_triples(self, triples: list[Triple]):
     logging.info("Writing %s triples to [%s]", len(triples), self.engine)
-    self.engine.executemany(_INSERT_TRIPLES_STATEMENT,
-                            [to_triple_tuple(triple) for triple in triples])
+    if triples:
+      self.engine.executemany(_INSERT_TRIPLES_STATEMENT,
+                              [to_triple_tuple(triple) for triple in triples])
 
   def insert_observations(self, observations: list[Observation],
                           input_file_name: str):
