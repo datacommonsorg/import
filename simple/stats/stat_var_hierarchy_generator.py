@@ -24,13 +24,13 @@ from stats.data import Triple
 from stats.data import VerticalSpec
 
 
-def generate(triples: list[Triple],
-             vertical_specs: list[VerticalSpec]) -> list[Triple]:
+def generate(triples: list[Triple], vertical_specs: list[VerticalSpec],
+             dcid2name: dict[str, str]) -> list[Triple]:
   """Given a list of input triples (including stat vars), 
 generates a SV hierarchy and returns a list of output triples
 representing the hierarchy.
 """
-  return _generate_internal(triples, vertical_specs).svg_triples
+  return _generate_internal(triples, vertical_specs, dcid2name).svg_triples
 
 
 def load_vertical_specs(data: str) -> list[VerticalSpec]:
@@ -46,9 +46,9 @@ def load_vertical_specs(data: str) -> list[VerticalSpec]:
 
 
 # TODO: Pruning (e.g. ignore Thing).
-def _generate_internal(
-    triples: list[Triple],
-    vertical_specs: list[VerticalSpec]) -> "StatVarHierarchy":
+def _generate_internal(triples: list[Triple],
+                       vertical_specs: list[VerticalSpec],
+                       dcid2name: dict[str, str]) -> "StatVarHierarchy":
   """Given a list of input triples (including stat vars), 
 generates a SV hierarchy and returns a list of output triples
 representing the hierarchy.
@@ -57,14 +57,14 @@ representing the hierarchy.
   # Extract SVs.
   svs = _extract_svs(triples)
   # Create SVGs.
-  svgs = _create_all_svgs(svs)
+  svgs = _create_all_svgs(svs, dcid2name)
   # Sort by SVG ID so it's easier to follow the hierarchy.
   svgs = dict(sorted(svgs.items()))
 
   # Get pop type svgs (they don't have a parent set at this stage).
   pop_type_svgs = _get_pop_type_svgs(svgs)
   # Attach verticals to pop type svgs.
-  vertical_svgs = _attach_verticals(pop_type_svgs, vertical_specs)
+  vertical_svgs = _attach_verticals(pop_type_svgs, vertical_specs, dcid2name)
   # Sort by SVG ID so it's easier to follow the verticals.
   vertical_svgs = dict(sorted(vertical_svgs.items()))
 
@@ -90,10 +90,10 @@ class PropVal:
       return f"{_to_dcid_token(self.prop)}-{_to_dcid_token(self.val)}"
     return _to_dcid_token(self.prop)
 
-  def gen_pv_name(self) -> str:
+  def gen_pv_name(self, dcid2name: dict[str, str]) -> str:
     if self.val:
-      return f"{_capitalize_and_split(self.prop)} = {_capitalize_and_split(self.val)}"
-    return _capitalize_and_split(self.prop)
+      return f"{_gen_name(self.prop, dcid2name)} = {_gen_name(self.val, dcid2name)}"
+    return _gen_name(self.prop, dcid2name)
 
 
 # TODO: DPV handling.
@@ -113,18 +113,19 @@ class SVPropVals:
       svg_id = f"{svg_id}_{pv.gen_pv_id()}"
     return svg_id
 
-  def gen_svg_name(self):
-    svg_name = _capitalize_and_split(self.population_type)
+  def gen_svg_name(self, dcid2name: dict[str, str]):
+    svg_name = _gen_name(self.population_type, dcid2name)
     if self.pvs:
-      pvs_str = ", ".join(map(lambda pv: pv.gen_pv_name(), self.pvs))
+      pvs_str = ", ".join(map(lambda pv: pv.gen_pv_name(dcid2name), self.pvs))
       svg_name = f"{svg_name} With {pvs_str}"
     return svg_name
 
-  def gen_specialized_name(self, parent_pvs: Self) -> str:
+  def gen_specialized_name(self, parent_pvs: Self, dcid2name: dict[str,
+                                                                   str]) -> str:
     parent_parts = parent_pvs._get_pv_parts()
     child_parts = self._get_pv_parts()
     parts = [part for part in child_parts if part not in parent_parts]
-    return ", ".join(map(lambda part: _capitalize_and_split(part), parts))
+    return ", ".join(map(lambda part: _gen_name(part, dcid2name), parts))
 
   # Creates and returns a new SVPropVals object with the same fields as this object
   # except for PVs which are set to the specified list.
@@ -187,9 +188,11 @@ class SVG:
 
     return triples
 
-  def gen_specialized_name(self, parent_svg: Self) -> str:
+  def gen_specialized_name(self, parent_svg: Self, dcid2name: dict[str,
+                                                                   str]) -> str:
     if self.sample_sv and parent_svg.sample_sv:
-      return self.sample_sv.gen_specialized_name(parent_svg.sample_sv)
+      return self.sample_sv.gen_specialized_name(parent_svg.sample_sv,
+                                                 dcid2name)
     return ""
 
   # For testing.
@@ -216,7 +219,8 @@ class StatVarHierarchy:
 
 # Attaches matching pop type svgs to vertical svgs, creates those vertical svgs and returns them.
 def _attach_verticals(poptype2svg: dict[str, SVG],
-                      vertical_specs: list[VerticalSpec]) -> dict[str, SVG]:
+                      vertical_specs: list[VerticalSpec],
+                      dcid2name: dict[str, str]) -> dict[str, SVG]:
   vertical_svgs: dict[str, SVG] = {}
   for vertical_spec in vertical_specs:
     pop_type_svg = poptype2svg.get(vertical_spec.population_type)
@@ -229,7 +233,8 @@ def _attach_verticals(poptype2svg: dict[str, SVG],
       continue
     # Put pop type svg under all verticals in the spec.
     for vertical in vertical_spec.verticals:
-      vertical_svg = _get_or_create_vertical_svg(vertical, vertical_svgs)
+      vertical_svg = _get_or_create_vertical_svg(vertical, vertical_svgs,
+                                                 dcid2name)
       vertical_svgs[vertical_svg.svg_id] = vertical_svg
       vertical_svg.child_svg_id_2_specialized_name[pop_type_svg.svg_id] = ""
       pop_type_svg.parent_svg_ids[vertical_svg.svg_id] = True
@@ -244,12 +249,12 @@ def _attach_verticals(poptype2svg: dict[str, SVG],
   return vertical_svgs
 
 
-def _get_or_create_vertical_svg(vertical: str, vertical_svgs: dict[str,
-                                                                   SVG]) -> SVG:
+def _get_or_create_vertical_svg(vertical: str, vertical_svgs: dict[str, SVG],
+                                dcid2name: dict[str, str]) -> SVG:
   vertical_svg_id = f"{sc.CUSTOM_SVG_PREFIX}{vertical}"
   vertical_svg = vertical_svgs.get(vertical_svg_id)
   if not vertical_svg:
-    vertical_svg = SVG(vertical_svg_id, _capitalize_and_split(vertical))
+    vertical_svg = SVG(vertical_svg_id, _gen_name(vertical, dcid2name))
     vertical_svg.parent_svg_ids[sc.DEFAULT_CUSTOM_ROOT_SVG_ID] = True
   return vertical_svg
 
@@ -264,11 +269,12 @@ def _get_pop_type_svgs(svgs: dict[str, SVG]) -> dict[str, SVG]:
   return poptype2svg
 
 
-def _get_or_create_svg(svgs: dict[str, SVG], sv: SVPropVals) -> SVG:
+def _get_or_create_svg(svgs: dict[str, SVG], sv: SVPropVals,
+                       dcid2name: dict[str, str]) -> SVG:
   svg_id = sv.gen_svg_id()
   svg = svgs.get(svg_id)
   if not svg:
-    svg = SVG(svg_id=svg_id, svg_name=sv.gen_svg_name())
+    svg = SVG(svg_id=svg_id, svg_name=sv.gen_svg_name(dcid2name))
     svg.sample_sv = sv
     svgs[svg_id] = svg
   # Add SV mprop to the SVG.
@@ -284,18 +290,20 @@ def _create_all_svg_triples(svgs: dict[str, SVG]):
   return triples
 
 
-def _create_all_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
-  svgs = _create_leaf_svgs(svs)
+def _create_all_svgs(svs: list[SVPropVals],
+                     dcid2name: dict[str, str]) -> dict[str, SVG]:
+  svgs = _create_leaf_svgs(svs, dcid2name)
   for svg_id in list(svgs.keys()):
-    _create_parent_svgs(svg_id, svgs)
+    _create_parent_svgs(svg_id, svgs, dcid2name)
   return svgs
 
 
 # Create SVGs that the SVs are directly attached to.
-def _create_leaf_svgs(svs: list[SVPropVals]) -> dict[str, SVG]:
+def _create_leaf_svgs(svs: list[SVPropVals],
+                      dcid2name: dict[str, str]) -> dict[str, SVG]:
   svgs: dict[str, SVG] = {}
   for sv in svs:
-    svg = _get_or_create_svg(svgs, sv)
+    svg = _get_or_create_svg(svgs, sv, dcid2name)
     # Insert SV into SVG.
     svg.sv_ids[sv.sv_id] = True
   return svgs
@@ -314,13 +322,14 @@ def _add_measured_properties_to_parent_svgs(mprops: dict[str, bool],
 
 
 def _create_parent_svg(parent_sv: SVPropVals, svg: SVG, svgs: dict[str, SVG],
-                       svg_has_prop_without_val: bool):
-  parent_svg = _get_or_create_svg(svgs, parent_sv)
+                       svg_has_prop_without_val: bool, dcid2name: dict[str,
+                                                                       str]):
+  parent_svg = _get_or_create_svg(svgs, parent_sv, dcid2name)
 
   # Add parent child relationships.
   svg.parent_svg_ids[parent_svg.svg_id] = True
   parent_svg.child_svg_id_2_specialized_name[
-      svg.svg_id] = svg.gen_specialized_name(parent_svg)
+      svg.svg_id] = svg.gen_specialized_name(parent_svg, dcid2name)
 
   # Add child mprops to all parents recursively.
   _add_measured_properties_to_parent_svgs(svg.measured_properties,
@@ -328,10 +337,11 @@ def _create_parent_svg(parent_sv: SVPropVals, svg: SVG, svgs: dict[str, SVG],
 
   if not parent_svg.parent_svgs_processed:
     parent_svg.has_prop_without_val = svg_has_prop_without_val
-    _create_parent_svgs(parent_svg.svg_id, svgs)
+    _create_parent_svgs(parent_svg.svg_id, svgs, dcid2name)
 
 
-def _create_parent_svgs(svg_id: str, svgs: dict[str, SVG]):
+def _create_parent_svgs(svg_id: str, svgs: dict[str, SVG],
+                        dcid2name: dict[str, str]):
   svg = svgs[svg_id]
   sv = svg.sample_sv
 
@@ -355,7 +365,8 @@ def _create_parent_svgs(svg_id: str, svgs: dict[str, SVG]):
     _create_parent_svg(parent_sv=sv.with_pvs(parent_pvs),
                        svg=svg,
                        svgs=svgs,
-                       svg_has_prop_without_val=False)
+                       svg_has_prop_without_val=False,
+                       dcid2name=dcid2name)
   # Process SVGs with vals.
   else:
     for pv1 in sv.pvs:
@@ -370,7 +381,8 @@ def _create_parent_svgs(svg_id: str, svgs: dict[str, SVG]):
       _create_parent_svg(parent_sv=sv.with_pvs(parent_pvs),
                          svg=svg,
                          svgs=svgs,
-                         svg_has_prop_without_val=True)
+                         svg_has_prop_without_val=True,
+                         dcid2name=dcid2name)
 
   svg.parent_svgs_processed = True
 
@@ -395,6 +407,10 @@ def _capitalize(s: str) -> str:
 # e.g. "energySource" -> "EnergySource" -> "Energy Source"
 def _capitalize_and_split(s: str) -> str:
   return _split_camel_case(_capitalize(s))
+
+
+def _gen_name(dcid: str, dcid2name: dict[str, str]) -> str:
+  return _capitalize_and_split(dcid2name.get(dcid) or dcid)
 
 
 def _to_dcid_token(token: str) -> str:

@@ -1,0 +1,27 @@
+subject_id,predicate,object_id,object_value
+c/g/Person,typeOf,StatVarGroup,
+c/g/Person,name,,Person
+c/g/Person,specializationOf,c/g/Root,
+c/g/Person_PovertyStatus,typeOf,StatVarGroup,
+c/g/Person_PovertyStatus,name,,Person With State of poverty
+c/g/Person_PovertyStatus,specializationOf,c/g/Person,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months,typeOf,StatVarGroup,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months,name,,Person With State of poverty = Under poverty level in the last year
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months,specializationOf,c/g/Person_PovertyStatus,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race,typeOf,StatVarGroup,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race,name,,"Person With State of poverty = Under poverty level in the last year, Race"
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race,specializationOf,c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-Asian,typeOf,StatVarGroup,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-Asian,name,,"Person With State of poverty = Under poverty level in the last year, Race = Asian"
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-Asian,specializationOf,c/g/Person_PovertyStatus_Race-Asian,
+c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-Asian,specializationOf,c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race,
+sv1,memberOf,c/g/Person_PovertyStatus-BelowPovertyLevelInThePast12Months_Race-Asian,
+c/g/Person_PovertyStatus_Race-Asian,typeOf,StatVarGroup,
+c/g/Person_PovertyStatus_Race-Asian,name,,"Person With State of poverty, Race = Asian"
+c/g/Person_PovertyStatus_Race-Asian,specializationOf,c/g/Person_Race-Asian,
+c/g/Person_Race,typeOf,StatVarGroup,
+c/g/Person_Race,name,,Person With Race
+c/g/Person_Race,specializationOf,c/g/Person,
+c/g/Person_Race-Asian,typeOf,StatVarGroup,
+c/g/Person_Race-Asian,name,,Person With Race = Asian
+c/g/Person_Race-Asian,specializationOf,c/g/Person_Race,
