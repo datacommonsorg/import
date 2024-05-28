@@ -14,3 +14,11 @@ name: "Some Variable 2 Name"
 description: "Some Variable 2 Description"
 populationType: schema:Person
 gender: dcs:Male
+
+Node: dcid:PersonCountVertical
+typeOf: dcs:Thing
+name: "Number of people"
+
+Node: dcid:PersonAgeVertical
+typeOf: dcs:Thing
+name: "Age of people"

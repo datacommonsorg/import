@@ -437,3 +437,16 @@ class VerticalSpec:
                         measured_properties=set(
                             json.get("measuredProperties", [])),
                         verticals=set(json.get("verticals", [])))
+
+
+# dict[svg id, svg specialized name]
+SVGSpecializedNames = dict[str, str]
+
+# dict[parent svg id, child SVGSpecializedNames]
+ParentSVG2ChildSpecializedNames = dict[str, SVGSpecializedNames]
+
+
+@dataclass
+class StatVarHierarchyResult:
+  svg_triples: list[Triple]
+  svg_specialized_names: ParentSVG2ChildSpecializedNames

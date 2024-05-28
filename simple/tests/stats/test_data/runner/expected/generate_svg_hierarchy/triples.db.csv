@@ -11,6 +11,10 @@ some_var2,name,,Some Variable 2 Name
 some_var2,description,,Some Variable 2 Description
 some_var2,populationType,Person,
 some_var2,gender,Male,
+PersonCountVertical,typeOf,Thing,
+PersonCountVertical,name,,Number of people
+PersonAgeVertical,typeOf,Thing,
+PersonAgeVertical,name,,Age of people
 c/s/default,typeOf,Source,
 c/s/default,name,,Custom Data Commons
 c/s/1,typeOf,Source,
@@ -29,10 +33,10 @@ c/g/Root,typeOf,StatVarGroup,
 c/g/Root,name,,Custom Variables
 c/g/Root,specializationOf,dc/g/Root,
 c/g/PersonAgeVertical,typeOf,StatVarGroup,
-c/g/PersonAgeVertical,name,,Person Age Vertical
+c/g/PersonAgeVertical,name,,Age of people
 c/g/PersonAgeVertical,specializationOf,c/g/Root,
 c/g/PersonCountVertical,typeOf,StatVarGroup,
-c/g/PersonCountVertical,name,,Person Count Vertical
+c/g/PersonCountVertical,name,,Number of people
 c/g/PersonCountVertical,specializationOf,c/g/Root,
 c/g/Person,typeOf,StatVarGroup,
 c/g/Person,name,,Person
