@@ -17,6 +17,7 @@ import json
 import logging
 
 from stats import constants
+from stats import schema
 from stats import stat_var_hierarchy_generator
 from stats.config import Config
 from stats.data import ImportType
@@ -65,6 +66,8 @@ class Runner:
     # "Special" file handlers.
     # i.e. if files of these types are present, they are handled in specific ways.
     self.special_handlers: dict[str, FileHandler] = {}
+    # dict[parent svg id, dict[child svg id, child specialized name]]
+    self.svg_specialized_names: dict[str, dict[str, str]] = {}
 
     # Config file driven.
     if config_file:
@@ -144,6 +147,9 @@ class Runner:
       # Generate SVG hierarchy.
       self._generate_svg_hierarchy()
 
+      # Generate SVG cache.
+      self._generate_svg_cache()
+
       # Generate NL sentences for creating embeddings.
       self._generate_nl_sentences()
 
@@ -195,11 +201,42 @@ class Runner:
                    vertical_specs_fh.basename())
       vertical_specs = stat_var_hierarchy_generator.load_vertical_specs(
           vertical_specs_fh.read_string())
-    # TODO: get dcid to name mappings and pass to generator.
-    svg_triples = stat_var_hierarchy_generator.generate(
-        triples=sv_triples, vertical_specs=vertical_specs, dcid2name={})
-    logging.info("Inserting %s SVG triples into DB.", len(svg_triples))
-    self.db.insert_triples(svg_triples)
+
+    # Collect all dcids that can be used to generate SVG names and get their schema names.
+    schema_dcids = list(
+        self._triples_dcids(sv_triples) |
+        self._vertical_specs_dcids(vertical_specs))
+    dcid2name = schema.get_schema_names(schema_dcids, self.db)
+
+    sv_hierarchy_result = stat_var_hierarchy_generator.generate(
+        triples=sv_triples, vertical_specs=vertical_specs, dcid2name=dcid2name)
+    self.svg_specialized_names = sv_hierarchy_result.svg_specialized_names
+    logging.info("Inserting %s SVG triples into DB.",
+                 len(sv_hierarchy_result.svg_triples))
+    self.db.insert_triples(sv_hierarchy_result.svg_triples)
+
+  # Returns all unique predicates and object ids from the specified triples.
+  def _triples_dcids(self, triples: list[Triple]) -> set[str]:
+    dcids: set[str] = set()
+    for triple in triples:
+      if triple.predicate and triple.object_id:
+        dcids.add(triple.predicate)
+        dcids.add(triple.object_id)
+    return dcids
+
+  # Returns all unique pop types and verticals from the specified vertical specs.
+  def _vertical_specs_dcids(self,
+                            vertical_specs: list[VerticalSpec]) -> set[str]:
+    dcids: set[str] = set()
+    for vertical_spec in vertical_specs:
+      if vertical_spec.population_type:
+        dcids.add(vertical_spec.population_type)
+      dcids.update(vertical_spec.verticals)
+    return dcids
+
+  def _generate_svg_cache(self):
+    # TODO: Use svg / sv triples + self.svg_specialized_names to generate SVG cache.
+    pass
 
   # If the fh is a "special" file, append it to the self.special_handlers dict.
   # Returns true if it is, otherwise false.

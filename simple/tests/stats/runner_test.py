@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import os
 from pathlib import Path
 import shutil
 import sqlite3
 import tempfile
 import unittest
+from unittest.mock import MagicMock
 
 import pandas as pd
 from stats import constants
@@ -25,6 +27,8 @@ from stats.data import Observation
 from stats.data import Triple
 from stats.runner import Runner
 from tests.stats.test_util import is_write_mode
+
+from util import dc_client
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "runner")
@@ -64,9 +68,12 @@ def _test_runner(test: unittest.TestCase,
     if is_config_driven:
       config_path = os.path.join(_CONFIG_DIR, f"{test_name}.json")
       input_dir = None
+      remote_schema_names_path = None
     else:
       config_path = None
       input_dir = os.path.join(_INPUT_DIR, test_name)
+      remote_schema_names_path = os.path.join(input_dir,
+                                              "remote_schema_names.json")
 
     db_path = os.path.join(temp_dir, "datacommons.db")
 
@@ -84,6 +91,11 @@ def _test_runner(test: unittest.TestCase,
     expected_nl_sentences_path = os.path.join(expected_dir,
                                               constants.NL_DIR_NAME,
                                               constants.SENTENCES_FILE_NAME)
+
+    dc_client.get_property_of_entities = MagicMock(return_value={})
+    if remote_schema_names_path and os.path.exists(remote_schema_names_path):
+      with os.open(remote_schema_names_path, "r") as f:
+        dc_client.get_property_of_entities = json.load(f)
 
     Runner(config_file=config_path, input_dir=input_dir,
            output_dir=temp_dir).run()
