@@ -148,7 +148,7 @@ function help {
   echo "-l              Run lint test"
   echo "-m              Run sample and generate main dc output"
   echo "-p              Run python tests"
-  echo "-protoc         Compile protos"
+  echo "--protoc        Compile protos"
   echo "-s              Run sample and generate debug output"
   exit 1
 }
@@ -200,7 +200,7 @@ while [[ "$#" -gt 0 ]]; do
         run_py_test
         shift 1
         ;;
-    -protoc)
+    --protoc)
         echo -e "### Compiling protos"
         compile_protos
         shift 1
