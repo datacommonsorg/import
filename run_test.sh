@@ -135,7 +135,7 @@ function run_all_samples {
 
 function compile_protos {
   echo "Running protoc."
-  protoc -I=./simple/proto/ --python_out=./simple/proto ./simple/proto/*.proto
+  protoc -I=./simple/proto/ --python_out=./simple/proto --mypy_out=./simple/proto ./simple/proto/*.proto
 }
 
 function help {
