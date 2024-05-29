@@ -1,0 +1,5 @@
+subject_id,predicate,object_id,object_value
+sv1,typeOf,StatisticalVariable,
+sv1,name,,SV1 name
+sv1,name,,SV1 desc
+sv1,memberOf,c/g/g11,
