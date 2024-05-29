@@ -26,8 +26,8 @@ function run_lint_fix {
   then
     pip3 install isort -q
   fi
-  yapf -r -i -p --style='{based_on_style: google, indent_width: 2}' simple/ -e=.env/*
-  isort simple/ --profile google
+  yapf -r -i -p --style='{based_on_style: google, indent_width: 2}' simple/ -e=*pb2.py -e=.env/*
+  isort simple/ --skip-glob *pb2.py  --skip-glob **/.env/** --profile google
   deactivate
 }
 
@@ -42,13 +42,13 @@ function run_lint_test {
   fi
   
   echo -e "#### Checking Python style"
-  if ! yapf --recursive --diff --style='{based_on_style: google, indent_width: 2}' -p simple/ -e=.env/*; then
+  if ! yapf --recursive --diff --style='{based_on_style: google, indent_width: 2}' -p simple/ -e=*pb2.py -e=.env/*; then
     echo "Fix Python lint errors by running ./run_test.sh -f"
     exit 1
   fi
 
   echo -e "#### Checking Python import order"
-  if ! isort simple/ -c --profile google; then
+  if ! isort simple/ -c --skip-glob *pb2.py  --skip-glob **/.env/** --profile google; then
     echo "Fix Python import sort orders by running ./run_test.sh -f"
     exit 1
   fi
@@ -133,6 +133,11 @@ function run_all_samples {
   run_main_dc_sample
 }
 
+function compile_protos {
+  echo "Running protoc."
+  protoc -I=./simple/proto/ --python_out=./simple/proto ./simple/proto/*.proto
+}
+
 function help {
   echo "Usage: $0 -afhlp"
   echo "-a              Run all tests"
@@ -143,6 +148,7 @@ function help {
   echo "-l              Run lint test"
   echo "-m              Run sample and generate main dc output"
   echo "-p              Run python tests"
+  echo "-protoc         Compile protos"
   echo "-s              Run sample and generate debug output"
   exit 1
 }
@@ -192,6 +198,11 @@ while [[ "$#" -gt 0 ]]; do
     -p)
         echo -e "### Running python tests"
         run_py_test
+        shift 1
+        ;;
+    -protoc)
+        echo -e "### Compiling protos"
+        compile_protos
         shift 1
         ;;
     -s)

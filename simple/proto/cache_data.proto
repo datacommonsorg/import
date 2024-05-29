@@ -1,0 +1,86 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+//  **** IMPORTANT NOTE ****
+//
+//  The proto of BT data has to match exactly the g3 proto, including tag
+//  number.
+
+syntax = "proto3";
+
+message StatVarGroups {
+  // Key is StatVarGroup ID.
+  map<string, StatVarGroupNode> stat_var_groups = 1;
+}
+
+message StatVarGroupNode {
+  message ChildSVG {
+    // StatVarGroup ID.
+    string id = 1;
+    // The specialized entity of the child StatVarGroup relative to the parent.
+    // This can be used for naming when the child appears in the hierarchy.
+    string specialized_entity = 2;
+
+    //==== Below are fields not in original cache.
+    // Name suitable for display in tree.
+    string display_name = 101;
+    // Number of unique descendent stat-vars.
+    int32 descendent_stat_var_count = 102;
+  }
+
+  message ChildSV {
+    // StatVar ID.
+    string id = 1;
+    // Name suitable for search.
+    string search_name = 2;
+    // Names suitable for search.
+    repeated string search_names = 4;
+    // Name suitable for display in tree.
+    string display_name = 3;
+    // Serialized string containing StatVar definition.
+    //
+    // The format is P=V delimited by commas. The required properties are
+    // abbreviated (populationType is 'pt', statType is 'st', etc).  For
+    // example, "median income of women" is:
+    //
+    //    "st=medianValue,pt=Person,mp=income,gender=Female"
+    //
+    // When statType is "measuredValue" (default), it is skipped.
+    string definition = 5;
+
+    //==== Below are fields not in original cache.
+    //==== and thus we start with a large tag number.
+
+    // Whether there is a data for this stat var
+    bool has_data = 101;
+  }
+
+  // Absolute name of StatVarGroup. Typically used only for root nodes.
+  string absolute_name = 1;
+  // List of children StatVar IDs directly attached to this group. If there are
+  // auto-generated and curated IDs for a StatVar, we'll prefer the curated.
+  repeated ChildSV child_stat_vars = 2;
+  // List of children StatVarGroups that are immediate specializations.
+  repeated ChildSVG child_stat_var_groups = 3;
+  // Number of unique descendent stat-vars.
+  int32 descendent_stat_var_count = 5;
+
+    //==== Below are fields not in original cache.
+    //==== and thus we start with a large tag number.
+
+  // List of parent StatVarGroup IDs.
+  repeated string parent_stat_var_groups = 101;
+
+  reserved 4;
+}

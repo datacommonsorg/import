@@ -4,6 +4,14 @@ This importer imports input CSVs into a database which is subsequently used to s
 
 [sqlite]: https://github.com/datacommonsorg/mixer/tree/a768446c56095aa23add8c59cf6a0630a17a726b/internal/sqlite
 
+
+## Prerequisites
+
+- Protoc 3.21.9
+
+  Install [`protoc`](https://grpc.io/docs/protoc-installation/) at version
+  3.21.9.
+
 ## Default usage
 
 ```shell
