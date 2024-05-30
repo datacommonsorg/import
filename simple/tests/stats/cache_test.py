@@ -15,47 +15,19 @@
 import json
 import os
 import shutil
-import sqlite3
 import tempfile
 import unittest
-from unittest import mock
 
-from freezegun import freeze_time
-import pandas as pd
 from parameterized import parameterized
-from stats import schema
-from stats import schema_constants as sc
 from stats.cache import _generate_svg_cache_internal
-from stats.data import Observation
-from stats.data import Triple
-from stats.db import create_db
-from stats.db import create_main_dc_config
-from stats.db import create_sqlite_config
-from stats.db import get_cloud_sql_config_from_env
-from stats.db import get_sqlite_config_from_env
-from stats.db import ImportStatus
-from stats.db import to_observation_tuple
-from stats.db import to_triple_tuple
+from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
+from tests.stats.test_util import read_triples_csv
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "cache")
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
-
-
-def _compare_files(test: unittest.TestCase, output_path: str,
-                   expected_path: str, test_name: str):
-  with open(output_path) as gotf:
-    got = gotf.read()
-    with open(expected_path) as wantf:
-      want = wantf.read()
-      test.assertEqual(got, want, test_name)
-
-
-def _read_triples_csv(path: str) -> list[Triple]:
-  df = pd.read_csv(path, keep_default_na=False)
-  return [Triple(**kwargs) for kwargs in df.to_dict(orient='records')]
 
 
 def _read_json(path: str) -> dict:
@@ -78,9 +50,8 @@ class TestCache(unittest.TestCase):
       output_proto_path = os.path.join(temp_dir, "svg_cache.textproto")
       expected_proto_path = os.path.join(expected_dir, "svg_cache.textproto")
 
-      svg_triples = _read_triples_csv(os.path.join(input_dir,
-                                                   "svg_triples.csv"))
-      sv_triples = _read_triples_csv(os.path.join(input_dir, "sv_triples.csv"))
+      svg_triples = read_triples_csv(os.path.join(input_dir, "svg_triples.csv"))
+      sv_triples = read_triples_csv(os.path.join(input_dir, "sv_triples.csv"))
       specialized_names = _read_json(
           os.path.join(input_dir, "specialized_names.json"))
 
@@ -94,4 +65,4 @@ class TestCache(unittest.TestCase):
         shutil.copy(output_proto_path, expected_proto_path)
         return
 
-      _compare_files(self, output_proto_path, expected_proto_path, test_name)
+      compare_files(self, output_proto_path, expected_proto_path, test_name)
