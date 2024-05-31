@@ -1,0 +1,30 @@
+stat_var_groups {
+  key: "c/g/g1"
+  value {
+    absolute_name: "SVG1"
+    child_stat_var_groups {
+      id: "c/g/g11"
+    }
+  }
+}
+stat_var_groups {
+  key: "c/g/g11"
+  value {
+    absolute_name: "SVG11"
+    child_stat_vars {
+      id: "sv1"
+      search_names: "SV1 name"
+      search_names: "SV1 desc"
+      display_name: "SV1 desc"
+    }
+  }
+}
+stat_var_groups {
+  key: "c/g/Root"
+  value {
+    absolute_name: "Custom Variables"
+    child_stat_var_groups {
+      id: "c/g/g1"
+    }
+  }
+}

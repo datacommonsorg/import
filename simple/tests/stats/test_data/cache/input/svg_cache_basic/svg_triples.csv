@@ -1,0 +1,10 @@
+subject_id,predicate,object_id,object_value
+c/g/Root,typeOf,StatVarGroup,
+c/g/Root,name,,Custom Variables
+c/g/Root,specializationOf,dc/g/Root,
+c/g/g1,typeOf,StatVarGroup,
+c/g/g1,name,,SVG1
+c/g/g1,specializationOf,c/g/Root,
+c/g/g11,typeOf,StatVarGroup,
+c/g/g11,name,,SVG11
+c/g/g11,specializationOf,c/g/g1,
