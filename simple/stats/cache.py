@@ -67,9 +67,6 @@ class _SVGCache:
       if predicate == sc.PREDICATE_NAME and object_value:
         svg_node.absolute_name = object_value
       elif predicate == sc.PREDICATE_SPECIALIZATION_OF and object_id:
-        # Skip DC root.
-        if object_id == sc.ROOT_SVG_ID:
-          continue
         parent_svg_node = self._get_or_create_svg_node(object_id)
         specialized_entity = specialized_names.get(object_id,
                                                    {}).get(svg_id, "")
