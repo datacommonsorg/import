@@ -29,19 +29,13 @@ from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
+from tests.stats.test_util import write_observations
 from util.filehandler import LocalFileHandler
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "observations_importer")
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
-
-
-def _write_observations(db_path: str, output_path: str):
-  with sqlite3.connect(db_path) as db:
-    rows = db.execute("select * from observations").fetchall()
-    observations = [Observation(*row) for row in rows]
-    pd.DataFrame(observations).to_csv(output_path, index=False)
 
 
 def _test_import(test: unittest.TestCase,
@@ -81,7 +75,7 @@ def _test_import(test: unittest.TestCase,
                          nodes=nodes).do_import()
     db.commit_and_close()
 
-    _write_observations(db_path, output_path)
+    write_observations(db_path, output_path)
 
     if is_write_mode():
       shutil.copy(output_path, expected_path)

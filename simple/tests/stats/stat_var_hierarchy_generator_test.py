@@ -28,15 +28,12 @@ from stats.stat_var_hierarchy_generator import _generate_internal
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import read_triples_csv
+from tests.stats.test_util import write_triples_list
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "stat_var_hierarchy_generator")
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
-
-
-def _write_triples_csv(triples: list[Triple], path: str):
-  pd.DataFrame(triples).to_csv(path, index=False)
 
 
 def _strip_ns(v):
@@ -101,7 +98,7 @@ def _test_generate_internal(test: unittest.TestCase,
     with open(output_svgs_json_path, "w") as out:
       json.dump(svgs_json, out, indent=1)
     # Write SVG triples
-    _write_triples_csv(hierarchy.svg_triples, output_triples_csv_path)
+    write_triples_list(hierarchy.svg_triples, output_triples_csv_path)
 
     if is_write_mode():
       shutil.copy(output_svgs_json_path, expected_svgs_json_path)

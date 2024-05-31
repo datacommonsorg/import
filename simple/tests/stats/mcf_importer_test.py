@@ -30,19 +30,13 @@ from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
+from tests.stats.test_util import write_triples
 from util.filehandler import LocalFileHandler
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "mcf_importer")
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
-
-
-def _write_triples(db_path: str, output_path: str):
-  with sqlite3.connect(db_path) as db:
-    rows = db.execute("select * from triples").fetchall()
-    triples = [Triple(*row) for row in rows]
-    pd.DataFrame(triples).to_csv(output_path, index=False)
 
 
 def _test_import(test: unittest.TestCase,
@@ -83,7 +77,7 @@ def _test_import(test: unittest.TestCase,
     importer.do_import()
 
     db.commit_and_close()
-    _write_triples(db_path, output_triples_path)
+    write_triples(db_path, output_triples_path)
 
     if not is_main_dc:
       if is_write_mode():
