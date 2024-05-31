@@ -30,20 +30,12 @@ from stats.db import get_sqlite_config_from_env
 from stats.db import ImportStatus
 from stats.db import to_observation_tuple
 from stats.db import to_triple_tuple
+from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "db")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
-
-
-def _compare_files(test: unittest.TestCase, output_path, expected_path):
-  with open(output_path) as gotf:
-    got = gotf.read()
-    with open(expected_path) as wantf:
-      want = wantf.read()
-      test.assertEqual(got, want)
-
 
 _TRIPLES = [
     Triple("sub1", "typeOf", object_id="StatisticalVariable"),
@@ -120,9 +112,9 @@ class TestDb(unittest.TestCase):
         shutil.copy(mcf_file, expected_mcf_file)
         return
 
-      _compare_files(self, observations_file, expected_observations_file)
-      _compare_files(self, tmcf_file, expected_tmcf_file)
-      _compare_files(self, mcf_file, expected_mcf_file)
+      compare_files(self, observations_file, expected_observations_file)
+      compare_files(self, tmcf_file, expected_tmcf_file)
+      compare_files(self, mcf_file, expected_mcf_file)
 
   @mock.patch.dict(os.environ, {})
   def test_get_cloud_sql_config_from_env_empty(self):

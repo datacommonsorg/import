@@ -27,6 +27,7 @@ from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
 from stats.reporter import FileImportReporter
 from stats.reporter import ImportReporter
+from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from util.filehandler import LocalFileHandler
 
@@ -34,14 +35,6 @@ _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "observations_importer")
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
-
-
-def _compare_files(test: unittest.TestCase, output_path, expected_path):
-  with open(output_path) as gotf:
-    got = gotf.read()
-    with open(expected_path) as wantf:
-      want = wantf.read()
-      test.assertEqual(got, want)
 
 
 def _write_observations(db_path: str, output_path: str):
@@ -94,7 +87,7 @@ def _test_import(test: unittest.TestCase,
       shutil.copy(output_path, expected_path)
       return
 
-    _compare_files(test, output_path, expected_path)
+    compare_files(test, output_path, expected_path)
 
 
 class TestObservationsImporter(unittest.TestCase):

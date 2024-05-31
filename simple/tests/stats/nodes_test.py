@@ -23,21 +23,13 @@ from stats.data import Provenance
 from stats.data import StatVar
 from stats.data import StatVarGroup
 from stats.nodes import Nodes
+from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from util.filehandler import LocalFileHandler
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "nodes")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
-
-
-def _compare_files(test: unittest.TestCase, output_path, expected_path):
-  with open(output_path) as gotf:
-    got = gotf.read()
-    with open(expected_path) as wantf:
-      want = wantf.read()
-      test.assertEqual(got, want)
-
 
 CONFIG_DATA = {
     "inputFiles": {
@@ -147,7 +139,7 @@ class TestNodes(unittest.TestCase):
         shutil.copy(output_path, expected_path)
         return
 
-      _compare_files(self, output_path, expected_path)
+      compare_files(self, output_path, expected_path)
 
   def test_variable_with_no_config(self):
     nodes = Nodes(CONFIG)
