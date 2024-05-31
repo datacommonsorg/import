@@ -63,8 +63,6 @@ class _SVGCache:
       svg_node = self._get_or_create_svg_node(svg_id)
       object_id = triple.object_id
       object_value = triple.object_value
-      if not object_id and not object_value:
-        continue
       predicate = triple.predicate
       if predicate == sc.PREDICATE_NAME and object_value:
         svg_node.absolute_name = object_value
@@ -93,8 +91,6 @@ class _SVGCache:
       sv = sv_id_2_sv.setdefault(sv_id, StatVarGroupNode.ChildSV(id=sv_id))
       object_id = triple.object_id
       object_value = triple.object_value
-      if not object_id and not object_value:
-        continue
       predicate = triple.predicate
       if predicate == sc.PREDICATE_NAME and object_value:
         sv.display_name = object_value
