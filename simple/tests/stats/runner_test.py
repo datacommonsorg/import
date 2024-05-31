@@ -26,6 +26,7 @@ from stats import constants
 from stats.data import Observation
 from stats.data import Triple
 from stats.runner import Runner
+from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 
 from util import dc_client
@@ -35,14 +36,6 @@ _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 _CONFIG_DIR = os.path.join(_TEST_DATA_DIR, "config")
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
-
-
-def _compare_files(test: unittest.TestCase, output_path, expected_path):
-  with open(output_path) as gotf:
-    got = gotf.read()
-    with open(expected_path) as wantf:
-      want = wantf.read()
-      test.assertEqual(got, want)
 
 
 def _write_observations(db_path: str, output_path: str):
@@ -109,9 +102,9 @@ def _test_runner(test: unittest.TestCase,
       shutil.copy(output_nl_sentences_path, expected_nl_sentences_path)
       return
 
-    _compare_files(test, output_triples_path, expected_triples_path)
-    _compare_files(test, output_observations_path, expected_observations_path)
-    _compare_files(test, output_nl_sentences_path, expected_nl_sentences_path)
+    compare_files(test, output_triples_path, expected_triples_path)
+    compare_files(test, output_observations_path, expected_observations_path)
+    compare_files(test, output_nl_sentences_path, expected_nl_sentences_path)
 
 
 class TestRunner(unittest.TestCase):

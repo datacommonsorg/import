@@ -25,7 +25,9 @@ from stats.data import Triple
 from stats.stat_var_hierarchy_generator import *
 from stats.stat_var_hierarchy_generator import _extract_svs
 from stats.stat_var_hierarchy_generator import _generate_internal
+from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
+from tests.stats.test_util import read_triples_csv
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "stat_var_hierarchy_generator")
@@ -33,22 +35,8 @@ _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 
-def _compare_files(test: unittest.TestCase, output_path, expected_path,
-                   message):
-  with open(output_path) as gotf:
-    got = gotf.read()
-    with open(expected_path) as wantf:
-      want = wantf.read()
-      test.assertEqual(got, want, message)
-
-
 def _write_triples_csv(triples: list[Triple], path: str):
   pd.DataFrame(triples).to_csv(path, index=False)
-
-
-def _read_triples_csv(path: str) -> list[Triple]:
-  df = pd.read_csv(path)
-  return [Triple(**kwargs) for kwargs in df.to_dict(orient='records')]
 
 
 def _strip_ns(v):
@@ -83,7 +71,7 @@ def _test_generate_internal(test: unittest.TestCase,
       input_triples = _mcf_to_triples(input_mcf_path)
     else:
       input_triples_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
-      input_triples = _read_triples_csv(input_triples_path)
+      input_triples = read_triples_csv(input_triples_path)
 
     vertical_specs: list[VerticalSpec] = []
     if has_vertical_specs:
@@ -120,10 +108,10 @@ def _test_generate_internal(test: unittest.TestCase,
       shutil.copy(output_triples_csv_path, expected_triples_csv_path)
       return
 
-    _compare_files(test, output_svgs_json_path, expected_svgs_json_path,
-                   f"Comparing SVGS JSON: {test_name}")
-    _compare_files(test, output_triples_csv_path, expected_triples_csv_path,
-                   f"Comparing SVG TRIPLES: {test_name}")
+    compare_files(test, output_svgs_json_path, expected_svgs_json_path,
+                  f"Comparing SVGS JSON: {test_name}")
+    compare_files(test, output_triples_csv_path, expected_triples_csv_path,
+                  f"Comparing SVG TRIPLES: {test_name}")
 
 
 class TestStatVarHierarchyGenerator(unittest.TestCase):

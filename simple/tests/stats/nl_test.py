@@ -20,7 +20,9 @@ import unittest
 import pandas as pd
 from stats.data import Triple
 import stats.nl as nl
+from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
+from tests.stats.test_util import read_triples_csv
 from util.filehandler import LocalFileHandler
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -29,25 +31,12 @@ _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 
-def _read_triples_csv(path: str) -> list[Triple]:
-  df = pd.read_csv(path)
-  return [Triple(**kwargs) for kwargs in df.to_dict(orient='records')]
-
-
-def _compare_files(test: unittest.TestCase, output_path, expected_path):
-  with open(output_path) as gotf:
-    got = gotf.read()
-    with open(expected_path) as wantf:
-      want = wantf.read()
-      test.assertEqual(got, want)
-
-
 def _test_generate_nl_sentences(test: unittest.TestCase, test_name: str):
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
     input_triples_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
-    input_triples = _read_triples_csv(input_triples_path)
+    input_triples = read_triples_csv(input_triples_path)
 
     output_sentences_csv_path = os.path.join(temp_dir,
                                              f"{test_name}_sentences.csv")
@@ -62,7 +51,7 @@ def _test_generate_nl_sentences(test: unittest.TestCase, test_name: str):
       shutil.copy(output_sentences_csv_path, expected_sentences_csv_path)
       return
 
-    _compare_files(test, output_sentences_csv_path, expected_sentences_csv_path)
+    compare_files(test, output_sentences_csv_path, expected_sentences_csv_path)
 
 
 class TestData(unittest.TestCase):
