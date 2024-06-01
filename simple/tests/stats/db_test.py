@@ -50,6 +50,8 @@ _OBSERVATIONS = [
     Observation("e2", "v1", "2023", "456", "p1")
 ]
 
+_KEY_VALUE = ("k1", "v1")
+
 
 class TestDb(unittest.TestCase):
 
@@ -60,6 +62,7 @@ class TestDb(unittest.TestCase):
       db = create_db(create_sqlite_config(db_file_path))
       db.insert_triples(_TRIPLES)
       db.insert_observations(_OBSERVATIONS, "foo.csv")
+      db.insert_key_value(_KEY_VALUE[0], _KEY_VALUE[1])
       db.insert_import_info(status=ImportStatus.SUCCESS)
 
       sv_triples = db.select_triples_by_subject_type("StatisticalVariable")
@@ -83,6 +86,10 @@ class TestDb(unittest.TestCase):
       self.assertListEqual(
           observations,
           list(map(lambda x: to_observation_tuple(x), _OBSERVATIONS)))
+
+      key_value_tuple = sqldb.execute(
+          "select * from key_value_store").fetchone()
+      self.assertTupleEqual(key_value_tuple, (_KEY_VALUE))
 
       import_tuple = sqldb.execute("select * from imports").fetchone()
       self.assertTupleEqual(
