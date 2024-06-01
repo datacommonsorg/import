@@ -83,6 +83,16 @@ create table if not exists observations (
 _DELETE_OBSERVATIONS_STATEMENT = "delete from observations"
 _INSERT_OBSERVATIONS_STATEMENT = "insert into observations values(?, ?, ?, ?, ?)"
 
+_CREATE_KEY_VALUE_STORE_TABLE = """
+create table if not exists key_value_store (
+    key varchar(255),
+    value TEXT
+);
+"""
+
+_DELETE_KEY_VALUE_STORE_STATEMENT = "delete from key_value_store"
+_INSERT_KEY_VALUE_STORE_STATEMENT = "insert into key_value_store values(?, ?)"
+
 _CREATE_IMPORTS_TABLE = """
 create table if not exists imports (
     imported_at datetime,
@@ -100,10 +110,12 @@ _SELECT_ENTITY_NAMES = "select subject_id, object_value from triples where subje
 _INIT_STATEMENTS = [
     _CREATE_TRIPLES_TABLE,
     _CREATE_OBSERVATIONS_TABLE,
+    _CREATE_KEY_VALUE_STORE_TABLE,
     _CREATE_IMPORTS_TABLE,
     # Clearing tables for now (not the import tables though since we want to maintain its history).
     _DELETE_TRIPLES_STATEMENT,
-    _DELETE_OBSERVATIONS_STATEMENT
+    _DELETE_OBSERVATIONS_STATEMENT,
+    _DELETE_KEY_VALUE_STORE_STATEMENT
 ]
 
 OBSERVATIONS_TMCF = """Node: E:Table->E0
@@ -136,6 +148,9 @@ class Db:
 
   def insert_observations(self, observations: list[Observation],
                           input_file_name: str):
+    pass
+
+  def insert_key_value(self, key: str, value: str):
     pass
 
   def insert_import_info(self, status: ImportStatus):
@@ -236,6 +251,9 @@ class SqlDb(Db):
       self.variables.add(observation.variable)
 
     self.engine.executemany(_INSERT_OBSERVATIONS_STATEMENT, tuples)
+
+  def insert_key_value(self, key: str, value: str):
+    self.engine.execute(_INSERT_KEY_VALUE_STORE_STATEMENT, (key, value))
 
   def insert_import_info(self, status: ImportStatus):
     metadata = self._import_metadata()
