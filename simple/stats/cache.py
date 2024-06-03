@@ -18,6 +18,9 @@ Currently it only generates the SVG cache but any future ones will be added here
 (Unless the file size gets too unwieldy in which case it will be broken up.)
 """
 
+import base64
+import gzip
+import io
 import logging
 
 from proto.cache_data_pb2 import StatVarGroupNode
@@ -34,6 +37,25 @@ def generate_svg_cache(db: Db,
   TODO: Get svgs and sv triples from db, generate cache and write to DB.
   """
   pass
+
+
+def gzip_and_base64_encode(data: bytes) -> str:
+  """Compresses bytes using GZIP, base64 encodes them and returns the encoded string."""
+  compressed_buffer = io.BytesIO()
+
+  with gzip.GzipFile(fileobj=compressed_buffer, mode="wb") as gz_file:
+    gz_file.write(data)
+
+  return base64.b64encode(compressed_buffer.getvalue()).decode('utf-8')
+
+
+def base64_decode_and_gunzip(encoded_data: str) -> bytes:
+  """Decodes a Base64 string, decompresses the GZIP data and returns the uncompressed bytes."""
+
+  compressed_data = base64.b64decode(encoded_data)
+
+  with gzip.GzipFile(fileobj=io.BytesIO(compressed_data), mode="rb") as gz_file:
+    return gz_file.read()
 
 
 def _generate_svg_cache_internal(

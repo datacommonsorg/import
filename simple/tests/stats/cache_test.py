@@ -19,10 +19,14 @@ import tempfile
 import unittest
 
 from parameterized import parameterized
+from proto.cache_data_pb2 import StatVarGroups
 from stats.cache import _generate_svg_cache_internal
+from stats.cache import base64_decode_and_gunzip
+from stats.cache import gzip_and_base64_encode
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import read_triples_csv
+from tests.stats.test_util import use_fake_gzip_time
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "cache")
@@ -66,3 +70,23 @@ class TestCache(unittest.TestCase):
         return
 
       compare_files(self, output_proto_path, expected_proto_path, test_name)
+
+  def test_encode_decode(self):
+    use_fake_gzip_time()
+
+    expected_proto = StatVarGroups()
+    expected_proto.stat_var_groups.get_or_create("svg1").absolute_name = "SVG1"
+
+    expected_serialized_proto = expected_proto.SerializeToString()
+    expected_encoded_string = "H4sIAAAAAAAC/+Pi42IpLks3FGLjYgkOczcEAFH0/f4QAAAA"
+
+    encoded_string = gzip_and_base64_encode(expected_serialized_proto)
+    self.assertEqual(encoded_string, expected_encoded_string, "encoded string")
+
+    serialized_proto = base64_decode_and_gunzip(encoded_string)
+    self.assertEqual(serialized_proto, expected_serialized_proto,
+                     "decoded bytes")
+
+    proto = StatVarGroups()
+    proto.ParseFromString(serialized_proto)
+    self.assertEqual(proto, expected_proto, "proto")
