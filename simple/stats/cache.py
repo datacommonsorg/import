@@ -45,6 +45,7 @@ def generate_svg_cache(db: Db,
                       gzip_and_base64_encode(svgs.SerializeToString()))
 
 
+# TODO: Move encode / decode methods into a util file.
 def gzip_and_base64_encode(data: bytes) -> str:
   """Compresses bytes using GZIP, base64 encodes them and returns the encoded string."""
   compressed_buffer = io.BytesIO()
