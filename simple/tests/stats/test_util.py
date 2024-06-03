@@ -54,7 +54,7 @@ def read_triples_csv(path: str) -> list[Triple]:
 
 def write_observations(db_path: str, output_path: str):
   """
-  Writes all observations from a sqlite db at db_path
+  Fetches all observations from a sqlite db at db_path
   and writes it to the output_path CSV.
   """
   with sqlite3.connect(db_path) as db:
@@ -65,7 +65,7 @@ def write_observations(db_path: str, output_path: str):
 
 def write_triples(db_path: str, output_path: str):
   """
-  Writes all triples from a sqlite db at db_path
+  Fetches all triples from a sqlite db at db_path
   and writes it to the output_path CSV.
   """
   with sqlite3.connect(db_path) as db:
@@ -79,6 +79,16 @@ def write_triples_list(triples: list[Triple], output_path: str):
   Writes the list of triples to the output_path CSV.
   """
   pd.DataFrame(triples).to_csv(output_path, index=False)
+
+
+def write_key_values(db_path: str, output_path: str):
+  """
+  Fetches all key values from a sqlite db at db_path
+  and writes it to the output_path CSV.
+  """
+  with sqlite3.connect(db_path) as db:
+    rows = db.execute("select * from key_value_store").fetchall()
+    pd.DataFrame(rows).to_csv(output_path, index=False)
 
 
 class FakeGzipTime:

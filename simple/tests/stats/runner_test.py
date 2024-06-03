@@ -28,6 +28,8 @@ from stats.data import Triple
 from stats.runner import Runner
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
+from tests.stats.test_util import use_fake_gzip_time
+from tests.stats.test_util import write_key_values
 from tests.stats.test_util import write_observations
 from tests.stats.test_util import write_triples
 
@@ -67,6 +69,10 @@ def _test_runner(test: unittest.TestCase,
     output_observations_path = os.path.join(temp_dir, "observations.db.csv")
     expected_observations_path = os.path.join(expected_dir,
                                               "observations.db.csv")
+    output_key_value_store_path = os.path.join(temp_dir,
+                                               "key_value_store.db.csv")
+    expected_key_value_store_path = os.path.join(expected_dir,
+                                                 "key_value_store.db.csv")
     output_nl_sentences_path = os.path.join(temp_dir, constants.NL_DIR_NAME,
                                             constants.SENTENCES_FILE_NAME)
     expected_nl_sentences_path = os.path.join(expected_dir,
@@ -83,19 +89,31 @@ def _test_runner(test: unittest.TestCase,
 
     write_triples(db_path, output_triples_path)
     write_observations(db_path, output_observations_path)
+    write_key_values(db_path, output_key_value_store_path)
 
     if is_write_mode():
       shutil.copy(output_triples_path, expected_triples_path)
       shutil.copy(output_observations_path, expected_observations_path)
+      shutil.copy(output_key_value_store_path, expected_key_value_store_path)
       shutil.copy(output_nl_sentences_path, expected_nl_sentences_path)
       return
 
-    compare_files(test, output_triples_path, expected_triples_path)
-    compare_files(test, output_observations_path, expected_observations_path)
-    compare_files(test, output_nl_sentences_path, expected_nl_sentences_path)
+    compare_files(test, output_triples_path, expected_triples_path,
+                  f"{test_name}: triples")
+    compare_files(test, output_observations_path, expected_observations_path,
+                  f"{test_name}: observations")
+    compare_files(test, output_key_value_store_path,
+                  expected_key_value_store_path,
+                  f"{test_name}: key_value_store")
+    compare_files(test, output_nl_sentences_path, expected_nl_sentences_path,
+                  f"{test_name}: triples")
 
 
 class TestRunner(unittest.TestCase):
+
+  def __init__(self, methodName: str = "runTest") -> None:
+    super().__init__(methodName)
+    use_fake_gzip_time()
 
   def test_config_driven(self):
     _test_runner(self, "config_driven")

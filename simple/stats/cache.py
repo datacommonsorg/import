@@ -30,13 +30,19 @@ from stats.data import ParentSVG2ChildSpecializedNames
 from stats.data import Triple
 from stats.db import Db
 
+STAT_VAR_GROUPS_CACHE_KEY = "StatVarGroups"
+
 
 def generate_svg_cache(db: Db,
                        specialized_names: ParentSVG2ChildSpecializedNames):
-  """
-  TODO: Get svgs and sv triples from db, generate cache and write to DB.
-  """
-  pass
+  """Get svgs and sv triples from db, generate cache and write to DB."""
+  svg_triples = db.select_triples_by_subject_type(
+      sc.TYPE_STATISTICAL_VARIABLE_GROUP)
+  sv_triples = db.select_triples_by_subject_type(sc.TYPE_STATISTICAL_VARIABLE)
+  svgs = _generate_svg_cache_internal(svg_triples, sv_triples,
+                                      specialized_names)
+  db.insert_key_value(STAT_VAR_GROUPS_CACHE_KEY,
+                      gzip_and_base64_encode(svgs.SerializeToString()))
 
 
 def gzip_and_base64_encode(data: bytes) -> str:
