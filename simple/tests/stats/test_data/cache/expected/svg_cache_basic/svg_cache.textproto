@@ -1,4 +1,12 @@
 stat_var_groups {
+  key: "dc/g/Root"
+  value {
+    child_stat_var_groups {
+      id: "c/g/Root"
+    }
+  }
+}
+stat_var_groups {
   key: "c/g/g1"
   value {
     absolute_name: "SVG1"

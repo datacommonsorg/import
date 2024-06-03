@@ -19,6 +19,7 @@ import logging
 from stats import constants
 from stats import schema
 from stats import stat_var_hierarchy_generator
+from stats.cache import generate_svg_cache
 from stats.config import Config
 from stats.data import ImportType
 from stats.data import InputFileFormat
@@ -235,8 +236,7 @@ class Runner:
     return dcids
 
   def _generate_svg_cache(self):
-    # TODO: Use svg / sv triples + self.svg_specialized_names to generate SVG cache.
-    pass
+    generate_svg_cache(self.db, self.svg_specialized_names)
 
   # If the fh is a "special" file, append it to the self.special_handlers dict.
   # Returns true if it is, otherwise false.

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import gzip
 import os
 import sqlite3
 import unittest
@@ -53,7 +54,7 @@ def read_triples_csv(path: str) -> list[Triple]:
 
 def write_observations(db_path: str, output_path: str):
   """
-  Writes all observations from a sqlite db at db_path
+  Fetches all observations from a sqlite db at db_path
   and writes it to the output_path CSV.
   """
   with sqlite3.connect(db_path) as db:
@@ -64,7 +65,7 @@ def write_observations(db_path: str, output_path: str):
 
 def write_triples(db_path: str, output_path: str):
   """
-  Writes all triples from a sqlite db at db_path
+  Fetches all triples from a sqlite db at db_path
   and writes it to the output_path CSV.
   """
   with sqlite3.connect(db_path) as db:
@@ -78,3 +79,29 @@ def write_triples_list(triples: list[Triple], output_path: str):
   Writes the list of triples to the output_path CSV.
   """
   pd.DataFrame(triples).to_csv(output_path, index=False)
+
+
+def write_key_values(db_path: str, output_path: str):
+  """
+  Fetches all key values from a sqlite db at db_path
+  and writes it to the output_path CSV.
+  """
+  with sqlite3.connect(db_path) as db:
+    rows = db.execute("select * from key_value_store").fetchall()
+    pd.DataFrame(rows, columns=["key", "value"]).to_csv(output_path,
+                                                        index=False)
+
+
+class FakeGzipTime:
+
+  def __init__(self, timestamp=0) -> None:
+    self.timestamp = timestamp
+
+  def time(self):
+    return self.timestamp
+
+
+# GZIP encodes a timestamp in the gzipped content which makes test results inconsistent.
+# Use this method to make tests use fixed timestamps.
+def use_fake_gzip_time(timestamp=0):
+  gzip.time = FakeGzipTime(timestamp)

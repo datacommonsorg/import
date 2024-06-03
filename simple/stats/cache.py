@@ -18,6 +18,9 @@ Currently it only generates the SVG cache but any future ones will be added here
 (Unless the file size gets too unwieldy in which case it will be broken up.)
 """
 
+import base64
+import gzip
+import io
 import logging
 
 from proto.cache_data_pb2 import StatVarGroupNode
@@ -27,13 +30,39 @@ from stats.data import ParentSVG2ChildSpecializedNames
 from stats.data import Triple
 from stats.db import Db
 
+STAT_VAR_GROUPS_CACHE_KEY = "StatVarGroups"
+
 
 def generate_svg_cache(db: Db,
                        specialized_names: ParentSVG2ChildSpecializedNames):
-  """
-  TODO: Get svgs and sv triples from db, generate cache and write to DB.
-  """
-  pass
+  """Get svgs and sv triples from db, generate cache and write to DB."""
+  svg_triples = db.select_triples_by_subject_type(
+      sc.TYPE_STATISTICAL_VARIABLE_GROUP)
+  sv_triples = db.select_triples_by_subject_type(sc.TYPE_STATISTICAL_VARIABLE)
+  svgs = _generate_svg_cache_internal(svg_triples, sv_triples,
+                                      specialized_names)
+  db.insert_key_value(STAT_VAR_GROUPS_CACHE_KEY,
+                      gzip_and_base64_encode(svgs.SerializeToString()))
+
+
+# TODO: Move encode / decode methods into a util file.
+def gzip_and_base64_encode(data: bytes) -> str:
+  """Compresses bytes using GZIP, base64 encodes them and returns the encoded string."""
+  compressed_buffer = io.BytesIO()
+
+  with gzip.GzipFile(fileobj=compressed_buffer, mode="wb") as gz_file:
+    gz_file.write(data)
+
+  return base64.b64encode(compressed_buffer.getvalue()).decode('utf-8')
+
+
+def base64_decode_and_gunzip(encoded_data: str) -> bytes:
+  """Decodes a Base64 string, decompresses the GZIP data and returns the uncompressed bytes."""
+
+  compressed_data = base64.b64decode(encoded_data)
+
+  with gzip.GzipFile(fileobj=io.BytesIO(compressed_data), mode="rb") as gz_file:
+    return gz_file.read()
 
 
 def _generate_svg_cache_internal(
@@ -67,9 +96,6 @@ class _SVGCache:
       if predicate == sc.PREDICATE_NAME and object_value:
         svg_node.absolute_name = object_value
       elif predicate == sc.PREDICATE_SPECIALIZATION_OF and object_id:
-        # Skip DC root.
-        if object_id == sc.ROOT_SVG_ID:
-          continue
         parent_svg_node = self._get_or_create_svg_node(object_id)
         specialized_entity = specialized_names.get(object_id,
                                                    {}).get(svg_id, "")
