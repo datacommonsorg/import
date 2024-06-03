@@ -85,7 +85,7 @@ _INSERT_OBSERVATIONS_STATEMENT = "insert into observations values(?, ?, ?, ?, ?)
 
 _CREATE_KEY_VALUE_STORE_TABLE = """
 create table if not exists key_value_store (
-    key varchar(255),
+    lookup_key varchar(255),
     value TEXT
 );
 """
