@@ -88,8 +88,8 @@ def write_key_values(db_path: str, output_path: str):
   """
   with sqlite3.connect(db_path) as db:
     rows = db.execute("select * from key_value_store").fetchall()
-    pd.DataFrame(rows, columns=["key", "value"]).to_csv(output_path,
-                                                        index=False)
+    pd.DataFrame(rows, columns=["lookup_key", "value"]).to_csv(output_path,
+                                                               index=False)
 
 
 class FakeGzipTime:
