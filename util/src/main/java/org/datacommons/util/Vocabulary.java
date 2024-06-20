@@ -154,6 +154,11 @@ public final class Vocabulary {
   public static final String CONFIDENCE_INTERVAL_UPPER_LIMIT = "confidenceIntervalUpperLimit";
   public static final String KURTOSIS = "kurtosisValue";
   public static final String SKEWNESS = "skewnessValue";
+  public static final String VARIENCE_VALUE = "varianceValue";
+  public static final String PALMA_RATIO = "palmaRatio";
+  public static final String RANK_FROM_TOP = "rankFromTop";
+  public static final String RANK_FROM_BOTTOM = "rankFromBottom";
+  public static final String DECILE_VLUE = "decileValue";
   public static final String MEASUREMENT_RESULT = "measurementResult";
 
   // Quantity/QuantityRange props
@@ -335,7 +340,10 @@ public final class Vocabulary {
         || lcVal.endsWith("stderror")
         || lcVal.endsWith("samplesize")
         || lcVal.endsWith("growthrate")
-        || lcVal.endsWith("limit");
+        || lcVal.endsWith("limit")
+        || lcVal.endsWith("palmaratio")
+        || lcVal.startsWith("rank");
+
   }
 
   public static boolean isStatVar(String type) {
