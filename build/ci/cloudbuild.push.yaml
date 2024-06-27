@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Cloud build config that is triggered on a push to master.
 # This cloud build is triggered when there is code change, but can also involve
 # data change.
 
@@ -28,11 +29,4 @@ steps:
         gcloud source repos clone deployment /tmp/deployment --project=datcom-ci
         cd /tmp/deployment
         ./scripts/update_external_repo_version.sh $REPO_NAME $SHORT_SHA
-    waitFor: ["-"]
-
-# Generate protoc, build, check-format and run test
-  - id: "format & test"
-    name: "maven:3-jdk-11"
-    entrypoint: "mvn"
-    args: ["com.spotify.fmt:fmt-maven-plugin:check", "test"]
     waitFor: ["-"]
