@@ -16,17 +16,23 @@
 # data change.
 
 steps:
-  # Push server image to container registry
-  - id: push-image
-    name: gcr.io/cloud-builders/docker
-    entrypoint: "bash"
+
+# Trigger downstream builds that listen for changes to multiple repos.
+  - id: update-repo-version
+    name: "gcr.io/cloud-builders/git"
+    entrypoint: /bin/bash
     args:
       - -c
       - |
         set -e
-        docker build -f build/Dockerfile \
-          -t gcr.io/datcom-ci/datacommons-mini-api:$SHORT_SHA \
-          -t gcr.io/datcom-ci/datacommons-mini-api:latest \
-          .
-        docker push gcr.io/datcom-ci/datacommons-mini-api:$SHORT_SHA
-        docker push gcr.io/datcom-ci/datacommons-mini-api:latest
+        gcloud source repos clone deployment /tmp/deployment --project=datcom-ci
+        cd /tmp/deployment
+        ./scripts/update_external_repo_version.sh $REPO_NAME $SHORT_SHA
+    waitFor: ["-"]
+
+# Generate protoc, build, check-format and run test
+  - id: "format & test"
+    name: "maven:3-jdk-11"
+    entrypoint: "mvn"
+    args: ["com.spotify.fmt:fmt-maven-plugin:check", "test"]
+    waitFor: ["-"]
