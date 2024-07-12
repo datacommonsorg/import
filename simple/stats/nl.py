@@ -14,7 +14,6 @@
 
 from dataclasses import dataclass
 from dataclasses import field
-import json
 import logging
 
 import pandas as pd
@@ -75,9 +74,10 @@ def generate_nl_sentences(triples: list[Triple], nl_dir_fh: FileHandler):
   embeddings_fh = embeddings_dir_fh.make_file(_EMBEDDINGS_FILE)
   catalog_fh = embeddings_dir_fh.make_file(_CUSTOM_CATALOG_YAML)
   catalog_dict = _catalog_dict(nl_dir_fh.path, embeddings_fh.path)
+  catalog_yaml = yaml.safe_dump(catalog_dict)
   logging.info("Writing custom catalog to path %s:\n%s", catalog_fh,
-               json.dumps(catalog_dict, indent=1))
-  catalog_fh.write_string(yaml.safe_dump(catalog_dict))
+               catalog_yaml)
+  catalog_fh.write_string(catalog_yaml)
 
 
 def _catalog_dict(nl_dir: str, embeddings_path: str) -> dict:
