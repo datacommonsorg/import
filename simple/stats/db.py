@@ -373,10 +373,16 @@ class SqliteDbEngine(DbEngine):
       create_file_handler(self.db_file_path, is_dir=False).write_bytes(local_db)
 
 
-_CLOUD_MY_SQL_CONNECT_PARAMS = [
-    CLOUD_MY_SQL_USER, CLOUD_MY_SQL_PASSWORD, CLOUD_MY_SQL_DB
+# Parameters needed to connect to a Cloud SQL instance.
+_CLOUD_MY_SQL_INSTANCE_CONNECT_PARAMS = [
+    CLOUD_MY_SQL_USER, CLOUD_MY_SQL_PASSWORD
 ]
-_CLOUD_MY_SQL_PARAMS = [CLOUD_MY_SQL_INSTANCE] + _CLOUD_MY_SQL_CONNECT_PARAMS
+# Parameters needed to connect to a specific DB in a Cloud SQL instance.
+_CLOUD_MY_SQL_DB_CONNECT_PARAMS = _CLOUD_MY_SQL_INSTANCE_CONNECT_PARAMS + [
+    CLOUD_MY_SQL_DB
+]
+# All parameters that must be specified for connecting to Cloud SQL.
+_CLOUD_MY_SQL_PARAMS = [CLOUD_MY_SQL_INSTANCE] + _CLOUD_MY_SQL_DB_CONNECT_PARAMS
 
 
 class CloudSqlDbEngine(DbEngine):
@@ -385,7 +391,10 @@ class CloudSqlDbEngine(DbEngine):
     for param in _CLOUD_MY_SQL_PARAMS:
       assert param in db_params, f"{param} param not specified"
     connector = Connector()
-    kwargs = {param: db_params[param] for param in _CLOUD_MY_SQL_CONNECT_PARAMS}
+    CloudSqlDbEngine._maybe_create_database(connector, db_params)
+    kwargs = {
+        param: db_params[param] for param in _CLOUD_MY_SQL_DB_CONNECT_PARAMS
+    }
     logging.info("Connecting to Cloud MySQL: %s (%s)",
                  db_params[CLOUD_MY_SQL_INSTANCE], db_params[CLOUD_MY_SQL_DB])
     self.connection: Connection = connector.connect(
@@ -396,6 +405,34 @@ class CloudSqlDbEngine(DbEngine):
     self.cursor: Cursor = self.connection.cursor()
     for statement in _INIT_STATEMENTS:
       self.cursor.execute(statement)
+
+  def _maybe_create_database(connector: Connector,
+                             db_params: dict[str, str]) -> None:
+    kwargs = {
+        param: db_params[param]
+        for param in _CLOUD_MY_SQL_INSTANCE_CONNECT_PARAMS
+    }
+    db_name = db_params[CLOUD_MY_SQL_DB]
+    logging.info(
+        "Connecting to Cloud MySQL instance '%s' to check existence of DB '%s'.",
+        db_params[CLOUD_MY_SQL_INSTANCE], db_name)
+    with connector.connect(db_params[CLOUD_MY_SQL_INSTANCE], "pymysql",
+                           **kwargs) as conn:
+      with conn.cursor() as cursor:
+        # Check if the database already exists.
+        cursor.execute(
+            f"SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{db_name}'"
+        )
+        exists = cursor.fetchone()[0] > 0
+
+        if not exists:
+          cursor.execute(f"CREATE DATABASE {db_name}")
+          conn.commit()
+          logging.info(f"Database '{db_name}' created successfully.")
+        else:
+          logging.info(
+              f"Database '{db_name}' already exists and will be used for this import."
+          )
 
   def __str__(self) -> str:
     return self.description
