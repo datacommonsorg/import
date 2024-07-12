@@ -38,20 +38,27 @@ def _test_generate_nl_sentences(test: unittest.TestCase, test_name: str):
     input_triples_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
     input_triples = read_triples_csv(input_triples_path)
 
-    output_sentences_csv_path = os.path.join(temp_dir,
-                                             f"{test_name}_sentences.csv")
-    expected_sentences_csv_path = os.path.join(_EXPECTED_DIR,
-                                               f"{test_name}_sentences.csv")
+    output_sentences_csv_path = os.path.join(temp_dir, "sentences.csv")
+    expected_sentences_csv_path = os.path.join(_EXPECTED_DIR, test_name,
+                                               "sentences.csv")
 
-    output_sentences_csv_fh = LocalFileHandler(output_sentences_csv_path)
+    output_catalog_yaml_path = os.path.join(temp_dir, "embeddings",
+                                            "custom_catalog.yaml")
+    expected_catalog_yaml_path = os.path.join(_EXPECTED_DIR, test_name,
+                                              "custom_catalog.yaml")
 
-    nl.generate_nl_sentences(input_triples, output_sentences_csv_fh)
+    nl_dir_fh = LocalFileHandler(temp_dir)
+
+    nl.generate_nl_sentences(input_triples, nl_dir_fh)
+    nl._rewrite_catalog_for_testing(LocalFileHandler(output_catalog_yaml_path))
 
     if is_write_mode():
       shutil.copy(output_sentences_csv_path, expected_sentences_csv_path)
+      shutil.copy(output_catalog_yaml_path, expected_catalog_yaml_path)
       return
 
     compare_files(test, output_sentences_csv_path, expected_sentences_csv_path)
+    compare_files(test, output_catalog_yaml_path, expected_catalog_yaml_path)
 
 
 class TestData(unittest.TestCase):

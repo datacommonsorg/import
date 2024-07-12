@@ -176,8 +176,7 @@ class Runner:
           sc.TYPE_STATISTICAL_VARIABLE)
 
     # Generate sentences.
-    nl.generate_nl_sentences(
-        triples, self.nl_dir_fh.make_file(constants.SENTENCES_FILE_NAME))
+    nl.generate_nl_sentences(triples, self.nl_dir_fh)
 
   def _generate_svg_hierarchy(self):
     if self.mode == RunMode.MAIN_DC:
