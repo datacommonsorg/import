@@ -23,9 +23,11 @@ https://github.com/datacommonsorg/website/blob/1f46ef4f22d4777194f4dc6bb730ea56c
 # The custom embeddings index type.
 # See: https://github.com/datacommonsorg/website/blob/2dabf815b82dcd5ff226ed94d8bbdab545ffd4d7/nl_server/custom_dc_env.yaml#L6
 CUSTOM_EMBEDDINGS_INDEX = "user_all_minilm_mem"
+
 # The name of the model used for custom dc embeddings.
 # See: https://github.com/datacommonsorg/website/blob/1f46ef4f22d4777194f4dc6bb730ea56ca6f3207/deploy/nl/catalog.yaml#L119
 CUSTOM_MODEL = "ft-final-v20230717230459-all-MiniLM-L6-v2"
+
 # The GCS path to the model.
 # See: https://github.com/datacommonsorg/website/blob/1f46ef4f22d4777194f4dc6bb730ea56ca6f3207/deploy/nl/catalog.yaml#L122
 CUSTOM_MODEL_PATH = "gs://datcom-nl-models/ft_final_v20230717230459.all-MiniLM-L6-v2"
