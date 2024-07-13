@@ -18,6 +18,9 @@ import logging
 
 import pandas as pd
 from stats.data import Triple
+from stats.nl_constants import CUSTOM_EMBEDDINGS_INDEX
+from stats.nl_constants import CUSTOM_MODEL
+from stats.nl_constants import CUSTOM_MODEL_PATH
 import stats.schema_constants as sc
 from util.filehandler import FileHandler
 import yaml
@@ -26,16 +29,10 @@ _DCID_COL = "dcid"
 _SENTENCE_COL = "sentence"
 _SENTENCE_SEPARATOR = ";"
 
-_CUSTOM_EMBEDDING_INDEX = "user_all_minilm_mem"
-_CUSTOM_MODEL = "ft-final-v20230717230459-all-MiniLM-L6-v2"
-_CUSTOM_MODEL_PATH = "gs://datcom-nl-models/ft_final_v20230717230459.all-MiniLM-L6-v2"
 _EMBEDDINGS_DIR = "embeddings"
 _EMBEDDINGS_FILE = "embeddings.csv"
 _SENTENCES_FILE = "sentences.csv"
 _CUSTOM_CATALOG_YAML = "custom_catalog.yaml"
-
-# Source path in test catalog files will be rewritten with this fake path.
-_FAKE_SOURCE_PATH = "//fake/path"
 
 
 def generate_nl_sentences(triples: list[Triple], nl_dir_fh: FileHandler):
@@ -69,6 +66,7 @@ def generate_nl_sentences(triples: list[Triple], nl_dir_fh: FileHandler):
   logging.info("Writing %s NL sentences to: %s", dataframe.size, sentences_fh)
   sentences_fh.write_string(dataframe.to_csv(index=False))
 
+  # The trailing "/" is used by the file handler to create a directory.
   embeddings_dir_fh = nl_dir_fh.make_file(f"{_EMBEDDINGS_DIR}/")
   embeddings_dir_fh.make_dirs()
   embeddings_fh = embeddings_dir_fh.make_file(_EMBEDDINGS_FILE)
@@ -84,38 +82,22 @@ def _catalog_dict(nl_dir: str, embeddings_path: str) -> dict:
   return {
       "version": "1",
       "indexes": {
-          _CUSTOM_EMBEDDING_INDEX: {
+          CUSTOM_EMBEDDINGS_INDEX: {
               "store_type": "MEMORY",
               "source_path": nl_dir,
               "embeddings_path": embeddings_path,
-              "model": _CUSTOM_MODEL
+              "model": CUSTOM_MODEL
           },
       },
       "models": {
-          _CUSTOM_MODEL: {
+          CUSTOM_MODEL: {
               "type": "LOCAL",
               "usage": "EMBEDDINGS",
-              "gcs_folder": _CUSTOM_MODEL_PATH,
+              "gcs_folder": CUSTOM_MODEL_PATH,
               "score_threshold": 0.5
           }
       }
   }
-
-
-def _rewrite_catalog_for_testing(catalog_fh: FileHandler):
-  """
-  Test catalog files are written to temp folders whose values change from test to test.
-  To consistently test the catalog out against a golden file, we replace the root of paths in the catalog
-  with a constant fake path.
-  """
-  catalog_dict = yaml.safe_load(catalog_fh.read_string())
-  custom_index = catalog_dict["indexes"][_CUSTOM_EMBEDDING_INDEX]
-  orig_source_path = custom_index["source_path"]
-  custom_index["source_path"] = _FAKE_SOURCE_PATH
-  orig_embeddings_path: str = custom_index["embeddings_path"]
-  custom_index["embeddings_path"] = orig_embeddings_path.replace(
-      orig_source_path, _FAKE_SOURCE_PATH)
-  catalog_fh.write_string(yaml.safe_dump(catalog_dict))
 
 
 @dataclass
