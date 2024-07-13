@@ -18,15 +18,24 @@ import logging
 
 import pandas as pd
 from stats.data import Triple
+from stats.nl_constants import CUSTOM_EMBEDDINGS_INDEX
+from stats.nl_constants import CUSTOM_MODEL
+from stats.nl_constants import CUSTOM_MODEL_PATH
 import stats.schema_constants as sc
 from util.filehandler import FileHandler
+import yaml
 
 _DCID_COL = "dcid"
 _SENTENCE_COL = "sentence"
 _SENTENCE_SEPARATOR = ";"
 
+_EMBEDDINGS_DIR = "embeddings"
+_EMBEDDINGS_FILE = "embeddings.csv"
+_SENTENCES_FILE = "sentences.csv"
+_CUSTOM_CATALOG_YAML = "custom_catalog.yaml"
 
-def generate_nl_sentences(triples: list[Triple], sentences_fh: FileHandler):
+
+def generate_nl_sentences(triples: list[Triple], nl_dir_fh: FileHandler):
   """Generates NL sentences based on name and searchDescription triples.
 
   This method should only be called for triples of types for which NL sentences
@@ -53,8 +62,42 @@ def generate_nl_sentences(triples: list[Triple], sentences_fh: FileHandler):
 
   dataframe = pd.DataFrame(rows)
 
+  sentences_fh = nl_dir_fh.make_file(_SENTENCES_FILE)
   logging.info("Writing %s NL sentences to: %s", dataframe.size, sentences_fh)
   sentences_fh.write_string(dataframe.to_csv(index=False))
+
+  # The trailing "/" is used by the file handler to create a directory.
+  embeddings_dir_fh = nl_dir_fh.make_file(f"{_EMBEDDINGS_DIR}/")
+  embeddings_dir_fh.make_dirs()
+  embeddings_fh = embeddings_dir_fh.make_file(_EMBEDDINGS_FILE)
+  catalog_fh = embeddings_dir_fh.make_file(_CUSTOM_CATALOG_YAML)
+  catalog_dict = _catalog_dict(nl_dir_fh.path, embeddings_fh.path)
+  catalog_yaml = yaml.safe_dump(catalog_dict)
+  logging.info("Writing custom catalog to path %s:\n%s", catalog_fh,
+               catalog_yaml)
+  catalog_fh.write_string(catalog_yaml)
+
+
+def _catalog_dict(nl_dir: str, embeddings_path: str) -> dict:
+  return {
+      "version": "1",
+      "indexes": {
+          CUSTOM_EMBEDDINGS_INDEX: {
+              "store_type": "MEMORY",
+              "source_path": nl_dir,
+              "embeddings_path": embeddings_path,
+              "model": CUSTOM_MODEL
+          },
+      },
+      "models": {
+          CUSTOM_MODEL: {
+              "type": "LOCAL",
+              "usage": "EMBEDDINGS",
+              "gcs_folder": CUSTOM_MODEL_PATH,
+              "score_threshold": 0.5
+          }
+      }
+  }
 
 
 @dataclass

@@ -30,6 +30,22 @@ _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
+# Temp dir paths in test catalog files will be rewritten with this fake path
+# so they can be compared with golden files with a constant fake path.
+_FAKE_PATH = "//fake/path"
+
+
+def _rewrite_catalog_for_testing(catalog_yaml_path: str, temp_dir: str) -> None:
+  """
+  Test catalog files are written to temp folders whose values change from test to test.
+  To consistently test the catalog out against a golden file, we replace the temp paths
+  with a constant fake path.
+  """
+  catalog_fh = LocalFileHandler(catalog_yaml_path)
+  content = catalog_fh.read_string()
+  content = content.replace(temp_dir, _FAKE_PATH)
+  catalog_fh.write_string(content)
+
 
 def _test_generate_nl_sentences(test: unittest.TestCase, test_name: str):
   test.maxDiff = None
@@ -38,20 +54,27 @@ def _test_generate_nl_sentences(test: unittest.TestCase, test_name: str):
     input_triples_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
     input_triples = read_triples_csv(input_triples_path)
 
-    output_sentences_csv_path = os.path.join(temp_dir,
-                                             f"{test_name}_sentences.csv")
-    expected_sentences_csv_path = os.path.join(_EXPECTED_DIR,
-                                               f"{test_name}_sentences.csv")
+    output_sentences_csv_path = os.path.join(temp_dir, "sentences.csv")
+    expected_sentences_csv_path = os.path.join(_EXPECTED_DIR, test_name,
+                                               "sentences.csv")
 
-    output_sentences_csv_fh = LocalFileHandler(output_sentences_csv_path)
+    output_catalog_yaml_path = os.path.join(temp_dir, "embeddings",
+                                            "custom_catalog.yaml")
+    expected_catalog_yaml_path = os.path.join(_EXPECTED_DIR, test_name,
+                                              "custom_catalog.yaml")
 
-    nl.generate_nl_sentences(input_triples, output_sentences_csv_fh)
+    nl_dir_fh = LocalFileHandler(temp_dir)
+
+    nl.generate_nl_sentences(input_triples, nl_dir_fh)
+    _rewrite_catalog_for_testing(output_catalog_yaml_path, temp_dir)
 
     if is_write_mode():
       shutil.copy(output_sentences_csv_path, expected_sentences_csv_path)
+      shutil.copy(output_catalog_yaml_path, expected_catalog_yaml_path)
       return
 
     compare_files(test, output_sentences_csv_path, expected_sentences_csv_path)
+    compare_files(test, output_catalog_yaml_path, expected_catalog_yaml_path)
 
 
 class TestData(unittest.TestCase):
