@@ -377,10 +377,12 @@ class SqliteDbEngine(DbEngine):
 _CLOUD_MY_SQL_INSTANCE_CONNECT_PARAMS = [
     CLOUD_MY_SQL_USER, CLOUD_MY_SQL_PASSWORD
 ]
+
 # Parameters needed to connect to a specific DB in a Cloud SQL instance.
 _CLOUD_MY_SQL_DB_CONNECT_PARAMS = _CLOUD_MY_SQL_INSTANCE_CONNECT_PARAMS + [
     CLOUD_MY_SQL_DB
 ]
+
 # All parameters that must be specified for connecting to Cloud SQL.
 _CLOUD_MY_SQL_PARAMS = [CLOUD_MY_SQL_INSTANCE] + _CLOUD_MY_SQL_DB_CONNECT_PARAMS
 
@@ -397,6 +399,7 @@ class CloudSqlDbEngine(DbEngine):
     }
     logging.info("Connecting to Cloud MySQL: %s (%s)",
                  db_params[CLOUD_MY_SQL_INSTANCE], db_params[CLOUD_MY_SQL_DB])
+    # Uses the pymysql driver to connect to the DB.
     self.connection: Connection = connector.connect(
         db_params[CLOUD_MY_SQL_INSTANCE], "pymysql", **kwargs)
     logging.info("Connected to Cloud MySQL: %s (%s)",
@@ -408,24 +411,26 @@ class CloudSqlDbEngine(DbEngine):
 
   def _maybe_create_database(connector: Connector,
                              db_params: dict[str, str]) -> None:
+
+    def _db_exists(cursor) -> bool:
+      # Check if the database already exists.
+      cursor.execute(
+          f"SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{db_name}'"
+      )
+      return cursor.fetchone()[0] > 0
+
     kwargs = {
         param: db_params[param]
         for param in _CLOUD_MY_SQL_INSTANCE_CONNECT_PARAMS
     }
+    db_instance = db_params[CLOUD_MY_SQL_INSTANCE]
     db_name = db_params[CLOUD_MY_SQL_DB]
     logging.info(
         "Connecting to Cloud MySQL instance '%s' to check existence of DB '%s'.",
-        db_params[CLOUD_MY_SQL_INSTANCE], db_name)
-    with connector.connect(db_params[CLOUD_MY_SQL_INSTANCE], "pymysql",
-                           **kwargs) as conn:
+        db_instance, db_name)
+    with connector.connect(db_instance, "pymysql", **kwargs) as conn:
       with conn.cursor() as cursor:
-        # Check if the database already exists.
-        cursor.execute(
-            f"SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{db_name}'"
-        )
-        exists = cursor.fetchone()[0] > 0
-
-        if not exists:
+        if not _db_exists(cursor):
           cursor.execute(f"CREATE DATABASE {db_name}")
           conn.commit()
           logging.info(f"Database '{db_name}' created successfully.")
