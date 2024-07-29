@@ -51,12 +51,12 @@ def _test_runner(test: unittest.TestCase,
     if is_config_driven:
       config_path = os.path.join(_CONFIG_DIR, f"{test_name}.json")
       input_dir = None
-      remote_schema_names_path = None
+      remote_entity_types_path = None
     else:
       config_path = None
       input_dir = os.path.join(_INPUT_DIR, test_name)
-      remote_schema_names_path = os.path.join(input_dir,
-                                              "remote_schema_names.json")
+      remote_entity_types_path = os.path.join(input_dir,
+                                              "remote_entity_types.json")
 
     db_path = os.path.join(temp_dir, "datacommons.db")
 
@@ -80,9 +80,10 @@ def _test_runner(test: unittest.TestCase,
                                               constants.SENTENCES_FILE_NAME)
 
     dc_client.get_property_of_entities = MagicMock(return_value={})
-    if remote_schema_names_path and os.path.exists(remote_schema_names_path):
-      with os.open(remote_schema_names_path, "r") as f:
-        dc_client.get_property_of_entities = json.load(f)
+    if remote_entity_types_path and os.path.exists(remote_entity_types_path):
+      with open(remote_entity_types_path, "r") as f:
+        dc_client.get_property_of_entities = MagicMock(
+            return_value=json.load(f))
 
     Runner(config_file=config_path, input_dir=input_dir,
            output_dir=temp_dir).run()
@@ -132,3 +133,6 @@ class TestRunner(unittest.TestCase):
 
   def test_topic_nl_sentences(self):
     _test_runner(self, "topic_nl_sentences", is_config_driven=False)
+
+  def test_remote_entity_types(self):
+    _test_runner(self, "remote_entity_types", is_config_driven=False)

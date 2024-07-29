@@ -14,15 +14,17 @@
 
 from csv import DictReader
 import logging
-import random
 
 from stats import constants
+from stats import schema_constants as sc
 from stats.data import Observation
 from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
 from util.filehandler import FileHandler
+
+from util import dc_client as dc
 
 _COLUMNS = [
     constants.COLUMN_ENTITY, constants.COLUMN_VARIABLE, constants.COLUMN_DATE,
@@ -50,6 +52,9 @@ class VariablePerRowImporter(Importer):
     # Reassign after reading CSV.
     self.column_mappings = dict(_DEFAULT_COLUMN_MAPPINGS)
     self.reader: DictReader = None
+    # Unique entity IDs seen in this CSV.
+    # Using dict instead of set to maintain insertion order which keeps results consistent for tests.
+    self.entity_dcids: dict[str, bool] = {}
 
   def do_import(self) -> None:
     self.reporter.report_started()
@@ -86,11 +91,37 @@ class VariablePerRowImporter(Importer):
     provenance = self.nodes.provenance(self.input_file_name).id
     observations: list[Observation] = []
     for row in self.reader:
+      entity_dcid = row[self.column_mappings[constants.COLUMN_ENTITY]]
       observation = Observation(
-          entity=row[self.column_mappings[constants.COLUMN_ENTITY]],
+          entity=entity_dcid,
           variable=row[self.column_mappings[constants.COLUMN_VARIABLE]],
           date=row[self.column_mappings[constants.COLUMN_DATE]],
           value=row[self.column_mappings[constants.COLUMN_VALUE]],
           provenance=provenance)
       observations.append(observation)
+      self.entity_dcids[entity_dcid] = True
     self.db.insert_observations(observations, self.input_file_name)
+
+  def _add_entity_nodes(self) -> None:
+    # Get entity nodes that are not already recorded.
+    new_entity_dcids = [
+        dcid for dcid in self.entity_dcids
+        if dcid not in self.nodes.entities.keys()
+    ]
+
+    logging.info("Found %s total entities, of which %s are already imported.",
+                 len(self.entity_dcids),
+                 len(self.entity_dcids) - len(new_entity_dcids))
+
+    if not new_entity_dcids:
+      return
+
+    # Get entity types
+    dcid2type: dict[str,
+                    str] = dc.get_property_of_entities(new_entity_dcids,
+                                                       sc.PREDICATE_TYPE_OF)
+
+    if dcid2type:
+      logging.info("Importing %s of %s entities.", len(dcid2type),
+                   len(new_entity_dcids))
+      self.nodes.entities_with_types(dcid2type)
