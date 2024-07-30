@@ -263,6 +263,10 @@ class Nodes:
       self.entity_with_type(entity_dcid, entity_type)
 
   def entities_with_types(self, dcid2type: dict[str, str]):
+    """
+    Adds each dcid2type mapping to the list of entity with their types.
+    The full list will be inserted into the DB in the final stages of the import.
+    """
     for entity_dcid, entity_type in dcid2type.items():
       self.entity_with_type(entity_dcid, entity_type)
 
