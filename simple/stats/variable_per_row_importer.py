@@ -62,6 +62,7 @@ class VariablePerRowImporter(Importer):
       self._read_csv()
       self._map_columns()
       self._write_observations()
+      self._add_entity_nodes()
       self.reporter.report_success()
     except Exception as e:
       self.reporter.report_failure(str(e))
@@ -117,6 +118,8 @@ class VariablePerRowImporter(Importer):
       return
 
     # Get entity types
+    logging.info("Getting entity types from DC for %s entities.",
+                 len(new_entity_dcids))
     dcid2type: dict[str,
                     str] = dc.get_property_of_entities(new_entity_dcids,
                                                        sc.PREDICATE_TYPE_OF)

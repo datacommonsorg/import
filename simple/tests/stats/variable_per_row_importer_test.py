@@ -30,8 +30,9 @@ from stats.variable_per_row_importer import VariablePerRowImporter
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import write_observations
-from util.dc_client import get_property_of_entities
 from util.filehandler import LocalFileHandler
+
+from util import dc_client
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "variable_per_row_importer")
@@ -65,12 +66,15 @@ def _test_import(test: unittest.TestCase,
                 }
             }}))
 
-    get_property_of_entities = MagicMock(return_value={})
+    dc_client.get_property_of_entities = MagicMock(return_value={})
 
     VariablePerRowImporter(input_fh=input_fh,
                            db=db,
                            reporter=reporter,
                            nodes=nodes).do_import()
+
+    dc_client.get_property_of_entities.assert_called_once()
+
     db.commit_and_close()
 
     write_observations(db_path, output_path)
