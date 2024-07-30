@@ -281,7 +281,10 @@ async def _get_property_of_entities_chunk(client: AsyncClient,
   result_chunk: dict[str, str] = {}
   for entity_dcid, entity_data in response.get("data", {}).items():
     nodes = entity_data.get("arcs", {}).get(property_name, {}).get("nodes", [])
+    # Look for "value", then "dcid".
     values = [node.get("value") for node in nodes if node.get("value")]
+    if not values:
+      values = [node.get("dcid") for node in nodes if node.get("dcid")]
     if values:
       result_chunk[entity_dcid] = values[0]
 
