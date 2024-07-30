@@ -1,0 +1,23 @@
+{
+  "inputFiles": {
+    "variable_per_column.csv": {
+      "importType": "observations",
+      "format": "variablePerColumn",
+      "entityType": "Country",
+      "provenance": "Provenance1 Name"
+    },
+    "variable_per_row.csv": {
+      "importType": "observations",
+      "format": "variablePerRow",
+      "provenance": "Provenance1"
+    }
+  },
+  "sources": {
+    "Source1 Name": {
+      "url": "http://source1.com",
+      "provenances": {
+        "Provenance1 Name": "http://source1.com/provenance1"
+      }
+    }
+  }
+}

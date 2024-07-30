@@ -14,9 +14,9 @@
 
 import os
 import shutil
-import sqlite3
 import tempfile
 import unittest
+from unittest.mock import MagicMock
 
 import pandas as pd
 from stats.config import Config
@@ -30,6 +30,7 @@ from stats.variable_per_row_importer import VariablePerRowImporter
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import write_observations
+from util.dc_client import get_property_of_entities
 from util.filehandler import LocalFileHandler
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -63,6 +64,8 @@ def _test_import(test: unittest.TestCase,
                     "columnMappings": column_mappings
                 }
             }}))
+
+    get_property_of_entities = MagicMock(return_value={})
 
     VariablePerRowImporter(input_fh=input_fh,
                            db=db,

@@ -13,10 +13,10 @@
 # limitations under the License.
 
 import logging
-import random
 
 import pandas as pd
 from stats import constants
+from stats import schema_constants as sc
 from stats.data import Observation
 from stats.db import Db
 from stats.importer import Importer
@@ -141,24 +141,37 @@ class ObservationsImporter(Importer):
         self.input_file_name).id
 
   def _add_entity_nodes(self) -> None:
-    if not self.entity_type:
-      self.entity_type = self._resolve_entity_type()
-      if self.entity_type:
-        logging.info("Resolved entity type: %s", self.entity_type)
-    if not self.entity_type:
-      logging.warning(
-          "Could not resolve entity type. Entity triples will not be imported.")
-      return
-    self.nodes.entities_with_type(self.df.iloc[:, 0].tolist(), self.entity_type)
+    # Convert entity dcids to dict.
+    # Using dict instead of set to maintain insertion order which keeps results consistent for tests.
+    entity_dcids: dict[str, bool] = {
+        dcid: True for dcid in self.df.iloc[:, 0].tolist()
+    }
 
-  def _resolve_entity_type(self) -> str:
-    all_entity_dcids = self.df.iloc[:, 0].tolist()
-    sample_entity_dcids = random.sample(
-        all_entity_dcids,
-        min(len(all_entity_dcids), _SAMPLE_ENTITY_RESOLUTION_SIZE))
-    logging.info("Resolving entity type from sample entities: %s",
-                 sample_entity_dcids)
-    return dc.resolve_entity_type(sample_entity_dcids)
+    # Get entity nodes that are not already recorded.
+    new_entity_dcids = [
+        dcid for dcid in entity_dcids if dcid not in self.nodes.entities.keys()
+    ]
+
+    logging.info("Found %s total entities, of which %s are already imported.",
+                 len(entity_dcids),
+                 len(entity_dcids) - len(new_entity_dcids))
+
+    if not new_entity_dcids:
+      return
+
+    # Get entity types
+    dcid2type: dict[str,
+                    str] = dc.get_property_of_entities(new_entity_dcids,
+                                                       sc.PREDICATE_TYPE_OF)
+
+    if dcid2type:
+      logging.info("Importing %s of %s entities.", len(dcid2type),
+                   len(new_entity_dcids))
+      self.nodes.entities_with_types(dcid2type)
+    elif self.entity_type:
+      logging.info("Importing %s entities with type %s.", len(new_entity_dcids),
+                   self.entity_type)
+      self.nodes.entities_with_type(new_entity_dcids, self.entity_type)
 
   def _resolve_entities(self) -> None:
     df = self.df

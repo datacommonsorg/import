@@ -14,13 +14,12 @@
 
 import os
 import shutil
-import sqlite3
 import tempfile
 import unittest
+from unittest.mock import MagicMock
 
 import pandas as pd
 from stats.config import Config
-from stats.data import Observation
 from stats.db import create_db
 from stats.db import create_sqlite_config
 from stats.nodes import Nodes
@@ -31,6 +30,8 @@ from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import write_observations
 from util.filehandler import LocalFileHandler
+
+from util import dc_client
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "observations_importer")
@@ -67,6 +68,8 @@ def _test_import(test: unittest.TestCase,
                 }
             }
         }))
+
+    dc_client.get_property_of_entities = MagicMock(return_value={})
 
     ObservationsImporter(input_fh=input_fh,
                          db=db,
