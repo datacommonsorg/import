@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from dataclasses import dataclass
 from datetime import datetime
 from enum import auto
 from enum import Enum
@@ -131,6 +132,35 @@ SCHEMA_MCF_FILE_NAME = "schema.mcf"
 MCF_NODE_TYPES_ALLOWLIST = set([STATISTICAL_VARIABLE, STAT_VAR_GROUP])
 
 _NAMESPACE_DELIMITER = ':'
+
+
+@dataclass
+class DbIndex:
+  table_name: str
+  index_name: str
+  indexed_columns: list[str]
+
+  def sqlite_drop_index_statement(self) -> str:
+    return f"drop index if exists {self.index_name}"
+
+  def sqlite_create_index_statement(self) -> str:
+    return f"create index if not exists {self.index_name} on {self.table_name} ({', '.join(self.indexed_columns)})"
+
+  def mysql_drop_index_statement(self) -> str:
+    return f"alter table {self.table_name} drop index {self.index_name}"
+
+  def mysql_create_index_statement(self) -> str:
+    return f"alter table {self.table_name} add index {self.index_name} ({', '.join(self.indexed_columns)})"
+
+
+_DB_INDEXES: list[DbIndex] = [
+    DbIndex(table_name="observations",
+            index_name="observations_entity_variable",
+            indexed_columns=["entity", "variable"]),
+    DbIndex(table_name="triples",
+            index_name="triples_subject_id",
+            indexed_columns=["subject_id"])
+]
 
 
 class ImportStatus(Enum):
@@ -337,8 +367,21 @@ class SqliteDbEngine(DbEngine):
     logging.info("Connected to SQLite: %s", self.local_db_file_path)
 
     self.cursor = self.connection.cursor()
+    # Drop indexes first so inserts are faster.
+    self._drop_indexes()
     for statement in _INIT_STATEMENTS:
       self.cursor.execute(statement)
+
+  def _drop_indexes(self) -> None:
+    for index in _DB_INDEXES:
+      logging.info("Dropping index: %s", index.index_name)
+      self.cursor.execute(index.sqlite_drop_index_statement())
+
+  def _create_indexes(self) -> None:
+    for index in _DB_INDEXES:
+      logging.info("Creating index: %s", index.index_name)
+      self.cursor.execute(index.sqlite_create_index_statement())
+      logging.info("Index created: %s", index.index_name)
 
   def __str__(self) -> str:
     return f"{TYPE_SQLITE}: {self.db_file_path}"
@@ -362,6 +405,8 @@ class SqliteDbEngine(DbEngine):
       return self.cursor.execute(sql, parameters).fetchall()
 
   def commit_and_close(self):
+    # Create indexes before closing.
+    self._create_indexes()
     self.connection.commit()
     self.connection.close()
     # Copy file if local and actual DB file paths are different.
@@ -406,8 +451,24 @@ class CloudSqlDbEngine(DbEngine):
                  db_params[CLOUD_MY_SQL_INSTANCE], db_params[CLOUD_MY_SQL_DB])
     self.description = f"{TYPE_CLOUD_SQL}: {db_params[CLOUD_MY_SQL_INSTANCE]} ({db_params[CLOUD_MY_SQL_DB]})"
     self.cursor: Cursor = self.connection.cursor()
+    # Drop indexes first so inserts are faster.
+    self._drop_indexes()
     for statement in _INIT_STATEMENTS:
       self.cursor.execute(statement)
+
+  def _drop_indexes(self) -> None:
+    for index in _DB_INDEXES:
+      try:
+        logging.info("Dropping index: %s", index.index_name)
+        self.cursor.execute(index.mysql_drop_index_statement())
+      except:
+        logging.info("Index does not exist: %s", index.index_name)
+
+  def _create_indexes(self) -> None:
+    for index in _DB_INDEXES:
+      logging.info("Creating index: %s", index.index_name)
+      self.cursor.execute(index.mysql_create_index_statement())
+      logging.info("Index created: %s", index.index_name)
 
   def _maybe_create_database(connector: Connector,
                              db_params: dict[str, str]) -> None:
@@ -453,6 +514,8 @@ class CloudSqlDbEngine(DbEngine):
     return self.cursor.fetchall()
 
   def commit_and_close(self):
+    # Create indexes before closing.
+    self._create_indexes()
     self.cursor.close()
     self.connection.commit()
 

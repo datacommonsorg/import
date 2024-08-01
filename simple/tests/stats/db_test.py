@@ -96,6 +96,13 @@ class TestDb(unittest.TestCase):
           import_tuple,
           ("2023-01-01 00:00:00", "SUCCESS", '{"numVars": 1, "numObs": 2}'))
 
+      index_tuples = sqldb.execute(
+          "select name, tbl_name from sqlite_master where type = 'index'"
+      ).fetchall()
+      self.assertListEqual(index_tuples,
+                           [('observations_entity_variable', 'observations'),
+                            ('triples_subject_id', 'triples')])
+
   @freeze_time("2023-01-01")
   def test_main_dc_db(self):
     with tempfile.TemporaryDirectory() as temp_dir:
