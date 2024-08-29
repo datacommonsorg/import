@@ -89,50 +89,6 @@ function run_all_tests {
   run_py_test
 }
 
-function run_sample {
-  # Do not use Cloud SQL.
-  export USE_CLOUDSQL=false
-
-  python3 -m venv .env
-  source .env/bin/activate
-  
-  cd simple
-  pip3 install -r requirements.txt
-
-  echo "Deleting existing datacommons.db file."
-  rm -f sample/output/datacommons.db
-
-  echo "Running sample."
-  python3 -m stats.main --input_dir=sample/input --output_dir=sample/output --freeze_time
-
-  echo "Writing tables to CSVs."
-  mkdir -p sample/output/tables
-  sqlite3 -header -csv sample/output/datacommons.db "select * from observations;" > sample/output/tables/observations.csv
-  sqlite3 -header -csv sample/output/datacommons.db "select * from triples;" > sample/output/tables/triples.csv
-  sqlite3 -header -csv sample/output/datacommons.db "select * from imports;" > sample/output/tables/imports.csv
-
-  deactivate
-}
-
-function run_main_dc_sample {
-  python3 -m venv .env
-  source .env/bin/activate
-  
-  cd simple
-  pip3 install -r requirements.txt
-
-  echo "Running main dc sample."
-  python3 -m stats.main --mode=maindc --input_dir=sample/input --output_dir=sample/main_dc_output --freeze_time
-
-  deactivate
-}
-
-function run_all_samples {
-  run_sample
-  cd ..
-  run_main_dc_sample
-}
-
 function compile_protos {
   echo "Running protoc."
   protoc -I=./simple/proto/ --python_out=./simple/proto --mypy_out=./simple/proto ./simple/proto/*.proto
@@ -141,15 +97,12 @@ function compile_protos {
 function help {
   echo "Usage: $0 -afhlp"
   echo "-a              Run all tests"
-  echo "-as             Run all samples"
   echo "-f              Fix lint"
   echo "-g              Update goldens"
   echo "-h              This usage"
   echo "-l              Run lint test"
-  echo "-m              Run sample and generate main dc output"
   echo "-p              Run python tests"
   echo "--protoc        Compile protos"
-  echo "-s              Run sample and generate debug output"
   exit 1
 }
 
@@ -164,11 +117,6 @@ while [[ "$#" -gt 0 ]]; do
     -a)
         echo -e "### Running all tests"
         run_all_tests
-        shift 1
-        ;;
-    -as)
-        echo -e "### Running all samples"
-        run_all_samples
         shift 1
         ;;
     -f)
@@ -190,11 +138,6 @@ while [[ "$#" -gt 0 ]]; do
         run_lint_test
         shift 1
         ;;
-    -m)
-        echo -e "### Running main dc sample"
-        run_main_dc_sample
-        shift 1
-        ;;
     -p)
         echo -e "### Running python tests"
         run_py_test
@@ -203,11 +146,6 @@ while [[ "$#" -gt 0 ]]; do
     --protoc)
         echo -e "### Compiling protos"
         compile_protos
-        shift 1
-        ;;
-    -s)
-        echo -e "### Running sample"
-        run_sample
         shift 1
         ;;
     *)

@@ -1,6 +1,0 @@
-Node: E:Table->E0
-typeOf: dcs:StatVarObservation
-variableMeasured: C:Table->variable
-observationDate: C:Table->date
-observationAbout: C:Table->entity
-value: C:Table->value
