@@ -16,9 +16,11 @@ import unittest
 
 from stats.data import Event
 from stats.data import McfNode
+from stats.data import ObservationProperties
 from stats.data import Provenance
 from stats.data import StatVar
 from stats.data import StatVarGroup
+from stats.data import to_observation_properties
 from stats.data import Triple
 
 SV_ID1 = "sv_id1"
@@ -193,3 +195,9 @@ description: "sv desc"
 memberOf: svg1""".strip()
 
     self.assertEqual(node.to_mcf(), expected)
+
+  def test_observation_properties(self):
+    config = {"unit": "foo", "measurementMethod": "bar"}
+    obs_props = to_observation_properties(config)
+    self.assertEqual(
+        obs_props, ObservationProperties(unit="foo", measurement_method="bar"))

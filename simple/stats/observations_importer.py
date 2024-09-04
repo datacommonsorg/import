@@ -26,12 +26,7 @@ from util.filehandler import FileHandler
 
 from util import dc_client as dc
 
-# Number of entity IDs that will be sampled to resolved their entity type, if one is not specified by the user.
-# Note that the importer assumes that all entities in a given CSV are all of the same type.
-_SAMPLE_ENTITY_RESOLUTION_SIZE = 5
 
-
-# TODO: Add support for units.
 class ObservationsImporter(Importer):
   """Imports a single observations input file.
     """
@@ -61,7 +56,6 @@ class ObservationsImporter(Importer):
       self._sanitize_values()
       self._rename_columns()
       self._resolve_entities()
-      self._add_provenance_column()
       self._add_entity_nodes()
       self._write_observations()
       self.reporter.report_success()
@@ -115,30 +109,28 @@ class ObservationsImporter(Importer):
     # Convert all values to str first, otherwise it inserts ints as floats.
     observations_df = self.df.astype(str)
     observations_df = observations_df.melt(
-        id_vars=[
-            constants.COLUMN_DCID, constants.COLUMN_DATE,
-            constants.COLUMN_PROVENANCE
-        ],
+        id_vars=[constants.COLUMN_DCID, constants.COLUMN_DATE],
         var_name=constants.COLUMN_VARIABLE,
         value_name=constants.COLUMN_VALUE,
     )
 
-    # Reorder columns so they are in the same order as observations
-    observations_df = observations_df.reindex(columns=[
-        constants.COLUMN_DCID, constants.COLUMN_VARIABLE, constants.COLUMN_DATE,
-        constants.COLUMN_VALUE, constants.COLUMN_PROVENANCE
-    ])
+    provenance = self.nodes.provenance(self.input_file_name).id
+    obs_props = self.config.observation_properties(self.input_file_name)
 
     observations: list[Observation] = []
-    for row in observations_df.itertuples(index=False):
-      observation = Observation(*row)
+    for _, row in observations_df.iterrows():
+      observation = Observation(entity=row[constants.COLUMN_DCID],
+                                variable=row[constants.COLUMN_VARIABLE],
+                                date=row[constants.COLUMN_DATE],
+                                value=row[constants.COLUMN_VALUE],
+                                provenance=provenance,
+                                unit=obs_props.unit,
+                                scaling_factor=obs_props.scaling_factor,
+                                measurement_method=obs_props.measurement_method,
+                                observation_period=obs_props.observation_period)
       if observation.value and observation.value != "<NA>":
-        observations.append(Observation(*row))
+        observations.append(observation)
     self.db.insert_observations(observations, self.input_file_name)
-
-  def _add_provenance_column(self):
-    self.df[constants.COLUMN_PROVENANCE] = self.nodes.provenance(
-        self.input_file_name).id
 
   def _add_entity_nodes(self) -> None:
     # Convert entity dcids to dict.
