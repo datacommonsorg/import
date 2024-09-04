@@ -19,6 +19,7 @@ from stats.data import AggregationConfig
 from stats.data import AggregationMethod
 from stats.data import ImportType
 from stats.data import InputFileFormat
+from stats.data import ObservationProperties
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
@@ -301,3 +302,22 @@ class TestConfig(unittest.TestCase):
 
     config = Config({"inputFiles": {"foo.csv": {}}})
     self.assertListEqual(config.entity_columns("foo.csv"), [], "unspecified")
+
+  def test_observation_properties(self):
+    config = Config({})
+    self.assertEqual(config.observation_properties("foo.csv"),
+                     ObservationProperties(), "empty")
+
+    config = Config({
+        "inputFiles": {
+            "foo.csv": {
+                "observationProperties": {
+                    "unit": "foo",
+                    "observationPeriod": "bar"
+                }
+            }
+        }
+    })
+    self.assertEqual(
+        config.observation_properties("foo.csv"),
+        ObservationProperties(unit="foo", observation_period="bar"))

@@ -72,6 +72,10 @@ COLUMN_DATE = "date"
 COLUMN_VALUE = "value"
 COLUMN_PROVENANCE = "provenance"
 COLUMN_ENTITY = "entity"
+COLUMN_UNIT = "unit"
+COLUMN_SCALING_FACTOR = "scaling_factor"
+COLUMN_MEASUREMENT_METHOD = "measurement_method"
+COLUMN_OBSERVATION_PERIOD = "observation_period"
 
 # Debug CSV columns and values
 DEBUG_COLUMN_INPUT = "input"

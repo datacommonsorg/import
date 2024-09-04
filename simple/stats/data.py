@@ -19,6 +19,8 @@ from enum import StrEnum
 from typing import Self
 from urllib.parse import urlparse
 
+from dataclasses_json import dataclass_json
+from dataclasses_json import LetterCase
 from stats import schema_constants as sc
 
 _PREDICATE_TYPE_OF = "typeOf"
@@ -225,6 +227,23 @@ class Observation:
   date: str
   value: str
   provenance: str
+  unit: str = ""
+  scaling_factor: str = ""
+  measurement_method: str = ""
+  observation_period: str = ""
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class ObservationProperties:
+  unit: str = ""
+  scaling_factor: str = ""
+  measurement_method: str = ""
+  observation_period: str = ""
+
+
+def to_observation_properties(config_data: dict) -> ObservationProperties:
+  return ObservationProperties.from_dict(config_data)
 
 
 @dataclass

@@ -20,9 +20,11 @@ from stats.data import EntityType
 from stats.data import EventType
 from stats.data import ImportType
 from stats.data import InputFileFormat
+from stats.data import ObservationProperties
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
+from stats.data import to_observation_properties
 
 _INPUT_FILES_FIELD = "inputFiles"
 _IMPORT_TYPE_FIELD = "importType"
@@ -54,6 +56,7 @@ _ENTITY_COLUMNS = "entityColumns"
 _ENTITIES_FIELD = "entities"
 _GROUP_STAT_VARS_BY_PROPERTY = "groupStatVarsByProperty"
 _GENERATE_TOPICS = "generateTopics"
+_OBSERVATION_PROPERTIES = "observationProperties"
 
 
 class Config:
@@ -181,6 +184,11 @@ class Config:
   def generate_topics(self) -> bool:
     return self.data.get(_GENERATE_TOPICS) or False
 
+  def observation_properties(self,
+                             input_file_name: str) -> ObservationProperties:
+    return to_observation_properties(
+        self._input_file(input_file_name).get(_OBSERVATION_PROPERTIES, {}))
+
   def _input_file(self, input_file_name: str) -> dict:
     # Exact match.
     input_file_config = self._input_files_config.get(input_file_name, {})
@@ -204,7 +212,7 @@ class Config:
     return None
 
   def _input_file_pattern_to_regex(self, input_file_pattern: str) -> str:
-    """
+    r"""
     Transforms a string of the form "a*b.c" to the regex "a.*b\.c".
     """
     return input_file_pattern.replace(".", r"\.").replace("*", ".*")
