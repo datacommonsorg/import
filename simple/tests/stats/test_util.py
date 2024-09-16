@@ -19,6 +19,7 @@ import unittest
 
 import pandas as pd
 from stats.data import Observation
+from stats.data import OBSERVATION_FIELD_NAMES
 from stats.data import Triple
 
 # If $TEST_MODE is set to "write", the test will write the goldens.
@@ -59,8 +60,8 @@ def write_observations(db_path: str, output_path: str):
   """
   with sqlite3.connect(db_path) as db:
     rows = db.execute("select * from observations").fetchall()
-    observations = [Observation(*row) for row in rows]
-    pd.DataFrame(observations).to_csv(output_path, index=False)
+    pd.DataFrame(rows, columns=OBSERVATION_FIELD_NAMES).to_csv(output_path,
+                                                               index=False)
 
 
 def write_triples(db_path: str, output_path: str):

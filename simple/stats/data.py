@@ -15,11 +15,14 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from dataclasses import field
+from dataclasses import fields
 from enum import StrEnum
 from typing import Self
 from urllib.parse import urlparse
 
 from stats import schema_constants as sc
+from stats.util import base64_decode_and_gunzip_json
+from stats.util import gzip_and_base64_encode_json
 
 _PREDICATE_TYPE_OF = "typeOf"
 _PREDICATE_NAME = "name"
@@ -52,6 +55,8 @@ _MCF_PREDICATE_BLOCKLIST = set([_PREDICATE_INCLUDED_IN])
 
 _DCS_PREFIX = "dcs:"
 
+_NAMESPACE_DELIMITER = ':'
+
 
 @dataclass
 class Triple:
@@ -59,6 +64,10 @@ class Triple:
   predicate: str
   object_id: str = ""
   object_value: str = ""
+
+  def db_tuple(self):
+    return (_strip_namespace(self.subject_id), self.predicate,
+            _strip_namespace(self.object_id), self.object_value)
 
 
 @dataclass
@@ -225,6 +234,28 @@ class Observation:
   date: str
   value: str
   provenance: str
+  properties: dict[str, str] = field(default_factory=dict)
+
+  def __post_init__(self):
+    if not self.properties:
+      self.properties = {}
+    # Properties in the DB are stored as gzipped and base64 encoded strings.
+    # Convert it to json / dict so it is available as a dict in code.
+    elif isinstance(self.properties, str):
+      self.properties = base64_decode_and_gunzip_json(self.properties)
+
+  def properties_string(self) -> str:
+    if not self.properties:
+      return ""
+    return gzip_and_base64_encode_json(self.properties)
+
+  def db_tuple(self):
+    return (_strip_namespace(self.entity), _strip_namespace(self.variable),
+            self.date, self.value, _strip_namespace(self.provenance),
+            self.properties_string())
+
+
+OBSERVATION_FIELD_NAMES = list(map(lambda x: x.name, fields(Observation)))
 
 
 @dataclass
@@ -450,3 +481,7 @@ ParentSVG2ChildSpecializedNames = dict[str, SVGSpecializedNames]
 class StatVarHierarchyResult:
   svg_triples: list[Triple]
   svg_specialized_names: ParentSVG2ChildSpecializedNames
+
+
+def _strip_namespace(v: str) -> str:
+  return v[v.find(_NAMESPACE_DELIMITER) + 1:]

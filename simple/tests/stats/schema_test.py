@@ -12,30 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import os
-import shutil
-import sqlite3
 import tempfile
 import unittest
 from unittest import mock
 
-from freezegun import freeze_time
-import pandas as pd
 from parameterized import parameterized
 from stats import schema
 from stats import schema_constants as sc
-from stats.data import Observation
 from stats.data import Triple
 from stats.db import create_db
-from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
-from stats.db import get_cloud_sql_config_from_env
-from stats.db import get_sqlite_config_from_env
-from stats.db import ImportStatus
-from stats.db import to_observation_tuple
-from stats.db import to_triple_tuple
-from tests.stats.test_util import is_write_mode
 
 
 def _to_triples(dcid2name: dict[str, str]) -> list[Triple]:

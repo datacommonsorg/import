@@ -77,12 +77,13 @@ create table if not exists observations (
     variable varchar(255),
     date varchar(255),
     value varchar(255),
-    provenance varchar(255)
+    provenance varchar(255),
+    properties TEXT
 );
 """
 
 _DELETE_OBSERVATIONS_STATEMENT = "delete from observations"
-_INSERT_OBSERVATIONS_STATEMENT = "insert into observations values(?, ?, ?, ?, ?)"
+_INSERT_OBSERVATIONS_STATEMENT = "insert into observations values(?, ?, ?, ?, ?, ?)"
 
 _CREATE_KEY_VALUE_STORE_TABLE = """
 create table if not exists key_value_store (
@@ -130,8 +131,6 @@ OBSERVATIONS_TMCF_FILE_NAME = "observations.tmcf"
 SCHEMA_MCF_FILE_NAME = "schema.mcf"
 
 MCF_NODE_TYPES_ALLOWLIST = set([STATISTICAL_VARIABLE, STAT_VAR_GROUP])
-
-_NAMESPACE_DELIMITER = ':'
 
 
 @dataclass
@@ -220,8 +219,10 @@ class MainDcDb(Db):
   def insert_observations(self, observations: list[Observation],
                           input_file_name: str):
     df = pd.DataFrame(observations)
-    # Drop the provenance column. It is specified differently for main dc.
-    df = df.drop(columns=["provenance"])
+    # Drop the provenance and properties columns.
+    # Provenance is specified differently for main dc.
+    # TODO: Include obs properties in main DC output.
+    df = df.drop(columns=["provenance", "properties"])
     self.output_dir_fh.make_file(input_file_name).write_string(
         df.to_csv(index=False))
 
@@ -268,7 +269,7 @@ class SqlDb(Db):
     logging.info("Writing %s triples to [%s]", len(triples), self.engine)
     if triples:
       self.engine.executemany(_INSERT_TRIPLES_STATEMENT,
-                              [to_triple_tuple(triple) for triple in triples])
+                              [triple.db_tuple() for triple in triples])
 
   def insert_observations(self, observations: list[Observation],
                           input_file_name: str):
@@ -277,7 +278,7 @@ class SqlDb(Db):
     self.num_observations += len(observations)
     tuples = []
     for observation in observations:
-      tuples.append(to_observation_tuple(observation))
+      tuples.append(observation.db_tuple())
       self.variables.add(observation.variable)
 
     self.engine.executemany(_INSERT_OBSERVATIONS_STATEMENT, tuples)
@@ -319,21 +320,6 @@ def from_triple_tuple(tuple: tuple) -> Triple:
   return Triple(*tuple)
 
 
-def to_triple_tuple(triple: Triple):
-  return (_strip_namespace(triple.subject_id), triple.predicate,
-          _strip_namespace(triple.object_id), triple.object_value)
-
-
-def to_observation_tuple(observation: Observation):
-  return (_strip_namespace(observation.entity),
-          _strip_namespace(observation.variable), observation.date,
-          observation.value, _strip_namespace(observation.provenance))
-
-
-def _strip_namespace(v: str) -> str:
-  return v[v.find(_NAMESPACE_DELIMITER) + 1:]
-
-
 class DbEngine:
 
   def execute(self, sql: str, parameters=None):
@@ -347,6 +333,17 @@ class DbEngine:
 
   def commit_and_close(self):
     pass
+
+
+_PROPERTIES_COLUMN = "properties"
+
+_SQLITE_OBSERVATIONS_TABLE_INFO_STATEMENT = "pragma table_info(observations);"
+
+# The properties column was not part of the observations table originally.
+# This statement adds the column.
+# sqlite does not support an 'if not exists' statement for altering tables universally,
+# so the code needs to check for existence separately before applying this statement.
+_SQLITE_ALTER_OBSERVATIONS_TABLE_STATEMENT = "alter table observations add column properties TEXT;"
 
 
 class SqliteDbEngine(DbEngine):
@@ -371,6 +368,22 @@ class SqliteDbEngine(DbEngine):
     self._drop_indexes()
     for statement in _INIT_STATEMENTS:
       self.cursor.execute(statement)
+    # Apply schema updates.
+    self._schema_updates()
+
+  def _schema_updates(self) -> None:
+    """
+    Add any sqlite schema updates here.
+    Ensure that all schema updates always check if the update is necessary before applying it.
+    """
+    # Add properties column to observations table if it does not exist.
+    rows = self.fetch_all(_SQLITE_OBSERVATIONS_TABLE_INFO_STATEMENT)
+    existing_columns = set([columns[1] for columns in rows])
+    if _PROPERTIES_COLUMN not in existing_columns:
+      logging.info(
+          "'%s' column does not exist in the observations table. Altering table to add it.",
+          _PROPERTIES_COLUMN)
+      self.execute(_SQLITE_ALTER_OBSERVATIONS_TABLE_STATEMENT)
 
   def _drop_indexes(self) -> None:
     for index in _DB_INDEXES:
@@ -431,6 +444,10 @@ _CLOUD_MY_SQL_DB_CONNECT_PARAMS = _CLOUD_MY_SQL_INSTANCE_CONNECT_PARAMS + [
 # All parameters that must be specified for connecting to Cloud SQL.
 _CLOUD_MY_SQL_PARAMS = [CLOUD_MY_SQL_INSTANCE] + _CLOUD_MY_SQL_DB_CONNECT_PARAMS
 
+# The properties column was not part of the observations table originally.
+# This statement adds the column if one does not exist already.
+_CLOUD_MYSQL_ALTER_OBSERVATIONS_TABLE_STATEMENT = "alter table observations add column if not exists properties TEXT;"
+
 
 class CloudSqlDbEngine(DbEngine):
 
@@ -455,6 +472,16 @@ class CloudSqlDbEngine(DbEngine):
     self._drop_indexes()
     for statement in _INIT_STATEMENTS:
       self.cursor.execute(statement)
+    # Apply schema updates.
+    self._schema_updates()
+
+  def _schema_updates(self) -> None:
+    """
+    Add any cloud sql schema updates here.
+    Ensure that all schema updates always check if the update is necessary before applying it.
+    """
+    # Add properties column to observations table if it does not exist.
+    self.cursor.execute(_CLOUD_MYSQL_ALTER_OBSERVATIONS_TABLE_STATEMENT)
 
   def _drop_indexes(self) -> None:
     for index in _DB_INDEXES:

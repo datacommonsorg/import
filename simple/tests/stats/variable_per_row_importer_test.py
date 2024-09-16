@@ -29,6 +29,7 @@ from stats.reporter import ImportReporter
 from stats.variable_per_row_importer import VariablePerRowImporter
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
+from tests.stats.test_util import use_fake_gzip_time
 from tests.stats.test_util import write_observations
 from util.filehandler import LocalFileHandler
 
@@ -38,6 +39,8 @@ _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "variable_per_row_importer")
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
+
+use_fake_gzip_time()
 
 
 def _test_import(test: unittest.TestCase,
