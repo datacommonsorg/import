@@ -120,6 +120,14 @@ _INIT_STATEMENTS = [
     _DELETE_KEY_VALUE_STORE_STATEMENT
 ]
 
+# Schema update statements.
+
+# The properties column was not part of the observations table originally.
+# This statement adds the column.
+# Neither sqlite nor mysql support an 'if not exists' statement for altering tables universally,
+# so the code needs to check for existence separately before applying this statement.
+_ALTER_OBSERVATIONS_TABLE_STATEMENT = "alter table observations add column properties TEXT;"
+
 OBSERVATIONS_TMCF = """Node: E:Table->E0
 typeOf: dcs:StatVarObservation
 variableMeasured: C:Table->variable
@@ -335,15 +343,7 @@ class DbEngine:
     pass
 
 
-_PROPERTIES_COLUMN = "properties"
-
 _SQLITE_OBSERVATIONS_TABLE_INFO_STATEMENT = "pragma table_info(observations);"
-
-# The properties column was not part of the observations table originally.
-# This statement adds the column.
-# sqlite does not support an 'if not exists' statement for altering tables universally,
-# so the code needs to check for existence separately before applying this statement.
-_SQLITE_ALTER_OBSERVATIONS_TABLE_STATEMENT = "alter table observations add column properties TEXT;"
 
 
 class SqliteDbEngine(DbEngine):
@@ -379,11 +379,11 @@ class SqliteDbEngine(DbEngine):
     # Add properties column to observations table if it does not exist.
     rows = self.fetch_all(_SQLITE_OBSERVATIONS_TABLE_INFO_STATEMENT)
     existing_columns = set([columns[1] for columns in rows])
-    if _PROPERTIES_COLUMN not in existing_columns:
+    if "properties" not in existing_columns:
       logging.info(
-          "'%s' column does not exist in the observations table. Altering table to add it.",
-          _PROPERTIES_COLUMN)
-      self.execute(_SQLITE_ALTER_OBSERVATIONS_TABLE_STATEMENT)
+          "properties column does not exist in the observations table. Altering table to add it."
+      )
+      self.execute(_ALTER_OBSERVATIONS_TABLE_STATEMENT)
 
   def _drop_indexes(self) -> None:
     for index in _DB_INDEXES:
@@ -444,9 +444,11 @@ _CLOUD_MY_SQL_DB_CONNECT_PARAMS = _CLOUD_MY_SQL_INSTANCE_CONNECT_PARAMS + [
 # All parameters that must be specified for connecting to Cloud SQL.
 _CLOUD_MY_SQL_PARAMS = [CLOUD_MY_SQL_INSTANCE] + _CLOUD_MY_SQL_DB_CONNECT_PARAMS
 
-# The properties column was not part of the observations table originally.
-# This statement adds the column if one does not exist already.
-_CLOUD_MYSQL_ALTER_OBSERVATIONS_TABLE_STATEMENT = "alter table observations add column if not exists properties TEXT;"
+_CLOUD_MYSQL_PROPERTIES_COLUMN_EXISTS_STATEMENT = """
+  SELECT 1 
+    FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'observations' AND COLUMN_NAME = 'properties';
+"""
 
 
 class CloudSqlDbEngine(DbEngine):
@@ -481,7 +483,13 @@ class CloudSqlDbEngine(DbEngine):
     Ensure that all schema updates always check if the update is necessary before applying it.
     """
     # Add properties column to observations table if it does not exist.
-    self.cursor.execute(_CLOUD_MYSQL_ALTER_OBSERVATIONS_TABLE_STATEMENT)
+    rows = self.fetch_all(_CLOUD_MYSQL_PROPERTIES_COLUMN_EXISTS_STATEMENT)
+    properties_column_exists = rows is not None and len(rows) > 0
+    if not properties_column_exists:
+      logging.info(
+          "properties column does not exist in the observations table. Altering table to add it."
+      )
+      self.execute(_ALTER_OBSERVATIONS_TABLE_STATEMENT)
 
   def _drop_indexes(self) -> None:
     for index in _DB_INDEXES:
