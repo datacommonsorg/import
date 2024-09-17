@@ -43,10 +43,7 @@ _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 use_fake_gzip_time()
 
 
-def _test_import(test: unittest.TestCase,
-                 test_name: str,
-                 entity_type: str = "__DUMMY__",
-                 ignore_columns: list[str] = []):
+def _test_import(test: unittest.TestCase, test_name: str):
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:

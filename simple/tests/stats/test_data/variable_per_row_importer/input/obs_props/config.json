@@ -1,0 +1,11 @@
+{
+  "inputFiles": {
+    "input.csv": {
+      "format": "variablePerRow",
+      "observationProperties": {
+        "unit": "USD",
+        "observationPeriod": "P1Y"
+      }
+    }
+  }
+}

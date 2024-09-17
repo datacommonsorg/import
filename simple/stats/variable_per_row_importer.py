@@ -90,6 +90,8 @@ class VariablePerRowImporter(Importer):
 
   def _write_observations(self) -> None:
     provenance = self.nodes.provenance(self.input_file_name).id
+    obs_props = self.config.observation_properties(self.input_file_name)
+
     observations: list[Observation] = []
     for row in self.reader:
       entity_dcid = row[self.column_mappings[constants.COLUMN_ENTITY]]
@@ -98,7 +100,8 @@ class VariablePerRowImporter(Importer):
           variable=row[self.column_mappings[constants.COLUMN_VARIABLE]],
           date=row[self.column_mappings[constants.COLUMN_DATE]],
           value=row[self.column_mappings[constants.COLUMN_VALUE]],
-          provenance=provenance)
+          provenance=provenance,
+          properties=obs_props)
       observations.append(observation)
       self.entity_dcids[entity_dcid] = True
     self.db.insert_observations(observations, self.input_file_name)
