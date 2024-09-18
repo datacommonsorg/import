@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import os
 import shutil
 import tempfile
@@ -29,6 +30,7 @@ from stats.reporter import ImportReporter
 from stats.variable_per_row_importer import VariablePerRowImporter
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
+from tests.stats.test_util import use_fake_gzip_time
 from tests.stats.test_util import write_observations
 from util.filehandler import LocalFileHandler
 
@@ -39,32 +41,34 @@ _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
+use_fake_gzip_time()
 
-def _test_import(test: unittest.TestCase,
-                 test_name: str,
-                 column_mappings: dict[str, str] = {}):
+
+def _test_import(test: unittest.TestCase, test_name: str):
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
-    input_file = f"{test_name}.csv"
-    input_path = os.path.join(_INPUT_DIR, input_file)
+    input_dir = os.path.join(_INPUT_DIR, test_name)
+    expected_dir = os.path.join(_EXPECTED_DIR, test_name)
+
+    input_path = os.path.join(input_dir, "input.csv")
+    config_path = os.path.join(input_dir, "config.json")
     db_path = os.path.join(temp_dir, f"{test_name}.db")
 
     output_path = os.path.join(temp_dir, f"{test_name}.db.csv")
     expected_path = os.path.join(_EXPECTED_DIR, f"{test_name}.db.csv")
+    output_path = os.path.join(temp_dir, "observations.db.csv")
+    expected_path = os.path.join(expected_dir, "observations.db.csv")
 
     input_fh = LocalFileHandler(input_path)
+
+    with open(config_path) as config_file:
+      config = Config(json.load(config_file))
 
     db = create_db(create_sqlite_config(db_path))
     report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))
     reporter = FileImportReporter(input_path, ImportReporter(report_fh))
-    nodes = Nodes(
-        Config(
-            {"inputFiles": {
-                input_file: {
-                    "columnMappings": column_mappings
-                }
-            }}))
+    nodes = Nodes(config)
 
     dc_client.get_property_of_entities = MagicMock(return_value={})
 
@@ -92,12 +96,10 @@ class TestVariablePerRowImporter(unittest.TestCase):
     _test_import(self, "default_column_names")
 
   def test_custom_column_names(self):
-    _test_import(self,
-                 "custom_column_names",
-                 column_mappings={
-                     "variable": "Observed Variable",
-                     "entity": "Observed Location"
-                 })
+    _test_import(self, "custom_column_names")
 
   def test_namespace_prefixes(self):
     _test_import(self, "namespace_prefixes")
+
+  def test_obs_props(self):
+    _test_import(self, "obs_props")

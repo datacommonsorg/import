@@ -1,0 +1,11 @@
+{
+  "inputFiles": {
+    "input.csv": {
+      "format": "variablePerRow",
+      "columnMappings": {
+        "variable": "Observed Variable",
+        "entity": "Observed Location"
+      }
+    }
+  }
+}

@@ -54,6 +54,7 @@ _ENTITY_COLUMNS = "entityColumns"
 _ENTITIES_FIELD = "entities"
 _GROUP_STAT_VARS_BY_PROPERTY = "groupStatVarsByProperty"
 _GENERATE_TOPICS = "generateTopics"
+_OBSERVATION_PROPERTIES = "observationProperties"
 
 
 class Config:
@@ -163,6 +164,9 @@ class Config:
 
   def entity_columns(self, input_file_name: str) -> list[str]:
     return self._input_file(input_file_name).get(_ENTITY_COLUMNS, [])
+
+  def observation_properties(self, input_file_name: str) -> dict[str, str]:
+    return self._input_file(input_file_name).get(_OBSERVATION_PROPERTIES, {})
 
   def database(self) -> dict:
     return self.data.get(_DATABASE_FIELD)

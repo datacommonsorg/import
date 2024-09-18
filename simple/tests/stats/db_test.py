@@ -28,8 +28,6 @@ from stats.db import create_sqlite_config
 from stats.db import get_cloud_sql_config_from_env
 from stats.db import get_sqlite_config_from_env
 from stats.db import ImportStatus
-from stats.db import to_observation_tuple
-from stats.db import to_triple_tuple
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 
@@ -47,7 +45,8 @@ _TRIPLES = [
 
 _OBSERVATIONS = [
     Observation("e1", "v1", "2023", "123", "p1"),
-    Observation("e2", "v1", "2023", "456", "p1")
+    Observation("e2", "v1", "2023", "456", "p1"),
+    Observation("e3", "v1", "2023", "789", "p1", {"prop1": "val1"})
 ]
 
 _KEY_VALUE = ("k1", "v1")
@@ -79,13 +78,11 @@ class TestDb(unittest.TestCase):
       sqldb = sqlite3.connect(db_file_path)
 
       triples = sqldb.execute("select * from triples").fetchall()
-      self.assertListEqual(triples,
-                           list(map(lambda x: to_triple_tuple(x), _TRIPLES)))
+      self.assertListEqual(triples, list(map(lambda x: x.db_tuple(), _TRIPLES)))
 
       observations = sqldb.execute("select * from observations").fetchall()
-      self.assertListEqual(
-          observations,
-          list(map(lambda x: to_observation_tuple(x), _OBSERVATIONS)))
+      self.assertListEqual(observations,
+                           list(map(lambda x: x.db_tuple(), _OBSERVATIONS)))
 
       key_value_tuple = sqldb.execute(
           "select * from key_value_store").fetchone()
@@ -94,7 +91,7 @@ class TestDb(unittest.TestCase):
       import_tuple = sqldb.execute("select * from imports").fetchone()
       self.assertTupleEqual(
           import_tuple,
-          ("2023-01-01 00:00:00", "SUCCESS", '{"numVars": 1, "numObs": 2}'))
+          ("2023-01-01 00:00:00", "SUCCESS", '{"numVars": 1, "numObs": 3}'))
 
       index_tuples = sqldb.execute(
           "select name, tbl_name from sqlite_master where type = 'index'"

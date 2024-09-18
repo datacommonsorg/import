@@ -21,8 +21,8 @@ import unittest
 from parameterized import parameterized
 from proto.cache_data_pb2 import StatVarGroups
 from stats.cache import _generate_svg_cache_internal
-from stats.cache import base64_decode_and_gunzip
-from stats.cache import gzip_and_base64_encode
+from stats.util import base64_decode_and_gunzip
+from stats.util import gzip_and_base64_encode
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import read_triples_csv

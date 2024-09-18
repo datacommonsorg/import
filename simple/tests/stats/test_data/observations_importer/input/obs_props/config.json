@@ -1,0 +1,11 @@
+{
+  "inputFiles": {
+    "input.csv": {
+      "entityType": "Dummy",
+      "observationProperties": {
+        "unit": "USD",
+        "observationPeriod": "P1Y"
+      }
+    }
+  }
+}
