@@ -1,6 +1,6 @@
-entity,variable,date,value,provenance,properties
-country/USA,Crime_Event2_Count,2023-11-08,2,c/p/1,
-country/BRA,Crime_Event2_Count,2023-11-08,2,c/p/1,
-country/CHN,Crime_Event2_Count,2023-11-08,1,c/p/1,
-country/CHN,Crime_Event2_Count,2023-09-17,1,c/p/1,
-country/USA,Crime_Event2_Count,2023-08-02,1,c/p/1,
+entity,variable,date,value,provenance,unit,scaling_factor,measurement_method,observation_period,properties
+country/USA,Crime_Event2_Count,2023-11-08,2,c/p/1,,,,,
+country/BRA,Crime_Event2_Count,2023-11-08,2,c/p/1,,,,,
+country/CHN,Crime_Event2_Count,2023-11-08,1,c/p/1,,,,,
+country/CHN,Crime_Event2_Count,2023-09-17,1,c/p/1,,,,,
+country/USA,Crime_Event2_Count,2023-08-02,1,c/p/1,,,,,

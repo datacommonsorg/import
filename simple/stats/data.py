@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from dataclasses import field
 from dataclasses import fields
 from enum import StrEnum
+import json
 from typing import Self
 from urllib.parse import urlparse
 
@@ -234,25 +235,45 @@ class Observation:
   date: str
   value: str
   provenance: str
+  unit: str = ""
+  scaling_factor: str = ""
+  measurement_method: str = ""
+  observation_period: str = ""
   properties: dict[str, str] = field(default_factory=dict)
 
   def __post_init__(self):
     if not self.properties:
       self.properties = {}
-    # Properties in the DB are stored as gzipped and base64 encoded strings.
-    # Convert it to json / dict so it is available as a dict in code.
+    # Properties in the DB are stored as stringified json.
+    # Load it as a dict in code.
     elif isinstance(self.properties, str):
-      self.properties = base64_decode_and_gunzip_json(self.properties)
+      self.properties = json.loads(self.properties)
 
-  def properties_string(self) -> str:
-    if not self.properties:
-      return ""
-    return gzip_and_base64_encode_json(self.properties)
+    self.unit = self.unit or self.properties.get(sc.PREDICATE_UNIT, "")
+    self.scaling_factor = self.scaling_factor or self.properties.get(
+        sc.PREDICATE_SCALING_FACTOR, "")
+    self.measurement_method = self.measurement_method or self.properties.get(
+        sc.PREDICATE_MEASUREMENT_METHOD, "")
+    self.observation_period = self.observation_period or self.properties.get(
+        sc.PREDICATE_OBSERVATION_PERIOD, "")
+    self.properties = self._custom_properties()
+
+  def _custom_properties(self) -> dict[str, str]:
+    all_properties = self.properties or {}
+    custom_properties = {
+        p: v
+        for p, v in all_properties.items()
+        if p not in sc.STANDARD_OBSERVATION_PROPERTIES
+    }
+    return custom_properties
 
   def db_tuple(self):
     return (_strip_namespace(self.entity), _strip_namespace(self.variable),
             self.date, self.value, _strip_namespace(self.provenance),
-            self.properties_string())
+            _strip_namespace(self.unit), self.scaling_factor,
+            _strip_namespace(self.measurement_method),
+            _strip_namespace(self.observation_period),
+            json.dumps(self.properties) if self.properties else "")
 
 
 OBSERVATION_FIELD_NAMES = list(map(lambda x: x.name, fields(Observation)))

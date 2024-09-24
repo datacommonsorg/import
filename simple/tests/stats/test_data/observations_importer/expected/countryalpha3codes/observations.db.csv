@@ -1,7 +1,7 @@
-entity,variable,date,value,provenance,properties
-country/BRA,var1,2023,0.19,c/p/default,
-country/JPN,var1,2023,0.21,c/p/default,
-country/CHN,var1,2022,-123.456,c/p/default,
-country/BRA,var2,2023,6,c/p/default,
-country/JPN,var2,2023,56,c/p/default,
-country/USA,var2,2023,66,c/p/default,
+entity,variable,date,value,provenance,unit,scaling_factor,measurement_method,observation_period,properties
+country/BRA,var1,2023,0.19,c/p/default,,,,,
+country/JPN,var1,2023,0.21,c/p/default,,,,,
+country/CHN,var1,2022,-123.456,c/p/default,,,,,
+country/BRA,var2,2023,6,c/p/default,,,,,
+country/JPN,var2,2023,56,c/p/default,,,,,
+country/USA,var2,2023,66,c/p/default,,,,,

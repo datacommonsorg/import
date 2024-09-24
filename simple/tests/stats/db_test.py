@@ -46,7 +46,7 @@ _TRIPLES = [
 _OBSERVATIONS = [
     Observation("e1", "v1", "2023", "123", "p1"),
     Observation("e2", "v1", "2023", "456", "p1"),
-    Observation("e3", "v1", "2023", "789", "p1", {"prop1": "val1"})
+    Observation("e3", "v1", "2023", "789", "p1", properties={"prop1": "val1"})
 ]
 
 _KEY_VALUE = ("k1", "v1")
