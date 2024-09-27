@@ -59,6 +59,11 @@ ENV_SQLITE_PATH = "SQLITE_PATH"
 
 MAIN_DC_OUTPUT_DIR = "mainDcOutputDir"
 
+_OBSERVATION_PROPERTY_COLUMNS = [
+    "unit", "scaling_factor", "measurement_method", "observation_period",
+    "properties"
+]
+
 _CREATE_TRIPLES_TABLE = """
 create table if not exists triples (
     subject_id varchar(255),
@@ -240,10 +245,7 @@ class MainDcDb(Db):
     # Drop the provenance and properties columns.
     # Provenance is specified differently for main dc.
     # TODO: Include obs properties in main DC output.
-    df = df.drop(columns=[
-        "provenance", "unit", "scaling_factor", "measurement_method",
-        "observation_period", "properties"
-    ])
+    df = df.drop(columns=["provenance", "properties"])
     self.output_dir_fh.make_file(input_file_name).write_string(
         df.to_csv(index=False))
 
@@ -394,7 +396,7 @@ class SqliteDbEngine(DbEngine):
     existing_columns = set([columns[1] for columns in rows])
     if "properties" not in existing_columns:
       logging.info(
-          "properties column does not exist in the observations table. Altering table to add all property columns."
+          f"properties column does not exist in the observations table. Altering table to the following property columns: {', '.join(_OBSERVATION_PROPERTY_COLUMNS)}"
       )
       for statement in _ALTER_OBSERVATIONS_TABLE_STATEMENTS:
         self.cursor.execute(statement)
@@ -501,7 +503,7 @@ class CloudSqlDbEngine(DbEngine):
     properties_column_exists = rows is not None and len(rows) > 0
     if not properties_column_exists:
       logging.info(
-          "properties column does not exist in the observations table. Altering table to add all property columns."
+          f"properties column does not exist in the observations table. Altering table to the following property columns: {', '.join(_OBSERVATION_PROPERTY_COLUMNS)}"
       )
       for statement in _ALTER_OBSERVATIONS_TABLE_STATEMENTS:
         self.cursor.execute(statement)

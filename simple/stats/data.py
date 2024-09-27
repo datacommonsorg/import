@@ -11,11 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""This file includes data model classes used across the simple importer."""
 
 from collections import defaultdict
 from dataclasses import dataclass
 from dataclasses import field
 from dataclasses import fields
+from dataclasses import is_dataclass
 from enum import StrEnum
 import json
 from typing import Self
@@ -229,54 +231,61 @@ class Source:
 
 
 @dataclass
+class ObservationProperties:
+  unit: str = ""
+  scaling_factor: str = ""
+  measurement_method: str = ""
+  observation_period: str = ""
+  # All custom properties other than the standard ones above go in this field.
+  properties: dict[str, str] = field(default_factory=dict)
+
+  @classmethod
+  def new(cls: Self, all_properties: dict[str, str] = {}) -> Self:
+    unit = all_properties.get(sc.PREDICATE_UNIT, "")
+    scaling_factor = all_properties.get(sc.PREDICATE_SCALING_FACTOR, "")
+    measurement_method = all_properties.get(sc.PREDICATE_MEASUREMENT_METHOD, "")
+    observation_period = all_properties.get(sc.PREDICATE_OBSERVATION_PERIOD, "")
+    custom_properties = {
+        p: v
+        for p, v in all_properties.items()
+        if p not in sc.STANDARD_OBSERVATION_PROPERTIES
+    }
+    return cls(unit, scaling_factor, measurement_method, observation_period,
+               custom_properties)
+
+
+@dataclass
 class Observation:
   entity: str
   variable: str
   date: str
   value: str
   provenance: str
-  unit: str = ""
-  scaling_factor: str = ""
-  measurement_method: str = ""
-  observation_period: str = ""
-  properties: dict[str, str] = field(default_factory=dict)
-
-  def __post_init__(self):
-    if not self.properties:
-      self.properties = {}
-    # Properties in the DB are stored as stringified json.
-    # Load it as a dict in code.
-    elif isinstance(self.properties, str):
-      self.properties = json.loads(self.properties)
-
-    self.unit = self.unit or self.properties.get(sc.PREDICATE_UNIT, "")
-    self.scaling_factor = self.scaling_factor or self.properties.get(
-        sc.PREDICATE_SCALING_FACTOR, "")
-    self.measurement_method = self.measurement_method or self.properties.get(
-        sc.PREDICATE_MEASUREMENT_METHOD, "")
-    self.observation_period = self.observation_period or self.properties.get(
-        sc.PREDICATE_OBSERVATION_PERIOD, "")
-    self.properties = self._custom_properties()
-
-  def _custom_properties(self) -> dict[str, str]:
-    all_properties = self.properties or {}
-    custom_properties = {
-        p: v
-        for p, v in all_properties.items()
-        if p not in sc.STANDARD_OBSERVATION_PROPERTIES
-    }
-    return custom_properties
+  properties: ObservationProperties = field(
+      default_factory=ObservationProperties.new)
 
   def db_tuple(self):
     return (_strip_namespace(self.entity), _strip_namespace(self.variable),
             self.date, self.value, _strip_namespace(self.provenance),
-            _strip_namespace(self.unit), self.scaling_factor,
-            _strip_namespace(self.measurement_method),
-            _strip_namespace(self.observation_period),
-            json.dumps(self.properties) if self.properties else "")
+            _strip_namespace(self.properties.unit),
+            self.properties.scaling_factor,
+            _strip_namespace(self.properties.measurement_method),
+            _strip_namespace(self.properties.observation_period),
+            json.dumps(self.properties.properties)
+            if self.properties.properties else "")
 
 
-OBSERVATION_FIELD_NAMES = list(map(lambda x: x.name, fields(Observation)))
+def _get_flattened_dataclass_field_names(cls) -> list[str]:
+  field_names: list[str] = []
+  for field in fields(cls):
+    if is_dataclass(field.type):
+      field_names.extend(_get_flattened_dataclass_field_names(field.type))
+    else:
+      field_names.append(field.name)
+  return field_names
+
+
+OBSERVATION_FIELD_NAMES = _get_flattened_dataclass_field_names(Observation)
 
 
 @dataclass
