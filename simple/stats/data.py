@@ -276,6 +276,10 @@ class Observation:
 
 
 def _get_flattened_dataclass_field_names(cls) -> list[str]:
+  """Flattens the field names from the specified class and any of it's nested member classes.
+  In practice, this is used to flatten the fields from the Observation and ObservationProperties classes
+  which is used to populate test CSVs.
+  """
   field_names: list[str] = []
   for field in fields(cls):
     if is_dataclass(field.type):
