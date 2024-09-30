@@ -1,7 +1,7 @@
-entity,variable,date,value,provenance,properties
-country/BRA,var1,2023,0.19,c/p/default,H4sIAAAAAAAC/6tWKs3LLFGyUlAKDXZR0lFQyk8qTi0qSyzJzM8LSC3KzE8ByQUYRirVAgAA6g2KKwAAAA==
-country/JPN,var1,2023,0.21,c/p/default,H4sIAAAAAAAC/6tWKs3LLFGyUlAKDXZR0lFQyk8qTi0qSyzJzM8LSC3KzE8ByQUYRirVAgAA6g2KKwAAAA==
-country/CHN,var1,2022,-123.456,c/p/default,H4sIAAAAAAAC/6tWKs3LLFGyUlAKDXZR0lFQyk8qTi0qSyzJzM8LSC3KzE8ByQUYRirVAgAA6g2KKwAAAA==
-country/BRA,var2,2023,6,c/p/default,H4sIAAAAAAAC/6tWKs3LLFGyUlAKDXZR0lFQyk8qTi0qSyzJzM8LSC3KzE8ByQUYRirVAgAA6g2KKwAAAA==
-country/JPN,var2,2023,56,c/p/default,H4sIAAAAAAAC/6tWKs3LLFGyUlAKDXZR0lFQyk8qTi0qSyzJzM8LSC3KzE8ByQUYRirVAgAA6g2KKwAAAA==
-country/USA,var2,2023,66,c/p/default,H4sIAAAAAAAC/6tWKs3LLFGyUlAKDXZR0lFQyk8qTi0qSyzJzM8LSC3KzE8ByQUYRirVAgAA6g2KKwAAAA==
+entity,variable,date,value,provenance,unit,scaling_factor,measurement_method,observation_period,properties
+country/BRA,var1,2023,0.19,c/p/default,USD,,,P1Y,"{""customProperty1"": ""customValue1""}"
+country/JPN,var1,2023,0.21,c/p/default,USD,,,P1Y,"{""customProperty1"": ""customValue1""}"
+country/CHN,var1,2022,-123.456,c/p/default,USD,,,P1Y,"{""customProperty1"": ""customValue1""}"
+country/BRA,var2,2023,6,c/p/default,USD,,,P1Y,"{""customProperty1"": ""customValue1""}"
+country/JPN,var2,2023,56,c/p/default,USD,,,P1Y,"{""customProperty1"": ""customValue1""}"
+country/USA,var2,2023,66,c/p/default,USD,,,P1Y,"{""customProperty1"": ""customValue1""}"

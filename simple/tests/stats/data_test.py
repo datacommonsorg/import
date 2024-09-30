@@ -14,8 +14,10 @@
 
 import unittest
 
+from stats.data import _get_flattened_dataclass_field_names
 from stats.data import Event
 from stats.data import McfNode
+from stats.data import Observation
 from stats.data import Provenance
 from stats.data import StatVar
 from stats.data import StatVarGroup
@@ -193,3 +195,12 @@ description: "sv desc"
 memberOf: svg1""".strip()
 
     self.assertEqual(node.to_mcf(), expected)
+
+  def test_get_flattened_dataclass_field_names(self):
+    expected = [
+        "entity", "variable", "date", "value", "provenance", "unit",
+        "scaling_factor", "measurement_method", "observation_period",
+        "properties"
+    ]
+    self.assertListEqual(_get_flattened_dataclass_field_names(Observation),
+                         expected)

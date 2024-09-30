@@ -21,6 +21,7 @@ from unittest import mock
 
 from freezegun import freeze_time
 from stats.data import Observation
+from stats.data import ObservationProperties
 from stats.data import Triple
 from stats.db import create_db
 from stats.db import create_main_dc_config
@@ -46,7 +47,15 @@ _TRIPLES = [
 _OBSERVATIONS = [
     Observation("e1", "v1", "2023", "123", "p1"),
     Observation("e2", "v1", "2023", "456", "p1"),
-    Observation("e3", "v1", "2023", "789", "p1", {"prop1": "val1"})
+    Observation("e3",
+                "v1",
+                "2023",
+                "789",
+                "p1",
+                properties=ObservationProperties.new({
+                    "unit": "USD",
+                    "prop1": "val1"
+                }))
 ]
 
 _KEY_VALUE = ("k1", "v1")

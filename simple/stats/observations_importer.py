@@ -18,6 +18,7 @@ import pandas as pd
 from stats import constants
 from stats import schema_constants as sc
 from stats.data import Observation
+from stats.data import ObservationProperties
 from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
@@ -115,7 +116,8 @@ class ObservationsImporter(Importer):
     )
 
     provenance = self.nodes.provenance(self.input_file_name).id
-    obs_props = self.config.observation_properties(self.input_file_name)
+    obs_props = ObservationProperties.new(
+        self.config.observation_properties(self.input_file_name))
 
     observations: list[Observation] = []
     for _, row in observations_df.iterrows():

@@ -59,6 +59,11 @@ ENV_SQLITE_PATH = "SQLITE_PATH"
 
 MAIN_DC_OUTPUT_DIR = "mainDcOutputDir"
 
+_OBSERVATION_PROPERTY_COLUMNS = [
+    "unit", "scaling_factor", "measurement_method", "observation_period",
+    "properties"
+]
+
 _CREATE_TRIPLES_TABLE = """
 create table if not exists triples (
     subject_id varchar(255),
@@ -78,12 +83,16 @@ create table if not exists observations (
     date varchar(255),
     value varchar(255),
     provenance varchar(255),
+    unit varchar(255),
+    scaling_factor varchar(255),
+    measurement_method varchar(255),
+    observation_period varchar(255),
     properties TEXT
 );
 """
 
 _DELETE_OBSERVATIONS_STATEMENT = "delete from observations"
-_INSERT_OBSERVATIONS_STATEMENT = "insert into observations values(?, ?, ?, ?, ?, ?)"
+_INSERT_OBSERVATIONS_STATEMENT = "insert into observations values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 _CREATE_KEY_VALUE_STORE_TABLE = """
 create table if not exists key_value_store (
@@ -122,11 +131,17 @@ _INIT_STATEMENTS = [
 
 # Schema update statements.
 
-# The properties column was not part of the observations table originally.
-# This statement adds the column.
+# Various property columns not part of the observations table originally.
+# These statements add those columns.
 # Neither sqlite nor mysql support an 'if not exists' statement for altering tables universally,
-# so the code needs to check for existence separately before applying this statement.
-_ALTER_OBSERVATIONS_TABLE_STATEMENT = "alter table observations add column properties TEXT;"
+# so the code needs to check for existence separately before applying these statements.
+_ALTER_OBSERVATIONS_TABLE_STATEMENTS = [
+    "alter table observations add column unit varchar(255);",
+    "alter table observations add column scaling_factor varchar(255);",
+    "alter table observations add column measurement_method varchar(255);",
+    "alter table observations add column observation_period varchar(255);",
+    "alter table observations add column properties text;"
+]
 
 OBSERVATIONS_TMCF = """Node: E:Table->E0
 typeOf: dcs:StatVarObservation
@@ -376,14 +391,15 @@ class SqliteDbEngine(DbEngine):
     Add any sqlite schema updates here.
     Ensure that all schema updates always check if the update is necessary before applying it.
     """
-    # Add properties column to observations table if it does not exist.
+    # Add property columns to observations table if it does not exist.
     rows = self.fetch_all(_SQLITE_OBSERVATIONS_TABLE_INFO_STATEMENT)
     existing_columns = set([columns[1] for columns in rows])
     if "properties" not in existing_columns:
       logging.info(
-          "properties column does not exist in the observations table. Altering table to add it."
+          f"properties column does not exist in the observations table. Altering table to the following property columns: {', '.join(_OBSERVATION_PROPERTY_COLUMNS)}"
       )
-      self.execute(_ALTER_OBSERVATIONS_TABLE_STATEMENT)
+      for statement in _ALTER_OBSERVATIONS_TABLE_STATEMENTS:
+        self.cursor.execute(statement)
 
   def _drop_indexes(self) -> None:
     for index in _DB_INDEXES:
@@ -487,9 +503,10 @@ class CloudSqlDbEngine(DbEngine):
     properties_column_exists = rows is not None and len(rows) > 0
     if not properties_column_exists:
       logging.info(
-          "properties column does not exist in the observations table. Altering table to add it."
+          f"properties column does not exist in the observations table. Altering table to the following property columns: {', '.join(_OBSERVATION_PROPERTY_COLUMNS)}"
       )
-      self.execute(_ALTER_OBSERVATIONS_TABLE_STATEMENT)
+      for statement in _ALTER_OBSERVATIONS_TABLE_STATEMENTS:
+        self.cursor.execute(statement)
 
   def _drop_indexes(self) -> None:
     for index in _DB_INDEXES:
