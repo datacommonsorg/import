@@ -9,7 +9,7 @@ Options:
   -c <file>       Json config file for stats importer
   -i <dir>        Input directory to process
   -o <dir>        Output folder for stats importer. Default: $OUTPUT_DIR
-  -m <customdc|maindc> Mode of operation for simple importer. Default: $MODE
+  -m <customdc|schemaupdate|maindc> Mode of operation for simple importer. Default: $MODE
   -k <api-key>    DataCommons API Key
   -j <jar>        DC Import java jar file.
                     Download latest from https://github.com/datacommonsorg/import/releases/

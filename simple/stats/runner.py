@@ -48,6 +48,7 @@ from util.filehandler import FileHandler
 
 class RunMode(StrEnum):
   CUSTOM_DC = "customdc"
+  SCHEMA_UPDATE = "schemaupdate"
   MAIN_DC = "maindc"
 
 
@@ -137,25 +138,14 @@ class Runner:
 
   def run(self):
     try:
-      # Run all data imports.
-      self._run_imports()
+      if self.mode == RunMode.SCHEMA_UPDATE:
+        logging.info("Skipping imports because run mode is schema update.")
 
-      # Generate triples.
-      triples = self.nodes.triples()
-      # Write triples to DB.
-      self.db.insert_triples(triples)
+      elif self.mode == RunMode.CUSTOM_DC or self.mode == RunMode.MAIN_DC:
+        self._run_imports_and_do_post_import_work()
 
-      # Generate SVG hierarchy.
-      self._generate_svg_hierarchy()
-
-      # Generate SVG cache.
-      self._generate_svg_cache()
-
-      # Generate NL sentences for creating embeddings.
-      self._generate_nl_sentences()
-
-      # Write import info to DB.
-      self.db.insert_import_info(status=ImportStatus.SUCCESS)
+      else:
+        raise ValueError(f"Unsupported mode: {self.mode}")
 
       # Commit and close DB.
       self.db.commit_and_close()
@@ -163,8 +153,33 @@ class Runner:
       # Report done.
       self.reporter.report_done()
     except Exception as e:
-      logging.exception("Error running import")
+      logging.exception("Error updating stats")
       self.reporter.report_failure(error=str(e))
+
+  def _run_imports_and_do_post_import_work(self):
+    # Drop data in existing tables (except import metadata).
+    # Also drop indexes for faster writes.
+    self.db.clear_tables_and_indexes_for_import()
+
+    # Import data from all input files.
+    self._run_all_data_imports()
+
+    # Generate triples.
+    triples = self.nodes.triples()
+    # Write triples to DB.
+    self.db.insert_triples(triples)
+
+    # Generate SVG hierarchy.
+    self._generate_svg_hierarchy()
+
+    # Generate SVG cache.
+    self._generate_svg_cache()
+
+    # Generate NL sentences for creating embeddings.
+    self._generate_nl_sentences()
+
+    # Write import info to DB.
+    self.db.insert_import_info(status=ImportStatus.SUCCESS)
 
   def _generate_nl_sentences(self):
     triples: list[Triple] = []
@@ -247,7 +262,7 @@ class Runner:
       return True
     return False
 
-  def _run_imports(self):
+  def _run_all_data_imports(self):
     input_fhs: list[FileHandler] = []
     input_mcf_fhs: list[FileHandler] = []
     for input_handler in self.input_handlers:
