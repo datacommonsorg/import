@@ -25,6 +25,7 @@ import pandas as pd
 from stats import constants
 from stats.data import Observation
 from stats.data import Triple
+from stats.runner import RunMode
 from stats.runner import Runner
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
@@ -44,7 +45,9 @@ _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 def _test_runner(test: unittest.TestCase,
                  test_name: str,
-                 is_config_driven: bool = True):
+                 is_config_driven: bool = True,
+                 run_mode: RunMode = RunMode.CUSTOM_DC,
+                 input_db_file_name: str = None):
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
@@ -59,6 +62,9 @@ def _test_runner(test: unittest.TestCase,
                                               "remote_entity_types.json")
 
     db_path = os.path.join(temp_dir, "datacommons.db")
+    if (input_db_file_name):
+      input_db_file = os.path.join(input_dir, input_db_file_name)
+      shutil.copy(input_db_file, db_path)
 
     expected_dir = os.path.join(_EXPECTED_DIR, test_name)
     expected_nl_dir = os.path.join(expected_dir, constants.NL_DIR_NAME)
@@ -85,8 +91,10 @@ def _test_runner(test: unittest.TestCase,
         dc_client.get_property_of_entities = MagicMock(
             return_value=json.load(f))
 
-    Runner(config_file=config_path, input_dir=input_dir,
-           output_dir=temp_dir).run()
+    Runner(config_file=config_path,
+           input_dir=input_dir,
+           output_dir=temp_dir,
+           mode=run_mode).run()
 
     write_triples(db_path, output_triples_path)
     write_observations(db_path, output_observations_path)
@@ -125,6 +133,12 @@ class TestRunner(unittest.TestCase):
   def test_input_dir_driven(self):
     _test_runner(self, "input_dir_driven", is_config_driven=False)
 
+  def test_input_dir_driven_with_existing_old_schema_data(self):
+    _test_runner(self,
+                 "input_dir_driven_with_existing_old_schema_data",
+                 is_config_driven=False,
+                 input_db_file_name="sqlite_old_schema_populated.db")
+
   def test_generate_svg_hierarchy(self):
     _test_runner(self, "generate_svg_hierarchy", is_config_driven=False)
 
@@ -136,3 +150,10 @@ class TestRunner(unittest.TestCase):
 
   def test_remote_entity_types(self):
     _test_runner(self, "remote_entity_types", is_config_driven=False)
+
+  def test_schema_update_only(self):
+    _test_runner(self,
+                 "schema_update_only",
+                 is_config_driven=False,
+                 run_mode=RunMode.SCHEMA_UPDATE,
+                 input_db_file_name="sqlite_old_schema_populated.db")

@@ -38,6 +38,16 @@ def compare_files(test: unittest.TestCase,
   """
   Compares the content of the actual and expected files and asserts their equality.
   """
+  # Check if the files exist.
+  actual_file_exists = os.path.exists(actual_path)
+  expected_file_exists = os.path.exists(expected_path)
+  test.assertEqual(
+      actual_file_exists, expected_file_exists,
+      f"Actual file existence does not match expected file existence: {message}"
+  )
+  if (expected_file_exists == False):
+    return
+
   with open(actual_path) as gotf:
     got = gotf.read()
     with open(expected_path) as wantf:

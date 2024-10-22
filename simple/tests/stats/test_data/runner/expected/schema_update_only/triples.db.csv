@@ -1,0 +1,6 @@
+subject_id,predicate,object_id,object_value
+sub1,typeOf,StatisticalVariable,
+sub1,pred1,,objval1
+sub1,name,,name1
+sub2,typeOf,StatisticalVariable,
+sub2,name,,name2
