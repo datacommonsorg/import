@@ -34,6 +34,7 @@ from tests.stats.test_util import is_write_mode
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "db")
+_INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 _TRIPLES = [
@@ -58,13 +59,62 @@ _OBSERVATIONS = [
                 }))
 ]
 
+_OLD_OBSERVATION_TUPLES_AFTER_UPDATE = [
+    ("e1", "v1", "2023", "123", "p1", None, None, None, None, None),
+    ("e2", "v1", "2023", "456", "p1", None, None, None, None, None),
+    ("e3", "v1", "2023", "789", "p1", None, None, None, None, None)
+]
+
+# The import previously recorded in sqlite_old_schema_populated.db
+_OLD_IMPORT_TUPLE = ("2022-02-02 00:00:00", "SUCCESS",
+                     '{"numVars": 1, "numObs": 3}')
+
+# The import previously recorded in sqlite_current_schema_populated.db
+_DIFFERENT_IMPORT_TUPLE = ("2021-03-03 00:00:00", "SUCCESS",
+                           '{"numVars": 2, "numObs": 2}')
+
+# The import performed during tests in this file.
+_CURRENT_IMPORT_TUPLE = ("2023-01-01 00:00:00", "SUCCESS",
+                         '{"numVars": 1, "numObs": 3}')
+
 _KEY_VALUE = ("k1", "v1")
 
 
 class TestDb(unittest.TestCase):
 
+  def _seed_db_from_input(self, db_file_path: str, input_db_file_name: str):
+    input_db_file = os.path.join(_INPUT_DIR, input_db_file_name)
+    shutil.copy(input_db_file, db_file_path)
+
+  def _verify_db_contents(self, db_file_path: str, triples: list[tuple],
+                          observations: list[tuple], key_values: list[tuple],
+                          imports: list[tuple], indexes: list[tuple]):
+    sqldb = sqlite3.connect(db_file_path)
+
+    actual_triples = sqldb.execute("select * from triples").fetchall()
+    self.assertListEqual(actual_triples, triples)
+
+    actual_observations = sqldb.execute("select * from observations").fetchall()
+    self.assertListEqual(actual_observations, observations)
+
+    actual_key_values = sqldb.execute(
+        "select * from key_value_store").fetchall()
+    self.assertListEqual(actual_key_values, key_values)
+
+    actual_imports = sqldb.execute("select * from imports").fetchall()
+    self.assertListEqual(actual_imports, imports)
+
+    actual_indexes = sqldb.execute(
+        "select name, tbl_name from sqlite_master where type = 'index'"
+    ).fetchall()
+    self.assertListEqual(actual_indexes, indexes)
+
   @freeze_time("2023-01-01")
   def test_sql_db(self):
+    """ Tests database creation and insertion of triples, observations, and
+    import info in SQL mode.
+    Compares resulting DB contents with expected values.
+    """
     with tempfile.TemporaryDirectory() as temp_dir:
       db_file_path = os.path.join(temp_dir, "datacommons.db")
       db = create_db(create_sqlite_config(db_file_path))
@@ -84,33 +134,101 @@ class TestDb(unittest.TestCase):
 
       db.commit_and_close()
 
-      sqldb = sqlite3.connect(db_file_path)
+      self._verify_db_contents(
+          db_file_path,
+          triples=list(map(lambda x: x.db_tuple(), _TRIPLES)),
+          observations=list(map(lambda x: x.db_tuple(), _OBSERVATIONS)),
+          key_values=[_KEY_VALUE],
+          imports=[_CURRENT_IMPORT_TUPLE],
+          indexes=[('observations_entity_variable', 'observations'),
+                   ('triples_subject_id', 'triples')])
 
-      triples = sqldb.execute("select * from triples").fetchall()
-      self.assertListEqual(triples, list(map(lambda x: x.db_tuple(), _TRIPLES)))
+  @freeze_time("2023-01-01")
+  def test_sql_db_schema_update(self):
+    """ Tests that db.create() updates the schema of an existing SQL database
+    without modifying existing data.
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+      db_file_path = os.path.join(temp_dir, "datacommons.db")
+      self._seed_db_from_input(db_file_path, "sqlite_old_schema_populated.db")
 
-      observations = sqldb.execute("select * from observations").fetchall()
-      self.assertListEqual(observations,
-                           list(map(lambda x: x.db_tuple(), _OBSERVATIONS)))
+      db = create_db(create_sqlite_config(db_file_path))
+      db.commit_and_close()
 
-      key_value_tuple = sqldb.execute(
-          "select * from key_value_store").fetchone()
-      self.assertTupleEqual(key_value_tuple, (_KEY_VALUE))
+      self._verify_db_contents(
+          db_file_path,
+          triples=list(map(lambda x: x.db_tuple(), _TRIPLES)),
+          observations=_OLD_OBSERVATION_TUPLES_AFTER_UPDATE,
+          key_values=[_KEY_VALUE],
+          imports=[_OLD_IMPORT_TUPLE],
+          indexes=[('observations_entity_variable', 'observations'),
+                   ('triples_subject_id', 'triples')])
 
-      import_tuple = sqldb.execute("select * from imports").fetchone()
-      self.assertTupleEqual(
-          import_tuple,
-          ("2023-01-01 00:00:00", "SUCCESS", '{"numVars": 1, "numObs": 3}'))
+  @freeze_time("2023-01-01")
+  def test_sql_db_reimport_with_schema_update(self):
+    """ Tests that reimporting data to a SQL database succeeds when the existing
+    database has an old schema.
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+      db_file_path = os.path.join(temp_dir, "datacommons.db")
+      self._seed_db_from_input(db_file_path, "sqlite_old_schema_populated.db")
 
-      index_tuples = sqldb.execute(
-          "select name, tbl_name from sqlite_master where type = 'index'"
-      ).fetchall()
-      self.assertListEqual(index_tuples,
-                           [('observations_entity_variable', 'observations'),
-                            ('triples_subject_id', 'triples')])
+      db = create_db(create_sqlite_config(db_file_path))
+      db.clear_tables_and_indexes_for_import()
+
+      db.insert_triples(_TRIPLES)
+      db.insert_observations(_OBSERVATIONS, "foo.csv")
+      db.insert_key_value(_KEY_VALUE[0], _KEY_VALUE[1])
+      db.insert_import_info(status=ImportStatus.SUCCESS)
+
+      db.commit_and_close()
+
+      self._verify_db_contents(
+          db_file_path,
+          triples=list(map(lambda x: x.db_tuple(), _TRIPLES)),
+          observations=list(map(lambda x: x.db_tuple(), _OBSERVATIONS)),
+          key_values=[_KEY_VALUE],
+          imports=[_OLD_IMPORT_TUPLE, _CURRENT_IMPORT_TUPLE],
+          indexes=[('observations_entity_variable', 'observations'),
+                   ('triples_subject_id', 'triples')])
+
+  @freeze_time("2023-01-01")
+  def test_sql_db_reimport_without_schema_update(self):
+    """ Tests that importing new data to a SQL database replaces the contents of
+    all tables except the imports table.
+    """
+    with tempfile.TemporaryDirectory() as temp_dir:
+      db_file_path = os.path.join(temp_dir, "datacommons.db")
+      self._seed_db_from_input(db_file_path,
+                               "sqlite_current_schema_populated.db")
+
+      db = create_db(create_sqlite_config(db_file_path))
+
+      db.clear_tables_and_indexes_for_import()
+
+      db.insert_triples(_TRIPLES)
+      db.insert_observations(_OBSERVATIONS, "foo.csv")
+      db.insert_key_value(_KEY_VALUE[0], _KEY_VALUE[1])
+      db.insert_import_info(status=ImportStatus.SUCCESS)
+
+      db.commit_and_close()
+
+      self._verify_db_contents(
+          db_file_path,
+          triples=list(map(lambda x: x.db_tuple(), _TRIPLES)),
+          observations=list(map(lambda x: x.db_tuple(), _OBSERVATIONS)),
+          key_values=[_KEY_VALUE],
+          imports=[_DIFFERENT_IMPORT_TUPLE, _CURRENT_IMPORT_TUPLE],
+          indexes=[('observations_entity_variable', 'observations'),
+                   ('triples_subject_id', 'triples')])
 
   @freeze_time("2023-01-01")
   def test_main_dc_db(self):
+    """ Tests database creation and insertion of triples, observations, and
+    import info in main DC mode.
+    Compares output observation CSV, observation TMCF, and schema MCF with goldens.
+    In write mode, replaces the goldens instead.
+    """
     with tempfile.TemporaryDirectory() as temp_dir:
       observations_file = os.path.join(temp_dir, "observations.csv")
       expected_observations_file = os.path.join(_EXPECTED_DIR,
