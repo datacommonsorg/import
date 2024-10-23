@@ -29,6 +29,7 @@ from stats.runner import RunMode
 from stats.runner import Runner
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
+from tests.stats.test_util import read_full_db_from_file
 from tests.stats.test_util import use_fake_gzip_time
 from tests.stats.test_util import write_key_values
 from tests.stats.test_util import write_observations
@@ -64,7 +65,7 @@ def _test_runner(test: unittest.TestCase,
     db_path = os.path.join(temp_dir, "datacommons.db")
     if (input_db_file_name):
       input_db_file = os.path.join(input_dir, input_db_file_name)
-      shutil.copy(input_db_file, db_path)
+      read_full_db_from_file(db_path, input_db_file)
 
     expected_dir = os.path.join(_EXPECTED_DIR, test_name)
     expected_nl_dir = os.path.join(expected_dir, constants.NL_DIR_NAME)
@@ -137,7 +138,7 @@ class TestRunner(unittest.TestCase):
     _test_runner(self,
                  "input_dir_driven_with_existing_old_schema_data",
                  is_config_driven=False,
-                 input_db_file_name="sqlite_old_schema_populated.db")
+                 input_db_file_name="sqlite_old_schema_populated.sql")
 
   def test_generate_svg_hierarchy(self):
     _test_runner(self, "generate_svg_hierarchy", is_config_driven=False)
@@ -156,4 +157,4 @@ class TestRunner(unittest.TestCase):
                  "schema_update_only",
                  is_config_driven=False,
                  run_mode=RunMode.SCHEMA_UPDATE,
-                 input_db_file_name="sqlite_old_schema_populated.db")
+                 input_db_file_name="sqlite_old_schema_populated.sql")

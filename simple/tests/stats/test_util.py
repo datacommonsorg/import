@@ -104,6 +104,27 @@ def write_key_values(db_path: str, output_path: str):
                                                                index=False)
 
 
+def write_full_db_to_file(db_path: str, output_path: str):
+  """
+  Writes a file with SQL statements that can be used to reconstruct the full
+  database schema and contents.
+  """
+  with sqlite3.connect(db_path) as db:
+    with open(output_path, 'w') as f:
+      for line in db.iterdump():
+        f.write('%s\n' % line)
+
+
+def read_full_db_from_file(db_path: str, input_path: str):
+  """
+  Reconstructs a database's schema and contents from a file with a series of
+  SQL commands.
+  """
+  with sqlite3.connect(db_path) as db:
+    with open(input_path, 'r') as f:
+      db.cursor().executescript(f.read())
+
+
 class FakeGzipTime:
 
   def __init__(self, timestamp=0) -> None:

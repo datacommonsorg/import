@@ -31,6 +31,7 @@ from stats.db import get_sqlite_config_from_env
 from stats.db import ImportStatus
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
+from tests.stats.test_util import read_full_db_from_file
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "db")
@@ -65,11 +66,11 @@ _OLD_OBSERVATION_TUPLES_AFTER_UPDATE = [
     ("e3", "v1", "2023", "789", "p1", None, None, None, None, None)
 ]
 
-# The import previously recorded in sqlite_old_schema_populated.db
+# The import previously recorded in sqlite_old_schema_populated.sql
 _OLD_IMPORT_TUPLE = ("2022-02-02 00:00:00", "SUCCESS",
                      '{"numVars": 1, "numObs": 3}')
 
-# The import previously recorded in sqlite_current_schema_populated.db
+# The import previously recorded in sqlite_current_schema_populated.sql
 _DIFFERENT_IMPORT_TUPLE = ("2021-03-03 00:00:00", "SUCCESS",
                            '{"numVars": 2, "numObs": 2}')
 
@@ -84,30 +85,31 @@ class TestDb(unittest.TestCase):
 
   def _seed_db_from_input(self, db_file_path: str, input_db_file_name: str):
     input_db_file = os.path.join(_INPUT_DIR, input_db_file_name)
-    shutil.copy(input_db_file, db_file_path)
+    read_full_db_from_file(db_file_path, input_db_file)
 
   def _verify_db_contents(self, db_file_path: str, triples: list[tuple],
                           observations: list[tuple], key_values: list[tuple],
                           imports: list[tuple], indexes: list[tuple]):
-    sqldb = sqlite3.connect(db_file_path)
+    db = sqlite3.connect(db_file_path)
 
-    actual_triples = sqldb.execute("select * from triples").fetchall()
+    actual_triples = db.execute("select * from triples").fetchall()
     self.assertListEqual(actual_triples, triples)
 
-    actual_observations = sqldb.execute("select * from observations").fetchall()
+    actual_observations = db.execute("select * from observations").fetchall()
     self.assertListEqual(actual_observations, observations)
 
-    actual_key_values = sqldb.execute(
-        "select * from key_value_store").fetchall()
+    actual_key_values = db.execute("select * from key_value_store").fetchall()
     self.assertListEqual(actual_key_values, key_values)
 
-    actual_imports = sqldb.execute("select * from imports").fetchall()
+    actual_imports = db.execute("select * from imports").fetchall()
     self.assertListEqual(actual_imports, imports)
 
-    actual_indexes = sqldb.execute(
+    actual_indexes = db.execute(
         "select name, tbl_name from sqlite_master where type = 'index'"
     ).fetchall()
     self.assertListEqual(actual_indexes, indexes)
+
+    db.close()
 
   @freeze_time("2023-01-01")
   def test_sql_db(self):
@@ -150,7 +152,7 @@ class TestDb(unittest.TestCase):
     """
     with tempfile.TemporaryDirectory() as temp_dir:
       db_file_path = os.path.join(temp_dir, "datacommons.db")
-      self._seed_db_from_input(db_file_path, "sqlite_old_schema_populated.db")
+      self._seed_db_from_input(db_file_path, "sqlite_old_schema_populated.sql")
 
       db = create_db(create_sqlite_config(db_file_path))
       db.commit_and_close()
@@ -171,7 +173,7 @@ class TestDb(unittest.TestCase):
     """
     with tempfile.TemporaryDirectory() as temp_dir:
       db_file_path = os.path.join(temp_dir, "datacommons.db")
-      self._seed_db_from_input(db_file_path, "sqlite_old_schema_populated.db")
+      self._seed_db_from_input(db_file_path, "sqlite_old_schema_populated.sql")
 
       db = create_db(create_sqlite_config(db_file_path))
       db.clear_tables_and_indexes_for_import()
@@ -200,7 +202,7 @@ class TestDb(unittest.TestCase):
     with tempfile.TemporaryDirectory() as temp_dir:
       db_file_path = os.path.join(temp_dir, "datacommons.db")
       self._seed_db_from_input(db_file_path,
-                               "sqlite_current_schema_populated.db")
+                               "sqlite_current_schema_populated.sql")
 
       db = create_db(create_sqlite_config(db_file_path))
 
