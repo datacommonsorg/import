@@ -22,7 +22,7 @@ import unittest
 import pandas as pd
 from stats.config import Config
 from stats.data import Triple
-from stats.db import create_db
+from stats.db import create_and_update_db
 from stats.db import create_sqlite_config
 from stats.entities_importer import EntitiesImporter
 from stats.nodes import Nodes
@@ -61,7 +61,7 @@ def _test_import(test: unittest.TestCase, test_name: str):
     config = Config(data=json.loads(input_config_fh.read_string()))
     nodes = Nodes(config)
 
-    db = create_db(create_sqlite_config(db_path))
+    db = create_and_update_db(create_sqlite_config(db_path))
     report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))
     reporter = FileImportReporter(input_path, ImportReporter(report_fh))
 

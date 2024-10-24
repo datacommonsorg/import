@@ -118,11 +118,14 @@ _SELECT_TRIPLES_BY_SUBJECT_TYPE = "select * from triples where subject_id in (se
 
 _SELECT_ENTITY_NAMES = "select subject_id, object_value from triples where subject_id in (%s) and predicate = 'name' and object_value <> ''"
 
-_INIT_STATEMENTS = [
+_INIT_TABLE_STATEMENTS = [
     _CREATE_TRIPLES_TABLE,
     _CREATE_OBSERVATIONS_TABLE,
     _CREATE_KEY_VALUE_STORE_TABLE,
     _CREATE_IMPORTS_TABLE,
+]
+
+_CLEAR_TABLE_FOR_IMPORT_STATEMENTS = [
     # Clearing tables for now (not the import tables though since we want to maintain its history).
     _DELETE_TRIPLES_STATEMENT,
     _DELETE_OBSERVATIONS_STATEMENT,
@@ -194,6 +197,9 @@ class Db:
   """Abstract class to insert triples and observations into a DB.
   The "DB" could be a traditional sql db or a file system with the output being files.
   """
+
+  def maybe_clear_before_import(self):
+    pass
 
   def insert_triples(self, triples: list[Triple]):
     pass
@@ -285,8 +291,13 @@ class SqlDb(Db):
 
   def __init__(self, config: dict) -> None:
     self.engine = create_db_engine(config)
+    self.engine.init_or_update_tables()
     self.num_observations = 0
     self.variables: set[str] = set()
+    self.indexes_cleared = False
+
+  def maybe_clear_before_import(self):
+    self.engine.clear_tables_and_indexes()
 
   def insert_triples(self, triples: list[Triple]):
     logging.info("Writing %s triples to [%s]", len(triples), self.engine)
@@ -345,6 +356,12 @@ def from_triple_tuple(tuple: tuple) -> Triple:
 
 class DbEngine:
 
+  def init_or_update_tables(self):
+    pass
+
+  def clear_tables_and_indexes(self):
+    pass
+
   def execute(self, sql: str, parameters=None):
     pass
 
@@ -379,14 +396,8 @@ class SqliteDbEngine(DbEngine):
     logging.info("Connected to SQLite: %s", self.local_db_file_path)
 
     self.cursor = self.connection.cursor()
-    # Drop indexes first so inserts are faster.
-    self._drop_indexes()
-    for statement in _INIT_STATEMENTS:
-      self.cursor.execute(statement)
-    # Apply schema updates.
-    self._schema_updates()
 
-  def _schema_updates(self) -> None:
+  def _maybe_update_schema(self) -> None:
     """
     Add any sqlite schema updates here.
     Ensure that all schema updates always check if the update is necessary before applying it.
@@ -414,6 +425,15 @@ class SqliteDbEngine(DbEngine):
 
   def __str__(self) -> str:
     return f"{TYPE_SQLITE}: {self.db_file_path}"
+
+  def init_or_update_tables(self):
+    for statement in _INIT_TABLE_STATEMENTS:
+      self.cursor.execute(statement)
+    self._maybe_update_schema()
+
+  def clear_tables_and_indexes(self):
+    for statement in _CLEAR_TABLE_FOR_IMPORT_STATEMENTS:
+      self.cursor.execute(statement)
 
   def execute(self, sql: str, parameters=None):
     if not parameters:
@@ -461,8 +481,8 @@ _CLOUD_MY_SQL_DB_CONNECT_PARAMS = _CLOUD_MY_SQL_INSTANCE_CONNECT_PARAMS + [
 _CLOUD_MY_SQL_PARAMS = [CLOUD_MY_SQL_INSTANCE] + _CLOUD_MY_SQL_DB_CONNECT_PARAMS
 
 _CLOUD_MYSQL_PROPERTIES_COLUMN_EXISTS_STATEMENT = """
-  SELECT 1 
-    FROM INFORMATION_SCHEMA.COLUMNS 
+  SELECT 1
+    FROM INFORMATION_SCHEMA.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'observations' AND COLUMN_NAME = 'properties';
 """
 
@@ -486,14 +506,8 @@ class CloudSqlDbEngine(DbEngine):
                  db_params[CLOUD_MY_SQL_INSTANCE], db_params[CLOUD_MY_SQL_DB])
     self.description = f"{TYPE_CLOUD_SQL}: {db_params[CLOUD_MY_SQL_INSTANCE]} ({db_params[CLOUD_MY_SQL_DB]})"
     self.cursor: Cursor = self.connection.cursor()
-    # Drop indexes first so inserts are faster.
-    self._drop_indexes()
-    for statement in _INIT_STATEMENTS:
-      self.cursor.execute(statement)
-    # Apply schema updates.
-    self._schema_updates()
 
-  def _schema_updates(self) -> None:
+  def _maybe_update_schema(self) -> None:
     """
     Add any cloud sql schema updates here.
     Ensure that all schema updates always check if the update is necessary before applying it.
@@ -555,6 +569,16 @@ class CloudSqlDbEngine(DbEngine):
   def __str__(self) -> str:
     return self.description
 
+  def init_or_update_tables(self):
+    for statement in _INIT_TABLE_STATEMENTS:
+      self.cursor.execute(statement)
+    self._maybe_update_schema()
+
+  def clear_tables_and_indexes(self):
+    for statement in _CLEAR_TABLE_FOR_IMPORT_STATEMENTS:
+      self.cursor.execute(statement)
+    self._drop_indexes()
+
   def execute(self, sql: str, parameters=None):
     self.cursor.execute(_pymysql(sql), parameters)
 
@@ -599,7 +623,10 @@ def create_db_engine(config: dict) -> DbEngine:
   assert False
 
 
-def create_db(config: dict) -> Db:
+def create_and_update_db(config: dict) -> Db:
+  """ Creates and initializes a Db, performing any setup and updates
+  (e.g. table creation, table schema changes) that are needed.
+  """
   db_type = config[FIELD_DB_TYPE]
   if db_type and db_type == TYPE_MAIN_DC:
     return MainDcDb(config)

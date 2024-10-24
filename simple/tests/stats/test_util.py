@@ -38,6 +38,17 @@ def compare_files(test: unittest.TestCase,
   """
   Compares the content of the actual and expected files and asserts their equality.
   """
+  # Pass if neither actual nor existing file exists.
+  # Fail if only one exists.
+  actual_file_exists = os.path.exists(actual_path)
+  expected_file_exists = os.path.exists(expected_path)
+  test.assertEqual(
+      actual_file_exists, expected_file_exists,
+      f"Actual file existence does not match expected file existence: {message}"
+  )
+  if (expected_file_exists == False):
+    return
+
   with open(actual_path) as gotf:
     got = gotf.read()
     with open(expected_path) as wantf:
@@ -91,6 +102,27 @@ def write_key_values(db_path: str, output_path: str):
     rows = db.execute("select * from key_value_store").fetchall()
     pd.DataFrame(rows, columns=["lookup_key", "value"]).to_csv(output_path,
                                                                index=False)
+
+
+def write_full_db_to_file(db_path: str, output_path: str):
+  """
+  Writes a file with SQL statements that can be used to reconstruct the full
+  database schema and contents.
+  """
+  with sqlite3.connect(db_path) as db:
+    with open(output_path, 'w') as f:
+      for line in db.iterdump():
+        f.write('%s\n' % line)
+
+
+def read_full_db_from_file(db_path: str, input_path: str):
+  """
+  Reconstructs a database's schema and contents from a file with a series of
+  SQL commands.
+  """
+  with sqlite3.connect(db_path) as db:
+    with open(input_path, 'r') as f:
+      db.cursor().executescript(f.read())
 
 
 class FakeGzipTime:

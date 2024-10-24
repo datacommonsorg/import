@@ -21,7 +21,7 @@ function run_lint_fix {
   echo -e "#### Fixing Python code"
   python3 -m venv .env
   source .env/bin/activate
-  pip3 install yapf==0.33.0 -q
+  pip3 install yapf==0.40.2 -q
   if ! command -v isort &> /dev/null
   then
     pip3 install isort -q
@@ -35,12 +35,12 @@ function run_lint_fix {
 function run_lint_test {
   python3 -m venv .env
   source .env/bin/activate
-  pip3 install yapf==0.33.0 -q
+  pip3 install yapf==0.40.2 -q
   if ! command -v isort &> /dev/null
   then
     pip3 install isort -q
   fi
-  
+
   echo -e "#### Checking Python style"
   if ! yapf --recursive --diff --style='{based_on_style: google, indent_width: 2}' -p simple/ -e=*pb2.py -e=.env/*; then
     echo "Fix Python lint errors by running ./run_test.sh -f"
@@ -74,9 +74,9 @@ function py_test {
 
   python3 -m venv .env
   source .env/bin/activate
-  
+
   cd simple
-  pip3 install -r requirements.txt
+  pip3 install -r requirements.txt -q
 
   echo -e "#### Running stats tests"
   python3 -m pytest tests/stats/ -s

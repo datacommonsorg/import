@@ -22,7 +22,7 @@ import unittest
 import pandas as pd
 from stats.config import Config
 from stats.data import Triple
-from stats.db import create_db
+from stats.db import create_and_update_db
 from stats.db import create_sqlite_config
 from stats.mcf_importer import McfImporter
 from stats.nodes import Nodes
@@ -59,7 +59,7 @@ def _test_import(test: unittest.TestCase,
     input_fh = LocalFileHandler(input_mcf_path)
     output_fh = LocalFileHandler(output_mcf_path)
 
-    db = create_db(create_sqlite_config(db_path))
+    db = create_and_update_db(create_sqlite_config(db_path))
     report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))
     reporter = FileImportReporter(input_mcf_path, ImportReporter(report_fh))
 

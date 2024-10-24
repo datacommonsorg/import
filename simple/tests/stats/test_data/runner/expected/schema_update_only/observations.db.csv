@@ -1,0 +1,4 @@
+entity,variable,date,value,provenance,unit,scaling_factor,measurement_method,observation_period,properties
+e1,v1,2023,123,p1,,,,,
+e2,v1,2023,456,p1,,,,,
+e3,v1,2023,789,p1,,,,,

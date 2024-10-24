@@ -26,7 +26,7 @@ from stats.data import InputFileFormat
 from stats.data import ParentSVG2ChildSpecializedNames
 from stats.data import Triple
 from stats.data import VerticalSpec
-from stats.db import create_db
+from stats.db import create_and_update_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
 from stats.db import get_cloud_sql_config_from_env
@@ -48,6 +48,7 @@ from util.filehandler import FileHandler
 
 class RunMode(StrEnum):
   CUSTOM_DC = "customdc"
+  SCHEMA_UPDATE = "schemaupdate"
   MAIN_DC = "maindc"
 
 
@@ -113,49 +114,22 @@ class Runner:
     self.reporter = ImportReporter(report_fh=self.process_dir_fh.make_file(
         constants.REPORT_JSON_FILE_NAME))
 
-    # DB setup.
-    def _get_db_config() -> dict:
-      if self.mode == RunMode.MAIN_DC:
-        logging.info("Using Main DC config.")
-        return create_main_dc_config(self.output_dir_fh.path)
-      # Attempt to get from env (cloud sql, then sqlite),
-      # then config file, then default.
-      db_cfg = get_cloud_sql_config_from_env()
-      if db_cfg:
-        logging.info("Using Cloud SQL settings from env.")
-        return db_cfg
-      db_cfg = get_sqlite_config_from_env()
-      if db_cfg:
-        logging.info("Using SQLite settings from env.")
-        return db_cfg
-      logging.info("Using default DB settings.")
-      return create_sqlite_config(
-          self.output_dir_fh.make_file(constants.DB_FILE_NAME).path)
-
-    self.db = create_db(_get_db_config())
     self.nodes = Nodes(self.config)
+    self.db = None
 
   def run(self):
     try:
-      # Run all data imports.
-      self._run_imports()
+      if (self.db is None):
+        self.db = create_and_update_db(self._get_db_config())
 
-      # Generate triples.
-      triples = self.nodes.triples()
-      # Write triples to DB.
-      self.db.insert_triples(triples)
+      if self.mode == RunMode.SCHEMA_UPDATE:
+        logging.info("Skipping imports because run mode is schema update.")
 
-      # Generate SVG hierarchy.
-      self._generate_svg_hierarchy()
+      elif self.mode == RunMode.CUSTOM_DC or self.mode == RunMode.MAIN_DC:
+        self._run_imports_and_do_post_import_work()
 
-      # Generate SVG cache.
-      self._generate_svg_cache()
-
-      # Generate NL sentences for creating embeddings.
-      self._generate_nl_sentences()
-
-      # Write import info to DB.
-      self.db.insert_import_info(status=ImportStatus.SUCCESS)
+      else:
+        raise ValueError(f"Unsupported mode: {self.mode}")
 
       # Commit and close DB.
       self.db.commit_and_close()
@@ -163,8 +137,51 @@ class Runner:
       # Report done.
       self.reporter.report_done()
     except Exception as e:
-      logging.exception("Error running import")
+      logging.exception("Error updating stats")
       self.reporter.report_failure(error=str(e))
+
+  def _get_db_config(self) -> dict:
+    if self.mode == RunMode.MAIN_DC:
+      logging.info("Using Main DC config.")
+      return create_main_dc_config(self.output_dir_fh.path)
+    # Attempt to get from env (cloud sql, then sqlite),
+    # then config file, then default.
+    db_cfg = get_cloud_sql_config_from_env()
+    if db_cfg:
+      logging.info("Using Cloud SQL settings from env.")
+      return db_cfg
+    db_cfg = get_sqlite_config_from_env()
+    if db_cfg:
+      logging.info("Using SQLite settings from env.")
+      return db_cfg
+    logging.info("Using default DB settings.")
+    return create_sqlite_config(
+        self.output_dir_fh.make_file(constants.DB_FILE_NAME).path)
+
+  def _run_imports_and_do_post_import_work(self):
+    # (SQL only) Drop data in existing tables (except import metadata).
+    # Also drop indexes for faster writes.
+    self.db.maybe_clear_before_import()
+
+    # Import data from all input files.
+    self._run_all_data_imports()
+
+    # Generate triples.
+    triples = self.nodes.triples()
+    # Write triples to DB.
+    self.db.insert_triples(triples)
+
+    # Generate SVG hierarchy.
+    self._generate_svg_hierarchy()
+
+    # Generate SVG cache.
+    self._generate_svg_cache()
+
+    # Generate NL sentences for creating embeddings.
+    self._generate_nl_sentences()
+
+    # Write import info to DB.
+    self.db.insert_import_info(status=ImportStatus.SUCCESS)
 
   def _generate_nl_sentences(self):
     triples: list[Triple] = []
@@ -247,7 +264,7 @@ class Runner:
       return True
     return False
 
-  def _run_imports(self):
+  def _run_all_data_imports(self):
     input_fhs: list[FileHandler] = []
     input_mcf_fhs: list[FileHandler] = []
     for input_handler in self.input_handlers:

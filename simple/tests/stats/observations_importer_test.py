@@ -21,7 +21,7 @@ from unittest.mock import MagicMock
 
 import pandas as pd
 from stats.config import Config
-from stats.db import create_db
+from stats.db import create_and_update_db
 from stats.db import create_sqlite_config
 from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
@@ -64,7 +64,7 @@ def _test_import(test: unittest.TestCase, test_name: str):
     with open(config_path) as config_file:
       config = Config(json.load(config_file))
 
-    db = create_db(create_sqlite_config(db_path))
+    db = create_and_update_db(create_sqlite_config(db_path))
     debug_resolve_fh = LocalFileHandler(os.path.join(temp_dir, "debug.csv"))
     report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))
     reporter = FileImportReporter(input_path, ImportReporter(report_fh))
