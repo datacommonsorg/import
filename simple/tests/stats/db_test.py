@@ -23,7 +23,7 @@ from freezegun import freeze_time
 from stats.data import Observation
 from stats.data import ObservationProperties
 from stats.data import Triple
-from stats.db import create_db
+from stats.db import create_and_update_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
 from stats.db import get_cloud_sql_config_from_env
@@ -119,7 +119,7 @@ class TestDb(unittest.TestCase):
     """
     with tempfile.TemporaryDirectory() as temp_dir:
       db_file_path = os.path.join(temp_dir, "datacommons.db")
-      db = create_db(create_sqlite_config(db_file_path))
+      db = create_and_update_db(create_sqlite_config(db_file_path))
       db.insert_triples(_TRIPLES)
       db.insert_observations(_OBSERVATIONS, "foo.csv")
       db.insert_key_value(_KEY_VALUE[0], _KEY_VALUE[1])
@@ -154,7 +154,7 @@ class TestDb(unittest.TestCase):
       db_file_path = os.path.join(temp_dir, "datacommons.db")
       self._seed_db_from_input(db_file_path, "sqlite_old_schema_populated.sql")
 
-      db = create_db(create_sqlite_config(db_file_path))
+      db = create_and_update_db(create_sqlite_config(db_file_path))
       db.commit_and_close()
 
       self._verify_db_contents(
@@ -175,8 +175,9 @@ class TestDb(unittest.TestCase):
       db_file_path = os.path.join(temp_dir, "datacommons.db")
       self._seed_db_from_input(db_file_path, "sqlite_old_schema_populated.sql")
 
-      db = create_db(create_sqlite_config(db_file_path))
-      db.clear_tables_and_indexes_for_import()
+      db = create_and_update_db(create_sqlite_config(db_file_path))
+
+      db.maybe_clear_before_import()
 
       db.insert_triples(_TRIPLES)
       db.insert_observations(_OBSERVATIONS, "foo.csv")
@@ -204,9 +205,9 @@ class TestDb(unittest.TestCase):
       self._seed_db_from_input(db_file_path,
                                "sqlite_current_schema_populated.sql")
 
-      db = create_db(create_sqlite_config(db_file_path))
+      db = create_and_update_db(create_sqlite_config(db_file_path))
 
-      db.clear_tables_and_indexes_for_import()
+      db.maybe_clear_before_import()
 
       db.insert_triples(_TRIPLES)
       db.insert_observations(_OBSERVATIONS, "foo.csv")
@@ -240,7 +241,7 @@ class TestDb(unittest.TestCase):
       mcf_file = os.path.join(temp_dir, "schema.mcf")
       expected_mcf_file = os.path.join(_EXPECTED_DIR, "schema.mcf")
 
-      db = create_db(create_main_dc_config(temp_dir))
+      db = create_and_update_db(create_main_dc_config(temp_dir))
       db.insert_triples(_TRIPLES)
       db.insert_observations(_OBSERVATIONS, "observations.csv")
       db.insert_import_info(status=ImportStatus.SUCCESS)

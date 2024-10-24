@@ -198,7 +198,7 @@ class Db:
   The "DB" could be a traditional sql db or a file system with the output being files.
   """
 
-  def clear_tables_and_indexes_for_import(self):
+  def maybe_clear_before_import(self):
     pass
 
   def insert_triples(self, triples: list[Triple]):
@@ -296,8 +296,8 @@ class SqlDb(Db):
     self.variables: set[str] = set()
     self.indexes_cleared = False
 
-  def clear_tables_and_indexes_for_import(self):
-    self.engine.clear_tables_and_indexes_for_import()
+  def maybe_clear_before_import(self):
+    self.engine.clear_tables_and_indexes()
 
   def insert_triples(self, triples: list[Triple]):
     logging.info("Writing %s triples to [%s]", len(triples), self.engine)
@@ -359,7 +359,7 @@ class DbEngine:
   def init_or_update_tables(self):
     pass
 
-  def clear_tables_and_indexes_for_import(self):
+  def clear_tables_and_indexes(self):
     pass
 
   def execute(self, sql: str, parameters=None):
@@ -397,7 +397,7 @@ class SqliteDbEngine(DbEngine):
 
     self.cursor = self.connection.cursor()
 
-  def _schema_updates(self) -> None:
+  def _maybe_update_schema(self) -> None:
     """
     Add any sqlite schema updates here.
     Ensure that all schema updates always check if the update is necessary before applying it.
@@ -429,9 +429,9 @@ class SqliteDbEngine(DbEngine):
   def init_or_update_tables(self):
     for statement in _INIT_TABLE_STATEMENTS:
       self.cursor.execute(statement)
-    self._schema_updates()
+    self._maybe_update_schema()
 
-  def clear_tables_and_indexes_for_import(self):
+  def clear_tables_and_indexes(self):
     for statement in _CLEAR_TABLE_FOR_IMPORT_STATEMENTS:
       self.cursor.execute(statement)
 
@@ -507,7 +507,7 @@ class CloudSqlDbEngine(DbEngine):
     self.description = f"{TYPE_CLOUD_SQL}: {db_params[CLOUD_MY_SQL_INSTANCE]} ({db_params[CLOUD_MY_SQL_DB]})"
     self.cursor: Cursor = self.connection.cursor()
 
-  def _schema_updates(self) -> None:
+  def _maybe_update_schema(self) -> None:
     """
     Add any cloud sql schema updates here.
     Ensure that all schema updates always check if the update is necessary before applying it.
@@ -572,9 +572,9 @@ class CloudSqlDbEngine(DbEngine):
   def init_or_update_tables(self):
     for statement in _INIT_TABLE_STATEMENTS:
       self.cursor.execute(statement)
-    self._schema_updates()
+    self._maybe_update_schema()
 
-  def clear_tables_and_indexes_for_import(self):
+  def clear_tables_and_indexes(self):
     for statement in _CLEAR_TABLE_FOR_IMPORT_STATEMENTS:
       self.cursor.execute(statement)
     self._drop_indexes()
@@ -623,7 +623,10 @@ def create_db_engine(config: dict) -> DbEngine:
   assert False
 
 
-def create_db(config: dict) -> Db:
+def create_and_update_db(config: dict) -> Db:
+  """ Creates and initializes a Db, performing any setup and updates
+  (e.g. table creation, table schema changes) that are needed.
+  """
   db_type = config[FIELD_DB_TYPE]
   if db_type and db_type == TYPE_MAIN_DC:
     return MainDcDb(config)
