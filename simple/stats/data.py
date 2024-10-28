@@ -240,16 +240,26 @@ class ObservationProperties:
   properties: dict[str, str] = field(default_factory=dict)
 
   @classmethod
-  def new(cls: Self, all_properties: dict[str, str] = {}) -> Self:
-    unit = all_properties.get(sc.PREDICATE_UNIT, "")
-    scaling_factor = all_properties.get(sc.PREDICATE_SCALING_FACTOR, "")
-    measurement_method = all_properties.get(sc.PREDICATE_MEASUREMENT_METHOD, "")
-    observation_period = all_properties.get(sc.PREDICATE_OBSERVATION_PERIOD, "")
+  def new(cls: Self,
+          all_properties: dict[str, str] = {},
+          default_obs_props: Self = None) -> Self:
+    if default_obs_props is None:
+      default_obs_props = cls()
+    unit = all_properties.get(sc.PREDICATE_UNIT, "") or default_obs_props.unit
+    scaling_factor = all_properties.get(sc.PREDICATE_SCALING_FACTOR,
+                                        "") or default_obs_props.scaling_factor
+    measurement_method = all_properties.get(
+        sc.PREDICATE_MEASUREMENT_METHOD,
+        "") or default_obs_props.measurement_method
+    observation_period = all_properties.get(
+        sc.PREDICATE_OBSERVATION_PERIOD,
+        "") or default_obs_props.observation_period
     custom_properties = {
         p: v
         for p, v in all_properties.items()
         if p not in sc.STANDARD_OBSERVATION_PROPERTIES
     }
+    custom_properties = default_obs_props.properties | custom_properties
     return cls(unit, scaling_factor, measurement_method, observation_period,
                custom_properties)
 

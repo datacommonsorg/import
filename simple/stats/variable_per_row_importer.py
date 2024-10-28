@@ -27,11 +27,21 @@ from util.filehandler import FileHandler
 
 from util import dc_client as dc
 
-_COLUMNS = [
-    constants.COLUMN_ENTITY, constants.COLUMN_VARIABLE, constants.COLUMN_DATE,
-    constants.COLUMN_VALUE
+# Columns for standard observation properties.
+# These are optional.
+_OBS_PROPERTY_COLUMNS = [
+    sc.PREDICATE_UNIT,
+    sc.PREDICATE_SCALING_FACTOR,
+    sc.PREDICATE_MEASUREMENT_METHOD,
+    sc.PREDICATE_OBSERVATION_PERIOD,
 ]
-_DEFAULT_COLUMN_MAPPINGS = {x: x for x in _COLUMNS}
+_REQUIRED_COLUMNS = [
+    constants.COLUMN_ENTITY,
+    constants.COLUMN_VARIABLE,
+    constants.COLUMN_DATE,
+    constants.COLUMN_VALUE,
+]
+_DEFAULT_COLUMN_MAPPINGS = {x: x for x in _REQUIRED_COLUMNS}
 
 
 class VariablePerRowImporter(Importer):
@@ -74,7 +84,14 @@ class VariablePerRowImporter(Importer):
 
   def _map_columns(self):
     config_mappings = self.config.column_mappings(self.input_file_name)
+
+    # Required columns.
     for key in self.column_mappings.keys():
+      if key in config_mappings:
+        self.column_mappings[key] = config_mappings[key]
+
+    # Optional property column mappings.
+    for key in _OBS_PROPERTY_COLUMNS:
       if key in config_mappings:
         self.column_mappings[key] = config_mappings[key]
 
@@ -97,16 +114,25 @@ class VariablePerRowImporter(Importer):
     observations: list[Observation] = []
     for row in self.reader:
       entity_dcid = row[self.column_mappings[constants.COLUMN_ENTITY]]
+      row_obs_props = ObservationProperties.new(
+          all_properties=self._get_row_obs(row), default_obs_props=obs_props)
       observation = Observation(
           entity=entity_dcid,
           variable=row[self.column_mappings[constants.COLUMN_VARIABLE]],
           date=row[self.column_mappings[constants.COLUMN_DATE]],
           value=row[self.column_mappings[constants.COLUMN_VALUE]],
           provenance=provenance,
-          properties=obs_props)
+          properties=row_obs_props)
       observations.append(observation)
       self.entity_dcids[entity_dcid] = True
     self.db.insert_observations(observations, self.input_file_name)
+
+  def _get_row_obs(self, row: dict[str, str]) -> dict[str, str]:
+    properties: dict[str, str] = {}
+    for prop in _OBS_PROPERTY_COLUMNS:
+      if prop in self.column_mappings:
+        properties[prop] = row[self.column_mappings[prop]]
+    return properties
 
   def _add_entity_nodes(self) -> None:
     # Get entity nodes that are not already recorded.
