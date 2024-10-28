@@ -103,3 +103,6 @@ class TestVariablePerRowImporter(unittest.TestCase):
 
   def test_obs_props(self):
     _test_import(self, "obs_props")
+
+  def test_row_obs_props(self):
+    _test_import(self, "row_obs_props")

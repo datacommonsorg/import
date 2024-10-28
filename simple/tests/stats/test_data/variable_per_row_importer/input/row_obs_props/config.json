@@ -1,0 +1,15 @@
+{
+  "inputFiles": {
+    "input.csv": {
+      "format": "variablePerRow",
+      "observationProperties": {
+        "unit": "USD",
+        "observationPeriod": "P1Y"
+      },
+      "columnMappings": {
+        "unit": "OBS_UNIT",
+        "scalingFactor": "OBS_MULT"
+      }
+    }
+  }
+}

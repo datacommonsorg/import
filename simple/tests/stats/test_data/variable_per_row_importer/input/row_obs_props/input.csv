@@ -1,0 +1,7 @@
+variable,entity,date,value,OBS_UNIT,OBS_MULT
+var1,country/BRA,2023,0.19,,1
+var2,country/BRA,2023,6,GBP,2
+var1,country/JPN,2023,0.21,INR,3
+var2,country/JPN,2023,56,USD,4
+var2,country/USA,2023,66,,
+var1,country/CHN,2022,-123.456,,
