@@ -171,7 +171,6 @@ class TopicCacheNode:
     elif triple.predicate == sc.PREDICATE_RELEVANT_VARIABLE:
       self.relevantVariables.append(triple.object_id)
     elif triple.predicate == sc.PREDICATE_RELEVANT_VARIABLE_LIST:
-      print("[DEBUG] list", triple.object_value)
       self.relevantVariables.extend(self._csv_to_list(triple.object_value))
     elif triple.predicate == sc.PREDICATE_MEMBER_LIST:
       self.members.extend(self._csv_to_list(triple.object_value))
