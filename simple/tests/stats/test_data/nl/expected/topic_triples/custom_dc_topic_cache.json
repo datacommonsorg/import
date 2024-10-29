@@ -1,0 +1,48 @@
+{
+ "nodes": [
+  {
+   "dcid": [
+    "topic_with_search_descriptions"
+   ],
+   "typeOf": [
+    "Topic"
+   ],
+   "name": [
+    "Name should NOT be used"
+   ],
+   "relevantVariableList": [
+    "var1",
+    "var2"
+   ]
+  },
+  {
+   "dcid": [
+    "topic_with_name_only"
+   ],
+   "typeOf": [
+    "Topic"
+   ],
+   "name": [
+    "Name should be used"
+   ],
+   "relevantVariableList": [
+    "var3",
+    "var4"
+   ]
+  },
+  {
+   "dcid": [
+    "topic_with_no_sentence_props"
+   ],
+   "typeOf": [
+    "Topic"
+   ],
+   "relevantVariableList": [
+    "var5",
+    "var6",
+    "var7",
+    "var8"
+   ]
+  }
+ ]
+}

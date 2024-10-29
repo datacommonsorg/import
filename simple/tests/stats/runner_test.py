@@ -85,6 +85,10 @@ def _test_runner(test: unittest.TestCase,
     expected_nl_sentences_path = os.path.join(expected_dir,
                                               constants.NL_DIR_NAME,
                                               constants.SENTENCES_FILE_NAME)
+    output_topic_cache_json_path = os.path.join(temp_dir, constants.NL_DIR_NAME,
+                                                constants.TOPIC_CACHE_FILE_NAME)
+    expected_topic_cache_json_path = os.path.join(
+        expected_dir, constants.NL_DIR_NAME, constants.TOPIC_CACHE_FILE_NAME)
 
     dc_client.get_property_of_entities = MagicMock(return_value={})
     if remote_entity_types_path and os.path.exists(remote_entity_types_path):
@@ -105,7 +109,11 @@ def _test_runner(test: unittest.TestCase,
       shutil.copy(output_triples_path, expected_triples_path)
       shutil.copy(output_observations_path, expected_observations_path)
       shutil.copy(output_key_value_store_path, expected_key_value_store_path)
-      shutil.copy(output_nl_sentences_path, expected_nl_sentences_path)
+      if os.path.exists(output_nl_sentences_path):
+        shutil.copy(output_nl_sentences_path, expected_nl_sentences_path)
+      if os.path.exists(output_topic_cache_json_path):
+        shutil.copy(output_topic_cache_json_path,
+                    expected_topic_cache_json_path)
       return
 
     compare_files(test, output_triples_path, expected_triples_path,
@@ -115,8 +123,12 @@ def _test_runner(test: unittest.TestCase,
     compare_files(test, output_key_value_store_path,
                   expected_key_value_store_path,
                   f"{test_name}: key_value_store")
-    compare_files(test, output_nl_sentences_path, expected_nl_sentences_path,
-                  f"{test_name}: triples")
+    if os.path.exists(expected_nl_sentences_path):
+      compare_files(test, output_nl_sentences_path, expected_nl_sentences_path,
+                    f"{test_name}: nl sentences")
+    if os.path.exists(expected_topic_cache_json_path):
+      compare_files(test, output_topic_cache_json_path,
+                    expected_topic_cache_json_path, f"{test_name}: topic cache")
 
 
 class TestRunner(unittest.TestCase):

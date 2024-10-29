@@ -177,16 +177,17 @@ class Runner:
     # Generate SVG cache.
     self._generate_svg_cache()
 
-    # Generate NL sentences for creating embeddings.
-    self._generate_nl_sentences()
+    # Generate NL artifacts (sentences, embeddings, topic cache).
+    self._generate_nl_artifacts()
 
     # Write import info to DB.
     self.db.insert_import_info(status=ImportStatus.SUCCESS)
 
-  def _generate_nl_sentences(self):
+  def _generate_nl_artifacts(self):
     triples: list[Triple] = []
     # Get topic triples if generating topics else get SV triples.
-    if self.config.generate_topics():
+    generate_topics = self.config.generate_topics()
+    if generate_topics:
       triples = self.db.select_triples_by_subject_type(sc.TYPE_TOPIC)
     else:
       triples = self.db.select_triples_by_subject_type(
@@ -194,6 +195,10 @@ class Runner:
 
     # Generate sentences.
     nl.generate_nl_sentences(triples, self.nl_dir_fh)
+
+    # If generating topics, generate topic cache
+    if generate_topics:
+      nl.generate_topic_cache(triples, self.nl_dir_fh)
 
   def _generate_svg_hierarchy(self):
     if self.mode == RunMode.MAIN_DC:

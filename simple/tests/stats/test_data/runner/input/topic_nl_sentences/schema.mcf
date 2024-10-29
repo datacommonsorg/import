@@ -13,9 +13,11 @@ searchDescription: "Variable2 Search Description2"
 Node: dcid:topic1
 typeOf: dcs:Topic
 name: "Topic1 Name"
+relevantVariable: dcid:var1
 
 Node: dcid:topic2
 typeOf: dcs:Topic
 name: "Topic2 Name"
 searchDescription: "Topic2 Search Description1"
 searchDescription: "Topic2 Search Description2"
+relevantVariableList: "var1, var2"

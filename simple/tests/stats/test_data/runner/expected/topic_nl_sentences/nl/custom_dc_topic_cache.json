@@ -1,0 +1,33 @@
+{
+ "nodes": [
+  {
+   "dcid": [
+    "topic1"
+   ],
+   "typeOf": [
+    "Topic"
+   ],
+   "name": [
+    "Topic1 Name"
+   ],
+   "relevantVariableList": [
+    "var1"
+   ]
+  },
+  {
+   "dcid": [
+    "topic2"
+   ],
+   "typeOf": [
+    "Topic"
+   ],
+   "name": [
+    "Topic2 Name"
+   ],
+   "relevantVariableList": [
+    "var1",
+    "var2"
+   ]
+  }
+ ]
+}
