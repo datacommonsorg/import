@@ -9,10 +9,12 @@ var2,searchDescription,,Variable2 Search Description1
 var2,searchDescription,,Variable2 Search Description2
 topic1,typeOf,Topic,
 topic1,name,,Topic1 Name
+topic1,relevantVariable,var1,
 topic2,typeOf,Topic,
 topic2,name,,Topic2 Name
 topic2,searchDescription,,Topic2 Search Description1
 topic2,searchDescription,,Topic2 Search Description2
+topic2,relevantVariableList,,"var1, var2"
 c/s/default,typeOf,Source,
 c/s/default,name,,Custom Data Commons
 c/s/1,typeOf,Source,

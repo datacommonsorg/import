@@ -24,6 +24,7 @@ CONFIG_JSON_FILE_NAME = "config.json"
 REPORT_JSON_FILE_NAME = "report.json"
 TRIPLES_FILE_NAME = "triples.csv"
 SENTENCES_FILE_NAME = "sentences.csv"
+TOPIC_CACHE_FILE_NAME = "custom_dc_topic_cache.json"
 DB_FILE_NAME = "datacommons.db"
 
 OBSERVATIONS_FILE_NAME_PREFIX = "observations"

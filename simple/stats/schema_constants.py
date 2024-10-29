@@ -38,6 +38,9 @@ PREDICATE_UNIT = "unit"
 PREDICATE_SCALING_FACTOR = "scalingFactor"
 PREDICATE_MEASUREMENT_METHOD = "measurementMethod"
 PREDICATE_OBSERVATION_PERIOD = "observationPeriod"
+PREDICATE_RELEVANT_VARIABLE = "relevantVariable"
+PREDICATE_RELEVANT_VARIABLE_LIST = "relevantVariableList"
+PREDICATE_MEMBER_LIST = "memberList"
 
 # The set of standard observation properties with first class support in our APIs and FE.
 STANDARD_OBSERVATION_PROPERTIES: set[str] = {

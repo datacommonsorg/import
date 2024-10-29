@@ -14,6 +14,7 @@
 
 from dataclasses import dataclass
 from dataclasses import field
+import json
 import logging
 
 import pandas as pd
@@ -33,6 +34,7 @@ _EMBEDDINGS_DIR = "embeddings"
 _EMBEDDINGS_FILE = "embeddings.csv"
 _SENTENCES_FILE = "sentences.csv"
 _CUSTOM_CATALOG_YAML = "custom_catalog.yaml"
+_TOPIC_CACHE_JSON_FILE = "custom_dc_topic_cache.json"
 
 
 def generate_nl_sentences(triples: list[Triple], nl_dir_fh: FileHandler):
@@ -78,6 +80,34 @@ def generate_nl_sentences(triples: list[Triple], nl_dir_fh: FileHandler):
   catalog_fh.write_string(catalog_yaml)
 
 
+def generate_topic_cache(triples: list[Triple], nl_dir_fh: FileHandler):
+  """Generates topic cache based on Topic (and in the future, StatVarPeerGroup) triples.
+
+  This method should only be called for triples of types for which topic cache
+  should be generated. Currently it is only Topic.
+
+  This method does not do the type checks itself and the onus is on the caller 
+  to filter triples.
+
+  The topic cache is written to a custom_dc_topic_cache.json file in the specified directory.
+  """
+
+  dcid2nodes: dict[str, TopicCacheNode] = {}
+  for triple in triples:
+    dcid2nodes.setdefault(triple.subject_id,
+                          TopicCacheNode(triple.subject_id)).maybe_add(triple)
+
+  nodes = []
+  for node in dcid2nodes.values():
+    nodes.append(node.json())
+
+  result = {"nodes": nodes}
+  topic_cache_fh = nl_dir_fh.make_file(_TOPIC_CACHE_JSON_FILE)
+  logging.info("Writing %s topic cache nodes to: %s", len(nodes),
+               topic_cache_fh)
+  topic_cache_fh.write_string(json.dumps(result, indent=1))
+
+
 def _catalog_dict(nl_dir: str, embeddings_path: str) -> dict:
   return {
       "version": "1",
@@ -120,3 +150,41 @@ class SentenceCandidates:
       sentences = [self.name]
 
     return _SENTENCE_SEPARATOR.join(sentences)
+
+
+@dataclass
+class TopicCacheNode:
+  dcid: str
+  types: list[str] = field(default_factory=list)
+  names: list[str] = field(default_factory=list)
+  relevantVariables: list[str] = field(default_factory=list)
+  members: list[str] = field(default_factory=list)
+
+  def _csv_to_list(self, csv: str) -> list[str]:
+    return [item.strip() for item in csv.split(",")]
+
+  def maybe_add(self, triple: Triple):
+    if triple.predicate == sc.PREDICATE_TYPE_OF:
+      self.types.append(triple.object_id)
+    elif triple.predicate == sc.PREDICATE_NAME:
+      self.names.append(triple.object_value)
+    elif triple.predicate == sc.PREDICATE_RELEVANT_VARIABLE:
+      self.relevantVariables.append(triple.object_id)
+    elif triple.predicate == sc.PREDICATE_RELEVANT_VARIABLE_LIST:
+      print("[DEBUG] list", triple.object_value)
+      self.relevantVariables.extend(self._csv_to_list(triple.object_value))
+    elif triple.predicate == sc.PREDICATE_MEMBER_LIST:
+      self.members.extend(self._csv_to_list(triple.object_value))
+
+  def json(self) -> dict[str, any]:
+    result: dict[str, any] = {}
+    result["dcid"] = [self.dcid]
+    if self.types:
+      result["typeOf"] = self.types
+    if self.names:
+      result["name"] = self.names
+    if self.relevantVariables:
+      result["relevantVariableList"] = self.relevantVariables
+    if self.members:
+      result["memberList"] = self.members
+    return result
