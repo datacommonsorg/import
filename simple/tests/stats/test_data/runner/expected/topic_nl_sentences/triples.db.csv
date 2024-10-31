@@ -14,7 +14,12 @@ topic2,typeOf,Topic,
 topic2,name,,Topic2 Name
 topic2,searchDescription,,Topic2 Search Description1
 topic2,searchDescription,,Topic2 Search Description2
-topic2,relevantVariableList,,"var1, var2"
+topic2,relevantVariableList,,"var1, var2, svpg1"
+svpg1,typeOf,StatVarPeerGroup,
+svpg1,name,,SVPG1 Name
+svpg1,member,var1,
+svpg1,member,var2,
+svpg1,memberList,,"var3, var4"
 c/s/default,typeOf,Source,
 c/s/default,name,,Custom Data Commons
 c/s/1,typeOf,Source,

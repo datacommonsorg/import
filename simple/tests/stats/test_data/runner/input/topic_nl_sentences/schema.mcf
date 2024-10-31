@@ -20,4 +20,10 @@ typeOf: dcs:Topic
 name: "Topic2 Name"
 searchDescription: "Topic2 Search Description1"
 searchDescription: "Topic2 Search Description2"
-relevantVariableList: "var1, var2"
+relevantVariableList: "var1, var2, svpg1"
+
+Node: dcid:svpg1
+typeOf: dcs:StatVarPeerGroup
+name: "SVPG1 Name"
+member: dcid:var1, dcid:var2
+memberList: "var3, var4"

@@ -196,8 +196,10 @@ class Runner:
     # Generate sentences.
     nl.generate_nl_sentences(triples, self.nl_dir_fh)
 
-    # If generating topics, generate topic cache
+    # If generating topics, fetch svpg triples as well and generate topic cache
     if generate_topics:
+      triples = triples + self.db.select_triples_by_subject_type(
+          sc.TYPE_STAT_VAR_PEER_GROUP)
       nl.generate_topic_cache(triples, self.nl_dir_fh)
 
   def _generate_svg_hierarchy(self):
