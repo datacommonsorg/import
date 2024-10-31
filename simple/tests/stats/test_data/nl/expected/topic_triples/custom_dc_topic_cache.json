@@ -43,6 +43,23 @@
     "var7",
     "var8"
    ]
+  },
+  {
+   "dcid": [
+    "svpg1"
+   ],
+   "typeOf": [
+    "StatVarPeerGroup"
+   ],
+   "name": [
+    "SVPG 1"
+   ],
+   "memberList": [
+    "var1",
+    "var2",
+    "var3",
+    "var4"
+   ]
   }
  ]
 }

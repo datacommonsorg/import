@@ -17,9 +17,9 @@ import shutil
 import tempfile
 import unittest
 
-import pandas as pd
 from stats.data import Triple
 import stats.nl as nl
+import stats.schema_constants as sc
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import read_triples_csv
@@ -72,7 +72,9 @@ def _test_generate_nl_sentences(test: unittest.TestCase,
 
     nl_dir_fh = LocalFileHandler(temp_dir)
 
-    nl.generate_nl_sentences(input_triples, nl_dir_fh)
+    # Sentences are not generated for StatVarPeerGroup triples.
+    # So remove them first.
+    nl.generate_nl_sentences(_without_svpg_triples(input_triples), nl_dir_fh)
     _rewrite_catalog_for_testing(output_catalog_yaml_path, temp_dir)
 
     if generate_topics:
@@ -91,6 +93,18 @@ def _test_generate_nl_sentences(test: unittest.TestCase,
     if generate_topics:
       compare_files(test, output_topic_cache_json_path,
                     expected_topic_cache_json_path)
+
+
+def _without_svpg_triples(triples: list[Triple]) -> list[Triple]:
+  svpg_dcids = set()
+  for triple in triples:
+    if triple.predicate == sc.PREDICATE_TYPE_OF and triple.object_id == sc.TYPE_STAT_VAR_PEER_GROUP:
+      svpg_dcids.add(triple.subject_id)
+
+  if not svpg_dcids:
+    return triples
+  return list(
+      filter(lambda triple: triple.subject_id not in svpg_dcids, triples))
 
 
 class TestData(unittest.TestCase):

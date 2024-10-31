@@ -81,10 +81,10 @@ def generate_nl_sentences(triples: list[Triple], nl_dir_fh: FileHandler):
 
 
 def generate_topic_cache(triples: list[Triple], nl_dir_fh: FileHandler):
-  """Generates topic cache based on Topic (and in the future, StatVarPeerGroup) triples.
+  """Generates topic cache based on Topic and StatVarPeerGroup triples.
 
   This method should only be called for triples of types for which topic cache
-  should be generated. Currently it is only Topic.
+  should be generated (Topic and StatVarPeerGroup).
 
   This method does not do the type checks itself and the onus is on the caller 
   to filter triples.
@@ -172,6 +172,8 @@ class TopicCacheNode:
       self.relevantVariables.append(triple.object_id)
     elif triple.predicate == sc.PREDICATE_RELEVANT_VARIABLE_LIST:
       self.relevantVariables.extend(self._csv_to_list(triple.object_value))
+    elif triple.predicate == sc.PREDICATE_MEMBER:
+      self.members.append(triple.object_id)
     elif triple.predicate == sc.PREDICATE_MEMBER_LIST:
       self.members.extend(self._csv_to_list(triple.object_value))
 

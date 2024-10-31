@@ -13,3 +13,8 @@ topic_with_no_sentence_props,description,,Descriptions are NOT used for embeddin
 topic_with_no_sentence_props,relevantVariable,var5,
 topic_with_no_sentence_props,relevantVariable,var6,
 topic_with_no_sentence_props,relevantVariableList,,"var7,var8"
+svpg1,typeOf,StatVarPeerGroup,
+svpg1,name,,SVPG 1
+svpg1,member,var1,
+svpg1,member,var2,
+svpg1,memberList,,"var3,var4"
