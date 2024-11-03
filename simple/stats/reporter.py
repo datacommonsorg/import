@@ -19,7 +19,7 @@ from functools import wraps
 import json
 import time
 
-from util.filehandler import FileHandler
+from util.filesystem import File
 
 # Minimum interval before a report should be saved to disk or cloud.
 # This keeps it from reporting too frequently and running into GCS rate limit issues.
@@ -43,14 +43,14 @@ class ImportReporter:
     The report is written to report.json in the process directory.
     """
 
-  def __init__(self, report_fh: FileHandler) -> None:
+  def __init__(self, report_file: File) -> None:
     self.status = Status.NOT_STARTED
     self.start_time = None
     self.last_update = datetime.now()
     self.last_reported: float | None = None
-    self.report_fh = report_fh
+    self.report_file = report_file
     self.data = {}
-    self.import_files: dict[str, FileImportReporter] = {}
+    self.file_reporters_by_full_path: dict[str, FileImportReporter] = {}
 
   # Functions decorated with @_report will result in the report being saved
   # upon function execution.
@@ -65,11 +65,13 @@ class ImportReporter:
     return wrapper
 
   @_report
-  def report_started(self, import_files: list[str]):
+  def report_started(self, import_files: list[File]):
     self.status = Status.STARTED
     self.start_time = datetime.now()
     for import_file in import_files:
-      self.import_files[import_file] = FileImportReporter(import_file, self)
+      full_path = import_file.full_path()
+      self.file_reporters_by_full_path[full_path] = FileImportReporter(
+          full_path, self)
 
   @_report
   def report_done(self):
@@ -81,10 +83,10 @@ class ImportReporter:
     self.status = Status.FAILURE
     self.data["error"] = error
 
-  def import_file(self, import_file: str):
-    return self.import_files[import_file]
+  def get_file_reporter(self, import_file: File):
+    return self.file_reporters_by_full_path[import_file.full_path()]
 
-  def import_file_update(self, import_file: str):
+  def recompute_progress(self):
     self._compute_all_done()
     self.save()
 
@@ -95,8 +97,8 @@ class ImportReporter:
       self.status = Status.FAILURE
 
   def _all_file_imports(self, status: Status) -> bool:
-    return all(
-        reporter.status == status for reporter in self.import_files.values())
+    return all(reporter.status == status
+               for reporter in self.file_reporters_by_full_path.values())
 
   def json(self) -> dict:
     report = {}
@@ -113,11 +115,11 @@ class ImportReporter:
       report["startTime"] = str(self.start_time)
       report["lastUpdate"] = str(self.last_update)
 
-    import_files = {}
-    for import_file, import_file_reporter in self.import_files.items():
-      import_files[import_file] = import_file_reporter.json()
+    import_files_output = {}
+    for full_path, file_reporter in self.file_reporters_by_full_path.items():
+      import_files_output[full_path] = file_reporter.json()
 
-    report["importFiles"] = import_files
+    report["importFiles"] = import_files_output
 
     return report
 
@@ -128,18 +130,19 @@ class ImportReporter:
         self.status)
     if should_report:
       self.last_reported = time.time()
-      self.report_fh.write_string(json.dumps(self.json(), indent=2))
+      self.report_file.write(json.dumps(self.json(), indent=2))
 
 
 class FileImportReporter:
   """Generates a report on every reported change for a single file import.
     """
 
-  def __init__(self, import_file: str, parent: ImportReporter) -> None:
+  def __init__(self, import_file_full_path: str,
+               parent: ImportReporter) -> None:
     self.status = Status.NOT_STARTED
     self.start_time = None
     self.last_update = datetime.now()
-    self.import_file = import_file
+    self.import_file_full_path = import_file_full_path
     self.parent = parent
     self.data = {}
 
@@ -188,4 +191,4 @@ class FileImportReporter:
 
   def report(self) -> None:
     self.last_update = datetime.now()
-    self.parent.import_file_update(self.import_file)
+    self.parent.recompute_progress()

@@ -32,7 +32,7 @@ from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import use_fake_gzip_time
 from tests.stats.test_util import write_observations
-from util.filehandler import LocalFileHandler
+from util.filesystem import create_store
 
 from util import dc_client
 
@@ -50,29 +50,32 @@ def _test_import(test: unittest.TestCase, test_name: str):
   with tempfile.TemporaryDirectory() as temp_dir:
     input_dir = os.path.join(_INPUT_DIR, test_name)
     expected_dir = os.path.join(_EXPECTED_DIR, test_name)
+    temp_store = create_store(temp_dir)
 
     input_path = os.path.join(input_dir, "input.csv")
     config_path = os.path.join(input_dir, "config.json")
-    db_path = os.path.join(temp_dir, f"{test_name}.db")
+    db_file_name = f"{test_name}.db"
+    db_path = os.path.join(temp_dir, db_file_name)
+    db_file = temp_store.as_dir().open_file(db_file_name)
 
     output_path = os.path.join(temp_dir, f"{test_name}.db.csv")
     expected_path = os.path.join(_EXPECTED_DIR, f"{test_name}.db.csv")
     output_path = os.path.join(temp_dir, "observations.db.csv")
     expected_path = os.path.join(expected_dir, "observations.db.csv")
 
-    input_fh = LocalFileHandler(input_path)
+    input_file = create_store(input_path).as_file()
 
     with open(config_path) as config_file:
       config = Config(json.load(config_file))
 
-    db = create_and_update_db(create_sqlite_config(db_path))
-    report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))
-    reporter = FileImportReporter(input_path, ImportReporter(report_fh))
+    db = create_and_update_db(create_sqlite_config(db_file))
+    report_file = create_store(temp_dir).as_dir().open_file("report.json")
+    reporter = FileImportReporter(input_path, ImportReporter(report_file))
     nodes = Nodes(config)
 
     dc_client.get_property_of_entities = MagicMock(return_value={})
 
-    VariablePerRowImporter(input_fh=input_fh,
+    VariablePerRowImporter(input_file=input_file,
                            db=db,
                            reporter=reporter,
                            nodes=nodes).do_import()

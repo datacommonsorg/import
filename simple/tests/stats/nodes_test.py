@@ -25,7 +25,8 @@ from stats.data import StatVarGroup
 from stats.nodes import Nodes
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
-from util.filehandler import LocalFileHandler
+from util.filesystem import create_store
+from util.filesystem import File
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "nodes")
@@ -113,19 +114,40 @@ TEST_PROPERTY_COLUMNS = ["foo", "foo bar"]
 
 class TestNodes(unittest.TestCase):
 
+  def make_file(self, path: str) -> File:
+    return self.store.as_dir().open_file(path)
+
+  def setUp(self):
+    self.store = create_store("mem://")
+    self.a = self.make_file("a.csv")
+    self.b = self.make_file("b.csv")
+    self.events = self.make_file("events.csv")
+    self.entities = self.make_file("entities.csv")
+    self.x = self.make_file("x.csv")
+    self.map = {
+        "a.csv": self.a,
+        "b.csv": self.b,
+        "events.csv": self.events,
+        "entities.csv": self.entities,
+        "x.csv": self.x,
+    }
+
+  def tearDown(self):
+    self.store.close()
+
   def test_triples(self):
     nodes = Nodes(CONFIG)
     for sv_column_name, input_file_name in TEST_SV_COLUMN_AND_INPUT_FILE_NAMES:
-      nodes.variable(sv_column_name, input_file_name)
+      nodes.variable(sv_column_name, self.map[input_file_name])
 
     nodes.entities_with_type(TEST_ENTITY_DCIDS_1, TEST_ENTITY_TYPE_1)
     nodes.entities_with_type(TEST_ENTITY_DCIDS_2, TEST_ENTITY_TYPE_2)
 
     for event_type_name, input_file_name in TEST_EVENT_TYPE_INPUT_FILE_NAMES:
-      nodes.event_type(event_type_name, input_file_name)
+      nodes.event_type(event_type_name, self.map[input_file_name])
 
     for entity_type_name, input_file_name in TEST_ENTITY_TYPE_INPUT_FILE_NAMES:
-      nodes.entity_type(entity_type_name, input_file_name)
+      nodes.entity_type(entity_type_name, self.map[input_file_name])
 
     for property_column_name in TEST_PROPERTY_COLUMNS:
       nodes.property(property_column_name)
@@ -133,7 +155,9 @@ class TestNodes(unittest.TestCase):
     with tempfile.TemporaryDirectory() as temp_dir:
       output_path = os.path.join(temp_dir, f"triples.csv")
       expected_path = os.path.join(_EXPECTED_DIR, f"triples.csv")
-      nodes.triples(LocalFileHandler(output_path))
+      nodes.triples(
+          create_store(output_path, create_if_missing=True,
+                       treat_as_file=True).as_file())
 
       if is_write_mode():
         shutil.copy(output_path, expected_path)
@@ -143,7 +167,7 @@ class TestNodes(unittest.TestCase):
 
   def test_variable_with_no_config(self):
     nodes = Nodes(CONFIG)
-    sv = nodes.variable("Variable with no config", "a.csv")
+    sv = nodes.variable("Variable with no config", self.a)
     self.assertEqual(
         sv,
         StatVar(
@@ -157,7 +181,7 @@ class TestNodes(unittest.TestCase):
 
   def test_variable_with_config(self):
     nodes = Nodes(CONFIG)
-    sv = nodes.variable("var3", "a.csv")
+    sv = nodes.variable("var3", self.a)
     self.assertEqual(
         sv,
         StatVar(
@@ -173,7 +197,7 @@ class TestNodes(unittest.TestCase):
 
   def test_variable_with_group(self):
     nodes = Nodes(CONFIG)
-    sv = nodes.variable("Variable 1", "a.csv")
+    sv = nodes.variable("Variable 1", self.a)
     self.assertEqual(
         sv,
         StatVar(
@@ -206,7 +230,7 @@ class TestNodes(unittest.TestCase):
 
   def test_multiple_variables_in_same_group(self):
     nodes = Nodes(CONFIG)
-    sv = nodes.variable("Variable 1", "a.csv")
+    sv = nodes.variable("Variable 1", self.a)
     self.assertEqual(
         sv,
         StatVar(
@@ -217,7 +241,7 @@ class TestNodes(unittest.TestCase):
             source_ids=["c/s/1"],
         ),
     )
-    sv = nodes.variable("Variable 2", "a.csv")
+    sv = nodes.variable("Variable 2", self.a)
     self.assertEqual(
         sv,
         StatVar(
@@ -250,17 +274,17 @@ class TestNodes(unittest.TestCase):
 
   def test_provenance(self):
     nodes = Nodes(CONFIG)
-    nodes.variable("Variable 1", "a.csv")
-    nodes.variable("Variable X", "x.csv")
+    nodes.variable("Variable 1", self.a)
+    nodes.variable("Variable X", self.x)
 
     self.assertEqual(
-        nodes.provenance("a.csv"),
+        nodes.provenance(self.a),
         Provenance(id="c/p/1",
                    source_id="c/s/1",
                    name="Provenance1",
                    url="http://source1.com/provenance1"))
     self.assertEqual(
-        nodes.provenance("x.csv"),
+        nodes.provenance(self.x),
         Provenance(id="c/p/default",
                    source_id="c/s/default",
                    name="Custom Import",
@@ -268,7 +292,7 @@ class TestNodes(unittest.TestCase):
 
   def test_multiple_parent_groups(self):
     """This is to test a bug fix related to groups.
-    
+
     The bug was that if there are multiple custom parent groups and
     if a variable is inserted inbetween,
     the second parent is put under custom/g/Root instead of dc/g/Root.
@@ -277,7 +301,7 @@ class TestNodes(unittest.TestCase):
     """
     nodes = Nodes(Config({}))
     nodes.group("Parent 1/Child 1")
-    nodes.variable("foo", "x.csv")
+    nodes.variable("foo", self.x)
     nodes.group("Parent 2/Child 1")
 
     self.assertEqual(nodes.groups["Parent 1"].parent_id, "dc/g/Root")

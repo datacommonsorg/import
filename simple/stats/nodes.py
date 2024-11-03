@@ -28,7 +28,7 @@ from stats.data import StatVar
 from stats.data import StatVarGroup
 from stats.data import Triple
 import stats.schema_constants as sc
-from util.filehandler import FileHandler
+from util.filesystem import File
 
 _CUSTOM_SV_ID_PREFIX = "custom/statvar_"
 _CUSTOM_GROUP_ID_PREFIX = "custom/g/group_"
@@ -123,11 +123,11 @@ class Nodes:
 
     return source.id
 
-  def provenance(self, input_file_name: str) -> Provenance:
-    prov_name = self.config.provenance_name(input_file_name)
+  def provenance(self, input_file: File) -> Provenance:
+    prov_name = self.config.provenance_name(input_file)
     return self.provenances.get(prov_name, _DEFAULT_PROVENANCE)
 
-  def variable(self, sv_column_name: str, input_file_name: str) -> StatVar:
+  def variable(self, sv_column_name: str, input_file: File) -> StatVar:
     if not sv_column_name in self.variables:
       var_cfg = self.config.variable(sv_column_name)
       group = self.group(var_cfg.group_path)
@@ -141,7 +141,7 @@ class Nodes:
           properties=var_cfg.properties)
 
     return self._add_provenance(self.variables[sv_column_name],
-                                self.provenance(input_file_name))
+                                self.provenance(input_file))
 
   def property(self, property_column_name: str) -> Property:
     if not property_column_name in self.properties:
@@ -150,7 +150,7 @@ class Nodes:
 
     return self.properties[property_column_name]
 
-  def event_type(self, event_type_name: str, input_file_name: str) -> EventType:
+  def event_type(self, event_type_name: str, input_file: File) -> EventType:
     if not event_type_name in self.event_types:
       event_type_cfg = self.config.event(event_type_name)
       self.event_types[event_type_name] = EventType(
@@ -159,10 +159,9 @@ class Nodes:
           description=event_type_cfg.description)
 
     return self.event_types[event_type_name].add_provenance(
-        self.provenance(input_file_name))
+        self.provenance(input_file))
 
-  def entity_type(self, entity_type_name: str,
-                  input_file_name: str) -> EntityType:
+  def entity_type(self, entity_type_name: str, input_file: File) -> EntityType:
     if not entity_type_name in self.entity_types:
       entity_type_cfg = self.config.entity(entity_type_name)
       self.entity_types[entity_type_name] = EntityType(
@@ -171,7 +170,7 @@ class Nodes:
           description=entity_type_cfg.description)
 
     return self.entity_types[entity_type_name].add_provenance(
-        self.provenance(input_file_name))
+        self.provenance(input_file))
 
   def _add_provenance(self, sv: StatVar, provenance: Provenance) -> StatVar:
     sv.add_provenance(provenance)
@@ -270,7 +269,7 @@ class Nodes:
     for entity_dcid, entity_type in dcid2type.items():
       self.entity_with_type(entity_dcid, entity_type)
 
-  def triples(self, triples_fh: FileHandler | None = None) -> list[Triple]:
+  def triples(self, triples_file: File | None = None) -> list[Triple]:
     triples: list[Triple] = []
     for source in self.sources.values():
       triples.extend(source.triples())
@@ -289,8 +288,8 @@ class Nodes:
     for entities in self.entities.values():
       triples.extend(entities.triples())
 
-    if triples_fh:
-      logging.info("Writing %s triples to: %s", len(triples), str(triples_fh))
-      triples_fh.write_string(pd.DataFrame(triples).to_csv(index=False))
+    if triples_file:
+      logging.info("Writing %s triples to: %s", len(triples), triples_file.path)
+      triples_file.write(pd.DataFrame(triples).to_csv(index=False))
 
     return triples
