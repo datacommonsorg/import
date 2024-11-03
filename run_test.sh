@@ -79,7 +79,7 @@ function py_test {
   pip3 install -r requirements.txt -q
 
   echo -e "#### Running stats tests"
-  python3 -m pytest tests/stats/ -s
+  python3 -m pytest tests/ -s
 
   deactivate
 }

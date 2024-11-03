@@ -3,6 +3,8 @@ certifi==2023.7.22
 charset-normalizer==3.2.0
 cloud-sql-python-connector==1.4.3
 freezegun==1.2.2
+fs==2.4.16
+fs-gcsfs==1.5.1
 google-cloud-storage==2.11.0
 httpx==0.26.0
 idna==3.4
@@ -23,5 +25,5 @@ s2sphere==0.2.5
 six==1.16.0
 tomli==2.0.1
 tzdata==2023.3
-urllib3==2.0.4
+urllib3==1.26.20
 zipp==3.16.2
