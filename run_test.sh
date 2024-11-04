@@ -26,8 +26,8 @@ function run_lint_fix {
   then
     pip3 install isort -q
   fi
-  yapf -r -i -p --style='{based_on_style: google, indent_width: 2}' simple/ -e=*pb2.py -e=.env/*
-  isort simple/ --skip-glob *pb2.py  --skip-glob **/.env/** --profile google
+  yapf -r -i -p --style='{based_on_style: google, indent_width: 2}' simple/ -e=*pb2.py -e=**/.env/**
+  isort simple/ --skip-glob=*pb2.py  --skip-glob=**/.env/** --profile google
   deactivate
 }
 
@@ -42,13 +42,13 @@ function run_lint_test {
   fi
 
   echo -e "#### Checking Python style"
-  if ! yapf --recursive --diff --style='{based_on_style: google, indent_width: 2}' -p simple/ -e=*pb2.py -e=.env/*; then
+  if ! yapf --recursive --diff --style='{based_on_style: google, indent_width: 2}' -p simple/ -e=*pb2.py -e=**/.env/**; then
     echo "Fix Python lint errors by running ./run_test.sh -f"
     exit 1
   fi
 
   echo -e "#### Checking Python import order"
-  if ! isort simple/ -c --skip-glob *pb2.py  --skip-glob **/.env/** --profile google; then
+  if ! isort simple/ -c --skip-glob=*pb2.py  --skip-glob=**/.env/** --profile google; then
     echo "Fix Python import sort orders by running ./run_test.sh -f"
     exit 1
   fi
