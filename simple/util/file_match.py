@@ -21,8 +21,9 @@ def match(f: File, pattern: str) -> bool:
   """Returns true if this file's name or path matches a given pattern.
 
     Pattern rules:
-    - A leading double slash means the path must match from the root of the input dir.
-    - Protocol (e.g. gs://) can optionally be included in the pattern and will also add the requirement of matching from the root.
+    - A leading double slash means the path must match from the filesystem root, i.e. the absolute path.
+      - Protocol (e.g. gs://) can optionally be included in the pattern and will also add the requirement of matching from the root.
+    - A leading single slash will match the full path relative to the input dir.
     - A single wildcard (*) in the name or protocol portions of a pattern can be zero or more characters.
       - Double wildcards for name or protocol are invalid; use single wildcards instead.
     - A single wildcard (*) in the directory portion of a pattern can be any non-slash character.
@@ -36,12 +37,11 @@ def match(f: File, pattern: str) -> bool:
     - Match any CSV file in any directory or subdirectory: "*.csv"
     - Match any file called foo.csv in any directory or subdirectory: "foo.csv"
     - Match any file in a particular directory of a GCS bucket and its subdirectories: "gs://bucket/dir/**/*"
-    - Match any file in any directory called /bar/: "bar/*"
-    - Match any file in the root directory: "//*"
+    - Match any file in any directory called 'bar': "bar/*"
+    - Match any file in the input directory, but not its subdirectories: "/*"
     """
   original_pattern = pattern
   full_path = f.full_path()
-  dir_path, name = fspath.split(f.path)
   match_from_beginning = False
 
   # Handle protocol prefix.
@@ -50,19 +50,32 @@ def match(f: File, pattern: str) -> bool:
       return False
     protocol_pattern, pattern = pattern.split("://", 1)
     protocol_regex = _regexify_for_name(protocol_pattern, original_pattern)
-    if not _full_match(protocol_regex, full_path.split('://', 1)[0]):
+    protocol, abs_path = full_path.split('://', 1)
+    if not _full_match(protocol_regex, protocol):
       return False
     match_from_beginning = True
+  else:
+    if "://" in full_path:
+      # Switch to syspath
+      abs_path = fspath.relpath(f.syspath())
+    else:
+      abs_path = fspath.relpath(full_path)
 
-  # Handle leading double slash.
+  dir_path, name = fspath.split(f.path)
+
+  # Leading double slash -> full match with absolute path
   if pattern.startswith("//"):
     # We'll capture the full match requirement with re.search vs re.match.
     pattern = pattern[2:]
     match_from_beginning = True
+    # Use absolute path instead
+    dir_path, name = fspath.split(abs_path)
 
-  # Strip leading single slash. Patterns with and without one should be equivalent.
-  if pattern.startswith("/"):
+  # Leading single slash -> full match with relative path
+  elif pattern.startswith("/"):
+    # We'll capture the full match requirement with re.search vs re.match.
     pattern = pattern[1:]
+    match_from_beginning = True
 
   # Handle directory if accounted for in the pattern.
   if "/" in pattern:

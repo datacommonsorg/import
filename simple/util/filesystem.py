@@ -136,6 +136,12 @@ class _StoreWrapper():
       root_prefix, root_suffix = root_path.split("://", 1)
       return f"{root_prefix}://{fspath.join(root_suffix, self.path, sub_path)}"
 
+  def syspath(self) -> str | None:
+    """The local system path of the file or dir, or None if it has none."""
+    if self.fs().hassyspath(self.path):
+      return self.fs().getsyspath(self.path)
+    return None
+
 
 class Dir(_StoreWrapper):
 
@@ -185,12 +191,6 @@ class File(_StoreWrapper):
   def name(self) -> str:
     """The file name, including any extension and without a leading slash."""
     return fspath.basename(self.path)
-
-  def syspath(self) -> str | None:
-    """The local system path of the file, or None if it has none."""
-    if self.fs().hassyspath(self.path):
-      return self.fs().getsyspath(self.path)
-    return None
 
   def read(self) -> str:
     """Returns file contents as a string."""
