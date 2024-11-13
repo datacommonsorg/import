@@ -190,7 +190,7 @@ class TestConfig(unittest.TestCase):
     config = Config(CONFIG_DATA)
     self.assertEqual(config.import_type(self.make_file("a.csv")),
                      ImportType.OBSERVATIONS, "default import type")
-    self.assertEqual(config.import_type(self.make_file("observations")),
+    self.assertEqual(config.import_type(self.make_file("observations.csv")),
                      ImportType.OBSERVATIONS, "observations import type")
     self.assertEqual(config.import_type(self.make_file("events.csv")),
                      ImportType.EVENTS, "events import type")
