@@ -18,7 +18,7 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock
+from unittest import mock
 
 from stats import constants
 from stats.runner import RunMode
@@ -42,6 +42,7 @@ _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 def _test_runner(test: unittest.TestCase,
                  test_name: str,
+                 output_dir_name: str = None,
                  is_config_driven: bool = True,
                  run_mode: RunMode = RunMode.CUSTOM_DC,
                  input_db_file_name: str = None):
@@ -63,7 +64,8 @@ def _test_runner(test: unittest.TestCase,
       input_db_file = os.path.join(input_dir, input_db_file_name)
       read_full_db_from_file(db_path, input_db_file)
 
-    expected_dir = os.path.join(_EXPECTED_DIR, test_name)
+    output_dir_name = output_dir_name if output_dir_name else test_name
+    expected_dir = os.path.join(_EXPECTED_DIR, output_dir_name)
     expected_nl_dir = os.path.join(expected_dir, constants.NL_DIR_NAME)
     Path(expected_nl_dir).mkdir(parents=True, exist_ok=True)
 
@@ -86,10 +88,10 @@ def _test_runner(test: unittest.TestCase,
     expected_topic_cache_json_path = os.path.join(
         expected_dir, constants.NL_DIR_NAME, constants.TOPIC_CACHE_FILE_NAME)
 
-    dc_client.get_property_of_entities = MagicMock(return_value={})
+    dc_client.get_property_of_entities = mock.MagicMock(return_value={})
     if remote_entity_types_path and os.path.exists(remote_entity_types_path):
       with open(remote_entity_types_path, "r") as f:
-        dc_client.get_property_of_entities = MagicMock(
+        dc_client.get_property_of_entities = mock.MagicMock(
             return_value=json.load(f))
 
     Runner(config_file_path=config_path,
@@ -166,3 +168,18 @@ class TestRunner(unittest.TestCase):
                  is_config_driven=False,
                  run_mode=RunMode.SCHEMA_UPDATE,
                  input_db_file_name="sqlite_old_schema_populated.sql")
+
+  def test_with_subdirs_excluded(self):
+    _test_runner(self,
+                 "with_subdirs",
+                 output_dir_name="with_subdirs_excluded",
+                 is_config_driven=False)
+
+  @mock.patch.dict(os.environ, {
+      "INCLUDE_INPUT_SUBDIRS": "true",
+  })
+  def test_with_subdirs_included(self):
+    _test_runner(self,
+                 "with_subdirs",
+                 output_dir_name="with_subdirs_included",
+                 is_config_driven=False)

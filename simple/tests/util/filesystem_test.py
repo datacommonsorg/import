@@ -93,11 +93,17 @@ class TestFilesystem(unittest.TestCase):
       self.assertEqual(file.full_path(), "mem://dir1/dir2/dir3/foo.txt")
       dir.open_file("bar.txt")
       subdir.open_file("baz.txt")
-      all_file_paths = [file.full_path() for file in dir.all_files()]
-      self.assertListEqual(all_file_paths, [
+      all_file_paths_including_subdirs = [
+          file.full_path() for file in dir.all_files(include_subdirs=True)
+      ]
+      self.assertListEqual(all_file_paths_including_subdirs, [
           "mem://bar.txt", "mem://dir1/dir2/baz.txt",
           "mem://dir1/dir2/dir3/foo.txt"
       ])
+      all_file_paths_excluding_subdirs = [
+          file.full_path() for file in dir.all_files()
+      ]
+      self.assertListEqual(all_file_paths_excluding_subdirs, ["mem://bar.txt"])
 
   # Test copy_to method on File
   def test_copy_to(self):

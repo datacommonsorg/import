@@ -1,20 +1,7 @@
-# Copyright 2023 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from enum import StrEnum
 import json
 import logging
+import os
 
 import fs.path as fspath
 from stats import constants
@@ -70,6 +57,9 @@ class Runner:
 
     self.mode = mode
 
+    # New option to traverse subdirs of input dir(s).
+    self.include_input_subdirs = bool(os.getenv("INCLUDE_INPUT_SUBDIRS"))
+
     # File systems, both input and output. Must be closed when run finishes.
     self.stores: list[Store] = []
     # Input-only stores
@@ -110,8 +100,9 @@ class Runner:
 
     # Output directories
     output_store = create_store(output_dir_path, create_if_missing=True)
-    for input_store in self.input_stores:
-      _check_not_overlapping(input_store, output_store)
+    if self.include_input_subdirs:
+      for input_store in self.input_stores:
+        _check_not_overlapping(input_store, output_store)
     self.stores.append(output_store)
     self.output_dir = output_store.as_dir()
     self.nl_dir = self.output_dir.open_dir(constants.NL_DIR_NAME)
@@ -295,7 +286,8 @@ class Runner:
 
     for input_store in self.input_stores:
       if input_store.isdir():
-        input_files.extend(input_store.as_dir().all_files())
+        input_files.extend(input_store.as_dir().all_files(
+            self.include_input_subdirs))
       else:
         input_files.append(input_store.as_file())
 

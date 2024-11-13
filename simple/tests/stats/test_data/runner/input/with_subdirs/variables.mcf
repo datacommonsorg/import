@@ -1,0 +1,6 @@
+Node: v1
+dcid:"some_var1"
+typeOf: dcs:StatisticalVariable
+measuredProperty: dcs:value
+name: "Some Variable 1 Name"
+description: "Some Variable 1 Description"
