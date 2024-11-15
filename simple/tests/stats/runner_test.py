@@ -42,19 +42,17 @@ _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 def _test_runner(test: unittest.TestCase,
                  test_name: str,
+                 config_path: str = None,
                  output_dir_name: str = None,
-                 is_config_driven: bool = True,
                  run_mode: RunMode = RunMode.CUSTOM_DC,
                  input_db_file_name: str = None):
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
-    if is_config_driven:
-      config_path = os.path.join(_CONFIG_DIR, f"{test_name}.json")
+    if config_path:
       input_dir = None
       remote_entity_types_path = None
     else:
-      config_path = None
       input_dir = os.path.join(_INPUT_DIR, test_name)
       remote_entity_types_path = os.path.join(input_dir,
                                               "remote_entity_types.json")
@@ -136,50 +134,52 @@ class TestRunner(unittest.TestCase):
     use_fake_gzip_time()
 
   def test_config_driven(self):
-    _test_runner(self, "config_driven")
+    _test_runner(self,
+                 "config_driven",
+                 config_path=os.path.join(_CONFIG_DIR, "config_driven.json"))
 
   def test_config_with_wildcards(self):
-    _test_runner(self, "config_with_wildcards")
+    _test_runner(self,
+                 "config_with_wildcards",
+                 config_path=os.path.join(_CONFIG_DIR,
+                                          "config_with_wildcards.json"))
 
   def test_input_dir_driven(self):
-    _test_runner(self, "input_dir_driven", is_config_driven=False)
+    _test_runner(self, "input_dir_driven")
 
   def test_input_dir_driven_with_existing_old_schema_data(self):
     _test_runner(self,
                  "input_dir_driven_with_existing_old_schema_data",
-                 is_config_driven=False,
                  input_db_file_name="sqlite_old_schema_populated.sql")
 
   def test_generate_svg_hierarchy(self):
-    _test_runner(self, "generate_svg_hierarchy", is_config_driven=False)
+    _test_runner(self, "generate_svg_hierarchy")
 
   def test_sv_nl_sentences(self):
-    _test_runner(self, "sv_nl_sentences", is_config_driven=False)
+    _test_runner(self, "sv_nl_sentences")
 
   def test_topic_nl_sentences(self):
-    _test_runner(self, "topic_nl_sentences", is_config_driven=False)
+    _test_runner(self, "topic_nl_sentences")
 
   def test_remote_entity_types(self):
-    _test_runner(self, "remote_entity_types", is_config_driven=False)
+    _test_runner(self, "remote_entity_types")
 
   def test_schema_update_only(self):
     _test_runner(self,
                  "schema_update_only",
-                 is_config_driven=False,
                  run_mode=RunMode.SCHEMA_UPDATE,
                  input_db_file_name="sqlite_old_schema_populated.sql")
 
   def test_with_subdirs_excluded(self):
     _test_runner(self,
                  "with_subdirs",
-                 output_dir_name="with_subdirs_excluded",
-                 is_config_driven=False)
+                 config_path=os.path.join(_CONFIG_DIR,
+                                          "config_exclude_subdirs.json"),
+                 output_dir_name="with_subdirs_excluded")
 
-  @mock.patch.dict(os.environ, {
-      "INCLUDE_INPUT_SUBDIRS": "true",
-  })
   def test_with_subdirs_included(self):
     _test_runner(self,
                  "with_subdirs",
-                 output_dir_name="with_subdirs_included",
-                 is_config_driven=False)
+                 config_path=os.path.join(_CONFIG_DIR,
+                                          "config_include_subdirs.json"),
+                 output_dir_name="with_subdirs_included")

@@ -363,3 +363,13 @@ class TestConfig(unittest.TestCase):
     config = Config({"inputFiles": {"foo.csv": {}}})
     self.assertListEqual(config.entity_columns(self.make_file("foo.csv")), [],
                          "unspecified")
+
+  def test_include_input_subdirs(self):
+    config = Config({})
+    self.assertFalse(config.include_input_subdirs())
+
+    config = Config({"includeInputSubdirs": False})
+    self.assertFalse(config.include_input_subdirs())
+
+    config = Config({"includeInputSubdirs": True})
+    self.assertTrue(config.include_input_subdirs())

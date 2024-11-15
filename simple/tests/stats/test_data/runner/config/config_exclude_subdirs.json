@@ -1,4 +1,8 @@
 {
+  "includeInputSubdirs": false,
+  "dataDownloadUrl": [
+    "tests/stats/test_data/runner/input/with_subdirs"
+  ],
   "inputFiles": {
     "countries.csv": {
       "importType": "observations",

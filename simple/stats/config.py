@@ -55,6 +55,7 @@ _ENTITIES_FIELD = "entities"
 _GROUP_STAT_VARS_BY_PROPERTY = "groupStatVarsByProperty"
 _GENERATE_TOPICS = "generateTopics"
 _OBSERVATION_PROPERTIES = "observationProperties"
+_INCLUDE_INPUT_SUBDIRS_PROPERTY = "includeInputSubdirs"
 
 
 class Config:
@@ -175,6 +176,9 @@ class Config:
 
   def generate_hierarchy(self) -> bool:
     return self.data.get(_GROUP_STAT_VARS_BY_PROPERTY) or False
+
+  def include_input_subdirs(self) -> bool:
+    return self.data.get(_INCLUDE_INPUT_SUBDIRS_PROPERTY) or False
 
   def special_files(self) -> dict[str, str]:
     special_files: dict[str, str] = {}

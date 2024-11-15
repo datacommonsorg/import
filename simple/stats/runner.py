@@ -57,9 +57,6 @@ class Runner:
 
     self.mode = mode
 
-    # New option to traverse subdirs of input dir(s).
-    self.include_input_subdirs = bool(os.getenv("INCLUDE_INPUT_SUBDIRS"))
-
     # File systems, both input and output. Must be closed when run finishes.
     self.all_stores: list[Store] = []
     # Input-only stores
@@ -97,6 +94,9 @@ class Runner:
     # Get dict of special file type string to special file name.
     # Example entry: verticalSpecsFile -> vertical_specs.json
     self.special_file_names_by_type = self.config.special_files()
+
+    # New option to traverse subdirs of input dir(s). Defaults to false.
+    self.include_input_subdirs = self.config.include_input_subdirs()
 
     # Output directories
     output_store = create_store(output_dir_path, create_if_missing=True)
