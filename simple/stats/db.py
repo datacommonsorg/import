@@ -254,7 +254,8 @@ class MainDcDb(Db):
     # Right now, this overwrites any file with the same name,
     # so if different input sources have files with the same relative path,
     # they will clobber each others output. Treating this as an edge case
-    # for now but could resolve by allowing input sources to be mapped to output
+    # for now since it only affects the main DC case, but we could resolve
+    # it in the future by allowing input sources to be mapped to output
     # locations.
     self.output_dir.open_file(input_file.path).write(df.to_csv(index=False))
 

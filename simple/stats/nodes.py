@@ -289,7 +289,7 @@ class Nodes:
       triples.extend(entities.triples())
 
     if triples_file:
-      logging.info("Writing %s triples to: %s", len(triples), triples_file.path)
+      logging.info("Writing %s triples to: %s", len(triples), triples_file)
       triples_file.write(pd.DataFrame(triples).to_csv(index=False))
 
     return triples

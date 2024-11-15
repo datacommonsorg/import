@@ -188,6 +188,17 @@ class Config:
     return self.data.get(_GENERATE_TOPICS) or False
 
   def _per_file_config(self, input_file: File) -> dict:
+    """ Looks up the config for a given file.
+
+    The lookup process is as follows:
+    - If the file name exactly matches a config key, the config for that key
+      is returned.
+    - Else if the file's path relative to the input directory exactly matches
+      a config key, the config for that key is returned.
+    - Else, we attempt to match the file with each config key in order,
+      returning the first matching result.
+      Matches are checked with the match function in simple/util/file_match.py.
+    """
     for_exact_name = self._input_files_config.get(input_file.name(), {})
     if for_exact_name:
       return for_exact_name

@@ -61,7 +61,7 @@ class Runner:
     self.include_input_subdirs = bool(os.getenv("INCLUDE_INPUT_SUBDIRS"))
 
     # File systems, both input and output. Must be closed when run finishes.
-    self.stores: list[Store] = []
+    self.all_stores: list[Store] = []
     # Input-only stores
     self.input_stores: list[Store] = []
 
@@ -81,13 +81,13 @@ class Runner:
         raise ValueError("Data Download URLs not found in config.")
       for input_url in input_urls:
         input_store = create_store(input_url)
-        self.stores.append(input_store)
+        self.all_stores.append(input_store)
         self.input_stores.append(input_store)
 
     # Input dir driven (config file found in input dir)
     else:
       input_store = create_store(input_dir_path)
-      self.stores.append(input_store)
+      self.all_stores.append(input_store)
       self.input_stores.append(input_store)
 
       config_file = input_store.as_dir().open_file(
@@ -103,7 +103,7 @@ class Runner:
     if self.include_input_subdirs:
       for input_store in self.input_stores:
         _check_not_overlapping(input_store, output_store)
-    self.stores.append(output_store)
+    self.all_stores.append(output_store)
     self.output_dir = output_store.as_dir()
     self.nl_dir = self.output_dir.open_dir(constants.NL_DIR_NAME)
     self.process_dir = self.output_dir.open_dir(constants.PROCESS_DIR_NAME)
@@ -136,7 +136,7 @@ class Runner:
       self.reporter.report_done()
 
       # Close all file storage.
-      for store in self.stores:
+      for store in self.all_stores:
         store.close()
       logging.info("File storage closed.")
 
@@ -160,7 +160,7 @@ class Runner:
       sqlite_env_store = create_store(sqlite_path_from_env,
                                       create_if_missing=True,
                                       treat_as_file=True)
-      self.stores.append(sqlite_env_store)
+      self.all_stores.append(sqlite_env_store)
       sqlite_file = sqlite_env_store.as_file()
     else:
       logging.info("Using default SQLite settings.")
@@ -270,7 +270,7 @@ class Runner:
   def _generate_svg_cache(self):
     generate_svg_cache(self.db, self.svg_specialized_names)
 
-  def _check_if_special_file(self, file: File) -> None:
+  def _check_if_special_file(self, file: File) -> bool:
     for file_type in self.special_file_names_by_type.keys():
       if file_type in self.special_files:
         # Already found this special file.
@@ -278,6 +278,8 @@ class Runner:
       file_name = self.special_file_names_by_type[file_type]
       if match(file, file_name):
         self.special_files[file_type] = file
+        return True
+    return False
 
   def _run_all_data_imports(self):
     input_files: list[File] = []
@@ -292,7 +294,8 @@ class Runner:
         input_files.append(input_store.as_file())
 
     for input_file in input_files:
-      self._check_if_special_file(input_file)
+      if self._check_if_special_file(input_file):
+        continue
       if match(input_file, "*.csv"):
         input_csv_files.append(input_file)
       if match(input_file, "*.mcf"):
@@ -310,11 +313,11 @@ class Runner:
       self._run_single_mcf_import(input_mcf_file)
 
   def _run_single_import(self, input_file: File):
-    logging.info("Importing file: %s", input_file.name())
+    logging.info("Importing file: %s", input_file)
     self._create_importer(input_file).do_import()
 
   def _run_single_mcf_import(self, input_mcf_file: File):
-    logging.info("Importing MCF file: %s", input_mcf_file.name())
+    logging.info("Importing MCF file: %s", input_mcf_file)
     self._create_mcf_importer(input_mcf_file, self.output_dir,
                               self.mode == RunMode.MAIN_DC).do_import()
 
@@ -323,7 +326,8 @@ class Runner:
     # Right now, this overwrites any file with the same name,
     # so if different input sources have files with the same relative path,
     # they will clobber each others output. Treating this as an edge case
-    # for now but could resolve by allowing input sources to be mapped to output
+    # for now since it only affects the main DC case, but we could resolve
+    # it in the future by allowing input sources to be mapped to output
     # locations.
     output_file = output_dir.open_file(input_file.path)
     reporter = self.reporter.get_file_reporter(input_file)
