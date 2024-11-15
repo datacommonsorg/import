@@ -302,8 +302,8 @@ class Runner:
         input_mcf_files.append(input_file)
 
     # Sort input files alphabetically.
-    input_csv_files.sort(key=lambda f: f.name())
-    input_mcf_files.sort(key=lambda f: f.name())
+    input_csv_files.sort(key=lambda f: f.full_path())
+    input_mcf_files.sort(key=lambda f: f.full_path())
 
     self.reporter.report_started(import_files=list(input_csv_files +
                                                    input_mcf_files))
