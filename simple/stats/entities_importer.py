@@ -22,36 +22,35 @@ from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
-from util.filehandler import FileHandler
+from util.filesystem import File
 
 
 class EntitiesImporter(Importer):
   """Imports a single entities input file.
 
-  Key behaviors at this time: 
+  Key behaviors at this time:
   - All un-ignored columns will be encoded as property triples.
   - If an id column was configured, it will be used as the entity dcid. Else a new dcid will be generated for each entity.
   - Columns specified as entity columns will be encoded as object_id in the triples tables. Others will be encoded as object_value.
     + Currently this importer does not resolve any entities and all entities are assumed to be pre-resolved into dcids.
     """
 
-  def __init__(self, input_fh: FileHandler, db: Db,
-               reporter: FileImportReporter, nodes: Nodes) -> None:
-    self.input_fh = input_fh
+  def __init__(self, input_file: File, db: Db, reporter: FileImportReporter,
+               nodes: Nodes) -> None:
+    self.input_file = input_file
     self.db = db
     self.reporter = reporter
     self.nodes = nodes
-    self.input_file_name = self.input_fh.basename()
     self.config = nodes.config
-    self.ignore_columns = self.config.ignore_columns(self.input_file_name)
-    self.provenance = self.nodes.provenance(self.input_file_name).id
+    self.ignore_columns = self.config.ignore_columns(self.input_file)
+    self.provenance = self.nodes.provenance(self.input_file).id
 
-    self.row_entity_type = self.config.row_entity_type(self.input_file_name)
-    assert self.row_entity_type, f"Row entity type must be specified: {self.input_file_name}"
+    self.row_entity_type = self.config.row_entity_type(self.input_file)
+    assert self.row_entity_type, f"Row entity type must be specified: {self.input_file.full_path()}"
 
-    self.id_column = self.config.id_column(self.input_file_name)
+    self.id_column = self.config.id_column(self.input_file)
     # Reassigned when renaming columns.
-    self.entity_columns = set(self.config.entity_columns(self.input_file_name))
+    self.entity_columns = set(self.config.entity_columns(self.input_file))
 
     self.df = pd.DataFrame()
 
@@ -72,7 +71,7 @@ class EntitiesImporter(Importer):
     # Read CSVs with the following behaviors:
     # - Strip leading whitespaces
     # - Treat comma as a thousands separator
-    self.df = pd.read_csv(self.input_fh.read_string_io(),
+    self.df = pd.read_csv(self.input_file.read_string_io(),
                           skipinitialspace=True,
                           thousands=",")
     logging.info("Read %s rows.", self.df.index.size)
@@ -110,7 +109,7 @@ class EntitiesImporter(Importer):
     # Add event type node - it will be written to DB later.
     # This is to avoid duplicate entity types in scenarios where entities of the same type
     # are spread across files.
-    self.nodes.entity_type(self.row_entity_type, self.input_file_name)
+    self.nodes.entity_type(self.row_entity_type, self.input_file)
 
     # All property columns would've been renamed to their dcids by now.
     # So use the id column's dcid as the id column name.

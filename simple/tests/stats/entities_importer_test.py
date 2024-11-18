@@ -32,7 +32,7 @@ from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import use_fake_gzip_time
 from tests.stats.test_util import write_triples
-from util.filehandler import LocalFileHandler
+from util.filesystem import create_store
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "entities_importer")
@@ -46,26 +46,33 @@ def _test_import(test: unittest.TestCase, test_name: str):
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
-    input_file = f"{test_name}.csv"
-    input_path = os.path.join(_INPUT_DIR, input_file)
-    input_config_path = os.path.join(_INPUT_DIR, "config.json")
-    db_path = os.path.join(temp_dir, f"{test_name}.db")
+    input_store = create_store(_INPUT_DIR)
+    temp_store = create_store(temp_dir)
+
+    input_file_name = f"{test_name}.csv"
+    input_file = input_store.as_dir().open_file(input_file_name,
+                                                create_if_missing=False)
+    input_config_file = input_store.as_dir().open_file("config.json",
+                                                       create_if_missing=False)
+    db_file_name = f"{test_name}.db"
+    db_path = os.path.join(temp_dir, db_file_name)
+    db_file = temp_store.as_dir().open_file(db_file_name)
 
     output_triples_path = os.path.join(temp_dir, f"{test_name}.triples.db.csv")
     expected_triples_path = os.path.join(_EXPECTED_DIR,
                                          f"{test_name}.triples.db.csv")
 
-    input_fh = LocalFileHandler(input_path)
-
-    input_config_fh = LocalFileHandler(input_config_path)
-    config = Config(data=json.loads(input_config_fh.read_string()))
+    config = Config(data=json.loads(input_config_file.read()))
     nodes = Nodes(config)
 
-    db = create_and_update_db(create_sqlite_config(db_path))
-    report_fh = LocalFileHandler(os.path.join(temp_dir, "report.json"))
-    reporter = FileImportReporter(input_path, ImportReporter(report_fh))
+    db = create_and_update_db(create_sqlite_config(db_file))
+    report_file = temp_store.as_dir().open_file("report.json")
+    reporter = FileImportReporter(input_file.full_path(),
+                                  ImportReporter(report_file))
 
-    EntitiesImporter(input_fh=input_fh, db=db, reporter=reporter,
+    EntitiesImporter(input_file=input_file,
+                     db=db,
+                     reporter=reporter,
                      nodes=nodes).do_import()
     db.insert_triples(nodes.triples())
     db.commit_and_close()
@@ -77,6 +84,9 @@ def _test_import(test: unittest.TestCase, test_name: str):
       return
 
     compare_files(test, output_triples_path, expected_triples_path)
+
+    input_store.close()
+    temp_store.close()
 
 
 class TestEntitiesImporter(unittest.TestCase):

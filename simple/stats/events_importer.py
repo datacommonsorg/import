@@ -29,7 +29,7 @@ from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
-from util.filehandler import FileHandler
+from util.filesystem import File
 
 from util import dc_client as dc
 
@@ -42,26 +42,24 @@ class EventsImporter(Importer):
   """Imports a single events input file.
     """
 
-  def __init__(self, input_fh: FileHandler, db: Db,
-               debug_resolve_fh: FileHandler, reporter: FileImportReporter,
-               nodes: Nodes) -> None:
-    self.input_fh = input_fh
+  def __init__(self, input_file: File, db: Db, debug_resolve_file: File,
+               reporter: FileImportReporter, nodes: Nodes) -> None:
+    self.input_file = input_file
     self.db = db
-    self.debug_resolve_fh = debug_resolve_fh
+    self.debug_resolve_file = debug_resolve_file
     self.reporter = reporter
     self.nodes = nodes
-    self.input_file_name = self.input_fh.basename()
     self.config = nodes.config
-    self.entity_type = self.config.entity_type(self.input_file_name)
-    self.ignore_columns = self.config.ignore_columns(self.input_file_name)
-    self.provenance = self.nodes.provenance(self.input_file_name).id
+    self.entity_type = self.config.entity_type(self.input_file)
+    self.ignore_columns = self.config.ignore_columns(self.input_file)
+    self.provenance = self.nodes.provenance(self.input_file).id
     # Reassign after reading CSV.
     self.entity_column_name = constants.COLUMN_DCID
 
-    self.event_type = self.config.event_type(self.input_file_name)
-    assert self.event_type, f"Event type must be specified: {self.input_file_name}"
+    self.event_type = self.config.event_type(self.input_file)
+    assert self.event_type, f"Event type must be specified: {self.input_file.full_path()}"
 
-    self.id_column = self.config.id_column(self.input_file_name)
+    self.id_column = self.config.id_column(self.input_file)
 
     self.df = pd.DataFrame()
     self.debug_resolve_df = None
@@ -88,7 +86,7 @@ class EventsImporter(Importer):
     # - Set 1st column (i.e. the entity column) to type str (so that geoIds like "01" are not treated as ints and converted to 1)
     # - Strip leading whitespaces
     # - Treat comma as a thousands separator
-    self.df = pd.read_csv(self.input_fh.read_string_io(),
+    self.df = pd.read_csv(self.input_file.read_string_io(),
                           dtype={0: str},
                           skipinitialspace=True,
                           thousands=",")
@@ -125,17 +123,17 @@ class EventsImporter(Importer):
     self.df = self.df.rename(columns=renamed)
 
   def _write_observations(self) -> None:
-    sv_names = self.config.computed_variables(self.input_file_name)
+    sv_names = self.config.computed_variables(self.input_file)
     if not sv_names:
       logging.warning("No computed variables specified: %s",
-                      self.input_file_name)
+                      self.input_file.full_path())
       return
 
     for sv_name in sv_names:
-      sv_dcid = self.nodes.variable(sv_name, self.input_file_name).id
+      sv_dcid = self.nodes.variable(sv_name, self.input_file).id
       aggr_cfg = self.config.aggregation(sv_name)
       observations = self._compute_sv_observations(sv_dcid, aggr_cfg)
-      self.db.insert_observations(observations, self.input_file_name)
+      self.db.insert_observations(observations, self.input_file)
 
   def _compute_sv_observations(
       self, sv_dcid: str, aggr_cfg: AggregationConfig = AggregationConfig()
@@ -173,7 +171,7 @@ class EventsImporter(Importer):
     # Add event type node - it will be written to DB later.
     # This is to avoid duplicate event types in scenarios where events of the same type
     # are spread across files.
-    self.nodes.event_type(self.event_type, self.input_file_name)
+    self.nodes.event_type(self.event_type, self.input_file)
 
     # All property columns would've been renamed to their dcids by now.
     # So use the id column's dcid as the id column name.
@@ -305,9 +303,8 @@ class EventsImporter(Importer):
   def _write_debug_csvs(self) -> None:
     if self.debug_resolve_df is not None:
       logging.info("Writing resolutions (for debugging) to: %s",
-                   self.debug_resolve_fh)
-      self.debug_resolve_fh.write_string(
-          self.debug_resolve_df.to_csv(index=False))
+                   self.debug_resolve_file)
+      self.debug_resolve_file.write(self.debug_resolve_df.to_csv(index=False))
 
 
 # Utility methods

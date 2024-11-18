@@ -1,0 +1,48 @@
+{
+  "includeInputSubdirs": false,
+  "dataDownloadUrl": [
+    "tests/stats/test_data/runner/input/with_subdirs"
+  ],
+  "inputFiles": {
+    "countries.csv": {
+      "importType": "observations",
+      "format": "variablePerColumn",
+      "entityType": "Country",
+      "provenance": "Provenance1 Name"
+    },
+    "wikidataids.csv": {
+      "importType": "observations",
+      "format": "variablePerColumn",
+      "entityType": "Country",
+      "provenance": "Provenance1 Name"
+    },
+    "variable_per_row.csv": {
+      "importType": "observations",
+      "format": "variablePerRow",
+      "entityType": "Country",
+      "provenance": "Provenance1 Name"
+    },
+    "author_entities.csv": {
+      "importType": "entities",
+      "rowEntityType": "Author",
+      "idColumn": "author_id",
+      "entityColumns": ["author_country"],
+      "provenance": "Provenance1 Name"
+    },
+    "article_entities.csv": {
+      "importType": "entities",
+      "rowEntityType": "Article",
+      "idColumn": "article_id",
+      "entityColumns": ["article_author"],
+      "provenance": "Provenance1 Name"
+    }
+  },
+  "sources": {
+    "Source1 Name": {
+      "url": "http://source1.com",
+      "provenances": {
+        "Provenance1 Name": "http://source1.com/provenance1"
+      }
+    }
+  }
+}

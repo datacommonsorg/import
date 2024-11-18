@@ -23,7 +23,7 @@ import stats.schema_constants as sc
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import read_triples_csv
-from util.filehandler import LocalFileHandler
+from util.filesystem import create_store
 
 _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "nl")
@@ -41,10 +41,11 @@ def _rewrite_catalog_for_testing(catalog_yaml_path: str, temp_dir: str) -> None:
   To consistently test the catalog out against a golden file, we replace the temp paths
   with a constant fake path.
   """
-  catalog_fh = LocalFileHandler(catalog_yaml_path)
-  content = catalog_fh.read_string()
-  content = content.replace(temp_dir, _FAKE_PATH)
-  catalog_fh.write_string(content)
+  with create_store(catalog_yaml_path) as store:
+    catalog_file = store.as_file()
+    content = catalog_file.read()
+    content = content.replace(temp_dir, _FAKE_PATH)
+    catalog_file.write(content)
 
 
 def _test_generate_nl_sentences(test: unittest.TestCase,
@@ -53,6 +54,7 @@ def _test_generate_nl_sentences(test: unittest.TestCase,
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
+    temp_store = create_store(temp_dir)
     input_triples_path = os.path.join(_INPUT_DIR, f"{test_name}.csv")
     input_triples = read_triples_csv(input_triples_path)
 
@@ -70,15 +72,14 @@ def _test_generate_nl_sentences(test: unittest.TestCase,
     expected_topic_cache_json_path = os.path.join(_EXPECTED_DIR, test_name,
                                                   "custom_dc_topic_cache.json")
 
-    nl_dir_fh = LocalFileHandler(temp_dir)
-
     # Sentences are not generated for StatVarPeerGroup triples.
     # So remove them first.
-    nl.generate_nl_sentences(_without_svpg_triples(input_triples), nl_dir_fh)
+    nl.generate_nl_sentences(_without_svpg_triples(input_triples),
+                             nl_dir=temp_store.as_dir())
     _rewrite_catalog_for_testing(output_catalog_yaml_path, temp_dir)
 
     if generate_topics:
-      nl.generate_topic_cache(input_triples, nl_dir_fh)
+      nl.generate_topic_cache(input_triples, nl_dir=temp_store.as_dir())
 
     if is_write_mode():
       shutil.copy(output_sentences_csv_path, expected_sentences_csv_path)
@@ -93,6 +94,8 @@ def _test_generate_nl_sentences(test: unittest.TestCase,
     if generate_topics:
       compare_files(test, output_topic_cache_json_path,
                     expected_topic_cache_json_path)
+
+    temp_store.close()
 
 
 def _without_svpg_triples(triples: list[Triple]) -> list[Triple]:

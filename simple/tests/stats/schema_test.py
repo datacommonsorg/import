@@ -23,6 +23,7 @@ from stats import schema_constants as sc
 from stats.data import Triple
 from stats.db import create_and_update_db
 from stats.db import create_sqlite_config
+from util.filesystem import create_store
 
 
 def _to_triples(dcid2name: dict[str, str]) -> list[Triple]:
@@ -91,8 +92,8 @@ class TestSchema(unittest.TestCase):
                                                str], input_dcids: list[str],
                             output_names: dict[str, str], mock_dc_client):
     with tempfile.TemporaryDirectory() as temp_dir:
-      db_file_path = os.path.join(temp_dir, "datacommons.db")
-      db = create_and_update_db(create_sqlite_config(db_file_path))
+      db_file = create_store(temp_dir).as_dir().open_file("datacommons.db")
+      db = create_and_update_db(create_sqlite_config(db_file))
       db.insert_triples(_to_triples(db_names))
       mock_dc_client.return_value = remote_names
 

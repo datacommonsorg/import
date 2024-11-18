@@ -165,10 +165,11 @@ class Dir(_StoreWrapper):
           f"{self.full_path(path)} exists and is a directory, not a file")
     return File(self._store, new_path, create_if_missing)
 
-  def all_files(self):
+  def all_files(self, include_subdirs: bool = False):
     files = []
     subfs = self.fs().opendir(self.path)
-    for abspath in subfs.walk.files(self.path):
+    max_depth = None if include_subdirs else 1
+    for abspath in subfs.walk.files(self.path, max_depth=max_depth):
       files.append(self.open_file(abspath))
     return files
 

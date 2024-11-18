@@ -23,6 +23,8 @@ from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
 from stats.data import TimePeriod
+from util.filesystem import create_store
+from util.filesystem import File
 
 CONFIG_DATA = {
     "inputFiles": {
@@ -124,6 +126,15 @@ class TestConfig(unittest.TestCase):
     super().__init__(methodName)
     self.maxDiff = None
 
+  def make_file(self, path: str) -> File:
+    return self.store.as_dir().open_file(path)
+
+  def setUp(self):
+    self.store = create_store("mem://")
+
+  def tearDown(self):
+    self.store.close()
+
   def test_variable(self):
     config = Config(CONFIG_DATA)
     self.assertEqual(
@@ -151,15 +162,18 @@ class TestConfig(unittest.TestCase):
 
   def test_entity_type(self):
     config = Config(CONFIG_DATA)
-    self.assertEqual(config.entity_type("a.csv"), "Country")
-    self.assertEqual(config.entity_type("b.csv"), "")
-    self.assertEqual(config.entity_type("not-in-config.csv"), "")
+    self.assertEqual(config.entity_type(self.make_file("a.csv")), "Country")
+    self.assertEqual(config.entity_type(self.make_file("b.csv")), "")
+    self.assertEqual(config.entity_type(self.make_file("not_in_config.csv")),
+                     "")
 
   def test_ignore_columns(self):
     config = Config(CONFIG_DATA)
-    self.assertEqual(config.ignore_columns("a.csv"), [])
-    self.assertEqual(config.ignore_columns("b.csv"), ["ignore1", "ignore2"])
-    self.assertEqual(config.ignore_columns("not-in-config.csv"), [])
+    self.assertEqual(config.ignore_columns(self.make_file("a.csv")), [])
+    self.assertEqual(config.ignore_columns(self.make_file("b.csv")),
+                     ["ignore1", "ignore2"])
+    self.assertEqual(config.ignore_columns(self.make_file("not_in_config.csv")),
+                     [])
 
   def test_provenances_and_sources(self):
     config = Config(CONFIG_DATA)
@@ -168,19 +182,20 @@ class TestConfig(unittest.TestCase):
 
   def test_provenance_name(self):
     config = Config(CONFIG_DATA)
-    self.assertEqual(config.provenance_name("a.csv"), "Provenance21 Name")
-    self.assertEqual(config.provenance_name("b.csv"), "b.csv")
+    self.assertEqual(config.provenance_name(self.make_file("a.csv")),
+                     "Provenance21 Name")
+    self.assertEqual(config.provenance_name(self.make_file("b.csv")), "b.csv")
 
   def test_import_type(self):
     config = Config(CONFIG_DATA)
-    self.assertEqual(config.import_type("a.csv"), ImportType.OBSERVATIONS,
-                     "default import type")
-    self.assertEqual(config.import_type("observations.csv"),
+    self.assertEqual(config.import_type(self.make_file("a.csv")),
+                     ImportType.OBSERVATIONS, "default import type")
+    self.assertEqual(config.import_type(self.make_file("observations.csv")),
                      ImportType.OBSERVATIONS, "observations import type")
-    self.assertEqual(config.import_type("events.csv"), ImportType.EVENTS,
-                     "events import type")
+    self.assertEqual(config.import_type(self.make_file("events.csv")),
+                     ImportType.EVENTS, "events import type")
     with self.assertRaisesRegex(ValueError, "Unsupported import type"):
-      config.import_type("invalid_import_type.csv")
+      config.import_type(self.make_file("invalid_import_type.csv"))
 
   def test_aggregation(self):
     config = Config(CONFIG_DATA)
@@ -198,11 +213,11 @@ class TestConfig(unittest.TestCase):
   def test_empty_config(self):
     config = Config({})
     self.assertEqual(config.variable("Variable 1"), StatVar("", "Variable 1"))
-    self.assertEqual(config.entity_type("a.csv"), "")
-    self.assertEqual(config.ignore_columns("a.csv"), [])
+    self.assertEqual(config.entity_type(self.make_file("a.csv")), "")
+    self.assertEqual(config.ignore_columns(self.make_file("a.csv")), [])
     self.assertDictEqual(config.provenances, {})
     self.assertDictEqual(config.provenance_sources, {})
-    self.assertEqual(config.provenance_name("a.csv"), "a.csv")
+    self.assertEqual(config.provenance_name(self.make_file("a.csv")), "a.csv")
 
   def test_data_download_urls(self):
     self.assertListEqual(Config({}).data_download_urls(), [], "empty")
@@ -216,7 +231,8 @@ class TestConfig(unittest.TestCase):
         }).data_download_urls(), ["foo", "bar"], "two urls")
 
   def test_input_file(self):
-    self.assertDictEqual(Config({})._input_file("foo.csv"), {}, "empty")
+    self.assertDictEqual(
+        Config({})._per_file_config(self.make_file("foo.csv")), {}, "empty")
     self.assertDictEqual(
         Config({
             "inputFiles": {
@@ -224,7 +240,43 @@ class TestConfig(unittest.TestCase):
                     "x": "y"
                 }
             }
-        })._input_file("foo.csv"), {"x": "y"}, "exact match")
+        })._per_file_config(self.make_file("foo.csv")), {"x": "y"},
+        "exact match")
+    self.assertDictEqual(
+        Config({
+            "inputFiles": {
+                "foo.csv": {
+                    "x": "y"
+                }
+            }
+        })._per_file_config(self.make_file("path/to/foo.csv")), {"x": "y"},
+        "subdir match")
+    self.assertDictEqual(
+        Config({
+            "inputFiles": {
+                "path/to/*.csv": {
+                    "x": "y"
+                }
+            }
+        })._per_file_config(self.make_file("path/to/foo.csv")), {"x": "y"},
+        "subdir match with path")
+    self.assertDictEqual(
+        Config({
+            "inputFiles": {
+                "path/to/*.csv": {
+                    "x": "y"
+                }
+            }
+        })._per_file_config(self.make_file("foo.csv")), {}, "different subdir")
+    self.assertDictEqual(
+        Config({
+            "inputFiles": {
+                "//to/*.csv": {
+                    "x": "y"
+                }
+            }
+        })._per_file_config(self.make_file("path/to/foo.csv")), {},
+        "wrong subdir")
     self.assertDictEqual(
         Config({
             "inputFiles": {
@@ -232,7 +284,8 @@ class TestConfig(unittest.TestCase):
                     "x": "y"
                 }
             }
-        })._input_file("foo1.csv"), {"x": "y"}, "wildcard match")
+        })._per_file_config(self.make_file("foo1.csv")), {"x": "y"},
+        "wildcard match")
     self.assertDictEqual(
         Config({
             "inputFiles": {
@@ -240,7 +293,7 @@ class TestConfig(unittest.TestCase):
                     "x": "y"
                 }
             }
-        })._input_file("foo.csv"), {}, "no exact match")
+        })._per_file_config(self.make_file("foo.csv")), {}, "no exact match")
     self.assertDictEqual(
         Config({
             "inputFiles": {
@@ -248,14 +301,16 @@ class TestConfig(unittest.TestCase):
                     "x": "y"
                 }
             }
-        })._input_file("foo1.csv"), {}, "no wildcard match")
+        })._per_file_config(self.make_file("foo1.csv")), {},
+        "no wildcard match")
 
   def test_input_file_format(self):
     config = Config({})
-    self.assertEqual(config.format("foo.csv"), None, "empty")
+    self.assertEqual(config.format(self.make_file("foo.csv")), None, "empty")
 
     config = Config({"inputFiles": {"foo.csv": {"format": "variablePerRow"}}})
-    self.assertEqual(config.format("foo.csv"), InputFileFormat.VARIABLE_PER_ROW)
+    self.assertEqual(config.format(self.make_file("foo.csv")),
+                     InputFileFormat.VARIABLE_PER_ROW)
 
     config = Config(
         {"inputFiles": {
@@ -263,33 +318,38 @@ class TestConfig(unittest.TestCase):
                 "format": "variablePerColumn"
             }
         }})
-    self.assertEqual(config.format("foo.csv"),
+    self.assertEqual(config.format(self.make_file("foo.csv")),
                      InputFileFormat.VARIABLE_PER_COLUMN)
 
     config = Config({"inputFiles": {"foo.csv": {"format": "INVALID"}}})
     with self.assertRaisesRegex(ValueError, "Unsupported format"):
-      config.format("foo.csv")
+      config.format(self.make_file("foo.csv"))
 
   def test_column_mappings(self):
     config = Config({})
-    self.assertDictEqual(config.column_mappings("foo.csv"), {}, "empty")
+    self.assertDictEqual(config.column_mappings(self.make_file("foo.csv")), {},
+                         "empty")
 
     config = Config({"inputFiles": {"foo.csv": {"columnMappings": {"x": "y"}}}})
-    self.assertDictEqual(config.column_mappings("foo.csv"), {"x": "y"})
+    self.assertDictEqual(config.column_mappings(self.make_file("foo.csv")),
+                         {"x": "y"})
 
   def test_row_entity_type(self):
     config = Config({})
-    self.assertEqual(config.row_entity_type("foo.csv"), "", "empty")
+    self.assertEqual(config.row_entity_type(self.make_file("foo.csv")), "",
+                     "empty")
 
     config = Config({"inputFiles": {"foo.csv": {"rowEntityType": "Foo"}}})
-    self.assertEqual(config.row_entity_type("foo.csv"), "Foo")
+    self.assertEqual(config.row_entity_type(self.make_file("foo.csv")), "Foo")
 
     config = Config({"inputFiles": {"foo.csv": {}}})
-    self.assertEqual(config.row_entity_type("foo.csv"), "", "unspecified")
+    self.assertEqual(config.row_entity_type(self.make_file("foo.csv")), "",
+                     "unspecified")
 
   def test_entity_columns(self):
     config = Config({})
-    self.assertListEqual(config.entity_columns("foo.csv"), [], "empty")
+    self.assertListEqual(config.entity_columns(self.make_file("foo.csv")), [],
+                         "empty")
 
     config = Config(
         {"inputFiles": {
@@ -297,7 +357,19 @@ class TestConfig(unittest.TestCase):
                 "entityColumns": ["foo", "bar"]
             }
         }})
-    self.assertListEqual(config.entity_columns("foo.csv"), ["foo", "bar"])
+    self.assertListEqual(config.entity_columns(self.make_file("foo.csv")),
+                         ["foo", "bar"])
 
     config = Config({"inputFiles": {"foo.csv": {}}})
-    self.assertListEqual(config.entity_columns("foo.csv"), [], "unspecified")
+    self.assertListEqual(config.entity_columns(self.make_file("foo.csv")), [],
+                         "unspecified")
+
+  def test_include_input_subdirs(self):
+    config = Config({})
+    self.assertFalse(config.include_input_subdirs())
+
+    config = Config({"includeInputSubdirs": False})
+    self.assertFalse(config.include_input_subdirs())
+
+    config = Config({"includeInputSubdirs": True})
+    self.assertTrue(config.include_input_subdirs())

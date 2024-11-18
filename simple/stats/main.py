@@ -61,9 +61,9 @@ def _init_logger():
 
 
 def _run():
-  Runner(config_file=FLAGS.config_file,
-         input_dir=FLAGS.input_dir,
-         output_dir=FLAGS.output_dir,
+  Runner(config_file_path=FLAGS.config_file,
+         input_dir_path=FLAGS.input_dir,
+         output_dir_path=FLAGS.output_dir,
          mode=FLAGS.mode).run()
 
 

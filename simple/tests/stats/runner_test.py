@@ -16,15 +16,11 @@ import json
 import os
 from pathlib import Path
 import shutil
-import sqlite3
 import tempfile
 import unittest
-from unittest.mock import MagicMock
+from unittest import mock
 
-import pandas as pd
 from stats import constants
-from stats.data import Observation
-from stats.data import Triple
 from stats.runner import RunMode
 from stats.runner import Runner
 from tests.stats.test_util import compare_files
@@ -46,18 +42,17 @@ _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 def _test_runner(test: unittest.TestCase,
                  test_name: str,
-                 is_config_driven: bool = True,
+                 config_path: str = None,
+                 output_dir_name: str = None,
                  run_mode: RunMode = RunMode.CUSTOM_DC,
                  input_db_file_name: str = None):
   test.maxDiff = None
 
   with tempfile.TemporaryDirectory() as temp_dir:
-    if is_config_driven:
-      config_path = os.path.join(_CONFIG_DIR, f"{test_name}.json")
+    if config_path:
       input_dir = None
       remote_entity_types_path = None
     else:
-      config_path = None
       input_dir = os.path.join(_INPUT_DIR, test_name)
       remote_entity_types_path = os.path.join(input_dir,
                                               "remote_entity_types.json")
@@ -67,7 +62,8 @@ def _test_runner(test: unittest.TestCase,
       input_db_file = os.path.join(input_dir, input_db_file_name)
       read_full_db_from_file(db_path, input_db_file)
 
-    expected_dir = os.path.join(_EXPECTED_DIR, test_name)
+    output_dir_name = output_dir_name if output_dir_name else test_name
+    expected_dir = os.path.join(_EXPECTED_DIR, output_dir_name)
     expected_nl_dir = os.path.join(expected_dir, constants.NL_DIR_NAME)
     Path(expected_nl_dir).mkdir(parents=True, exist_ok=True)
 
@@ -90,15 +86,15 @@ def _test_runner(test: unittest.TestCase,
     expected_topic_cache_json_path = os.path.join(
         expected_dir, constants.NL_DIR_NAME, constants.TOPIC_CACHE_FILE_NAME)
 
-    dc_client.get_property_of_entities = MagicMock(return_value={})
+    dc_client.get_property_of_entities = mock.MagicMock(return_value={})
     if remote_entity_types_path and os.path.exists(remote_entity_types_path):
       with open(remote_entity_types_path, "r") as f:
-        dc_client.get_property_of_entities = MagicMock(
+        dc_client.get_property_of_entities = mock.MagicMock(
             return_value=json.load(f))
 
-    Runner(config_file=config_path,
-           input_dir=input_dir,
-           output_dir=temp_dir,
+    Runner(config_file_path=config_path,
+           input_dir_path=input_dir,
+           output_dir_path=temp_dir,
            mode=run_mode).run()
 
     write_triples(db_path, output_triples_path)
@@ -138,35 +134,52 @@ class TestRunner(unittest.TestCase):
     use_fake_gzip_time()
 
   def test_config_driven(self):
-    _test_runner(self, "config_driven")
+    _test_runner(self,
+                 "config_driven",
+                 config_path=os.path.join(_CONFIG_DIR, "config_driven.json"))
 
   def test_config_with_wildcards(self):
-    _test_runner(self, "config_with_wildcards")
+    _test_runner(self,
+                 "config_with_wildcards",
+                 config_path=os.path.join(_CONFIG_DIR,
+                                          "config_with_wildcards.json"))
 
   def test_input_dir_driven(self):
-    _test_runner(self, "input_dir_driven", is_config_driven=False)
+    _test_runner(self, "input_dir_driven")
 
   def test_input_dir_driven_with_existing_old_schema_data(self):
     _test_runner(self,
                  "input_dir_driven_with_existing_old_schema_data",
-                 is_config_driven=False,
                  input_db_file_name="sqlite_old_schema_populated.sql")
 
   def test_generate_svg_hierarchy(self):
-    _test_runner(self, "generate_svg_hierarchy", is_config_driven=False)
+    _test_runner(self, "generate_svg_hierarchy")
 
   def test_sv_nl_sentences(self):
-    _test_runner(self, "sv_nl_sentences", is_config_driven=False)
+    _test_runner(self, "sv_nl_sentences")
 
   def test_topic_nl_sentences(self):
-    _test_runner(self, "topic_nl_sentences", is_config_driven=False)
+    _test_runner(self, "topic_nl_sentences")
 
   def test_remote_entity_types(self):
-    _test_runner(self, "remote_entity_types", is_config_driven=False)
+    _test_runner(self, "remote_entity_types")
 
   def test_schema_update_only(self):
     _test_runner(self,
                  "schema_update_only",
-                 is_config_driven=False,
                  run_mode=RunMode.SCHEMA_UPDATE,
                  input_db_file_name="sqlite_old_schema_populated.sql")
+
+  def test_with_subdirs_excluded(self):
+    _test_runner(self,
+                 "with_subdirs",
+                 config_path=os.path.join(_CONFIG_DIR,
+                                          "config_exclude_subdirs.json"),
+                 output_dir_name="with_subdirs_excluded")
+
+  def test_with_subdirs_included(self):
+    _test_runner(self,
+                 "with_subdirs",
+                 config_path=os.path.join(_CONFIG_DIR,
+                                          "config_include_subdirs.json"),
+                 output_dir_name="with_subdirs_included")

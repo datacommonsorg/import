@@ -1,21 +1,9 @@
-# Copyright 2023 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from enum import StrEnum
 import json
 import logging
+import os
 
+import fs.path as fspath
 from stats import constants
 from stats import schema
 from stats import stat_var_hierarchy_generator
@@ -30,7 +18,7 @@ from stats.db import create_and_update_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
 from stats.db import get_cloud_sql_config_from_env
-from stats.db import get_sqlite_config_from_env
+from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
 from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
@@ -42,8 +30,11 @@ from stats.observations_importer import ObservationsImporter
 from stats.reporter import ImportReporter
 import stats.schema_constants as sc
 from stats.variable_per_row_importer import VariablePerRowImporter
-from util.filehandler import create_file_handler
-from util.filehandler import FileHandler
+from util.file_match import match
+from util.filesystem import create_store
+from util.filesystem import Dir
+from util.filesystem import File
+from util.filesystem import Store
 
 
 class RunMode(StrEnum):
@@ -57,62 +48,69 @@ class Runner:
     """
 
   def __init__(self,
-               config_file: str,
-               input_dir: str,
-               output_dir: str,
+               config_file_path: str,
+               input_dir_path: str,
+               output_dir_path: str,
                mode: RunMode = RunMode.CUSTOM_DC) -> None:
-    assert config_file or input_dir, "One of config_file or input_dir must be specified"
-    assert output_dir, "output_dir must be specified"
+    assert config_file_path or input_dir_path, "One of config_file or input_dir must be specified"
+    assert output_dir_path, "output_dir must be specified"
 
     self.mode = mode
-    self.input_handlers: list[FileHandler] = []
+
+    # File systems, both input and output. Must be closed when run finishes.
+    self.all_stores: list[Store] = []
+    # Input-only stores
+    self.input_stores: list[Store] = []
+
     # "Special" file handlers.
     # i.e. if files of these types are present, they are handled in specific ways.
-    self.special_handlers: dict[str, FileHandler] = {}
+    self.special_files: dict[str, File] = {}
     self.svg_specialized_names: ParentSVG2ChildSpecializedNames = {}
 
-    # Config file driven.
-    if config_file:
-      config_fh = create_file_handler(config_file, is_dir=False)
-      if not config_fh.exists():
-        raise FileNotFoundError("Config file must be provided.")
-      self.config = Config(data=json.loads(config_fh.read_string()))
+    # Config file driven (input paths pulled from config)
+    if config_file_path:
+      with create_store(config_file_path) as config_store:
+        config_data = config_store.as_file().read()
+        self.config = Config(data=json.loads(config_data))
 
       input_urls = self.config.data_download_urls()
       if not input_urls:
         raise ValueError("Data Download URLs not found in config.")
       for input_url in input_urls:
-        self.input_handlers.append(create_file_handler(input_url, is_dir=True))
+        input_store = create_store(input_url)
+        self.all_stores.append(input_store)
+        self.input_stores.append(input_store)
 
-    #Input dir driven.
+    # Input dir driven (config file found in input dir)
     else:
-      input_dir_fh = create_file_handler(input_dir, is_dir=True)
-      if not input_dir_fh.isdir:
-        raise NotADirectoryError(
-            f"Input path must be a directory: {input_dir}. If it is a GCS path, ensure it ends with a '/'."
-        )
-      self.input_handlers.append(input_dir_fh)
+      input_store = create_store(input_dir_path)
+      self.all_stores.append(input_store)
+      self.input_stores.append(input_store)
 
-      config_fh = input_dir_fh.make_file(constants.CONFIG_JSON_FILE_NAME)
-      if not config_fh.exists():
-        raise FileNotFoundError("Config file must be provided.")
-      self.config = Config(data=json.loads(config_fh.read_string()))
+      config_file = input_store.as_dir().open_file(
+          constants.CONFIG_JSON_FILE_NAME, create_if_missing=False)
+      self.config = Config(data=json.loads(config_file.read()))
 
-    self.special_file_to_type = self.config.special_files()
+    # Get dict of special file type string to special file name.
+    # Example entry: verticalSpecsFile -> vertical_specs.json
+    self.special_file_names_by_type = self.config.special_files()
+
+    # New option to traverse subdirs of input dir(s). Defaults to false.
+    self.include_input_subdirs = self.config.include_input_subdirs()
 
     # Output directories
-    self.output_dir_fh = create_file_handler(output_dir, is_dir=True)
-    self.nl_dir_fh = self.output_dir_fh.make_file(f"{constants.NL_DIR_NAME}/")
-    self.process_dir_fh = self.output_dir_fh.make_file(
-        f"{constants.PROCESS_DIR_NAME}/")
-
-    self.output_dir_fh.make_dirs()
-    self.nl_dir_fh.make_dirs()
-    self.process_dir_fh.make_dirs()
+    output_store = create_store(output_dir_path, create_if_missing=True)
+    if self.include_input_subdirs:
+      for input_store in self.input_stores:
+        _check_not_overlapping(input_store, output_store)
+    self.all_stores.append(output_store)
+    self.output_dir = output_store.as_dir()
+    self.nl_dir = self.output_dir.open_dir(constants.NL_DIR_NAME)
+    self.process_dir = self.output_dir.open_dir(constants.PROCESS_DIR_NAME)
 
     # Reporter.
-    self.reporter = ImportReporter(report_fh=self.process_dir_fh.make_file(
-        constants.REPORT_JSON_FILE_NAME))
+    self.reporter = ImportReporter(
+        report_file=self.process_dir.open_file(constants.REPORT_JSON_FILE_NAME))
 
     self.nodes = Nodes(self.config)
     self.db = None
@@ -136,6 +134,12 @@ class Runner:
 
       # Report done.
       self.reporter.report_done()
+
+      # Close all file storage.
+      for store in self.all_stores:
+        store.close()
+      logging.info("File storage closed.")
+
     except Exception as e:
       logging.exception("Error updating stats")
       self.reporter.report_failure(error=str(e))
@@ -143,20 +147,25 @@ class Runner:
   def _get_db_config(self) -> dict:
     if self.mode == RunMode.MAIN_DC:
       logging.info("Using Main DC config.")
-      return create_main_dc_config(self.output_dir_fh.path)
+      return create_main_dc_config(self.output_dir.path)
     # Attempt to get from env (cloud sql, then sqlite),
     # then config file, then default.
     db_cfg = get_cloud_sql_config_from_env()
     if db_cfg:
       logging.info("Using Cloud SQL settings from env.")
       return db_cfg
-    db_cfg = get_sqlite_config_from_env()
-    if db_cfg:
+    sqlite_path_from_env = get_sqlite_path_from_env()
+    if sqlite_path_from_env:
       logging.info("Using SQLite settings from env.")
-      return db_cfg
-    logging.info("Using default DB settings.")
-    return create_sqlite_config(
-        self.output_dir_fh.make_file(constants.DB_FILE_NAME).path)
+      sqlite_env_store = create_store(sqlite_path_from_env,
+                                      create_if_missing=True,
+                                      treat_as_file=True)
+      self.all_stores.append(sqlite_env_store)
+      sqlite_file = sqlite_env_store.as_file()
+    else:
+      logging.info("Using default SQLite settings.")
+      sqlite_file = self.output_dir.open_file(constants.DB_FILE_NAME)
+    return create_sqlite_config(sqlite_file)
 
   def _run_imports_and_do_post_import_work(self):
     # (SQL only) Drop data in existing tables (except import metadata).
@@ -194,13 +203,13 @@ class Runner:
           sc.TYPE_STATISTICAL_VARIABLE)
 
     # Generate sentences.
-    nl.generate_nl_sentences(triples, self.nl_dir_fh)
+    nl.generate_nl_sentences(triples, self.nl_dir)
 
     # If generating topics, fetch svpg triples as well and generate topic cache
     if generate_topics:
       triples = triples + self.db.select_triples_by_subject_type(
           sc.TYPE_STAT_VAR_PEER_GROUP)
-      nl.generate_topic_cache(triples, self.nl_dir_fh)
+      nl.generate_topic_cache(triples, self.nl_dir)
 
   def _generate_svg_hierarchy(self):
     if self.mode == RunMode.MAIN_DC:
@@ -218,13 +227,13 @@ class Runner:
     logging.info("Generating SVG hierarchy for %s SV triples.", len(sv_triples))
 
     vertical_specs: list[VerticalSpec] = []
-    vertical_specs_fh = self.special_handlers.get(
+    vertical_specs_file = self.special_files.get(
         constants.VERTICAL_SPECS_FILE_TYPE)
-    if vertical_specs_fh:
+    if vertical_specs_file:
       logging.info("Loading vertical specs from: %s",
-                   vertical_specs_fh.basename())
+                   vertical_specs_file.name())
       vertical_specs = stat_var_hierarchy_generator.load_vertical_specs(
-          vertical_specs_fh.read_string())
+          vertical_specs_file.read())
 
     # Collect all dcids that can be used to generate SVG names and get their schema names.
     schema_dcids = list(
@@ -261,100 +270,115 @@ class Runner:
   def _generate_svg_cache(self):
     generate_svg_cache(self.db, self.svg_specialized_names)
 
-  # If the fh is a "special" file, append it to the self.special_handlers dict.
-  # Returns true if it is, otherwise false.
-  def _maybe_set_special_fh(self, fh: FileHandler) -> bool:
-    file_name = fh.basename()
-    file_type = self.special_file_to_type.get(file_name)
-    if file_type:
-      self.special_handlers[file_type] = fh
-      return True
+  def _check_if_special_file(self, file: File) -> bool:
+    for file_type in self.special_file_names_by_type.keys():
+      if file_type in self.special_files:
+        # Already found this special file.
+        continue
+      file_name = self.special_file_names_by_type[file_type]
+      if match(file, file_name):
+        self.special_files[file_type] = file
+        return True
     return False
 
   def _run_all_data_imports(self):
-    input_fhs: list[FileHandler] = []
-    input_mcf_fhs: list[FileHandler] = []
-    for input_handler in self.input_handlers:
-      if not input_handler.isdir:
-        if self._maybe_set_special_fh(input_handler):
-          continue
-        input_file_name = input_handler.basename()
-        if input_file_name.endswith(".mcf"):
-          input_mcf_fhs.append(input_handler)
-        else:
-          input_fhs.append(input_handler)
+    input_files: list[File] = []
+    input_csv_files: list[File] = []
+    input_mcf_files: list[File] = []
+
+    for input_store in self.input_stores:
+      if input_store.isdir():
+        input_files.extend(input_store.as_dir().all_files(
+            self.include_input_subdirs))
       else:
-        for input_file in sorted(input_handler.list_files(extension=".csv")):
-          fh = input_handler.make_file(input_file)
-          if not self._maybe_set_special_fh(fh):
-            input_fhs.append(fh)
-        for input_file in sorted(input_handler.list_files(extension=".mcf")):
-          fh = input_handler.make_file(input_file)
-          if not self._maybe_set_special_fh(fh):
-            input_mcf_fhs.append(fh)
-        for input_file in sorted(input_handler.list_files(extension=".json")):
-          fh = input_handler.make_file(input_file)
-          self._maybe_set_special_fh(fh)
+        input_files.append(input_store.as_file())
 
-      self.reporter.report_started(import_files=list(
-          map(lambda fh: fh.basename(), input_fhs + input_mcf_fhs)))
-      for input_fh in input_fhs:
-        self._run_single_import(input_fh)
-      for input_mcf_fh in input_mcf_fhs:
-        self._run_single_mcf_import(input_mcf_fh)
+    for input_file in input_files:
+      if self._check_if_special_file(input_file):
+        continue
+      if match(input_file, "*.csv"):
+        input_csv_files.append(input_file)
+      if match(input_file, "*.mcf"):
+        input_mcf_files.append(input_file)
 
-  def _run_single_import(self, input_fh: FileHandler):
-    logging.info("Importing file: %s", input_fh.basename())
-    self._create_importer(input_fh).do_import()
+    # Sort input files alphabetically.
+    input_csv_files.sort(key=lambda f: f.full_path())
+    input_mcf_files.sort(key=lambda f: f.full_path())
 
-  def _run_single_mcf_import(self, input_mcf_fh: FileHandler):
-    logging.info("Importing MCF file: %s", input_mcf_fh.basename())
-    self._create_mcf_importer(input_mcf_fh, self.output_dir_fh,
+    self.reporter.report_started(import_files=list(input_csv_files +
+                                                   input_mcf_files))
+    for input_csv_file in input_csv_files:
+      self._run_single_import(input_csv_file)
+    for input_mcf_file in input_mcf_files:
+      self._run_single_mcf_import(input_mcf_file)
+
+  def _run_single_import(self, input_file: File):
+    logging.info("Importing file: %s", input_file)
+    self._create_importer(input_file).do_import()
+
+  def _run_single_mcf_import(self, input_mcf_file: File):
+    logging.info("Importing MCF file: %s", input_mcf_file)
+    self._create_mcf_importer(input_mcf_file, self.output_dir,
                               self.mode == RunMode.MAIN_DC).do_import()
 
-  def _create_mcf_importer(self, input_fh: FileHandler,
-                           output_dir_fh: FileHandler,
+  def _create_mcf_importer(self, input_file: File, output_dir: Dir,
                            is_main_dc: bool) -> Importer:
-    mcf_file_name = input_fh.basename()
-    output_fh = output_dir_fh.make_file(mcf_file_name)
-    reporter = self.reporter.import_file(mcf_file_name)
-    return McfImporter(input_fh=input_fh,
-                       output_fh=output_fh,
+    # Right now, this overwrites any file with the same name,
+    # so if different input sources have files with the same relative path,
+    # they will clobber each others output. Treating this as an edge case
+    # for now since it only affects the main DC case, but we could resolve
+    # it in the future by allowing input sources to be mapped to output
+    # locations.
+    output_file = output_dir.open_file(input_file.path)
+    reporter = self.reporter.get_file_reporter(input_file)
+    return McfImporter(input_file=input_file,
+                       output_file=output_file,
                        db=self.db,
                        reporter=reporter,
                        is_main_dc=is_main_dc)
 
-  def _create_importer(self, input_fh: FileHandler) -> Importer:
-    input_file = input_fh.basename()
+  def _create_importer(self, input_file: File) -> Importer:
     import_type = self.config.import_type(input_file)
-    debug_resolve_fh = self.process_dir_fh.make_file(
-        f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{input_file}")
-    reporter = self.reporter.import_file(input_file)
+    sanitized_path = input_file.full_path().replace("://",
+                                                    "_").replace("/", "_")
+    debug_resolve_file = self.process_dir.open_file(
+        f"{constants.DEBUG_RESOLVE_FILE_NAME_PREFIX}_{sanitized_path}")
+    reporter = self.reporter.get_file_reporter(input_file)
 
     if import_type == ImportType.OBSERVATIONS:
       input_file_format = self.config.format(input_file)
       if input_file_format == InputFileFormat.VARIABLE_PER_ROW:
-        return VariablePerRowImporter(input_fh=input_fh,
+        return VariablePerRowImporter(input_file=input_file,
                                       db=self.db,
                                       reporter=reporter,
                                       nodes=self.nodes)
-      return ObservationsImporter(input_fh=input_fh,
+      return ObservationsImporter(input_file=input_file,
                                   db=self.db,
-                                  debug_resolve_fh=debug_resolve_fh,
+                                  debug_resolve_file=debug_resolve_file,
                                   reporter=reporter,
                                   nodes=self.nodes)
 
     if import_type == ImportType.EVENTS:
-      return EventsImporter(input_fh=input_fh,
+      return EventsImporter(input_file=input_file,
                             db=self.db,
-                            debug_resolve_fh=debug_resolve_fh,
+                            debug_resolve_file=debug_resolve_file,
                             reporter=reporter,
                             nodes=self.nodes)
 
     if import_type == ImportType.ENTITIES:
-      return EntitiesImporter(input_fh=input_fh,
+      return EntitiesImporter(input_file=input_file,
                               db=self.db,
                               reporter=reporter,
                               nodes=self.nodes)
 
-    raise ValueError(f"Unsupported import type: {import_type} ({input_file})")
+    raise ValueError(
+        f"Unsupported import type: {import_type} ({input_file.full_path()})")
+
+
+def _check_not_overlapping(input_store: Store, output_store: Store):
+  input_path = input_store.full_path()
+  output_path = output_store.full_path()
+  if fspath.issamedir(input_path, output_path) or fspath.isparent(
+      input_path, output_path) or fspath.isparent(output_path, input_path):
+    raise ValueError(
+        f"Input path (${input_path}) overlaps with output dir ({output_path})")

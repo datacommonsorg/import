@@ -23,7 +23,7 @@ from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
-from util.filehandler import FileHandler
+from util.filesystem import File
 
 _ID = 'ID'
 _DCID = 'dcid'
@@ -36,13 +36,12 @@ class McfImporter(Importer):
   For custom DC, the MCF nodes are inserted as triples in the DB.
     """
 
-  def __init__(self, input_fh: FileHandler, output_fh: FileHandler, db: Db,
+  def __init__(self, input_file: File, output_file: File, db: Db,
                reporter: FileImportReporter, is_main_dc: bool) -> None:
-    self.input_fh = input_fh
-    self.output_fh = output_fh
+    self.input_file = input_file
+    self.output_file = output_file
     self.db = db
     self.reporter = reporter
-    self.input_file_name = self.input_fh.basename()
     self.is_main_dc = is_main_dc
 
   def do_import(self) -> None:
@@ -50,11 +49,11 @@ class McfImporter(Importer):
     try:
       # For main DC, simply copy the file over.
       if self.is_main_dc:
-        self.output_fh.write_string(self.input_fh.read_string())
+        self.output_file.write(self.input_file.read())
       else:
         triples = self._mcf_to_triples()
         logging.info("Inserting %s triples from %s", len(triples),
-                     self.input_file_name)
+                     self.input_file.full_path())
         self.db.insert_triples(triples)
 
       self.reporter.report_success()
@@ -66,7 +65,7 @@ class McfImporter(Importer):
     parser_triples: list[list[str]] = []
     # DCID references
     local2dcid: dict[str, str] = {}
-    for parser_triple in mcf_to_triples(self.input_fh.read_string_io()):
+    for parser_triple in mcf_to_triples(self.input_file.read_string_io()):
       [subject_id, predicate, value, _] = parser_triple
       if predicate == _DCID:
         local2dcid[subject_id] = value

@@ -55,7 +55,7 @@ def match(f: File, pattern: str) -> bool:
       return False
     match_from_beginning = True
   else:
-    if "://" in full_path:
+    if "://" in full_path and f.syspath() is not None:
       # Switch to syspath
       abs_path = fspath.relpath(f.syspath())
     else:

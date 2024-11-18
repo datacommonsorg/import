@@ -1,0 +1,65 @@
+subject_id,predicate,object_id,object_value
+author1,typeOf,Author,
+author1,includedIn,c/p/1,
+author1,author_id,,author1
+author1,author_name,,Jane Doe
+author1,author_country,country/USA,
+author2,typeOf,Author,
+author2,includedIn,c/p/1,
+author2,author_id,,author2
+author2,author_name,,Joe Smith
+author2,author_country,country/CAN,
+author3,typeOf,Author,
+author3,includedIn,c/p/1,
+author3,author_id,,author3
+author3,author_name,,Jane Smith
+author3,author_country,country/USA,
+some_var1,typeOf,StatisticalVariable,
+some_var1,measuredProperty,value,
+some_var1,name,,Some Variable 1 Name
+some_var1,description,,Some Variable 1 Description
+c/s/default,typeOf,Source,
+c/s/default,name,,Custom Data Commons
+c/s/1,typeOf,Source,
+c/s/1,name,,Source1 Name
+c/s/1,url,,http://source1.com
+c/s/1,domain,,source1.com
+c/p/default,typeOf,Provenance,
+c/p/default,name,,Custom Import
+c/p/default,source,c/s/default,
+c/p/default,url,,custom-import
+c/p/1,typeOf,Provenance,
+c/p/1,name,,Provenance1 Name
+c/p/1,source,c/s/1,
+c/p/1,url,,http://source1.com/provenance1
+c/g/Root,typeOf,StatVarGroup,
+c/g/Root,name,,Custom Variables
+c/g/Root,specializationOf,dc/g/Root,
+var1,typeOf,StatisticalVariable,
+var1,name,,var1
+var1,memberOf,c/g/Root,
+var1,includedIn,c/p/1,
+var1,includedIn,c/s/1,
+var1,populationType,Thing,
+var1,statType,measuredValue,
+var1,measuredProperty,var1,
+var2,typeOf,StatisticalVariable,
+var2,name,,var2
+var2,memberOf,c/g/Root,
+var2,includedIn,c/p/1,
+var2,includedIn,c/s/1,
+var2,populationType,Thing,
+var2,statType,measuredValue,
+var2,measuredProperty,var2,
+Author,typeOf,Class,
+Author,name,,Author
+Author,includedIn,c/p/1,
+Author,includedIn,c/s/1,
+author_id,typeOf,Property,
+author_id,name,,author_id
+author_name,typeOf,Property,
+author_name,name,,author_name
+author_country,typeOf,Property,
+author_country,name,,author_country
+country/USA,typeOf,Country,
+country/IND,typeOf,Country,
