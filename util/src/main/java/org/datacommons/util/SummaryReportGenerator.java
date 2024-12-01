@@ -31,6 +31,7 @@ public class SummaryReportGenerator {
 
   public static boolean TEST_mode = false;
   public static final String SUMMARY_REPORT_HTML = "summary_report.html";
+public static final String SUMMARY_REPORT_CSV = "summary_report.csv";
 
   // An object to save the information about a stat var. This contains all the necessary getters to
   // access the information in this object from SummaryReport.ftl
@@ -190,6 +191,8 @@ public class SummaryReportGenerator {
     data.put("placeSeriesSummaryMap", placeSeriesSummaryMap);
     Writer file = new FileWriter(Paths.get(outputDir.toString(), SUMMARY_REPORT_HTML).toString());
     template.process(data, file);
+Writer csvFile = new FileWriter(Paths.get(outputDir.toString(), SUMMARY_REPORT_CSV).toString());
+    CSVReportWriter.writeRecords(svSummaryMap, csvFile);
   }
 
   private static Configuration getConfiguration() throws IOException {
