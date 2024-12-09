@@ -16,9 +16,9 @@ public class CSVReportWriterTest {
 
   public static final String[] HEADERS = {"author", "title"};
   public static final String EXPECTED_FILESTREAM =
-      "StatVar,NumPlaces,NumObservations,NumObservationsDates,MinDate,MaxDate,MeasurementMethods,Units,ScalingFactors,observationPeriods\r\n"
-          + "Var1,0,6,0,,,[CensusACS5YrSurvey],[],[],[]\r\n"
-          + "Var2,0,2,2,2020,2025,[CensusACS5YrSurvey],[],[],[]";
+      "StatVar,NumPlaces,NumObservations,MinValue,MaxValue,NumObservationsDates,MinDate,MaxDate,MeasurementMethods,Units,ScalingFactors,observationPeriods\r\n"
+          + "Var1,0,6,10.0,100.0,0,,,[CensusACS5YrSurvey],[],[],[]\r\n"
+          + "Var2,0,2,5.0,60.0,2,2020,2025,[CensusACS5YrSurvey],[],[],[]";
   Map<String, StatVarSummary> records;
 
   @Before
@@ -26,10 +26,14 @@ public class CSVReportWriterTest {
     StatVarSummary countPersonExpectedSummary = new StatVarSummary();
     countPersonExpectedSummary.numObservations = 6;
     countPersonExpectedSummary.mMethods = Set.of("CensusACS5YrSurvey");
+    countPersonExpectedSummary.minValue = 10;
+    countPersonExpectedSummary.maxValue = 100;
     StatVarSummary countFemaleExpectedSummary = new StatVarSummary();
     countFemaleExpectedSummary.numObservations = 2;
     countFemaleExpectedSummary.mMethods = Set.of("CensusACS5YrSurvey");
     countFemaleExpectedSummary.dates = Set.of("2020", "2025");
+    countFemaleExpectedSummary.minValue = 5;
+    countFemaleExpectedSummary.maxValue = 60;
 
     records =
         Collections.unmodifiableMap(
@@ -48,4 +52,3 @@ public class CSVReportWriterTest {
     assertEquals(EXPECTED_FILESTREAM, sw.toString().trim());
   }
 }
-

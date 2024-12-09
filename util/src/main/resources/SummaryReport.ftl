@@ -189,6 +189,8 @@
               <th>StatVar</th>
               <th>Num Places</th>
               <th>Num Observations</th>
+              <th>Min Value</th>
+              <th>Max Value</th>
               <th>Num Observation Dates</th>
               <th>Min Date</th>
               <th>Max Date</th>
@@ -204,6 +206,8 @@
               <td><a name="statvars--${sv}" href="#statvars--${sv}">${sv}</a></td>
               <td>${svSummary.getPlaces()?size}</td>
               <td>${svSummary.getNumObservations()}</td>
+              <td>${svSummary.getMinValue()}</td>
+              <td>${svSummary.getMaxValue()}</td>
               <td>${svSummary.getUniqueDates()?size}</td>
               <td>${svSummary.getUniqueDates()?first!""}</td>
               <td>${svSummary.getUniqueDates()?last!""}</td>
