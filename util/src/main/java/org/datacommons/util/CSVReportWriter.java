@@ -8,12 +8,17 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.datacommons.util.SummaryReportGenerator.StatVarSummary;
 
+/*
+ * This class generates a CSV summary report of stats related to a dataset import.
+ */
 class CSVReportWriter {
 
   enum ReportHeaders {
     StatVar,
     NumPlaces,
     NumObservations,
+    MinValue,
+    MaxValue,
     NumObservationsDates,
     MinDate,
     MaxDate,
@@ -31,17 +36,16 @@ class CSVReportWriter {
       records.forEach(
           (sv, summary) -> {
             try {
+              TreeSet<String> dates = (TreeSet<String>) (summary.getUniqueDates());
               printer.printRecord(
                   sv,
                   summary.places.size(),
                   summary.numObservations,
+                  summary.getMinValue(),
+                  summary.getMaxValue(),
                   summary.dates.size(),
-                  !summary.dates.isEmpty()
-                      ? ((TreeSet<String>) (summary.getUniqueDates())).first()
-                      : "",
-                  !summary.dates.isEmpty()
-                      ? ((TreeSet<String>) (summary.getUniqueDates())).last()
-                      : "",
+                  !summary.dates.isEmpty() ? dates.first() : "",
+                  !summary.dates.isEmpty() ? dates.last() : "",
                   summary.mMethods.toString(),
                   summary.units.toString(),
                   summary.scalingFactors.toString(),
@@ -53,4 +57,3 @@ class CSVReportWriter {
     }
   }
 }
-
