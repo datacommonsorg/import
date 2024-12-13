@@ -19,6 +19,7 @@
 
 import io
 import unittest
+from unittest.mock import patch
 
 import mcf_parser
 
@@ -199,6 +200,20 @@ class MCFParserTest(unittest.TestCase):
     for (mcf, want) in mcf_triples_list:
       got = _triplify(mcf)
       self.assertEqual(got, want)
+
+  @patch('mcf_parser.reader', side_effect=Exception('Mock reader error'))
+  def test_parse_error(self, mock_reader):
+    mcf = """
+        Node: dcid:dc/mx44
+        typeOf: schema:City
+        name: "Über"
+    """
+
+    with self.assertRaises(ValueError) as context:
+      _triplify(mcf)
+    self.assertIn('Error parsing property typeOf in node dcid:dc/mx44',
+                  str(context.exception))
+    self.assertIn('Mock reader error', str(context.exception.__cause__))
 
 
 if __name__ == '__main__':

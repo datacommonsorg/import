@@ -28,6 +28,10 @@ from util.filesystem import File
 _ID = 'ID'
 _DCID = 'dcid'
 
+# The max length of a node value.
+# We limit it to the max size of a mysql text field.
+_MAX_CHARS = 2**16 - 1
+
 
 class McfImporter(Importer):
   """Imports a MCF file.
@@ -77,7 +81,10 @@ class McfImporter(Importer):
 
 def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
   [subject_id, predicate, value, value_type] = parser_triple
-
+  if len(value) > _MAX_CHARS:
+    raise ValueError(
+        f"Value of property {predicate} in node {subject_id} too long (got: {len(value)}, max: {_MAX_CHARS})"
+    )
   if subject_id not in local2dcid:
     raise ValueError(f"dcid not specified for node: {subject_id}")
 
