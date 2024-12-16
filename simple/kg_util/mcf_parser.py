@@ -225,8 +225,12 @@ def mcf_to_triples(mcf_file):
       # Processing inside Node block.
       assert pc.node, _as_err('Prop-Values before Node or Context block', pc)
 
-      for vp in _parse_values(prop, val_str, pc):
-        yield [pc.node, prop, vp[0], vp[1]]
+      try:
+        for vp in _parse_values(prop, val_str, pc):
+          yield [pc.node, prop, vp[0], vp[1]]
+      except Exception as e:
+        raise ValueError(
+            f'Error parsing property {prop} in node {pc.node}') from e
 
       if prop == _dcid:
         pc.has_dcid = True
