@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+
 from dateutil.parser import parse as date_parse
 import pandas as pd
 from stats import constants

@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from absl import app
 from absl import flags
 from freezegun import freeze_time
 from stats import constants
+from stats.logger import initialize_logger
 from stats.runner import RunMode
 from stats.runner import Runner
-from stats.logger import initialize_logger
+
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string("config_file", None, "The config file.")

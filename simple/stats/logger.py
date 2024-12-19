@@ -15,8 +15,9 @@
 import logging
 import sys
 
+
 def initialize_logger():
-    """
+  """
     Initialize the root logger with a standard configuration.
 
     The logger is configured to:
@@ -26,16 +27,15 @@ def initialize_logger():
     - Remove any existing handlers first
 
     """
-    # Remove handlers from root logger
-    for handler in logging.root.handlers:
-      logging.root.removeHandler(handler)
+  # Remove handlers from root logger
+  for handler in logging.root.handlers:
+    logging.root.removeHandler(handler)
 
-    # Initialize logging
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    handler = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter(
-        "[%(asctime)s %(levelname)s %(filename)s:%(lineno)d] %(message)s"
-    )
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+  # Initialize logging
+  logger = logging.getLogger()
+  logger.setLevel(logging.INFO)
+  handler = logging.StreamHandler(sys.stdout)
+  formatter = logging.Formatter(
+      "[%(asctime)s %(levelname)s %(filename)s:%(lineno)d] %(message)s")
+  handler.setFormatter(formatter)
+  logger.addHandler(handler)

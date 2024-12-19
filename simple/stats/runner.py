@@ -35,6 +35,7 @@ from util.filesystem import Dir
 from util.filesystem import File
 from util.filesystem import Store
 
+
 class RunMode(StrEnum):
   CUSTOM_DC = "customdc"
   SCHEMA_UPDATE = "schemaupdate"
