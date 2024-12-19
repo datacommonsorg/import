@@ -1,7 +1,6 @@
 from enum import StrEnum
 import json
 import logging
-import os
 
 import fs.path as fspath
 from stats import constants
@@ -304,6 +303,9 @@ class Runner:
     # Sort input files alphabetically.
     input_csv_files.sort(key=lambda f: f.full_path())
     input_mcf_files.sort(key=lambda f: f.full_path())
+
+    logging.info(f"Found {len(input_csv_files)} csv files to import")
+    logging.info(f"Found {len(input_mcf_files)} mcf files to import")
 
     self.reporter.report_started(import_files=list(input_csv_files +
                                                    input_mcf_files))

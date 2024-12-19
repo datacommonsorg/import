@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-import sys
-
 from absl import app
 from absl import flags
 from freezegun import freeze_time
 from stats import constants
+from stats.logger import initialize_logger
 from stats.runner import RunMode
 from stats.runner import Runner
 
@@ -51,16 +49,8 @@ flags.DEFINE_string(
 _FREEZE_TIME_IGNORE_LIST = ["transformers"]
 
 
-def _init_logger():
-  # Log to stdout for easy redirect of the output text.
-  logger = logging.getLogger()
-  logger.setLevel(logging.INFO)
-  handler = logging.StreamHandler(sys.stdout)
-  handler.setLevel(logging.INFO)
-  logger.addHandler(handler)
-
-
 def _run():
+  initialize_logger()
   Runner(config_file_path=FLAGS.config_file,
          input_dir_path=FLAGS.input_dir,
          output_dir_path=FLAGS.output_dir,
@@ -68,8 +58,6 @@ def _run():
 
 
 def main(_):
-  _init_logger()
-
   if FLAGS.freeze_time:
     logging.info("Running with time frozen at: %s", FLAGS.frozen_time)
     with freeze_time(FLAGS.frozen_time, ignore=_FREEZE_TIME_IGNORE_LIST):
