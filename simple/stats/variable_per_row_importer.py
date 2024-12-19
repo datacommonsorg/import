@@ -96,11 +96,11 @@ class VariablePerRowImporter(Importer):
 
     # Ensure that the expected columns exist.
     expected_column_names = set(self.column_mappings.values())
-    logging.info("Expected column names: %s", expected_column_names)
     actual_column_names = set(self.reader.fieldnames)
-    logging.info("Actual column names: %s", actual_column_names)
     difference = expected_column_names - actual_column_names
     if difference:
+      logging.info("Expected column names: %s", expected_column_names)
+      logging.info("Actual column names: %s", actual_column_names)
       raise ValueError(
           f"The following expected columns were not found: {difference}. You can specify column mappings using the columnMappings field."
       )

@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from dataclasses import field
 import json
 import logging
+import yaml
 
 import pandas as pd
 from stats.data import Triple
@@ -25,7 +26,6 @@ from stats.nl_constants import CUSTOM_MODEL_PATH
 import stats.schema_constants as sc
 from util.filesystem import Dir
 from util.filesystem import File
-import yaml
 
 _DCID_COL = "dcid"
 _SENTENCE_COL = "sentence"

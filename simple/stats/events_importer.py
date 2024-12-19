@@ -12,15 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime
 import logging
-import random
-
 from dateutil.parser import parse as date_parse
 import pandas as pd
 from stats import constants
 from stats.data import AggregationConfig
-from stats.data import AggregationMethod
 from stats.data import Event
 from stats.data import Observation
 from stats.data import TimePeriod

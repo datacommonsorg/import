@@ -1,7 +1,6 @@
 from enum import StrEnum
 import json
 import logging
-import os
 
 import fs.path as fspath
 from stats import constants
@@ -35,7 +34,6 @@ from util.filesystem import create_store
 from util.filesystem import Dir
 from util.filesystem import File
 from util.filesystem import Store
-
 
 class RunMode(StrEnum):
   CUSTOM_DC = "customdc"
@@ -304,6 +302,9 @@ class Runner:
     # Sort input files alphabetically.
     input_csv_files.sort(key=lambda f: f.full_path())
     input_mcf_files.sort(key=lambda f: f.full_path())
+
+    logging.info(f"Found {len(input_csv_files)} csv files to import")
+    logging.info(f"Found {len(input_mcf_files)} mcf files to import")
 
     self.reporter.report_started(import_files=list(input_csv_files +
                                                    input_mcf_files))
