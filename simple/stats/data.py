@@ -69,8 +69,8 @@ class Triple:
   object_value: str = ""
 
   def db_tuple(self):
-    return (_strip_namespace(self.subject_id), self.predicate,
-            _strip_namespace(self.object_id), self.object_value)
+    return (strip_namespace(self.subject_id), self.predicate,
+            strip_namespace(self.object_id), self.object_value)
 
 
 @dataclass
@@ -275,12 +275,12 @@ class Observation:
       default_factory=ObservationProperties.new)
 
   def db_tuple(self):
-    return (_strip_namespace(self.entity), _strip_namespace(self.variable),
-            self.date, self.value, _strip_namespace(self.provenance),
-            _strip_namespace(self.properties.unit),
+    return (strip_namespace(self.entity), strip_namespace(self.variable),
+            self.date, self.value, strip_namespace(self.provenance),
+            strip_namespace(self.properties.unit),
             self.properties.scaling_factor,
-            _strip_namespace(self.properties.measurement_method),
-            _strip_namespace(self.properties.observation_period),
+            strip_namespace(self.properties.measurement_method),
+            strip_namespace(self.properties.observation_period),
             json.dumps(self.properties.properties)
             if self.properties.properties else "")
 
@@ -527,5 +527,9 @@ class StatVarHierarchyResult:
   svg_specialized_names: ParentSVG2ChildSpecializedNames
 
 
-def _strip_namespace(v: str) -> str:
+def strip_namespace(v: str) -> str:
+  """
+    Strips namespaces from dcids.
+    e.g. 'dcid:country/USA' -> 'country/USA'
+  """
   return v[v.find(_NAMESPACE_DELIMITER) + 1:]

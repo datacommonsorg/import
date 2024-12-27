@@ -1,0 +1,21 @@
+Node: dcid:sv
+typeOf: dcs:StatisticalVariable
+measuredProperty: dcs:value
+name: "SV"
+populationType: dcs:sv
+statType: dcs:measuredValue
+
+Node: dcid:sv_female
+typeOf: dcs:StatisticalVariable
+measuredProperty: dcs:value
+name: "SV Female"
+populationType: dcs:sv
+statType: dcs:measuredValue
+
+
+Node: dcid:sv_male
+typeOf: dcs:StatisticalVariable
+measuredProperty: dcs:value
+name: "SV Male"
+populationType: dcs:sv
+statType: dcs:measuredValue

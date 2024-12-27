@@ -183,3 +183,6 @@ class TestRunner(unittest.TestCase):
                  config_path=os.path.join(_CONFIG_DIR,
                                           "config_include_subdirs.json"),
                  output_dir_name="with_subdirs_included")
+
+  def test_namespace_prefixes(self):
+    _test_runner(self, "namespace_prefixes")

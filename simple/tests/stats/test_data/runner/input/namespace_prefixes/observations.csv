@@ -1,0 +1,8 @@
+variable,entity,date,value
+dcs:sv_female,dcid:country/FAKE1,2019,1.2
+dcs:sv_male,dcid:country/FAKE1,2019,13.4
+dcs:sv,dcid:country/FAKE1,2019,7.5
+dcs:sv_female,dcid:country/FAKE2,2016,1.8
+dcs:sv_male,dcid:country/FAKE2,2016,14.3
+dcs:sv_female,dcid:country/FAKE3,2018,4.5
+dcs:sv_male,dcid:country/FAKE3,2018,35.7

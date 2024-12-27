@@ -19,6 +19,7 @@ from stats import constants
 from stats import schema_constants as sc
 from stats.data import Observation
 from stats.data import ObservationProperties
+from stats.data import strip_namespace
 from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
@@ -133,7 +134,7 @@ class ObservationsImporter(Importer):
     # Convert entity dcids to dict.
     # Using dict instead of set to maintain insertion order which keeps results consistent for tests.
     entity_dcids: dict[str, bool] = {
-        dcid: True for dcid in self.df.iloc[:, 0].tolist()
+        strip_namespace(dcid): True for dcid in self.df.iloc[:, 0].tolist()
     }
 
     # Get entity nodes that are not already recorded.
