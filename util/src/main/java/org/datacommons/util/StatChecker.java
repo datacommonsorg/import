@@ -655,6 +655,13 @@ public class StatChecker {
     if (svDcid.isEmpty()) return;
     StatVarSummary svMap = svSummaryMap.computeIfAbsent(svDcid, k -> new StatVarSummary());
     svMap.numObservations++;
+    try {
+      double value = Double.parseDouble(McfUtil.getPropVal(node, Vocabulary.VALUE));
+      svMap.minValue = Math.min(svMap.minValue, value);
+      svMap.maxValue = Math.max(svMap.maxValue, value);
+    } catch (NumberFormatException e) {
+      // Ignore if the value is not a number.
+    }
     svMap.dates.add(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_DATE));
     svMap.places.add(McfUtil.getPropVal(node, Vocabulary.OBSERVATION_ABOUT));
     svMap.mMethods.add(McfUtil.getPropVal(node, Vocabulary.MEASUREMENT_METHOD));
