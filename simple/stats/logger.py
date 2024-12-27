@@ -13,7 +13,12 @@
 # limitations under the License.
 
 import logging
+import os
 import sys
+
+# Get the log level from the environment variable, defaulting to INFO if not set
+log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(level=log_level)
 
 
 def initialize_logger():
@@ -22,7 +27,7 @@ def initialize_logger():
 
     The logger is configured to:
     - Log to stdout
-    - Use INFO level
+    - Use log_level as the logging level
     - Format messages with timestamp, level, filename, line number and message
     - Remove any existing handlers first
 
@@ -33,7 +38,7 @@ def initialize_logger():
 
   # Initialize logging
   logger = logging.getLogger()
-  logger.setLevel(logging.INFO)
+  logger.setLevel(log_level)
   handler = logging.StreamHandler(sys.stdout)
   formatter = logging.Formatter(
       "[%(asctime)s %(levelname)s %(filename)s:%(lineno)d] %(message)s")

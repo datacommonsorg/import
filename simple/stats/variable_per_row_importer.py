@@ -19,6 +19,7 @@ from stats import constants
 from stats import schema_constants as sc
 from stats.data import Observation
 from stats.data import ObservationProperties
+from stats.data import strip_namespace
 from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
@@ -136,7 +137,8 @@ class VariablePerRowImporter(Importer):
   def _add_entity_nodes(self) -> None:
     # Get entity nodes that are not already recorded.
     new_entity_dcids = [
-        dcid for dcid in self.entity_dcids
+        strip_namespace(dcid)
+        for dcid in self.entity_dcids
         if dcid not in self.nodes.entities.keys()
     ]
 
