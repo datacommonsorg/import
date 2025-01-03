@@ -61,11 +61,14 @@ class Store:
 
     if not treat_as_file:
       try:
-        # Set strict=False in case the root_path is not initialized with an empty blob.
-        self.fs = open_fs(f"{self.root_path}?strict=False", create=create_if_missing)
-        # Fix GCS storage if needed.
+        # If the path is a GCS path, set strict=False in case the root_path is not initialized with an empty blob.
         if self.root_path.startswith(_GCS_PATH_PREFIX):
+          self.fs = open_fs(f"{self.root_path}?strict=False", create=create_if_missing)
+          # Fix GCS storage if needed.
           _fix_gcsfs_storage(gcs_fs=self.fs)
+        else:
+          self.fs = open_fs(self.root_path, create=create_if_missing)
+
         self._wrapper: _StoreWrapper = Dir(self, path="/")
         self._isdir = True
       except fserrors.CreateFailed as e:
@@ -221,7 +224,7 @@ class File(_StoreWrapper):
     dest.write_bytes(self.read_bytes())
 
 
-def _fix_gcsfs_storage(gcs_fs: GCSFS) -> None:
+def _fix_gcsfs_storage(fs: GCSFS) -> None:
   """Utility function that walks the entire `root_path` and makes sure that all intermediate directories are correctly marked with empty blobs.
 
   As GCS is no real file system but only a key-value store, there is also no concept of folders. S3FS and GCSFS overcome this limitation by adding
@@ -231,7 +234,7 @@ def _fix_gcsfs_storage(gcs_fs: GCSFS) -> None:
   """
   names = [
       blob.name
-      for blob in gcs_fs.bucket.list_blobs(prefix=fspath.forcedir(gcs_fs.root_path))
+      for blob in fs.bucket.list_blobs(prefix=fspath.forcedir(fs.root_path))
   ]
   marked_dirs = set()
   all_dirs = set()
@@ -242,16 +245,16 @@ def _fix_gcsfs_storage(gcs_fs: GCSFS) -> None:
       marked_dirs.add(fspath.dirname(name))
 
     name = fspath.dirname(name)
-    while name != gcs_fs.root_path:
+    while name != fs.root_path:
       all_dirs.add(name)
       name = fspath.dirname(name)
 
-  if fspath.forcedir(gcs_fs.root_path) != "/":
-    all_dirs.add(gcs_fs.root_path)
+  if fspath.forcedir(fs.root_path) != "/":
+    all_dirs.add(fs.root_path)
 
   unmarked_dirs = all_dirs.difference(marked_dirs)
   if len(unmarked_dirs) > 0:
     for unmarked_dir in unmarked_dirs:
       dir_name = fspath.forcedir(unmarked_dir)
-      blob = gcs_fs.bucket.blob(dir_name)
+      blob = fs.bucket.blob(dir_name)
       blob.upload_from_string(b"")
