@@ -35,23 +35,9 @@ from fs import open_fs
 import fs.errors as fserrors
 import fs.path as fspath
 from fs_gcsfs import GCSFS
-from urllib.parse import urlparse
 
 # Paths with this prefix refer to Google Cloud Storage.
 _GCS_PATH_PREFIX = "gs://"
-
-def split_path(path: str) -> tuple[str, str]:
-  """
-  Splits a GCS path into a bucket name and a relative path.
-
-  Example:
-    gs://bucket/path/to/file -> ("bucket", "path/to/file")
-
-  Returns:
-    A tuple (bucket_name, relative_path).
-  """
-  parsed_url = urlparse(path)
-  return parsed_url.netloc, parsed_url.path.lstrip("/")
 
 def create_store(path: str,
                  create_if_missing: bool = False,
@@ -73,13 +59,13 @@ class Store:
     # For single-file stores, this is updated below to be the parent directory of the file.
     self.root_path = path
 
-    # Fix GCS storage if needed.
-    if self.root_path.startswith(_GCS_PATH_PREFIX):
-      _fix_gcsfs_storage(gcs_uri=self.root_path)
-
     if not treat_as_file:
       try:
-        self.fs = open_fs(self.root_path, create=create_if_missing)
+        # Set strict=False in case the root_path is not initialized with an empty blob.
+        self.fs = open_fs(f"{self.root_path}?strict=False", create=create_if_missing)
+        # Fix GCS storage if needed.
+        if self.root_path.startswith(_GCS_PATH_PREFIX):
+          _fix_gcsfs_storage(gcs_fs=self.fs)
         self._wrapper: _StoreWrapper = Dir(self, path="/")
         self._isdir = True
       except fserrors.CreateFailed:
@@ -235,7 +221,7 @@ class File(_StoreWrapper):
     dest.write_bytes(self.read_bytes())
 
 
-def _fix_gcsfs_storage(gcs_uri: str) -> None:
+def _fix_gcsfs_storage(gcs_fs: GCSFS) -> None:
   """Utility function that walks the entire `root_path` and makes sure that all intermediate directories are correctly marked with empty blobs.
 
   As GCS is no real file system but only a key-value store, there is also no concept of folders. S3FS and GCSFS overcome this limitation by adding
@@ -243,12 +229,9 @@ def _fix_gcsfs_storage(gcs_uri: str) -> None:
 
   This is the same as GCSFS.fix_storage() but with a fix for an infinite loop when root_path does not end with a slash.
   """
-  bucket_name, relative_path = split_path(gcs_uri)
-  # Set strict=False in case the root_path is not initialized with an empty blob.
-  fs = GCSFS(bucket_name=bucket_name, root_path=relative_path, strict=False)
   names = [
       blob.name
-      for blob in fs.bucket.list_blobs(prefix=fspath.forcedir(fs.root_path))
+      for blob in gcs_fs.bucket.list_blobs(prefix=fspath.forcedir(gcs_fs.root_path))
   ]
   marked_dirs = set()
   all_dirs = set()
@@ -259,16 +242,16 @@ def _fix_gcsfs_storage(gcs_uri: str) -> None:
       marked_dirs.add(fspath.dirname(name))
 
     name = fspath.dirname(name)
-    while name != fs.root_path:
+    while name != gcs_fs.root_path:
       all_dirs.add(name)
       name = fspath.dirname(name)
 
-  if fspath.forcedir(fs.root_path) != "/":
-    all_dirs.add(fs.root_path)
+  if fspath.forcedir(gcs_fs.root_path) != "/":
+    all_dirs.add(gcs_fs.root_path)
 
   unmarked_dirs = all_dirs.difference(marked_dirs)
   if len(unmarked_dirs) > 0:
     for unmarked_dir in unmarked_dirs:
       dir_name = fspath.forcedir(unmarked_dir)
-      blob = fs.bucket.blob(dir_name)
+      blob = gcs_fs.bucket.blob(dir_name)
       blob.upload_from_string(b"")
