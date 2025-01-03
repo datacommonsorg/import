@@ -68,8 +68,8 @@ class Store:
           _fix_gcsfs_storage(gcs_fs=self.fs)
         self._wrapper: _StoreWrapper = Dir(self, path="/")
         self._isdir = True
-      except fserrors.CreateFailed:
-        logging.info(f"CreateFailed exception: {str(fserrors.CreateFailed)}")
+      except fserrors.CreateFailed as e:
+        logging.info(f"Failed to open file: {self.root_path}. Falling back to treating the path as a file path. CreateFailed exception: {repr(e)}")
         # Fall back to treating the path as a file path.
         treat_as_file = True
 
