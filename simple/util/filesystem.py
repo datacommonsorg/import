@@ -29,6 +29,7 @@ have been tested. In-memory (mem://) and temp (temp://) paths are also built in.
 """
 
 import io
+import logging
 
 from fs import open_fs
 import fs.errors as fserrors
@@ -55,17 +56,27 @@ class Store:
   """File storage location. May be local or remote, directory or file."""
 
   def __init__(self, path: str, create_if_missing: bool, treat_as_file: bool):
-
     # Path of the associated PyFilesystem FS.
     # For single-file stores, this is updated below to be the parent directory of the file.
     self.root_path = path
 
     if not treat_as_file:
       try:
-        self.fs = open_fs(self.root_path, create=create_if_missing)
+        # If the path is a GCS path, set strict=False in case the root_path is not initialized with an empty blob.
+        if self.root_path.startswith(_GCS_PATH_PREFIX):
+          self.fs = open_fs(f"{self.root_path}?strict=False",
+                            create=create_if_missing)
+          # Fix GCS storage if needed.
+          _fix_gcsfs_storage(gcs_fs=self.fs)
+        else:
+          self.fs = open_fs(self.root_path, create=create_if_missing)
+
         self._wrapper: _StoreWrapper = Dir(self, path="/")
         self._isdir = True
-      except fserrors.CreateFailed:
+      except fserrors.CreateFailed as e:
+        logging.info(
+            f"Failed to open file: {self.root_path}. Falling back to treating the path as a file path. CreateFailed exception: {repr(e)}"
+        )
         # Fall back to treating the path as a file path.
         treat_as_file = True
 
@@ -83,9 +94,6 @@ class Store:
       self._wrapper: _StoreWrapper = File(self,
                                           path=file_name,
                                           create_if_missing=create_if_missing)
-
-    if self.root_path.startswith(_GCS_PATH_PREFIX):
-      _fix_gcsfs_storage(self.fs)
 
   def __enter__(self):
     return self
