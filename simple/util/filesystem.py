@@ -39,6 +39,7 @@ from fs_gcsfs import GCSFS
 # Paths with this prefix refer to Google Cloud Storage.
 _GCS_PATH_PREFIX = "gs://"
 
+
 def create_store(path: str,
                  create_if_missing: bool = False,
                  treat_as_file: bool = False) -> "Store":
@@ -63,7 +64,8 @@ class Store:
       try:
         # If the path is a GCS path, set strict=False in case the root_path is not initialized with an empty blob.
         if self.root_path.startswith(_GCS_PATH_PREFIX):
-          self.fs = open_fs(f"{self.root_path}?strict=False", create=create_if_missing)
+          self.fs = open_fs(f"{self.root_path}?strict=False",
+                            create=create_if_missing)
           # Fix GCS storage if needed.
           _fix_gcsfs_storage(gcs_fs=self.fs)
         else:
@@ -72,7 +74,9 @@ class Store:
         self._wrapper: _StoreWrapper = Dir(self, path="/")
         self._isdir = True
       except fserrors.CreateFailed as e:
-        logging.info(f"Failed to open file: {self.root_path}. Falling back to treating the path as a file path. CreateFailed exception: {repr(e)}")
+        logging.info(
+            f"Failed to open file: {self.root_path}. Falling back to treating the path as a file path. CreateFailed exception: {repr(e)}"
+        )
         # Fall back to treating the path as a file path.
         treat_as_file = True
 
@@ -90,7 +94,6 @@ class Store:
       self._wrapper: _StoreWrapper = File(self,
                                           path=file_name,
                                           create_if_missing=create_if_missing)
-
 
   def __enter__(self):
     return self
@@ -253,6 +256,7 @@ def _fix_gcsfs_storage(fs: GCSFS) -> None:
     all_dirs.add(fs.root_path)
 
   unmarked_dirs = all_dirs.difference(marked_dirs)
+
   if len(unmarked_dirs) > 0:
     for unmarked_dir in unmarked_dirs:
       dir_name = fspath.forcedir(unmarked_dir)

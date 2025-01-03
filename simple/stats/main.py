@@ -21,7 +21,6 @@ from stats import constants
 from stats.logger import initialize_logger
 from stats.runner import RunMode
 from stats.runner import Runner
-import logging
 
 FLAGS = flags.FLAGS
 
