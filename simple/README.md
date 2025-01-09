@@ -7,10 +7,15 @@ This importer imports input CSVs into a database which is subsequently used to s
 
 ## Prerequisites
 
-- Protoc 3.21.9
+- Protoc 3.21.12
 
   Install [`protoc`](https://grpc.io/docs/protoc-installation/) at version
-  3.21.9.
+  3.21.12.
+
+  On MacOS, you can do this with Homebrew by running `brew install protobuf@21`.
+  Be sure to update your path as described in the output (likely it'll instruct
+  you to run
+  `echo 'export PATH="/opt/homebrew/opt/protobuf@21/bin:$PATH"' >> ~/.zshrc`).
 
 ## Default usage
 
@@ -41,7 +46,7 @@ python3 -m stats.main \
   --output_dir=//path/to/output/dir
 ```
 
-For config driven imports, the import files are specified using the 
+For config driven imports, the import files are specified using the
 [dataDownloadUrl](stats/config.md#dataDownloadUrl) field.
 
 ## Input files
