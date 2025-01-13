@@ -67,7 +67,7 @@ class Store:
           self.fs = open_fs(f"{self.root_path}?strict=False",
                             create=create_if_missing)
           # Fix GCS storage if needed.
-          _fix_gcsfs_storage(gcs_fs=self.fs)
+          _fix_gcsfs_storage(self.fs)
         else:
           self.fs = open_fs(self.root_path, create=create_if_missing)
 
