@@ -73,7 +73,8 @@ class Runner:
 
       input_urls = self.config.data_download_urls()
       if not input_urls:
-        raise ValueError("Data Download URLs not found in config.")
+        if self.mode != RunMode.SCHEMA_UPDATE:
+          raise ValueError("Data Download URLs not found in config.")
       for input_url in input_urls:
         input_store = create_store(input_url)
         self.all_stores.append(input_store)
@@ -153,8 +154,11 @@ class Runner:
         with create_store(config_file_path) as config_store:
           raw_config = config_store.as_file().read()
     except FileNotFoundError:
-      logging.warning("Config file not found. Defaulting to empty config.")
-      raw_config = None
+      if self.mode == RunMode.SCHEMA_UPDATE:
+        logging.warning("Config file not found. Defaulting to empty config.")
+        raw_config = None
+      else:
+        raise
 
     config_data = json.loads(raw_config) if raw_config else {}
     self.config = Config(data=config_data)
