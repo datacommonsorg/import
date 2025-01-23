@@ -153,6 +153,24 @@ class TestRunner(unittest.TestCase):
                  run_mode=RunMode.SCHEMA_UPDATE,
                  input_db_file_name="sqlite_old_schema_populated.sql")
 
+  def test_schema_update_with_empty_input_and_empty_db(self):
+    """Schema update mode, input dir-driven, empty input, no database to start
+
+    Expected output: initialized, empty database
+    """
+    _test_runner(self,
+                 "schema_update_empty_input",
+                 run_mode=RunMode.SCHEMA_UPDATE)
+
+  def test_schema_update_with_missing_config_and_empty_db(self):
+    """Schema update mode, config file-driven, empty input, no database to start
+
+    Expected output: initialized, empty database
+    """
+    _test_runner(self,
+                 "schema_update_missing_config",
+                 run_mode=RunMode.SCHEMA_UPDATE)
+
   def test_with_subdirs_excluded(self):
     _test_runner(self,
                  "with_subdirs",
