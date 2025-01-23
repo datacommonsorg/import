@@ -72,9 +72,8 @@ class Runner:
       self._read_config_from_file(config_file_path)
 
       input_urls = self.config.data_download_urls()
-      if not input_urls:
-        if self.mode != RunMode.SCHEMA_UPDATE:
-          raise ValueError("Data Download URLs not found in config.")
+      if not input_urls and self.mode != RunMode.SCHEMA_UPDATE:
+        raise ValueError("Data Download URLs not found in config.")
       for input_url in input_urls:
         input_store = create_store(input_url)
         self.all_stores.append(input_store)

@@ -121,6 +121,13 @@ class TestRunner(unittest.TestCase):
                  "config_driven",
                  config_path=os.path.join(_CONFIG_DIR, "config_driven.json"))
 
+  def test_config_driven_invalid(self):
+    with self.assertRaises(ValueError):
+      _test_runner(self,
+                   "config_driven",
+                   config_path=os.path.join(_CONFIG_DIR,
+                                            "config_driven_invalid.json"))
+
   def test_config_with_wildcards(self):
     _test_runner(self,
                  "config_with_wildcards",
