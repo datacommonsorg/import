@@ -20,6 +20,7 @@ import tempfile
 import unittest
 from unittest import mock
 
+from freezegun import freeze_time
 from stats import constants
 from stats.runner import RunMode
 from stats.runner import Runner
@@ -27,9 +28,7 @@ from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import read_full_db_from_file
 from tests.stats.test_util import use_fake_gzip_time
-from tests.stats.test_util import write_key_values
-from tests.stats.test_util import write_observations
-from tests.stats.test_util import write_triples
+from tests.stats.test_util import write_full_db_to_file
 
 from util import dc_client
 
@@ -40,6 +39,7 @@ _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 
+@freeze_time("2025-01-23")
 def _test_runner(test: unittest.TestCase,
                  test_name: str,
                  config_path: str = None,
@@ -67,20 +67,13 @@ def _test_runner(test: unittest.TestCase,
     expected_nl_dir = os.path.join(expected_dir, constants.NL_DIR_NAME)
     Path(expected_nl_dir).mkdir(parents=True, exist_ok=True)
 
-    output_triples_path = os.path.join(temp_dir, "triples.db.csv")
-    expected_triples_path = os.path.join(expected_dir, "triples.db.csv")
-    output_observations_path = os.path.join(temp_dir, "observations.db.csv")
-    expected_observations_path = os.path.join(expected_dir,
-                                              "observations.db.csv")
-    output_key_value_store_path = os.path.join(temp_dir,
-                                               "key_value_store.db.csv")
-    expected_key_value_store_path = os.path.join(expected_dir,
-                                                 "key_value_store.db.csv")
     output_nl_sentences_path = os.path.join(temp_dir, constants.NL_DIR_NAME,
                                             constants.SENTENCES_FILE_NAME)
     expected_nl_sentences_path = os.path.join(expected_dir,
                                               constants.NL_DIR_NAME,
                                               constants.SENTENCES_FILE_NAME)
+    output_db_path = os.path.join(temp_dir, "datacommons.sql")
+    expected_db_path = os.path.join(expected_dir, "datacommons.sql")
     output_topic_cache_json_path = os.path.join(temp_dir, constants.NL_DIR_NAME,
                                                 constants.TOPIC_CACHE_FILE_NAME)
     expected_topic_cache_json_path = os.path.join(
@@ -97,14 +90,8 @@ def _test_runner(test: unittest.TestCase,
            output_dir_path=temp_dir,
            mode=run_mode).run()
 
-    write_triples(db_path, output_triples_path)
-    write_observations(db_path, output_observations_path)
-    write_key_values(db_path, output_key_value_store_path)
-
     if is_write_mode():
-      shutil.copy(output_triples_path, expected_triples_path)
-      shutil.copy(output_observations_path, expected_observations_path)
-      shutil.copy(output_key_value_store_path, expected_key_value_store_path)
+      write_full_db_to_file(db_path=db_path, output_path=expected_db_path)
       if os.path.exists(output_nl_sentences_path):
         shutil.copy(output_nl_sentences_path, expected_nl_sentences_path)
       if os.path.exists(output_topic_cache_json_path):
@@ -112,13 +99,9 @@ def _test_runner(test: unittest.TestCase,
                     expected_topic_cache_json_path)
       return
 
-    compare_files(test, output_triples_path, expected_triples_path,
-                  f"{test_name}: triples")
-    compare_files(test, output_observations_path, expected_observations_path,
-                  f"{test_name}: observations")
-    compare_files(test, output_key_value_store_path,
-                  expected_key_value_store_path,
-                  f"{test_name}: key_value_store")
+    write_full_db_to_file(db_path=db_path, output_path=output_db_path)
+    compare_files(test, output_db_path, expected_db_path,
+                  f"{test_name}: database")
     if os.path.exists(expected_nl_sentences_path):
       compare_files(test, output_nl_sentences_path, expected_nl_sentences_path,
                     f"{test_name}: nl sentences")
