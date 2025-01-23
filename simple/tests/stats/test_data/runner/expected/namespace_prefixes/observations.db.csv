@@ -1,8 +1,0 @@
-entity,variable,date,value,provenance,unit,scaling_factor,measurement_method,observation_period,properties
-country/FAKE1,sv_female,2019,1.2,c/p/default,,,,,
-country/FAKE1,sv_male,2019,13.4,c/p/default,,,,,
-country/FAKE1,sv,2019,7.5,c/p/default,,,,,
-country/FAKE2,sv_female,2016,1.8,c/p/default,,,,,
-country/FAKE2,sv_male,2016,14.3,c/p/default,,,,,
-country/FAKE3,sv_female,2018,4.5,c/p/default,,,,,
-country/FAKE3,sv_male,2018,35.7,c/p/default,,,,,
