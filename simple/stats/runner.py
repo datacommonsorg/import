@@ -1,6 +1,7 @@
 from enum import StrEnum
 import json
 import logging
+from typing import Optional
 
 import fs.path as fspath
 from stats import constants
@@ -68,12 +69,10 @@ class Runner:
 
     # Config file driven (input paths pulled from config)
     if config_file_path:
-      with create_store(config_file_path) as config_store:
-        config_data = config_store.as_file().read()
-        self.config = Config(data=json.loads(config_data))
+      self._read_config_from_file(config_file_path)
 
       input_urls = self.config.data_download_urls()
-      if not input_urls:
+      if not input_urls and self.mode != RunMode.SCHEMA_UPDATE:
         raise ValueError("Data Download URLs not found in config.")
       for input_url in input_urls:
         input_store = create_store(input_url)
@@ -86,9 +85,9 @@ class Runner:
       self.all_stores.append(input_store)
       self.input_stores.append(input_store)
 
-      config_file = input_store.as_dir().open_file(
-          constants.CONFIG_JSON_FILE_NAME, create_if_missing=False)
-      self.config = Config(data=json.loads(config_file.read()))
+      self._read_config_from_file(
+          config_file_path=constants.CONFIG_JSON_FILE_NAME,
+          config_file_dir=input_store.as_dir())
 
     # Get dict of special file type string to special file name.
     # Example entry: verticalSpecsFile -> vertical_specs.json
@@ -142,6 +141,26 @@ class Runner:
     except Exception as e:
       logging.exception("Error updating stats")
       self.reporter.report_failure(error=str(e))
+
+  def _read_config_from_file(self,
+                             config_file_path: str,
+                             config_file_dir: Optional[Dir] = None) -> Config:
+    try:
+      if config_file_dir:
+        raw_config = config_file_dir.open_file(config_file_path,
+                                               create_if_missing=False).read()
+      else:
+        with create_store(config_file_path) as config_store:
+          raw_config = config_store.as_file().read()
+    except FileNotFoundError:
+      if self.mode == RunMode.SCHEMA_UPDATE:
+        logging.warning("Config file not found. Defaulting to empty config.")
+        raw_config = None
+      else:
+        raise
+
+    config_data = json.loads(raw_config) if raw_config else {}
+    self.config = Config(data=config_data)
 
   def _get_db_config(self) -> dict:
     if self.mode == RunMode.MAIN_DC:

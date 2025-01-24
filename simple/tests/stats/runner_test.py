@@ -121,6 +121,13 @@ class TestRunner(unittest.TestCase):
                  "config_driven",
                  config_path=os.path.join(_CONFIG_DIR, "config_driven.json"))
 
+  def test_config_driven_invalid(self):
+    with self.assertRaises(ValueError):
+      _test_runner(self,
+                   "config_driven",
+                   config_path=os.path.join(_CONFIG_DIR,
+                                            "config_driven_invalid.json"))
+
   def test_config_with_wildcards(self):
     _test_runner(self,
                  "config_with_wildcards",
@@ -152,6 +159,37 @@ class TestRunner(unittest.TestCase):
                  "schema_update_only",
                  run_mode=RunMode.SCHEMA_UPDATE,
                  input_db_file_name="sqlite_old_schema_populated.sql")
+
+  def test_empty_input(self):
+    with self.assertRaises(FileNotFoundError):
+      _test_runner(self, "empty")
+
+  def test_missing_config(self):
+    with self.assertRaises(FileNotFoundError):
+      _test_runner(self,
+                   "empty",
+                   config_path=os.path.join(_CONFIG_DIR, "nonexistent.json"))
+
+  def test_empty_input_schema_update(self):
+    """Schema update mode, input dir-driven, empty input, no database to start
+
+    Expected output: initialized, empty database
+    """
+    _test_runner(self,
+                 "empty",
+                 output_dir_name="empty_initialized_db",
+                 run_mode=RunMode.SCHEMA_UPDATE)
+
+  def test_missing_config_schema_update(self):
+    """Schema update mode, config file-driven, empty input, no database to start
+
+    Expected output: initialized, empty database
+    """
+    _test_runner(self,
+                 "missing_config_schema_update",
+                 config_path=os.path.join(_CONFIG_DIR, "nonexistent.json"),
+                 output_dir_name="empty_initialized_db",
+                 run_mode=RunMode.SCHEMA_UPDATE)
 
   def test_with_subdirs_excluded(self):
     _test_runner(self,
