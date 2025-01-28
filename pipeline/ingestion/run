@@ -1,0 +1,7 @@
+#mvn compile exec:java -Dexec.mainClass=org.datacommons.SpannerIngestion
+mvn -Pdataflow-runner compile exec:java \
+   -Dexec.mainClass=org.datacommons.SpannerIngestion \
+    -Dexec.args="--project=datcom-store \
+    --gcpTempLocation=gs://vishg-dataflow/temp/ \
+    --runner=DataflowRunner \
+    --region=us-central1"
