@@ -215,6 +215,7 @@ class Runner:
 
     # Flush the DB cache if it exists.
     if self.db_cache:
+      logging.info("Database cache is configured. Clearing cache.")
       self.db_cache.clear()
 
   def _generate_nl_artifacts(self):

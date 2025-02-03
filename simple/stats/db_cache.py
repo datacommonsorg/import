@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 
 import redis
@@ -36,11 +37,15 @@ class RedisDbCache(DbCache):
 
   def __init__(self, host: str, port: int):
     self.connection = redis.Redis(host=host, port=port, decode_responses=True)
+    self.host = host
+    self.port = port
     self.connection.ping()
 
   def clear(self):
     """Flushes all data from the Redis instance used as a database cache."""
-    self.connection.flushall(asynchronous=False)
+    logging.info("Running FLUSHDB on Redis instance with host=%s and port=%s",
+                 self.host, self.port)
+    self.connection.flushdb(asynchronous=False)
 
 
 def get_db_cache_from_env() -> DbCache | None:
