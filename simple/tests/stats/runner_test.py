@@ -20,8 +20,10 @@ import tempfile
 import unittest
 from unittest import mock
 
+from fakeredis import FakeRedis
 from freezegun import freeze_time
 from stats import constants
+from stats.db_cache import ENV_REDIS_HOST
 from stats.runner import RunMode
 from stats.runner import Runner
 from tests.stats.test_util import compare_files
@@ -207,3 +209,26 @@ class TestRunner(unittest.TestCase):
 
   def test_namespace_prefixes(self):
     _test_runner(self, "namespace_prefixes")
+
+  @mock.patch.dict(os.environ, {ENV_REDIS_HOST: "localhost"})
+  def test_with_redis_db_cache(self):
+    fake_redis = FakeRedis()
+    fake_redis.set("somekey", "somevalue")
+    self.assertEquals(1, len(fake_redis.keys("*")))
+    with mock.patch("redis.Redis", return_value=fake_redis):
+      _test_runner(self, "input_dir_driven")
+      # Redis cache should be cleared.
+      self.assertEquals(0, len(fake_redis.keys("*")))
+
+  @mock.patch.dict(os.environ, {ENV_REDIS_HOST: "localhost"})
+  def test_with_redis_db_cache_schema_update(self):
+    fake_redis = FakeRedis()
+    fake_redis.set("somekey", "somevalue")
+    self.assertEquals(1, len(fake_redis.keys("*")))
+    with mock.patch("redis.Redis", return_value=fake_redis):
+      _test_runner(self,
+                   "empty",
+                   output_dir_name="empty_initialized_db",
+                   run_mode=RunMode.SCHEMA_UPDATE)
+      # Redis cache should NOT be cleared in schema update mode.
+      self.assertEquals(1, len(fake_redis.keys("*")))

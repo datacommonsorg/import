@@ -7,7 +7,6 @@ import fs.path as fspath
 from stats import constants
 from stats import schema
 from stats import stat_var_hierarchy_generator
-from stats.cache import generate_svg_cache
 from stats.config import Config
 from stats.data import ImportType
 from stats.data import InputFileFormat
@@ -20,6 +19,7 @@ from stats.db import create_sqlite_config
 from stats.db import get_cloud_sql_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
+from stats.db_cache import get_db_cache_from_env
 from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
 from stats.importer import Importer
@@ -29,6 +29,7 @@ from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
 from stats.reporter import ImportReporter
 import stats.schema_constants as sc
+from stats.svg_cache import generate_svg_cache
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
 from util.filesystem import create_store
@@ -112,11 +113,13 @@ class Runner:
 
     self.nodes = Nodes(self.config)
     self.db = None
+    self.db_cache = None
 
   def run(self):
     try:
       if (self.db is None):
         self.db = create_and_update_db(self._get_db_config())
+        self.db_cache = get_db_cache_from_env()
 
       if self.mode == RunMode.SCHEMA_UPDATE:
         logging.info("Skipping imports because run mode is schema update.")
@@ -209,6 +212,10 @@ class Runner:
 
     # Write import info to DB.
     self.db.insert_import_info(status=ImportStatus.SUCCESS)
+
+    # Flush the DB cache if it exists.
+    if self.db_cache:
+      self.db_cache.clear()
 
   def _generate_nl_artifacts(self):
     triples: list[Triple] = []
