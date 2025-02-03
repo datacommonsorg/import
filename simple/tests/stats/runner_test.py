@@ -214,21 +214,21 @@ class TestRunner(unittest.TestCase):
   def test_with_redis_db_cache(self):
     fake_redis = FakeRedis()
     fake_redis.set("somekey", "somevalue")
-    self.assertEquals(1, len(fake_redis.keys("*")))
+    self.assertEqual(1, len(fake_redis.keys("*")))
     with mock.patch("redis.Redis", return_value=fake_redis):
       _test_runner(self, "input_dir_driven")
       # Redis cache should be cleared.
-      self.assertEquals(0, len(fake_redis.keys("*")))
+      self.assertEqual(0, len(fake_redis.keys("*")))
 
   @mock.patch.dict(os.environ, {ENV_REDIS_HOST: "localhost"})
   def test_with_redis_db_cache_schema_update(self):
     fake_redis = FakeRedis()
     fake_redis.set("somekey", "somevalue")
-    self.assertEquals(1, len(fake_redis.keys("*")))
+    self.assertEqual(1, len(fake_redis.keys("*")))
     with mock.patch("redis.Redis", return_value=fake_redis):
       _test_runner(self,
                    "empty",
                    output_dir_name="empty_initialized_db",
                    run_mode=RunMode.SCHEMA_UPDATE)
       # Redis cache should NOT be cleared in schema update mode.
-      self.assertEquals(1, len(fake_redis.keys("*")))
+      self.assertEqual(1, len(fake_redis.keys("*")))

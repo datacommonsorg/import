@@ -59,9 +59,9 @@ class TestDbCache(unittest.TestCase):
   def test_get_db_cache_redis_clear(self):
     fake_redis = FakeRedis()
     fake_redis.set("somekey", "somevalue")
-    self.assertEquals(1, len(fake_redis.keys("*")))
+    self.assertEqual(1, len(fake_redis.keys("*")))
     with patch("redis.Redis", return_value=fake_redis):
       cache = get_db_cache_from_env()
       self.assertIsInstance(cache, RedisDbCache)
       cache.clear()
-      self.assertEquals(0, len(fake_redis.keys("*")))
+      self.assertEqual(0, len(fake_redis.keys("*")))
