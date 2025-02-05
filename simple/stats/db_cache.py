@@ -46,6 +46,7 @@ class RedisDbCache(DbCache):
     logging.info("Running FLUSHDB on Redis instance with host=%s and port=%s",
                  self.host, self.port)
     self.connection.flushdb(asynchronous=False)
+    logging.info("Redis flush complete.")
 
 
 def get_db_cache_from_env() -> DbCache | None:
