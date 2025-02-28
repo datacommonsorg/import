@@ -191,8 +191,8 @@ _DB_INDEXES: list[DbIndex] = [
             indexed_columns=["subject_id", "predicate"]),
     # Used by getStatVarSummaries
     DbIndex(table_name="observations",
-            index_name="observations_variable_value",
-            indexed_columns=["variable", "value"]),
+            index_name="observations_variable",
+            indexed_columns=["variable"]),
 ]
 
 
