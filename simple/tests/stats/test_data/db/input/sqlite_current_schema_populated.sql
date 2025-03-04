@@ -36,5 +36,7 @@ INSERT INTO "triples" VALUES('sub3','name','','name3');
 INSERT INTO "triples" VALUES('sub2','typeOf','StatisticalVariable','');
 INSERT INTO "triples" VALUES('sub2','name','','name2');
 CREATE INDEX observations_entity_variable on observations (entity, variable);
+CREATE INDEX observations_variable on observations (variable);
 CREATE INDEX triples_subject_id on triples (subject_id);
+CREATE INDEX triples_subject_id_predicate on triples (subject_id, predicate);
 COMMIT;

@@ -184,7 +184,15 @@ _DB_INDEXES: list[DbIndex] = [
             indexed_columns=["entity", "variable"]),
     DbIndex(table_name="triples",
             index_name="triples_subject_id",
-            indexed_columns=["subject_id"])
+            indexed_columns=["subject_id"]),
+    # Used by getStatVarSummaries
+    DbIndex(table_name="triples",
+            index_name="triples_subject_id_predicate",
+            indexed_columns=["subject_id", "predicate"]),
+    # Used by getStatVarSummaries
+    DbIndex(table_name="observations",
+            index_name="observations_variable",
+            indexed_columns=["variable"]),
 ]
 
 
