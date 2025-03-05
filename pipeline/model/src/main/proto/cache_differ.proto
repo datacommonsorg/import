@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package org.datacommons.proto;
+//         stats.point_diff=ADDED|DELETED|MODIFIED, stats.points=<a>
+message CacheDiffResult{
+  string key = 1;
+  string place_name = 4;
+
+  enum DiffType {
+    UNKNOWN = 0;
+    ADDED = 1;
+    DELETED = 2;
+    MODIFIED = 3;
+  }
+
+  DiffType diff = 2;
+
+  // Set only for ObsTimeSeries cache when diff == MODIFIED.
+  message Stats {
+    DiffType series_diff = 2;
+
+    // Set only if series_diff == MODIFIED
+    DiffType point_diff = 3;
+
+    message Point {
+      string date = 1;
+
+      // Only one of old_val or old_val_str can be set at a time.
+      oneof val_old {
+        double old_val = 2;
+        string old_val_str = 5;
+      }
+
+      // Only one of new_val or new_val_str can be set at a time.
+      oneof val_new {
+        double new_val = 3;
+        string new_val_str = 6;
+      }
+
+      // Magnitude of percent difference of new_val compared to old_val when
+      // series_diff == MODIFIED.  It is INT64_MAX if old_val is 0.
+      int64 pct_diff = 4;
+    }
+
+    repeated Point points = 4;  // data points added/deleted/modified
+  }
+
+  Stats stats = 3;
+}
