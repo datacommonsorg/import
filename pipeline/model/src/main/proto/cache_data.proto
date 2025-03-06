@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package org.datacommons.proto;
+// Summary information about a StatVar.
+//
+// IMPORTANT: This message should be in sync with:
+// https://github.com/datacommonsorg/mixer/blob/master/proto/stat_var.proto.
+message StatVarSummary {
+  message Place {
+    string dcid = 1;
+    string name = 3;
+
+    reserved 2;
+  }
+
+  message PlaceTypeSummary {
+    // Number of places with stats for this StatVar
+    int32 place_count = 4;
+
+    // A short (<4) list of most-populated places of this type
+    repeated Place top_places = 3;
+
+    // Minimum observation value for places of this type
+    double min_value = 5;
+
+    // Maximum observation value for places of this type
+    double max_value = 6;
+
+    reserved 1, 2;
+  }
+
+  message SeriesSummary {
+    message SeriesKey {
+      // Measurement method of this time series type
+      string measurement_method = 1;
+
+      // Observation period of this time series type
+      string observation_period = 2;
+
+      // Scaling factor of this time series type
+      string scaling_factor = 3;
+
+      // Unit of this time series type
+      string unit = 4;
+
+      // Whether this time series type is aggregated by Data Commons
+      bool is_dc_aggregate = 5;
+
+      // Whether this time series type is imputed by Data Commons
+      bool is_dc_imputed = 6;
+    }
+
+    SeriesKey series_key = 1;
+
+    // Earliest observation date of this time series type
+    string earliest_date = 2;
+
+    // Latest observation date in this time series type
+    string latest_date = 3;
+
+    // Map of place type to PlaceTypeSummary for this time series type
+    map<string, PlaceTypeSummary> place_type_summary = 6;
+
+    // Minimum observation value of this time series type
+    double min_value = 7;
+
+    // Maximum observation value of this time series type
+    double max_value = 8;
+
+    // Number of observations of this time series type, might exceed INT32_MAX.
+    double observation_count = 9;
+
+    // Number of series of this time series type, might exceed INT32_MAX.
+    double time_series_count = 10;
+
+    reserved 4, 5;
+  }
+
+  message ProvenanceSummary {
+    // Import name
+    string import_name = 1;
+
+    // Release frequency of this provenance
+    string release_frequency = 4;
+
+    // SeriesSummary for each time series in this provenance
+    repeated SeriesSummary series_summary = 5;
+
+    // Number of observations from this provenance, might exceed INT32_MAX.
+    double observation_count = 6;
+
+    // Number of time series from this provenance, might exceed INT32_MAX.
+    double time_series_count = 7;
+
+    reserved 2, 3;
+  }
+
+  // Key: type of place.  When places have multiple types, the dominant place
+  // type is selected.
+  map<string, PlaceTypeSummary> place_type_summary = 1;
+
+  // Key: provenance ID
+  map<string, ProvenanceSummary> provenance_summary = 2;
+}
+
+// Basic info for an entity (subject or object).
+message EntityInfo {
+  string name = 1;  // Only for reference object.
+
+  repeated string types = 2;  // Only for reference object.
+
+  string dcid = 3;  // Only for reference object.
+
+  string provenance_id = 4;
+  string value = 5;  // Only for object value.
+}
+
+// Basic info for a collection of entities.
+message EntityInfoCollection {
+  repeated EntityInfo entities = 1;
+
+  // Before potential truncation, might exceed INT32_MAX.
+  double total = 3;
+
+  reserved 2;
+}
+
+// A page of entities. The page number starts from 0, and is in the cache key.
+// Page size is set by ::datacommons::prophet::kPageSize.
+message PagedEntities {
+  // A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
+  repeated EntityInfo entities = 1;
+  double total_page_count = 2;
+}

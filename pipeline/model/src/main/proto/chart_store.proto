@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+// Protos in this file represent the value stored in Data Commons Laelaps table,
+// as well as stats data in Cloud BT cache.
+// IMPORTANT: The protos here must exactly match (including tag numbers) the
+// ones used in Data Commons mixer on Github.
+
+package org.datacommons.proto;
+
+// Facet contains the source and measurement information for a statistical
+// observation.
+message Facet {
+  string import_name = 1;
+  string provenance_url = 2;
+  string measurement_method = 3;
+  string observation_period = 4;
+  string scaling_factor = 5;
+  string unit = 6;
+  bool is_dc_aggregate = 7;
+
+  // Whether this facet is imputed by Data Commons.
+  bool is_dc_imputed = 8;
+}
+
+// PlaceVariableFacet contains the source and measurement information for a set
+// of statistical observations about a place and variable.
+message PlaceVariableFacet {
+  Facet facet = 1;
+
+  // Number of observations for given place + variable + Facet.
+  int32 obs_count = 2;
+
+  // Latest observation date.
+  string latest_date = 3;
+
+  // Earliest observation date.
+  string earliest_date = 4;
+}
+
+// Observation time series for a given place, measured property, stat type,
+// pop type, and an optional list of pop PVs. Used for Common Knowledge in
+// Search and Data Commons frontend.
+message ObsTimeSeries {
+  // Next ID: 15.
+  message SourceSeries {
+    // Note on the key and value of "val" and "str_val".
+    //
+    // 1. For SourceSeries in ObsTimeSeries, the key is observation date and
+    //    the value is the stat value.
+    //
+    // 2. For SourceSeries in ObsCollection, there are 3 cases:
+    //    (a) For ObsCollection that is for a specific date (i.e., cache key has
+    //        date), the key here is place DCID and value is the stat value.
+    //    (b) For ObsCollection that the date value is LATEST, the key here is
+    //        place DCID and the value is the stat value. Only for this case
+    //        place_to_latest_date is set.
+    //    (c) For ObsCollection that includes the date information (i.e., cache
+    //        key has empty date value), the key here is observation date and
+    //        value is the frequency of occurrence of that date across places.
+    map<string, double> val = 1;  // Used for number values.
+
+    map<string, string> str_val = 12;  // Used for enum or string values.
+
+    string measurement_method = 3;
+    string observation_period = 4;
+    string import_name = 5;
+    string provenance_domain = 6;
+    string scaling_factor = 7;
+    string unit = 8;
+    bool is_dc_aggregate = 9;
+    string provenance_url = 10;
+
+    // Only used for latest date obs collection.
+    map<string, string> place_to_latest_date = 11;
+
+    // Whether this source series is imputed by Data Commons.
+    bool is_dc_imputed = 13;
+
+    // Facet for this source series.
+    // TODO: Migrate other fields to use Facet.
+    Facet facet = 14;
+
+    reserved 2;
+  }
+
+  string place_name = 3;
+  string place_dcid = 5;  // Only set if the key uses mid.
+
+  repeated SourceSeries source_series = 6;
+
+  reserved 1, 2, 4;
+}
+
+// A collection of observation values for various places with the same parent
+// and place type, for a given Stat Var and date.
+message ObsCollection {
+  // NOTE: The key in SourceSeries.val is place DCID.
+  repeated ObsTimeSeries.SourceSeries source_cohorts = 5;
+
+  reserved 1, 2, 3, 4;
+}
+
+// List of categories of observations for a given place. These correspond to the
+// sections of the Place Explorer (https://datacommons.org/place/geoId/06).
+message ObsCategories {
+  repeated string categories = 1;
+  string place_name = 2;
+  string place_dcid = 3;
+}
+
+// Wrapper message for DC Laelaps value.
+message ChartStore {
+  oneof val {
+    ObsTimeSeries obs_time_series = 1;
+    ObsCollection obs_collection = 2;
+    ObsCategories obs_categories = 3;
+  }
+}
