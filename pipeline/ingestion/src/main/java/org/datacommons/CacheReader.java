@@ -11,8 +11,6 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Filter;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -25,12 +23,19 @@ import org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// Utility functions to read caches from GCS.
+/** Utility functions to read caches from GCS. */
 public class CacheReader {
   private static final Logger LOGGER = LoggerFactory.getLogger(CacheReader.class);
 
-  // Returns GCS path for the import group. 
-  private static String GetPrefix(String projectId, String bucketId, String group) {
+  /**
+   * GCS cache path for the import group.
+   *
+   * @param projectId GCP project id
+   * @param bucketId GCS bucket Id
+   * @param group Import group
+   * @return
+   */
+  public static String getCachePath(String projectId, String bucketId, String group) {
     Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
     Page<Blob> blobs =
         storage.list(
@@ -45,88 +50,129 @@ public class CacheReader {
     return String.format("gs://%s/%scache.csv*", bucketId, prefix);
   }
 
-  private static List<Entity> GetEntitiesfromCache(String row) {
+  /**
+   * Get entities parsing a cache row.
+   *
+   * @param row Input cache row to be parsed
+   * @return List of entities present in the row
+   */
+  private static List<Entity> parseEntityCache(String row) {
     // Cache format:  <dcid^predicate^type^page>, PagedEntities
-    String key = row.split(",")[0];
-    String value = row.split(",")[1];
-    String prefix = key.substring(4);
-    String[] keys = prefix.split("\\^");
     List<Entity> entities = new ArrayList<>();
-    if (!(value.isEmpty()) && keys.length >= 2) {
-      try {
-        String dcid = keys[0];
-        String predicate = keys[1];
-        PagedEntities elist =
-            PagedEntities.parseFrom(
-                new GZIPInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(value))));
-        for (EntityInfo entity : elist.getEntitiesList()) {
-          // TODO: add a self edge if value is populated
-          Entity e =
-              new Entity(
-                  dcid,
-                  entity.getDcid(),
-                  predicate,
-                  entity.getDcid(),
-                  entity.getValue(),
-                  entity.getProvenanceId(),
-                  entity.getName(),
-                  entity.getTypesList());
-          entities.add(e);
+    if (row != null && !row.isEmpty()) {
+      String[] items = row.split(",");
+      if (items.length == 2) {
+        String key = items[0];
+        String value = items[1];
+        String prefix = key.substring(4);
+        String[] keys = prefix.split("\\^");
+        if (!(value.isEmpty()) && keys.length >= 2) {
+          try {
+            String dcid = keys[0];
+            String predicate = keys[1];
+            PagedEntities elist =
+                PagedEntities.parseFrom(
+                    new GZIPInputStream(
+                        new ByteArrayInputStream(Base64.getDecoder().decode(value))));
+            for (EntityInfo entity : elist.getEntitiesList()) {
+              // TODO: add a self edge if value is populated
+              String subjectId, objectId;
+              if (row.startsWith("d/m/")) {
+                subjectId = dcid;
+                objectId = entity.getDcid();
+              } else { // "d/l/"
+                subjectId = entity.getDcid();
+                objectId = dcid;
+              }
+              // TODO: fix id column.
+              Entity e =
+                  new Entity(
+                      dcid,
+                      subjectId,
+                      predicate,
+                      objectId,
+                      entity.getValue(),
+                      entity.getProvenanceId(),
+                      entity.getName(),
+                      entity.getTypesList());
+              entities.add(e);
+            }
+          } catch (IOException e) {
+            LOGGER.error("Error parsing entity cache", e);
+          }
         }
-      } catch (IOException e) {
-        LOGGER.error(e.getMessage());
       }
     }
     return entities;
   }
 
-  private static List<Observation> GetObservationsfromCache(String row) {
+  /**
+   * Get observations parsing a cache row.
+   *
+   * @param row Input cache row to be parsed
+   * @return List of observations present in the row
+   */
+  private static List<Observation> parseObservationCache(String row) {
     // Cache format: <placeId^statVarId>, ChartStore containing ObsTimeSeries.
-    String key = row.split(",")[0];
-    String value = row.split(",")[1];
-    String prefix = key.substring(4);
-    String[] keys = prefix.split("\\^");
     List<Observation> obs = new ArrayList<>();
-    if (!(value.isEmpty()) && keys.length >= 2) {
-      try {
-        ChartStore chart =
-            ChartStore.parseFrom(
-                new GZIPInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(value))));
-        for (SourceSeries ss : chart.getObsTimeSeries().getSourceSeriesList()) {
-          List<String> observations = new ArrayList<>();
-          for (Map.Entry<String, Double> e : ss.getValMap().entrySet()) {
-            observations.add(
-                String.format("{\"%s\" : \"%s\"}", e.getKey(), e.getValue().toString()));
-          }
-          for (Map.Entry<String, String> e : ss.getStrValMap().entrySet()) {
-            observations.add(String.format("{\"%s\" : \"%s\"}", e.getKey(), e.getValue()));
-          }
-          Observation ob =
-              new Observation(
-                  keys[1],
-                  keys[0],
-                  observations,
-                  ss.getObservationPeriod(),
-                  ss.getMeasurementMethod(),
-                  ss.getScalingFactor(),
-                  ss.getUnit(),
-                  ss.getProvenanceDomain(),
-                  ss.getProvenanceUrl(),
-                  ss.getImportName());
-          obs.add(ob);
-        }
+    if (row != null && !row.isEmpty()) {
+      String[] items = row.split(",");
+      if (items.length == 2) {
+        String key = items[0];
+        String value = items[1];
+        String prefix = key.substring(4);
+        String[] keys = prefix.split("\\^");
+        if (!(value.isEmpty()) && keys.length >= 2) {
+          try {
+            ChartStore chart =
+                ChartStore.parseFrom(
+                    new GZIPInputStream(
+                        new ByteArrayInputStream(Base64.getDecoder().decode(value))));
+            for (SourceSeries source : chart.getObsTimeSeries().getSourceSeriesList()) {
+              List<String> observations = new ArrayList<>();
+              for (Map.Entry<String, Double> e : source.getValMap().entrySet()) {
+                observations.add(
+                    String.format("{\"%s\" : \"%s\"}", e.getKey(), e.getValue().toString()));
+              }
+              for (Map.Entry<String, String> e : source.getStrValMap().entrySet()) {
+                observations.add(String.format("{\"%s\" : \"%s\"}", e.getKey(), e.getValue()));
+              }
+              Observation ob =
+                  new Observation(
+                      keys[1],
+                      keys[0],
+                      observations,
+                      source.getObservationPeriod(),
+                      source.getMeasurementMethod(),
+                      source.getScalingFactor(),
+                      source.getUnit(),
+                      source.getProvenanceDomain(),
+                      source.getProvenanceUrl(),
+                      source.getImportName());
+              obs.add(ob);
+            }
 
-      } catch (IOException e) {
-        LOGGER.error(e.getMessage());
+          } catch (IOException e) {
+            // TODO: add counters to capture errors.
+            LOGGER.error("Error parsing observation cache", e);
+          }
+        }
       }
     }
     return obs;
   }
 
-  public static PCollection<Entity> GetEntities(String group, Pipeline p, IngestionOptions config) {
-    String prefix = GetPrefix(config.getProjectId(), config.getStorageBucketId(), group);
-    return p.apply(group, TextIO.read().from(prefix))
+  /**
+   * A dataflow pipeline stage to filter and transform a PCollection of cache entries to a
+   * PCollection of entities.
+   *
+   * @param entries PCollection of input cache entries
+   * @return PCollection of entities
+   */
+  public static PCollection<Entity> getEntities(PCollection<String> entries) {
+    return entries
         .apply(
+            "FilterEntities",
             Filter.by(
                 new SerializableFunction<String, Boolean>() {
                   @Override
@@ -142,43 +188,44 @@ public class CacheReader {
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     String row = c.element();
-                    List<Entity> eList = CacheReader.GetEntitiesfromCache(row);
-                    for (Entity e : eList) {
-                      c.output(e);
+                    List<Entity> entityList = CacheReader.parseEntityCache(row);
+                    for (Entity entity : entityList) {
+                      c.output(entity);
                     }
                   }
                 }));
   }
 
-
-  public static PCollection<Observation> GetObservations(
-      String group, Pipeline p, IngestionOptions config) {
-    String prefix = GetPrefix(config.getProjectId(), config.getStorageBucketId(), group);
-    PCollection<String> entries =
-        p.apply(group, TextIO.read().from(prefix))
-            .apply(
-                Filter.by(
-                    new SerializableFunction<String, Boolean>() {
-                      @Override
-                      public Boolean apply(String input) {
-                        return input.startsWith("d/3/");
-                      }
-                    }));
-
-    PCollection<Observation> obs =
-        entries.apply(
+  /**
+   * A dataflow pipeline stage to filter and transform a PCollection of cache entries to a
+   * PCollection of observations.
+   *
+   * @param entries PCollection of input cache entries
+   * @return PCollection of observations
+   */
+  public static PCollection<Observation> getObservations(PCollection<String> entries) {
+    return entries
+        .apply(
+            "FilterObs",
+            Filter.by(
+                new SerializableFunction<String, Boolean>() {
+                  @Override
+                  public Boolean apply(String input) {
+                    return input.startsWith("d/3/");
+                  }
+                }))
+        .apply(
             "GetObs",
             ParDo.of(
                 new DoFn<String, Observation>() {
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     String row = c.element();
-                    List<Observation> obList = CacheReader.GetObservationsfromCache(row);
-                    for (Observation ob : obList) {
+                    List<Observation> obsList = CacheReader.parseObservationCache(row);
+                    for (Observation ob : obsList) {
                       c.output(ob);
                     }
                   }
                 }));
-    return obs;
   }
 }

@@ -1,10 +1,5 @@
 syntax = "proto3";
 
-// Protos in this file represent the value stored in Data Commons Laelaps table,
-// as well as stats data in Cloud BT cache.
-// IMPORTANT: The protos here must exactly match (including tag numbers) the
-// ones used in Data Commons mixer on Github.
-
 package org.datacommons.proto;
 
 // Facet contains the source and measurement information for a statistical
@@ -20,21 +15,6 @@ message Facet {
 
   // Whether this facet is imputed by Data Commons.
   bool is_dc_imputed = 8;
-}
-
-// PlaceVariableFacet contains the source and measurement information for a set
-// of statistical observations about a place and variable.
-message PlaceVariableFacet {
-  Facet facet = 1;
-
-  // Number of observations for given place + variable + Facet.
-  int32 obs_count = 2;
-
-  // Latest observation date.
-  string latest_date = 3;
-
-  // Earliest observation date.
-  string earliest_date = 4;
 }
 
 // Observation time series for a given place, measured property, stat type,

@@ -8,12 +8,18 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
 
-// Helper functions to write data to Spanner tables.
+/** Helper functions to write data to Spanner tables. */
 public class SpannerClient {
 
+  /**
+   * Writes a PCollection of observations to Spanner Database
+   *
+   * @param config Ingestion configuration for Spanner DB
+   * @param obs PCollection of observations to be written
+   */
   public static void WriteObservations(IngestionOptions config, PCollection<Observation> obs) {
     obs.apply(
-            "CreateMutation",
+            "CreateObsMutation",
             ParDo.of(
                 new DoFn<Observation, Mutation>() {
                   @ProcessElement
@@ -23,18 +29,24 @@ public class SpannerClient {
                   }
                 }))
         .apply(
-            "WriteObs",
+            "WriteObsToSpanner",
             SpannerIO.write()
                 .withProjectId(config.getProjectId())
                 .withInstanceId(config.getSpannerInstanceId())
                 .withDatabaseId(config.getSpannerDatabaseId()));
   }
 
+  /**
+   * Writes a PCollection of entities to Spanner Graph Database
+   *
+   * @param config Ingestion configuration for Spanner DB
+   * @param obs PCollection of entities to be written
+   */
   public static void WriteGraph(IngestionOptions config, PCollection<Entity> entity) {
     SpannerWriteResult result =
         entity
             .apply(
-                "CreateMutation",
+                "CreateNodeMutation",
                 ParDo.of(
                     new DoFn<Entity, Mutation>() {
                       @ProcessElement
@@ -44,16 +56,17 @@ public class SpannerClient {
                       }
                     }))
             .apply(
-                "WriteNodes",
+                "WriteNodesToSpanner",
                 SpannerIO.write()
-                .withProjectId(config.getProjectId())
-                .withInstanceId(config.getSpannerInstanceId())
-                .withDatabaseId(config.getSpannerDatabaseId()));
+                    .withProjectId(config.getProjectId())
+                    .withInstanceId(config.getSpannerInstanceId())
+                    .withDatabaseId(config.getSpannerDatabaseId()));
 
+    // Wait for the node table to be written before writing Edge table due to interleaving.
     entity
         .apply(Wait.on(result.getOutput()))
         .apply(
-            "CreateMutation",
+            "CreateEdgeMutation",
             ParDo.of(
                 new DoFn<Entity, Mutation>() {
                   @ProcessElement
@@ -63,7 +76,7 @@ public class SpannerClient {
                   }
                 }))
         .apply(
-            "WriteEdges",
+            "WriteEdgesToSpanner",
             SpannerIO.write()
                 .withProjectId(config.getProjectId())
                 .withInstanceId(config.getSpannerInstanceId())
