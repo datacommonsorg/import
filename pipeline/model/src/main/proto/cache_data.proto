@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package org.datacommons.proto;
+
+// Basic info for an entity (subject or object).
+message EntityInfo {
+  string name = 1;  // Only for reference object.
+
+  repeated string types = 2;  // Only for reference object.
+
+  string dcid = 3;  // Only for reference object.
+
+  string provenance_id = 4;
+  string value = 5;  // Only for object value.
+}
+
+// Basic info for a collection of entities.
+message EntityInfoCollection {
+  repeated EntityInfo entities = 1;
+
+  // Before potential truncation, might exceed INT32_MAX.
+  double total = 3;
+
+  reserved 2;
+}
+
+// A page of entities. The page number starts from 0, and is in the cache key.
+// Page size is set by ::datacommons::prophet::kPageSize.
+message PagedEntities {
+  // A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
+  repeated EntityInfo entities = 1;
+  double total_page_count = 2;
+}
