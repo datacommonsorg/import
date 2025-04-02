@@ -75,14 +75,19 @@ public class CacheReader {
                     new GZIPInputStream(
                         new ByteArrayInputStream(Base64.getDecoder().decode(value))));
             for (EntityInfo entity : elist.getEntitiesList()) {
-              // TODO: add a self edge if value is populated
               String subjectId, objectId;
-              if (row.startsWith("d/m/")) {
+              // Add a self edge if value is populated.
+              if (entity.getValue().isEmpty()) {
                 subjectId = dcid;
-                objectId = entity.getDcid();
-              } else { // "d/l/"
-                subjectId = entity.getDcid();
                 objectId = dcid;
+              } else {
+                if (row.startsWith("d/m/")) {
+                  subjectId = dcid;
+                  objectId = entity.getDcid();
+                } else { // "d/l/"
+                  subjectId = entity.getDcid();
+                  objectId = dcid;
+                }
               }
               // TODO: fix id column.
               Entity e =
