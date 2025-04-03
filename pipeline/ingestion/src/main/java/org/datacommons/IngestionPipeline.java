@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
@@ -50,8 +51,9 @@ public class IngestionPipeline {
         collectionList.add(result);
       }
       PCollectionList<Entity> collections = PCollectionList.of(collectionList);
-      PCollection<Entity> merged = collections.apply(Flatten.pCollections());
-      SpannerClient.WriteGraph(options, merged);
+      PCollection<Entity> merged = collections.apply("FlattenedEntities", Flatten.pCollections());
+      PCollection<Entity> distinct = merged.apply("DistinctEntities", Distinct.create());
+      SpannerClient.WriteGraph(options, distinct);
     }
     pipeline.run();
   }
