@@ -14,10 +14,14 @@ public class Entity {
   String subjectId;
   String predicate;
   String objectId;
-  @Nullable String objectValue;
-  @Nullable String provenance;
-  @Nullable String name;
-  @Nullable List<String> types;
+  @Nullable
+  String objectValue;
+  @Nullable
+  String provenance;
+  @Nullable
+  String name;
+  @Nullable
+  List<String> types;
 
   public Entity(
       String id,
@@ -55,39 +59,58 @@ public class Entity {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
     Entity other = (Entity) obj;
     if (id == null) {
-      if (other.id != null) return false;
-    } else if (!id.equals(other.id)) return false;
+      if (other.id != null)
+        return false;
+    } else if (!id.equals(other.id))
+      return false;
     if (subjectId == null) {
-      if (other.subjectId != null) return false;
-    } else if (!subjectId.equals(other.subjectId)) return false;
+      if (other.subjectId != null)
+        return false;
+    } else if (!subjectId.equals(other.subjectId))
+      return false;
     if (predicate == null) {
-      if (other.predicate != null) return false;
-    } else if (!predicate.equals(other.predicate)) return false;
+      if (other.predicate != null)
+        return false;
+    } else if (!predicate.equals(other.predicate))
+      return false;
     if (objectId == null) {
-      if (other.objectId != null) return false;
-    } else if (!objectId.equals(other.objectId)) return false;
+      if (other.objectId != null)
+        return false;
+    } else if (!objectId.equals(other.objectId))
+      return false;
     if (objectValue == null) {
-      if (other.objectValue != null) return false;
-    } else if (!objectValue.equals(other.objectValue)) return false;
+      if (other.objectValue != null)
+        return false;
+    } else if (!objectValue.equals(other.objectValue))
+      return false;
     if (provenance == null) {
-      if (other.provenance != null) return false;
-    } else if (!provenance.equals(other.provenance)) return false;
+      if (other.provenance != null)
+        return false;
+    } else if (!provenance.equals(other.provenance))
+      return false;
     if (name == null) {
-      if (other.name != null) return false;
-    } else if (!name.equals(other.name)) return false;
+      if (other.name != null)
+        return false;
+    } else if (!name.equals(other.name))
+      return false;
     if (types == null) {
-      if (other.types != null) return false;
-    } else if (!types.equals(other.types)) return false;
+      if (other.types != null)
+        return false;
+    } else if (!types.equals(other.types))
+      return false;
     return true;
   }
 
-  public Mutation toNode() {
-    return Mutation.newInsertOrUpdateBuilder("Node")
+  public Mutation toNode(String nodeTableName) {
+    return Mutation.newInsertOrUpdateBuilder(nodeTableName)
         .set("subject_id")
         .to(subjectId)
         .set("name")
@@ -97,8 +120,8 @@ public class Entity {
         .build();
   }
 
-  public Mutation toEdge() {
-    return Mutation.newInsertOrUpdateBuilder("Edge")
+  public Mutation toEdge(String edgeTableName) {
+    return Mutation.newInsertOrUpdateBuilder(edgeTableName)
         .set("id")
         .to(id)
         .set("subject_id")
@@ -114,5 +137,6 @@ public class Entity {
         .build();
   }
 
-  Entity() {}
+  Entity() {
   }
+}
