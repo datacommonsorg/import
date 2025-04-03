@@ -15,19 +15,19 @@ public class SpannerClient {
    * Writes a PCollection of observations to Spanner Database
    *
    * @param config Ingestion configuration for Spanner DB
-   * @param obs PCollection of observations to be written
+   * @param obs    PCollection of observations to be written
    */
   public static void WriteObservations(IngestionOptions config, PCollection<Observation> obs) {
     obs.apply(
-            "CreateObsMutation",
-            ParDo.of(
-                new DoFn<Observation, Mutation>() {
-                  @ProcessElement
-                  public void processElement(ProcessContext c) {
-                    Observation o = c.element();
-                    c.output(o.toMutation());
-                  }
-                }))
+        "CreateObsMutation",
+        ParDo.of(
+            new DoFn<Observation, Mutation>() {
+              @ProcessElement
+              public void processElement(ProcessContext c) {
+                IngestionOptions options = c.getPipelineOptions().as(IngestionOptions.class);
+                c.output(c.element().toMutation(options.getSpannerObservationTableName()));
+              }
+            }))
         .apply(
             "WriteObsToSpanner",
             SpannerIO.write()
@@ -40,29 +40,29 @@ public class SpannerClient {
    * Writes a PCollection of entities to Spanner Graph Database
    *
    * @param config Ingestion configuration for Spanner DB
-   * @param obs PCollection of entities to be written
+   * @param obs    PCollection of entities to be written
    */
   public static void WriteGraph(IngestionOptions config, PCollection<Entity> entity) {
-    SpannerWriteResult result =
-        entity
-            .apply(
-                "CreateNodeMutation",
-                ParDo.of(
-                    new DoFn<Entity, Mutation>() {
-                      @ProcessElement
-                      public void processElement(ProcessContext c) {
-                        Entity e = c.element();
-                        c.output(e.toNode());
-                      }
-                    }))
-            .apply(
-                "WriteNodesToSpanner",
-                SpannerIO.write()
-                    .withProjectId(config.getProjectId())
-                    .withInstanceId(config.getSpannerInstanceId())
-                    .withDatabaseId(config.getSpannerDatabaseId()));
+    SpannerWriteResult result = entity
+        .apply(
+            "CreateNodeMutation",
+            ParDo.of(
+                new DoFn<Entity, Mutation>() {
+                  @ProcessElement
+                  public void processElement(ProcessContext c) {
+                    IngestionOptions options = c.getPipelineOptions().as(IngestionOptions.class);
+                    c.output(c.element().toNode(options.getSpannerNodeTableName()));
+                  }
+                }))
+        .apply(
+            "WriteNodesToSpanner",
+            SpannerIO.write()
+                .withProjectId(config.getProjectId())
+                .withInstanceId(config.getSpannerInstanceId())
+                .withDatabaseId(config.getSpannerDatabaseId()));
 
-    // Wait for the node table to be written before writing Edge table due to interleaving.
+    // Wait for the node table to be written before writing Edge table due to
+    // interleaving.
     entity
         .apply(Wait.on(result.getOutput()))
         .apply(
@@ -71,8 +71,8 @@ public class SpannerClient {
                 new DoFn<Entity, Mutation>() {
                   @ProcessElement
                   public void processElement(ProcessContext c) {
-                    Entity e = c.element();
-                    c.output(e.toEdge());
+                    IngestionOptions options = c.getPipelineOptions().as(IngestionOptions.class);
+                    c.output(c.element().toEdge(options.getSpannerEdgeTableName()));
                   }
                 }))
         .apply(

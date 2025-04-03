@@ -100,8 +100,9 @@ public class Observation {
     return true;
   }
 
-  public Mutation toMutation() {
-    return Mutation.newInsertOrUpdateBuilder("Observation")
+  public Mutation toMutation(String observationTableName) {
+    return Mutation.newInsertOrUpdateBuilder(
+        observationTableName)
         .set("variable_measured")
         .to(variableMeasured)
         .set("observation_about")
