@@ -3,8 +3,10 @@ package org.datacommons;
 import com.google.cloud.spanner.Mutation;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
+import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
 
@@ -54,6 +56,13 @@ public class SpannerClient {
                     c.output(c.element().toNode(options.getSpannerNodeTableName()));
                   }
                 }))
+        .apply("DistinctNodeMutations",
+            Distinct.withRepresentativeValueFn(new SerializableFunction<Mutation, String>() {
+              @Override
+              public String apply(Mutation input) {
+                return input.asMap().get("subject_id").getString();
+              }
+            }))
         .apply(
             "WriteNodesToSpanner",
             SpannerIO.write()
