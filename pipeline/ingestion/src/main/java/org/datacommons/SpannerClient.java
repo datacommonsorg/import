@@ -50,8 +50,11 @@ public class SpannerClient {
                 new DoFn<Entity, Mutation>() {
                   @ProcessElement
                   public void processElement(ProcessContext c) {
-                    IngestionOptions options = c.getPipelineOptions().as(IngestionOptions.class);
-                    c.output(c.element().toNode(options.getSpannerNodeTableName()));
+                    // Only emit if node can be created.
+                    if (!c.element().nodeId.isEmpty()) {
+                      IngestionOptions options = c.getPipelineOptions().as(IngestionOptions.class);
+                      c.output(c.element().toNode(options.getSpannerNodeTableName()));
+                    }
                   }
                 }))
         .apply(
