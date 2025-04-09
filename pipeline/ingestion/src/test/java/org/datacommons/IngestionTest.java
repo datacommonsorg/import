@@ -81,7 +81,7 @@ public class IngestionTest {
             "dc/base/HumanReadableStatVars",
             "count",
             "count",
-            new ArrayList<>()),
+            List.of("Property")),
         new Entity(
             "Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person",
             "Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person",
@@ -91,7 +91,7 @@ public class IngestionTest {
             "dc/base/HumanReadableStatVars",
             "",
             "",
-            new ArrayList<>()),
+            new ArrayList<String>()),
         new Entity(
             "dc/base/UN_SDG",
             "dc/base/UN_SDG",
@@ -101,7 +101,7 @@ public class IngestionTest {
             "dc/base/UN_SDG",
             "dc/base/UN_SDG",
             "UN_SDG",
-            new ArrayList<>()));
+            List.of("Provenance")));
     PAssert.that(result).containsInAnyOrder(expected);
     p.run();
   }
@@ -117,14 +117,14 @@ public class IngestionTest {
         "dc/base/HumanReadableStatVars",
         "count",
         "count",
-        new ArrayList<>());
+        List.of("Property"));
     Mutation outExpected = Mutation.newInsertOrUpdateBuilder("Node")
         .set("subject_id")
         .to("count")
         .set("name")
         .to("count")
         .set("types")
-        .to(Value.stringArray(new ArrayList<String>()))
+        .to(Value.stringArray(List.of("Property")))
         .build();
     Assert.assertTrue(out.toNode("Node").equals(outExpected));
   }

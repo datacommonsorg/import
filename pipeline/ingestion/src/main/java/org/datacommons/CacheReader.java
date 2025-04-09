@@ -6,6 +6,7 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -70,6 +71,7 @@ public class CacheReader {
           try {
             String dcid = keys[0];
             String predicate = keys[1];
+            String typeOf = keys[2];
             PagedEntities elist =
                 PagedEntities.parseFrom(
                     new GZIPInputStream(
@@ -92,6 +94,10 @@ public class CacheReader {
                   nodeId = entity.getDcid();
                 }
               }
+              List<String> types = entity.getTypesList();
+              if (types.isEmpty() && !typeOf.isEmpty()) {
+                types = Arrays.asList(typeOf);
+              }
               // TODO: fix id column.
               Entity e =
                   new Entity(
@@ -103,7 +109,7 @@ public class CacheReader {
                       entity.getProvenanceId(),
                       nodeId,
                       entity.getName(),
-                      entity.getTypesList());
+                      types);
               entities.add(e);
             }
           } catch (IOException e) {

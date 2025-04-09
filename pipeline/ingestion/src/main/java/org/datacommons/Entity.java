@@ -113,7 +113,7 @@ public class Entity {
     if (types == null) {
       if (other.types != null)
         return false;
-    } else if (!types.equals(other.types))
+    } else if (!types.equals(other.types)) 
       return false;
     return true;
   }
@@ -130,7 +130,7 @@ public class Entity {
           "\n\tnodeId: %s" +
           "\n\tname: %s" +
           "\n\ttypes: %s" +
-          "\n}", id, subjectId, predicate, objectId, objectValue, nodeId, provenance, name, String.join(", ", types));
+          "\n}", id, subjectId, predicate, objectId, objectValue, provenance, nodeId, name, String.join(", ", types));
   }
 
   public Mutation toNode(String nodeTableName) {
