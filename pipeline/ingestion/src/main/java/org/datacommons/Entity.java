@@ -10,17 +10,26 @@ import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
 /** Models a graph entity (node/edge). */
 @DefaultCoder(AvroCoder.class)
 public class Entity {
+  // Id of the generated Edge.
   String id;
+  // SubjectId of the generated Edge.
   String subjectId;
+  // Predicate of the generated Edge.
   String predicate;
+  // ObjectId of the generated Edge.
   String objectId;
+  // ObjectValue of the generatedEdge.
   @Nullable
   String objectValue;
+  // Provenance of the generated Edge.
   @Nullable
   String provenance;
+  // SubjectId of the generated Node.
+  String nodeId;
+  // Name of the generated Node.
   @Nullable
   String name;
-  String nodeId;
+  // Types of the generated Node.
   @Nullable
   List<String> types;
 
