@@ -1,5 +1,7 @@
 package org.datacommons;
 
+import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Value;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -7,6 +9,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -62,9 +65,13 @@ public class IngestionTest {
     List<String> cache = new ArrayList<>();
     cache.add(
         "d/m/Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person^measuredProperty^Property^0,H4sIAAAAAAAAAOPS5WJNzi/NK5GCUEqyKcn6SYnFqfoepbmJeUGpiSmJSTmpwSWJJWGJRcWCDGDwwR4AejAnwDgAAAA=");
+    cache.add(
+        "d/m/Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person^name^^0,H4sIAAAAAAAAAONqYFSSTUnWT0osTtX3KM1NzAtKTUxJTMpJDS5JLAlLLCrWig9ILUpOzStJTE9VCM8vylYISs1JLElNUQjIqCzOTE7MUXBMLsksyyyp1FHwzU9JLQJKwoUU/IsUPFITyyoRIo65+XnpCgH5BaVAYzLz8wQZwOCDPQA1JajOjAAAAA==");
+    cache.add(
+        "d/l/dc/d/UnitedNationsUn_SdgIndicatorsDatabase^isPartOf^Provenance^0,H4sIAAAAAAAAAOPS4GIL9YsPdnGX4ktJ1k9KLE7Vh/CV0PiCDGDwwR4AhMbiaDMAAAA=");
     PCollection<String> entries = p.apply(Create.of(cache));
     PCollection<Entity> result = CacheReader.getEntities(entries);
-    Entity expected =
+    List<Entity> expected =  Arrays.asList(
         new Entity(
             "Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person",
             "Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person",
@@ -73,8 +80,52 @@ public class IngestionTest {
             "",
             "dc/base/HumanReadableStatVars",
             "count",
-            new ArrayList<>());
+            "count",
+            List.of("Property")),
+        new Entity(
+            "Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person",
+            "Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person",
+            "name",
+            "Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person",
+            "Percentage Work Related Physical Activity, Moderate Activity Or Heavy Activity Among Population",
+            "dc/base/HumanReadableStatVars",
+            "",
+            "",
+            new ArrayList<String>()),
+        new Entity(
+            "dc/base/UN_SDG",
+            "dc/base/UN_SDG",
+            "isPartOf",
+            "dc/d/UnitedNationsUn_SdgIndicatorsDatabase",
+            "",
+            "dc/base/UN_SDG",
+            "dc/base/UN_SDG",
+            "UN_SDG",
+            List.of("Provenance")));
     PAssert.that(result).containsInAnyOrder(expected);
     p.run();
+  }
+
+  @Test
+  public void testToNode() {
+    Entity out = new Entity(
+        "Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person",
+        "Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person",
+        "measuredProperty",
+        "count",
+        "",
+        "dc/base/HumanReadableStatVars",
+        "count",
+        "count",
+        List.of("Property"));
+    Mutation outExpected = Mutation.newInsertOrUpdateBuilder("Node")
+        .set("subject_id")
+        .to("count")
+        .set("name")
+        .to("count")
+        .set("types")
+        .to(Value.stringArray(List.of("Property")))
+        .build();
+    Assert.assertTrue(out.toNode("Node").equals(outExpected));
   }
 }
