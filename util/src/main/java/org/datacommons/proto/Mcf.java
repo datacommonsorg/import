@@ -11,6 +11,7 @@ public final class Mcf {
   public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
     registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
   }
+
   /**
    *
    *
@@ -47,6 +48,7 @@ public final class Mcf {
 
     /** <code>UNKNOWN_MCF_TYPE = 0;</code> */
     public static final int UNKNOWN_MCF_TYPE_VALUE = 0;
+
     /**
      *
      *
@@ -57,6 +59,7 @@ public final class Mcf {
      * <code>INSTANCE_MCF = 1;</code>
      */
     public static final int INSTANCE_MCF_VALUE = 1;
+
     /**
      *
      *
@@ -229,6 +232,7 @@ public final class Mcf {
 
     /** <code>UNKNOWN_VALUE_TYPE = 0;</code> */
     public static final int UNKNOWN_VALUE_TYPE_VALUE = 0;
+
     /**
      *
      *
@@ -239,6 +243,7 @@ public final class Mcf {
      * <code>TEXT = 1;</code>
      */
     public static final int TEXT_VALUE = 1;
+
     /**
      *
      *
@@ -250,6 +255,7 @@ public final class Mcf {
      * <code>NUMBER = 2;</code>
      */
     public static final int NUMBER_VALUE = 2;
+
     /**
      *
      *
@@ -262,6 +268,7 @@ public final class Mcf {
      * <code>UNRESOLVED_REF = 3;</code>
      */
     public static final int UNRESOLVED_REF_VALUE = 3;
+
     /**
      *
      *
@@ -272,6 +279,7 @@ public final class Mcf {
      * <code>RESOLVED_REF = 4;</code>
      */
     public static final int RESOLVED_REF_VALUE = 4;
+
     /**
      *
      *
@@ -282,6 +290,7 @@ public final class Mcf {
      * <code>COMPLEX_VALUE = 5;</code>
      */
     public static final int COMPLEX_VALUE_VALUE = 5;
+
     /**
      *
      *
@@ -292,6 +301,7 @@ public final class Mcf {
      * <code>TABLE_COLUMN = 6;</code>
      */
     public static final int TABLE_COLUMN_VALUE = 6;
+
     /**
      *
      *
@@ -402,6 +412,7 @@ public final class Mcf {
      * @return Whether the type field is set.
      */
     boolean hasType();
+
     /**
      *
      *
@@ -425,6 +436,7 @@ public final class Mcf {
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
     int getNodesCount();
+
     /**
      *
      *
@@ -435,9 +447,11 @@ public final class Mcf {
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
     boolean containsNodes(java.lang.String key);
+
     /** Use {@link #getNodesMap()} instead. */
     @java.lang.Deprecated
     java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> getNodes();
+
     /**
      *
      *
@@ -449,6 +463,7 @@ public final class Mcf {
      */
     java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
         getNodesMap();
+
     /**
      *
      *
@@ -460,6 +475,7 @@ public final class Mcf {
      */
     org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrDefault(
         java.lang.String key, org.datacommons.proto.Mcf.McfGraph.PropertyValues defaultValue);
+
     /**
      *
      *
@@ -471,6 +487,7 @@ public final class Mcf {
      */
     org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrThrow(java.lang.String key);
   }
+
   /**
    *
    *
@@ -486,6 +503,7 @@ public final class Mcf {
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.McfGraph)
       McfGraphOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use McfGraph.newBuilder() to construct.
     private McfGraph(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -611,6 +629,7 @@ public final class Mcf {
        * @return Whether the type field is set.
        */
       boolean hasType();
+
       /**
        * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
        *
@@ -624,12 +643,14 @@ public final class Mcf {
        * @return Whether the value field is set.
        */
       boolean hasValue();
+
       /**
        * <code>optional string value = 2;</code>
        *
        * @return The value.
        */
       java.lang.String getValue();
+
       /**
        * <code>optional string value = 2;</code>
        *
@@ -650,6 +671,7 @@ public final class Mcf {
        * @return Whether the column field is set.
        */
       boolean hasColumn();
+
       /**
        *
        *
@@ -663,6 +685,7 @@ public final class Mcf {
        * @return The column.
        */
       java.lang.String getColumn();
+
       /**
        *
        *
@@ -677,6 +700,7 @@ public final class Mcf {
        */
       com.google.protobuf.ByteString getColumnBytes();
     }
+
     /**
      *
      *
@@ -691,6 +715,7 @@ public final class Mcf {
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.McfGraph.TypedValue)
         TypedValueOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use TypedValue.newBuilder() to construct.
       private TypedValue(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -798,6 +823,7 @@ public final class Mcf {
       private int bitField0_;
       public static final int TYPE_FIELD_NUMBER = 1;
       private int type_;
+
       /**
        * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
        *
@@ -807,6 +833,7 @@ public final class Mcf {
       public boolean hasType() {
         return ((bitField0_ & 0x00000001) != 0);
       }
+
       /**
        * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
        *
@@ -822,6 +849,7 @@ public final class Mcf {
 
       public static final int VALUE_FIELD_NUMBER = 2;
       private volatile java.lang.Object value_;
+
       /**
        * <code>optional string value = 2;</code>
        *
@@ -831,6 +859,7 @@ public final class Mcf {
       public boolean hasValue() {
         return ((bitField0_ & 0x00000002) != 0);
       }
+
       /**
        * <code>optional string value = 2;</code>
        *
@@ -850,6 +879,7 @@ public final class Mcf {
           return s;
         }
       }
+
       /**
        * <code>optional string value = 2;</code>
        *
@@ -870,6 +900,7 @@ public final class Mcf {
 
       public static final int COLUMN_FIELD_NUMBER = 3;
       private volatile java.lang.Object column_;
+
       /**
        *
        *
@@ -886,6 +917,7 @@ public final class Mcf {
       public boolean hasColumn() {
         return ((bitField0_ & 0x00000004) != 0);
       }
+
       /**
        *
        *
@@ -912,6 +944,7 @@ public final class Mcf {
           return s;
         }
       }
+
       /**
        *
        *
@@ -1130,6 +1163,7 @@ public final class Mcf {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /**
        *
        *
@@ -1322,6 +1356,7 @@ public final class Mcf {
         private int bitField0_;
 
         private int type_ = 0;
+
         /**
          * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
          *
@@ -1331,6 +1366,7 @@ public final class Mcf {
         public boolean hasType() {
           return ((bitField0_ & 0x00000001) != 0);
         }
+
         /**
          * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
          *
@@ -1343,6 +1379,7 @@ public final class Mcf {
               org.datacommons.proto.Mcf.ValueType.valueOf(type_);
           return result == null ? org.datacommons.proto.Mcf.ValueType.UNKNOWN_VALUE_TYPE : result;
         }
+
         /**
          * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
          *
@@ -1358,6 +1395,7 @@ public final class Mcf {
           onChanged();
           return this;
         }
+
         /**
          * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
          *
@@ -1371,6 +1409,7 @@ public final class Mcf {
         }
 
         private java.lang.Object value_ = "";
+
         /**
          * <code>optional string value = 2;</code>
          *
@@ -1379,6 +1418,7 @@ public final class Mcf {
         public boolean hasValue() {
           return ((bitField0_ & 0x00000002) != 0);
         }
+
         /**
          * <code>optional string value = 2;</code>
          *
@@ -1397,6 +1437,7 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>optional string value = 2;</code>
          *
@@ -1413,6 +1454,7 @@ public final class Mcf {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>optional string value = 2;</code>
          *
@@ -1428,6 +1470,7 @@ public final class Mcf {
           onChanged();
           return this;
         }
+
         /**
          * <code>optional string value = 2;</code>
          *
@@ -1439,6 +1482,7 @@ public final class Mcf {
           onChanged();
           return this;
         }
+
         /**
          * <code>optional string value = 2;</code>
          *
@@ -1456,6 +1500,7 @@ public final class Mcf {
         }
 
         private java.lang.Object column_ = "";
+
         /**
          *
          *
@@ -1471,6 +1516,7 @@ public final class Mcf {
         public boolean hasColumn() {
           return ((bitField0_ & 0x00000004) != 0);
         }
+
         /**
          *
          *
@@ -1496,6 +1542,7 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
+
         /**
          *
          *
@@ -1519,6 +1566,7 @@ public final class Mcf {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          *
          *
@@ -1541,6 +1589,7 @@ public final class Mcf {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -1559,6 +1608,7 @@ public final class Mcf {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -1650,6 +1700,7 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
       java.util.List<org.datacommons.proto.Mcf.McfGraph.TypedValue> getTypedValuesList();
+
       /**
        *
        *
@@ -1660,6 +1711,7 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
       org.datacommons.proto.Mcf.McfGraph.TypedValue getTypedValues(int index);
+
       /**
        *
        *
@@ -1670,6 +1722,7 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
       int getTypedValuesCount();
+
       /**
        *
        *
@@ -1681,6 +1734,7 @@ public final class Mcf {
        */
       java.util.List<? extends org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>
           getTypedValuesOrBuilderList();
+
       /**
        *
        *
@@ -1692,6 +1746,7 @@ public final class Mcf {
        */
       org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getTypedValuesOrBuilder(int index);
     }
+
     /**
      *
      *
@@ -1706,6 +1761,7 @@ public final class Mcf {
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.McfGraph.Values)
         ValuesOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use Values.newBuilder() to construct.
       private Values(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -1797,6 +1853,7 @@ public final class Mcf {
 
       public static final int TYPED_VALUES_FIELD_NUMBER = 1;
       private java.util.List<org.datacommons.proto.Mcf.McfGraph.TypedValue> typedValues_;
+
       /**
        *
        *
@@ -1810,6 +1867,7 @@ public final class Mcf {
       public java.util.List<org.datacommons.proto.Mcf.McfGraph.TypedValue> getTypedValuesList() {
         return typedValues_;
       }
+
       /**
        *
        *
@@ -1824,6 +1882,7 @@ public final class Mcf {
           getTypedValuesOrBuilderList() {
         return typedValues_;
       }
+
       /**
        *
        *
@@ -1837,6 +1896,7 @@ public final class Mcf {
       public int getTypedValuesCount() {
         return typedValues_.size();
       }
+
       /**
        *
        *
@@ -1850,6 +1910,7 @@ public final class Mcf {
       public org.datacommons.proto.Mcf.McfGraph.TypedValue getTypedValues(int index) {
         return typedValues_.get(index);
       }
+
       /**
        *
        *
@@ -2027,6 +2088,7 @@ public final class Mcf {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /**
        *
        *
@@ -2261,6 +2323,7 @@ public final class Mcf {
             return typedValuesBuilder_.getMessageList();
           }
         }
+
         /**
          *
          *
@@ -2277,6 +2340,7 @@ public final class Mcf {
             return typedValuesBuilder_.getCount();
           }
         }
+
         /**
          *
          *
@@ -2293,6 +2357,7 @@ public final class Mcf {
             return typedValuesBuilder_.getMessage(index);
           }
         }
+
         /**
          *
          *
@@ -2316,6 +2381,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -2336,6 +2402,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -2358,6 +2425,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -2381,6 +2449,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -2401,6 +2470,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -2421,6 +2491,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -2441,6 +2512,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -2460,6 +2532,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -2479,6 +2552,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -2492,6 +2566,7 @@ public final class Mcf {
             int index) {
           return getTypedValuesFieldBuilder().getBuilder(index);
         }
+
         /**
          *
          *
@@ -2509,6 +2584,7 @@ public final class Mcf {
             return typedValuesBuilder_.getMessageOrBuilder(index);
           }
         }
+
         /**
          *
          *
@@ -2526,6 +2602,7 @@ public final class Mcf {
             return java.util.Collections.unmodifiableList(typedValues_);
           }
         }
+
         /**
          *
          *
@@ -2539,6 +2616,7 @@ public final class Mcf {
           return getTypedValuesFieldBuilder()
               .addBuilder(org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance());
         }
+
         /**
          *
          *
@@ -2554,6 +2632,7 @@ public final class Mcf {
               .addBuilder(
                   index, org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance());
         }
+
         /**
          *
          *
@@ -2656,6 +2735,7 @@ public final class Mcf {
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
       int getPvsCount();
+
       /**
        *
        *
@@ -2666,9 +2746,11 @@ public final class Mcf {
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
       boolean containsPvs(java.lang.String key);
+
       /** Use {@link #getPvsMap()} instead. */
       @java.lang.Deprecated
       java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvs();
+
       /**
        *
        *
@@ -2679,6 +2761,7 @@ public final class Mcf {
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
       java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvsMap();
+
       /**
        *
        *
@@ -2690,6 +2773,7 @@ public final class Mcf {
        */
       org.datacommons.proto.Mcf.McfGraph.Values getPvsOrDefault(
           java.lang.String key, org.datacommons.proto.Mcf.McfGraph.Values defaultValue);
+
       /**
        *
        *
@@ -2712,6 +2796,7 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList();
+
       /**
        *
        *
@@ -2723,6 +2808,7 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       org.datacommons.proto.LogLocation.Location getLocations(int index);
+
       /**
        *
        *
@@ -2734,6 +2820,7 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       int getLocationsCount();
+
       /**
        *
        *
@@ -2746,6 +2833,7 @@ public final class Mcf {
        */
       java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder>
           getLocationsOrBuilderList();
+
       /**
        *
        *
@@ -2770,6 +2858,7 @@ public final class Mcf {
        * @return Whether the templateNode field is set.
        */
       boolean hasTemplateNode();
+
       /**
        *
        *
@@ -2782,6 +2871,7 @@ public final class Mcf {
        * @return The templateNode.
        */
       java.lang.String getTemplateNode();
+
       /**
        *
        *
@@ -2807,6 +2897,7 @@ public final class Mcf {
        * @return Whether the errorMessage field is set.
        */
       boolean hasErrorMessage();
+
       /**
        *
        *
@@ -2819,6 +2910,7 @@ public final class Mcf {
        * @return The errorMessage.
        */
       java.lang.String getErrorMessage();
+
       /**
        *
        *
@@ -2832,6 +2924,7 @@ public final class Mcf {
        */
       com.google.protobuf.ByteString getErrorMessageBytes();
     }
+
     /**
      *
      *
@@ -2846,6 +2939,7 @@ public final class Mcf {
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.McfGraph.PropertyValues)
         PropertyValuesOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use PropertyValues.newBuilder() to construct.
       private PropertyValues(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -3013,6 +3107,7 @@ public final class Mcf {
       public int getPvsCount() {
         return internalGetPvs().getMap().size();
       }
+
       /**
        *
        *
@@ -3029,12 +3124,14 @@ public final class Mcf {
         }
         return internalGetPvs().getMap().containsKey(key);
       }
+
       /** Use {@link #getPvsMap()} instead. */
       @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvs() {
         return getPvsMap();
       }
+
       /**
        *
        *
@@ -3049,6 +3146,7 @@ public final class Mcf {
           getPvsMap() {
         return internalGetPvs().getMap();
       }
+
       /**
        *
        *
@@ -3068,6 +3166,7 @@ public final class Mcf {
             internalGetPvs().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
+
       /**
        *
        *
@@ -3092,6 +3191,7 @@ public final class Mcf {
 
       public static final int LOCATIONS_FIELD_NUMBER = 2;
       private java.util.List<org.datacommons.proto.LogLocation.Location> locations_;
+
       /**
        *
        *
@@ -3106,6 +3206,7 @@ public final class Mcf {
       public java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList() {
         return locations_;
       }
+
       /**
        *
        *
@@ -3121,6 +3222,7 @@ public final class Mcf {
           getLocationsOrBuilderList() {
         return locations_;
       }
+
       /**
        *
        *
@@ -3135,6 +3237,7 @@ public final class Mcf {
       public int getLocationsCount() {
         return locations_.size();
       }
+
       /**
        *
        *
@@ -3149,6 +3252,7 @@ public final class Mcf {
       public org.datacommons.proto.LogLocation.Location getLocations(int index) {
         return locations_.get(index);
       }
+
       /**
        *
        *
@@ -3166,6 +3270,7 @@ public final class Mcf {
 
       public static final int TEMPLATE_NODE_FIELD_NUMBER = 3;
       private volatile java.lang.Object templateNode_;
+
       /**
        *
        *
@@ -3181,6 +3286,7 @@ public final class Mcf {
       public boolean hasTemplateNode() {
         return ((bitField0_ & 0x00000001) != 0);
       }
+
       /**
        *
        *
@@ -3206,6 +3312,7 @@ public final class Mcf {
           return s;
         }
       }
+
       /**
        *
        *
@@ -3232,6 +3339,7 @@ public final class Mcf {
 
       public static final int ERROR_MESSAGE_FIELD_NUMBER = 4;
       private volatile java.lang.Object errorMessage_;
+
       /**
        *
        *
@@ -3247,6 +3355,7 @@ public final class Mcf {
       public boolean hasErrorMessage() {
         return ((bitField0_ & 0x00000002) != 0);
       }
+
       /**
        *
        *
@@ -3272,6 +3381,7 @@ public final class Mcf {
           return s;
         }
       }
+
       /**
        *
        *
@@ -3505,6 +3615,7 @@ public final class Mcf {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /**
        *
        *
@@ -3785,6 +3896,7 @@ public final class Mcf {
         public int getPvsCount() {
           return internalGetPvs().getMap().size();
         }
+
         /**
          *
          *
@@ -3801,12 +3913,14 @@ public final class Mcf {
           }
           return internalGetPvs().getMap().containsKey(key);
         }
+
         /** Use {@link #getPvsMap()} instead. */
         @java.lang.Override
         @java.lang.Deprecated
         public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvs() {
           return getPvsMap();
         }
+
         /**
          *
          *
@@ -3821,6 +3935,7 @@ public final class Mcf {
             getPvsMap() {
           return internalGetPvs().getMap();
         }
+
         /**
          *
          *
@@ -3840,6 +3955,7 @@ public final class Mcf {
               internalGetPvs().getMap();
           return map.containsKey(key) ? map.get(key) : defaultValue;
         }
+
         /**
          *
          *
@@ -3866,6 +3982,7 @@ public final class Mcf {
           internalGetMutablePvs().getMutableMap().clear();
           return this;
         }
+
         /**
          *
          *
@@ -3882,12 +3999,14 @@ public final class Mcf {
           internalGetMutablePvs().getMutableMap().remove(key);
           return this;
         }
+
         /** Use alternate mutation accessors instead. */
         @java.lang.Deprecated
         public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
             getMutablePvs() {
           return internalGetMutablePvs().getMutableMap();
         }
+
         /**
          *
          *
@@ -3908,6 +4027,7 @@ public final class Mcf {
           internalGetMutablePvs().getMutableMap().put(key, value);
           return this;
         }
+
         /**
          *
          *
@@ -3957,6 +4077,7 @@ public final class Mcf {
             return locationsBuilder_.getMessageList();
           }
         }
+
         /**
          *
          *
@@ -3974,6 +4095,7 @@ public final class Mcf {
             return locationsBuilder_.getCount();
           }
         }
+
         /**
          *
          *
@@ -3991,6 +4113,7 @@ public final class Mcf {
             return locationsBuilder_.getMessage(index);
           }
         }
+
         /**
          *
          *
@@ -4014,6 +4137,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -4035,6 +4159,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -4058,6 +4183,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -4081,6 +4207,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -4102,6 +4229,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -4123,6 +4251,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -4144,6 +4273,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -4164,6 +4294,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -4184,6 +4315,7 @@ public final class Mcf {
           }
           return this;
         }
+
         /**
          *
          *
@@ -4197,6 +4329,7 @@ public final class Mcf {
         public org.datacommons.proto.LogLocation.Location.Builder getLocationsBuilder(int index) {
           return getLocationsFieldBuilder().getBuilder(index);
         }
+
         /**
          *
          *
@@ -4215,6 +4348,7 @@ public final class Mcf {
             return locationsBuilder_.getMessageOrBuilder(index);
           }
         }
+
         /**
          *
          *
@@ -4233,6 +4367,7 @@ public final class Mcf {
             return java.util.Collections.unmodifiableList(locations_);
           }
         }
+
         /**
          *
          *
@@ -4247,6 +4382,7 @@ public final class Mcf {
           return getLocationsFieldBuilder()
               .addBuilder(org.datacommons.proto.LogLocation.Location.getDefaultInstance());
         }
+
         /**
          *
          *
@@ -4261,6 +4397,7 @@ public final class Mcf {
           return getLocationsFieldBuilder()
               .addBuilder(index, org.datacommons.proto.LogLocation.Location.getDefaultInstance());
         }
+
         /**
          *
          *
@@ -4297,6 +4434,7 @@ public final class Mcf {
         }
 
         private java.lang.Object templateNode_ = "";
+
         /**
          *
          *
@@ -4311,6 +4449,7 @@ public final class Mcf {
         public boolean hasTemplateNode() {
           return ((bitField0_ & 0x00000004) != 0);
         }
+
         /**
          *
          *
@@ -4335,6 +4474,7 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
+
         /**
          *
          *
@@ -4357,6 +4497,7 @@ public final class Mcf {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          *
          *
@@ -4378,6 +4519,7 @@ public final class Mcf {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -4395,6 +4537,7 @@ public final class Mcf {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -4418,6 +4561,7 @@ public final class Mcf {
         }
 
         private java.lang.Object errorMessage_ = "";
+
         /**
          *
          *
@@ -4432,6 +4576,7 @@ public final class Mcf {
         public boolean hasErrorMessage() {
           return ((bitField0_ & 0x00000008) != 0);
         }
+
         /**
          *
          *
@@ -4456,6 +4601,7 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
+
         /**
          *
          *
@@ -4478,6 +4624,7 @@ public final class Mcf {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          *
          *
@@ -4499,6 +4646,7 @@ public final class Mcf {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -4516,6 +4664,7 @@ public final class Mcf {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -4594,6 +4743,7 @@ public final class Mcf {
     private int bitField0_;
     public static final int TYPE_FIELD_NUMBER = 1;
     private int type_;
+
     /**
      *
      *
@@ -4609,6 +4759,7 @@ public final class Mcf {
     public boolean hasType() {
       return ((bitField0_ & 0x00000001) != 0);
     }
+
     /**
      *
      *
@@ -4660,6 +4811,7 @@ public final class Mcf {
     public int getNodesCount() {
       return internalGetNodes().getMap().size();
     }
+
     /**
      *
      *
@@ -4676,6 +4828,7 @@ public final class Mcf {
       }
       return internalGetNodes().getMap().containsKey(key);
     }
+
     /** Use {@link #getNodesMap()} instead. */
     @java.lang.Override
     @java.lang.Deprecated
@@ -4683,6 +4836,7 @@ public final class Mcf {
         getNodes() {
       return getNodesMap();
     }
+
     /**
      *
      *
@@ -4697,6 +4851,7 @@ public final class Mcf {
         getNodesMap() {
       return internalGetNodes().getMap();
     }
+
     /**
      *
      *
@@ -4716,6 +4871,7 @@ public final class Mcf {
           internalGetNodes().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
+
     /**
      *
      *
@@ -4920,6 +5076,7 @@ public final class Mcf {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
      *
      *
@@ -5110,6 +5267,7 @@ public final class Mcf {
       private int bitField0_;
 
       private int type_ = 1;
+
       /**
        *
        *
@@ -5125,6 +5283,7 @@ public final class Mcf {
       public boolean hasType() {
         return ((bitField0_ & 0x00000001) != 0);
       }
+
       /**
        *
        *
@@ -5142,6 +5301,7 @@ public final class Mcf {
         org.datacommons.proto.Mcf.McfType result = org.datacommons.proto.Mcf.McfType.valueOf(type_);
         return result == null ? org.datacommons.proto.Mcf.McfType.INSTANCE_MCF : result;
       }
+
       /**
        *
        *
@@ -5163,6 +5323,7 @@ public final class Mcf {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -5211,6 +5372,7 @@ public final class Mcf {
       public int getNodesCount() {
         return internalGetNodes().getMap().size();
       }
+
       /**
        *
        *
@@ -5227,6 +5389,7 @@ public final class Mcf {
         }
         return internalGetNodes().getMap().containsKey(key);
       }
+
       /** Use {@link #getNodesMap()} instead. */
       @java.lang.Override
       @java.lang.Deprecated
@@ -5234,6 +5397,7 @@ public final class Mcf {
           getNodes() {
         return getNodesMap();
       }
+
       /**
        *
        *
@@ -5248,6 +5412,7 @@ public final class Mcf {
           getNodesMap() {
         return internalGetNodes().getMap();
       }
+
       /**
        *
        *
@@ -5267,6 +5432,7 @@ public final class Mcf {
             internalGetNodes().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
+
       /**
        *
        *
@@ -5294,6 +5460,7 @@ public final class Mcf {
         internalGetMutableNodes().getMutableMap().clear();
         return this;
       }
+
       /**
        *
        *
@@ -5310,12 +5477,14 @@ public final class Mcf {
         internalGetMutableNodes().getMutableMap().remove(key);
         return this;
       }
+
       /** Use alternate mutation accessors instead. */
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
           getMutableNodes() {
         return internalGetMutableNodes().getMutableMap();
       }
+
       /**
        *
        *
@@ -5336,6 +5505,7 @@ public final class Mcf {
         internalGetMutableNodes().getMutableMap().put(key, value);
         return this;
       }
+
       /**
        *
        *

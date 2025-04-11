@@ -30,6 +30,7 @@ public final class LogLocation {
      * @return Whether the file field is set.
      */
     boolean hasFile();
+
     /**
      *
      *
@@ -43,6 +44,7 @@ public final class LogLocation {
      * @return The file.
      */
     java.lang.String getFile();
+
     /**
      *
      *
@@ -70,6 +72,7 @@ public final class LogLocation {
      * @return Whether the lineNumber field is set.
      */
     boolean hasLineNumber();
+
     /**
      *
      *
@@ -84,12 +87,14 @@ public final class LogLocation {
      */
     long getLineNumber();
   }
+
   /** Protobuf type {@code org.datacommons.proto.Location} */
   public static final class Location extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.Location)
       LocationOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use Location.newBuilder() to construct.
     private Location(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -179,6 +184,7 @@ public final class LogLocation {
     private int bitField0_;
     public static final int FILE_FIELD_NUMBER = 1;
     private volatile java.lang.Object file_;
+
     /**
      *
      *
@@ -195,6 +201,7 @@ public final class LogLocation {
     public boolean hasFile() {
       return ((bitField0_ & 0x00000001) != 0);
     }
+
     /**
      *
      *
@@ -221,6 +228,7 @@ public final class LogLocation {
         return s;
       }
     }
+
     /**
      *
      *
@@ -248,6 +256,7 @@ public final class LogLocation {
 
     public static final int LINE_NUMBER_FIELD_NUMBER = 2;
     private long lineNumber_;
+
     /**
      *
      *
@@ -264,6 +273,7 @@ public final class LogLocation {
     public boolean hasLineNumber() {
       return ((bitField0_ & 0x00000002) != 0);
     }
+
     /**
      *
      *
@@ -460,6 +470,7 @@ public final class LogLocation {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.Location} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -631,6 +642,7 @@ public final class LogLocation {
       private int bitField0_;
 
       private java.lang.Object file_ = "";
+
       /**
        *
        *
@@ -646,6 +658,7 @@ public final class LogLocation {
       public boolean hasFile() {
         return ((bitField0_ & 0x00000001) != 0);
       }
+
       /**
        *
        *
@@ -671,6 +684,7 @@ public final class LogLocation {
           return (java.lang.String) ref;
         }
       }
+
       /**
        *
        *
@@ -694,6 +708,7 @@ public final class LogLocation {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        *
        *
@@ -716,6 +731,7 @@ public final class LogLocation {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -734,6 +750,7 @@ public final class LogLocation {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -758,6 +775,7 @@ public final class LogLocation {
       }
 
       private long lineNumber_;
+
       /**
        *
        *
@@ -774,6 +792,7 @@ public final class LogLocation {
       public boolean hasLineNumber() {
         return ((bitField0_ & 0x00000002) != 0);
       }
+
       /**
        *
        *
@@ -790,6 +809,7 @@ public final class LogLocation {
       public long getLineNumber() {
         return lineNumber_;
       }
+
       /**
        *
        *
@@ -809,6 +829,7 @@ public final class LogLocation {
         onChanged();
         return this;
       }
+
       /**
        *
        *

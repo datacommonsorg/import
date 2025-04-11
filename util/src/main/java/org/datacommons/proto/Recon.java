@@ -23,6 +23,7 @@ public final class Recon {
      * @return The prop.
      */
     java.lang.String getProp();
+
     /**
      * <code>string prop = 1;</code>
      *
@@ -36,6 +37,7 @@ public final class Recon {
      * @return The val.
      */
     java.lang.String getVal();
+
     /**
      * <code>string val = 2;</code>
      *
@@ -43,12 +45,14 @@ public final class Recon {
      */
     com.google.protobuf.ByteString getValBytes();
   }
+
   /** Protobuf type {@code org.datacommons.proto.IdWithProperty} */
   public static final class IdWithProperty extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.IdWithProperty)
       IdWithPropertyOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use IdWithProperty.newBuilder() to construct.
     private IdWithProperty(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -138,6 +142,7 @@ public final class Recon {
 
     public static final int PROP_FIELD_NUMBER = 1;
     private volatile java.lang.Object prop_;
+
     /**
      * <code>string prop = 1;</code>
      *
@@ -155,6 +160,7 @@ public final class Recon {
         return s;
       }
     }
+
     /**
      * <code>string prop = 1;</code>
      *
@@ -175,6 +181,7 @@ public final class Recon {
 
     public static final int VAL_FIELD_NUMBER = 2;
     private volatile java.lang.Object val_;
+
     /**
      * <code>string val = 2;</code>
      *
@@ -192,6 +199,7 @@ public final class Recon {
         return s;
       }
     }
+
     /**
      * <code>string val = 2;</code>
      *
@@ -379,6 +387,7 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.IdWithProperty} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -539,6 +548,7 @@ public final class Recon {
       }
 
       private java.lang.Object prop_ = "";
+
       /**
        * <code>string prop = 1;</code>
        *
@@ -555,6 +565,7 @@ public final class Recon {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string prop = 1;</code>
        *
@@ -571,6 +582,7 @@ public final class Recon {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string prop = 1;</code>
        *
@@ -586,6 +598,7 @@ public final class Recon {
         onChanged();
         return this;
       }
+
       /**
        * <code>string prop = 1;</code>
        *
@@ -597,6 +610,7 @@ public final class Recon {
         onChanged();
         return this;
       }
+
       /**
        * <code>string prop = 1;</code>
        *
@@ -615,6 +629,7 @@ public final class Recon {
       }
 
       private java.lang.Object val_ = "";
+
       /**
        * <code>string val = 2;</code>
        *
@@ -631,6 +646,7 @@ public final class Recon {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string val = 2;</code>
        *
@@ -647,6 +663,7 @@ public final class Recon {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string val = 2;</code>
        *
@@ -662,6 +679,7 @@ public final class Recon {
         onChanged();
         return this;
       }
+
       /**
        * <code>string val = 2;</code>
        *
@@ -673,6 +691,7 @@ public final class Recon {
         onChanged();
         return this;
       }
+
       /**
        * <code>string val = 2;</code>
        *
@@ -749,22 +768,28 @@ public final class Recon {
 
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     java.util.List<org.datacommons.proto.Recon.IdWithProperty> getIdsList();
+
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     org.datacommons.proto.Recon.IdWithProperty getIds(int index);
+
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     int getIdsCount();
+
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
         getIdsOrBuilderList();
+
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index);
   }
+
   /** Protobuf type {@code org.datacommons.proto.EntityIds} */
   public static final class EntityIds extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.EntityIds)
       EntityIdsOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use EntityIds.newBuilder() to construct.
     private EntityIds(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -853,27 +878,32 @@ public final class Recon {
 
     public static final int IDS_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Recon.IdWithProperty> ids_;
+
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     @java.lang.Override
     public java.util.List<org.datacommons.proto.Recon.IdWithProperty> getIdsList() {
       return ids_;
     }
+
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     @java.lang.Override
     public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
         getIdsOrBuilderList() {
       return ids_;
     }
+
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     @java.lang.Override
     public int getIdsCount() {
       return ids_.size();
     }
+
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.IdWithProperty getIds(int index) {
       return ids_.get(index);
     }
+
     /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index) {
@@ -1041,6 +1071,7 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.EntityIds} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -1257,6 +1288,7 @@ public final class Recon {
           return idsBuilder_.getMessageList();
         }
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public int getIdsCount() {
         if (idsBuilder_ == null) {
@@ -1265,6 +1297,7 @@ public final class Recon {
           return idsBuilder_.getCount();
         }
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public org.datacommons.proto.Recon.IdWithProperty getIds(int index) {
         if (idsBuilder_ == null) {
@@ -1273,6 +1306,7 @@ public final class Recon {
           return idsBuilder_.getMessage(index);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder setIds(int index, org.datacommons.proto.Recon.IdWithProperty value) {
         if (idsBuilder_ == null) {
@@ -1287,6 +1321,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder setIds(
           int index, org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
@@ -1299,6 +1334,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder addIds(org.datacommons.proto.Recon.IdWithProperty value) {
         if (idsBuilder_ == null) {
@@ -1313,6 +1349,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder addIds(int index, org.datacommons.proto.Recon.IdWithProperty value) {
         if (idsBuilder_ == null) {
@@ -1327,6 +1364,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder addIds(org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
         if (idsBuilder_ == null) {
@@ -1338,6 +1376,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder addIds(
           int index, org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
@@ -1350,6 +1389,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder addAllIds(
           java.lang.Iterable<? extends org.datacommons.proto.Recon.IdWithProperty> values) {
@@ -1362,6 +1402,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder clearIds() {
         if (idsBuilder_ == null) {
@@ -1373,6 +1414,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder removeIds(int index) {
         if (idsBuilder_ == null) {
@@ -1384,10 +1426,12 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public org.datacommons.proto.Recon.IdWithProperty.Builder getIdsBuilder(int index) {
         return getIdsFieldBuilder().getBuilder(index);
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index) {
         if (idsBuilder_ == null) {
@@ -1396,6 +1440,7 @@ public final class Recon {
           return idsBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
           getIdsOrBuilderList() {
@@ -1405,16 +1450,19 @@ public final class Recon {
           return java.util.Collections.unmodifiableList(ids_);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public org.datacommons.proto.Recon.IdWithProperty.Builder addIdsBuilder() {
         return getIdsFieldBuilder()
             .addBuilder(org.datacommons.proto.Recon.IdWithProperty.getDefaultInstance());
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public org.datacommons.proto.Recon.IdWithProperty.Builder addIdsBuilder(int index) {
         return getIdsFieldBuilder()
             .addBuilder(index, org.datacommons.proto.Recon.IdWithProperty.getDefaultInstance());
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public java.util.List<org.datacommons.proto.Recon.IdWithProperty.Builder>
           getIdsBuilderList() {
@@ -1507,6 +1555,7 @@ public final class Recon {
      * @return The sourceId.
      */
     java.lang.String getSourceId();
+
     /**
      *
      *
@@ -1526,12 +1575,14 @@ public final class Recon {
      * @return Whether the subGraph field is set.
      */
     boolean hasSubGraph();
+
     /**
      * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
      *
      * @return The subGraph.
      */
     org.datacommons.proto.Mcf.McfGraph getSubGraph();
+
     /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
     org.datacommons.proto.Mcf.McfGraphOrBuilder getSubGraphOrBuilder();
 
@@ -1541,18 +1592,21 @@ public final class Recon {
      * @return Whether the entityIds field is set.
      */
     boolean hasEntityIds();
+
     /**
      * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
      *
      * @return The entityIds.
      */
     org.datacommons.proto.Recon.EntityIds getEntityIds();
+
     /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
     org.datacommons.proto.Recon.EntityIdsOrBuilder getEntityIdsOrBuilder();
 
     public org.datacommons.proto.Recon.EntitySubGraph.GraphRepresentationCase
         getGraphRepresentationCase();
   }
+
   /**
    *
    *
@@ -1567,6 +1621,7 @@ public final class Recon {
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.EntitySubGraph)
       EntitySubGraphOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use EntitySubGraph.newBuilder() to construct.
     private EntitySubGraph(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -1695,6 +1750,7 @@ public final class Recon {
       private GraphRepresentationCase(int value) {
         this.value = value;
       }
+
       /**
        * @param value The number of the enum to look for.
        * @return The enum associated with the given number.
@@ -1729,6 +1785,7 @@ public final class Recon {
 
     public static final int SOURCE_ID_FIELD_NUMBER = 1;
     private volatile java.lang.Object sourceId_;
+
     /**
      *
      *
@@ -1752,6 +1809,7 @@ public final class Recon {
         return s;
       }
     }
+
     /**
      *
      *
@@ -1777,6 +1835,7 @@ public final class Recon {
     }
 
     public static final int SUB_GRAPH_FIELD_NUMBER = 2;
+
     /**
      * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
      *
@@ -1786,6 +1845,7 @@ public final class Recon {
     public boolean hasSubGraph() {
       return graphRepresentationCase_ == 2;
     }
+
     /**
      * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
      *
@@ -1798,6 +1858,7 @@ public final class Recon {
       }
       return org.datacommons.proto.Mcf.McfGraph.getDefaultInstance();
     }
+
     /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
     @java.lang.Override
     public org.datacommons.proto.Mcf.McfGraphOrBuilder getSubGraphOrBuilder() {
@@ -1808,6 +1869,7 @@ public final class Recon {
     }
 
     public static final int ENTITY_IDS_FIELD_NUMBER = 3;
+
     /**
      * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
      *
@@ -1817,6 +1879,7 @@ public final class Recon {
     public boolean hasEntityIds() {
       return graphRepresentationCase_ == 3;
     }
+
     /**
      * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
      *
@@ -1829,6 +1892,7 @@ public final class Recon {
       }
       return org.datacommons.proto.Recon.EntityIds.getDefaultInstance();
     }
+
     /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntityIdsOrBuilder getEntityIdsOrBuilder() {
@@ -2037,6 +2101,7 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
      *
      *
@@ -2245,6 +2310,7 @@ public final class Recon {
       }
 
       private java.lang.Object sourceId_ = "";
+
       /**
        *
        *
@@ -2267,6 +2333,7 @@ public final class Recon {
           return (java.lang.String) ref;
         }
       }
+
       /**
        *
        *
@@ -2289,6 +2356,7 @@ public final class Recon {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        *
        *
@@ -2310,6 +2378,7 @@ public final class Recon {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -2327,6 +2396,7 @@ public final class Recon {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -2355,6 +2425,7 @@ public final class Recon {
               org.datacommons.proto.Mcf.McfGraph.Builder,
               org.datacommons.proto.Mcf.McfGraphOrBuilder>
           subGraphBuilder_;
+
       /**
        * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
        *
@@ -2364,6 +2435,7 @@ public final class Recon {
       public boolean hasSubGraph() {
         return graphRepresentationCase_ == 2;
       }
+
       /**
        * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
        *
@@ -2383,6 +2455,7 @@ public final class Recon {
           return org.datacommons.proto.Mcf.McfGraph.getDefaultInstance();
         }
       }
+
       /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
       public Builder setSubGraph(org.datacommons.proto.Mcf.McfGraph value) {
         if (subGraphBuilder_ == null) {
@@ -2397,6 +2470,7 @@ public final class Recon {
         graphRepresentationCase_ = 2;
         return this;
       }
+
       /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
       public Builder setSubGraph(org.datacommons.proto.Mcf.McfGraph.Builder builderForValue) {
         if (subGraphBuilder_ == null) {
@@ -2408,6 +2482,7 @@ public final class Recon {
         graphRepresentationCase_ = 2;
         return this;
       }
+
       /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
       public Builder mergeSubGraph(org.datacommons.proto.Mcf.McfGraph value) {
         if (subGraphBuilder_ == null) {
@@ -2431,6 +2506,7 @@ public final class Recon {
         graphRepresentationCase_ = 2;
         return this;
       }
+
       /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
       public Builder clearSubGraph() {
         if (subGraphBuilder_ == null) {
@@ -2448,10 +2524,12 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
       public org.datacommons.proto.Mcf.McfGraph.Builder getSubGraphBuilder() {
         return getSubGraphFieldBuilder().getBuilder();
       }
+
       /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
       @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraphOrBuilder getSubGraphOrBuilder() {
@@ -2464,6 +2542,7 @@ public final class Recon {
           return org.datacommons.proto.Mcf.McfGraph.getDefaultInstance();
         }
       }
+
       /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
               org.datacommons.proto.Mcf.McfGraph,
@@ -2495,6 +2574,7 @@ public final class Recon {
               org.datacommons.proto.Recon.EntityIds.Builder,
               org.datacommons.proto.Recon.EntityIdsOrBuilder>
           entityIdsBuilder_;
+
       /**
        * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
        *
@@ -2504,6 +2584,7 @@ public final class Recon {
       public boolean hasEntityIds() {
         return graphRepresentationCase_ == 3;
       }
+
       /**
        * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
        *
@@ -2523,6 +2604,7 @@ public final class Recon {
           return org.datacommons.proto.Recon.EntityIds.getDefaultInstance();
         }
       }
+
       /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
       public Builder setEntityIds(org.datacommons.proto.Recon.EntityIds value) {
         if (entityIdsBuilder_ == null) {
@@ -2537,6 +2619,7 @@ public final class Recon {
         graphRepresentationCase_ = 3;
         return this;
       }
+
       /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
       public Builder setEntityIds(org.datacommons.proto.Recon.EntityIds.Builder builderForValue) {
         if (entityIdsBuilder_ == null) {
@@ -2548,6 +2631,7 @@ public final class Recon {
         graphRepresentationCase_ = 3;
         return this;
       }
+
       /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
       public Builder mergeEntityIds(org.datacommons.proto.Recon.EntityIds value) {
         if (entityIdsBuilder_ == null) {
@@ -2572,6 +2656,7 @@ public final class Recon {
         graphRepresentationCase_ = 3;
         return this;
       }
+
       /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
       public Builder clearEntityIds() {
         if (entityIdsBuilder_ == null) {
@@ -2589,10 +2674,12 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
       public org.datacommons.proto.Recon.EntityIds.Builder getEntityIdsBuilder() {
         return getEntityIdsFieldBuilder().getBuilder();
       }
+
       /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
       @java.lang.Override
       public org.datacommons.proto.Recon.EntityIdsOrBuilder getEntityIdsOrBuilder() {
@@ -2605,6 +2692,7 @@ public final class Recon {
           return org.datacommons.proto.Recon.EntityIds.getDefaultInstance();
         }
       }
+
       /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
               org.datacommons.proto.Recon.EntityIds,
@@ -2694,12 +2782,14 @@ public final class Recon {
      * @return Whether the entityOne field is set.
      */
     boolean hasEntityOne();
+
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
      *
      * @return The entityOne.
      */
     org.datacommons.proto.Recon.EntitySubGraph getEntityOne();
+
     /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
     org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityOneOrBuilder();
 
@@ -2709,21 +2799,25 @@ public final class Recon {
      * @return Whether the entityTwo field is set.
      */
     boolean hasEntityTwo();
+
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
      *
      * @return The entityTwo.
      */
     org.datacommons.proto.Recon.EntitySubGraph getEntityTwo();
+
     /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
     org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityTwoOrBuilder();
   }
+
   /** Protobuf type {@code org.datacommons.proto.EntityPair} */
   public static final class EntityPair extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.EntityPair)
       EntityPairOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use EntityPair.newBuilder() to construct.
     private EntityPair(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -2828,6 +2922,7 @@ public final class Recon {
 
     public static final int ENTITY_ONE_FIELD_NUMBER = 1;
     private org.datacommons.proto.Recon.EntitySubGraph entityOne_;
+
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
      *
@@ -2837,6 +2932,7 @@ public final class Recon {
     public boolean hasEntityOne() {
       return entityOne_ != null;
     }
+
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
      *
@@ -2848,6 +2944,7 @@ public final class Recon {
           ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance()
           : entityOne_;
     }
+
     /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityOneOrBuilder() {
@@ -2856,6 +2953,7 @@ public final class Recon {
 
     public static final int ENTITY_TWO_FIELD_NUMBER = 2;
     private org.datacommons.proto.Recon.EntitySubGraph entityTwo_;
+
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
      *
@@ -2865,6 +2963,7 @@ public final class Recon {
     public boolean hasEntityTwo() {
       return entityTwo_ != null;
     }
+
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
      *
@@ -2876,6 +2975,7 @@ public final class Recon {
           ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance()
           : entityTwo_;
     }
+
     /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityTwoOrBuilder() {
@@ -3060,6 +3160,7 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.EntityPair} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -3239,6 +3340,7 @@ public final class Recon {
               org.datacommons.proto.Recon.EntitySubGraph.Builder,
               org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
           entityOneBuilder_;
+
       /**
        * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
        *
@@ -3247,6 +3349,7 @@ public final class Recon {
       public boolean hasEntityOne() {
         return entityOneBuilder_ != null || entityOne_ != null;
       }
+
       /**
        * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
        *
@@ -3261,6 +3364,7 @@ public final class Recon {
           return entityOneBuilder_.getMessage();
         }
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       public Builder setEntityOne(org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entityOneBuilder_ == null) {
@@ -3275,6 +3379,7 @@ public final class Recon {
 
         return this;
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       public Builder setEntityOne(
           org.datacommons.proto.Recon.EntitySubGraph.Builder builderForValue) {
@@ -3287,6 +3392,7 @@ public final class Recon {
 
         return this;
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       public Builder mergeEntityOne(org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entityOneBuilder_ == null) {
@@ -3305,6 +3411,7 @@ public final class Recon {
 
         return this;
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       public Builder clearEntityOne() {
         if (entityOneBuilder_ == null) {
@@ -3317,12 +3424,14 @@ public final class Recon {
 
         return this;
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       public org.datacommons.proto.Recon.EntitySubGraph.Builder getEntityOneBuilder() {
 
         onChanged();
         return getEntityOneFieldBuilder().getBuilder();
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityOneOrBuilder() {
         if (entityOneBuilder_ != null) {
@@ -3333,6 +3442,7 @@ public final class Recon {
               : entityOne_;
         }
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
               org.datacommons.proto.Recon.EntitySubGraph,
@@ -3357,6 +3467,7 @@ public final class Recon {
               org.datacommons.proto.Recon.EntitySubGraph.Builder,
               org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
           entityTwoBuilder_;
+
       /**
        * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
        *
@@ -3365,6 +3476,7 @@ public final class Recon {
       public boolean hasEntityTwo() {
         return entityTwoBuilder_ != null || entityTwo_ != null;
       }
+
       /**
        * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
        *
@@ -3379,6 +3491,7 @@ public final class Recon {
           return entityTwoBuilder_.getMessage();
         }
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       public Builder setEntityTwo(org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entityTwoBuilder_ == null) {
@@ -3393,6 +3506,7 @@ public final class Recon {
 
         return this;
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       public Builder setEntityTwo(
           org.datacommons.proto.Recon.EntitySubGraph.Builder builderForValue) {
@@ -3405,6 +3519,7 @@ public final class Recon {
 
         return this;
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       public Builder mergeEntityTwo(org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entityTwoBuilder_ == null) {
@@ -3423,6 +3538,7 @@ public final class Recon {
 
         return this;
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       public Builder clearEntityTwo() {
         if (entityTwoBuilder_ == null) {
@@ -3435,12 +3551,14 @@ public final class Recon {
 
         return this;
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       public org.datacommons.proto.Recon.EntitySubGraph.Builder getEntityTwoBuilder() {
 
         onChanged();
         return getEntityTwoFieldBuilder().getBuilder();
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityTwoOrBuilder() {
         if (entityTwoBuilder_ != null) {
@@ -3451,6 +3569,7 @@ public final class Recon {
               : entityTwo_;
         }
       }
+
       /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
               org.datacommons.proto.Recon.EntitySubGraph,
@@ -3528,22 +3647,28 @@ public final class Recon {
 
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     java.util.List<org.datacommons.proto.Recon.EntityPair> getEntityPairsList();
+
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     org.datacommons.proto.Recon.EntityPair getEntityPairs(int index);
+
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     int getEntityPairsCount();
+
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     java.util.List<? extends org.datacommons.proto.Recon.EntityPairOrBuilder>
         getEntityPairsOrBuilderList();
+
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     org.datacommons.proto.Recon.EntityPairOrBuilder getEntityPairsOrBuilder(int index);
   }
+
   /** Protobuf type {@code org.datacommons.proto.CompareEntitiesRequest} */
   public static final class CompareEntitiesRequest extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.CompareEntitiesRequest)
       CompareEntitiesRequestOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use CompareEntitiesRequest.newBuilder() to construct.
     private CompareEntitiesRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -3633,27 +3758,32 @@ public final class Recon {
 
     public static final int ENTITY_PAIRS_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Recon.EntityPair> entityPairs_;
+
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     @java.lang.Override
     public java.util.List<org.datacommons.proto.Recon.EntityPair> getEntityPairsList() {
       return entityPairs_;
     }
+
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     @java.lang.Override
     public java.util.List<? extends org.datacommons.proto.Recon.EntityPairOrBuilder>
         getEntityPairsOrBuilderList() {
       return entityPairs_;
     }
+
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     @java.lang.Override
     public int getEntityPairsCount() {
       return entityPairs_.size();
     }
+
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntityPair getEntityPairs(int index) {
       return entityPairs_.get(index);
     }
+
     /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntityPairOrBuilder getEntityPairsOrBuilder(int index) {
@@ -3822,6 +3952,7 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.CompareEntitiesRequest} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -4041,6 +4172,7 @@ public final class Recon {
           return entityPairsBuilder_.getMessageList();
         }
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public int getEntityPairsCount() {
         if (entityPairsBuilder_ == null) {
@@ -4049,6 +4181,7 @@ public final class Recon {
           return entityPairsBuilder_.getCount();
         }
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public org.datacommons.proto.Recon.EntityPair getEntityPairs(int index) {
         if (entityPairsBuilder_ == null) {
@@ -4057,6 +4190,7 @@ public final class Recon {
           return entityPairsBuilder_.getMessage(index);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder setEntityPairs(int index, org.datacommons.proto.Recon.EntityPair value) {
         if (entityPairsBuilder_ == null) {
@@ -4071,6 +4205,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder setEntityPairs(
           int index, org.datacommons.proto.Recon.EntityPair.Builder builderForValue) {
@@ -4083,6 +4218,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder addEntityPairs(org.datacommons.proto.Recon.EntityPair value) {
         if (entityPairsBuilder_ == null) {
@@ -4097,6 +4233,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder addEntityPairs(int index, org.datacommons.proto.Recon.EntityPair value) {
         if (entityPairsBuilder_ == null) {
@@ -4111,6 +4248,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder addEntityPairs(
           org.datacommons.proto.Recon.EntityPair.Builder builderForValue) {
@@ -4123,6 +4261,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder addEntityPairs(
           int index, org.datacommons.proto.Recon.EntityPair.Builder builderForValue) {
@@ -4135,6 +4274,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder addAllEntityPairs(
           java.lang.Iterable<? extends org.datacommons.proto.Recon.EntityPair> values) {
@@ -4147,6 +4287,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder clearEntityPairs() {
         if (entityPairsBuilder_ == null) {
@@ -4158,6 +4299,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder removeEntityPairs(int index) {
         if (entityPairsBuilder_ == null) {
@@ -4169,10 +4311,12 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public org.datacommons.proto.Recon.EntityPair.Builder getEntityPairsBuilder(int index) {
         return getEntityPairsFieldBuilder().getBuilder(index);
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public org.datacommons.proto.Recon.EntityPairOrBuilder getEntityPairsOrBuilder(int index) {
         if (entityPairsBuilder_ == null) {
@@ -4181,6 +4325,7 @@ public final class Recon {
           return entityPairsBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public java.util.List<? extends org.datacommons.proto.Recon.EntityPairOrBuilder>
           getEntityPairsOrBuilderList() {
@@ -4190,16 +4335,19 @@ public final class Recon {
           return java.util.Collections.unmodifiableList(entityPairs_);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public org.datacommons.proto.Recon.EntityPair.Builder addEntityPairsBuilder() {
         return getEntityPairsFieldBuilder()
             .addBuilder(org.datacommons.proto.Recon.EntityPair.getDefaultInstance());
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public org.datacommons.proto.Recon.EntityPair.Builder addEntityPairsBuilder(int index) {
         return getEntityPairsFieldBuilder()
             .addBuilder(index, org.datacommons.proto.Recon.EntityPair.getDefaultInstance());
       }
+
       /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public java.util.List<org.datacommons.proto.Recon.EntityPair.Builder>
           getEntityPairsBuilderList() {
@@ -4289,16 +4437,19 @@ public final class Recon {
      */
     java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison>
         getComparisonsList();
+
     /**
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
      */
     org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison getComparisons(int index);
+
     /**
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
      */
     int getComparisonsCount();
+
     /**
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
@@ -4306,6 +4457,7 @@ public final class Recon {
     java.util.List<
             ? extends org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder>
         getComparisonsOrBuilderList();
+
     /**
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
@@ -4313,12 +4465,14 @@ public final class Recon {
     org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder getComparisonsOrBuilder(
         int index);
   }
+
   /** Protobuf type {@code org.datacommons.proto.CompareEntitiesResponse} */
   public static final class CompareEntitiesResponse extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.CompareEntitiesResponse)
       CompareEntitiesResponseOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use CompareEntitiesResponse.newBuilder() to construct.
     private CompareEntitiesResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -4426,6 +4580,7 @@ public final class Recon {
        * @return A list containing the sourceIds.
        */
       java.util.List<java.lang.String> getSourceIdsList();
+
       /**
        *
        *
@@ -4438,6 +4593,7 @@ public final class Recon {
        * @return The count of sourceIds.
        */
       int getSourceIdsCount();
+
       /**
        *
        *
@@ -4451,6 +4607,7 @@ public final class Recon {
        * @return The sourceIds at the given index.
        */
       java.lang.String getSourceIds(int index);
+
       /**
        *
        *
@@ -4472,12 +4629,14 @@ public final class Recon {
        */
       double getProbability();
     }
+
     /** Protobuf type {@code org.datacommons.proto.CompareEntitiesResponse.Comparison} */
     public static final class Comparison extends com.google.protobuf.GeneratedMessageV3
         implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.CompareEntitiesResponse.Comparison)
         ComparisonOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use Comparison.newBuilder() to construct.
       private Comparison(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -4572,6 +4731,7 @@ public final class Recon {
 
       public static final int SOURCE_IDS_FIELD_NUMBER = 1;
       private com.google.protobuf.LazyStringList sourceIds_;
+
       /**
        *
        *
@@ -4586,6 +4746,7 @@ public final class Recon {
       public com.google.protobuf.ProtocolStringList getSourceIdsList() {
         return sourceIds_;
       }
+
       /**
        *
        *
@@ -4600,6 +4761,7 @@ public final class Recon {
       public int getSourceIdsCount() {
         return sourceIds_.size();
       }
+
       /**
        *
        *
@@ -4615,6 +4777,7 @@ public final class Recon {
       public java.lang.String getSourceIds(int index) {
         return sourceIds_.get(index);
       }
+
       /**
        *
        *
@@ -4633,6 +4796,7 @@ public final class Recon {
 
       public static final int PROBABILITY_FIELD_NUMBER = 2;
       private double probability_;
+
       /**
        * <code>double probability = 2;</code>
        *
@@ -4826,6 +4990,7 @@ public final class Recon {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /** Protobuf type {@code org.datacommons.proto.CompareEntitiesResponse.Comparison} */
       public static final class Builder
           extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -5015,6 +5180,7 @@ public final class Recon {
             bitField0_ |= 0x00000001;
           }
         }
+
         /**
          *
          *
@@ -5029,6 +5195,7 @@ public final class Recon {
         public com.google.protobuf.ProtocolStringList getSourceIdsList() {
           return sourceIds_.getUnmodifiableView();
         }
+
         /**
          *
          *
@@ -5043,6 +5210,7 @@ public final class Recon {
         public int getSourceIdsCount() {
           return sourceIds_.size();
         }
+
         /**
          *
          *
@@ -5058,6 +5226,7 @@ public final class Recon {
         public java.lang.String getSourceIds(int index) {
           return sourceIds_.get(index);
         }
+
         /**
          *
          *
@@ -5073,6 +5242,7 @@ public final class Recon {
         public com.google.protobuf.ByteString getSourceIdsBytes(int index) {
           return sourceIds_.getByteString(index);
         }
+
         /**
          *
          *
@@ -5095,6 +5265,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -5116,6 +5287,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -5134,6 +5306,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -5151,6 +5324,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -5175,6 +5349,7 @@ public final class Recon {
         }
 
         private double probability_;
+
         /**
          * <code>double probability = 2;</code>
          *
@@ -5184,6 +5359,7 @@ public final class Recon {
         public double getProbability() {
           return probability_;
         }
+
         /**
          * <code>double probability = 2;</code>
          *
@@ -5196,6 +5372,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>double probability = 2;</code>
          *
@@ -5266,6 +5443,7 @@ public final class Recon {
     public static final int COMPARISONS_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison>
         comparisons_;
+
     /**
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
@@ -5275,6 +5453,7 @@ public final class Recon {
         getComparisonsList() {
       return comparisons_;
     }
+
     /**
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
@@ -5285,6 +5464,7 @@ public final class Recon {
         getComparisonsOrBuilderList() {
       return comparisons_;
     }
+
     /**
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
@@ -5293,6 +5473,7 @@ public final class Recon {
     public int getComparisonsCount() {
       return comparisons_.size();
     }
+
     /**
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
@@ -5302,6 +5483,7 @@ public final class Recon {
         int index) {
       return comparisons_.get(index);
     }
+
     /**
      * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
      * </code>
@@ -5475,6 +5657,7 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.CompareEntitiesResponse} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -5699,6 +5882,7 @@ public final class Recon {
           return comparisonsBuilder_.getMessageList();
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5710,6 +5894,7 @@ public final class Recon {
           return comparisonsBuilder_.getCount();
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5722,6 +5907,7 @@ public final class Recon {
           return comparisonsBuilder_.getMessage(index);
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5740,6 +5926,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5756,6 +5943,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5774,6 +5962,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5792,6 +5981,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5807,6 +5997,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5823,6 +6014,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5840,6 +6032,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5854,6 +6047,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5868,6 +6062,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5876,6 +6071,7 @@ public final class Recon {
           getComparisonsBuilder(int index) {
         return getComparisonsFieldBuilder().getBuilder(index);
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5888,6 +6084,7 @@ public final class Recon {
           return comparisonsBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5901,6 +6098,7 @@ public final class Recon {
           return java.util.Collections.unmodifiableList(comparisons_);
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5912,6 +6110,7 @@ public final class Recon {
                 org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison
                     .getDefaultInstance());
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -5924,6 +6123,7 @@ public final class Recon {
                 org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison
                     .getDefaultInstance());
       }
+
       /**
        * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
        * </code>
@@ -6012,13 +6212,17 @@ public final class Recon {
 
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     java.util.List<org.datacommons.proto.Recon.EntitySubGraph> getEntitiesList();
+
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     org.datacommons.proto.Recon.EntitySubGraph getEntities(int index);
+
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     int getEntitiesCount();
+
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     java.util.List<? extends org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
         getEntitiesOrBuilderList();
+
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntitiesOrBuilder(int index);
 
@@ -6034,6 +6238,7 @@ public final class Recon {
      * @return A list containing the wantedIdProperties.
      */
     java.util.List<java.lang.String> getWantedIdPropertiesList();
+
     /**
      *
      *
@@ -6046,6 +6251,7 @@ public final class Recon {
      * @return The count of wantedIdProperties.
      */
     int getWantedIdPropertiesCount();
+
     /**
      *
      *
@@ -6059,6 +6265,7 @@ public final class Recon {
      * @return The wantedIdProperties at the given index.
      */
     java.lang.String getWantedIdProperties(int index);
+
     /**
      *
      *
@@ -6073,12 +6280,14 @@ public final class Recon {
      */
     com.google.protobuf.ByteString getWantedIdPropertiesBytes(int index);
   }
+
   /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesRequest} */
   public static final class ResolveEntitiesRequest extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveEntitiesRequest)
       ResolveEntitiesRequestOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use ResolveEntitiesRequest.newBuilder() to construct.
     private ResolveEntitiesRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -6182,27 +6391,32 @@ public final class Recon {
 
     public static final int ENTITIES_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Recon.EntitySubGraph> entities_;
+
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     @java.lang.Override
     public java.util.List<org.datacommons.proto.Recon.EntitySubGraph> getEntitiesList() {
       return entities_;
     }
+
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     @java.lang.Override
     public java.util.List<? extends org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
         getEntitiesOrBuilderList() {
       return entities_;
     }
+
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     @java.lang.Override
     public int getEntitiesCount() {
       return entities_.size();
     }
+
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraph getEntities(int index) {
       return entities_.get(index);
     }
+
     /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntitiesOrBuilder(int index) {
@@ -6211,6 +6425,7 @@ public final class Recon {
 
     public static final int WANTED_ID_PROPERTIES_FIELD_NUMBER = 2;
     private com.google.protobuf.LazyStringList wantedIdProperties_;
+
     /**
      *
      *
@@ -6225,6 +6440,7 @@ public final class Recon {
     public com.google.protobuf.ProtocolStringList getWantedIdPropertiesList() {
       return wantedIdProperties_;
     }
+
     /**
      *
      *
@@ -6239,6 +6455,7 @@ public final class Recon {
     public int getWantedIdPropertiesCount() {
       return wantedIdProperties_.size();
     }
+
     /**
      *
      *
@@ -6254,6 +6471,7 @@ public final class Recon {
     public java.lang.String getWantedIdProperties(int index) {
       return wantedIdProperties_.get(index);
     }
+
     /**
      *
      *
@@ -6449,6 +6667,7 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesRequest} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -6685,6 +6904,7 @@ public final class Recon {
           return entitiesBuilder_.getMessageList();
         }
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public int getEntitiesCount() {
         if (entitiesBuilder_ == null) {
@@ -6693,6 +6913,7 @@ public final class Recon {
           return entitiesBuilder_.getCount();
         }
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public org.datacommons.proto.Recon.EntitySubGraph getEntities(int index) {
         if (entitiesBuilder_ == null) {
@@ -6701,6 +6922,7 @@ public final class Recon {
           return entitiesBuilder_.getMessage(index);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder setEntities(int index, org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entitiesBuilder_ == null) {
@@ -6715,6 +6937,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder setEntities(
           int index, org.datacommons.proto.Recon.EntitySubGraph.Builder builderForValue) {
@@ -6727,6 +6950,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder addEntities(org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entitiesBuilder_ == null) {
@@ -6741,6 +6965,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder addEntities(int index, org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entitiesBuilder_ == null) {
@@ -6755,6 +6980,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder addEntities(
           org.datacommons.proto.Recon.EntitySubGraph.Builder builderForValue) {
@@ -6767,6 +6993,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder addEntities(
           int index, org.datacommons.proto.Recon.EntitySubGraph.Builder builderForValue) {
@@ -6779,6 +7006,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder addAllEntities(
           java.lang.Iterable<? extends org.datacommons.proto.Recon.EntitySubGraph> values) {
@@ -6791,6 +7019,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder clearEntities() {
         if (entitiesBuilder_ == null) {
@@ -6802,6 +7031,7 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder removeEntities(int index) {
         if (entitiesBuilder_ == null) {
@@ -6813,10 +7043,12 @@ public final class Recon {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public org.datacommons.proto.Recon.EntitySubGraph.Builder getEntitiesBuilder(int index) {
         return getEntitiesFieldBuilder().getBuilder(index);
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntitiesOrBuilder(int index) {
         if (entitiesBuilder_ == null) {
@@ -6825,6 +7057,7 @@ public final class Recon {
           return entitiesBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public java.util.List<? extends org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
           getEntitiesOrBuilderList() {
@@ -6834,16 +7067,19 @@ public final class Recon {
           return java.util.Collections.unmodifiableList(entities_);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public org.datacommons.proto.Recon.EntitySubGraph.Builder addEntitiesBuilder() {
         return getEntitiesFieldBuilder()
             .addBuilder(org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance());
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public org.datacommons.proto.Recon.EntitySubGraph.Builder addEntitiesBuilder(int index) {
         return getEntitiesFieldBuilder()
             .addBuilder(index, org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance());
       }
+
       /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public java.util.List<org.datacommons.proto.Recon.EntitySubGraph.Builder>
           getEntitiesBuilderList() {
@@ -6876,6 +7112,7 @@ public final class Recon {
           bitField0_ |= 0x00000002;
         }
       }
+
       /**
        *
        *
@@ -6890,6 +7127,7 @@ public final class Recon {
       public com.google.protobuf.ProtocolStringList getWantedIdPropertiesList() {
         return wantedIdProperties_.getUnmodifiableView();
       }
+
       /**
        *
        *
@@ -6904,6 +7142,7 @@ public final class Recon {
       public int getWantedIdPropertiesCount() {
         return wantedIdProperties_.size();
       }
+
       /**
        *
        *
@@ -6919,6 +7158,7 @@ public final class Recon {
       public java.lang.String getWantedIdProperties(int index) {
         return wantedIdProperties_.get(index);
       }
+
       /**
        *
        *
@@ -6934,6 +7174,7 @@ public final class Recon {
       public com.google.protobuf.ByteString getWantedIdPropertiesBytes(int index) {
         return wantedIdProperties_.getByteString(index);
       }
+
       /**
        *
        *
@@ -6956,6 +7197,7 @@ public final class Recon {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -6977,6 +7219,7 @@ public final class Recon {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -6995,6 +7238,7 @@ public final class Recon {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -7012,6 +7256,7 @@ public final class Recon {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -7099,6 +7344,7 @@ public final class Recon {
      */
     java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity>
         getResolvedEntitiesList();
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -7106,12 +7352,14 @@ public final class Recon {
      */
     org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity getResolvedEntities(
         int index);
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
      * </code>
      */
     int getResolvedEntitiesCount();
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -7120,6 +7368,7 @@ public final class Recon {
     java.util.List<
             ? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder>
         getResolvedEntitiesOrBuilderList();
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -7128,12 +7377,14 @@ public final class Recon {
     org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder
         getResolvedEntitiesOrBuilder(int index);
   }
+
   /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse} */
   public static final class ResolveEntitiesResponse extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveEntitiesResponse)
       ResolveEntitiesResponseOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use ResolveEntitiesResponse.newBuilder() to construct.
     private ResolveEntitiesResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -7231,13 +7482,17 @@ public final class Recon {
 
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       java.util.List<org.datacommons.proto.Recon.IdWithProperty> getIdsList();
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       org.datacommons.proto.Recon.IdWithProperty getIds(int index);
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       int getIdsCount();
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
           getIdsOrBuilderList();
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index);
 
@@ -7248,12 +7503,14 @@ public final class Recon {
        */
       double getProbability();
     }
+
     /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse.ResolvedId} */
     public static final class ResolvedId extends com.google.protobuf.GeneratedMessageV3
         implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveEntitiesResponse.ResolvedId)
         ResolvedIdOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use ResolvedId.newBuilder() to construct.
       private ResolvedId(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -7349,27 +7606,32 @@ public final class Recon {
 
       public static final int IDS_FIELD_NUMBER = 1;
       private java.util.List<org.datacommons.proto.Recon.IdWithProperty> ids_;
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       @java.lang.Override
       public java.util.List<org.datacommons.proto.Recon.IdWithProperty> getIdsList() {
         return ids_;
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       @java.lang.Override
       public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
           getIdsOrBuilderList() {
         return ids_;
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       @java.lang.Override
       public int getIdsCount() {
         return ids_.size();
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       @java.lang.Override
       public org.datacommons.proto.Recon.IdWithProperty getIds(int index) {
         return ids_.get(index);
       }
+
       /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       @java.lang.Override
       public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index) {
@@ -7378,6 +7640,7 @@ public final class Recon {
 
       public static final int PROBABILITY_FIELD_NUMBER = 2;
       private double probability_;
+
       /**
        * <code>double probability = 2;</code>
        *
@@ -7566,6 +7829,7 @@ public final class Recon {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse.ResolvedId} */
       public static final class Builder
           extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -7797,6 +8061,7 @@ public final class Recon {
             return idsBuilder_.getMessageList();
           }
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public int getIdsCount() {
           if (idsBuilder_ == null) {
@@ -7805,6 +8070,7 @@ public final class Recon {
             return idsBuilder_.getCount();
           }
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public org.datacommons.proto.Recon.IdWithProperty getIds(int index) {
           if (idsBuilder_ == null) {
@@ -7813,6 +8079,7 @@ public final class Recon {
             return idsBuilder_.getMessage(index);
           }
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder setIds(int index, org.datacommons.proto.Recon.IdWithProperty value) {
           if (idsBuilder_ == null) {
@@ -7827,6 +8094,7 @@ public final class Recon {
           }
           return this;
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder setIds(
             int index, org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
@@ -7839,6 +8107,7 @@ public final class Recon {
           }
           return this;
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder addIds(org.datacommons.proto.Recon.IdWithProperty value) {
           if (idsBuilder_ == null) {
@@ -7853,6 +8122,7 @@ public final class Recon {
           }
           return this;
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder addIds(int index, org.datacommons.proto.Recon.IdWithProperty value) {
           if (idsBuilder_ == null) {
@@ -7867,6 +8137,7 @@ public final class Recon {
           }
           return this;
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder addIds(org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
           if (idsBuilder_ == null) {
@@ -7878,6 +8149,7 @@ public final class Recon {
           }
           return this;
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder addIds(
             int index, org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
@@ -7890,6 +8162,7 @@ public final class Recon {
           }
           return this;
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder addAllIds(
             java.lang.Iterable<? extends org.datacommons.proto.Recon.IdWithProperty> values) {
@@ -7902,6 +8175,7 @@ public final class Recon {
           }
           return this;
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder clearIds() {
           if (idsBuilder_ == null) {
@@ -7913,6 +8187,7 @@ public final class Recon {
           }
           return this;
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder removeIds(int index) {
           if (idsBuilder_ == null) {
@@ -7924,10 +8199,12 @@ public final class Recon {
           }
           return this;
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public org.datacommons.proto.Recon.IdWithProperty.Builder getIdsBuilder(int index) {
           return getIdsFieldBuilder().getBuilder(index);
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index) {
           if (idsBuilder_ == null) {
@@ -7936,6 +8213,7 @@ public final class Recon {
             return idsBuilder_.getMessageOrBuilder(index);
           }
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
             getIdsOrBuilderList() {
@@ -7945,16 +8223,19 @@ public final class Recon {
             return java.util.Collections.unmodifiableList(ids_);
           }
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public org.datacommons.proto.Recon.IdWithProperty.Builder addIdsBuilder() {
           return getIdsFieldBuilder()
               .addBuilder(org.datacommons.proto.Recon.IdWithProperty.getDefaultInstance());
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public org.datacommons.proto.Recon.IdWithProperty.Builder addIdsBuilder(int index) {
           return getIdsFieldBuilder()
               .addBuilder(index, org.datacommons.proto.Recon.IdWithProperty.getDefaultInstance());
         }
+
         /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public java.util.List<org.datacommons.proto.Recon.IdWithProperty.Builder>
             getIdsBuilderList() {
@@ -7979,6 +8260,7 @@ public final class Recon {
         }
 
         private double probability_;
+
         /**
          * <code>double probability = 2;</code>
          *
@@ -7988,6 +8270,7 @@ public final class Recon {
         public double getProbability() {
           return probability_;
         }
+
         /**
          * <code>double probability = 2;</code>
          *
@@ -8000,6 +8283,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>double probability = 2;</code>
          *
@@ -8078,6 +8362,7 @@ public final class Recon {
        * @return The sourceId.
        */
       java.lang.String getSourceId();
+
       /**
        * <code>string source_id = 1;</code>
        *
@@ -8091,16 +8376,19 @@ public final class Recon {
        */
       java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId>
           getResolvedIdsList();
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
        */
       org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId getResolvedIds(int index);
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
        */
       int getResolvedIdsCount();
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
@@ -8108,6 +8396,7 @@ public final class Recon {
       java.util.List<
               ? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder>
           getResolvedIdsOrBuilderList();
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
@@ -8115,12 +8404,14 @@ public final class Recon {
       org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder
           getResolvedIdsOrBuilder(int index);
     }
+
     /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity} */
     public static final class ResolvedEntity extends com.google.protobuf.GeneratedMessageV3
         implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity)
         ResolvedEntityOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use ResolvedEntity.newBuilder() to construct.
       private ResolvedEntity(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -8222,6 +8513,7 @@ public final class Recon {
 
       public static final int SOURCE_ID_FIELD_NUMBER = 1;
       private volatile java.lang.Object sourceId_;
+
       /**
        * <code>string source_id = 1;</code>
        *
@@ -8239,6 +8531,7 @@ public final class Recon {
           return s;
         }
       }
+
       /**
        * <code>string source_id = 1;</code>
        *
@@ -8260,6 +8553,7 @@ public final class Recon {
       public static final int RESOLVED_IDS_FIELD_NUMBER = 2;
       private java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId>
           resolvedIds_;
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
@@ -8269,6 +8563,7 @@ public final class Recon {
           getResolvedIdsList() {
         return resolvedIds_;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
@@ -8279,6 +8574,7 @@ public final class Recon {
           getResolvedIdsOrBuilderList() {
         return resolvedIds_;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
@@ -8287,6 +8583,7 @@ public final class Recon {
       public int getResolvedIdsCount() {
         return resolvedIds_.size();
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
@@ -8296,6 +8593,7 @@ public final class Recon {
           int index) {
         return resolvedIds_.get(index);
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
        * </code>
@@ -8480,6 +8778,7 @@ public final class Recon {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity} */
       public static final class Builder
           extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -8690,6 +8989,7 @@ public final class Recon {
         private int bitField0_;
 
         private java.lang.Object sourceId_ = "";
+
         /**
          * <code>string source_id = 1;</code>
          *
@@ -8706,6 +9006,7 @@ public final class Recon {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string source_id = 1;</code>
          *
@@ -8722,6 +9023,7 @@ public final class Recon {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string source_id = 1;</code>
          *
@@ -8737,6 +9039,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>string source_id = 1;</code>
          *
@@ -8748,6 +9051,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>string source_id = 1;</code>
          *
@@ -8796,6 +9100,7 @@ public final class Recon {
             return resolvedIdsBuilder_.getMessageList();
           }
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -8808,6 +9113,7 @@ public final class Recon {
             return resolvedIdsBuilder_.getCount();
           }
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -8821,6 +9127,7 @@ public final class Recon {
             return resolvedIdsBuilder_.getMessage(index);
           }
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -8840,6 +9147,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -8858,6 +9166,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -8877,6 +9186,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -8896,6 +9206,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -8913,6 +9224,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -8931,6 +9243,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -8949,6 +9262,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -8964,6 +9278,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -8979,6 +9294,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -8988,6 +9304,7 @@ public final class Recon {
             getResolvedIdsBuilder(int index) {
           return getResolvedIdsFieldBuilder().getBuilder(index);
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -9001,6 +9318,7 @@ public final class Recon {
             return resolvedIdsBuilder_.getMessageOrBuilder(index);
           }
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -9015,6 +9333,7 @@ public final class Recon {
             return java.util.Collections.unmodifiableList(resolvedIds_);
           }
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -9027,6 +9346,7 @@ public final class Recon {
                   org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId
                       .getDefaultInstance());
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -9040,6 +9360,7 @@ public final class Recon {
                   org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId
                       .getDefaultInstance());
         }
+
         /**
          * <code>
          * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
@@ -9129,6 +9450,7 @@ public final class Recon {
     public static final int RESOLVED_ENTITIES_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity>
         resolvedEntities_;
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9139,6 +9461,7 @@ public final class Recon {
         getResolvedEntitiesList() {
       return resolvedEntities_;
     }
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9150,6 +9473,7 @@ public final class Recon {
         getResolvedEntitiesOrBuilderList() {
       return resolvedEntities_;
     }
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9159,6 +9483,7 @@ public final class Recon {
     public int getResolvedEntitiesCount() {
       return resolvedEntities_.size();
     }
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9169,6 +9494,7 @@ public final class Recon {
         int index) {
       return resolvedEntities_.get(index);
     }
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9344,6 +9670,7 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -9570,6 +9897,7 @@ public final class Recon {
           return resolvedEntitiesBuilder_.getMessageList();
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9582,6 +9910,7 @@ public final class Recon {
           return resolvedEntitiesBuilder_.getCount();
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9595,6 +9924,7 @@ public final class Recon {
           return resolvedEntitiesBuilder_.getMessage(index);
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9614,6 +9944,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9632,6 +9963,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9651,6 +9983,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9670,6 +10003,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9687,6 +10021,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9705,6 +10040,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9723,6 +10059,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9738,6 +10075,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9753,6 +10091,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9762,6 +10101,7 @@ public final class Recon {
           getResolvedEntitiesBuilder(int index) {
         return getResolvedEntitiesFieldBuilder().getBuilder(index);
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9775,6 +10115,7 @@ public final class Recon {
           return resolvedEntitiesBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9789,6 +10130,7 @@ public final class Recon {
           return java.util.Collections.unmodifiableList(resolvedEntities_);
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9801,6 +10143,7 @@ public final class Recon {
                 org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity
                     .getDefaultInstance());
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9814,6 +10157,7 @@ public final class Recon {
                 org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity
                     .getDefaultInstance());
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
@@ -9908,16 +10252,19 @@ public final class Recon {
      */
     java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
         getCoordinatesList();
+
     /**
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
      */
     org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate getCoordinates(int index);
+
     /**
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
      */
     int getCoordinatesCount();
+
     /**
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
@@ -9925,6 +10272,7 @@ public final class Recon {
     java.util.List<
             ? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>
         getCoordinatesOrBuilderList();
+
     /**
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
@@ -9932,12 +10280,14 @@ public final class Recon {
     org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder
         getCoordinatesOrBuilder(int index);
   }
+
   /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest} */
   public static final class ResolveCoordinatesRequest extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesRequest)
       ResolveCoordinatesRequestOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use ResolveCoordinatesRequest.newBuilder() to construct.
     private ResolveCoordinatesRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -10047,12 +10397,14 @@ public final class Recon {
        */
       double getLongitude();
     }
+
     /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest.Coordinate} */
     public static final class Coordinate extends com.google.protobuf.GeneratedMessageV3
         implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesRequest.Coordinate)
         CoordinateOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use Coordinate.newBuilder() to construct.
       private Coordinate(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -10136,6 +10488,7 @@ public final class Recon {
 
       public static final int LATITUDE_FIELD_NUMBER = 1;
       private double latitude_;
+
       /**
        * <code>double latitude = 1;</code>
        *
@@ -10148,6 +10501,7 @@ public final class Recon {
 
       public static final int LONGITUDE_FIELD_NUMBER = 2;
       private double longitude_;
+
       /**
        * <code>double longitude = 2;</code>
        *
@@ -10338,6 +10692,7 @@ public final class Recon {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest.Coordinate} */
       public static final class Builder
           extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -10505,6 +10860,7 @@ public final class Recon {
         }
 
         private double latitude_;
+
         /**
          * <code>double latitude = 1;</code>
          *
@@ -10514,6 +10870,7 @@ public final class Recon {
         public double getLatitude() {
           return latitude_;
         }
+
         /**
          * <code>double latitude = 1;</code>
          *
@@ -10526,6 +10883,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>double latitude = 1;</code>
          *
@@ -10539,6 +10897,7 @@ public final class Recon {
         }
 
         private double longitude_;
+
         /**
          * <code>double longitude = 2;</code>
          *
@@ -10548,6 +10907,7 @@ public final class Recon {
         public double getLongitude() {
           return longitude_;
         }
+
         /**
          * <code>double longitude = 2;</code>
          *
@@ -10560,6 +10920,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>double longitude = 2;</code>
          *
@@ -10630,6 +10991,7 @@ public final class Recon {
     public static final int COORDINATES_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
         coordinates_;
+
     /**
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
@@ -10639,6 +11001,7 @@ public final class Recon {
         getCoordinatesList() {
       return coordinates_;
     }
+
     /**
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
@@ -10649,6 +11012,7 @@ public final class Recon {
         getCoordinatesOrBuilderList() {
       return coordinates_;
     }
+
     /**
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
@@ -10657,6 +11021,7 @@ public final class Recon {
     public int getCoordinatesCount() {
       return coordinates_.size();
     }
+
     /**
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
@@ -10666,6 +11031,7 @@ public final class Recon {
         int index) {
       return coordinates_.get(index);
     }
+
     /**
      * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
      * </code>
@@ -10839,6 +11205,7 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -11063,6 +11430,7 @@ public final class Recon {
           return coordinatesBuilder_.getMessageList();
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11074,6 +11442,7 @@ public final class Recon {
           return coordinatesBuilder_.getCount();
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11086,6 +11455,7 @@ public final class Recon {
           return coordinatesBuilder_.getMessage(index);
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11104,6 +11474,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11121,6 +11492,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11139,6 +11511,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11157,6 +11530,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11173,6 +11547,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11190,6 +11565,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11207,6 +11583,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11221,6 +11598,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11235,6 +11613,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11243,6 +11622,7 @@ public final class Recon {
           getCoordinatesBuilder(int index) {
         return getCoordinatesFieldBuilder().getBuilder(index);
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11255,6 +11635,7 @@ public final class Recon {
           return coordinatesBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11268,6 +11649,7 @@ public final class Recon {
           return java.util.Collections.unmodifiableList(coordinates_);
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11279,6 +11661,7 @@ public final class Recon {
                 org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
                     .getDefaultInstance());
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11291,6 +11674,7 @@ public final class Recon {
                 org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
                     .getDefaultInstance());
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
        * </code>
@@ -11385,6 +11769,7 @@ public final class Recon {
      */
     java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
         getPlaceCoordinatesList();
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -11392,12 +11777,14 @@ public final class Recon {
      */
     org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate getPlaceCoordinates(
         int index);
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
      * </code>
      */
     int getPlaceCoordinatesCount();
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -11407,6 +11794,7 @@ public final class Recon {
             ? extends
                 org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>
         getPlaceCoordinatesOrBuilderList();
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -11415,6 +11803,7 @@ public final class Recon {
     org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder
         getPlaceCoordinatesOrBuilder(int index);
   }
+
   /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse} */
   public static final class ResolveCoordinatesResponse
       extends com.google.protobuf.GeneratedMessageV3
@@ -11422,6 +11811,7 @@ public final class Recon {
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesResponse)
       ResolveCoordinatesResponseOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use ResolveCoordinatesResponse.newBuilder() to construct.
     private ResolveCoordinatesResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -11524,6 +11914,7 @@ public final class Recon {
        * @return The dcid.
        */
       java.lang.String getDcid();
+
       /**
        * <code>string dcid = 1;</code>
        *
@@ -11537,6 +11928,7 @@ public final class Recon {
        * @return The dominantType.
        */
       java.lang.String getDominantType();
+
       /**
        * <code>string dominant_type = 2;</code>
        *
@@ -11544,12 +11936,14 @@ public final class Recon {
        */
       com.google.protobuf.ByteString getDominantTypeBytes();
     }
+
     /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.Place} */
     public static final class Place extends com.google.protobuf.GeneratedMessageV3
         implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesResponse.Place)
         PlaceOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use Place.newBuilder() to construct.
       private Place(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -11640,6 +12034,7 @@ public final class Recon {
 
       public static final int DCID_FIELD_NUMBER = 1;
       private volatile java.lang.Object dcid_;
+
       /**
        * <code>string dcid = 1;</code>
        *
@@ -11657,6 +12052,7 @@ public final class Recon {
           return s;
         }
       }
+
       /**
        * <code>string dcid = 1;</code>
        *
@@ -11677,6 +12073,7 @@ public final class Recon {
 
       public static final int DOMINANT_TYPE_FIELD_NUMBER = 2;
       private volatile java.lang.Object dominantType_;
+
       /**
        * <code>string dominant_type = 2;</code>
        *
@@ -11694,6 +12091,7 @@ public final class Recon {
           return s;
         }
       }
+
       /**
        * <code>string dominant_type = 2;</code>
        *
@@ -11882,6 +12280,7 @@ public final class Recon {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.Place} */
       public static final class Builder
           extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -12048,6 +12447,7 @@ public final class Recon {
         }
 
         private java.lang.Object dcid_ = "";
+
         /**
          * <code>string dcid = 1;</code>
          *
@@ -12064,6 +12464,7 @@ public final class Recon {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string dcid = 1;</code>
          *
@@ -12080,6 +12481,7 @@ public final class Recon {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string dcid = 1;</code>
          *
@@ -12095,6 +12497,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>string dcid = 1;</code>
          *
@@ -12106,6 +12509,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>string dcid = 1;</code>
          *
@@ -12124,6 +12528,7 @@ public final class Recon {
         }
 
         private java.lang.Object dominantType_ = "";
+
         /**
          * <code>string dominant_type = 2;</code>
          *
@@ -12140,6 +12545,7 @@ public final class Recon {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string dominant_type = 2;</code>
          *
@@ -12156,6 +12562,7 @@ public final class Recon {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string dominant_type = 2;</code>
          *
@@ -12171,6 +12578,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>string dominant_type = 2;</code>
          *
@@ -12182,6 +12590,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>string dominant_type = 2;</code>
          *
@@ -12279,12 +12688,14 @@ public final class Recon {
        * @return A list containing the placeDcids.
        */
       java.util.List<java.lang.String> getPlaceDcidsList();
+
       /**
        * <code>repeated string place_dcids = 3;</code>
        *
        * @return The count of placeDcids.
        */
       int getPlaceDcidsCount();
+
       /**
        * <code>repeated string place_dcids = 3;</code>
        *
@@ -12292,6 +12703,7 @@ public final class Recon {
        * @return The placeDcids at the given index.
        */
       java.lang.String getPlaceDcids(int index);
+
       /**
        * <code>repeated string place_dcids = 3;</code>
        *
@@ -12304,32 +12716,38 @@ public final class Recon {
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
       java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place> getPlacesList();
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
       org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place getPlaces(int index);
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
       int getPlacesCount();
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
       java.util.List<
               ? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder>
           getPlacesOrBuilderList();
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
       org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder getPlacesOrBuilder(
           int index);
     }
+
     /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate} */
     public static final class PlaceCoordinate extends com.google.protobuf.GeneratedMessageV3
         implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate)
         PlaceCoordinateOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use PlaceCoordinate.newBuilder() to construct.
       private PlaceCoordinate(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -12448,6 +12866,7 @@ public final class Recon {
 
       public static final int LATITUDE_FIELD_NUMBER = 1;
       private double latitude_;
+
       /**
        * <code>double latitude = 1;</code>
        *
@@ -12460,6 +12879,7 @@ public final class Recon {
 
       public static final int LONGITUDE_FIELD_NUMBER = 2;
       private double longitude_;
+
       /**
        * <code>double longitude = 2;</code>
        *
@@ -12472,6 +12892,7 @@ public final class Recon {
 
       public static final int PLACE_DCIDS_FIELD_NUMBER = 3;
       private com.google.protobuf.LazyStringList placeDcids_;
+
       /**
        * <code>repeated string place_dcids = 3;</code>
        *
@@ -12480,6 +12901,7 @@ public final class Recon {
       public com.google.protobuf.ProtocolStringList getPlaceDcidsList() {
         return placeDcids_;
       }
+
       /**
        * <code>repeated string place_dcids = 3;</code>
        *
@@ -12488,6 +12910,7 @@ public final class Recon {
       public int getPlaceDcidsCount() {
         return placeDcids_.size();
       }
+
       /**
        * <code>repeated string place_dcids = 3;</code>
        *
@@ -12497,6 +12920,7 @@ public final class Recon {
       public java.lang.String getPlaceDcids(int index) {
         return placeDcids_.get(index);
       }
+
       /**
        * <code>repeated string place_dcids = 3;</code>
        *
@@ -12509,6 +12933,7 @@ public final class Recon {
 
       public static final int PLACES_FIELD_NUMBER = 4;
       private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place> places_;
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
@@ -12517,6 +12942,7 @@ public final class Recon {
           getPlacesList() {
         return places_;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
@@ -12526,6 +12952,7 @@ public final class Recon {
           getPlacesOrBuilderList() {
         return places_;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
@@ -12533,6 +12960,7 @@ public final class Recon {
       public int getPlacesCount() {
         return places_.size();
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
@@ -12540,6 +12968,7 @@ public final class Recon {
       public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place getPlaces(int index) {
         return places_.get(index);
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
@@ -12763,6 +13192,7 @@ public final class Recon {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate} */
       public static final class Builder
           extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -12999,6 +13429,7 @@ public final class Recon {
         private int bitField0_;
 
         private double latitude_;
+
         /**
          * <code>double latitude = 1;</code>
          *
@@ -13008,6 +13439,7 @@ public final class Recon {
         public double getLatitude() {
           return latitude_;
         }
+
         /**
          * <code>double latitude = 1;</code>
          *
@@ -13020,6 +13452,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>double latitude = 1;</code>
          *
@@ -13033,6 +13466,7 @@ public final class Recon {
         }
 
         private double longitude_;
+
         /**
          * <code>double longitude = 2;</code>
          *
@@ -13042,6 +13476,7 @@ public final class Recon {
         public double getLongitude() {
           return longitude_;
         }
+
         /**
          * <code>double longitude = 2;</code>
          *
@@ -13054,6 +13489,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>double longitude = 2;</code>
          *
@@ -13075,6 +13511,7 @@ public final class Recon {
             bitField0_ |= 0x00000001;
           }
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
          *
@@ -13083,6 +13520,7 @@ public final class Recon {
         public com.google.protobuf.ProtocolStringList getPlaceDcidsList() {
           return placeDcids_.getUnmodifiableView();
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
          *
@@ -13091,6 +13529,7 @@ public final class Recon {
         public int getPlaceDcidsCount() {
           return placeDcids_.size();
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
          *
@@ -13100,6 +13539,7 @@ public final class Recon {
         public java.lang.String getPlaceDcids(int index) {
           return placeDcids_.get(index);
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
          *
@@ -13109,6 +13549,7 @@ public final class Recon {
         public com.google.protobuf.ByteString getPlaceDcidsBytes(int index) {
           return placeDcids_.getByteString(index);
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
          *
@@ -13125,6 +13566,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
          *
@@ -13140,6 +13582,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
          *
@@ -13152,6 +13595,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
          *
@@ -13163,6 +13607,7 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
          *
@@ -13209,6 +13654,7 @@ public final class Recon {
             return placesBuilder_.getMessageList();
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13219,6 +13665,7 @@ public final class Recon {
             return placesBuilder_.getCount();
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13229,6 +13676,7 @@ public final class Recon {
             return placesBuilder_.getMessage(index);
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13246,6 +13694,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13261,6 +13710,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13278,6 +13728,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13295,6 +13746,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13309,6 +13761,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13324,6 +13777,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13340,6 +13794,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13353,6 +13808,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13366,6 +13822,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13373,6 +13830,7 @@ public final class Recon {
             getPlacesBuilder(int index) {
           return getPlacesFieldBuilder().getBuilder(index);
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13384,6 +13842,7 @@ public final class Recon {
             return placesBuilder_.getMessageOrBuilder(index);
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13396,6 +13855,7 @@ public final class Recon {
             return java.util.Collections.unmodifiableList(places_);
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13406,6 +13866,7 @@ public final class Recon {
                   org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place
                       .getDefaultInstance());
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13417,6 +13878,7 @@ public final class Recon {
                   org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place
                       .getDefaultInstance());
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -13501,6 +13963,7 @@ public final class Recon {
     public static final int PLACE_COORDINATES_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
         placeCoordinates_;
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -13511,6 +13974,7 @@ public final class Recon {
         getPlaceCoordinatesList() {
       return placeCoordinates_;
     }
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -13523,6 +13987,7 @@ public final class Recon {
         getPlaceCoordinatesOrBuilderList() {
       return placeCoordinates_;
     }
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -13532,6 +13997,7 @@ public final class Recon {
     public int getPlaceCoordinatesCount() {
       return placeCoordinates_.size();
     }
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -13542,6 +14008,7 @@ public final class Recon {
         getPlaceCoordinates(int index) {
       return placeCoordinates_.get(index);
     }
+
     /**
      * <code>
      * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -13717,6 +14184,7 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -13943,6 +14411,7 @@ public final class Recon {
           return placeCoordinatesBuilder_.getMessageList();
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -13955,6 +14424,7 @@ public final class Recon {
           return placeCoordinatesBuilder_.getCount();
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -13968,6 +14438,7 @@ public final class Recon {
           return placeCoordinatesBuilder_.getMessage(index);
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -13987,6 +14458,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -14005,6 +14477,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -14024,6 +14497,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -14043,6 +14517,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -14060,6 +14535,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -14078,6 +14554,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -14096,6 +14573,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -14111,6 +14589,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -14126,6 +14605,7 @@ public final class Recon {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -14135,6 +14615,7 @@ public final class Recon {
           getPlaceCoordinatesBuilder(int index) {
         return getPlaceCoordinatesFieldBuilder().getBuilder(index);
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -14148,6 +14629,7 @@ public final class Recon {
           return placeCoordinatesBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -14163,6 +14645,7 @@ public final class Recon {
           return java.util.Collections.unmodifiableList(placeCoordinates_);
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -14175,6 +14658,7 @@ public final class Recon {
                 org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
                     .getDefaultInstance());
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
@@ -14188,6 +14672,7 @@ public final class Recon {
                 org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
                     .getDefaultInstance());
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;

@@ -27,6 +27,7 @@ public final class Debug {
      * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
     int getLevelSummaryCount();
+
     /**
      *
      *
@@ -37,9 +38,11 @@ public final class Debug {
      * <code>map&lt;string, .org.datacommons.proto.Log.CounterSet&gt; level_summary = 1;</code>
      */
     boolean containsLevelSummary(java.lang.String key);
+
     /** Use {@link #getLevelSummaryMap()} instead. */
     @java.lang.Deprecated
     java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet> getLevelSummary();
+
     /**
      *
      *
@@ -51,6 +54,7 @@ public final class Debug {
      */
     java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
         getLevelSummaryMap();
+
     /**
      *
      *
@@ -62,6 +66,7 @@ public final class Debug {
      */
     org.datacommons.proto.Debug.Log.CounterSet getLevelSummaryOrDefault(
         java.lang.String key, org.datacommons.proto.Debug.Log.CounterSet defaultValue);
+
     /**
      *
      *
@@ -75,13 +80,17 @@ public final class Debug {
 
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
     java.util.List<org.datacommons.proto.Debug.Log.Entry> getEntriesList();
+
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
     org.datacommons.proto.Debug.Log.Entry getEntries(int index);
+
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
     int getEntriesCount();
+
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
     java.util.List<? extends org.datacommons.proto.Debug.Log.EntryOrBuilder>
         getEntriesOrBuilderList();
+
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
     org.datacommons.proto.Debug.Log.EntryOrBuilder getEntriesOrBuilder(int index);
 
@@ -89,19 +98,23 @@ public final class Debug {
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
     java.util.List<org.datacommons.proto.Debug.StatValidationResult> getStatsCheckSummaryList();
+
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
     org.datacommons.proto.Debug.StatValidationResult getStatsCheckSummary(int index);
+
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
     int getStatsCheckSummaryCount();
+
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
     java.util.List<? extends org.datacommons.proto.Debug.StatValidationResultOrBuilder>
         getStatsCheckSummaryOrBuilderList();
+
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
@@ -114,15 +127,18 @@ public final class Debug {
      * @return Whether the commandArgs field is set.
      */
     boolean hasCommandArgs();
+
     /**
      * <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code>
      *
      * @return The commandArgs.
      */
     org.datacommons.proto.Debug.CommandArgs getCommandArgs();
+
     /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
     org.datacommons.proto.Debug.CommandArgsOrBuilder getCommandArgsOrBuilder();
   }
+
   /**
    *
    *
@@ -137,6 +153,7 @@ public final class Debug {
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.Log)
       LogOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use Log.newBuilder() to construct.
     private Log(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -309,12 +326,16 @@ public final class Debug {
 
       /** <code>LEVEL_UNSPECIFIED = 0;</code> */
       public static final int LEVEL_UNSPECIFIED_VALUE = 0;
+
       /** <code>LEVEL_INFO = 1;</code> */
       public static final int LEVEL_INFO_VALUE = 1;
+
       /** <code>LEVEL_WARNING = 2;</code> */
       public static final int LEVEL_WARNING_VALUE = 2;
+
       /** <code>LEVEL_ERROR = 3;</code> */
       public static final int LEVEL_ERROR_VALUE = 3;
+
       /** <code>LEVEL_FATAL = 4;</code> */
       public static final int LEVEL_FATAL_VALUE = 4;
 
@@ -409,6 +430,7 @@ public final class Debug {
        * <code>map&lt;string, int64&gt; counters = 1;</code>
        */
       int getCountersCount();
+
       /**
        *
        *
@@ -419,9 +441,11 @@ public final class Debug {
        * <code>map&lt;string, int64&gt; counters = 1;</code>
        */
       boolean containsCounters(java.lang.String key);
+
       /** Use {@link #getCountersMap()} instead. */
       @java.lang.Deprecated
       java.util.Map<java.lang.String, java.lang.Long> getCounters();
+
       /**
        *
        *
@@ -432,6 +456,7 @@ public final class Debug {
        * <code>map&lt;string, int64&gt; counters = 1;</code>
        */
       java.util.Map<java.lang.String, java.lang.Long> getCountersMap();
+
       /**
        *
        *
@@ -442,6 +467,7 @@ public final class Debug {
        * <code>map&lt;string, int64&gt; counters = 1;</code>
        */
       long getCountersOrDefault(java.lang.String key, long defaultValue);
+
       /**
        *
        *
@@ -453,12 +479,14 @@ public final class Debug {
        */
       long getCountersOrThrow(java.lang.String key);
     }
+
     /** Protobuf type {@code org.datacommons.proto.Log.CounterSet} */
     public static final class CounterSet extends com.google.protobuf.GeneratedMessageV3
         implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.Log.CounterSet)
         CounterSetOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use CounterSet.newBuilder() to construct.
       private CounterSet(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -583,6 +611,7 @@ public final class Debug {
       public int getCountersCount() {
         return internalGetCounters().getMap().size();
       }
+
       /**
        *
        *
@@ -599,12 +628,14 @@ public final class Debug {
         }
         return internalGetCounters().getMap().containsKey(key);
       }
+
       /** Use {@link #getCountersMap()} instead. */
       @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
         return getCountersMap();
       }
+
       /**
        *
        *
@@ -618,6 +649,7 @@ public final class Debug {
       public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
         return internalGetCounters().getMap();
       }
+
       /**
        *
        *
@@ -635,6 +667,7 @@ public final class Debug {
         java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
+
       /**
        *
        *
@@ -824,6 +857,7 @@ public final class Debug {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /** Protobuf type {@code org.datacommons.proto.Log.CounterSet} */
       public static final class Builder
           extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -1024,6 +1058,7 @@ public final class Debug {
         public int getCountersCount() {
           return internalGetCounters().getMap().size();
         }
+
         /**
          *
          *
@@ -1040,12 +1075,14 @@ public final class Debug {
           }
           return internalGetCounters().getMap().containsKey(key);
         }
+
         /** Use {@link #getCountersMap()} instead. */
         @java.lang.Override
         @java.lang.Deprecated
         public java.util.Map<java.lang.String, java.lang.Long> getCounters() {
           return getCountersMap();
         }
+
         /**
          *
          *
@@ -1059,6 +1096,7 @@ public final class Debug {
         public java.util.Map<java.lang.String, java.lang.Long> getCountersMap() {
           return internalGetCounters().getMap();
         }
+
         /**
          *
          *
@@ -1076,6 +1114,7 @@ public final class Debug {
           java.util.Map<java.lang.String, java.lang.Long> map = internalGetCounters().getMap();
           return map.containsKey(key) ? map.get(key) : defaultValue;
         }
+
         /**
          *
          *
@@ -1101,6 +1140,7 @@ public final class Debug {
           internalGetMutableCounters().getMutableMap().clear();
           return this;
         }
+
         /**
          *
          *
@@ -1117,11 +1157,13 @@ public final class Debug {
           internalGetMutableCounters().getMutableMap().remove(key);
           return this;
         }
+
         /** Use alternate mutation accessors instead. */
         @java.lang.Deprecated
         public java.util.Map<java.lang.String, java.lang.Long> getMutableCounters() {
           return internalGetMutableCounters().getMutableMap();
         }
+
         /**
          *
          *
@@ -1139,6 +1181,7 @@ public final class Debug {
           internalGetMutableCounters().getMutableMap().put(key, value);
           return this;
         }
+
         /**
          *
          *
@@ -1217,6 +1260,7 @@ public final class Debug {
        * @return Whether the level field is set.
        */
       boolean hasLevel();
+
       /**
        * <code>optional .org.datacommons.proto.Log.Level level = 1;</code>
        *
@@ -1230,12 +1274,14 @@ public final class Debug {
        * @return Whether the location field is set.
        */
       boolean hasLocation();
+
       /**
        * <code>optional .org.datacommons.proto.Location location = 2;</code>
        *
        * @return The location.
        */
       org.datacommons.proto.LogLocation.Location getLocation();
+
       /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
       org.datacommons.proto.LogLocation.LocationOrBuilder getLocationOrBuilder();
 
@@ -1251,6 +1297,7 @@ public final class Debug {
        * @return Whether the userMessage field is set.
        */
       boolean hasUserMessage();
+
       /**
        *
        *
@@ -1263,6 +1310,7 @@ public final class Debug {
        * @return The userMessage.
        */
       java.lang.String getUserMessage();
+
       /**
        *
        *
@@ -1288,6 +1336,7 @@ public final class Debug {
        * @return Whether the counterKey field is set.
        */
       boolean hasCounterKey();
+
       /**
        *
        *
@@ -1300,6 +1349,7 @@ public final class Debug {
        * @return The counterKey.
        */
       java.lang.String getCounterKey();
+
       /**
        *
        *
@@ -1327,6 +1377,7 @@ public final class Debug {
        * @return A list containing the columnName.
        */
       java.util.List<java.lang.String> getColumnNameList();
+
       /**
        *
        *
@@ -1341,6 +1392,7 @@ public final class Debug {
        * @return The count of columnName.
        */
       int getColumnNameCount();
+
       /**
        *
        *
@@ -1356,6 +1408,7 @@ public final class Debug {
        * @return The columnName at the given index.
        */
       java.lang.String getColumnName(int index);
+
       /**
        *
        *
@@ -1372,6 +1425,7 @@ public final class Debug {
        */
       com.google.protobuf.ByteString getColumnNameBytes(int index);
     }
+
     /**
      *
      *
@@ -1387,6 +1441,7 @@ public final class Debug {
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.Log.Entry)
         EntryOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use Entry.newBuilder() to construct.
       private Entry(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -1524,6 +1579,7 @@ public final class Debug {
       private int bitField0_;
       public static final int LEVEL_FIELD_NUMBER = 1;
       private int level_;
+
       /**
        * <code>optional .org.datacommons.proto.Log.Level level = 1;</code>
        *
@@ -1533,6 +1589,7 @@ public final class Debug {
       public boolean hasLevel() {
         return ((bitField0_ & 0x00000001) != 0);
       }
+
       /**
        * <code>optional .org.datacommons.proto.Log.Level level = 1;</code>
        *
@@ -1548,6 +1605,7 @@ public final class Debug {
 
       public static final int LOCATION_FIELD_NUMBER = 2;
       private org.datacommons.proto.LogLocation.Location location_;
+
       /**
        * <code>optional .org.datacommons.proto.Location location = 2;</code>
        *
@@ -1557,6 +1615,7 @@ public final class Debug {
       public boolean hasLocation() {
         return ((bitField0_ & 0x00000002) != 0);
       }
+
       /**
        * <code>optional .org.datacommons.proto.Location location = 2;</code>
        *
@@ -1568,6 +1627,7 @@ public final class Debug {
             ? org.datacommons.proto.LogLocation.Location.getDefaultInstance()
             : location_;
       }
+
       /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
       @java.lang.Override
       public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationOrBuilder() {
@@ -1578,6 +1638,7 @@ public final class Debug {
 
       public static final int USER_MESSAGE_FIELD_NUMBER = 3;
       private volatile java.lang.Object userMessage_;
+
       /**
        *
        *
@@ -1593,6 +1654,7 @@ public final class Debug {
       public boolean hasUserMessage() {
         return ((bitField0_ & 0x00000004) != 0);
       }
+
       /**
        *
        *
@@ -1618,6 +1680,7 @@ public final class Debug {
           return s;
         }
       }
+
       /**
        *
        *
@@ -1644,6 +1707,7 @@ public final class Debug {
 
       public static final int COUNTER_KEY_FIELD_NUMBER = 4;
       private volatile java.lang.Object counterKey_;
+
       /**
        *
        *
@@ -1659,6 +1723,7 @@ public final class Debug {
       public boolean hasCounterKey() {
         return ((bitField0_ & 0x00000008) != 0);
       }
+
       /**
        *
        *
@@ -1684,6 +1749,7 @@ public final class Debug {
           return s;
         }
       }
+
       /**
        *
        *
@@ -1710,6 +1776,7 @@ public final class Debug {
 
       public static final int COLUMN_NAME_FIELD_NUMBER = 5;
       private com.google.protobuf.LazyStringList columnName_;
+
       /**
        *
        *
@@ -1726,6 +1793,7 @@ public final class Debug {
       public com.google.protobuf.ProtocolStringList getColumnNameList() {
         return columnName_;
       }
+
       /**
        *
        *
@@ -1742,6 +1810,7 @@ public final class Debug {
       public int getColumnNameCount() {
         return columnName_.size();
       }
+
       /**
        *
        *
@@ -1759,6 +1828,7 @@ public final class Debug {
       public java.lang.String getColumnName(int index) {
         return columnName_.get(index);
       }
+
       /**
        *
        *
@@ -1999,6 +2069,7 @@ public final class Debug {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /**
        *
        *
@@ -2226,6 +2297,7 @@ public final class Debug {
         private int bitField0_;
 
         private int level_ = 0;
+
         /**
          * <code>optional .org.datacommons.proto.Log.Level level = 1;</code>
          *
@@ -2235,6 +2307,7 @@ public final class Debug {
         public boolean hasLevel() {
           return ((bitField0_ & 0x00000001) != 0);
         }
+
         /**
          * <code>optional .org.datacommons.proto.Log.Level level = 1;</code>
          *
@@ -2247,6 +2320,7 @@ public final class Debug {
               org.datacommons.proto.Debug.Log.Level.valueOf(level_);
           return result == null ? org.datacommons.proto.Debug.Log.Level.LEVEL_UNSPECIFIED : result;
         }
+
         /**
          * <code>optional .org.datacommons.proto.Log.Level level = 1;</code>
          *
@@ -2262,6 +2336,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          * <code>optional .org.datacommons.proto.Log.Level level = 1;</code>
          *
@@ -2280,6 +2355,7 @@ public final class Debug {
                 org.datacommons.proto.LogLocation.Location.Builder,
                 org.datacommons.proto.LogLocation.LocationOrBuilder>
             locationBuilder_;
+
         /**
          * <code>optional .org.datacommons.proto.Location location = 2;</code>
          *
@@ -2288,6 +2364,7 @@ public final class Debug {
         public boolean hasLocation() {
           return ((bitField0_ & 0x00000002) != 0);
         }
+
         /**
          * <code>optional .org.datacommons.proto.Location location = 2;</code>
          *
@@ -2302,6 +2379,7 @@ public final class Debug {
             return locationBuilder_.getMessage();
           }
         }
+
         /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
         public Builder setLocation(org.datacommons.proto.LogLocation.Location value) {
           if (locationBuilder_ == null) {
@@ -2316,6 +2394,7 @@ public final class Debug {
           bitField0_ |= 0x00000002;
           return this;
         }
+
         /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
         public Builder setLocation(
             org.datacommons.proto.LogLocation.Location.Builder builderForValue) {
@@ -2328,6 +2407,7 @@ public final class Debug {
           bitField0_ |= 0x00000002;
           return this;
         }
+
         /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
         public Builder mergeLocation(org.datacommons.proto.LogLocation.Location value) {
           if (locationBuilder_ == null) {
@@ -2348,6 +2428,7 @@ public final class Debug {
           bitField0_ |= 0x00000002;
           return this;
         }
+
         /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
         public Builder clearLocation() {
           if (locationBuilder_ == null) {
@@ -2359,12 +2440,14 @@ public final class Debug {
           bitField0_ = (bitField0_ & ~0x00000002);
           return this;
         }
+
         /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
         public org.datacommons.proto.LogLocation.Location.Builder getLocationBuilder() {
           bitField0_ |= 0x00000002;
           onChanged();
           return getLocationFieldBuilder().getBuilder();
         }
+
         /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
         public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationOrBuilder() {
           if (locationBuilder_ != null) {
@@ -2375,6 +2458,7 @@ public final class Debug {
                 : location_;
           }
         }
+
         /** <code>optional .org.datacommons.proto.Location location = 2;</code> */
         private com.google.protobuf.SingleFieldBuilderV3<
                 org.datacommons.proto.LogLocation.Location,
@@ -2394,6 +2478,7 @@ public final class Debug {
         }
 
         private java.lang.Object userMessage_ = "";
+
         /**
          *
          *
@@ -2408,6 +2493,7 @@ public final class Debug {
         public boolean hasUserMessage() {
           return ((bitField0_ & 0x00000004) != 0);
         }
+
         /**
          *
          *
@@ -2432,6 +2518,7 @@ public final class Debug {
             return (java.lang.String) ref;
           }
         }
+
         /**
          *
          *
@@ -2454,6 +2541,7 @@ public final class Debug {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          *
          *
@@ -2475,6 +2563,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -2492,6 +2581,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -2515,6 +2605,7 @@ public final class Debug {
         }
 
         private java.lang.Object counterKey_ = "";
+
         /**
          *
          *
@@ -2529,6 +2620,7 @@ public final class Debug {
         public boolean hasCounterKey() {
           return ((bitField0_ & 0x00000008) != 0);
         }
+
         /**
          *
          *
@@ -2553,6 +2645,7 @@ public final class Debug {
             return (java.lang.String) ref;
           }
         }
+
         /**
          *
          *
@@ -2575,6 +2668,7 @@ public final class Debug {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          *
          *
@@ -2596,6 +2690,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -2613,6 +2708,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -2644,6 +2740,7 @@ public final class Debug {
             bitField0_ |= 0x00000010;
           }
         }
+
         /**
          *
          *
@@ -2660,6 +2757,7 @@ public final class Debug {
         public com.google.protobuf.ProtocolStringList getColumnNameList() {
           return columnName_.getUnmodifiableView();
         }
+
         /**
          *
          *
@@ -2676,6 +2774,7 @@ public final class Debug {
         public int getColumnNameCount() {
           return columnName_.size();
         }
+
         /**
          *
          *
@@ -2693,6 +2792,7 @@ public final class Debug {
         public java.lang.String getColumnName(int index) {
           return columnName_.get(index);
         }
+
         /**
          *
          *
@@ -2710,6 +2810,7 @@ public final class Debug {
         public com.google.protobuf.ByteString getColumnNameBytes(int index) {
           return columnName_.getByteString(index);
         }
+
         /**
          *
          *
@@ -2734,6 +2835,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -2757,6 +2859,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -2777,6 +2880,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -2796,6 +2900,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -2907,6 +3012,7 @@ public final class Debug {
     public int getLevelSummaryCount() {
       return internalGetLevelSummary().getMap().size();
     }
+
     /**
      *
      *
@@ -2923,6 +3029,7 @@ public final class Debug {
       }
       return internalGetLevelSummary().getMap().containsKey(key);
     }
+
     /** Use {@link #getLevelSummaryMap()} instead. */
     @java.lang.Override
     @java.lang.Deprecated
@@ -2930,6 +3037,7 @@ public final class Debug {
         getLevelSummary() {
       return getLevelSummaryMap();
     }
+
     /**
      *
      *
@@ -2944,6 +3052,7 @@ public final class Debug {
         getLevelSummaryMap() {
       return internalGetLevelSummary().getMap();
     }
+
     /**
      *
      *
@@ -2963,6 +3072,7 @@ public final class Debug {
           internalGetLevelSummary().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
+
     /**
      *
      *
@@ -2987,27 +3097,32 @@ public final class Debug {
 
     public static final int ENTRIES_FIELD_NUMBER = 3;
     private java.util.List<org.datacommons.proto.Debug.Log.Entry> entries_;
+
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
     @java.lang.Override
     public java.util.List<org.datacommons.proto.Debug.Log.Entry> getEntriesList() {
       return entries_;
     }
+
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
     @java.lang.Override
     public java.util.List<? extends org.datacommons.proto.Debug.Log.EntryOrBuilder>
         getEntriesOrBuilderList() {
       return entries_;
     }
+
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
     @java.lang.Override
     public int getEntriesCount() {
       return entries_.size();
     }
+
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
     @java.lang.Override
     public org.datacommons.proto.Debug.Log.Entry getEntries(int index) {
       return entries_.get(index);
     }
+
     /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
     @java.lang.Override
     public org.datacommons.proto.Debug.Log.EntryOrBuilder getEntriesOrBuilder(int index) {
@@ -3016,6 +3131,7 @@ public final class Debug {
 
     public static final int STATS_CHECK_SUMMARY_FIELD_NUMBER = 4;
     private java.util.List<org.datacommons.proto.Debug.StatValidationResult> statsCheckSummary_;
+
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
@@ -3024,6 +3140,7 @@ public final class Debug {
         getStatsCheckSummaryList() {
       return statsCheckSummary_;
     }
+
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
@@ -3032,6 +3149,7 @@ public final class Debug {
         getStatsCheckSummaryOrBuilderList() {
       return statsCheckSummary_;
     }
+
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
@@ -3039,6 +3157,7 @@ public final class Debug {
     public int getStatsCheckSummaryCount() {
       return statsCheckSummary_.size();
     }
+
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
@@ -3046,6 +3165,7 @@ public final class Debug {
     public org.datacommons.proto.Debug.StatValidationResult getStatsCheckSummary(int index) {
       return statsCheckSummary_.get(index);
     }
+
     /**
      * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
      */
@@ -3057,6 +3177,7 @@ public final class Debug {
 
     public static final int COMMAND_ARGS_FIELD_NUMBER = 5;
     private org.datacommons.proto.Debug.CommandArgs commandArgs_;
+
     /**
      * <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code>
      *
@@ -3066,6 +3187,7 @@ public final class Debug {
     public boolean hasCommandArgs() {
       return ((bitField0_ & 0x00000001) != 0);
     }
+
     /**
      * <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code>
      *
@@ -3077,6 +3199,7 @@ public final class Debug {
           ? org.datacommons.proto.Debug.CommandArgs.getDefaultInstance()
           : commandArgs_;
     }
+
     /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
     @java.lang.Override
     public org.datacommons.proto.Debug.CommandArgsOrBuilder getCommandArgsOrBuilder() {
@@ -3289,6 +3412,7 @@ public final class Debug {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
      *
      *
@@ -3605,6 +3729,7 @@ public final class Debug {
       public int getLevelSummaryCount() {
         return internalGetLevelSummary().getMap().size();
       }
+
       /**
        *
        *
@@ -3621,6 +3746,7 @@ public final class Debug {
         }
         return internalGetLevelSummary().getMap().containsKey(key);
       }
+
       /** Use {@link #getLevelSummaryMap()} instead. */
       @java.lang.Override
       @java.lang.Deprecated
@@ -3628,6 +3754,7 @@ public final class Debug {
           getLevelSummary() {
         return getLevelSummaryMap();
       }
+
       /**
        *
        *
@@ -3642,6 +3769,7 @@ public final class Debug {
           getLevelSummaryMap() {
         return internalGetLevelSummary().getMap();
       }
+
       /**
        *
        *
@@ -3661,6 +3789,7 @@ public final class Debug {
             internalGetLevelSummary().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
+
       /**
        *
        *
@@ -3688,6 +3817,7 @@ public final class Debug {
         internalGetMutableLevelSummary().getMutableMap().clear();
         return this;
       }
+
       /**
        *
        *
@@ -3704,12 +3834,14 @@ public final class Debug {
         internalGetMutableLevelSummary().getMutableMap().remove(key);
         return this;
       }
+
       /** Use alternate mutation accessors instead. */
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, org.datacommons.proto.Debug.Log.CounterSet>
           getMutableLevelSummary() {
         return internalGetMutableLevelSummary().getMutableMap();
       }
+
       /**
        *
        *
@@ -3730,6 +3862,7 @@ public final class Debug {
         internalGetMutableLevelSummary().getMutableMap().put(key, value);
         return this;
       }
+
       /**
        *
        *
@@ -3769,6 +3902,7 @@ public final class Debug {
           return entriesBuilder_.getMessageList();
         }
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public int getEntriesCount() {
         if (entriesBuilder_ == null) {
@@ -3777,6 +3911,7 @@ public final class Debug {
           return entriesBuilder_.getCount();
         }
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public org.datacommons.proto.Debug.Log.Entry getEntries(int index) {
         if (entriesBuilder_ == null) {
@@ -3785,6 +3920,7 @@ public final class Debug {
           return entriesBuilder_.getMessage(index);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public Builder setEntries(int index, org.datacommons.proto.Debug.Log.Entry value) {
         if (entriesBuilder_ == null) {
@@ -3799,6 +3935,7 @@ public final class Debug {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public Builder setEntries(
           int index, org.datacommons.proto.Debug.Log.Entry.Builder builderForValue) {
@@ -3811,6 +3948,7 @@ public final class Debug {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public Builder addEntries(org.datacommons.proto.Debug.Log.Entry value) {
         if (entriesBuilder_ == null) {
@@ -3825,6 +3963,7 @@ public final class Debug {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public Builder addEntries(int index, org.datacommons.proto.Debug.Log.Entry value) {
         if (entriesBuilder_ == null) {
@@ -3839,6 +3978,7 @@ public final class Debug {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public Builder addEntries(org.datacommons.proto.Debug.Log.Entry.Builder builderForValue) {
         if (entriesBuilder_ == null) {
@@ -3850,6 +3990,7 @@ public final class Debug {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public Builder addEntries(
           int index, org.datacommons.proto.Debug.Log.Entry.Builder builderForValue) {
@@ -3862,6 +4003,7 @@ public final class Debug {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public Builder addAllEntries(
           java.lang.Iterable<? extends org.datacommons.proto.Debug.Log.Entry> values) {
@@ -3874,6 +4016,7 @@ public final class Debug {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public Builder clearEntries() {
         if (entriesBuilder_ == null) {
@@ -3885,6 +4028,7 @@ public final class Debug {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public Builder removeEntries(int index) {
         if (entriesBuilder_ == null) {
@@ -3896,10 +4040,12 @@ public final class Debug {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public org.datacommons.proto.Debug.Log.Entry.Builder getEntriesBuilder(int index) {
         return getEntriesFieldBuilder().getBuilder(index);
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public org.datacommons.proto.Debug.Log.EntryOrBuilder getEntriesOrBuilder(int index) {
         if (entriesBuilder_ == null) {
@@ -3908,6 +4054,7 @@ public final class Debug {
           return entriesBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public java.util.List<? extends org.datacommons.proto.Debug.Log.EntryOrBuilder>
           getEntriesOrBuilderList() {
@@ -3917,16 +4064,19 @@ public final class Debug {
           return java.util.Collections.unmodifiableList(entries_);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public org.datacommons.proto.Debug.Log.Entry.Builder addEntriesBuilder() {
         return getEntriesFieldBuilder()
             .addBuilder(org.datacommons.proto.Debug.Log.Entry.getDefaultInstance());
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public org.datacommons.proto.Debug.Log.Entry.Builder addEntriesBuilder(int index) {
         return getEntriesFieldBuilder()
             .addBuilder(index, org.datacommons.proto.Debug.Log.Entry.getDefaultInstance());
       }
+
       /** <code>repeated .org.datacommons.proto.Log.Entry entries = 3;</code> */
       public java.util.List<org.datacommons.proto.Debug.Log.Entry.Builder> getEntriesBuilderList() {
         return getEntriesFieldBuilder().getBuilderList();
@@ -3978,6 +4128,7 @@ public final class Debug {
           return statsCheckSummaryBuilder_.getMessageList();
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -3988,6 +4139,7 @@ public final class Debug {
           return statsCheckSummaryBuilder_.getCount();
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -3998,6 +4150,7 @@ public final class Debug {
           return statsCheckSummaryBuilder_.getMessage(index);
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4015,6 +4168,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4029,6 +4183,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4045,6 +4200,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4062,6 +4218,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4076,6 +4233,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4090,6 +4248,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4104,6 +4263,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4117,6 +4277,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4130,6 +4291,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4137,6 +4299,7 @@ public final class Debug {
           int index) {
         return getStatsCheckSummaryFieldBuilder().getBuilder(index);
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4148,6 +4311,7 @@ public final class Debug {
           return statsCheckSummaryBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4159,6 +4323,7 @@ public final class Debug {
           return java.util.Collections.unmodifiableList(statsCheckSummary_);
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4167,6 +4332,7 @@ public final class Debug {
         return getStatsCheckSummaryFieldBuilder()
             .addBuilder(org.datacommons.proto.Debug.StatValidationResult.getDefaultInstance());
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4176,6 +4342,7 @@ public final class Debug {
             .addBuilder(
                 index, org.datacommons.proto.Debug.StatValidationResult.getDefaultInstance());
       }
+
       /**
        * <code>repeated .org.datacommons.proto.StatValidationResult stats_check_summary = 4;</code>
        */
@@ -4210,6 +4377,7 @@ public final class Debug {
               org.datacommons.proto.Debug.CommandArgs.Builder,
               org.datacommons.proto.Debug.CommandArgsOrBuilder>
           commandArgsBuilder_;
+
       /**
        * <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code>
        *
@@ -4218,6 +4386,7 @@ public final class Debug {
       public boolean hasCommandArgs() {
         return ((bitField0_ & 0x00000008) != 0);
       }
+
       /**
        * <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code>
        *
@@ -4232,6 +4401,7 @@ public final class Debug {
           return commandArgsBuilder_.getMessage();
         }
       }
+
       /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
       public Builder setCommandArgs(org.datacommons.proto.Debug.CommandArgs value) {
         if (commandArgsBuilder_ == null) {
@@ -4246,6 +4416,7 @@ public final class Debug {
         bitField0_ |= 0x00000008;
         return this;
       }
+
       /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
       public Builder setCommandArgs(
           org.datacommons.proto.Debug.CommandArgs.Builder builderForValue) {
@@ -4258,6 +4429,7 @@ public final class Debug {
         bitField0_ |= 0x00000008;
         return this;
       }
+
       /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
       public Builder mergeCommandArgs(org.datacommons.proto.Debug.CommandArgs value) {
         if (commandArgsBuilder_ == null) {
@@ -4278,6 +4450,7 @@ public final class Debug {
         bitField0_ |= 0x00000008;
         return this;
       }
+
       /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
       public Builder clearCommandArgs() {
         if (commandArgsBuilder_ == null) {
@@ -4289,12 +4462,14 @@ public final class Debug {
         bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
+
       /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
       public org.datacommons.proto.Debug.CommandArgs.Builder getCommandArgsBuilder() {
         bitField0_ |= 0x00000008;
         onChanged();
         return getCommandArgsFieldBuilder().getBuilder();
       }
+
       /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
       public org.datacommons.proto.Debug.CommandArgsOrBuilder getCommandArgsOrBuilder() {
         if (commandArgsBuilder_ != null) {
@@ -4305,6 +4480,7 @@ public final class Debug {
               : commandArgs_;
         }
       }
+
       /** <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
               org.datacommons.proto.Debug.CommandArgs,
@@ -4387,6 +4563,7 @@ public final class Debug {
      * @return Whether the existenceChecks field is set.
      */
     boolean hasExistenceChecks();
+
     /**
      * <code>optional bool existence_checks = 1;</code>
      *
@@ -4400,6 +4577,7 @@ public final class Debug {
      * @return Whether the resolution field is set.
      */
     boolean hasResolution();
+
     /**
      * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
      *
@@ -4413,6 +4591,7 @@ public final class Debug {
      * @return Whether the numThreads field is set.
      */
     boolean hasNumThreads();
+
     /**
      * <code>optional int32 num_threads = 3;</code>
      *
@@ -4426,6 +4605,7 @@ public final class Debug {
      * @return Whether the statChecks field is set.
      */
     boolean hasStatChecks();
+
     /**
      * <code>optional bool stat_checks = 4;</code>
      *
@@ -4439,12 +4619,14 @@ public final class Debug {
      * @return A list containing the samplePlaces.
      */
     java.util.List<java.lang.String> getSamplePlacesList();
+
     /**
      * <code>repeated string sample_places = 5;</code>
      *
      * @return The count of samplePlaces.
      */
     int getSamplePlacesCount();
+
     /**
      * <code>repeated string sample_places = 5;</code>
      *
@@ -4452,6 +4634,7 @@ public final class Debug {
      * @return The samplePlaces at the given index.
      */
     java.lang.String getSamplePlaces(int index);
+
     /**
      * <code>repeated string sample_places = 5;</code>
      *
@@ -4466,6 +4649,7 @@ public final class Debug {
      * @return Whether the observationAbout field is set.
      */
     boolean hasObservationAbout();
+
     /**
      * <code>optional bool observation_about = 6;</code>
      *
@@ -4485,6 +4669,7 @@ public final class Debug {
      * @return Whether the allowNanSvobs field is set.
      */
     boolean hasAllowNanSvobs();
+
     /**
      *
      *
@@ -4510,6 +4695,7 @@ public final class Debug {
      * @return Whether the checkMeasurementResult field is set.
      */
     boolean hasCheckMeasurementResult();
+
     /**
      *
      *
@@ -4529,6 +4715,7 @@ public final class Debug {
      * @return Whether the coordinatesResolution field is set.
      */
     boolean hasCoordinatesResolution();
+
     /**
      * <code>optional bool coordinates_resolution = 9;</code>
      *
@@ -4536,12 +4723,14 @@ public final class Debug {
      */
     boolean getCoordinatesResolution();
   }
+
   /** Protobuf type {@code org.datacommons.proto.CommandArgs} */
   public static final class CommandArgs extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.CommandArgs)
       CommandArgsOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use CommandArgs.newBuilder() to construct.
     private CommandArgs(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -4724,6 +4913,7 @@ public final class Debug {
 
       /** <code>RESOLUTION_MODE_UNSPECIFIED = 0;</code> */
       public static final int RESOLUTION_MODE_UNSPECIFIED_VALUE = 0;
+
       /**
        *
        *
@@ -4734,6 +4924,7 @@ public final class Debug {
        * <code>RESOLUTION_MODE_NONE = 1;</code>
        */
       public static final int RESOLUTION_MODE_NONE_VALUE = 1;
+
       /**
        *
        *
@@ -4745,6 +4936,7 @@ public final class Debug {
        * <code>RESOLUTION_MODE_LOCAL = 2;</code>
        */
       public static final int RESOLUTION_MODE_LOCAL_VALUE = 2;
+
       /**
        *
        *
@@ -4835,6 +5027,7 @@ public final class Debug {
     private int bitField0_;
     public static final int EXISTENCE_CHECKS_FIELD_NUMBER = 1;
     private boolean existenceChecks_;
+
     /**
      * <code>optional bool existence_checks = 1;</code>
      *
@@ -4844,6 +5037,7 @@ public final class Debug {
     public boolean hasExistenceChecks() {
       return ((bitField0_ & 0x00000001) != 0);
     }
+
     /**
      * <code>optional bool existence_checks = 1;</code>
      *
@@ -4856,6 +5050,7 @@ public final class Debug {
 
     public static final int RESOLUTION_FIELD_NUMBER = 2;
     private int resolution_;
+
     /**
      * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
      *
@@ -4865,6 +5060,7 @@ public final class Debug {
     public boolean hasResolution() {
       return ((bitField0_ & 0x00000002) != 0);
     }
+
     /**
      * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
      *
@@ -4882,6 +5078,7 @@ public final class Debug {
 
     public static final int NUM_THREADS_FIELD_NUMBER = 3;
     private int numThreads_;
+
     /**
      * <code>optional int32 num_threads = 3;</code>
      *
@@ -4891,6 +5088,7 @@ public final class Debug {
     public boolean hasNumThreads() {
       return ((bitField0_ & 0x00000004) != 0);
     }
+
     /**
      * <code>optional int32 num_threads = 3;</code>
      *
@@ -4903,6 +5101,7 @@ public final class Debug {
 
     public static final int STAT_CHECKS_FIELD_NUMBER = 4;
     private boolean statChecks_;
+
     /**
      * <code>optional bool stat_checks = 4;</code>
      *
@@ -4912,6 +5111,7 @@ public final class Debug {
     public boolean hasStatChecks() {
       return ((bitField0_ & 0x00000008) != 0);
     }
+
     /**
      * <code>optional bool stat_checks = 4;</code>
      *
@@ -4924,6 +5124,7 @@ public final class Debug {
 
     public static final int SAMPLE_PLACES_FIELD_NUMBER = 5;
     private com.google.protobuf.LazyStringList samplePlaces_;
+
     /**
      * <code>repeated string sample_places = 5;</code>
      *
@@ -4932,6 +5133,7 @@ public final class Debug {
     public com.google.protobuf.ProtocolStringList getSamplePlacesList() {
       return samplePlaces_;
     }
+
     /**
      * <code>repeated string sample_places = 5;</code>
      *
@@ -4940,6 +5142,7 @@ public final class Debug {
     public int getSamplePlacesCount() {
       return samplePlaces_.size();
     }
+
     /**
      * <code>repeated string sample_places = 5;</code>
      *
@@ -4949,6 +5152,7 @@ public final class Debug {
     public java.lang.String getSamplePlaces(int index) {
       return samplePlaces_.get(index);
     }
+
     /**
      * <code>repeated string sample_places = 5;</code>
      *
@@ -4961,6 +5165,7 @@ public final class Debug {
 
     public static final int OBSERVATION_ABOUT_FIELD_NUMBER = 6;
     private boolean observationAbout_;
+
     /**
      * <code>optional bool observation_about = 6;</code>
      *
@@ -4970,6 +5175,7 @@ public final class Debug {
     public boolean hasObservationAbout() {
       return ((bitField0_ & 0x00000010) != 0);
     }
+
     /**
      * <code>optional bool observation_about = 6;</code>
      *
@@ -4982,6 +5188,7 @@ public final class Debug {
 
     public static final int ALLOW_NAN_SVOBS_FIELD_NUMBER = 7;
     private boolean allowNanSvobs_;
+
     /**
      *
      *
@@ -4997,6 +5204,7 @@ public final class Debug {
     public boolean hasAllowNanSvobs() {
       return ((bitField0_ & 0x00000020) != 0);
     }
+
     /**
      *
      *
@@ -5015,6 +5223,7 @@ public final class Debug {
 
     public static final int CHECK_MEASUREMENT_RESULT_FIELD_NUMBER = 8;
     private boolean checkMeasurementResult_;
+
     /**
      *
      *
@@ -5030,6 +5239,7 @@ public final class Debug {
     public boolean hasCheckMeasurementResult() {
       return ((bitField0_ & 0x00000040) != 0);
     }
+
     /**
      *
      *
@@ -5048,6 +5258,7 @@ public final class Debug {
 
     public static final int COORDINATES_RESOLUTION_FIELD_NUMBER = 9;
     private boolean coordinatesResolution_;
+
     /**
      * <code>optional bool coordinates_resolution = 9;</code>
      *
@@ -5057,6 +5268,7 @@ public final class Debug {
     public boolean hasCoordinatesResolution() {
       return ((bitField0_ & 0x00000080) != 0);
     }
+
     /**
      * <code>optional bool coordinates_resolution = 9;</code>
      *
@@ -5345,6 +5557,7 @@ public final class Debug {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.CommandArgs} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -5585,6 +5798,7 @@ public final class Debug {
       private int bitField0_;
 
       private boolean existenceChecks_;
+
       /**
        * <code>optional bool existence_checks = 1;</code>
        *
@@ -5594,6 +5808,7 @@ public final class Debug {
       public boolean hasExistenceChecks() {
         return ((bitField0_ & 0x00000001) != 0);
       }
+
       /**
        * <code>optional bool existence_checks = 1;</code>
        *
@@ -5603,6 +5818,7 @@ public final class Debug {
       public boolean getExistenceChecks() {
         return existenceChecks_;
       }
+
       /**
        * <code>optional bool existence_checks = 1;</code>
        *
@@ -5615,6 +5831,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional bool existence_checks = 1;</code>
        *
@@ -5628,6 +5845,7 @@ public final class Debug {
       }
 
       private int resolution_ = 0;
+
       /**
        * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
        *
@@ -5637,6 +5855,7 @@ public final class Debug {
       public boolean hasResolution() {
         return ((bitField0_ & 0x00000002) != 0);
       }
+
       /**
        * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
        *
@@ -5651,6 +5870,7 @@ public final class Debug {
             ? org.datacommons.proto.Debug.CommandArgs.ResolutionMode.RESOLUTION_MODE_UNSPECIFIED
             : result;
       }
+
       /**
        * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
        *
@@ -5666,6 +5886,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional .org.datacommons.proto.CommandArgs.ResolutionMode resolution = 2;</code>
        *
@@ -5679,6 +5900,7 @@ public final class Debug {
       }
 
       private int numThreads_;
+
       /**
        * <code>optional int32 num_threads = 3;</code>
        *
@@ -5688,6 +5910,7 @@ public final class Debug {
       public boolean hasNumThreads() {
         return ((bitField0_ & 0x00000004) != 0);
       }
+
       /**
        * <code>optional int32 num_threads = 3;</code>
        *
@@ -5697,6 +5920,7 @@ public final class Debug {
       public int getNumThreads() {
         return numThreads_;
       }
+
       /**
        * <code>optional int32 num_threads = 3;</code>
        *
@@ -5709,6 +5933,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional int32 num_threads = 3;</code>
        *
@@ -5722,6 +5947,7 @@ public final class Debug {
       }
 
       private boolean statChecks_;
+
       /**
        * <code>optional bool stat_checks = 4;</code>
        *
@@ -5731,6 +5957,7 @@ public final class Debug {
       public boolean hasStatChecks() {
         return ((bitField0_ & 0x00000008) != 0);
       }
+
       /**
        * <code>optional bool stat_checks = 4;</code>
        *
@@ -5740,6 +5967,7 @@ public final class Debug {
       public boolean getStatChecks() {
         return statChecks_;
       }
+
       /**
        * <code>optional bool stat_checks = 4;</code>
        *
@@ -5752,6 +5980,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional bool stat_checks = 4;</code>
        *
@@ -5773,6 +6002,7 @@ public final class Debug {
           bitField0_ |= 0x00000010;
         }
       }
+
       /**
        * <code>repeated string sample_places = 5;</code>
        *
@@ -5781,6 +6011,7 @@ public final class Debug {
       public com.google.protobuf.ProtocolStringList getSamplePlacesList() {
         return samplePlaces_.getUnmodifiableView();
       }
+
       /**
        * <code>repeated string sample_places = 5;</code>
        *
@@ -5789,6 +6020,7 @@ public final class Debug {
       public int getSamplePlacesCount() {
         return samplePlaces_.size();
       }
+
       /**
        * <code>repeated string sample_places = 5;</code>
        *
@@ -5798,6 +6030,7 @@ public final class Debug {
       public java.lang.String getSamplePlaces(int index) {
         return samplePlaces_.get(index);
       }
+
       /**
        * <code>repeated string sample_places = 5;</code>
        *
@@ -5807,6 +6040,7 @@ public final class Debug {
       public com.google.protobuf.ByteString getSamplePlacesBytes(int index) {
         return samplePlaces_.getByteString(index);
       }
+
       /**
        * <code>repeated string sample_places = 5;</code>
        *
@@ -5823,6 +6057,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string sample_places = 5;</code>
        *
@@ -5838,6 +6073,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string sample_places = 5;</code>
        *
@@ -5850,6 +6086,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string sample_places = 5;</code>
        *
@@ -5861,6 +6098,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string sample_places = 5;</code>
        *
@@ -5878,6 +6116,7 @@ public final class Debug {
       }
 
       private boolean observationAbout_;
+
       /**
        * <code>optional bool observation_about = 6;</code>
        *
@@ -5887,6 +6126,7 @@ public final class Debug {
       public boolean hasObservationAbout() {
         return ((bitField0_ & 0x00000020) != 0);
       }
+
       /**
        * <code>optional bool observation_about = 6;</code>
        *
@@ -5896,6 +6136,7 @@ public final class Debug {
       public boolean getObservationAbout() {
         return observationAbout_;
       }
+
       /**
        * <code>optional bool observation_about = 6;</code>
        *
@@ -5908,6 +6149,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional bool observation_about = 6;</code>
        *
@@ -5921,6 +6163,7 @@ public final class Debug {
       }
 
       private boolean allowNanSvobs_;
+
       /**
        *
        *
@@ -5936,6 +6179,7 @@ public final class Debug {
       public boolean hasAllowNanSvobs() {
         return ((bitField0_ & 0x00000040) != 0);
       }
+
       /**
        *
        *
@@ -5951,6 +6195,7 @@ public final class Debug {
       public boolean getAllowNanSvobs() {
         return allowNanSvobs_;
       }
+
       /**
        *
        *
@@ -5969,6 +6214,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -5988,6 +6234,7 @@ public final class Debug {
       }
 
       private boolean checkMeasurementResult_;
+
       /**
        *
        *
@@ -6003,6 +6250,7 @@ public final class Debug {
       public boolean hasCheckMeasurementResult() {
         return ((bitField0_ & 0x00000080) != 0);
       }
+
       /**
        *
        *
@@ -6018,6 +6266,7 @@ public final class Debug {
       public boolean getCheckMeasurementResult() {
         return checkMeasurementResult_;
       }
+
       /**
        *
        *
@@ -6036,6 +6285,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -6055,6 +6305,7 @@ public final class Debug {
       }
 
       private boolean coordinatesResolution_;
+
       /**
        * <code>optional bool coordinates_resolution = 9;</code>
        *
@@ -6064,6 +6315,7 @@ public final class Debug {
       public boolean hasCoordinatesResolution() {
         return ((bitField0_ & 0x00000100) != 0);
       }
+
       /**
        * <code>optional bool coordinates_resolution = 9;</code>
        *
@@ -6073,6 +6325,7 @@ public final class Debug {
       public boolean getCoordinatesResolution() {
         return coordinatesResolution_;
       }
+
       /**
        * <code>optional bool coordinates_resolution = 9;</code>
        *
@@ -6085,6 +6338,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional bool coordinates_resolution = 9;</code>
        *
@@ -6161,12 +6415,14 @@ public final class Debug {
      * @return Whether the date field is set.
      */
     boolean hasDate();
+
     /**
      * <code>optional string date = 1;</code>
      *
      * @return The date.
      */
     java.lang.String getDate();
+
     /**
      * <code>optional string date = 1;</code>
      *
@@ -6184,6 +6440,7 @@ public final class Debug {
      * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
      */
     java.util.List<org.datacommons.proto.Debug.DataPoint.DataValue> getValuesList();
+
     /**
      *
      *
@@ -6194,6 +6451,7 @@ public final class Debug {
      * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
      */
     org.datacommons.proto.Debug.DataPoint.DataValue getValues(int index);
+
     /**
      *
      *
@@ -6204,6 +6462,7 @@ public final class Debug {
      * <code>repeated .org.datacommons.proto.DataPoint.DataValue values = 2;</code>
      */
     int getValuesCount();
+
     /**
      *
      *
@@ -6215,6 +6474,7 @@ public final class Debug {
      */
     java.util.List<? extends org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder>
         getValuesOrBuilderList();
+
     /**
      *
      *
@@ -6226,12 +6486,14 @@ public final class Debug {
      */
     org.datacommons.proto.Debug.DataPoint.DataValueOrBuilder getValuesOrBuilder(int index);
   }
+
   /** Protobuf type {@code org.datacommons.proto.DataPoint} */
   public static final class DataPoint extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.DataPoint)
       DataPointOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use DataPoint.newBuilder() to construct.
     private DataPoint(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -6338,12 +6600,14 @@ public final class Debug {
        * @return Whether the value field is set.
        */
       boolean hasValue();
+
       /**
        * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
        *
        * @return The value.
        */
       org.datacommons.proto.Mcf.McfGraph.TypedValue getValue();
+
       /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
       org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getValueOrBuilder();
 
@@ -6357,6 +6621,7 @@ public final class Debug {
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList();
+
       /**
        *
        *
@@ -6367,6 +6632,7 @@ public final class Debug {
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       org.datacommons.proto.LogLocation.Location getLocations(int index);
+
       /**
        *
        *
@@ -6377,6 +6643,7 @@ public final class Debug {
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       int getLocationsCount();
+
       /**
        *
        *
@@ -6388,6 +6655,7 @@ public final class Debug {
        */
       java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder>
           getLocationsOrBuilderList();
+
       /**
        *
        *
@@ -6399,12 +6667,14 @@ public final class Debug {
        */
       org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(int index);
     }
+
     /** Protobuf type {@code org.datacommons.proto.DataPoint.DataValue} */
     public static final class DataValue extends com.google.protobuf.GeneratedMessageV3
         implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.DataPoint.DataValue)
         DataValueOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use DataValue.newBuilder() to construct.
       private DataValue(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -6513,6 +6783,7 @@ public final class Debug {
       private int bitField0_;
       public static final int VALUE_FIELD_NUMBER = 1;
       private org.datacommons.proto.Mcf.McfGraph.TypedValue value_;
+
       /**
        * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
        *
@@ -6522,6 +6793,7 @@ public final class Debug {
       public boolean hasValue() {
         return ((bitField0_ & 0x00000001) != 0);
       }
+
       /**
        * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
        *
@@ -6533,6 +6805,7 @@ public final class Debug {
             ? org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()
             : value_;
       }
+
       /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
       @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getValueOrBuilder() {
@@ -6543,6 +6816,7 @@ public final class Debug {
 
       public static final int LOCATIONS_FIELD_NUMBER = 2;
       private java.util.List<org.datacommons.proto.LogLocation.Location> locations_;
+
       /**
        *
        *
@@ -6556,6 +6830,7 @@ public final class Debug {
       public java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList() {
         return locations_;
       }
+
       /**
        *
        *
@@ -6570,6 +6845,7 @@ public final class Debug {
           getLocationsOrBuilderList() {
         return locations_;
       }
+
       /**
        *
        *
@@ -6583,6 +6859,7 @@ public final class Debug {
       public int getLocationsCount() {
         return locations_.size();
       }
+
       /**
        *
        *
@@ -6596,6 +6873,7 @@ public final class Debug {
       public org.datacommons.proto.LogLocation.Location getLocations(int index) {
         return locations_.get(index);
       }
+
       /**
        *
        *
@@ -6786,6 +7064,7 @@ public final class Debug {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /** Protobuf type {@code org.datacommons.proto.DataPoint.DataValue} */
       public static final class Builder
           extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -7006,6 +7285,7 @@ public final class Debug {
                 org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder,
                 org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>
             valueBuilder_;
+
         /**
          * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
          *
@@ -7014,6 +7294,7 @@ public final class Debug {
         public boolean hasValue() {
           return ((bitField0_ & 0x00000001) != 0);
         }
+
         /**
          * <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code>
          *
@@ -7028,6 +7309,7 @@ public final class Debug {
             return valueBuilder_.getMessage();
           }
         }
+
         /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
         public Builder setValue(org.datacommons.proto.Mcf.McfGraph.TypedValue value) {
           if (valueBuilder_ == null) {
@@ -7042,6 +7324,7 @@ public final class Debug {
           bitField0_ |= 0x00000001;
           return this;
         }
+
         /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
         public Builder setValue(
             org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder builderForValue) {
@@ -7054,6 +7337,7 @@ public final class Debug {
           bitField0_ |= 0x00000001;
           return this;
         }
+
         /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
         public Builder mergeValue(org.datacommons.proto.Mcf.McfGraph.TypedValue value) {
           if (valueBuilder_ == null) {
@@ -7074,6 +7358,7 @@ public final class Debug {
           bitField0_ |= 0x00000001;
           return this;
         }
+
         /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
         public Builder clearValue() {
           if (valueBuilder_ == null) {
@@ -7085,12 +7370,14 @@ public final class Debug {
           bitField0_ = (bitField0_ & ~0x00000001);
           return this;
         }
+
         /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
         public org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder getValueBuilder() {
           bitField0_ |= 0x00000001;
           onChanged();
           return getValueFieldBuilder().getBuilder();
         }
+
         /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
         public org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getValueOrBuilder() {
           if (valueBuilder_ != null) {
@@ -7101,6 +7388,7 @@ public final class Debug {
                 : value_;
           }
         }
+
         /** <code>optional .org.datacommons.proto.McfGraph.TypedValue value = 1;</code> */
         private com.google.protobuf.SingleFieldBuilderV3<
                 org.datacommons.proto.Mcf.McfGraph.TypedValue,
@@ -7152,6 +7440,7 @@ public final class Debug {
             return locationsBuilder_.getMessageList();
           }
         }
+
         /**
          *
          *
@@ -7168,6 +7457,7 @@ public final class Debug {
             return locationsBuilder_.getCount();
           }
         }
+
         /**
          *
          *
@@ -7184,6 +7474,7 @@ public final class Debug {
             return locationsBuilder_.getMessage(index);
           }
         }
+
         /**
          *
          *
@@ -7206,6 +7497,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -7226,6 +7518,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -7248,6 +7541,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -7270,6 +7564,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -7290,6 +7585,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -7310,6 +7606,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -7330,6 +7627,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -7349,6 +7647,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -7368,6 +7667,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -7380,6 +7680,7 @@ public final class Debug {
         public org.datacommons.proto.LogLocation.Location.Builder getLocationsBuilder(int index) {
           return getLocationsFieldBuilder().getBuilder(index);
         }
+
         /**
          *
          *
@@ -7397,6 +7698,7 @@ public final class Debug {
             return locationsBuilder_.getMessageOrBuilder(index);
           }
         }
+
         /**
          *
          *
@@ -7414,6 +7716,7 @@ public final class Debug {
             return java.util.Collections.unmodifiableList(locations_);
           }
         }
+
         /**
          *
          *
@@ -7427,6 +7730,7 @@ public final class Debug {
           return getLocationsFieldBuilder()
               .addBuilder(org.datacommons.proto.LogLocation.Location.getDefaultInstance());
         }
+
         /**
          *
          *
@@ -7440,6 +7744,7 @@ public final class Debug {
           return getLocationsFieldBuilder()
               .addBuilder(index, org.datacommons.proto.LogLocation.Location.getDefaultInstance());
         }
+
         /**
          *
          *
@@ -7530,6 +7835,7 @@ public final class Debug {
     private int bitField0_;
     public static final int DATE_FIELD_NUMBER = 1;
     private volatile java.lang.Object date_;
+
     /**
      * <code>optional string date = 1;</code>
      *
@@ -7539,6 +7845,7 @@ public final class Debug {
     public boolean hasDate() {
       return ((bitField0_ & 0x00000001) != 0);
     }
+
     /**
      * <code>optional string date = 1;</code>
      *
@@ -7558,6 +7865,7 @@ public final class Debug {
         return s;
       }
     }
+
     /**
      * <code>optional string date = 1;</code>
      *
@@ -7578,6 +7886,7 @@ public final class Debug {
 
     public static final int VALUES_FIELD_NUMBER = 2;
     private java.util.List<org.datacommons.proto.Debug.DataPoint.DataValue> values_;
+
     /**
      *
      *
@@ -7591,6 +7900,7 @@ public final class Debug {
     public java.util.List<org.datacommons.proto.Debug.DataPoint.DataValue> getValuesList() {
       return values_;
     }
+
     /**
      *
      *
@@ -7605,6 +7915,7 @@ public final class Debug {
         getValuesOrBuilderList() {
       return values_;
     }
+
     /**
      *
      *
@@ -7618,6 +7929,7 @@ public final class Debug {
     public int getValuesCount() {
       return values_.size();
     }
+
     /**
      *
      *
@@ -7631,6 +7943,7 @@ public final class Debug {
     public org.datacommons.proto.Debug.DataPoint.DataValue getValues(int index) {
       return values_.get(index);
     }
+
     /**
      *
      *
@@ -7820,6 +8133,7 @@ public final class Debug {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.DataPoint} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -8026,6 +8340,7 @@ public final class Debug {
       private int bitField0_;
 
       private java.lang.Object date_ = "";
+
       /**
        * <code>optional string date = 1;</code>
        *
@@ -8034,6 +8349,7 @@ public final class Debug {
       public boolean hasDate() {
         return ((bitField0_ & 0x00000001) != 0);
       }
+
       /**
        * <code>optional string date = 1;</code>
        *
@@ -8052,6 +8368,7 @@ public final class Debug {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>optional string date = 1;</code>
        *
@@ -8068,6 +8385,7 @@ public final class Debug {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>optional string date = 1;</code>
        *
@@ -8083,6 +8401,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional string date = 1;</code>
        *
@@ -8094,6 +8413,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional string date = 1;</code>
        *
@@ -8143,6 +8463,7 @@ public final class Debug {
           return valuesBuilder_.getMessageList();
         }
       }
+
       /**
        *
        *
@@ -8159,6 +8480,7 @@ public final class Debug {
           return valuesBuilder_.getCount();
         }
       }
+
       /**
        *
        *
@@ -8175,6 +8497,7 @@ public final class Debug {
           return valuesBuilder_.getMessage(index);
         }
       }
+
       /**
        *
        *
@@ -8197,6 +8520,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        *
        *
@@ -8217,6 +8541,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        *
        *
@@ -8239,6 +8564,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        *
        *
@@ -8261,6 +8587,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        *
        *
@@ -8281,6 +8608,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        *
        *
@@ -8301,6 +8629,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        *
        *
@@ -8321,6 +8650,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        *
        *
@@ -8340,6 +8670,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        *
        *
@@ -8359,6 +8690,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        *
        *
@@ -8371,6 +8703,7 @@ public final class Debug {
       public org.datacommons.proto.Debug.DataPoint.DataValue.Builder getValuesBuilder(int index) {
         return getValuesFieldBuilder().getBuilder(index);
       }
+
       /**
        *
        *
@@ -8388,6 +8721,7 @@ public final class Debug {
           return valuesBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
        *
        *
@@ -8405,6 +8739,7 @@ public final class Debug {
           return java.util.Collections.unmodifiableList(values_);
         }
       }
+
       /**
        *
        *
@@ -8418,6 +8753,7 @@ public final class Debug {
         return getValuesFieldBuilder()
             .addBuilder(org.datacommons.proto.Debug.DataPoint.DataValue.getDefaultInstance());
       }
+
       /**
        *
        *
@@ -8432,6 +8768,7 @@ public final class Debug {
             .addBuilder(
                 index, org.datacommons.proto.Debug.DataPoint.DataValue.getDefaultInstance());
       }
+
       /**
        *
        *
@@ -8533,6 +8870,7 @@ public final class Debug {
      * @return Whether the placeDcid field is set.
      */
     boolean hasPlaceDcid();
+
     /**
      *
      *
@@ -8545,6 +8883,7 @@ public final class Debug {
      * @return The placeDcid.
      */
     java.lang.String getPlaceDcid();
+
     /**
      *
      *
@@ -8570,6 +8909,7 @@ public final class Debug {
      * @return Whether the statVarDcid field is set.
      */
     boolean hasStatVarDcid();
+
     /**
      *
      *
@@ -8582,6 +8922,7 @@ public final class Debug {
      * @return The statVarDcid.
      */
     java.lang.String getStatVarDcid();
+
     /**
      *
      *
@@ -8608,6 +8949,7 @@ public final class Debug {
      * @return Whether the measurementMethod field is set.
      */
     boolean hasMeasurementMethod();
+
     /**
      *
      *
@@ -8621,6 +8963,7 @@ public final class Debug {
      * @return The measurementMethod.
      */
     java.lang.String getMeasurementMethod();
+
     /**
      *
      *
@@ -8641,12 +8984,14 @@ public final class Debug {
      * @return Whether the observationPeriod field is set.
      */
     boolean hasObservationPeriod();
+
     /**
      * <code>optional string observation_period = 4;</code>
      *
      * @return The observationPeriod.
      */
     java.lang.String getObservationPeriod();
+
     /**
      * <code>optional string observation_period = 4;</code>
      *
@@ -8660,12 +9005,14 @@ public final class Debug {
      * @return Whether the scalingFactor field is set.
      */
     boolean hasScalingFactor();
+
     /**
      * <code>optional string scaling_factor = 5;</code>
      *
      * @return The scalingFactor.
      */
     java.lang.String getScalingFactor();
+
     /**
      * <code>optional string scaling_factor = 5;</code>
      *
@@ -8679,12 +9026,14 @@ public final class Debug {
      * @return Whether the unit field is set.
      */
     boolean hasUnit();
+
     /**
      * <code>optional string unit = 6;</code>
      *
      * @return The unit.
      */
     java.lang.String getUnit();
+
     /**
      * <code>optional string unit = 6;</code>
      *
@@ -8699,6 +9048,7 @@ public final class Debug {
      */
     java.util.List<org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry>
         getValidationCountersList();
+
     /**
      * <code>
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -8706,12 +9056,14 @@ public final class Debug {
      */
     org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry getValidationCounters(
         int index);
+
     /**
      * <code>
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
      * </code>
      */
     int getValidationCountersCount();
+
     /**
      * <code>
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -8720,6 +9072,7 @@ public final class Debug {
     java.util.List<
             ? extends org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder>
         getValidationCountersOrBuilderList();
+
     /**
      * <code>
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -8728,12 +9081,14 @@ public final class Debug {
     org.datacommons.proto.Debug.StatValidationResult.StatValidationEntryOrBuilder
         getValidationCountersOrBuilder(int index);
   }
+
   /** Protobuf type {@code org.datacommons.proto.StatValidationResult} */
   public static final class StatValidationResult extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.StatValidationResult)
       StatValidationResultOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use StatValidationResult.newBuilder() to construct.
     private StatValidationResult(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -8889,6 +9244,7 @@ public final class Debug {
        * @return Whether the counterKey field is set.
        */
       boolean hasCounterKey();
+
       /**
        *
        *
@@ -8901,6 +9257,7 @@ public final class Debug {
        * @return The counterKey.
        */
       java.lang.String getCounterKey();
+
       /**
        *
        *
@@ -8924,6 +9281,7 @@ public final class Debug {
        * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
        */
       java.util.List<org.datacommons.proto.Debug.DataPoint> getProblemPointsList();
+
       /**
        *
        *
@@ -8934,6 +9292,7 @@ public final class Debug {
        * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
        */
       org.datacommons.proto.Debug.DataPoint getProblemPoints(int index);
+
       /**
        *
        *
@@ -8944,6 +9303,7 @@ public final class Debug {
        * <code>repeated .org.datacommons.proto.DataPoint problem_points = 2;</code>
        */
       int getProblemPointsCount();
+
       /**
        *
        *
@@ -8955,6 +9315,7 @@ public final class Debug {
        */
       java.util.List<? extends org.datacommons.proto.Debug.DataPointOrBuilder>
           getProblemPointsOrBuilderList();
+
       /**
        *
        *
@@ -8978,6 +9339,7 @@ public final class Debug {
        * @return Whether the additionalDetails field is set.
        */
       boolean hasAdditionalDetails();
+
       /**
        *
        *
@@ -8990,6 +9352,7 @@ public final class Debug {
        * @return The additionalDetails.
        */
       java.lang.String getAdditionalDetails();
+
       /**
        *
        *
@@ -9015,6 +9378,7 @@ public final class Debug {
        * @return Whether the percentDifference field is set.
        */
       boolean hasPercentDifference();
+
       /**
        *
        *
@@ -9028,6 +9392,7 @@ public final class Debug {
        */
       double getPercentDifference();
     }
+
     /**
      *
      *
@@ -9042,6 +9407,7 @@ public final class Debug {
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.StatValidationResult.StatValidationEntry)
         StatValidationEntryOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use StatValidationEntry.newBuilder() to construct.
       private StatValidationEntry(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -9156,6 +9522,7 @@ public final class Debug {
       private int bitField0_;
       public static final int COUNTER_KEY_FIELD_NUMBER = 1;
       private volatile java.lang.Object counterKey_;
+
       /**
        *
        *
@@ -9171,6 +9538,7 @@ public final class Debug {
       public boolean hasCounterKey() {
         return ((bitField0_ & 0x00000001) != 0);
       }
+
       /**
        *
        *
@@ -9196,6 +9564,7 @@ public final class Debug {
           return s;
         }
       }
+
       /**
        *
        *
@@ -9222,6 +9591,7 @@ public final class Debug {
 
       public static final int PROBLEM_POINTS_FIELD_NUMBER = 2;
       private java.util.List<org.datacommons.proto.Debug.DataPoint> problemPoints_;
+
       /**
        *
        *
@@ -9235,6 +9605,7 @@ public final class Debug {
       public java.util.List<org.datacommons.proto.Debug.DataPoint> getProblemPointsList() {
         return problemPoints_;
       }
+
       /**
        *
        *
@@ -9249,6 +9620,7 @@ public final class Debug {
           getProblemPointsOrBuilderList() {
         return problemPoints_;
       }
+
       /**
        *
        *
@@ -9262,6 +9634,7 @@ public final class Debug {
       public int getProblemPointsCount() {
         return problemPoints_.size();
       }
+
       /**
        *
        *
@@ -9275,6 +9648,7 @@ public final class Debug {
       public org.datacommons.proto.Debug.DataPoint getProblemPoints(int index) {
         return problemPoints_.get(index);
       }
+
       /**
        *
        *
@@ -9291,6 +9665,7 @@ public final class Debug {
 
       public static final int ADDITIONAL_DETAILS_FIELD_NUMBER = 3;
       private volatile java.lang.Object additionalDetails_;
+
       /**
        *
        *
@@ -9306,6 +9681,7 @@ public final class Debug {
       public boolean hasAdditionalDetails() {
         return ((bitField0_ & 0x00000002) != 0);
       }
+
       /**
        *
        *
@@ -9331,6 +9707,7 @@ public final class Debug {
           return s;
         }
       }
+
       /**
        *
        *
@@ -9357,6 +9734,7 @@ public final class Debug {
 
       public static final int PERCENT_DIFFERENCE_FIELD_NUMBER = 4;
       private double percentDifference_;
+
       /**
        *
        *
@@ -9372,6 +9750,7 @@ public final class Debug {
       public boolean hasPercentDifference() {
         return ((bitField0_ & 0x00000004) != 0);
       }
+
       /**
        *
        *
@@ -9601,6 +9980,7 @@ public final class Debug {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /**
        *
        *
@@ -9847,6 +10227,7 @@ public final class Debug {
         private int bitField0_;
 
         private java.lang.Object counterKey_ = "";
+
         /**
          *
          *
@@ -9861,6 +10242,7 @@ public final class Debug {
         public boolean hasCounterKey() {
           return ((bitField0_ & 0x00000001) != 0);
         }
+
         /**
          *
          *
@@ -9885,6 +10267,7 @@ public final class Debug {
             return (java.lang.String) ref;
           }
         }
+
         /**
          *
          *
@@ -9907,6 +10290,7 @@ public final class Debug {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          *
          *
@@ -9928,6 +10312,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -9945,6 +10330,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -10000,6 +10386,7 @@ public final class Debug {
             return problemPointsBuilder_.getMessageList();
           }
         }
+
         /**
          *
          *
@@ -10016,6 +10403,7 @@ public final class Debug {
             return problemPointsBuilder_.getCount();
           }
         }
+
         /**
          *
          *
@@ -10032,6 +10420,7 @@ public final class Debug {
             return problemPointsBuilder_.getMessage(index);
           }
         }
+
         /**
          *
          *
@@ -10054,6 +10443,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -10074,6 +10464,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -10096,6 +10487,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -10118,6 +10510,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -10138,6 +10531,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -10158,6 +10552,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -10178,6 +10573,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -10197,6 +10593,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -10216,6 +10613,7 @@ public final class Debug {
           }
           return this;
         }
+
         /**
          *
          *
@@ -10228,6 +10626,7 @@ public final class Debug {
         public org.datacommons.proto.Debug.DataPoint.Builder getProblemPointsBuilder(int index) {
           return getProblemPointsFieldBuilder().getBuilder(index);
         }
+
         /**
          *
          *
@@ -10244,6 +10643,7 @@ public final class Debug {
             return problemPointsBuilder_.getMessageOrBuilder(index);
           }
         }
+
         /**
          *
          *
@@ -10261,6 +10661,7 @@ public final class Debug {
             return java.util.Collections.unmodifiableList(problemPoints_);
           }
         }
+
         /**
          *
          *
@@ -10274,6 +10675,7 @@ public final class Debug {
           return getProblemPointsFieldBuilder()
               .addBuilder(org.datacommons.proto.Debug.DataPoint.getDefaultInstance());
         }
+
         /**
          *
          *
@@ -10287,6 +10689,7 @@ public final class Debug {
           return getProblemPointsFieldBuilder()
               .addBuilder(index, org.datacommons.proto.Debug.DataPoint.getDefaultInstance());
         }
+
         /**
          *
          *
@@ -10322,6 +10725,7 @@ public final class Debug {
         }
 
         private java.lang.Object additionalDetails_ = "";
+
         /**
          *
          *
@@ -10336,6 +10740,7 @@ public final class Debug {
         public boolean hasAdditionalDetails() {
           return ((bitField0_ & 0x00000004) != 0);
         }
+
         /**
          *
          *
@@ -10360,6 +10765,7 @@ public final class Debug {
             return (java.lang.String) ref;
           }
         }
+
         /**
          *
          *
@@ -10382,6 +10788,7 @@ public final class Debug {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          *
          *
@@ -10403,6 +10810,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -10420,6 +10828,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -10443,6 +10852,7 @@ public final class Debug {
         }
 
         private double percentDifference_;
+
         /**
          *
          *
@@ -10458,6 +10868,7 @@ public final class Debug {
         public boolean hasPercentDifference() {
           return ((bitField0_ & 0x00000008) != 0);
         }
+
         /**
          *
          *
@@ -10473,6 +10884,7 @@ public final class Debug {
         public double getPercentDifference() {
           return percentDifference_;
         }
+
         /**
          *
          *
@@ -10491,6 +10903,7 @@ public final class Debug {
           onChanged();
           return this;
         }
+
         /**
          *
          *
@@ -10569,6 +10982,7 @@ public final class Debug {
     private int bitField0_;
     public static final int PLACE_DCID_FIELD_NUMBER = 1;
     private volatile java.lang.Object placeDcid_;
+
     /**
      *
      *
@@ -10584,6 +10998,7 @@ public final class Debug {
     public boolean hasPlaceDcid() {
       return ((bitField0_ & 0x00000001) != 0);
     }
+
     /**
      *
      *
@@ -10609,6 +11024,7 @@ public final class Debug {
         return s;
       }
     }
+
     /**
      *
      *
@@ -10635,6 +11051,7 @@ public final class Debug {
 
     public static final int STAT_VAR_DCID_FIELD_NUMBER = 2;
     private volatile java.lang.Object statVarDcid_;
+
     /**
      *
      *
@@ -10650,6 +11067,7 @@ public final class Debug {
     public boolean hasStatVarDcid() {
       return ((bitField0_ & 0x00000002) != 0);
     }
+
     /**
      *
      *
@@ -10675,6 +11093,7 @@ public final class Debug {
         return s;
       }
     }
+
     /**
      *
      *
@@ -10701,6 +11120,7 @@ public final class Debug {
 
     public static final int MEASUREMENT_METHOD_FIELD_NUMBER = 3;
     private volatile java.lang.Object measurementMethod_;
+
     /**
      *
      *
@@ -10717,6 +11137,7 @@ public final class Debug {
     public boolean hasMeasurementMethod() {
       return ((bitField0_ & 0x00000004) != 0);
     }
+
     /**
      *
      *
@@ -10743,6 +11164,7 @@ public final class Debug {
         return s;
       }
     }
+
     /**
      *
      *
@@ -10770,6 +11192,7 @@ public final class Debug {
 
     public static final int OBSERVATION_PERIOD_FIELD_NUMBER = 4;
     private volatile java.lang.Object observationPeriod_;
+
     /**
      * <code>optional string observation_period = 4;</code>
      *
@@ -10779,6 +11202,7 @@ public final class Debug {
     public boolean hasObservationPeriod() {
       return ((bitField0_ & 0x00000008) != 0);
     }
+
     /**
      * <code>optional string observation_period = 4;</code>
      *
@@ -10798,6 +11222,7 @@ public final class Debug {
         return s;
       }
     }
+
     /**
      * <code>optional string observation_period = 4;</code>
      *
@@ -10818,6 +11243,7 @@ public final class Debug {
 
     public static final int SCALING_FACTOR_FIELD_NUMBER = 5;
     private volatile java.lang.Object scalingFactor_;
+
     /**
      * <code>optional string scaling_factor = 5;</code>
      *
@@ -10827,6 +11253,7 @@ public final class Debug {
     public boolean hasScalingFactor() {
       return ((bitField0_ & 0x00000010) != 0);
     }
+
     /**
      * <code>optional string scaling_factor = 5;</code>
      *
@@ -10846,6 +11273,7 @@ public final class Debug {
         return s;
       }
     }
+
     /**
      * <code>optional string scaling_factor = 5;</code>
      *
@@ -10866,6 +11294,7 @@ public final class Debug {
 
     public static final int UNIT_FIELD_NUMBER = 6;
     private volatile java.lang.Object unit_;
+
     /**
      * <code>optional string unit = 6;</code>
      *
@@ -10875,6 +11304,7 @@ public final class Debug {
     public boolean hasUnit() {
       return ((bitField0_ & 0x00000020) != 0);
     }
+
     /**
      * <code>optional string unit = 6;</code>
      *
@@ -10894,6 +11324,7 @@ public final class Debug {
         return s;
       }
     }
+
     /**
      * <code>optional string unit = 6;</code>
      *
@@ -10915,6 +11346,7 @@ public final class Debug {
     public static final int VALIDATION_COUNTERS_FIELD_NUMBER = 7;
     private java.util.List<org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry>
         validationCounters_;
+
     /**
      * <code>
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -10925,6 +11357,7 @@ public final class Debug {
         getValidationCountersList() {
       return validationCounters_;
     }
+
     /**
      * <code>
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -10936,6 +11369,7 @@ public final class Debug {
         getValidationCountersOrBuilderList() {
       return validationCounters_;
     }
+
     /**
      * <code>
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -10945,6 +11379,7 @@ public final class Debug {
     public int getValidationCountersCount() {
       return validationCounters_.size();
     }
+
     /**
      * <code>
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -10955,6 +11390,7 @@ public final class Debug {
         getValidationCounters(int index) {
       return validationCounters_.get(index);
     }
+
     /**
      * <code>
      * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -11213,6 +11649,7 @@ public final class Debug {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.StatValidationResult} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -11476,6 +11913,7 @@ public final class Debug {
       private int bitField0_;
 
       private java.lang.Object placeDcid_ = "";
+
       /**
        *
        *
@@ -11490,6 +11928,7 @@ public final class Debug {
       public boolean hasPlaceDcid() {
         return ((bitField0_ & 0x00000001) != 0);
       }
+
       /**
        *
        *
@@ -11514,6 +11953,7 @@ public final class Debug {
           return (java.lang.String) ref;
         }
       }
+
       /**
        *
        *
@@ -11536,6 +11976,7 @@ public final class Debug {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        *
        *
@@ -11557,6 +11998,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -11574,6 +12016,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -11597,6 +12040,7 @@ public final class Debug {
       }
 
       private java.lang.Object statVarDcid_ = "";
+
       /**
        *
        *
@@ -11611,6 +12055,7 @@ public final class Debug {
       public boolean hasStatVarDcid() {
         return ((bitField0_ & 0x00000002) != 0);
       }
+
       /**
        *
        *
@@ -11635,6 +12080,7 @@ public final class Debug {
           return (java.lang.String) ref;
         }
       }
+
       /**
        *
        *
@@ -11657,6 +12103,7 @@ public final class Debug {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        *
        *
@@ -11678,6 +12125,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -11695,6 +12143,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -11718,6 +12167,7 @@ public final class Debug {
       }
 
       private java.lang.Object measurementMethod_ = "";
+
       /**
        *
        *
@@ -11733,6 +12183,7 @@ public final class Debug {
       public boolean hasMeasurementMethod() {
         return ((bitField0_ & 0x00000004) != 0);
       }
+
       /**
        *
        *
@@ -11758,6 +12209,7 @@ public final class Debug {
           return (java.lang.String) ref;
         }
       }
+
       /**
        *
        *
@@ -11781,6 +12233,7 @@ public final class Debug {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        *
        *
@@ -11803,6 +12256,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -11821,6 +12275,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        *
        *
@@ -11845,6 +12300,7 @@ public final class Debug {
       }
 
       private java.lang.Object observationPeriod_ = "";
+
       /**
        * <code>optional string observation_period = 4;</code>
        *
@@ -11853,6 +12309,7 @@ public final class Debug {
       public boolean hasObservationPeriod() {
         return ((bitField0_ & 0x00000008) != 0);
       }
+
       /**
        * <code>optional string observation_period = 4;</code>
        *
@@ -11871,6 +12328,7 @@ public final class Debug {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>optional string observation_period = 4;</code>
        *
@@ -11887,6 +12345,7 @@ public final class Debug {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>optional string observation_period = 4;</code>
        *
@@ -11902,6 +12361,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional string observation_period = 4;</code>
        *
@@ -11913,6 +12373,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional string observation_period = 4;</code>
        *
@@ -11930,6 +12391,7 @@ public final class Debug {
       }
 
       private java.lang.Object scalingFactor_ = "";
+
       /**
        * <code>optional string scaling_factor = 5;</code>
        *
@@ -11938,6 +12400,7 @@ public final class Debug {
       public boolean hasScalingFactor() {
         return ((bitField0_ & 0x00000010) != 0);
       }
+
       /**
        * <code>optional string scaling_factor = 5;</code>
        *
@@ -11956,6 +12419,7 @@ public final class Debug {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>optional string scaling_factor = 5;</code>
        *
@@ -11972,6 +12436,7 @@ public final class Debug {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>optional string scaling_factor = 5;</code>
        *
@@ -11987,6 +12452,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional string scaling_factor = 5;</code>
        *
@@ -11998,6 +12464,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional string scaling_factor = 5;</code>
        *
@@ -12015,6 +12482,7 @@ public final class Debug {
       }
 
       private java.lang.Object unit_ = "";
+
       /**
        * <code>optional string unit = 6;</code>
        *
@@ -12023,6 +12491,7 @@ public final class Debug {
       public boolean hasUnit() {
         return ((bitField0_ & 0x00000020) != 0);
       }
+
       /**
        * <code>optional string unit = 6;</code>
        *
@@ -12041,6 +12510,7 @@ public final class Debug {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>optional string unit = 6;</code>
        *
@@ -12057,6 +12527,7 @@ public final class Debug {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>optional string unit = 6;</code>
        *
@@ -12072,6 +12543,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional string unit = 6;</code>
        *
@@ -12083,6 +12555,7 @@ public final class Debug {
         onChanged();
         return this;
       }
+
       /**
        * <code>optional string unit = 6;</code>
        *
@@ -12131,6 +12604,7 @@ public final class Debug {
           return validationCountersBuilder_.getMessageList();
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12143,6 +12617,7 @@ public final class Debug {
           return validationCountersBuilder_.getCount();
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12156,6 +12631,7 @@ public final class Debug {
           return validationCountersBuilder_.getMessage(index);
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12175,6 +12651,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12193,6 +12670,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12212,6 +12690,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12231,6 +12710,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12248,6 +12728,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12266,6 +12747,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12284,6 +12766,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12299,6 +12782,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12314,6 +12798,7 @@ public final class Debug {
         }
         return this;
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12323,6 +12808,7 @@ public final class Debug {
           getValidationCountersBuilder(int index) {
         return getValidationCountersFieldBuilder().getBuilder(index);
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12336,6 +12822,7 @@ public final class Debug {
           return validationCountersBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12351,6 +12838,7 @@ public final class Debug {
           return java.util.Collections.unmodifiableList(validationCounters_);
         }
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12363,6 +12851,7 @@ public final class Debug {
                 org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
                     .getDefaultInstance());
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;
@@ -12376,6 +12865,7 @@ public final class Debug {
                 org.datacommons.proto.Debug.StatValidationResult.StatValidationEntry
                     .getDefaultInstance());
       }
+
       /**
        * <code>
        * repeated .org.datacommons.proto.StatValidationResult.StatValidationEntry validation_counters = 7;

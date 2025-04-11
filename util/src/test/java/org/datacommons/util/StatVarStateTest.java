@@ -111,6 +111,7 @@ public class StatVarStateTest {
 
     assertEquals(Vocabulary.MEASUREMENT_RESULT, returnValue);
   }
+
   // Test many things that parseApiStatTypeResponse should return null for
   // (i.e. incorrect/invalid inputs)
   @Test
