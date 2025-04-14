@@ -10,16 +10,26 @@ import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
 /** Models a graph entity (node/edge). */
 @DefaultCoder(AvroCoder.class)
 public class Entity {
+  // Id of the generated Edge.
   String id;
+  // SubjectId of the generated Edge.
   String subjectId;
+  // Predicate of the generated Edge.
   String predicate;
+  // ObjectId of the generated Edge.
   String objectId;
+  // ObjectValue of the generatedEdge.
   @Nullable
   String objectValue;
+  // Provenance of the generated Edge.
   @Nullable
   String provenance;
+  // SubjectId of the generated Node.
+  String nodeId;
+  // Name of the generated Node.
   @Nullable
   String name;
+  // Types of the generated Node.
   @Nullable
   List<String> types;
 
@@ -30,6 +40,7 @@ public class Entity {
       String objectId,
       String objectValue,
       String provenance,
+      String nodeId,
       String name,
       List<String> types) {
     this.id = id;
@@ -38,6 +49,7 @@ public class Entity {
     this.objectId = objectId;
     this.objectValue = objectValue;
     this.provenance = provenance;
+    this.nodeId = nodeId;
     this.name = name;
     this.types = types;
   }
@@ -52,6 +64,7 @@ public class Entity {
     result = prime * result + ((objectId == null) ? 0 : objectId.hashCode());
     result = prime * result + ((objectValue == null) ? 0 : objectValue.hashCode());
     result = prime * result + ((provenance == null) ? 0 : provenance.hashCode());
+    result = prime * result + ((nodeId == null) ? 0 : nodeId.hashCode());
     result = prime * result + ((name == null) ? 0 : name.hashCode());
     result = prime * result + ((types == null) ? 0 : types.hashCode());
     return result;
@@ -96,6 +109,11 @@ public class Entity {
         return false;
     } else if (!provenance.equals(other.provenance))
       return false;
+    if (nodeId == null) {
+      if (other.nodeId != null)
+        return false;
+    } else if (!nodeId.equals(other.nodeId))
+      return false;
     if (name == null) {
       if (other.name != null)
         return false;
@@ -109,10 +127,25 @@ public class Entity {
     return true;
   }
 
+  @Override
+  public String toString() {
+        return String.format("{" +
+          "\n\tid: %s" +
+          "\n\tsubjectId: %s" +
+          "\n\tpredicate: %s" + 
+          "\n\tobjectId: %s" +
+          "\n\tobjectValue: %s" +
+          "\n\tprovenance: %s" +
+          "\n\tnodeId: %s" +
+          "\n\tname: %s" +
+          "\n\ttypes: %s" +
+          "\n}", id, subjectId, predicate, objectId, objectValue, provenance, nodeId, name, String.join(", ", types));
+  }
+
   public Mutation toNode(String nodeTableName) {
     return Mutation.newInsertOrUpdateBuilder(nodeTableName)
         .set("subject_id")
-        .to(subjectId)
+        .to(nodeId)
         .set("name")
         .to(name)
         .set("types")

@@ -6,6 +6,7 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -70,36 +71,45 @@ public class CacheReader {
           try {
             String dcid = keys[0];
             String predicate = keys[1];
+            String typeOf = keys[2];
             PagedEntities elist =
                 PagedEntities.parseFrom(
                     new GZIPInputStream(
                         new ByteArrayInputStream(Base64.getDecoder().decode(value))));
             for (EntityInfo entity : elist.getEntitiesList()) {
-              String subjectId, objectId;
+              String subjectId, objectId, nodeId = "";
               // Add a self edge if value is populated.
-              if (entity.getValue().isEmpty()) {
+              if (!entity.getValue().isEmpty()) {
                 subjectId = dcid;
                 objectId = dcid;
+                // Terminal edges won't produce any object nodes.
               } else {
                 if (row.startsWith("d/m/")) {
                   subjectId = dcid;
                   objectId = entity.getDcid();
+                  nodeId = entity.getDcid();
                 } else { // "d/l/"
                   subjectId = entity.getDcid();
                   objectId = dcid;
+                  nodeId = entity.getDcid();
                 }
+              }
+              List<String> types = entity.getTypesList();
+              if (types.isEmpty() && !typeOf.isEmpty()) {
+                types = Arrays.asList(typeOf);
               }
               // TODO: fix id column.
               Entity e =
                   new Entity(
-                      dcid,
+                      subjectId,
                       subjectId,
                       predicate,
                       objectId,
                       entity.getValue(),
                       entity.getProvenanceId(),
+                      nodeId,
                       entity.getName(),
-                      entity.getTypesList());
+                      types);
               entities.add(e);
             }
           } catch (IOException e) {
