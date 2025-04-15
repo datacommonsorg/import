@@ -1,21 +1,54 @@
 package org.datacommons;
 
-import com.google.cloud.spanner.Mutation;
-import com.google.cloud.spanner.Value;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Value;
 
 public class IngestionTest {
+  private static final Logger LOGGER = LoggerFactory.getLogger(IngestionTest.class);
 
   @Rule public TestPipeline p = TestPipeline.create();
+
+  /**
+   * Test function to log elements.
+   * This can be used when writing tests.
+   * 
+   * Example usage:
+   * <code>
+   * PCollection<Mutation> mutations = ...;
+   * log("LogMutations", mutations);
+   * </code>
+   * 
+   * Example output:
+   * <code>
+   * DEBUG: Mutation: Mutation{table=Node, insertOrUpdate=true, values={subject_id=count, name=count, types=[Property]}}
+   * </code>
+   */
+  static class LogElements<T> extends DoFn<T, Void> {
+    @ProcessElement
+    public void processElement(@Element T element) {
+      LOGGER.info("DEBUG: {}: {}", element.getClass().getSimpleName(), element);
+    }
+  }
+
+  static void log(String name, PCollection<?> collection) {
+    collection.apply(name, ParDo.of(new LogElements<>()));
+  }
 
   @Test
   public void testGetObservations() {
@@ -127,5 +160,65 @@ public class IngestionTest {
         .to(Value.stringArray(List.of("Property")))
         .build();
     Assert.assertTrue(out.toNode("Node").equals(outExpected));
+  }
+
+  @Test
+  public void testMutations() {
+    List<String> cache = Arrays.asList(
+        "d/m/Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person^measuredProperty^Property^0,H4sIAAAAAAAAAOPS5WJNzi/NK5GCUEqyKcn6SYnFqfoepbmJeUGpiSmJSTmpwSWJJWGJRcWCDGDwwR4AejAnwDgAAAA=",
+        "d/m/Count_Person^measuredProperty^Property^0,H4sIAAAAAAAAAOPS5WJNzi/NK5GCUEqyKcn6SYnFqfoepbmJeUGpiSmJSTmpwSWJJWGJRcWCDGDwwR4AejAnwDgAAAA=");
+
+    PCollection<String> entries = p.apply(Create.of(cache));
+    PCollection<Entity> entities = CacheReader.getEntities(entries);
+
+    // Expecting only 1 node mutation.
+    List<Mutation> expectedNodeMutations = Arrays.asList(
+        Mutation.newInsertOrUpdateBuilder("Node")
+            .set("subject_id")
+            .to("count")
+            .set("name")
+            .to("count")
+            .set("types")
+            .to(Value.stringArray(List.of("Property")))
+            .build());
+
+    // Expecting 2 edge mutations.
+    List<Mutation> expectedEdgeMutations = Arrays.asList(
+        Mutation.newInsertOrUpdateBuilder("Edge")
+            .set("id")
+            .to("Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person")
+            .set("subject_id")
+            .to("Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person")
+            .set("predicate")
+            .to("measuredProperty")
+            .set("object_id")
+            .to("count")
+            .set("object_value")
+            .to("")
+            .set("provenance")
+            .to("dc/base/HumanReadableStatVars")
+            .build(),
+        Mutation.newInsertOrUpdateBuilder("Edge")
+            .set("id")
+            .to("Count_Person")
+            .set("subject_id")
+            .to("Count_Person")
+            .set("predicate")
+            .to("measuredProperty")
+            .set("object_id")
+            .to("count")
+            .set("object_value")
+            .to("")
+            .set("provenance")
+            .to("dc/base/HumanReadableStatVars")
+            .build());
+
+    PCollection<Mutation> nodeMutations = SpannerClient.applyNodeTransforms(entities);
+    PCollection<Mutation> edgeMutations = SpannerClient.applyEdgeTransforms(entities);
+
+    PAssert.that(nodeMutations).containsInAnyOrder(expectedNodeMutations);
+    PAssert.that(edgeMutations).containsInAnyOrder(expectedEdgeMutations);
+
+    p.run();
   }
 }
