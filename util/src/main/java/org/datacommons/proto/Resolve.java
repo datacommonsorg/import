@@ -23,12 +23,14 @@ public final class Resolve {
      * @return A list containing the nodes.
      */
     java.util.List<java.lang.String> getNodesList();
+
     /**
      * <code>repeated string nodes = 1;</code>
      *
      * @return The count of nodes.
      */
     int getNodesCount();
+
     /**
      * <code>repeated string nodes = 1;</code>
      *
@@ -36,6 +38,7 @@ public final class Resolve {
      * @return The nodes at the given index.
      */
     java.lang.String getNodes(int index);
+
     /**
      * <code>repeated string nodes = 1;</code>
      *
@@ -50,6 +53,7 @@ public final class Resolve {
      * @return The property.
      */
     java.lang.String getProperty();
+
     /**
      * <code>string property = 2;</code>
      *
@@ -57,6 +61,7 @@ public final class Resolve {
      */
     com.google.protobuf.ByteString getPropertyBytes();
   }
+
   /**
    *
    *
@@ -80,6 +85,7 @@ public final class Resolve {
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveRequest)
       ResolveRequestOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use ResolveRequest.newBuilder() to construct.
     private ResolveRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -176,6 +182,7 @@ public final class Resolve {
 
     public static final int NODES_FIELD_NUMBER = 1;
     private com.google.protobuf.LazyStringList nodes_;
+
     /**
      * <code>repeated string nodes = 1;</code>
      *
@@ -184,6 +191,7 @@ public final class Resolve {
     public com.google.protobuf.ProtocolStringList getNodesList() {
       return nodes_;
     }
+
     /**
      * <code>repeated string nodes = 1;</code>
      *
@@ -192,6 +200,7 @@ public final class Resolve {
     public int getNodesCount() {
       return nodes_.size();
     }
+
     /**
      * <code>repeated string nodes = 1;</code>
      *
@@ -201,6 +210,7 @@ public final class Resolve {
     public java.lang.String getNodes(int index) {
       return nodes_.get(index);
     }
+
     /**
      * <code>repeated string nodes = 1;</code>
      *
@@ -213,6 +223,7 @@ public final class Resolve {
 
     public static final int PROPERTY_FIELD_NUMBER = 2;
     private volatile java.lang.Object property_;
+
     /**
      * <code>string property = 2;</code>
      *
@@ -230,6 +241,7 @@ public final class Resolve {
         return s;
       }
     }
+
     /**
      * <code>string property = 2;</code>
      *
@@ -424,6 +436,7 @@ public final class Resolve {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
      *
      *
@@ -622,6 +635,7 @@ public final class Resolve {
           bitField0_ |= 0x00000001;
         }
       }
+
       /**
        * <code>repeated string nodes = 1;</code>
        *
@@ -630,6 +644,7 @@ public final class Resolve {
       public com.google.protobuf.ProtocolStringList getNodesList() {
         return nodes_.getUnmodifiableView();
       }
+
       /**
        * <code>repeated string nodes = 1;</code>
        *
@@ -638,6 +653,7 @@ public final class Resolve {
       public int getNodesCount() {
         return nodes_.size();
       }
+
       /**
        * <code>repeated string nodes = 1;</code>
        *
@@ -647,6 +663,7 @@ public final class Resolve {
       public java.lang.String getNodes(int index) {
         return nodes_.get(index);
       }
+
       /**
        * <code>repeated string nodes = 1;</code>
        *
@@ -656,6 +673,7 @@ public final class Resolve {
       public com.google.protobuf.ByteString getNodesBytes(int index) {
         return nodes_.getByteString(index);
       }
+
       /**
        * <code>repeated string nodes = 1;</code>
        *
@@ -672,6 +690,7 @@ public final class Resolve {
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string nodes = 1;</code>
        *
@@ -687,6 +706,7 @@ public final class Resolve {
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string nodes = 1;</code>
        *
@@ -699,6 +719,7 @@ public final class Resolve {
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string nodes = 1;</code>
        *
@@ -710,6 +731,7 @@ public final class Resolve {
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string nodes = 1;</code>
        *
@@ -728,6 +750,7 @@ public final class Resolve {
       }
 
       private java.lang.Object property_ = "";
+
       /**
        * <code>string property = 2;</code>
        *
@@ -744,6 +767,7 @@ public final class Resolve {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string property = 2;</code>
        *
@@ -760,6 +784,7 @@ public final class Resolve {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string property = 2;</code>
        *
@@ -775,6 +800,7 @@ public final class Resolve {
         onChanged();
         return this;
       }
+
       /**
        * <code>string property = 2;</code>
        *
@@ -786,6 +812,7 @@ public final class Resolve {
         onChanged();
         return this;
       }
+
       /**
        * <code>string property = 2;</code>
        *
@@ -862,22 +889,28 @@ public final class Resolve {
 
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
     java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity> getEntitiesList();
+
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
     org.datacommons.proto.Resolve.ResolveResponse.Entity getEntities(int index);
+
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
     int getEntitiesCount();
+
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
     java.util.List<? extends org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder>
         getEntitiesOrBuilderList();
+
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
     org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder getEntitiesOrBuilder(int index);
   }
+
   /** Protobuf type {@code org.datacommons.proto.ResolveResponse} */
   public static final class ResolveResponse extends com.google.protobuf.GeneratedMessageV3
       implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveResponse)
       ResolveResponseOrBuilder {
     private static final long serialVersionUID = 0L;
+
     // Use ResolveResponse.newBuilder() to construct.
     private ResolveResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -979,6 +1012,7 @@ public final class Resolve {
        * @return The node.
        */
       java.lang.String getNode();
+
       /**
        * <code>string node = 1;</code>
        *
@@ -987,76 +1021,24 @@ public final class Resolve {
       com.google.protobuf.ByteString getNodeBytes();
 
       /**
-       *
-       *
-       * <pre>
-       * TODO(ws): Deprecate this field once not used in website:
-       * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-       * </pre>
-       *
-       * <code>repeated string resolved_ids = 2;</code>
-       *
-       * @return A list containing the resolvedIds.
-       */
-      java.util.List<java.lang.String> getResolvedIdsList();
-      /**
-       *
-       *
-       * <pre>
-       * TODO(ws): Deprecate this field once not used in website:
-       * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-       * </pre>
-       *
-       * <code>repeated string resolved_ids = 2;</code>
-       *
-       * @return The count of resolvedIds.
-       */
-      int getResolvedIdsCount();
-      /**
-       *
-       *
-       * <pre>
-       * TODO(ws): Deprecate this field once not used in website:
-       * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-       * </pre>
-       *
-       * <code>repeated string resolved_ids = 2;</code>
-       *
-       * @param index The index of the element to return.
-       * @return The resolvedIds at the given index.
-       */
-      java.lang.String getResolvedIds(int index);
-      /**
-       *
-       *
-       * <pre>
-       * TODO(ws): Deprecate this field once not used in website:
-       * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-       * </pre>
-       *
-       * <code>repeated string resolved_ids = 2;</code>
-       *
-       * @param index The index of the value to return.
-       * @return The bytes of the resolvedIds at the given index.
-       */
-      com.google.protobuf.ByteString getResolvedIdsBytes(int index);
-
-      /**
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
        */
       java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>
           getCandidatesList();
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
        */
       org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate getCandidates(int index);
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
        */
       int getCandidatesCount();
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
@@ -1064,6 +1046,7 @@ public final class Resolve {
       java.util.List<
               ? extends org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder>
           getCandidatesOrBuilderList();
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
@@ -1071,12 +1054,14 @@ public final class Resolve {
       org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder
           getCandidatesOrBuilder(int index);
     }
+
     /** Protobuf type {@code org.datacommons.proto.ResolveResponse.Entity} */
     public static final class Entity extends com.google.protobuf.GeneratedMessageV3
         implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveResponse.Entity)
         EntityOrBuilder {
       private static final long serialVersionUID = 0L;
+
       // Use Entity.newBuilder() to construct.
       private Entity(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
@@ -1084,7 +1069,6 @@ public final class Resolve {
 
       private Entity() {
         node_ = "";
-        resolvedIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         candidates_ = java.util.Collections.emptyList();
       }
 
@@ -1125,23 +1109,13 @@ public final class Resolve {
                   node_ = s;
                   break;
                 }
-              case 18:
-                {
-                  java.lang.String s = input.readStringRequireUtf8();
-                  if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                    resolvedIds_ = new com.google.protobuf.LazyStringArrayList();
-                    mutable_bitField0_ |= 0x00000001;
-                  }
-                  resolvedIds_.add(s);
-                  break;
-                }
               case 26:
                 {
-                  if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                  if (!((mutable_bitField0_ & 0x00000001) != 0)) {
                     candidates_ =
                         new java.util.ArrayList<
                             org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>();
-                    mutable_bitField0_ |= 0x00000002;
+                    mutable_bitField0_ |= 0x00000001;
                   }
                   candidates_.add(
                       input.readMessage(
@@ -1165,9 +1139,6 @@ public final class Resolve {
               .setUnfinishedMessage(this);
         } finally {
           if (((mutable_bitField0_ & 0x00000001) != 0)) {
-            resolvedIds_ = resolvedIds_.getUnmodifiableView();
-          }
-          if (((mutable_bitField0_ & 0x00000002) != 0)) {
             candidates_ = java.util.Collections.unmodifiableList(candidates_);
           }
           this.unknownFields = unknownFields.build();
@@ -1201,6 +1172,7 @@ public final class Resolve {
          * @return The dcid.
          */
         java.lang.String getDcid();
+
         /**
          * <code>string dcid = 1;</code>
          *
@@ -1214,6 +1186,7 @@ public final class Resolve {
          * @return The dominantType.
          */
         java.lang.String getDominantType();
+
         /**
          * <code>string dominant_type = 2;</code>
          *
@@ -1221,12 +1194,14 @@ public final class Resolve {
          */
         com.google.protobuf.ByteString getDominantTypeBytes();
       }
+
       /** Protobuf type {@code org.datacommons.proto.ResolveResponse.Entity.Candidate} */
       public static final class Candidate extends com.google.protobuf.GeneratedMessageV3
           implements
           // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveResponse.Entity.Candidate)
           CandidateOrBuilder {
         private static final long serialVersionUID = 0L;
+
         // Use Candidate.newBuilder() to construct.
         private Candidate(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
           super(builder);
@@ -1317,6 +1292,7 @@ public final class Resolve {
 
         public static final int DCID_FIELD_NUMBER = 1;
         private volatile java.lang.Object dcid_;
+
         /**
          * <code>string dcid = 1;</code>
          *
@@ -1334,6 +1310,7 @@ public final class Resolve {
             return s;
           }
         }
+
         /**
          * <code>string dcid = 1;</code>
          *
@@ -1354,6 +1331,7 @@ public final class Resolve {
 
         public static final int DOMINANT_TYPE_FIELD_NUMBER = 2;
         private volatile java.lang.Object dominantType_;
+
         /**
          * <code>string dominant_type = 2;</code>
          *
@@ -1371,6 +1349,7 @@ public final class Resolve {
             return s;
           }
         }
+
         /**
          * <code>string dominant_type = 2;</code>
          *
@@ -1563,6 +1542,7 @@ public final class Resolve {
           Builder builder = new Builder(parent);
           return builder;
         }
+
         /** Protobuf type {@code org.datacommons.proto.ResolveResponse.Entity.Candidate} */
         public static final class Builder
             extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -1732,6 +1712,7 @@ public final class Resolve {
           }
 
           private java.lang.Object dcid_ = "";
+
           /**
            * <code>string dcid = 1;</code>
            *
@@ -1748,6 +1729,7 @@ public final class Resolve {
               return (java.lang.String) ref;
             }
           }
+
           /**
            * <code>string dcid = 1;</code>
            *
@@ -1764,6 +1746,7 @@ public final class Resolve {
               return (com.google.protobuf.ByteString) ref;
             }
           }
+
           /**
            * <code>string dcid = 1;</code>
            *
@@ -1779,6 +1762,7 @@ public final class Resolve {
             onChanged();
             return this;
           }
+
           /**
            * <code>string dcid = 1;</code>
            *
@@ -1790,6 +1774,7 @@ public final class Resolve {
             onChanged();
             return this;
           }
+
           /**
            * <code>string dcid = 1;</code>
            *
@@ -1808,6 +1793,7 @@ public final class Resolve {
           }
 
           private java.lang.Object dominantType_ = "";
+
           /**
            * <code>string dominant_type = 2;</code>
            *
@@ -1824,6 +1810,7 @@ public final class Resolve {
               return (java.lang.String) ref;
             }
           }
+
           /**
            * <code>string dominant_type = 2;</code>
            *
@@ -1840,6 +1827,7 @@ public final class Resolve {
               return (com.google.protobuf.ByteString) ref;
             }
           }
+
           /**
            * <code>string dominant_type = 2;</code>
            *
@@ -1855,6 +1843,7 @@ public final class Resolve {
             onChanged();
             return this;
           }
+
           /**
            * <code>string dominant_type = 2;</code>
            *
@@ -1866,6 +1855,7 @@ public final class Resolve {
             onChanged();
             return this;
           }
+
           /**
            * <code>string dominant_type = 2;</code>
            *
@@ -1940,6 +1930,7 @@ public final class Resolve {
 
       public static final int NODE_FIELD_NUMBER = 1;
       private volatile java.lang.Object node_;
+
       /**
        * <code>string node = 1;</code>
        *
@@ -1957,6 +1948,7 @@ public final class Resolve {
           return s;
         }
       }
+
       /**
        * <code>string node = 1;</code>
        *
@@ -1975,74 +1967,10 @@ public final class Resolve {
         }
       }
 
-      public static final int RESOLVED_IDS_FIELD_NUMBER = 2;
-      private com.google.protobuf.LazyStringList resolvedIds_;
-      /**
-       *
-       *
-       * <pre>
-       * TODO(ws): Deprecate this field once not used in website:
-       * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-       * </pre>
-       *
-       * <code>repeated string resolved_ids = 2;</code>
-       *
-       * @return A list containing the resolvedIds.
-       */
-      public com.google.protobuf.ProtocolStringList getResolvedIdsList() {
-        return resolvedIds_;
-      }
-      /**
-       *
-       *
-       * <pre>
-       * TODO(ws): Deprecate this field once not used in website:
-       * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-       * </pre>
-       *
-       * <code>repeated string resolved_ids = 2;</code>
-       *
-       * @return The count of resolvedIds.
-       */
-      public int getResolvedIdsCount() {
-        return resolvedIds_.size();
-      }
-      /**
-       *
-       *
-       * <pre>
-       * TODO(ws): Deprecate this field once not used in website:
-       * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-       * </pre>
-       *
-       * <code>repeated string resolved_ids = 2;</code>
-       *
-       * @param index The index of the element to return.
-       * @return The resolvedIds at the given index.
-       */
-      public java.lang.String getResolvedIds(int index) {
-        return resolvedIds_.get(index);
-      }
-      /**
-       *
-       *
-       * <pre>
-       * TODO(ws): Deprecate this field once not used in website:
-       * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-       * </pre>
-       *
-       * <code>repeated string resolved_ids = 2;</code>
-       *
-       * @param index The index of the value to return.
-       * @return The bytes of the resolvedIds at the given index.
-       */
-      public com.google.protobuf.ByteString getResolvedIdsBytes(int index) {
-        return resolvedIds_.getByteString(index);
-      }
-
       public static final int CANDIDATES_FIELD_NUMBER = 3;
       private java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>
           candidates_;
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
@@ -2052,6 +1980,7 @@ public final class Resolve {
           getCandidatesList() {
         return candidates_;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
@@ -2062,6 +1991,7 @@ public final class Resolve {
           getCandidatesOrBuilderList() {
         return candidates_;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
@@ -2070,6 +2000,7 @@ public final class Resolve {
       public int getCandidatesCount() {
         return candidates_.size();
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
@@ -2079,6 +2010,7 @@ public final class Resolve {
           int index) {
         return candidates_.get(index);
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
        * </code>
@@ -2106,9 +2038,6 @@ public final class Resolve {
         if (!getNodeBytes().isEmpty()) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 1, node_);
         }
-        for (int i = 0; i < resolvedIds_.size(); i++) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 2, resolvedIds_.getRaw(i));
-        }
         for (int i = 0; i < candidates_.size(); i++) {
           output.writeMessage(3, candidates_.get(i));
         }
@@ -2123,14 +2052,6 @@ public final class Resolve {
         size = 0;
         if (!getNodeBytes().isEmpty()) {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, node_);
-        }
-        {
-          int dataSize = 0;
-          for (int i = 0; i < resolvedIds_.size(); i++) {
-            dataSize += computeStringSizeNoTag(resolvedIds_.getRaw(i));
-          }
-          size += dataSize;
-          size += 1 * getResolvedIdsList().size();
         }
         for (int i = 0; i < candidates_.size(); i++) {
           size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, candidates_.get(i));
@@ -2152,7 +2073,6 @@ public final class Resolve {
             (org.datacommons.proto.Resolve.ResolveResponse.Entity) obj;
 
         if (!getNode().equals(other.getNode())) return false;
-        if (!getResolvedIdsList().equals(other.getResolvedIdsList())) return false;
         if (!getCandidatesList().equals(other.getCandidatesList())) return false;
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
@@ -2167,10 +2087,6 @@ public final class Resolve {
         hash = (19 * hash) + getDescriptor().hashCode();
         hash = (37 * hash) + NODE_FIELD_NUMBER;
         hash = (53 * hash) + getNode().hashCode();
-        if (getResolvedIdsCount() > 0) {
-          hash = (37 * hash) + RESOLVED_IDS_FIELD_NUMBER;
-          hash = (53 * hash) + getResolvedIdsList().hashCode();
-        }
         if (getCandidatesCount() > 0) {
           hash = (37 * hash) + CANDIDATES_FIELD_NUMBER;
           hash = (53 * hash) + getCandidatesList().hashCode();
@@ -2277,6 +2193,7 @@ public final class Resolve {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /** Protobuf type {@code org.datacommons.proto.ResolveResponse.Entity} */
       public static final class Builder
           extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -2319,11 +2236,9 @@ public final class Resolve {
           super.clear();
           node_ = "";
 
-          resolvedIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-          bitField0_ = (bitField0_ & ~0x00000001);
           if (candidatesBuilder_ == null) {
             candidates_ = java.util.Collections.emptyList();
-            bitField0_ = (bitField0_ & ~0x00000002);
+            bitField0_ = (bitField0_ & ~0x00000001);
           } else {
             candidatesBuilder_.clear();
           }
@@ -2356,15 +2271,10 @@ public final class Resolve {
               new org.datacommons.proto.Resolve.ResolveResponse.Entity(this);
           int from_bitField0_ = bitField0_;
           result.node_ = node_;
-          if (((bitField0_ & 0x00000001) != 0)) {
-            resolvedIds_ = resolvedIds_.getUnmodifiableView();
-            bitField0_ = (bitField0_ & ~0x00000001);
-          }
-          result.resolvedIds_ = resolvedIds_;
           if (candidatesBuilder_ == null) {
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000001) != 0)) {
               candidates_ = java.util.Collections.unmodifiableList(candidates_);
-              bitField0_ = (bitField0_ & ~0x00000002);
+              bitField0_ = (bitField0_ & ~0x00000001);
             }
             result.candidates_ = candidates_;
           } else {
@@ -2426,21 +2336,11 @@ public final class Resolve {
             node_ = other.node_;
             onChanged();
           }
-          if (!other.resolvedIds_.isEmpty()) {
-            if (resolvedIds_.isEmpty()) {
-              resolvedIds_ = other.resolvedIds_;
-              bitField0_ = (bitField0_ & ~0x00000001);
-            } else {
-              ensureResolvedIdsIsMutable();
-              resolvedIds_.addAll(other.resolvedIds_);
-            }
-            onChanged();
-          }
           if (candidatesBuilder_ == null) {
             if (!other.candidates_.isEmpty()) {
               if (candidates_.isEmpty()) {
                 candidates_ = other.candidates_;
-                bitField0_ = (bitField0_ & ~0x00000002);
+                bitField0_ = (bitField0_ & ~0x00000001);
               } else {
                 ensureCandidatesIsMutable();
                 candidates_.addAll(other.candidates_);
@@ -2453,7 +2353,7 @@ public final class Resolve {
                 candidatesBuilder_.dispose();
                 candidatesBuilder_ = null;
                 candidates_ = other.candidates_;
-                bitField0_ = (bitField0_ & ~0x00000002);
+                bitField0_ = (bitField0_ & ~0x00000001);
                 candidatesBuilder_ =
                     com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
                         ? getCandidatesFieldBuilder()
@@ -2496,6 +2396,7 @@ public final class Resolve {
         private int bitField0_;
 
         private java.lang.Object node_ = "";
+
         /**
          * <code>string node = 1;</code>
          *
@@ -2512,6 +2413,7 @@ public final class Resolve {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string node = 1;</code>
          *
@@ -2528,6 +2430,7 @@ public final class Resolve {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string node = 1;</code>
          *
@@ -2543,6 +2446,7 @@ public final class Resolve {
           onChanged();
           return this;
         }
+
         /**
          * <code>string node = 1;</code>
          *
@@ -2554,6 +2458,7 @@ public final class Resolve {
           onChanged();
           return this;
         }
+
         /**
          * <code>string node = 1;</code>
          *
@@ -2571,192 +2476,15 @@ public final class Resolve {
           return this;
         }
 
-        private com.google.protobuf.LazyStringList resolvedIds_ =
-            com.google.protobuf.LazyStringArrayList.EMPTY;
-
-        private void ensureResolvedIdsIsMutable() {
-          if (!((bitField0_ & 0x00000001) != 0)) {
-            resolvedIds_ = new com.google.protobuf.LazyStringArrayList(resolvedIds_);
-            bitField0_ |= 0x00000001;
-          }
-        }
-        /**
-         *
-         *
-         * <pre>
-         * TODO(ws): Deprecate this field once not used in website:
-         * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-         * </pre>
-         *
-         * <code>repeated string resolved_ids = 2;</code>
-         *
-         * @return A list containing the resolvedIds.
-         */
-        public com.google.protobuf.ProtocolStringList getResolvedIdsList() {
-          return resolvedIds_.getUnmodifiableView();
-        }
-        /**
-         *
-         *
-         * <pre>
-         * TODO(ws): Deprecate this field once not used in website:
-         * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-         * </pre>
-         *
-         * <code>repeated string resolved_ids = 2;</code>
-         *
-         * @return The count of resolvedIds.
-         */
-        public int getResolvedIdsCount() {
-          return resolvedIds_.size();
-        }
-        /**
-         *
-         *
-         * <pre>
-         * TODO(ws): Deprecate this field once not used in website:
-         * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-         * </pre>
-         *
-         * <code>repeated string resolved_ids = 2;</code>
-         *
-         * @param index The index of the element to return.
-         * @return The resolvedIds at the given index.
-         */
-        public java.lang.String getResolvedIds(int index) {
-          return resolvedIds_.get(index);
-        }
-        /**
-         *
-         *
-         * <pre>
-         * TODO(ws): Deprecate this field once not used in website:
-         * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-         * </pre>
-         *
-         * <code>repeated string resolved_ids = 2;</code>
-         *
-         * @param index The index of the value to return.
-         * @return The bytes of the resolvedIds at the given index.
-         */
-        public com.google.protobuf.ByteString getResolvedIdsBytes(int index) {
-          return resolvedIds_.getByteString(index);
-        }
-        /**
-         *
-         *
-         * <pre>
-         * TODO(ws): Deprecate this field once not used in website:
-         * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-         * </pre>
-         *
-         * <code>repeated string resolved_ids = 2;</code>
-         *
-         * @param index The index to set the value at.
-         * @param value The resolvedIds to set.
-         * @return This builder for chaining.
-         */
-        public Builder setResolvedIds(int index, java.lang.String value) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureResolvedIdsIsMutable();
-          resolvedIds_.set(index, value);
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * TODO(ws): Deprecate this field once not used in website:
-         * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-         * </pre>
-         *
-         * <code>repeated string resolved_ids = 2;</code>
-         *
-         * @param value The resolvedIds to add.
-         * @return This builder for chaining.
-         */
-        public Builder addResolvedIds(java.lang.String value) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureResolvedIdsIsMutable();
-          resolvedIds_.add(value);
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * TODO(ws): Deprecate this field once not used in website:
-         * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-         * </pre>
-         *
-         * <code>repeated string resolved_ids = 2;</code>
-         *
-         * @param values The resolvedIds to add.
-         * @return This builder for chaining.
-         */
-        public Builder addAllResolvedIds(java.lang.Iterable<java.lang.String> values) {
-          ensureResolvedIdsIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, resolvedIds_);
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * TODO(ws): Deprecate this field once not used in website:
-         * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-         * </pre>
-         *
-         * <code>repeated string resolved_ids = 2;</code>
-         *
-         * @return This builder for chaining.
-         */
-        public Builder clearResolvedIds() {
-          resolvedIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-          bitField0_ = (bitField0_ & ~0x00000001);
-          onChanged();
-          return this;
-        }
-        /**
-         *
-         *
-         * <pre>
-         * TODO(ws): Deprecate this field once not used in website:
-         * https://github.com/search?q=repo%3Adatacommonsorg%2Fwebsite%20v2%2Fresolve&amp;type=code
-         * </pre>
-         *
-         * <code>repeated string resolved_ids = 2;</code>
-         *
-         * @param value The bytes of the resolvedIds to add.
-         * @return This builder for chaining.
-         */
-        public Builder addResolvedIdsBytes(com.google.protobuf.ByteString value) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          checkByteStringIsUtf8(value);
-          ensureResolvedIdsIsMutable();
-          resolvedIds_.add(value);
-          onChanged();
-          return this;
-        }
-
         private java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>
             candidates_ = java.util.Collections.emptyList();
 
         private void ensureCandidatesIsMutable() {
-          if (!((bitField0_ & 0x00000002) != 0)) {
+          if (!((bitField0_ & 0x00000001) != 0)) {
             candidates_ =
                 new java.util.ArrayList<
                     org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>(candidates_);
-            bitField0_ |= 0x00000002;
+            bitField0_ |= 0x00000001;
           }
         }
 
@@ -2778,6 +2506,7 @@ public final class Resolve {
             return candidatesBuilder_.getMessageList();
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2789,6 +2518,7 @@ public final class Resolve {
             return candidatesBuilder_.getCount();
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2801,6 +2531,7 @@ public final class Resolve {
             return candidatesBuilder_.getMessage(index);
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2819,6 +2550,7 @@ public final class Resolve {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2836,6 +2568,7 @@ public final class Resolve {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2854,6 +2587,7 @@ public final class Resolve {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2872,6 +2606,7 @@ public final class Resolve {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2888,6 +2623,7 @@ public final class Resolve {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2905,6 +2641,7 @@ public final class Resolve {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2922,6 +2659,7 @@ public final class Resolve {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2929,13 +2667,14 @@ public final class Resolve {
         public Builder clearCandidates() {
           if (candidatesBuilder_ == null) {
             candidates_ = java.util.Collections.emptyList();
-            bitField0_ = (bitField0_ & ~0x00000002);
+            bitField0_ = (bitField0_ & ~0x00000001);
             onChanged();
           } else {
             candidatesBuilder_.clear();
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2950,6 +2689,7 @@ public final class Resolve {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2958,6 +2698,7 @@ public final class Resolve {
             getCandidatesBuilder(int index) {
           return getCandidatesFieldBuilder().getBuilder(index);
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2970,6 +2711,7 @@ public final class Resolve {
             return candidatesBuilder_.getMessageOrBuilder(index);
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2983,6 +2725,7 @@ public final class Resolve {
             return java.util.Collections.unmodifiableList(candidates_);
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -2994,6 +2737,7 @@ public final class Resolve {
                   org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate
                       .getDefaultInstance());
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -3006,6 +2750,7 @@ public final class Resolve {
                   org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate
                       .getDefaultInstance());
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
          * </code>
@@ -3028,7 +2773,7 @@ public final class Resolve {
                     org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder,
                     org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder>(
                     candidates_,
-                    ((bitField0_ & 0x00000002) != 0),
+                    ((bitField0_ & 0x00000001) != 0),
                     getParentForChildren(),
                     isClean());
             candidates_ = null;
@@ -3090,27 +2835,32 @@ public final class Resolve {
 
     public static final int ENTITIES_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity> entities_;
+
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
     @java.lang.Override
     public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity> getEntitiesList() {
       return entities_;
     }
+
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
     @java.lang.Override
     public java.util.List<? extends org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder>
         getEntitiesOrBuilderList() {
       return entities_;
     }
+
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
     @java.lang.Override
     public int getEntitiesCount() {
       return entities_.size();
     }
+
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.Resolve.ResolveResponse.Entity getEntities(int index) {
       return entities_.get(index);
     }
+
     /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder getEntitiesOrBuilder(
@@ -3280,6 +3030,7 @@ public final class Resolve {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /** Protobuf type {@code org.datacommons.proto.ResolveResponse} */
     public static final class Builder
         extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
@@ -3500,6 +3251,7 @@ public final class Resolve {
           return entitiesBuilder_.getMessageList();
         }
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public int getEntitiesCount() {
         if (entitiesBuilder_ == null) {
@@ -3508,6 +3260,7 @@ public final class Resolve {
           return entitiesBuilder_.getCount();
         }
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public org.datacommons.proto.Resolve.ResolveResponse.Entity getEntities(int index) {
         if (entitiesBuilder_ == null) {
@@ -3516,6 +3269,7 @@ public final class Resolve {
           return entitiesBuilder_.getMessage(index);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public Builder setEntities(
           int index, org.datacommons.proto.Resolve.ResolveResponse.Entity value) {
@@ -3531,6 +3285,7 @@ public final class Resolve {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public Builder setEntities(
           int index, org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder builderForValue) {
@@ -3543,6 +3298,7 @@ public final class Resolve {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public Builder addEntities(org.datacommons.proto.Resolve.ResolveResponse.Entity value) {
         if (entitiesBuilder_ == null) {
@@ -3557,6 +3313,7 @@ public final class Resolve {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public Builder addEntities(
           int index, org.datacommons.proto.Resolve.ResolveResponse.Entity value) {
@@ -3572,6 +3329,7 @@ public final class Resolve {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public Builder addEntities(
           org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder builderForValue) {
@@ -3584,6 +3342,7 @@ public final class Resolve {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public Builder addEntities(
           int index, org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder builderForValue) {
@@ -3596,6 +3355,7 @@ public final class Resolve {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public Builder addAllEntities(
           java.lang.Iterable<? extends org.datacommons.proto.Resolve.ResolveResponse.Entity>
@@ -3609,6 +3369,7 @@ public final class Resolve {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public Builder clearEntities() {
         if (entitiesBuilder_ == null) {
@@ -3620,6 +3381,7 @@ public final class Resolve {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public Builder removeEntities(int index) {
         if (entitiesBuilder_ == null) {
@@ -3631,11 +3393,13 @@ public final class Resolve {
         }
         return this;
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder getEntitiesBuilder(
           int index) {
         return getEntitiesFieldBuilder().getBuilder(index);
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder getEntitiesOrBuilder(
           int index) {
@@ -3645,6 +3409,7 @@ public final class Resolve {
           return entitiesBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public java.util.List<? extends org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder>
           getEntitiesOrBuilderList() {
@@ -3654,11 +3419,13 @@ public final class Resolve {
           return java.util.Collections.unmodifiableList(entities_);
         }
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder addEntitiesBuilder() {
         return getEntitiesFieldBuilder()
             .addBuilder(org.datacommons.proto.Resolve.ResolveResponse.Entity.getDefaultInstance());
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder addEntitiesBuilder(
           int index) {
@@ -3666,6 +3433,7 @@ public final class Resolve {
             .addBuilder(
                 index, org.datacommons.proto.Resolve.ResolveResponse.Entity.getDefaultInstance());
       }
+
       /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
       public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder>
           getEntitiesBuilderList() {
@@ -3768,13 +3536,13 @@ public final class Resolve {
     java.lang.String[] descriptorData = {
       "\n\rresolve.proto\022\025org.datacommons.proto\"1"
           + "\n\016ResolveRequest\022\r\n\005nodes\030\001 \003(\t\022\020\n\010prope"
-          + "rty\030\002 \001(\t\"\200\002\n\017ResolveResponse\022?\n\010entitie"
+          + "rty\030\002 \001(\t\"\360\001\n\017ResolveResponse\022?\n\010entitie"
           + "s\030\001 \003(\0132-.org.datacommons.proto.ResolveR"
-          + "esponse.Entity\032\253\001\n\006Entity\022\014\n\004node\030\001 \001(\t\022"
-          + "\024\n\014resolved_ids\030\002 \003(\t\022K\n\ncandidates\030\003 \003("
-          + "\01327.org.datacommons.proto.ResolveRespons"
-          + "e.Entity.Candidate\0320\n\tCandidate\022\014\n\004dcid\030"
-          + "\001 \001(\t\022\025\n\rdominant_type\030\002 \001(\tb\006proto3"
+          + "esponse.Entity\032\233\001\n\006Entity\022\014\n\004node\030\001 \001(\t\022"
+          + "K\n\ncandidates\030\003 \003(\01327.org.datacommons.pr"
+          + "oto.ResolveResponse.Entity.Candidate\0320\n\t"
+          + "Candidate\022\014\n\004dcid\030\001 \001(\t\022\025\n\rdominant_type"
+          + "\030\002 \001(\tJ\004\010\002\020\003b\006proto3"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -3801,7 +3569,7 @@ public final class Resolve {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor,
             new java.lang.String[] {
-              "Node", "ResolvedIds", "Candidates",
+              "Node", "Candidates",
             });
     internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_descriptor =
         internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor
