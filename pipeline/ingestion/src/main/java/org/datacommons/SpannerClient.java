@@ -3,8 +3,10 @@ package org.datacommons;
 import com.google.cloud.spanner.Mutation;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
+import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
 
@@ -42,21 +44,8 @@ public class SpannerClient {
    * @param config Ingestion configuration for Spanner DB
    * @param obs    PCollection of entities to be written
    */
-  public static void WriteGraph(IngestionOptions config, PCollection<Entity> entity) {
-    SpannerWriteResult result = entity
-        .apply(
-            "CreateNodeMutation",
-            ParDo.of(
-                new DoFn<Entity, Mutation>() {
-                  @ProcessElement
-                  public void processElement(ProcessContext c) {
-                    // Only emit if node can be created.
-                    if (!c.element().nodeId.isEmpty()) {
-                      IngestionOptions options = c.getPipelineOptions().as(IngestionOptions.class);
-                      c.output(c.element().toNode(options.getSpannerNodeTableName()));
-                    }
-                  }
-                }))
+  public static void WriteGraph(IngestionOptions config, PCollection<Entity> entities) {
+    SpannerWriteResult result = applyNodeTransforms(entities)
         .apply(
             "WriteNodesToSpanner",
             SpannerIO.write()
@@ -66,23 +55,46 @@ public class SpannerClient {
 
     // Wait for the node table to be written before writing Edge table due to
     // interleaving.
-    entity
-        .apply(Wait.on(result.getOutput()))
-        .apply(
-            "CreateEdgeMutation",
-            ParDo.of(
-                new DoFn<Entity, Mutation>() {
-                  @ProcessElement
-                  public void processElement(ProcessContext c) {
-                    IngestionOptions options = c.getPipelineOptions().as(IngestionOptions.class);
-                    c.output(c.element().toEdge(options.getSpannerEdgeTableName()));
-                  }
-                }))
+    applyEdgeTransforms(entities.apply("WaitForNodes", Wait.on(result.getOutput())))
         .apply(
             "WriteEdgesToSpanner",
             SpannerIO.write()
                 .withProjectId(config.getProjectId())
                 .withInstanceId(config.getSpannerInstanceId())
                 .withDatabaseId(config.getSpannerDatabaseId()));
+  }
+
+  static PCollection<Mutation> applyNodeTransforms(PCollection<Entity> entities) {
+    return entities
+        .apply(
+            "CreateNodeMutation",
+            ParDo.of(
+                new DoFn<Entity, Mutation>() {
+                  @ProcessElement
+                  public void processElement(ProcessContext c) {
+                    IngestionOptions options = c.getPipelineOptions().as(IngestionOptions.class);
+                    c.output(c.element().toNode(options.getSpannerNodeTableName()));
+                  }
+                }))
+        .apply("DistinctNodeMutations",
+            Distinct.withRepresentativeValueFn(new SerializableFunction<Mutation, String>() {
+              @Override
+              public String apply(Mutation input) {
+                return input.asMap().get("subject_id").getString();
+              }
+            }));
+  }
+
+  static PCollection<Mutation> applyEdgeTransforms(PCollection<Entity> entities) {
+    return entities.apply(
+        "CreateEdgeMutation",
+        ParDo.of(
+            new DoFn<Entity, Mutation>() {
+              @ProcessElement
+              public void processElement(ProcessContext c) {
+                IngestionOptions options = c.getPipelineOptions().as(IngestionOptions.class);
+                c.output(c.element().toEdge(options.getSpannerEdgeTableName()));
+              }
+            }));
   }
 }
