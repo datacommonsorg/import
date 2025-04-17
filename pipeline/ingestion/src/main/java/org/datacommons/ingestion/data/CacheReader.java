@@ -2,9 +2,11 @@ package org.datacommons.ingestion.data;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
@@ -26,13 +28,22 @@ import com.google.protobuf.Parser;
 /**
  * CacheReader is a class that has utility methods to read data from BT cache.
  */
-public class CacheReader {
+public class CacheReader implements Serializable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CacheReader.class);
     private static final String OUT_ARC_CACHE_PREFIX = "d/m/";
     private static final String IN_ARC_CACHE_PREFIX = "d/l/";
     private static final String OBS_TIME_SERIES_CACHE_PREFIX = "d/3/";
     private static final int CACHE_KEY_PREFIX_SIZE = 4;
     private static final String CACHE_KEY_VALUE_SEPARATOR_REGEX = ",";
     private static final String CACHE_KEY_SEPARATOR_REGEX = "\\^";
+
+    private final List<String> skipPredicatePrefixes;
+    private final List<String> adjustKeyPrefixes;
+
+    public CacheReader(List<String> skipPredicatePrefixes, List<String> adjustKeyPrefixes) {
+        this.skipPredicatePrefixes = skipPredicatePrefixes;
+        this.adjustKeyPrefixes = adjustKeyPrefixes;
+    }
 
     /**
      * Returns the GCS cache path for the import group.
@@ -52,13 +63,16 @@ public class CacheReader {
         for (Blob blob : blobs.iterateAll()) {
             prefix = blob.getName();
         }
+        if (prefix.isEmpty()) {
+            throw new RuntimeException(String.format("No blobs found for import group: %s", importGroup));
+        }
         return String.format("gs://%s/%scache.csv*", bucketId, prefix);
     }
 
     /**
      * Parses an arc cache row to extract nodes and edges.
      */
-    public static NodesEdges parseArcRow(String row) {
+    public NodesEdges parseArcRow(String row) {
         NodesEdges result = new NodesEdges();
 
         // Cache format: <dcid^predicate^type^page>, PagedEntities
@@ -73,6 +87,13 @@ public class CacheReader {
                     String dcid = keys[0];
                     String predicate = keys[1];
                     String typeOf = keys[2];
+
+                    // Skip predicates that are in the skip set.
+                    if (skipPredicate(predicate)) {
+                        LOGGER.info("Skipping predicate: {}", predicate);
+                        return result;
+                    }
+
                     PagedEntities elist = parseProto(value, PagedEntities.parser());
                     for (EntityInfo entity : elist.getEntitiesList()) {
                         String subjectId, objectId, nodeId = "";
@@ -92,6 +113,12 @@ public class CacheReader {
                                 nodeId = entity.getDcid();
                             }
                         }
+
+                        // Adjust dcids.
+                        subjectId = adjustKey(subjectId);
+                        objectId = adjustKey(objectId);
+                        nodeId = adjustKey(nodeId);
+                        String provenance = adjustKey(entity.getProvenanceId());
                         List<String> types = entity.getTypesList();
                         if (types.isEmpty() && !typeOf.isEmpty()) {
                             types = Arrays.asList(typeOf);
@@ -113,7 +140,7 @@ public class CacheReader {
                                     .predicate(predicate)
                                     .objectId(objectId)
                                     .objectValue(entity.getValue())
-                                    .provenance(entity.getProvenanceId())
+                                    .provenance(provenance)
                                     .build());
                         }
                     }
@@ -127,7 +154,7 @@ public class CacheReader {
     /**
      * Parses a time series cache row to extract observations.
      */
-    public static List<Observation> parseTimeSeriesRow(String row) {
+    public List<Observation> parseTimeSeriesRow(String row) {
         List<Observation> result = new ArrayList<>();
 
         // Cache format: <placeId^statVarId>, ChartStore containing ObsTimeSeries.
@@ -166,6 +193,49 @@ public class CacheReader {
         }
 
         return result;
+    }
+
+    private String adjustKey(String key) {
+        for (String prefix : adjustKeyPrefixes) {
+            String adjusted = adjustKey(key, prefix);
+            if (!adjusted.equals(key)) {
+                return adjusted;
+            }
+        }
+        return key;
+    }
+
+    private boolean skipPredicate(String predicate) {
+        for (String prefix : skipPredicatePrefixes) {
+            if (predicate.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Adjusts a key by moving a given prefix to the end and reversing the remaining
+     * parts.
+     * e.g. "bio/foo_bar_baz" with prefix "bio" becomes "baz_bar_foo/bio".
+     */
+    static String adjustKey(String key, String prefix) {
+        if (!key.startsWith(prefix + "/")) {
+            return key;
+        }
+
+        // Remove "prefix/"
+        String remainingPart = key.substring(prefix.length() + 1);
+        String[] parts = remainingPart.split("_");
+        List<String> partList = new ArrayList<>();
+        for (String part : parts) {
+            if (!part.isEmpty())
+                partList.add(part);
+        }
+        Collections.reverse(partList);
+        String reversedPart = String.join("_", partList);
+
+        return reversedPart + "/" + prefix;
     }
 
     /**

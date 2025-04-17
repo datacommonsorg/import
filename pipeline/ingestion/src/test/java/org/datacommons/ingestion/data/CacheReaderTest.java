@@ -1,15 +1,16 @@
 package org.datacommons.ingestion.data;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Test;
+
 public class CacheReaderTest {
         @Test
         public void testParseArcRow_outArcwithNode() {
+                CacheReader reader = new CacheReader(List.of(), List.of());
                 String row = "d/m/Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person^measuredProperty^Property^0,H4sIAAAAAAAAAOPS5WJNzi/NK5GCUEqyKcn6SYnFqfoepbmJeUGpiSmJSTmpwSWJJWGJRcWCDGDwwR4AejAnwDgAAAA=";
 
                 NodesEdges expected = new NodesEdges()
@@ -26,13 +27,14 @@ public class CacheReaderTest {
                                                 .provenance("dc/base/HumanReadableStatVars")
                                                 .build());
 
-                NodesEdges actual = CacheReader.parseArcRow(row);
+                NodesEdges actual = reader.parseArcRow(row);
 
                 assertEquals(expected, actual);
         }
 
         @Test
         public void testParseArcRow_outArcwithoutNode() {
+                CacheReader reader = new CacheReader(List.of(), List.of());
                 String row = "d/m/Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person^name^^0,H4sIAAAAAAAAAONqYFSSTUnWT0osTtX3KM1NzAtKTUxJTMpJDS5JLAlLLCrWig9ILUpOzStJTE9VCM8vylYISs1JLElNUQjIqCzOTE7MUXBMLsksyyyp1FHwzU9JLQJKwoUU/IsUPFITyyoRIo65+XnpCgH5BaVAYzLz8wQZwOCDPQA1JajOjAAAAA==";
 
                 NodesEdges expected = new NodesEdges()
@@ -46,13 +48,14 @@ public class CacheReaderTest {
                                                 .provenance("dc/base/HumanReadableStatVars")
                                                 .build());
 
-                NodesEdges actual = CacheReader.parseArcRow(row);
+                NodesEdges actual = reader.parseArcRow(row);
 
                 assertEquals(expected, actual);
         }
 
         @Test
         public void testParseArcRow_inArc() {
+                CacheReader reader = new CacheReader(List.of(), List.of());
                 String row = "d/l/dc/d/UnitedNationsUn_SdgIndicatorsDatabase^isPartOf^Provenance^0,H4sIAAAAAAAAAOPS4GIL9YsPdnGX4ktJ1k9KLE7Vh/CV0PiCDGDwwR4AhMbiaDMAAAA=";
 
                 NodesEdges expected = new NodesEdges()
@@ -69,13 +72,50 @@ public class CacheReaderTest {
                                                 .provenance("dc/base/UN_SDG")
                                                 .build());
 
-                NodesEdges actual = CacheReader.parseArcRow(row);
+                NodesEdges actual = reader.parseArcRow(row);
+
+                assertEquals(expected, actual);
+        }
+
+        @Test
+        public void testParseArcRow_skipPredicate() {
+                CacheReader reader = new CacheReader(List.of("measuredProperty"), List.of());
+                String row = "d/m/Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person^measuredProperty^Property^0,H4sIAAAAAAAAAOPS5WJNzi/NK5GCUEqyKcn6SYnFqfoepbmJeUGpiSmJSTmpwSWJJWGJRcWCDGDwwR4AejAnwDgAAAA=";
+
+                NodesEdges expected = new NodesEdges();
+
+                NodesEdges actual = reader.parseArcRow(row);
+
+                assertEquals(expected, actual);
+        }
+
+        @Test
+        public void testParseArcRow_adjustKey() {
+                CacheReader reader = new CacheReader(List.of(), List.of("dc/base"));
+                String row = "d/l/dc/d/UnitedNationsUn_SdgIndicatorsDatabase^isPartOf^Provenance^0,H4sIAAAAAAAAAOPS4GIL9YsPdnGX4ktJ1k9KLE7Vh/CV0PiCDGDwwR4AhMbiaDMAAAA=";
+
+                NodesEdges expected = new NodesEdges()
+                                .addNode(Node.builder()
+                                                .subjectId("SDG_UN/dc/base")
+                                                .name("UN_SDG")
+                                                .types(List.of("Provenance")).build())
+                                .addEdge(Edge.builder()
+                                                .subjectId(
+                                                                "SDG_UN/dc/base")
+                                                .predicate("isPartOf")
+                                                .objectId("dc/d/UnitedNationsUn_SdgIndicatorsDatabase")
+                                                .objectValue("")
+                                                .provenance("SDG_UN/dc/base")
+                                                .build());
+
+                NodesEdges actual = reader.parseArcRow(row);
 
                 assertEquals(expected, actual);
         }
 
         @Test
         public void testParseTimeSeriesRow() {
+                CacheReader reader = new CacheReader(List.of("measuredProperty"), List.of());
                 String row = "d/3/geoId/sch2915390^Mean_PrecipitableWater_Atmosphere,H4sIAAAAAAAAAOPqZpHi8igtykmtVAjS9TT6w8wlysVlZGBkqmtgpGtkIMgQvilZeYOoA4qwkeBcve7Os9OVUIWNBQOzZ5XPaVJBEjbWNTAU3OHQ9Oj4DD1U1aaCIvbH7mx9ookibGguqN6xi98hSwZV2EJQ0Mxmb5CYFqohJoJMszik59WpogobCq49MOHqWjk5VJcYCRac67h074AqqrCxoOOVWoag1QqohlgIpnUkx96ZZoQqbC7IeI+Js2s+mkvMBKub9X2WrdJENdtE0N9BOPHwZkVU71gKGoOBioMUh5+/o2O8u1uwEnOAoYuWBIwbH56aWJKRWuSWX5SanFhcYsSRl5+YqJeeX+bE5ZuZk5OZm1qSWuTBGOSZUVJSUGylr19eXq6Xl5yaqQdTqF9QlJ9SmlxSrF8OMUs3GagtsSRVNzc/JTWnWD89Jz8pMUc3DWoFAAwgwZ8OAgAA";
 
                 List<DateValue> series = Arrays.asList(
@@ -109,8 +149,13 @@ public class CacheReaderTest {
                                 .importName("NOAA_GFS_WeatherForecast")
                                 .build());
 
-                List<Observation> actual = CacheReader.parseTimeSeriesRow(row);
+                List<Observation> actual = reader.parseTimeSeriesRow(row);
 
                 assertEquals(expected, actual);
+        }
+
+        @Test
+        public void testAdjustKey() {
+                assertEquals("baz_bar_foo/bio", CacheReader.adjustKey("bio/foo_bar_baz", "bio"));
         }
 }
