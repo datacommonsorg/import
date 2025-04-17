@@ -23,23 +23,10 @@ public interface SimpleGraphPipelineOptions extends BasePipelineOptions {
 
     void setSkipPredicatePrefixes(List<String> skipPredicatePrefixes);
 
-    @Description("List of prefixes of keys to adjust for better distribution.")
-    @Default.InstanceFactory(AdjustKeyPrefixesFactory.class)
-    List<String> getAdjustKeyPrefixes();
-
-    void setAdjustKeyPrefixes(List<String> adjustKeyPrefixes);
-
     static class SkipPredicatePrefixesFactory implements DefaultValueFactory<List<String>> {
         @Override
         public List<String> create(PipelineOptions options) {
             return List.of("geoJsonCoordinates", "kmlCoordinates");
-        }
-    }
-
-    static class AdjustKeyPrefixesFactory implements DefaultValueFactory<List<String>> {
-        @Override
-        public List<String> create(PipelineOptions options) {
-            return List.of("bio");
         }
     }
 }

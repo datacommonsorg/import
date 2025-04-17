@@ -6,6 +6,8 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.CacheReader;
+import org.datacommons.ingestion.pipeline.Transforms.ArcRowToMutationDoFn;
+import org.datacommons.ingestion.pipeline.Transforms.GraphMutationGroupTransform;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +30,7 @@ public class SimpleGraphPipeline {
         Pipeline pipeline = Pipeline.create(options);
         LOGGER.info("Running simple graph pipeline for import group: {}", options.getImportGroup());
 
-        CacheReader cacheReader = new CacheReader(options.getSkipPredicatePrefixes(), options.getAdjustKeyPrefixes());
+        CacheReader cacheReader = new CacheReader(options.getSkipPredicatePrefixes());
         SpannerClient spannerClient = SpannerClient.builder().gcpProjectId(options.getProjectId())
                 .spannerInstanceId(options.getSpannerInstanceId())
                 .spannerDatabaseId(options.getSpannerDatabaseId())
@@ -42,8 +44,10 @@ public class SimpleGraphPipeline {
 
         PCollection<String> entries = pipeline.apply("ReadCache", TextIO.read().from(cachePath));
         PCollection<Mutation> mutations = entries.apply("CreateMutations",
-                ParDo.of(new Transforms.ArcRowToMutationDoFn(cacheReader, spannerClient)));
-        mutations.apply("WriteToSpanner", spannerClient.getWriteTransform());
+                ParDo.of(new ArcRowToMutationDoFn(cacheReader, spannerClient)));
+        PCollection<Mutation> groupedMutations = mutations
+                .apply("GroupAndSortMutations", new GraphMutationGroupTransform());
+        groupedMutations.apply("WriteToSpanner", spannerClient.getWriteTransform());
 
         pipeline.run();
     }

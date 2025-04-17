@@ -38,11 +38,9 @@ public class CacheReader implements Serializable {
     private static final String CACHE_KEY_SEPARATOR_REGEX = "\\^";
 
     private final List<String> skipPredicatePrefixes;
-    private final List<String> adjustKeyPrefixes;
 
-    public CacheReader(List<String> skipPredicatePrefixes, List<String> adjustKeyPrefixes) {
+    public CacheReader(List<String> skipPredicatePrefixes) {
         this.skipPredicatePrefixes = skipPredicatePrefixes;
-        this.adjustKeyPrefixes = adjustKeyPrefixes;
     }
 
     /**
@@ -114,11 +112,6 @@ public class CacheReader implements Serializable {
                             }
                         }
 
-                        // Adjust dcids.
-                        subjectId = adjustKey(subjectId);
-                        objectId = adjustKey(objectId);
-                        nodeId = adjustKey(nodeId);
-                        String provenance = adjustKey(entity.getProvenanceId());
                         List<String> types = entity.getTypesList();
                         if (types.isEmpty() && !typeOf.isEmpty()) {
                             types = Arrays.asList(typeOf);
@@ -140,7 +133,7 @@ public class CacheReader implements Serializable {
                                     .predicate(predicate)
                                     .objectId(objectId)
                                     .objectValue(entity.getValue())
-                                    .provenance(provenance)
+                                    .provenance(entity.getProvenanceId())
                                     .build());
                         }
                     }
@@ -195,16 +188,6 @@ public class CacheReader implements Serializable {
         return result;
     }
 
-    private String adjustKey(String key) {
-        for (String prefix : adjustKeyPrefixes) {
-            String adjusted = adjustKey(key, prefix);
-            if (!adjusted.equals(key)) {
-                return adjusted;
-            }
-        }
-        return key;
-    }
-
     private boolean skipPredicate(String predicate) {
         for (String prefix : skipPredicatePrefixes) {
             if (predicate.startsWith(prefix)) {
@@ -212,30 +195,6 @@ public class CacheReader implements Serializable {
             }
         }
         return false;
-    }
-
-    /**
-     * Adjusts a key by moving a given prefix to the end and reversing the remaining
-     * parts.
-     * e.g. "bio/foo_bar_baz" with prefix "bio" becomes "baz_bar_foo/bio".
-     */
-    static String adjustKey(String key, String prefix) {
-        if (!key.startsWith(prefix + "/")) {
-            return key;
-        }
-
-        // Remove "prefix/"
-        String remainingPart = key.substring(prefix.length() + 1);
-        String[] parts = remainingPart.split("_");
-        List<String> partList = new ArrayList<>();
-        for (String part : parts) {
-            if (!part.isEmpty())
-                partList.add(part);
-        }
-        Collections.reverse(partList);
-        String reversedPart = String.join("_", partList);
-
-        return reversedPart + "/" + prefix;
     }
 
     /**
