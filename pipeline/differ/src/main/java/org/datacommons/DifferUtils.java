@@ -28,7 +28,6 @@ public class DifferUtils {
     ADDED,
     DELETED,
     MODIFIED,
-    TOTAL,
     SAME;
   }
 
@@ -69,12 +68,12 @@ public class DifferUtils {
    */
   static PCollection<String> performDiff(
       PCollection<KV<String, String>> currentNodes, PCollection<KV<String, String>> previousNodes) {
-    TupleTag<String> keyTag = new TupleTag<>();
-    TupleTag<String> valueTag = new TupleTag<>();
+    TupleTag<String> currentTag = new TupleTag<>();
+    TupleTag<String> previousTag = new TupleTag<>();
 
     PCollection<KV<String, CoGbkResult>> joinedResult =
-        KeyedPCollectionTuple.of(keyTag, currentNodes)
-            .and(valueTag, previousNodes)
+        KeyedPCollectionTuple.of(currentTag, currentNodes)
+            .and(previousTag, previousNodes)
             .apply(CoGroupByKey.create());
 
     return joinedResult.apply(
@@ -87,11 +86,11 @@ public class DifferUtils {
                 Diff diff;
                 if (!input
                     .getValue()
-                    .getOnly(keyTag, "")
-                    .equals(input.getValue().getOnly(valueTag, ""))) {
-                  if (input.getValue().getOnly(keyTag, "").isEmpty()) {
+                    .getOnly(currentTag, "")
+                    .equals(input.getValue().getOnly(previousTag, ""))) {
+                  if (input.getValue().getOnly(currentTag, "").isEmpty()) {
                     diff = Diff.DELETED;
-                  } else if (input.getValue().getOnly(valueTag, "").isEmpty()) {
+                  } else if (input.getValue().getOnly(previousTag, "").isEmpty()) {
                     diff = Diff.ADDED;
                   } else {
                     diff = Diff.MODIFIED;
@@ -101,8 +100,8 @@ public class DifferUtils {
                       String.format(
                           "%s,%s,%s,%s",
                           input.getKey(),
-                          input.getValue().getOnly(keyTag, ""),
-                          input.getValue().getOnly(valueTag, ""),
+                          input.getValue().getOnly(currentTag, ""),
+                          input.getValue().getOnly(previousTag, ""),
                           diff.name()));
                 } else {
                   // Ignore nodes with no change
@@ -121,7 +120,6 @@ public class DifferUtils {
   public static PCollection<McfGraph> readMcfGraph(ValueProvider<String> files, Pipeline p) {
     return p.apply(
             "ReadMcfGraph", TFRecordIO.read().from(files).withCompression(GZIP).withoutValidation())
-        // .apply(ParDo.of(new ByteArrayToString()));
         .apply(
             "ProcessGraph",
             ParDo.of(
