@@ -10,9 +10,7 @@ import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfType;
 import org.datacommons.proto.Mcf.ValueType;
 
-/**
- * Util functions for processing MCF graphs.
- */
+/** Util functions for processing MCF graphs. */
 public class GraphUtil {
 
   enum Property {
@@ -31,7 +29,8 @@ public class GraphUtil {
   public static final String STAT_VAR_OB = "StatVarObservation";
 
   /**
-   * Flattens an optimized MCF graph into a list of graph node 
+   * Flattens an optimized MCF graph into a list of graph node
+   *
    * @param optimized_graph input optimized graph
    * @return list of graph nodes
    */
@@ -99,6 +98,7 @@ public class GraphUtil {
 
   /**
    * Updates a PV in an McfGraph instance
+   *
    * @param prop property to update
    * @param val_type value type
    * @param val property value
@@ -114,6 +114,7 @@ public class GraphUtil {
 
   /**
    * Gets value for a property from Graph node
+   *
    * @param node PVs to read value from
    * @param prop property to fetch
    * @return value for the property
@@ -132,7 +133,8 @@ public class GraphUtil {
   }
 
   /**
-   * Gets value for a property from a map of PVs 
+   * Gets value for a property from a map of PVs
+   *
    * @param pvs a map of property-values
    * @param key property to fetch
    * @return property value
@@ -146,34 +148,32 @@ public class GraphUtil {
   }
 
   /**
-   * Returns a key-val pair from PVs of a graph node 
-   * Key: PVs excluding value
-   * Val: Value, scaling factor properties
+   * Returns a key-val pair from PVs of a graph node Key: PVs excluding value Val: Value, scaling
+   * factor properties
+   *
    * @param node input PVs
-   * @return String array of key-val pair 
+   * @return String array of key-val pair
    */
   public static String[] GetPropValKV(McfGraph.PropertyValues node) {
     Map<String, McfGraph.Values> pvs = node.getPvsMap();
     String key =
         String.format(
-            "%s,%s,%s,%s,%s,%s",
+            "%s,%s,%s,%s,%s,%s,%s",
             GetPropertyValue(pvs, Property.variableMeasured.name()),
             GetPropertyValue(pvs, Property.observationAbout.name()),
             GetPropertyValue(pvs, Property.observationDate.name()),
+            GetPropertyValue(pvs, Property.observationPeriod.name()),
             GetPropertyValue(pvs, Property.measurementMethod.name()),
             GetPropertyValue(pvs, Property.unit.name()),
-            GetPropertyValue(pvs, Property.observationPeriod.name()));
+            GetPropertyValue(pvs, Property.scalingFactor.name()));
 
     String value = GetPropertyValue(pvs, Property.value.name());
-    String scaling;
-    if (!(scaling = GetPropertyValue(pvs, Property.scalingFactor.name())).isEmpty()) {
-      value = value + "*" + scaling;
-    }
     return new String[] {key, value};
   }
 
   /**
    * Converts a byte stream of (optimized graph format) into a list of flattened graph nodes
+   *
    * @param element input byte stream
    * @return list of graph nodes
    */
@@ -193,9 +193,10 @@ public class GraphUtil {
   }
 
   /**
-   * Converts an MCF string into a graph proto 
+   * Converts an MCF string into a graph proto (only SVObs)
+   *
    * @param input input mcf string
-   * @return  graph node
+   * @return graph node
    */
   public static McfGraph convertToGraph(String input) {
     McfGraph.Builder g = McfGraph.newBuilder();

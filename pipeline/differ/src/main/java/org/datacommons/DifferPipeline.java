@@ -22,7 +22,7 @@ public class DifferPipeline {
 
     // Read input graph files and convert into PCollections.
     PCollection<McfGraph> previous_nodes, current_nodes;
-    if (options.getUseTfrFormat().isAccessible()) {
+    if (options.getUseOptimizedGraphFormat().isAccessible()) {
       LOGGER.info("Using tfrecord file format");
       current_nodes = DifferUtils.readMcfGraph(options.getCurrentData(), p);
       previous_nodes = DifferUtils.readMcfGraph(options.getPreviousData(), p);
@@ -38,10 +38,7 @@ public class DifferPipeline {
     PCollection<String> merged = DifferUtils.performDiff(nCollection, pCollection);
 
     merged.apply(
-        "Write diff output",
-        TextIO.write()
-            .to(options.getOutputLocation())
-            .withSuffix(".csv")); // .withHeader("variable,place,time,value_x,value_y,diff"));
+        "Write diff output", TextIO.write().to(options.getOutputLocation()).withSuffix(".csv"));
     p.run();
   }
 }

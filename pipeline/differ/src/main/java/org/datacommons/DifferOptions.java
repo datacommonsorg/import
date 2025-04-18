@@ -5,9 +5,7 @@ import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.options.ValueProvider;
 
-/**
- * Parameters for the differ pipeline.
- */
+/** Parameters for the differ pipeline. */
 public interface DifferOptions extends PipelineOptions {
   @Description("Path of the current data")
   @Required
@@ -27,13 +25,8 @@ public interface DifferOptions extends PipelineOptions {
 
   void setOutputLocation(ValueProvider<String> value);
 
-  @Description("Whether to use tfrecord file format")
-  ValueProvider<String> getUseTfrFormat();
+  @Description("Whether to use optimized tfrecord file format")
+  ValueProvider<String> getUseOptimizedGraphFormat();
 
   void setUseTfrFormat(ValueProvider<String> value);
-
-  @Description("Whether to use mcf file format")
-  ValueProvider<String> getUseMcfFormat();
-
-  void setUseMcfFormat(ValueProvider<String> value);
 }

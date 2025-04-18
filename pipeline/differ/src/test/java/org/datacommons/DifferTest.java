@@ -36,13 +36,13 @@ public class DifferTest {
     // Assert on the results.
     PAssert.that(result)
         .containsInAnyOrder(
-            "dcid:Mean_Concentration_AirPollutant_CO,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,dcid:MicrogramsPerCubicMeter,,,41.0,DELETED",
-            "dcid:Min_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___IMD,\"2024-09-24T12:00:00\",,dcid:MicrogramsPerCubicMeter,,,18.0,DELETED",
-            "dcid:Mean_Concentration_AirPollutant_CO,dcid:cpcpAq/Secretariat_Amaravati___IMD,\"2024-09-24T12:00:00\",,dcid:MicrogramsPerCubicMeter,,42.0,41.0,MODIFIED",
-            "dcid:Min_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,dcid:MicrogramsPerCubicMeter,,,18.0,DELETED",
-            "dcid:Max_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,dcid:MicrogramsPerCubicMeter,,53.0,,ADDED",
-            "dcid:Mean_Concentration_AirPollutant_CO,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-25T12:00:00\",,dcid:MicrogramsPerCubicMeter,,,40.0,DELETED",
-            "dcid:Mean_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,dcid:MicrogramsPerCubicMeter,,28.0,29.0,MODIFIED");
+            "dcid:Mean_Concentration_AirPollutant_CO,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,,41.0,DELETED",
+            "dcid:Min_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___IMD,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,,18.0,DELETED",
+            "dcid:Mean_Concentration_AirPollutant_CO,dcid:cpcpAq/Secretariat_Amaravati___IMD,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,42.0,41.0,MODIFIED",
+            "dcid:Min_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,,18.0,DELETED",
+            "dcid:Max_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,53.0,,ADDED",
+            "dcid:Mean_Concentration_AirPollutant_CO,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-25T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,,40.0,DELETED",
+            "dcid:Mean_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,28.0,29.0,MODIFIED");
 
     // Run the pipeline.
     p.run();
