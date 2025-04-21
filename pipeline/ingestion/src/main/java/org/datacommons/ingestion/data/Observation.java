@@ -51,6 +51,10 @@ public class Observation implements Serializable {
     return observations;
   }
 
+  public List<String> getObservationsAsJsonStrings() {
+    return observations.stream().map(DateValue::toJsonString).toList();
+  }
+
   public String getProvenance() {
     return provenance;
   }

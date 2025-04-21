@@ -6,6 +6,7 @@ import org.apache.beam.sdk.io.gcp.spanner.MutationGroup;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.datacommons.ingestion.data.CacheReader;
 import org.datacommons.ingestion.data.NodesEdges;
+import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.spanner.SpannerClient;
 
 /** Transforms and DoFns for the ingestion pipeline. */
@@ -32,6 +33,29 @@ public class Transforms {
         List<Mutation> mutations =
             spannerClient.toGraphMutations(nodesEdges.getNodes(), nodesEdges.getEdges());
         List<MutationGroup> mutationGroups = spannerClient.toGraphMutationGroups(mutations);
+        mutationGroups.forEach(c::output);
+      }
+    }
+  }
+
+  /** DoFn to convert obs time series cache rows to Spanner mutation groups. */
+  public static class ObsTimeSeriesRowToMutationGroupDoFn extends DoFn<String, MutationGroup> {
+    private final CacheReader cacheReader;
+    private final SpannerClient spannerClient;
+
+    public ObsTimeSeriesRowToMutationGroupDoFn(
+        CacheReader cacheReader, SpannerClient spannerClient) {
+      this.cacheReader = cacheReader;
+      this.spannerClient = spannerClient;
+    }
+
+    @ProcessElement
+    public void processElement(@Element String row, OutputReceiver<MutationGroup> c) {
+      if (CacheReader.isObsTimeSeriesCacheRow(row)) {
+        List<Observation> observations = cacheReader.parseTimeSeriesRow(row);
+        List<Mutation> mutations =
+            observations.stream().map(spannerClient::toObservationMutation).toList();
+        List<MutationGroup> mutationGroups = spannerClient.toObservationMutationGroups(mutations);
         mutationGroups.forEach(c::output);
       }
     }

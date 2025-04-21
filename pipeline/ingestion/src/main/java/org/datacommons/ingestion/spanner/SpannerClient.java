@@ -3,7 +3,9 @@ package org.datacommons.ingestion.spanner;
 import static java.util.stream.Collectors.toList;
 
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Value;
 import java.io.Serializable;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,6 +19,7 @@ import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.Write;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.WriteGrouped;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
+import org.datacommons.ingestion.data.Observation;
 
 public class SpannerClient implements Serializable {
 
@@ -75,6 +78,31 @@ public class SpannerClient implements Serializable {
         .build();
   }
 
+  public Mutation toObservationMutation(Observation observation) {
+    return Mutation.newInsertOrUpdateBuilder(observationTableName)
+        .set("variable_measured")
+        .to(observation.getVariableMeasured())
+        .set("observation_about")
+        .to(observation.getObservationAbout())
+        .set("provenance")
+        .to(observation.getProvenance())
+        .set("observation_period")
+        .to(observation.getObservationPeriod())
+        .set("measurement_method")
+        .to(observation.getMeasurementMethod())
+        .set("unit")
+        .to(observation.getUnit())
+        .set("scaling_factor")
+        .to(observation.getScalingFactor())
+        .set("observations")
+        .to(Value.jsonArray(observation.getObservationsAsJsonStrings()))
+        .set("import_name")
+        .to(observation.getImportName())
+        .set("provenance_url")
+        .to(observation.getProvenanceUrl())
+        .build();
+  }
+
   public List<Mutation> toGraphMutations(List<Node> nodes, List<Edge> edges) {
     return Stream.concat(
             nodes.stream().map(this::toNodeMutation), edges.stream().map(this::toEdgeMutation))
@@ -95,6 +123,37 @@ public class SpannerClient implements Serializable {
 
       nodeIds.add(subjectId);
       mutationMap.computeIfAbsent(subjectId, k -> new ArrayList<>()).add(mutation);
+    }
+
+    List<MutationGroup> mutationGroups = new ArrayList<>();
+    for (List<Mutation> mutationList : mutationMap.values()) {
+      if (mutationList.size() == 1) {
+        mutationGroups.add(MutationGroup.create(mutationList.get(0)));
+      } else {
+        Mutation first = mutationList.get(0);
+        List<Mutation> rest = mutationList.subList(1, mutationList.size());
+        mutationGroups.add(MutationGroup.create(first, rest));
+      }
+    }
+    return mutationGroups;
+  }
+
+  /**
+   * Creates mutation groups for observations. Each group contains mutations for the same variable
+   * and place.
+   */
+  public List<MutationGroup> toObservationMutationGroups(List<Mutation> mutations) {
+    // Map from Pair(variable_measured, observation_about) to mutation.
+    // Using SimpleEntry for representing a pair.
+    Map<SimpleEntry<String, String>, List<Mutation>> mutationMap = new HashMap<>();
+
+    for (Mutation mutation : mutations) {
+      String variableMeasured = mutation.asMap().get("variable_measured").getString();
+      String observationAbout = mutation.asMap().get("observation_about").getString();
+
+      SimpleEntry<String, String> key = new SimpleEntry<>(variableMeasured, observationAbout);
+
+      mutationMap.computeIfAbsent(key, k -> new ArrayList<>()).add(mutation);
     }
 
     List<MutationGroup> mutationGroups = new ArrayList<>();
