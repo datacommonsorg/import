@@ -24,7 +24,7 @@ public class SimpleGraphPipeline {
     SimpleGraphPipelineOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(SimpleGraphPipelineOptions.class);
     Pipeline pipeline = Pipeline.create(options);
-    LOGGER.info("Running simple graph pipeline for import group: {}", options.getImportGroupVersion());
+    LOGGER.info("Running simple graph pipeline for import group: {}", options.getImportGroup());
 
     CacheReader cacheReader = new CacheReader(options.getSkipPredicatePrefixes());
     SpannerClient spannerClient =
@@ -39,7 +39,7 @@ public class SimpleGraphPipeline {
 
     String cachePath =
         CacheReader.getCachePath(
-            options.getProjectId(), options.getStorageBucketId(), options.getImportGroupVersion());
+            options.getProjectId(), options.getStorageBucketId(), options.getImportGroup());
 
     PCollection<String> entries = pipeline.apply("ReadFromCache", TextIO.read().from(cachePath));
     PCollection<MutationGroup> mutationGroups =

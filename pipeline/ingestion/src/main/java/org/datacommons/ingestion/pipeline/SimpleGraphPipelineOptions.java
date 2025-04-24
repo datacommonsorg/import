@@ -10,9 +10,9 @@ import org.apache.beam.sdk.options.PipelineOptions;
 public interface SimpleGraphPipelineOptions extends BasePipelineOptions {
   @Description("Import group to be ingested into Spanner.")
   @Default.String("schema")
-  String getImportGroupVersion();
+  String getImportGroup();
 
-  void setImportGroupVersion(String importGroup);
+  void setImportGroup(String importGroup);
 
   @Description("List of prefixes of predicates to skip during ingestion.")
   @Default.InstanceFactory(SkipPredicatePrefixesFactory.class)
