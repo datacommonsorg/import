@@ -70,15 +70,15 @@ public class Transforms {
 
   /**
    * DoFn that outputs observation and graph (nodes and edges) mutations for a single cache row.
-   * Observation mutations are output as MutationGroup objects.
-   * Graph mutations are output as KV<String, Mutation> pairs,
-   * where the key is the subject ID and the value is the mutation.
+   * Observation mutations are output as MutationGroup objects. Graph mutations are output as
+   * KV<String, Mutation> pairs, where the key is the subject ID and the value is the mutation.
    */
   static class CacheRowMutationsDoFn extends DoFn<String, KV<String, Mutation>> {
     private final CacheReader cacheReader;
     private final SpannerClient spannerClient;
     private final TupleTag<KV<String, Mutation>> graph;
     private final TupleTag<MutationGroup> observations;
+    private final Set<String> seenNodes = Sets.newConcurrentHashSet();
 
     public CacheRowMutationsDoFn(
         CacheReader cacheReader,
@@ -91,12 +91,18 @@ public class Transforms {
       this.observations = observations;
     }
 
+    @FinishBundle
+    public void finishBundle() {
+      this.seenNodes.clear();
+    }
+
     @ProcessElement
     public void processElement(@Element String row, MultiOutputReceiver out) {
       if (CacheReader.isArcCacheRow(row)) {
         NodesEdges nodesEdges = cacheReader.parseArcRow(row);
+        var kvs = spannerClient.toGraphKVMutations(nodesEdges.getNodes(), nodesEdges.getEdges());
         spannerClient
-            .toGraphKVMutations(nodesEdges.getNodes(), nodesEdges.getEdges())
+            .filterGraphKVMutations(kvs, seenNodes)
             .forEach(kv -> out.get(graph).output(kv));
       } else if (CacheReader.isObsTimeSeriesCacheRow(row)) {
         List<Observation> obs = cacheReader.parseTimeSeriesRow(row);
@@ -107,20 +113,15 @@ public class Transforms {
 
   static class ExtractGraphMutationsDoFn extends DoFn<KV<String, Mutation>, Mutation> {
     private final SpannerClient spannerClient;
-    private Set<String> seenNodes = Sets.newConcurrentHashSet();
+    private final Set<String> seenNodes = Sets.newConcurrentHashSet();
 
     public ExtractGraphMutationsDoFn(SpannerClient spannerClient) {
       this.spannerClient = spannerClient;
     }
 
-    @StartBundle
-    public void startBundle() {
-      this.seenNodes = Sets.newConcurrentHashSet();
-    }
-
     @FinishBundle
     public void finishBundle() {
-      this.seenNodes = null;
+      this.seenNodes.clear();
     }
 
     @ProcessElement
@@ -152,8 +153,7 @@ public class Transforms {
     PCollectionTuple mutations =
         cacheRows.apply(
             "CreateMutations",
-            ParDo.of(createMutations)
-                .withOutputTags(graph, TupleTagList.of(observations)));
+            ParDo.of(createMutations).withOutputTags(graph, TupleTagList.of(observations)));
 
     // Write graph to spanner.
     mutations

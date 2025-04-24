@@ -1,5 +1,7 @@
 package org.datacommons.ingestion.spanner;
 
+import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Value;
 import java.io.Serializable;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
@@ -9,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
-
 import org.apache.beam.sdk.io.gcp.spanner.MutationGroup;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.Write;
@@ -18,9 +19,6 @@ import org.apache.beam.sdk.values.KV;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
-
-import com.google.cloud.spanner.Mutation;
-import com.google.cloud.spanner.Value;
 
 public class SpannerClient implements Serializable {
 
@@ -132,6 +130,24 @@ public class SpannerClient implements Serializable {
                     edges.stream().map(this::toEdgeMutation))
             .map(mutation -> KV.of(getSubjectId(mutation), mutation))
             .toList();
+  }
+
+  public List<KV<String, Mutation>> filterGraphKVMutations(List<KV<String, Mutation>> kvs, Set<String> seenNodes) {
+    var filtered = new ArrayList<KV<String, Mutation>>();
+    for (var kv : kvs) {
+      var mutation = kv.getValue();
+      // Skip duplicate node mutations for the same subject_id
+      if (mutation.getTable().equals(nodeTableName)) {
+        String subjectId = getSubjectId(mutation);
+        if (seenNodes.contains(subjectId)) {
+          continue;
+        }
+        seenNodes.add(subjectId);
+      }
+
+      filtered.add(kv);
+    }
+    return filtered;
   }
 
   public List<MutationGroup> toGraphMutationGroups(List<Mutation> mutations) {
