@@ -41,6 +41,12 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setImportGroupVersion(String importGroupVersion);
 
+  @Description("The number of shards to generate for writing edge mutations.")
+  @Default.Integer(100)
+  int getNumEdgeShards();
+
+  void setNumEdgeShards(int numEdgeShards);
+
   @Description("Spanner Observation table name")
   @Default.String("Observation")
   String getSpannerObservationTableName();
