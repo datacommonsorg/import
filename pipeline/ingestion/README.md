@@ -1,5 +1,16 @@
 # Spanner Graph Data Ingestion Pipeline
 
+## org.datacommons.ingestion.pipeline.ImportGroupPipeline
+
+This module loads all tables (observations, nodes and edges) from a single import group version into Spanner.
+
+Example usage:
+
+```shell
+mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.datacommons.ingestion.pipeline.ImportGroupPipeline \
+-Dexec.args="--importGroupVersion=biomedical_2025_04_02_05_12_09 --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=50 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=n2-highmem-16"
+```
+
 ## org.datacommons.ingestion.pipeline.SimpleGraphPipeline
 
 This module loads nodes and edges from a single import group into Spanner.

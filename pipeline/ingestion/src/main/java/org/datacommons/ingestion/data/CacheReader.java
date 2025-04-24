@@ -68,6 +68,19 @@ public class CacheReader implements Serializable {
     }
 
     /**
+     * Returns the GCS path for the import group cache in the specified bucket with
+     * the specified import group version.
+     * 
+     * The returned path is of the form:
+     * gs://gcsBucketId/importGroupVersion/cache.csv*
+     * 
+     * e.g. gs://datcom-store/auto1d_2025_03_26_02_16_23/cache.csv*
+     */
+    public static String getImportGroupCachePath(String gcsBucketId, String importGroupVersion) {
+        return String.format("gs://%s/%s/cache.csv*", gcsBucketId, importGroupVersion);
+    }
+
+    /**
      * Parses an arc cache row to extract nodes and edges.
      */
     public NodesEdges parseArcRow(String row) {

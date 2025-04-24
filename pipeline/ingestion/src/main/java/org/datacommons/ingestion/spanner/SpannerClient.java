@@ -1,9 +1,5 @@
 package org.datacommons.ingestion.spanner;
 
-import static java.util.stream.Collectors.toList;
-
-import com.google.cloud.spanner.Mutation;
-import com.google.cloud.spanner.Value;
 import java.io.Serializable;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
@@ -13,13 +9,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
+
 import org.apache.beam.sdk.io.gcp.spanner.MutationGroup;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.Write;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.WriteGrouped;
+import org.apache.beam.sdk.values.KV;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
+
+import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Value;
 
 public class SpannerClient implements Serializable {
 
@@ -103,10 +104,34 @@ public class SpannerClient implements Serializable {
         .build();
   }
 
+  public List<KV<String, Mutation>> toNodeMutations(List<Node> nodes) {
+    return nodes.stream()
+        .map(node -> KV.of(node.getSubjectId(), toNodeMutation(node)))
+        .toList();
+  }
+
+  public List<KV<String, Mutation>> toEdgeMutations(List<Edge> edges) {
+    return edges.stream()
+        .map(edge -> KV.of(edge.getSubjectId(), toEdgeMutation(edge)))
+        .toList();
+  }
+
+  public List<MutationGroup> toObservationMutations(List<Observation> observations) {
+    return toObservationMutationGroups(observations.stream().map(this::toObservationMutation).toList());
+  }
+
   public List<Mutation> toGraphMutations(List<Node> nodes, List<Edge> edges) {
     return Stream.concat(
             nodes.stream().map(this::toNodeMutation), edges.stream().map(this::toEdgeMutation))
-        .collect(toList());
+        .toList();
+  }
+
+  public List<KV<String, Mutation>> toGraphKVMutations(List<Node> nodes, List<Edge> edges) {
+    return Stream.concat(
+                    nodes.stream().map(this::toNodeMutation),
+                    edges.stream().map(this::toEdgeMutation))
+            .map(mutation -> KV.of(getSubjectId(mutation), mutation))
+            .toList();
   }
 
   public List<MutationGroup> toGraphMutationGroups(List<Mutation> mutations) {
@@ -114,7 +139,7 @@ public class SpannerClient implements Serializable {
     Set<String> nodeIds = new HashSet<>();
 
     for (Mutation mutation : mutations) {
-      String subjectId = mutation.asMap().get("subject_id").getString();
+      String subjectId = getSubjectId(mutation);
 
       // Skip duplicate node mutations for the same subject_id
       if (mutation.getTable().equals(nodeTableName) && nodeIds.contains(subjectId)) {
@@ -167,6 +192,10 @@ public class SpannerClient implements Serializable {
       }
     }
     return mutationGroups;
+  }
+
+  public static String getSubjectId(Mutation mutation) {
+    return mutation.asMap().get("subject_id").getString();
   }
 
   public String getGcpProjectId() {
