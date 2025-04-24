@@ -27,7 +27,7 @@ public class SimpleObservationsPipeline {
             .as(SimpleObservationsPipelineOptions.class);
     Pipeline pipeline = Pipeline.create(options);
     LOGGER.info(
-            "Running simple observations pipeline for import group: {}", options.getImportGroupVersion());
+        "Running simple observations pipeline for import group: {}", options.getImportGroup());
 
     CacheReader cacheReader = new CacheReader(List.of());
     SpannerClient spannerClient =
@@ -42,7 +42,7 @@ public class SimpleObservationsPipeline {
 
     String cachePath =
         CacheReader.getCachePath(
-                    options.getProjectId(), options.getStorageBucketId(), options.getImportGroupVersion());
+            options.getProjectId(), options.getStorageBucketId(), options.getImportGroup());
 
     PCollection<String> entries = pipeline.apply("ReadFromCache", TextIO.read().from(cachePath));
     PCollection<MutationGroup> mutationGroups =

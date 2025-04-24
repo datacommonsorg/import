@@ -7,7 +7,7 @@ import org.apache.beam.sdk.options.Description;
 public interface SimpleObservationsPipelineOptions extends BasePipelineOptions {
   @Description("Import group to be ingested into Spanner.")
   @Default.String("frequent")
-  String getImportGroupVersion();
+  String getImportGroup();
 
-  void setImportGroupVersion(String importGroup);
+  void setImportGroup(String importGroup);
 }
