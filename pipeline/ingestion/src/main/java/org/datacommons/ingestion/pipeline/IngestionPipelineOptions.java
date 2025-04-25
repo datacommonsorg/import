@@ -1,16 +1,12 @@
 package org.datacommons.ingestion.pipeline;
 
 import java.util.List;
-
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.DefaultValueFactory;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 
-/**
- * IngestionPipelineOptions interface for defining spanner ingestion pipeline
- * options.
- */
+/** IngestionPipelineOptions interface for defining spanner ingestion pipeline options. */
 public interface IngestionPipelineOptions extends PipelineOptions {
   @Description("GCP project id")
   @Default.String("datcom-store")
@@ -36,7 +32,14 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setStorageBucketId(String bucketId);
 
-  @Description("The import group version to be ingested into Spanner. e.g. auto1d_2025_03_26_02_16_23")
+  @Description("The DC version endpoint to fetch import group versions to ingest.")
+  @Default.String("https://autopush.api.datacommons.org/version")
+  String getVersionEndpoint();
+
+  void setVersionEndpoint(String versionEndpoint);
+
+  @Description(
+      "The import group version to be ingested into Spanner. e.g. auto1d_2025_03_26_02_16_23")
   String getImportGroupVersion();
 
   void setImportGroupVersion(String importGroupVersion);
@@ -46,6 +49,12 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   int getNumEdgeShards();
 
   void setNumEdgeShards(int numEdgeShards);
+
+  @Description("If true, observations will not be ingested.")
+  @Default.Boolean(false)
+  boolean getSkipObservations();
+
+  void setSkipObservations(boolean skipObservations);
 
   @Description("Spanner Observation table name")
   @Default.String("Observation")

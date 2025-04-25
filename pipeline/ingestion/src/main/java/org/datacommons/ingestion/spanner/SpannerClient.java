@@ -1,12 +1,14 @@
 package org.datacommons.ingestion.spanner;
 
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Options.RpcPriority;
 import com.google.cloud.spanner.Value;
 import java.io.Serializable;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.stream.Stream;
 import org.apache.beam.sdk.io.gcp.spanner.MutationGroup;
+import org.apache.beam.sdk.io.gcp.spanner.SpannerConfig;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.Write;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.WriteGrouped;
@@ -39,7 +41,8 @@ public class SpannerClient implements Serializable {
     return SpannerIO.write()
         .withProjectId(gcpProjectId)
         .withInstanceId(spannerInstanceId)
-        .withDatabaseId(spannerDatabaseId);
+        .withDatabaseId(spannerDatabaseId)
+        .withSpannerConfig(SpannerConfig.create().withRpcPriority(RpcPriority.HIGH));
   }
 
   public WriteGrouped getWriteGroupedTransform() {
@@ -100,19 +103,16 @@ public class SpannerClient implements Serializable {
   }
 
   public List<KV<String, Mutation>> toNodeMutations(List<Node> nodes) {
-    return nodes.stream()
-        .map(node -> KV.of(node.getSubjectId(), toNodeMutation(node)))
-        .toList();
+    return nodes.stream().map(node -> KV.of(node.getSubjectId(), toNodeMutation(node))).toList();
   }
 
   public List<KV<String, Mutation>> toEdgeMutations(List<Edge> edges) {
-    return edges.stream()
-        .map(edge -> KV.of(edge.getSubjectId(), toEdgeMutation(edge)))
-        .toList();
+    return edges.stream().map(edge -> KV.of(edge.getSubjectId(), toEdgeMutation(edge))).toList();
   }
 
   public List<MutationGroup> toObservationMutations(List<Observation> observations) {
-    return toObservationMutationGroups(observations.stream().map(this::toObservationMutation).toList());
+    return toObservationMutationGroups(
+        observations.stream().map(this::toObservationMutation).toList());
   }
 
   public List<Mutation> toGraphMutations(List<Node> nodes, List<Edge> edges) {
@@ -123,13 +123,13 @@ public class SpannerClient implements Serializable {
 
   public List<KV<String, Mutation>> toGraphKVMutations(List<Node> nodes, List<Edge> edges) {
     return Stream.concat(
-                    nodes.stream().map(this::toNodeMutation),
-                    edges.stream().map(this::toEdgeMutation))
-            .map(mutation -> KV.of(getGraphKVKey(mutation), mutation))
-            .toList();
+            nodes.stream().map(this::toNodeMutation), edges.stream().map(this::toEdgeMutation))
+        .map(mutation -> KV.of(getGraphKVKey(mutation), mutation))
+        .toList();
   }
 
-  public List<KV<String, Mutation>> filterGraphKVMutations(List<KV<String, Mutation>> kvs, Set<String> seenNodes) {
+  public List<KV<String, Mutation>> filterGraphKVMutations(
+      List<KV<String, Mutation>> kvs, Set<String> seenNodes) {
     var filtered = new ArrayList<KV<String, Mutation>>();
     for (var kv : kvs) {
       var mutation = kv.getValue();

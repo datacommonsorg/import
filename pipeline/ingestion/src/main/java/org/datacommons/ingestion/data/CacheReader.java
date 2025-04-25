@@ -1,29 +1,26 @@
 package org.datacommons.ingestion.data;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.zip.GZIPInputStream;
-
-import org.datacommons.proto.CacheData.EntityInfo;
-import org.datacommons.proto.CacheData.PagedEntities;
-import org.datacommons.proto.ChartStoreOuterClass.ChartStore;
-import org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.api.gax.paging.Page;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.google.protobuf.Message;
 import com.google.protobuf.Parser;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.GZIPInputStream;
+import org.datacommons.proto.CacheData.EntityInfo;
+import org.datacommons.proto.CacheData.PagedEntities;
+import org.datacommons.proto.ChartStoreOuterClass.ChartStore;
+import org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * CacheReader is a class that has utility methods to read data from BT cache.
@@ -37,9 +34,11 @@ public class CacheReader implements Serializable {
     private static final String CACHE_KEY_VALUE_SEPARATOR_REGEX = ",";
     private static final String CACHE_KEY_SEPARATOR_REGEX = "\\^";
 
+    private final String gcsBucketId;
     private final List<String> skipPredicatePrefixes;
 
-    public CacheReader(List<String> skipPredicatePrefixes) {
+    public CacheReader(String gcsBucketId, List<String> skipPredicatePrefixes) {
+        this.gcsBucketId = gcsBucketId;
         this.skipPredicatePrefixes = skipPredicatePrefixes;
     }
 
@@ -67,16 +66,15 @@ public class CacheReader implements Serializable {
         return String.format("gs://%s/%scache.csv*", bucketId, prefix);
     }
 
-    /**
-     * Returns the GCS path for the import group cache in the specified bucket with
-     * the specified import group version.
-     * 
-     * The returned path is of the form:
-     * gs://gcsBucketId/importGroupVersion/cache.csv*
-     * 
-     * e.g. gs://datcom-store/auto1d_2025_03_26_02_16_23/cache.csv*
-     */
-    public static String getImportGroupCachePath(String gcsBucketId, String importGroupVersion) {
+  /**
+   * Returns the GCS path for the import group cache in the specified bucket with the specified
+   * import group version.
+   *
+   * <p>The returned path is of the form: gs://gcsBucketId/importGroupVersion/cache.csv*
+   *
+   * <p>e.g. gs://datcom-store/auto1d_2025_03_26_02_16_23/cache.csv*
+   */
+  public String getImportGroupCachePath(String importGroupVersion) {
         return String.format("gs://%s/%s/cache.csv*", gcsBucketId, importGroupVersion);
     }
 

@@ -1,7 +1,9 @@
 package org.datacommons.ingestion.pipeline;
 
-import static org.datacommons.ingestion.pipeline.Transforms.buildImportGroupPipeline;
+import static org.datacommons.ingestion.data.ImportGroupVersions.getImportGroupVersions;
+import static org.datacommons.ingestion.pipeline.Transforms.buildIngestionPipeline;
 
+import java.util.List;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.datacommons.ingestion.data.CacheReader;
@@ -9,15 +11,14 @@ import org.datacommons.ingestion.spanner.SpannerClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ImportGroupPipeline {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ImportGroupPipeline.class);
+public class IngestionPipeline {
+  private static final Logger LOGGER = LoggerFactory.getLogger(IngestionPipeline.class);
 
   public static void main(String[] args) {
     IngestionPipelineOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(IngestionPipelineOptions.class);
     Pipeline pipeline = Pipeline.create(options);
-    LOGGER.info(
-        "Running import group pipeline for import group: {}", options.getImportGroupVersion());
+    LOGGER.info("Fetching versions from: {}", options.getVersionEndpoint());
 
     CacheReader cacheReader =
         new CacheReader(options.getStorageBucketId(), options.getSkipPredicatePrefixes());
@@ -31,7 +32,9 @@ public class ImportGroupPipeline {
             .observationTableName(options.getSpannerObservationTableName())
             .build();
 
-    buildImportGroupPipeline(pipeline, options.getImportGroupVersion(), cacheReader, spannerClient);
+    List<String> importGroupVersions = getImportGroupVersions(options.getVersionEndpoint());
+
+    buildIngestionPipeline(pipeline, importGroupVersions, cacheReader, spannerClient);
 
     pipeline.run();
   }

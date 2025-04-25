@@ -1,5 +1,17 @@
 # Spanner Graph Data Ingestion Pipeline
 
+## org.datacommons.ingestion.pipeline.IngestionPipeline
+
+This module loads all tables (observations, nodes and edges) for all import groups into Spanner.
+The import group version to load from are fetched from the DC API's version endpoint.
+
+Example usage:
+
+```shell
+mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.datacommons.ingestion.pipeline.IngestionPipeline \
+-Dexec.args="--skipObservations=true --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=50 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=e2-highmem-16"
+```
+
 ## org.datacommons.ingestion.pipeline.ImportGroupPipeline
 
 This module loads all tables (observations, nodes and edges) from a single import group version into Spanner.
@@ -8,35 +20,7 @@ Example usage:
 
 ```shell
 mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.datacommons.ingestion.pipeline.ImportGroupPipeline \
--Dexec.args="--importGroupVersion=biomedical_2025_04_02_05_12_09 --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=50 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=n2-highmem-16"
-```
-
-## org.datacommons.ingestion.pipeline.SimpleGraphPipeline
-
-This module loads nodes and edges from a single import group into Spanner.
-
-It is a simple pipeline that creates mutation groups (by subject ID) from each cache row
-and writes them to spanner.
-
-Example usage:
-
-```shell
-mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.datacommons.ingestion.pipeline.SimpleGraphPipeline \
--Dexec.args="--importGroup=biomedical --spannerNodeTableName=NodeNoFK --spannerEdgeTableName=EdgeNoFK --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-east1  --numWorkers=5 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=n2-highmem-8"
-```
-
-## org.datacommons.ingestion.pipeline.SimpleObservationsPipeline
-
-This module loads observations from a single import group into Spanner.
-
-It is a simple pipeline that creates mutation groups (by variable and place) from each cache row
-and writes them to spanner.
-
-Example usage:
-
-```shell
-mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.datacommons.ingestion.pipeline.SimpleObservationsPipeline \
--Dexec.args="--importGroup=ipcc --spannerObservationTableName=ObservationTest --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=5 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=n2-highmem-8"
+-Dexec.args="--importGroupVersion=auto1d_2025_03_26_02_16_23 --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=5 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=e2-highmem-16"
 ```
 
 ## org.datacommons.IngestionPipeline
