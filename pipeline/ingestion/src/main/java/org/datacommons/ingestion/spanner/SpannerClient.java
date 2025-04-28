@@ -1,22 +1,18 @@
 package org.datacommons.ingestion.spanner;
 
-import static java.util.stream.Collectors.toList;
-
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Options.RpcPriority;
 import com.google.cloud.spanner.Value;
 import java.io.Serializable;
+import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Stream;
 import org.apache.beam.sdk.io.gcp.spanner.MutationGroup;
+import org.apache.beam.sdk.io.gcp.spanner.SpannerConfig;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.Write;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.WriteGrouped;
+import org.apache.beam.sdk.values.KV;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
@@ -29,6 +25,7 @@ public class SpannerClient implements Serializable {
   private final String nodeTableName;
   private final String edgeTableName;
   private final String observationTableName;
+  private final int numEdgeShards;
 
   private SpannerClient(Builder builder) {
     this.gcpProjectId = builder.gcpProjectId;
@@ -37,13 +34,15 @@ public class SpannerClient implements Serializable {
     this.nodeTableName = builder.nodeTableName;
     this.edgeTableName = builder.edgeTableName;
     this.observationTableName = builder.observationTableName;
+    this.numEdgeShards = builder.numEdgeShards;
   }
 
   public Write getWriteTransform() {
     return SpannerIO.write()
         .withProjectId(gcpProjectId)
         .withInstanceId(spannerInstanceId)
-        .withDatabaseId(spannerDatabaseId);
+        .withDatabaseId(spannerDatabaseId)
+        .withSpannerConfig(SpannerConfig.create().withRpcPriority(RpcPriority.HIGH));
   }
 
   public WriteGrouped getWriteGroupedTransform() {
@@ -103,10 +102,49 @@ public class SpannerClient implements Serializable {
         .build();
   }
 
+  public List<KV<String, Mutation>> toNodeMutations(List<Node> nodes) {
+    return nodes.stream().map(node -> KV.of(node.getSubjectId(), toNodeMutation(node))).toList();
+  }
+
+  public List<KV<String, Mutation>> toEdgeMutations(List<Edge> edges) {
+    return edges.stream().map(edge -> KV.of(edge.getSubjectId(), toEdgeMutation(edge))).toList();
+  }
+
+  public List<MutationGroup> toObservationMutations(List<Observation> observations) {
+    return toObservationMutationGroups(
+        observations.stream().map(this::toObservationMutation).toList());
+  }
+
   public List<Mutation> toGraphMutations(List<Node> nodes, List<Edge> edges) {
     return Stream.concat(
             nodes.stream().map(this::toNodeMutation), edges.stream().map(this::toEdgeMutation))
-        .collect(toList());
+        .toList();
+  }
+
+  public List<KV<String, Mutation>> toGraphKVMutations(List<Node> nodes, List<Edge> edges) {
+    return Stream.concat(
+            nodes.stream().map(this::toNodeMutation), edges.stream().map(this::toEdgeMutation))
+        .map(mutation -> KV.of(getGraphKVKey(mutation), mutation))
+        .toList();
+  }
+
+  public List<KV<String, Mutation>> filterGraphKVMutations(
+      List<KV<String, Mutation>> kvs, Set<String> seenNodes) {
+    var filtered = new ArrayList<KV<String, Mutation>>();
+    for (var kv : kvs) {
+      var mutation = kv.getValue();
+      // Skip duplicate node mutations for the same subject_id
+      if (mutation.getTable().equals(nodeTableName)) {
+        String subjectId = getSubjectId(mutation);
+        if (seenNodes.contains(subjectId)) {
+          continue;
+        }
+        seenNodes.add(subjectId);
+      }
+
+      filtered.add(kv);
+    }
+    return filtered;
   }
 
   public List<MutationGroup> toGraphMutationGroups(List<Mutation> mutations) {
@@ -114,7 +152,7 @@ public class SpannerClient implements Serializable {
     Set<String> nodeIds = new HashSet<>();
 
     for (Mutation mutation : mutations) {
-      String subjectId = mutation.asMap().get("subject_id").getString();
+      String subjectId = getSubjectId(mutation);
 
       // Skip duplicate node mutations for the same subject_id
       if (mutation.getTable().equals(nodeTableName) && nodeIds.contains(subjectId)) {
@@ -167,6 +205,27 @@ public class SpannerClient implements Serializable {
       }
     }
     return mutationGroups;
+  }
+
+  public static String getSubjectId(Mutation mutation) {
+    return getMutationValue(mutation, "subject_id");
+  }
+
+  private static String getMutationValue(Mutation mutation, String columnName) {
+    return mutation.asMap().get(columnName).getString();
+  }
+
+  public String getGraphKVKey(Mutation mutation) {
+    String subjectId = getSubjectId(mutation);
+    if (numEdgeShards <= 1 || !mutation.getTable().equals(edgeTableName)) {
+      return subjectId;
+    }
+
+    String objectId = getMutationValue(mutation, "object_id");
+    String objectHash = getMutationValue(mutation, "object_hash");
+    int shard = Objects.hash(objectId, objectHash) % numEdgeShards;
+
+    return subjectId + "-" + shard;
   }
 
   public String getGcpProjectId() {
@@ -223,6 +282,7 @@ public class SpannerClient implements Serializable {
     private String nodeTableName = "Node";
     private String edgeTableName = "Edge";
     private String observationTableName = "Observation";
+    private int numEdgeShards = 0;
 
     private Builder() {}
 
@@ -253,6 +313,11 @@ public class SpannerClient implements Serializable {
 
     public Builder observationTableName(String observationTableName) {
       this.observationTableName = observationTableName;
+      return this;
+    }
+
+    public Builder numEdgeShards(int numEdgeShards) {
+      this.numEdgeShards = numEdgeShards;
       return this;
     }
 
