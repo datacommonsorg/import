@@ -30,3 +30,18 @@ This module implements a Dataflow pipeline that loads Spanner DB with StatVar ob
 ```shell
 mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.datacommons.IngestionPipeline -Dexec.args="--project=<project-id> --gcpTempLocation=<gs://path> --runner=DataflowRunner --region=<region>  --projectId=<project-id> --spannerInstanceId=<instance-id> --spannerDatabaseId=<database-id> --cacheType=<observation/graph> --importGroupList=auto1d,auto1w,auto2w --storageBucketId=<bucket-id>"
 ```
+
+## Debug options
+
+When running any pipeline, various debug options are possible. Below are some that can be useful for the ingestion pipeline:
+
+```shell
+# Log hot keys
+--hotKeyLoggingEnabled
+
+# Enable profiler
+--dataflowServiceOptions=enable_google_cloud_profiler
+
+# Capture output samples for display in the cloud console
+--experiments=enable_data_sampling
+```

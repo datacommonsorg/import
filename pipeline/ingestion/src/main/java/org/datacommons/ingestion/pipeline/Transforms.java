@@ -45,6 +45,11 @@ public class Transforms {
       this.observations = observations;
     }
 
+    @StartBundle
+    public void startBundle() {
+      this.seenNodes.clear();
+    }
+
     @FinishBundle
     public void finishBundle() {
       this.seenNodes.clear();
@@ -71,6 +76,11 @@ public class Transforms {
 
     public ExtractGraphMutationsDoFn(SpannerClient spannerClient) {
       this.spannerClient = spannerClient;
+    }
+
+    @StartBundle
+    public void startBundle() {
+      this.seenNodes.clear();
     }
 
     @FinishBundle
