@@ -1,8 +1,11 @@
 package org.datacommons.ingestion.spanner;
 
+import static java.util.Comparator.comparing;
+
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Options.RpcPriority;
 import com.google.cloud.spanner.Value;
+import com.google.common.base.Joiner;
 import java.io.Serializable;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
@@ -25,7 +28,7 @@ public class SpannerClient implements Serializable {
   private final String nodeTableName;
   private final String edgeTableName;
   private final String observationTableName;
-  private final int numEdgeShards;
+  private final int numShards;
 
   private SpannerClient(Builder builder) {
     this.gcpProjectId = builder.gcpProjectId;
@@ -34,15 +37,15 @@ public class SpannerClient implements Serializable {
     this.nodeTableName = builder.nodeTableName;
     this.edgeTableName = builder.edgeTableName;
     this.observationTableName = builder.observationTableName;
-    this.numEdgeShards = builder.numEdgeShards;
+    this.numShards = builder.numShards;
   }
 
   public Write getWriteTransform() {
     return SpannerIO.write()
+        .withSpannerConfig(SpannerConfig.create().withRpcPriority(RpcPriority.HIGH))
         .withProjectId(gcpProjectId)
         .withInstanceId(spannerInstanceId)
-        .withDatabaseId(spannerDatabaseId)
-        .withSpannerConfig(SpannerConfig.create().withRpcPriority(RpcPriority.HIGH));
+        .withDatabaseId(spannerDatabaseId);
   }
 
   public WriteGrouped getWriteGroupedTransform() {
@@ -110,9 +113,8 @@ public class SpannerClient implements Serializable {
     return edges.stream().map(edge -> KV.of(edge.getSubjectId(), toEdgeMutation(edge))).toList();
   }
 
-  public List<MutationGroup> toObservationMutations(List<Observation> observations) {
-    return toObservationMutationGroups(
-        observations.stream().map(this::toObservationMutation).toList());
+  public List<Mutation> toObservationMutations(List<Observation> observations) {
+    return observations.stream().map(this::toObservationMutation).toList();
   }
 
   public List<Mutation> toGraphMutations(List<Node> nodes, List<Edge> edges) {
@@ -125,6 +127,13 @@ public class SpannerClient implements Serializable {
     return Stream.concat(
             nodes.stream().map(this::toNodeMutation), edges.stream().map(this::toEdgeMutation))
         .map(mutation -> KV.of(getGraphKVKey(mutation), mutation))
+        .toList();
+  }
+
+  public List<KV<String, Mutation>> toObservationKVMutations(List<Observation> observations) {
+    return observations.stream()
+        .map(this::toObservationMutation)
+        .map(mutation -> KV.of(getObservationKVKey(mutation), mutation))
         .toList();
   }
 
@@ -147,6 +156,17 @@ public class SpannerClient implements Serializable {
     return filtered;
   }
 
+  public List<Mutation> sortObservationMutations(List<Mutation> mutations) {
+
+    return mutations.stream()
+        .sorted(comparing(mutation -> getMutationValue(mutation, "variable_measured")))
+        .toList();
+  }
+
+  /**
+   * Creates mutation groups for graph mutations. Each group contains mutations for the same
+   * subject_id.
+   */
   public List<MutationGroup> toGraphMutationGroups(List<Mutation> mutations) {
     Map<String, List<Mutation>> mutationMap = new HashMap<>();
     Set<String> nodeIds = new HashSet<>();
@@ -212,20 +232,28 @@ public class SpannerClient implements Serializable {
   }
 
   private static String getMutationValue(Mutation mutation, String columnName) {
-    return mutation.asMap().get(columnName).getString();
+    return mutation.asMap().getOrDefault(columnName, Value.string("")).getString();
   }
 
   public String getGraphKVKey(Mutation mutation) {
     String subjectId = getSubjectId(mutation);
-    if (numEdgeShards <= 1 || !mutation.getTable().equals(edgeTableName)) {
+    if (numShards <= 1 || !mutation.getTable().equals(edgeTableName)) {
       return subjectId;
     }
 
     String objectId = getMutationValue(mutation, "object_id");
     String objectHash = getMutationValue(mutation, "object_hash");
-    int shard = Objects.hash(objectId, objectHash) % numEdgeShards;
+    int shard = Objects.hash(objectId, objectHash) % numShards;
 
     return subjectId + "-" + shard;
+  }
+
+  public String getObservationKVKey(Mutation mutation) {
+    var variableMeasured = getMutationValue(mutation, "variable_measured");
+    var observationAbout = getMutationValue(mutation, "observation_about");
+    int shard = Objects.hash(mutation.asMap().get("observations")) % numShards;
+
+    return Joiner.on("-").join(variableMeasured, observationAbout, shard);
   }
 
   public String getGcpProjectId() {
@@ -282,7 +310,7 @@ public class SpannerClient implements Serializable {
     private String nodeTableName = "Node";
     private String edgeTableName = "Edge";
     private String observationTableName = "Observation";
-    private int numEdgeShards = 0;
+    private int numShards = 0;
 
     private Builder() {}
 
@@ -316,8 +344,8 @@ public class SpannerClient implements Serializable {
       return this;
     }
 
-    public Builder numEdgeShards(int numEdgeShards) {
-      this.numEdgeShards = numEdgeShards;
+    public Builder numShards(int numShards) {
+      this.numShards = numShards;
       return this;
     }
 

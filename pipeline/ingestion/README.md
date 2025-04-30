@@ -2,25 +2,37 @@
 
 ## org.datacommons.ingestion.pipeline.IngestionPipeline
 
-This module loads all tables (observations, nodes and edges) for all import groups into Spanner.
+This module loads all tables (observations, nodes and edges) for all or specified import groups into Spanner.
 The import group version to load from are fetched from the DC API's version endpoint.
 
-Example usage:
+Example usages:
+
+### Import all import groups
 
 ```shell
 mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.datacommons.ingestion.pipeline.IngestionPipeline \
--Dexec.args="--skipObservations=true --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=50 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=e2-highmem-16"
+-Dexec.args="--project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=50 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=e2-highmem-16"
 ```
 
-## org.datacommons.ingestion.pipeline.ImportGroupPipeline
-
-This module loads all tables (observations, nodes and edges) from a single import group version into Spanner.
-
-Example usage:
+### Import all import groups while skipping observations
 
 ```shell
-mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.datacommons.ingestion.pipeline.ImportGroupPipeline \
--Dexec.args="--importGroupVersion=auto1d_2025_03_26_02_16_23 --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=5 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=e2-highmem-16"
+mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.datacommons.ingestion.pipeline.IngestionPipeline \
+-Dexec.args="--skipProcessing=SKIP_OBS --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=50 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=e2-highmem-16"
+```
+
+### Import specific import group
+
+```shell
+mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.datacommons.ingestion.pipeline.IngestionPipeline \
+-Dexec.args="--importGroupVersion=ipcc_2025_04_04_03_46_23 --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=50 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=e2-highmem-16"
+```
+
+### Import specific import group while skipping obs
+
+```shell
+mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.datacommons.ingestion.pipeline.IngestionPipeline \
+-Dexec.args="--importGroupVersion=ipcc_2025_04_04_03_46_23 --skipProcessing=SKIP_GRAPH --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=50 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=e2-highmem-16"
 ```
 
 ## org.datacommons.IngestionPipeline

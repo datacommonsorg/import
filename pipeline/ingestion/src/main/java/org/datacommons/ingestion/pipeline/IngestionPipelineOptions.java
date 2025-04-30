@@ -44,17 +44,17 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setImportGroupVersion(String importGroupVersion);
 
-  @Description("The number of shards to generate for writing edge mutations.")
+  @Description("The number of shards to generate for writing mutations.")
   @Default.Integer(100)
-  int getNumEdgeShards();
+  int getNumShards();
 
-  void setNumEdgeShards(int numEdgeShards);
+  void setNumShards(int numShards);
 
   @Description("If true, observations will not be ingested.")
-  @Default.Boolean(false)
-  boolean getSkipObservations();
+  @Default.Enum("SKIP_NONE")
+  SkipProcessing getSkipProcessing();
 
-  void setSkipObservations(boolean skipObservations);
+  void setSkipProcessing(SkipProcessing skipProcessing);
 
   @Description("Spanner Observation table name")
   @Default.String("Observation")
