@@ -19,8 +19,18 @@ import org.apache.beam.sdk.values.KV;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
+import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SpannerClient implements Serializable {
+  private static final Logger LOGGER = LoggerFactory.getLogger(SpannerClient.class);
+
+  private static final int MAX_LOG_SAMPLES = 1000;
+  private int numObsDupsLogged = 0;
+  private int numNodeDupsLogged = 0;
+  private int numEdgeGroupByKeysLogged = 0;
+  private int numObsGroupByKeysLogged = 0;
 
   private final String gcpProjectId;
   private final String spannerInstanceId;
@@ -45,7 +55,12 @@ public class SpannerClient implements Serializable {
         .withSpannerConfig(SpannerConfig.create().withRpcPriority(RpcPriority.HIGH))
         .withProjectId(gcpProjectId)
         .withInstanceId(spannerInstanceId)
-        .withDatabaseId(spannerDatabaseId);
+        .withDatabaseId(spannerDatabaseId)
+        .withMaxCommitDelay(20)
+        .withBatchSizeBytes(3 * 1024 * 1024)
+        .withMaxNumMutations(10000)
+        .withGroupingFactor(100)
+        .withCommitDeadline(Duration.standardSeconds(120));
   }
 
   public WriteGrouped getWriteGroupedTransform() {
@@ -137,6 +152,25 @@ public class SpannerClient implements Serializable {
         .toList();
   }
 
+  public List<KV<String, Mutation>> filterObservationKVMutations(
+      List<KV<String, Mutation>> kvs, Set<String> seenObs) {
+    var filtered = new ArrayList<KV<String, Mutation>>();
+    for (var kv : kvs) {
+      var key = getFullObservationKey(kv.getValue());
+      if (seenObs.contains(key)) {
+        if (numObsDupsLogged < MAX_LOG_SAMPLES) {
+          LOGGER.info("Duplicate observation: {}", key);
+          numObsDupsLogged++;
+        }
+        continue;
+      }
+      seenObs.add(key);
+
+      filtered.add(kv);
+    }
+    return filtered;
+  }
+
   public List<KV<String, Mutation>> filterGraphKVMutations(
       List<KV<String, Mutation>> kvs, Set<String> seenNodes) {
     var filtered = new ArrayList<KV<String, Mutation>>();
@@ -146,6 +180,10 @@ public class SpannerClient implements Serializable {
       if (mutation.getTable().equals(nodeTableName)) {
         String subjectId = getSubjectId(mutation);
         if (seenNodes.contains(subjectId)) {
+          if (numNodeDupsLogged < MAX_LOG_SAMPLES) {
+            LOGGER.info("Duplicate node: {}", subjectId);
+            numNodeDupsLogged++;
+          }
           continue;
         }
         seenNodes.add(subjectId);
@@ -243,17 +281,46 @@ public class SpannerClient implements Serializable {
 
     String objectId = getMutationValue(mutation, "object_id");
     String objectHash = getMutationValue(mutation, "object_hash");
-    int shard = Objects.hash(objectId, objectHash) % numShards;
+    int shard = Math.abs(Objects.hash(objectId, objectHash)) % numShards;
 
-    return subjectId + "-" + shard;
+    var key = Joiner.on("::").join(subjectId, shard);
+
+    if (numEdgeGroupByKeysLogged < MAX_LOG_SAMPLES) {
+      LOGGER.info("Edge GroupBy key: {}", key);
+      numEdgeGroupByKeysLogged++;
+    }
+
+    return key;
   }
 
   public String getObservationKVKey(Mutation mutation) {
     var variableMeasured = getMutationValue(mutation, "variable_measured");
     var observationAbout = getMutationValue(mutation, "observation_about");
-    int shard = Objects.hash(mutation.asMap().get("observations")) % numShards;
+    int shard = Math.abs(Objects.hash(observationAbout)) % numShards;
 
-    return Joiner.on("-").join(variableMeasured, observationAbout, shard);
+    var key = Joiner.on("::").join(variableMeasured, shard);
+
+    if (numObsGroupByKeysLogged < MAX_LOG_SAMPLES) {
+      LOGGER.info("Observation GroupBy key: {}, observation_about: {}", key, observationAbout);
+      numObsGroupByKeysLogged++;
+    }
+
+    return key;
+  }
+
+  public static String getFullObservationKey(Mutation mutation) {
+    var parts =
+        new String[] {
+          getMutationValue(mutation, "variable_measured"),
+          getMutationValue(mutation, "observation_about"),
+          getMutationValue(mutation, "provenance"),
+          getMutationValue(mutation, "observation_period"),
+          getMutationValue(mutation, "measurement_method"),
+          getMutationValue(mutation, "unit"),
+          getMutationValue(mutation, "scaling_factor")
+        };
+
+    return Joiner.on("::").join(parts);
   }
 
   public String getGcpProjectId() {
