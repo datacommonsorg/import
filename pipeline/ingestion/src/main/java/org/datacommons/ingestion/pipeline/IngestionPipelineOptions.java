@@ -45,7 +45,7 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   void setImportGroupVersion(String importGroupVersion);
 
   @Description("The number of shards to generate for writing mutations.")
-  @Default.Integer(100)
+  @Default.Integer(1000)
   int getNumShards();
 
   void setNumShards(int numShards);

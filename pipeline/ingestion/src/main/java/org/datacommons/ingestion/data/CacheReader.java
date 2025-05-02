@@ -172,7 +172,6 @@ public class CacheReader implements Serializable {
                     .measurementMethod(source.getMeasurementMethod())
                     .scalingFactor(source.getScalingFactor())
                     .unit(source.getUnit())
-                    .provenance(source.getProvenanceDomain())
                     .provenanceUrl(source.getProvenanceUrl())
                     .importName(source.getImportName());
             for (Map.Entry<String, Double> e : source.getValMap().entrySet()) {

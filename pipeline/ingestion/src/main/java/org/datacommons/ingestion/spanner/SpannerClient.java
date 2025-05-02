@@ -56,7 +56,7 @@ public class SpannerClient implements Serializable {
         .withProjectId(gcpProjectId)
         .withInstanceId(spannerInstanceId)
         .withDatabaseId(spannerDatabaseId)
-        .withMaxCommitDelay(20)
+        .withMaxCommitDelay(50)
         .withBatchSizeBytes(3 * 1024 * 1024)
         .withMaxNumMutations(10000)
         .withGroupingFactor(100)
@@ -101,8 +101,6 @@ public class SpannerClient implements Serializable {
         .to(observation.getVariableMeasured())
         .set("observation_about")
         .to(observation.getObservationAbout())
-        .set("provenance")
-        .to(observation.getProvenance())
         .set("observation_period")
         .to(observation.getObservationPeriod())
         .set("measurement_method")
@@ -294,18 +292,19 @@ public class SpannerClient implements Serializable {
   }
 
   public String getObservationKVKey(Mutation mutation) {
-    var variableMeasured = getMutationValue(mutation, "variable_measured");
-    var observationAbout = getMutationValue(mutation, "observation_about");
-    int shard = Math.abs(Objects.hash(observationAbout)) % numShards;
+    var parts =
+        new Object[] {
+          getMutationValue(mutation, "variable_measured"),
+          hashShard(
+              getMutationValue(mutation, "observation_about"),
+              getMutationValue(mutation, "import_name"))
+        };
 
-    var key = Joiner.on("::").join(variableMeasured, shard);
+    return Joiner.on("::").join(parts);
+  }
 
-    if (numObsGroupByKeysLogged < MAX_LOG_SAMPLES) {
-      LOGGER.info("Observation GroupBy key: {}, observation_about: {}", key, observationAbout);
-      numObsGroupByKeysLogged++;
-    }
-
-    return key;
+  private int hashShard(Object... values) {
+    return Math.abs(Objects.hash(values)) % numShards;
   }
 
   public static String getFullObservationKey(Mutation mutation) {
@@ -313,7 +312,7 @@ public class SpannerClient implements Serializable {
         new String[] {
           getMutationValue(mutation, "variable_measured"),
           getMutationValue(mutation, "observation_about"),
-          getMutationValue(mutation, "provenance"),
+          getMutationValue(mutation, "import_name"),
           getMutationValue(mutation, "observation_period"),
           getMutationValue(mutation, "measurement_method"),
           getMutationValue(mutation, "unit"),
