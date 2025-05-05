@@ -1,11 +1,10 @@
 package org.datacommons.ingestion.data;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import org.apache.beam.sdk.coders.DefaultCoder;
 import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
+import org.datacommons.proto.Storage.Observations;
 
 /** Models a statvar observation time series. */
 @DefaultCoder(AvroCoder.class)
@@ -13,7 +12,7 @@ public class Observation implements Serializable {
 
   private String variableMeasured;
   private String observationAbout;
-  private List<DateValue> observations;
+  private Observations observations;
   private String observationPeriod;
   private String measurementMethod;
   private String unit;
@@ -24,7 +23,7 @@ public class Observation implements Serializable {
   private Observation(Builder builder) {
     this.variableMeasured = builder.variableMeasured;
     this.observationAbout = builder.observationAbout;
-    this.observations = builder.observations;
+    this.observations = builder.observations.build();
     this.observationPeriod = builder.observationPeriod;
     this.measurementMethod = builder.measurementMethod;
     this.unit = builder.unit;
@@ -45,12 +44,8 @@ public class Observation implements Serializable {
     return observationAbout;
   }
 
-  public List<DateValue> getObservations() {
+  public Observations getObservations() {
     return observations;
-  }
-
-  public List<String> getObservationsAsJsonStrings() {
-    return observations.stream().map(DateValue::toJsonString).toList();
   }
 
   public String getObservationPeriod() {
@@ -136,7 +131,7 @@ public class Observation implements Serializable {
   public static class Builder {
     private String variableMeasured = "";
     private String observationAbout = "";
-    private List<DateValue> observations = new ArrayList<>();
+    private Observations.Builder observations = Observations.newBuilder();
     private String observationPeriod = "";
     private String measurementMethod = "";
     private String unit = "";
@@ -154,13 +149,13 @@ public class Observation implements Serializable {
       return this;
     }
 
-    public Builder observation(DateValue dateValue) {
-      this.observations.add(dateValue);
+    public Builder observation(String date, String value) {
+      this.observations.putValues(date, value);
       return this;
     }
 
-    public Builder observations(List<DateValue> observations) {
-      this.observations = observations;
+    public Builder observations(Observations observations) {
+      this.observations = observations.toBuilder();
       return this;
     }
 

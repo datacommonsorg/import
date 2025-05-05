@@ -4,17 +4,11 @@ import com.google.api.gax.paging.Page;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-import com.google.protobuf.Message;
-import com.google.protobuf.Parser;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
 import org.datacommons.proto.CacheData.EntityInfo;
 import org.datacommons.proto.CacheData.PagedEntities;
 import org.datacommons.proto.ChartStoreOuterClass.ChartStore;
@@ -97,7 +91,7 @@ public class CacheReader implements Serializable {
             return result;
           }
 
-          PagedEntities elist = parseProto(value, PagedEntities.parser());
+          PagedEntities elist = ProtoUtil.parseCacheProto(value, PagedEntities.parser());
           for (EntityInfo entity : elist.getEntitiesList()) {
             String subjectId, objectId, nodeId = "";
             // Add a self edge if value is populated.
@@ -162,7 +156,7 @@ public class CacheReader implements Serializable {
         if (!(value.isEmpty()) && keys.length >= 2) {
           String variableMeasured = keys[1];
           String observationAbout = keys[0];
-          ChartStore chart = parseProto(value, ChartStore.parser());
+          ChartStore chart = ProtoUtil.parseCacheProto(value, ChartStore.parser());
           for (SourceSeries source : chart.getObsTimeSeries().getSourceSeriesList()) {
             Observation.Builder builder =
                 Observation.builder()
@@ -175,10 +169,10 @@ public class CacheReader implements Serializable {
                     .provenanceUrl(source.getProvenanceUrl())
                     .importName(source.getImportName());
             for (Map.Entry<String, Double> e : source.getValMap().entrySet()) {
-              builder.observation(new DateValue(e.getKey(), e.getValue().toString()));
+              builder.observation(e.getKey(), e.getValue().toString());
             }
             for (Map.Entry<String, String> e : source.getStrValMap().entrySet()) {
-              builder.observation(new DateValue(e.getKey(), e.getValue()));
+              builder.observation(e.getKey(), e.getValue());
             }
             result.add(builder.build());
           }
@@ -196,16 +190,6 @@ public class CacheReader implements Serializable {
       }
     }
     return false;
-  }
-
-  /** Parses a Base64-encoded, GZIP-compressed protobuf message from a cache row string. */
-  private static <T extends Message> T parseProto(String value, Parser<T> parser) {
-    try (GZIPInputStream gzipInputStream =
-        new GZIPInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(value)))) {
-      return parser.parseFrom(gzipInputStream);
-    } catch (IOException e) {
-      throw new RuntimeException("Error parsing protobuf message: " + e.getMessage(), e);
-    }
   }
 
   private static final boolean isInArcCacheRow(String row) {

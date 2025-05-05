@@ -50,7 +50,7 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setNumShards(int numShards);
 
-  @Description("If true, observations will not be ingested.")
+  @Description("The type of processing to be skipped, if any.")
   @Default.Enum("SKIP_NONE")
   SkipProcessing getSkipProcessing();
 
