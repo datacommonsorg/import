@@ -3,6 +3,7 @@ package org.datacommons.ingestion.pipeline;
 import static org.datacommons.ingestion.data.ImportGroupVersions.getImportGroupVersions;
 import static org.datacommons.ingestion.pipeline.Transforms.buildIngestionPipeline;
 
+import com.google.common.base.Strings;
 import java.util.List;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -18,7 +19,17 @@ public class IngestionPipeline {
     IngestionPipelineOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(IngestionPipelineOptions.class);
     Pipeline pipeline = Pipeline.create(options);
-    LOGGER.info("Fetching versions from: {}", options.getVersionEndpoint());
+
+    List<String> importGroupVersions = List.of();
+
+    String specificImportGroupVersion = options.getImportGroupVersion();
+    if (!Strings.isNullOrEmpty(specificImportGroupVersion)) {
+      LOGGER.info("Ingesting import group version: {}", specificImportGroupVersion);
+      importGroupVersions = List.of(specificImportGroupVersion);
+    } else {
+      LOGGER.info("Fetching versions from: {}", options.getVersionEndpoint());
+      importGroupVersions = getImportGroupVersions(options.getVersionEndpoint());
+    }
 
     CacheReader cacheReader =
         new CacheReader(options.getStorageBucketId(), options.getSkipPredicatePrefixes());
@@ -30,9 +41,8 @@ public class IngestionPipeline {
             .nodeTableName(options.getSpannerNodeTableName())
             .edgeTableName(options.getSpannerEdgeTableName())
             .observationTableName(options.getSpannerObservationTableName())
+            .numShards(options.getNumShards())
             .build();
-
-    List<String> importGroupVersions = getImportGroupVersions(options.getVersionEndpoint());
 
     buildIngestionPipeline(pipeline, importGroupVersions, cacheReader, spannerClient);
 

@@ -1,156 +1,166 @@
 package org.datacommons.ingestion.pipeline;
 
+import static org.datacommons.ingestion.pipeline.SkipProcessing.SKIP_GRAPH;
+import static org.datacommons.ingestion.pipeline.SkipProcessing.SKIP_OBS;
+
 import com.google.cloud.spanner.Mutation;
-import com.google.common.collect.Sets;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.io.gcp.spanner.MutationGroup;
-import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.*;
 import org.datacommons.ingestion.data.CacheReader;
 import org.datacommons.ingestion.data.ImportGroupVersions;
 import org.datacommons.ingestion.data.NodesEdges;
-import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.spanner.SpannerClient;
 
 /** Transforms and DoFns for the ingestion pipeline. */
 public class Transforms {
 
-  /**
-   * DoFn that outputs observation and graph (nodes and edges) mutations for a single cache row.
-   * Observation mutations are output as MutationGroup objects. Graph mutations are output as
-   * KV<String, Mutation> pairs, where the key is the subject ID and the value is the mutation.
-   */
-  static class CacheRowMutationsDoFn extends DoFn<String, KV<String, Mutation>> {
+  static class CacheRowKVMutationsDoFn extends DoFn<String, KV<String, Mutation>> {
+    private static final Counter DUPLICATE_OBS_COUNTER =
+        Metrics.counter(CacheRowKVMutationsDoFn.class, "dc_duplicate_obs_creation");
+    private static final Counter DUPLICATE_NODES_COUNTER =
+        Metrics.counter(CacheRowKVMutationsDoFn.class, "dc_duplicate_nodes_creation");
+
     private final CacheReader cacheReader;
     private final SpannerClient spannerClient;
-    private final TupleTag<KV<String, Mutation>> graph;
-    private final TupleTag<MutationGroup> observations;
-    private final boolean skipObservations;
-    private final Set<String> seenNodes = Sets.newConcurrentHashSet();
+    private final SkipProcessing skipProcessing;
+    private final Set<String> seenNodes = new HashSet<>();
+    private final Set<String> seenObs = new HashSet<>();
 
-    public CacheRowMutationsDoFn(
-        CacheReader cacheReader,
-        SpannerClient spannerClient,
-        boolean skipObservations,
-        TupleTag<KV<String, Mutation>> graph,
-        TupleTag<MutationGroup> observations) {
+    private CacheRowKVMutationsDoFn(
+        CacheReader cacheReader, SpannerClient spannerClient, SkipProcessing skipProcessing) {
       this.cacheReader = cacheReader;
       this.spannerClient = spannerClient;
-      this.skipObservations = skipObservations;
-      this.graph = graph;
-      this.observations = observations;
+      this.skipProcessing = skipProcessing;
     }
 
     @StartBundle
     public void startBundle() {
-      this.seenNodes.clear();
+      seenNodes.clear();
+      seenObs.clear();
     }
 
     @FinishBundle
     public void finishBundle() {
-      this.seenNodes.clear();
+      seenNodes.clear();
+      seenObs.clear();
     }
 
     @ProcessElement
-    public void processElement(@Element String row, MultiOutputReceiver out) {
-      if (CacheReader.isArcCacheRow(row)) {
+    public void processElement(@Element String row, OutputReceiver<KV<String, Mutation>> out) {
+      if (CacheReader.isArcCacheRow(row) && skipProcessing != SKIP_GRAPH) {
         NodesEdges nodesEdges = cacheReader.parseArcRow(row);
         var kvs = spannerClient.toGraphKVMutations(nodesEdges.getNodes(), nodesEdges.getEdges());
-        spannerClient
-            .filterGraphKVMutations(kvs, seenNodes)
-            .forEach(kv -> out.get(graph).output(kv));
-      } else if (CacheReader.isObsTimeSeriesCacheRow(row) && !skipObservations) {
-        List<Observation> obs = cacheReader.parseTimeSeriesRow(row);
-        spannerClient.toObservationMutations(obs).forEach(out.get(observations)::output);
+        var filtered = spannerClient.filterGraphKVMutations(kvs, seenNodes);
+        filtered.forEach(out::output);
+
+        var dups = kvs.size() - filtered.size();
+        if (dups > 0) {
+          DUPLICATE_NODES_COUNTER.inc(dups);
+        }
+      } else if (CacheReader.isObsTimeSeriesCacheRow(row) && skipProcessing != SKIP_OBS) {
+        var obs = cacheReader.parseTimeSeriesRow(row);
+        var kvs = spannerClient.toObservationKVMutations(obs);
+        var filtered = spannerClient.filterObservationKVMutations(kvs, seenObs);
+        filtered.forEach(out::output);
+
+        var dups = kvs.size() - filtered.size();
+        if (dups > 0) {
+          DUPLICATE_OBS_COUNTER.inc(dups);
+        }
       }
     }
   }
 
-  static class ExtractGraphMutationsDoFn extends DoFn<KV<String, Mutation>, Mutation> {
-    private final SpannerClient spannerClient;
-    private final Set<String> seenNodes = Sets.newConcurrentHashSet();
+  static class ExtractKVMutationsDoFn extends DoFn<KV<String, Iterable<Mutation>>, Mutation> {
+    private static final Counter DUPLICATE_OBS_COUNTER =
+        Metrics.counter(ExtractKVMutationsDoFn.class, "dc_duplicate_obs_extraction");
+    private static final Counter DUPLICATE_NODES_COUNTER =
+        Metrics.counter(ExtractKVMutationsDoFn.class, "dc_duplicate_nodes_extraction");
 
-    public ExtractGraphMutationsDoFn(SpannerClient spannerClient) {
+    private final SpannerClient spannerClient;
+
+    // seenNodes and seenObs are sets of unique node and observation keys respectively that are
+    // maintained per beam bundle and cleared once processing a given bundle is finished.
+    // These sets are used to detect and remove duplicates in a bundle.
+    private final Set<String> seenNodes = new HashSet<>();
+    private final Set<String> seenObs = new HashSet<>();
+
+    public ExtractKVMutationsDoFn(SpannerClient spannerClient) {
       this.spannerClient = spannerClient;
     }
 
     @StartBundle
     public void startBundle() {
-      this.seenNodes.clear();
+      seenNodes.clear();
+      seenObs.clear();
     }
 
     @FinishBundle
     public void finishBundle() {
-      this.seenNodes.clear();
+      seenNodes.clear();
+      seenObs.clear();
     }
 
     @ProcessElement
-    public void processElement(@Element KV<String, Mutation> kv, OutputReceiver<Mutation> out) {
-      var mutation = kv.getValue();
-      var subjectId = SpannerClient.getSubjectId(mutation);
-      if (mutation.getTable().equals(spannerClient.getNodeTableName())) {
-        if (seenNodes.contains(subjectId)) {
-          return;
+    public void processElement(
+        @Element KV<String, Iterable<Mutation>> kv, OutputReceiver<Mutation> out) {
+      for (var mutation : kv.getValue()) {
+        if (mutation.getTable().equals(spannerClient.getNodeTableName())) {
+          var subjectId = SpannerClient.getSubjectId(mutation);
+          if (seenNodes.contains(subjectId)) {
+            DUPLICATE_NODES_COUNTER.inc();
+            continue;
+          }
+          seenNodes.add(subjectId);
+        } else if (mutation.getTable().equals(spannerClient.getObservationTableName())) {
+          var key = SpannerClient.getFullObservationKey(mutation);
+          if (seenObs.contains(key)) {
+            DUPLICATE_OBS_COUNTER.inc();
+            continue;
+          }
+          seenObs.add(key);
         }
-        seenNodes.add(subjectId);
+        out.output(mutation);
       }
-      out.output(mutation);
     }
   }
 
   static class ImportGroupTransform extends PTransform<PCollection<String>, PCollection<Void>> {
     private final CacheReader cacheReader;
     private final SpannerClient spannerClient;
-    private final boolean skipObservations;
+    private final SkipProcessing skipProcessing;
 
     public ImportGroupTransform(
-        CacheReader cacheReader, SpannerClient spannerClient, boolean skipObservations) {
+        CacheReader cacheReader, SpannerClient spannerClient, SkipProcessing skipProcessing) {
       this.cacheReader = cacheReader;
       this.spannerClient = spannerClient;
-      this.skipObservations = skipObservations;
+      this.skipProcessing = skipProcessing;
     }
 
     @Override
     public PCollection<Void> expand(PCollection<String> cacheRows) {
-      TupleTag<MutationGroup> observations = new TupleTag<>() {};
-      TupleTag<KV<String, Mutation>> graph = new TupleTag<>() {};
-      CacheRowMutationsDoFn createMutations =
-          new CacheRowMutationsDoFn(
-              cacheReader, spannerClient, skipObservations, graph, observations);
+      // While a separate method is not required here, doing so makes it easier to develop and test
+      // with other strategies.
+      return groupBy(cacheRows);
+    }
 
-      PCollectionTuple mutations =
+    private PCollection<Void> groupBy(PCollection<String> cacheRows) {
+      var kvs =
           cacheRows.apply(
               "CreateMutations",
-              ParDo.of(createMutations).withOutputTags(graph, TupleTagList.of(observations)));
-
-      // Write graph to spanner.
-      var graphResult =
-          mutations
-              .get(graph)
-              .apply("RedistributeGraphMutations", Redistribute.byKey())
-              .apply(
-                  "ExtractGraphMutations", ParDo.of(new ExtractGraphMutationsDoFn(spannerClient)))
-              .apply("WriteGraphToSpanner", spannerClient.getWriteTransform());
-
-      // Write observations to spanner.
-      SpannerWriteResult obsResult = null;
-      if (!skipObservations) {
-        obsResult =
-            mutations
-                .get(observations)
-                .apply("WriteObservationsToSpanner", spannerClient.getWriteGroupedTransform());
-      }
-
-      var writeResults = PCollectionList.of(graphResult.getOutput());
-      if (obsResult != null) {
-        writeResults.and(obsResult.getOutput());
-      }
-
-      return writeResults.apply("Done", Flatten.pCollections());
+              ParDo.of(new CacheRowKVMutationsDoFn(cacheReader, spannerClient, skipProcessing)));
+      var grouped = kvs.apply("GroupMutations", GroupByKey.create());
+      var mutations =
+          grouped.apply("ExtractMutations", ParDo.of(new ExtractKVMutationsDoFn(spannerClient)));
+      var write = mutations.apply("WriteToSpanner", spannerClient.getWriteTransform());
+      return write.getOutput();
     }
   }
 
@@ -166,7 +176,8 @@ public class Transforms {
         .apply("Read: " + importGroupName, TextIO.read().from(importGroupFilePath))
         .apply(
             "Ingest: " + importGroupName,
-            new ImportGroupTransform(cacheReader, spannerClient, options.getSkipObservations()));
+            new Transforms.ImportGroupTransform(
+                cacheReader, spannerClient, options.getSkipProcessing()));
   }
 
   static void buildIngestionPipeline(

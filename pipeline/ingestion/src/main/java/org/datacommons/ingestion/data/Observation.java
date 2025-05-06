@@ -1,11 +1,10 @@
 package org.datacommons.ingestion.data;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import org.apache.beam.sdk.coders.DefaultCoder;
 import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
+import org.datacommons.proto.Storage.Observations;
 
 /** Models a statvar observation time series. */
 @DefaultCoder(AvroCoder.class)
@@ -13,8 +12,7 @@ public class Observation implements Serializable {
 
   private String variableMeasured;
   private String observationAbout;
-  private List<DateValue> observations;
-  private String provenance;
+  private Observations observations;
   private String observationPeriod;
   private String measurementMethod;
   private String unit;
@@ -25,8 +23,7 @@ public class Observation implements Serializable {
   private Observation(Builder builder) {
     this.variableMeasured = builder.variableMeasured;
     this.observationAbout = builder.observationAbout;
-    this.observations = builder.observations;
-    this.provenance = builder.provenance;
+    this.observations = builder.observations.build();
     this.observationPeriod = builder.observationPeriod;
     this.measurementMethod = builder.measurementMethod;
     this.unit = builder.unit;
@@ -47,16 +44,8 @@ public class Observation implements Serializable {
     return observationAbout;
   }
 
-  public List<DateValue> getObservations() {
+  public Observations getObservations() {
     return observations;
-  }
-
-  public List<String> getObservationsAsJsonStrings() {
-    return observations.stream().map(DateValue::toJsonString).toList();
-  }
-
-  public String getProvenance() {
-    return provenance;
   }
 
   public String getObservationPeriod() {
@@ -91,7 +80,6 @@ public class Observation implements Serializable {
     return Objects.equals(variableMeasured, that.variableMeasured)
         && Objects.equals(observationAbout, that.observationAbout)
         && Objects.equals(observations, that.observations)
-        && Objects.equals(provenance, that.provenance)
         && Objects.equals(observationPeriod, that.observationPeriod)
         && Objects.equals(measurementMethod, that.measurementMethod)
         && Objects.equals(unit, that.unit)
@@ -106,7 +94,6 @@ public class Observation implements Serializable {
         variableMeasured,
         observationAbout,
         observations,
-        provenance,
         observationPeriod,
         measurementMethod,
         unit,
@@ -122,7 +109,6 @@ public class Observation implements Serializable {
             + "variableMeasured='%s', "
             + "observationAbout='%s', "
             + "observations=%s, "
-            + "provenance='%s', "
             + "observationPeriod='%s', "
             + "measurementMethod='%s', "
             + "unit='%s', "
@@ -133,7 +119,6 @@ public class Observation implements Serializable {
         variableMeasured,
         observationAbout,
         observations,
-        provenance,
         observationPeriod,
         measurementMethod,
         unit,
@@ -146,8 +131,7 @@ public class Observation implements Serializable {
   public static class Builder {
     private String variableMeasured = "";
     private String observationAbout = "";
-    private List<DateValue> observations = new ArrayList<>();
-    private String provenance = "";
+    private Observations.Builder observations = Observations.newBuilder();
     private String observationPeriod = "";
     private String measurementMethod = "";
     private String unit = "";
@@ -165,18 +149,13 @@ public class Observation implements Serializable {
       return this;
     }
 
-    public Builder observation(DateValue dateValue) {
-      this.observations.add(dateValue);
+    public Builder observation(String date, String value) {
+      this.observations.putValues(date, value);
       return this;
     }
 
-    public Builder observations(List<DateValue> observations) {
-      this.observations = observations;
-      return this;
-    }
-
-    public Builder provenance(String provenance) {
-      this.provenance = provenance;
+    public Builder observations(Observations observations) {
+      this.observations = observations.toBuilder();
       return this;
     }
 
