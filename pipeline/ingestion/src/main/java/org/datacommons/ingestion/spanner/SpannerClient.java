@@ -1,6 +1,6 @@
 package org.datacommons.ingestion.spanner;
 
-import static org.datacommons.ingestion.data.ProtoUtil.serializeSpannerProto;
+import static org.datacommons.ingestion.data.ProtoUtil.compressProto;
 
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
@@ -19,16 +19,8 @@ import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
 import org.joda.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SpannerClient implements Serializable {
-  private static final Logger LOGGER = LoggerFactory.getLogger(SpannerClient.class);
-
-  private static final int MAX_LOG_SAMPLES = 1000;
-  private int numObsDupsLogged = 0;
-  private int numNodeDupsLogged = 0;
-  private int numEdgeGroupByKeysLogged = 0;
 
   private final String gcpProjectId;
   private final String spannerInstanceId;
@@ -108,7 +100,7 @@ public class SpannerClient implements Serializable {
         .set("scaling_factor")
         .to(observation.getScalingFactor())
         .set("observations")
-        .to(ByteArray.copyFrom(serializeSpannerProto(observation.getObservations())))
+        .to(ByteArray.copyFrom(compressProto(observation.getObservations())))
         .set("import_name")
         .to(observation.getImportName())
         .set("provenance_url")
@@ -136,10 +128,6 @@ public class SpannerClient implements Serializable {
     for (var kv : kvs) {
       var key = getFullObservationKey(kv.getValue());
       if (seenObs.contains(key)) {
-        if (numObsDupsLogged < MAX_LOG_SAMPLES) {
-          LOGGER.info("Duplicate observation: {}", key);
-          numObsDupsLogged++;
-        }
         continue;
       }
       seenObs.add(key);
@@ -158,10 +146,6 @@ public class SpannerClient implements Serializable {
       if (mutation.getTable().equals(nodeTableName)) {
         String subjectId = getSubjectId(mutation);
         if (seenNodes.contains(subjectId)) {
-          if (numNodeDupsLogged < MAX_LOG_SAMPLES) {
-            LOGGER.info("Duplicate node: {}", subjectId);
-            numNodeDupsLogged++;
-          }
           continue;
         }
         seenNodes.add(subjectId);
@@ -177,36 +161,53 @@ public class SpannerClient implements Serializable {
   }
 
   private static String getMutationValue(Mutation mutation, String columnName) {
-    return mutation.asMap().getOrDefault(columnName, Value.string("")).getString();
+    return getMutationValue(mutation.asMap(), columnName);
+  }
+
+  /**
+   * Returns a string mutation value from a mutation map.
+   *
+   * Prefer using this method when multiple mutation values are to be fetched from a given mutation.
+   * Call mutation.asMap() on the mutation and then call this method by passing the map.
+   * This is more efficient since asMap() iterates over the columns and creates a new map each time.
+   *
+   * Example usage:
+   *
+   * <code>
+   *     Mutation mutation = ...;
+   *     var mutationMap = mutation.asMap();
+   *     var value1 = getMutationValue(mutationMap, "column1");
+   *     var value2 = getMutationValue(mutationMap, "column2");
+   *     ...
+   *     var valueN = getMutationValue(mutationMap, "columnN");
+   * </code>
+   */
+  private static String getMutationValue(Map<String, Value> mutationMap, String columnName) {
+    return mutationMap.getOrDefault(columnName, Value.string("")).getString();
   }
 
   public String getGraphKVKey(Mutation mutation) {
-    String subjectId = getSubjectId(mutation);
+    var mutationMap = mutation.asMap();
+    String subjectId = getMutationValue(mutationMap, "subject_id");
     if (numShards <= 1 || !mutation.getTable().equals(edgeTableName)) {
       return subjectId;
     }
 
-    String objectId = getMutationValue(mutation, "object_id");
-    String objectHash = getMutationValue(mutation, "object_hash");
+    String objectId = getMutationValue(mutationMap, "object_id");
+    String objectHash = getMutationValue(mutationMap, "object_hash");
     int shard = Math.abs(Objects.hash(objectId, objectHash)) % numShards;
 
-    var key = Joiner.on("::").join(subjectId, shard);
-
-    if (numEdgeGroupByKeysLogged < MAX_LOG_SAMPLES) {
-      LOGGER.info("Edge GroupBy key: {}", key);
-      numEdgeGroupByKeysLogged++;
-    }
-
-    return key;
+    return Joiner.on("::").join(subjectId, shard);
   }
 
   public String getObservationKVKey(Mutation mutation) {
+    var mutationMap = mutation.asMap();
     var parts =
         new Object[] {
-          getMutationValue(mutation, "variable_measured"),
+          getMutationValue(mutationMap, "variable_measured"),
           hashShard(
-              getMutationValue(mutation, "observation_about"),
-              getMutationValue(mutation, "import_name"))
+              getMutationValue(mutationMap, "observation_about"),
+              getMutationValue(mutationMap, "import_name"))
         };
 
     return Joiner.on("::").join(parts);
@@ -217,15 +218,16 @@ public class SpannerClient implements Serializable {
   }
 
   public static String getFullObservationKey(Mutation mutation) {
+    var mutationMap = mutation.asMap();
     var parts =
         new String[] {
-          getMutationValue(mutation, "variable_measured"),
-          getMutationValue(mutation, "observation_about"),
-          getMutationValue(mutation, "import_name"),
-          getMutationValue(mutation, "observation_period"),
-          getMutationValue(mutation, "measurement_method"),
-          getMutationValue(mutation, "unit"),
-          getMutationValue(mutation, "scaling_factor")
+          getMutationValue(mutationMap, "variable_measured"),
+          getMutationValue(mutationMap, "observation_about"),
+          getMutationValue(mutationMap, "import_name"),
+          getMutationValue(mutationMap, "observation_period"),
+          getMutationValue(mutationMap, "measurement_method"),
+          getMutationValue(mutationMap, "unit"),
+          getMutationValue(mutationMap, "scaling_factor")
         };
 
     return Joiner.on("::").join(parts);

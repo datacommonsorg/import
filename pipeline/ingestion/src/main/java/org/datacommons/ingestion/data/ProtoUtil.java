@@ -22,12 +22,12 @@ public final class ProtoUtil {
   }
 
   /**
-   * Serializes the specified proto to be stored in spanner as gzipped bytes.
+   * Compresses the specified proto to be stored in spanner as gzipped bytes.
    *
    * <p>Note that we don't Base64 encode them like we do in BT since base64 encoding almost triples
    * the size.
    */
-  public static byte[] serializeSpannerProto(Message proto) {
+  public static byte[] compressProto(Message proto) {
     try {
       var out = new ByteArrayOutputStream();
       try (GZIPOutputStream gout = new GZIPOutputStream(out)) {

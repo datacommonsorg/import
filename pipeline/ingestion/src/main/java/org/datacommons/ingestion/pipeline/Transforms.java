@@ -17,12 +17,9 @@ import org.datacommons.ingestion.data.CacheReader;
 import org.datacommons.ingestion.data.ImportGroupVersions;
 import org.datacommons.ingestion.data.NodesEdges;
 import org.datacommons.ingestion.spanner.SpannerClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Transforms and DoFns for the ingestion pipeline. */
 public class Transforms {
-  private static final int MAX_LOG_SAMPLES = 1000;
 
   static class CacheRowKVMutationsDoFn extends DoFn<String, KV<String, Mutation>> {
     private static final Counter DUPLICATE_OBS_COUNTER =
@@ -82,18 +79,18 @@ public class Transforms {
   }
 
   static class ExtractKVMutationsDoFn extends DoFn<KV<String, Iterable<Mutation>>, Mutation> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExtractKVMutationsDoFn.class);
     private static final Counter DUPLICATE_OBS_COUNTER =
         Metrics.counter(ExtractKVMutationsDoFn.class, "dc_duplicate_obs_extraction");
     private static final Counter DUPLICATE_NODES_COUNTER =
         Metrics.counter(ExtractKVMutationsDoFn.class, "dc_duplicate_nodes_extraction");
 
     private final SpannerClient spannerClient;
+
+    // seenNodes and seenObs are sets of unique node and observation keys respectively that are
+    // maintained per beam bundle and cleared once processing a given bundle is finished.
+    // These sets are used to detect and remove duplicates in a bundle.
     private final Set<String> seenNodes = new HashSet<>();
     private final Set<String> seenObs = new HashSet<>();
-
-    private int numObsDupsLogged = 0;
-    private int numNodeDupsLogged = 0;
 
     public ExtractKVMutationsDoFn(SpannerClient spannerClient) {
       this.spannerClient = spannerClient;
@@ -118,11 +115,6 @@ public class Transforms {
         if (mutation.getTable().equals(spannerClient.getNodeTableName())) {
           var subjectId = SpannerClient.getSubjectId(mutation);
           if (seenNodes.contains(subjectId)) {
-            if (numNodeDupsLogged < MAX_LOG_SAMPLES) {
-              LOGGER.info("Duplicate node (extraction): {}", subjectId);
-              numNodeDupsLogged++;
-            }
-
             DUPLICATE_NODES_COUNTER.inc();
             continue;
           }
@@ -130,11 +122,6 @@ public class Transforms {
         } else if (mutation.getTable().equals(spannerClient.getObservationTableName())) {
           var key = SpannerClient.getFullObservationKey(mutation);
           if (seenObs.contains(key)) {
-            if (numObsDupsLogged < MAX_LOG_SAMPLES) {
-              LOGGER.info("Duplicate observation (extraction): {}", key);
-              numObsDupsLogged++;
-            }
-
             DUPLICATE_OBS_COUNTER.inc();
             continue;
           }
