@@ -32,7 +32,7 @@ mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.d
 
 ```shell
 mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.datacommons.ingestion.pipeline.IngestionPipeline \
--Dexec.args="--importGroupVersion=ipcc_2025_04_04_03_46_23 --skipProcessing=SKIP_GRAPH --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=20 --maxNumWorkers=20 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=n2-highmem-16"
+-Dexec.args="--importGroupVersion=ipcc_2025_04_04_03_46_23 --skipProcessing=SKIP_GRAPH --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=50 --maxNumWorkers=100 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=e2-highmem-16"
 ```
 
 ## org.datacommons.IngestionPipeline

@@ -55,7 +55,7 @@ public class SpannerClient implements Serializable {
         .withInstanceId(spannerInstanceId)
         .withDatabaseId(spannerDatabaseId)
         .withMaxCommitDelay(50)
-        .withBatchSizeBytes(1024 * 1024)
+        .withBatchSizeBytes(3 * 1024 * 1024)
         .withMaxNumMutations(10000)
         .withGroupingFactor(100)
         .withCommitDeadline(Duration.standardSeconds(120));
