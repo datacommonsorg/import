@@ -4,16 +4,15 @@ import static org.datacommons.ingestion.data.ProtoUtil.compressProto;
 
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
-import com.google.cloud.spanner.Options.RpcPriority;
 import com.google.cloud.spanner.Value;
 import com.google.common.base.Joiner;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Stream;
-import org.apache.beam.sdk.io.gcp.spanner.SpannerConfig;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.Write;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.WriteGrouped;
+import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.values.KV;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
@@ -42,14 +41,15 @@ public class SpannerClient implements Serializable {
 
   public Write getWriteTransform() {
     return SpannerIO.write()
-        .withSpannerConfig(SpannerConfig.create().withRpcPriority(RpcPriority.HIGH))
         .withProjectId(gcpProjectId)
         .withInstanceId(spannerInstanceId)
         .withDatabaseId(spannerDatabaseId)
-        .withMaxCommitDelay(50)
-        .withBatchSizeBytes(3 * 1024 * 1024)
-        .withMaxNumMutations(10000)
-        .withGroupingFactor(100)
+        .withBatchSizeBytes(500 * 1024) // decrease batch size for observations (bigger rows)
+        .withMaxNumRows(2000) // increase batch size for Nodes/Edges (smaller rows)
+        .withGroupingFactor(
+            3000) // use more rows for sorting/batching to limit batch to fewer splits
+        .withMaxNumMutations(
+            10000) // higher value ensures this limit is not encountered before MaxNumRows
         .withCommitDeadline(Duration.standardSeconds(120));
   }
 
@@ -138,7 +138,11 @@ public class SpannerClient implements Serializable {
   }
 
   public List<KV<String, Mutation>> filterGraphKVMutations(
-      List<KV<String, Mutation>> kvs, Set<String> seenNodes) {
+      List<KV<String, Mutation>> kvs,
+      Set<String> seenNodes,
+      Set<String> seenEdges,
+      Counter duplicateNodesCounter,
+      Counter duplicateEdgesCounter) {
     var filtered = new ArrayList<KV<String, Mutation>>();
     for (var kv : kvs) {
       var mutation = kv.getValue();
@@ -146,9 +150,18 @@ public class SpannerClient implements Serializable {
       if (mutation.getTable().equals(nodeTableName)) {
         String subjectId = getSubjectId(mutation);
         if (seenNodes.contains(subjectId)) {
+          duplicateNodesCounter.inc();
           continue;
         }
         seenNodes.add(subjectId);
+      } else if (seenEdges != null && mutation.getTable().equals(edgeTableName)) {
+        // Skip duplicate edge mutations for the same edge key
+        String edgeKey = getEdgeKey(mutation);
+        if (seenEdges.contains(edgeKey)) {
+          duplicateEdgesCounter.inc();
+          continue;
+        }
+        seenEdges.add(edgeKey);
       }
 
       filtered.add(kv);
@@ -167,13 +180,11 @@ public class SpannerClient implements Serializable {
   /**
    * Returns a string mutation value from a mutation map.
    *
-   * Prefer using this method when multiple mutation values are to be fetched from a given mutation.
-   * Call mutation.asMap() on the mutation and then call this method by passing the map.
+   * <p>Prefer using this method when multiple mutation values are to be fetched from a given
+   * mutation. Call mutation.asMap() on the mutation and then call this method by passing the map.
    * This is more efficient since asMap() iterates over the columns and creates a new map each time.
    *
-   * Example usage:
-   *
-   * <code>
+   * <p>Example usage: <code>
    *     Mutation mutation = ...;
    *     var mutationMap = mutation.asMap();
    *     var value1 = getMutationValue(mutationMap, "column1");
@@ -184,6 +195,17 @@ public class SpannerClient implements Serializable {
    */
   private static String getMutationValue(Map<String, Value> mutationMap, String columnName) {
     return mutationMap.getOrDefault(columnName, Value.string("")).getString();
+  }
+
+  public static String getEdgeKey(Mutation mutation) {
+    var mutationMap = mutation.asMap();
+    return Joiner.on("::")
+        .join(
+            getMutationValue(mutationMap, "subject_id"),
+            getMutationValue(mutationMap, "predicate"),
+            getMutationValue(mutationMap, "object_id"),
+            getMutationValue(mutationMap, "object_hash"),
+            getMutationValue(mutationMap, "provenance"));
   }
 
   public String getGraphKVKey(Mutation mutation) {

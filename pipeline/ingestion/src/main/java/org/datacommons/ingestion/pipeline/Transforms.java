@@ -26,49 +26,60 @@ public class Transforms {
         Metrics.counter(CacheRowKVMutationsDoFn.class, "dc_duplicate_obs_creation");
     private static final Counter DUPLICATE_NODES_COUNTER =
         Metrics.counter(CacheRowKVMutationsDoFn.class, "dc_duplicate_nodes_creation");
+    private static final Counter DUPLICATE_EDGES_COUNTER =
+        Metrics.counter(CacheRowKVMutationsDoFn.class, "dc_duplicate_edges_creation");
 
     private final CacheReader cacheReader;
     private final SpannerClient spannerClient;
     private final SkipProcessing skipProcessing;
+    private final TupleTag<KV<String, Mutation>> graphTag;
+    private final TupleTag<KV<String, Mutation>> observationTag;
+    // TODO: Explore filtering duplicates across all bundles within a JVM.
     private final Set<String> seenNodes = new HashSet<>();
+    private final Set<String> seenEdges = new HashSet<>();
     private final Set<String> seenObs = new HashSet<>();
 
     private CacheRowKVMutationsDoFn(
-        CacheReader cacheReader, SpannerClient spannerClient, SkipProcessing skipProcessing) {
+        CacheReader cacheReader,
+        SpannerClient spannerClient,
+        SkipProcessing skipProcessing,
+        TupleTag<KV<String, Mutation>> graphTag,
+        TupleTag<KV<String, Mutation>> observationTag) {
       this.cacheReader = cacheReader;
       this.spannerClient = spannerClient;
       this.skipProcessing = skipProcessing;
+      this.graphTag = graphTag;
+      this.observationTag = observationTag;
     }
 
     @StartBundle
     public void startBundle() {
       seenNodes.clear();
       seenObs.clear();
+      seenEdges.clear();
     }
 
     @FinishBundle
     public void finishBundle() {
       seenNodes.clear();
       seenObs.clear();
+      seenEdges.clear();
     }
 
     @ProcessElement
-    public void processElement(@Element String row, OutputReceiver<KV<String, Mutation>> out) {
+    public void processElement(@Element String row, MultiOutputReceiver out) {
       if (CacheReader.isArcCacheRow(row) && skipProcessing != SKIP_GRAPH) {
         NodesEdges nodesEdges = cacheReader.parseArcRow(row);
         var kvs = spannerClient.toGraphKVMutations(nodesEdges.getNodes(), nodesEdges.getEdges());
-        var filtered = spannerClient.filterGraphKVMutations(kvs, seenNodes);
-        filtered.forEach(out::output);
-
-        var dups = kvs.size() - filtered.size();
-        if (dups > 0) {
-          DUPLICATE_NODES_COUNTER.inc(dups);
-        }
+        var filtered =
+            spannerClient.filterGraphKVMutations(
+                kvs, seenNodes, seenEdges, DUPLICATE_NODES_COUNTER, DUPLICATE_EDGES_COUNTER);
+        filtered.forEach(out.get(graphTag)::output);
       } else if (CacheReader.isObsTimeSeriesCacheRow(row) && skipProcessing != SKIP_OBS) {
         var obs = cacheReader.parseTimeSeriesRow(row);
         var kvs = spannerClient.toObservationKVMutations(obs);
         var filtered = spannerClient.filterObservationKVMutations(kvs, seenObs);
-        filtered.forEach(out::output);
+        filtered.forEach(out.get(observationTag)::output);
 
         var dups = kvs.size() - filtered.size();
         if (dups > 0) {
@@ -83,6 +94,8 @@ public class Transforms {
         Metrics.counter(ExtractKVMutationsDoFn.class, "dc_duplicate_obs_extraction");
     private static final Counter DUPLICATE_NODES_COUNTER =
         Metrics.counter(ExtractKVMutationsDoFn.class, "dc_duplicate_nodes_extraction");
+    private static final Counter DUPLICATE_EDGES_COUNTER =
+        Metrics.counter(ExtractKVMutationsDoFn.class, "dc_duplicate_edges_extraction");
 
     private final SpannerClient spannerClient;
 
@@ -91,6 +104,7 @@ public class Transforms {
     // These sets are used to detect and remove duplicates in a bundle.
     private final Set<String> seenNodes = new HashSet<>();
     private final Set<String> seenObs = new HashSet<>();
+    private final Set<String> seenEdges = new HashSet<>();
 
     public ExtractKVMutationsDoFn(SpannerClient spannerClient) {
       this.spannerClient = spannerClient;
@@ -100,12 +114,14 @@ public class Transforms {
     public void startBundle() {
       seenNodes.clear();
       seenObs.clear();
+      seenEdges.clear();
     }
 
     @FinishBundle
     public void finishBundle() {
       seenNodes.clear();
       seenObs.clear();
+      seenEdges.clear();
     }
 
     @ProcessElement
@@ -119,6 +135,14 @@ public class Transforms {
             continue;
           }
           seenNodes.add(subjectId);
+        }
+        if (mutation.getTable().equals(spannerClient.getEdgeTableName())) {
+          var edgeKey = SpannerClient.getEdgeKey(mutation);
+          if (seenEdges.contains(edgeKey)) {
+            DUPLICATE_EDGES_COUNTER.inc();
+            continue;
+          }
+          seenEdges.add(edgeKey);
         } else if (mutation.getTable().equals(spannerClient.getObservationTableName())) {
           var key = SpannerClient.getFullObservationKey(mutation);
           if (seenObs.contains(key)) {
@@ -148,18 +172,55 @@ public class Transforms {
     public PCollection<Void> expand(PCollection<String> cacheRows) {
       // While a separate method is not required here, doing so makes it easier to develop and test
       // with other strategies.
-      return groupBy(cacheRows);
+      // return groupBy(cacheRows);
+      return groupByGraphOnly(cacheRows);
     }
 
     private PCollection<Void> groupBy(PCollection<String> cacheRows) {
+      var observationTag = new TupleTag<KV<String, Mutation>>() {};
+      var graphTag = new TupleTag<KV<String, Mutation>>() {};
       var kvs =
           cacheRows.apply(
               "CreateMutations",
-              ParDo.of(new CacheRowKVMutationsDoFn(cacheReader, spannerClient, skipProcessing)));
-      var grouped = kvs.apply("GroupMutations", GroupByKey.create());
+              ParDo.of(
+                      new CacheRowKVMutationsDoFn(
+                          cacheReader, spannerClient, skipProcessing, graphTag, observationTag))
+                  .withOutputTags(graphTag, TupleTagList.of(observationTag)));
+      var merge =
+          PCollectionList.of(kvs.get(graphTag))
+              .and(kvs.get(observationTag))
+              .apply("MergeKVs", Flatten.<KV<String, Mutation>>pCollections());
+      var grouped = merge.apply("GroupMutations", GroupByKey.create());
       var mutations =
           grouped.apply("ExtractMutations", ParDo.of(new ExtractKVMutationsDoFn(spannerClient)));
       var write = mutations.apply("WriteToSpanner", spannerClient.getWriteTransform());
+      return write.getOutput();
+    }
+
+    private PCollection<Void> groupByGraphOnly(PCollection<String> cacheRows) {
+      var observationTag = new TupleTag<KV<String, Mutation>>() {};
+      var graphTag = new TupleTag<KV<String, Mutation>>() {};
+      var kvs =
+          cacheRows.apply(
+              "CreateMutations",
+              ParDo.of(
+                      new CacheRowKVMutationsDoFn(
+                          cacheReader, spannerClient, skipProcessing, graphTag, observationTag))
+                  .withOutputTags(graphTag, TupleTagList.of(observationTag)));
+
+      var observations =
+          kvs.get(observationTag).apply("ExtractObservationMutations", Values.create());
+      // TODO: Explore emitting protos instead of mutations to reduce shuffle cost.
+      var graph =
+          kvs.get(graphTag)
+              .apply("GroupGraphMutations", GroupByKey.create())
+              .apply("ExtractGraphMutations", ParDo.of(new ExtractKVMutationsDoFn(spannerClient)));
+
+      var write =
+          PCollectionList.of(graph)
+              .and(observations)
+              .apply("MergeMutations", Flatten.<Mutation>pCollections())
+              .apply("WriteToSpanner", spannerClient.getWriteTransform());
       return write.getOutput();
     }
   }
