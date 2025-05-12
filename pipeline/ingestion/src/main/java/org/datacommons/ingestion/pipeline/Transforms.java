@@ -34,6 +34,7 @@ public class Transforms {
     private final SkipProcessing skipProcessing;
     private final TupleTag<KV<String, Mutation>> graphTag;
     private final TupleTag<KV<String, Mutation>> observationTag;
+    // TODO: Explore filtering duplicates across all bundles within a JVM.
     private final Set<String> seenNodes = new HashSet<>();
     private final Set<String> seenEdges = new HashSet<>();
     private final Set<String> seenObs = new HashSet<>();
@@ -209,7 +210,7 @@ public class Transforms {
 
       var observations =
           kvs.get(observationTag).apply("ExtractObservationMutations", Values.create());
-
+      // TODO: Explore emitting protos instead of mutations to reduce shuffle cost.
       var graph =
           kvs.get(graphTag)
               .apply("GroupGraphMutations", GroupByKey.create())
