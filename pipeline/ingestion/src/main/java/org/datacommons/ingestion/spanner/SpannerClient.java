@@ -13,6 +13,7 @@ import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.Write;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.WriteGrouped;
 import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.options.ValueProvider;
 import org.apache.beam.sdk.values.KV;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
@@ -20,6 +21,16 @@ import org.datacommons.ingestion.data.Observation;
 import org.joda.time.Duration;
 
 public class SpannerClient implements Serializable {
+  // Decrease batch size for observations (bigger rows)
+  private static final int SPANNER_BATCH_SIZE_BYTES = 500 * 1024;
+  // Increase batch size for Nodes/Edges (smaller rows)
+  private static final int SPANNER_MAX_NUM_ROWS = 2000;
+  // Higher value ensures this limit is not encountered before MaxNumRows
+  private static final int SPANNER_MAX_NUM_MUTATIONS = 10000;
+  // Use more rows for sorting/batching to limit batch to fewer splits
+  private static final int SPANNER_GROUPING_FACTOR = 3000;
+  // Commit deadline for spanner writes. Use large value for bigger batches.
+  private static final int SPANNER_COMMIT_DEADLINE_SECONDS = 120;
 
   private final String gcpProjectId;
   private final String spannerInstanceId;
@@ -43,14 +54,12 @@ public class SpannerClient implements Serializable {
     return SpannerIO.write()
         .withProjectId(gcpProjectId)
         .withInstanceId(spannerInstanceId)
-        .withDatabaseId(spannerDatabaseId)
-        .withBatchSizeBytes(500 * 1024) // decrease batch size for observations (bigger rows)
-        .withMaxNumRows(2000) // increase batch size for Nodes/Edges (smaller rows)
-        .withGroupingFactor(
-            3000) // use more rows for sorting/batching to limit batch to fewer splits
-        .withMaxNumMutations(
-            10000) // higher value ensures this limit is not encountered before MaxNumRows
-        .withCommitDeadline(Duration.standardSeconds(120));
+        .withDatabaseId(ValueProvider.StaticValueProvider.of(spannerDatabaseId))
+        .withBatchSizeBytes(SPANNER_BATCH_SIZE_BYTES)
+        .withMaxNumRows(SPANNER_MAX_NUM_ROWS)
+        .withGroupingFactor(SPANNER_GROUPING_FACTOR)
+        .withMaxNumMutations(SPANNER_MAX_NUM_MUTATIONS)
+        .withCommitDeadline(Duration.standardSeconds(SPANNER_COMMIT_DEADLINE_SECONDS));
   }
 
   public WriteGrouped getWriteGroupedTransform() {
@@ -154,7 +163,7 @@ public class SpannerClient implements Serializable {
           continue;
         }
         seenNodes.add(subjectId);
-      } else if (seenEdges != null && mutation.getTable().equals(edgeTableName)) {
+      } else if (mutation.getTable().equals(edgeTableName)) {
         // Skip duplicate edge mutations for the same edge key
         String edgeKey = getEdgeKey(mutation);
         if (seenEdges.contains(edgeKey)) {
@@ -208,6 +217,12 @@ public class SpannerClient implements Serializable {
             getMutationValue(mutationMap, "provenance"));
   }
 
+  /**
+   * Returns the key for grouping graph mutations (Nodes and Edges) in a KV.
+   *
+   * <p>Note: For effective de-duplication, the grouping key should be a subset of the primary keys
+   * from the relevant tables (e.g. edges, nodes, observations).
+   */
   public String getGraphKVKey(Mutation mutation) {
     var mutationMap = mutation.asMap();
     String subjectId = getMutationValue(mutationMap, "subject_id");
