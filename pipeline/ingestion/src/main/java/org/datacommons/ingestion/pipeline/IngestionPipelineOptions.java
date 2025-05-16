@@ -1,5 +1,6 @@
 package org.datacommons.ingestion.pipeline;
 
+import java.util.Collections;
 import java.util.List;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.DefaultValueFactory;
@@ -83,7 +84,8 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   static class SkipPredicatePrefixesFactory implements DefaultValueFactory<List<String>> {
     @Override
     public List<String> create(PipelineOptions options) {
-      return List.of("geoJsonCoordinates", "kmlCoordinates");
+      // return List.of("geoJsonCoordinates", "kmlCoordinates");
+      return Collections.emptyList();
     }
   }
 }
