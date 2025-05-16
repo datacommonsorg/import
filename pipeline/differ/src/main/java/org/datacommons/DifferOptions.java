@@ -26,7 +26,7 @@ public interface DifferOptions extends PipelineOptions {
   void setOutputLocation(ValueProvider<String> value);
 
   @Description("Whether to use optimized tfrecord file format")
-  ValueProvider<String> getUseOptimizedGraphFormat();
+  ValueProvider<Boolean> getUseOptimizedGraphFormat();
 
-  void setUseTfrFormat(ValueProvider<String> value);
+  void setUseOptimizedGraphFormat(ValueProvider<Boolean> value);
 }
