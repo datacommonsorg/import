@@ -99,34 +99,22 @@ public class Transforms {
 
     private final SpannerClient spannerClient;
 
-    // seenNodes and seenObs are sets of unique node and observation keys respectively that are
-    // maintained per beam bundle and cleared once processing a given bundle is finished.
-    // These sets are used to detect and remove duplicates in a bundle.
-    private final Set<String> seenNodes = new HashSet<>();
-    private final Set<String> seenObs = new HashSet<>();
-    private final Set<String> seenEdges = new HashSet<>();
-
     public ExtractKVMutationsDoFn(SpannerClient spannerClient) {
       this.spannerClient = spannerClient;
-    }
-
-    @StartBundle
-    public void startBundle() {
-      seenNodes.clear();
-      seenObs.clear();
-      seenEdges.clear();
-    }
-
-    @FinishBundle
-    public void finishBundle() {
-      seenNodes.clear();
-      seenObs.clear();
-      seenEdges.clear();
     }
 
     @ProcessElement
     public void processElement(
         @Element KV<String, Iterable<Mutation>> kv, OutputReceiver<Mutation> out) {
+      // Storing caches at the bundle level can create long-lived objects, potentially leading to
+      // performance issues such as frequent garbage collection (GC) and thrashing. Hence,
+      // maintaining at key level.
+      // Following de-duplication approach only removes duplicates among values for a
+      // single key. For effective de-duplication, the grouping key should be a subset of the
+      // primary keys from the relevant tables (e.g. edges, nodes, observations).
+      final Set<String> seenNodes = new HashSet<>();
+      final Set<String> seenObs = new HashSet<>();
+      final Set<String> seenEdges = new HashSet<>();
       for (var mutation : kv.getValue()) {
         if (mutation.getTable().equals(spannerClient.getNodeTableName())) {
           var subjectId = SpannerClient.getSubjectId(mutation);
@@ -172,29 +160,7 @@ public class Transforms {
     public PCollection<Void> expand(PCollection<String> cacheRows) {
       // While a separate method is not required here, doing so makes it easier to develop and test
       // with other strategies.
-      // return groupBy(cacheRows);
       return groupByGraphOnly(cacheRows);
-    }
-
-    private PCollection<Void> groupBy(PCollection<String> cacheRows) {
-      var observationTag = new TupleTag<KV<String, Mutation>>() {};
-      var graphTag = new TupleTag<KV<String, Mutation>>() {};
-      var kvs =
-          cacheRows.apply(
-              "CreateMutations",
-              ParDo.of(
-                      new CacheRowKVMutationsDoFn(
-                          cacheReader, spannerClient, skipProcessing, graphTag, observationTag))
-                  .withOutputTags(graphTag, TupleTagList.of(observationTag)));
-      var merge =
-          PCollectionList.of(kvs.get(graphTag))
-              .and(kvs.get(observationTag))
-              .apply("MergeKVs", Flatten.<KV<String, Mutation>>pCollections());
-      var grouped = merge.apply("GroupMutations", GroupByKey.create());
-      var mutations =
-          grouped.apply("ExtractMutations", ParDo.of(new ExtractKVMutationsDoFn(spannerClient)));
-      var write = mutations.apply("WriteToSpanner", spannerClient.getWriteTransform());
-      return write.getOutput();
     }
 
     private PCollection<Void> groupByGraphOnly(PCollection<String> cacheRows) {
