@@ -1,7 +1,5 @@
 package org.datacommons.ingestion.spanner;
 
-import static org.datacommons.ingestion.data.ProtoUtil.compressProto;
-
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.WriteBuilder;
@@ -25,7 +23,6 @@ import org.apache.beam.sdk.values.KV;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
-
 import org.joda.time.Duration;
 
 public class SpannerClient implements Serializable {
@@ -151,7 +148,7 @@ public class SpannerClient implements Serializable {
         .set("scaling_factor")
         .to(observation.getScalingFactor())
         .set("observations")
-        .to(ByteArray.copyFrom(compressProto(observation.getObservations())))
+        .to(Value.protoMessage(observation.getObservations()))
         .set("import_name")
         .to(observation.getImportName())
         .set("provenance_url")
