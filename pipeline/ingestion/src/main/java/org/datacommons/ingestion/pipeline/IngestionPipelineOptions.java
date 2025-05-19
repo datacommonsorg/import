@@ -84,7 +84,6 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   static class SkipPredicatePrefixesFactory implements DefaultValueFactory<List<String>> {
     @Override
     public List<String> create(PipelineOptions options) {
-      // return List.of("geoJsonCoordinates", "kmlCoordinates");
       return Collections.emptyList();
     }
   }

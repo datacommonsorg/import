@@ -11,29 +11,3 @@ message Observations {
   // Examples: "2024" -> "123", "2025-05" -> "-456.78"
   map<string, string> values = 1;
 }
-
-
-message GeoJsonCoordinates{
-
-  message Point{
-    optional double latitude = 1;
-    optional double longitude = 2;
-    optional double altitude = 3;
-  }
-
-  message Polygon{
-    repeated Point points = 1;
-  }
-
-  repeated Polygon polygons = 1;
-
-
-}
-
-//message KmlCoordinates{
-//  message Coordinates{
-//    repeated double points = 1;
-//  }
-//
-//  repeated Coordinates coordinates = 1;
-//}
