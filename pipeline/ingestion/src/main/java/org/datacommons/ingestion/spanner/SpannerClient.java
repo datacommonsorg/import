@@ -1,8 +1,6 @@
 package org.datacommons.ingestion.spanner;
 
-import static org.datacommons.ingestion.data.ProtoUtil.compressProto;
 
-import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Value;
 import com.google.common.base.Joiner;
@@ -109,7 +107,7 @@ public class SpannerClient implements Serializable {
         .set("scaling_factor")
         .to(observation.getScalingFactor())
         .set("observations")
-        .to(ByteArray.copyFrom(compressProto(observation.getObservations())))
+        .to(Value.protoMessage(observation.getObservations()))
         .set("import_name")
         .to(observation.getImportName())
         .set("provenance_url")
