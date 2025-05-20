@@ -31,8 +31,7 @@ public class IngestionPipeline {
       importGroupVersions = getImportGroupVersions(options.getVersionEndpoint());
     }
 
-    CacheReader cacheReader =
-        new CacheReader(options.getStorageBucketId(), options.getSkipPredicatePrefixes());
+    CacheReader cacheReader = new CacheReader(options.getStorageBucketId());
     SpannerClient spannerClient =
         SpannerClient.builder()
             .gcpProjectId(options.getProjectId())
