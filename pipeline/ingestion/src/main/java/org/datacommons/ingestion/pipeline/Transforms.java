@@ -231,7 +231,11 @@ public class Transforms {
   /**
    * A simple LRU cache with a fixed capacity. Note:
    *
-   * <p>Note: Not thread-safe. For single-threaded use only.
+   * <p>Not thread-safe. For single-threaded use only.
+   *
+   * <p>To check for key existence in an `LRUCache` and maintain LRU order, use `get(key) != null`.
+   * This method updates the key's usage, unlike `containsKey()`, which doesn't and would therefore
+   * disrupt the LRU sequence.
    */
   private static class LRUCache<K, V> extends LinkedHashMap<K, V> {
     private final int capacity;
