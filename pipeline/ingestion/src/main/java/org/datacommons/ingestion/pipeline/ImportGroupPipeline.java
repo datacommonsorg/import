@@ -19,8 +19,7 @@ public class ImportGroupPipeline {
     LOGGER.info(
         "Running import group pipeline for import group: {}", options.getImportGroupVersion());
 
-    CacheReader cacheReader =
-        new CacheReader(options.getStorageBucketId(), options.getSkipPredicatePrefixes());
+    CacheReader cacheReader = new CacheReader(options.getStorageBucketId());
     SpannerClient spannerClient =
         SpannerClient.builder()
             .gcpProjectId(options.getProjectId())
