@@ -27,11 +27,9 @@ public class CacheReader implements Serializable {
   private static final String CACHE_KEY_SEPARATOR_REGEX = "\\^";
 
   private final String gcsBucketId;
-  private final List<String> skipPredicatePrefixes;
 
-  public CacheReader(String gcsBucketId, List<String> skipPredicatePrefixes) {
+  public CacheReader(String gcsBucketId) {
     this.gcsBucketId = gcsBucketId;
-    this.skipPredicatePrefixes = skipPredicatePrefixes;
   }
 
   /** Returns the GCS cache path for the import group. */
@@ -85,11 +83,6 @@ public class CacheReader implements Serializable {
           String dcid = keys[0];
           String predicate = keys[1];
           String typeOf = keys[2];
-
-          // Skip predicates that are in the skip set.
-          if (skipPredicate(predicate)) {
-            return result;
-          }
 
           PagedEntities elist = ProtoUtil.parseCacheProto(value, PagedEntities.parser());
           for (EntityInfo entity : elist.getEntitiesList()) {
@@ -181,15 +174,6 @@ public class CacheReader implements Serializable {
     }
 
     return result;
-  }
-
-  private boolean skipPredicate(String predicate) {
-    for (String prefix : skipPredicatePrefixes) {
-      if (predicate.startsWith(prefix)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private static final boolean isInArcCacheRow(String row) {
