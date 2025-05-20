@@ -86,19 +86,6 @@ public class CacheReaderTest {
   }
 
   @Test
-  public void testParseArcRow_skipPredicate() {
-    CacheReader reader = newCacheReader(List.of("measuredProperty"));
-    String row =
-        "d/m/Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person^measuredProperty^Property^0,H4sIAAAAAAAAAOPS5WJNzi/NK5GCUEqyKcn6SYnFqfoepbmJeUGpiSmJSTmpwSWJJWGJRcWCDGDwwR4AejAnwDgAAAA=";
-
-    NodesEdges expected = new NodesEdges();
-
-    NodesEdges actual = reader.parseArcRow(row);
-
-    assertEquals(expected, actual);
-  }
-
-  @Test
   public void testParseTimeSeriesRow() {
     CacheReader reader = newCacheReader();
     String row =
@@ -145,10 +132,6 @@ public class CacheReaderTest {
   }
 
   private static CacheReader newCacheReader() {
-    return newCacheReader(List.of());
-  }
-
-  private static CacheReader newCacheReader(List<String> skipPredicatePrefixes) {
-    return new CacheReader("datcom-store", skipPredicatePrefixes);
+    return new CacheReader("datcom-store");
   }
 }
