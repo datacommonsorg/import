@@ -225,7 +225,7 @@ class Nodes:
     if re.fullmatch(_DCID_PATTERN, dcid):
       return dcid
     self._entity_type_generated_id_count += 1
-    return f"{_CUSTOM_ENTITY_TYPE_ID_PREFIX}{self._event_entity_generated_id_count}"
+    return f"{_CUSTOM_ENTITY_TYPE_ID_PREFIX}{self._entity_generated_id_count}"
 
   def group(self, group_path: str) -> StatVarGroup | None:
     if not group_path:
