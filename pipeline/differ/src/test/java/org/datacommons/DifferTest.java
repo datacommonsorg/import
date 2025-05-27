@@ -26,10 +26,10 @@ public class DifferTest {
 
     // Process the input.
     PCollection<McfGraph> currentGraph =
-        DifferUtils.readMcfFile(StaticValueProvider.of(currentFile), p);
+        GraphUtils.readMcfFile(StaticValueProvider.of(currentFile), p);
     PCollection<KV<String, String>> currentNodes = DifferUtils.processGraph(currentGraph);
     PCollection<McfGraph> previousGraph =
-        DifferUtils.readMcfFile(StaticValueProvider.of(previousFile), p);
+        GraphUtils.readMcfFile(StaticValueProvider.of(previousFile), p);
     PCollection<KV<String, String>> previousNodes = DifferUtils.processGraph(previousGraph);
     PCollection<String> result = DifferUtils.performDiff(currentNodes, previousNodes);
 

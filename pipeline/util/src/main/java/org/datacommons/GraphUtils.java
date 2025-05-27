@@ -1,8 +1,22 @@
 package org.datacommons;
 
+import static org.apache.beam.sdk.io.Compression.GZIP;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.TFRecordIO;
+import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.options.ValueProvider;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.DoFn.Element;
+import org.apache.beam.sdk.transforms.DoFn.OutputReceiver;
+import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SimpleFunction;
+import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.proto.Mcf.MCFOptimizedGraph;
 import org.datacommons.proto.Mcf.MCFStatVarObsSeries;
 import org.datacommons.proto.Mcf.MCFStatVarObsSeries.StatVarObs;
@@ -11,9 +25,9 @@ import org.datacommons.proto.Mcf.McfType;
 import org.datacommons.proto.Mcf.ValueType;
 
 /** Util functions for processing MCF graphs. */
-public class GraphUtil {
+public class GraphUtils {
 
-  enum Property {
+  public enum Property {
     typeOf,
     observationAbout,
     variableMeasured,
@@ -139,7 +153,7 @@ public class GraphUtil {
    * @param key property to fetch
    * @return property value
    */
-  private static String GetPropertyValue(Map<String, McfGraph.Values> pvs, String key) {
+  public static String GetPropertyValue(Map<String, McfGraph.Values> pvs, String key) {
     String value = pvs.get(key) != null ? pvs.get(key).getTypedValues(0).getValue() : "";
     if (value.contains(",")) {
       value = String.format("\"%s\"", value);
@@ -217,11 +231,57 @@ public class GraphUtil {
       }
       SetPropVal(lhs, ValueType.TEXT, rhs, base_node);
     }
-    McfGraph.PropertyValues pvs = base_node.build();
-    if (GetPropertyValue(pvs.getPvsMap(), Property.typeOf.name())
-        .equals(Property.dcid.name() + ":" + STAT_VAR_OB)) {
-      g.putNodes(node_id, base_node.build());
-    }
+    g.putNodes(node_id, base_node.build());
     return g.build();
+  }
+
+  /**
+   * Reads an MCF graph from TFRecord files
+   *
+   * @param files input files (regex supported)
+   * @param p dataflow pipeline
+   * @return PCollection of MCF graph proto
+   */
+  public static PCollection<McfGraph> readMcfGraph(ValueProvider<String> files, Pipeline p) {
+    return p.apply(
+            "ReadMcfGraph", TFRecordIO.read().from(files).withCompression(GZIP).withoutValidation())
+        .apply(
+            "ProcessGraph",
+            ParDo.of(
+                new DoFn<byte[], McfGraph>() {
+                  @ProcessElement
+                  public void processElement(
+                      @Element byte[] element, OutputReceiver<McfGraph> receiver) {
+
+                    List<McfGraph> graphList = GraphUtils.parseToGraph(element);
+                    for (McfGraph g : graphList) {
+                      receiver.output(g);
+                    }
+                  }
+                }));
+  }
+
+  /**
+   * Reads a graph from MCF textproto files
+   *
+   * @param files input files (regex supported)
+   * @param p dataflow pipeline
+   * @return PCollection of MCF graph proto
+   */
+  public static PCollection<McfGraph> readMcfFile(ValueProvider<String> file, Pipeline p) {
+    String delimiter = "\n\n";
+    PCollection<String> nodes =
+        p.apply("ReadMcfFile", TextIO.read().withDelimiter(delimiter.getBytes()).from(file));
+    PCollection<McfGraph> mcf =
+        nodes.apply(
+            "ProcesGraph",
+            MapElements.via(
+                new SimpleFunction<String, McfGraph>() {
+                  @Override
+                  public McfGraph apply(String input) {
+                    return GraphUtils.convertToGraph(input);
+                  }
+                }));
+    return mcf;
   }
 }
