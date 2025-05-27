@@ -20,5 +20,10 @@
       <artifactId>model</artifactId>
       <version>${revision}</version>
     </dependency>
+    <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-core</artifactId>
+        <version>${beam.version}</version>
+    </dependency>
   </dependencies>
 </project>
