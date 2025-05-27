@@ -3,6 +3,7 @@ package org.datacommons.ingestion.spanner;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import org.datacommons.ingestion.data.Observation;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,6 @@ import org.apache.beam.sdk.options.ValueProvider;
 import org.apache.beam.sdk.values.KV;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
-import org.datacommons.ingestion.data.Observation;
 import org.joda.time.Duration;
 
 import com.google.cloud.ByteArray;

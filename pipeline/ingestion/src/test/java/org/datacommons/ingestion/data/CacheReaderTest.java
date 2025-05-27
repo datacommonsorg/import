@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 import org.datacommons.proto.Storage.Observations;
+import org.datacommons.ingestion.data.Observation;
 import org.junit.Test;
 
 public class CacheReaderTest {
