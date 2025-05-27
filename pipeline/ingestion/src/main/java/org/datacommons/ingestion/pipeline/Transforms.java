@@ -5,7 +5,9 @@ import static org.datacommons.ingestion.pipeline.SkipProcessing.SKIP_OBS;
 
 import com.google.cloud.spanner.Mutation;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
@@ -17,9 +19,12 @@ import org.datacommons.ingestion.data.CacheReader;
 import org.datacommons.ingestion.data.ImportGroupVersions;
 import org.datacommons.ingestion.data.NodesEdges;
 import org.datacommons.ingestion.spanner.SpannerClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Transforms and DoFns for the ingestion pipeline. */
 public class Transforms {
+  private static final Logger LOGGER = LoggerFactory.getLogger(Transforms.class);
 
   static class CacheRowKVMutationsDoFn extends DoFn<String, KV<String, Mutation>> {
     private static final Counter DUPLICATE_OBS_COUNTER =
@@ -34,10 +39,15 @@ public class Transforms {
     private final SkipProcessing skipProcessing;
     private final TupleTag<KV<String, Mutation>> graphTag;
     private final TupleTag<KV<String, Mutation>> observationTag;
-    // TODO: Explore filtering duplicates across all bundles within a JVM.
-    private final Set<String> seenNodes = new HashSet<>();
-    private final Set<String> seenEdges = new HashSet<>();
-    private final Set<String> seenObs = new HashSet<>();
+    // Using a bounded cache to prevent excessive memory consumption.
+    // As these are bundle-level caches, their size depends on the bundle's data.
+    // Large caches can block memory for the bundle's duration, risking OOM errors,
+    // GC thrashing, or worker failures.
+    // Note: Increasing capacity can enhance filtering performance, but might require more worker
+    // memory.
+    private final LRUCache<String, Boolean> seenNodes = new LRUCache<>(5_000_000);
+    private final LRUCache<String, Boolean> seenEdges = new LRUCache<>(5_000_000);
+    private final LRUCache<String, Boolean> seenObs = new LRUCache<>(5_000_000);
 
     private CacheRowKVMutationsDoFn(
         CacheReader cacheReader,
@@ -160,6 +170,7 @@ public class Transforms {
     public PCollection<Void> expand(PCollection<String> cacheRows) {
       // While a separate method is not required here, doing so makes it easier to develop and test
       // with other strategies.
+
       return groupByGraphOnly(cacheRows);
     }
 
@@ -214,6 +225,29 @@ public class Transforms {
       SpannerClient spannerClient) {
     for (var importGroupVersion : importGroupVersions) {
       buildImportGroupPipeline(pipeline, importGroupVersion, cacheReader, spannerClient);
+    }
+  }
+
+  /**
+   * A simple LRU cache with a fixed capacity. Note:
+   *
+   * <p>Not thread-safe. For single-threaded use only.
+   *
+   * <p>To check for key existence in an `LRUCache` and maintain LRU order, use `get(key) != null`.
+   * This method updates the key's usage, unlike `containsKey()`, which doesn't and would therefore
+   * disrupt the LRU sequence.
+   */
+  private static class LRUCache<K, V> extends LinkedHashMap<K, V> {
+    private final int capacity;
+
+    public LRUCache(int capacity) {
+      super(capacity, 0.75f, true); // accessOrder = true
+      this.capacity = capacity;
+    }
+
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+      return size() > capacity;
     }
   }
 }

@@ -180,14 +180,14 @@ public class SpannerClient implements Serializable {
   }
 
   public List<KV<String, Mutation>> filterObservationKVMutations(
-      List<KV<String, Mutation>> kvs, Set<String> seenObs) {
+      List<KV<String, Mutation>> kvs, Map<String, Boolean> seenObs) {
     var filtered = new ArrayList<KV<String, Mutation>>();
     for (var kv : kvs) {
       var key = getFullObservationKey(kv.getValue());
-      if (seenObs.contains(key)) {
+      if (seenObs.get(key) != null) {
         continue;
       }
-      seenObs.add(key);
+      seenObs.putIfAbsent(key, true);
 
       filtered.add(kv);
     }
@@ -196,8 +196,8 @@ public class SpannerClient implements Serializable {
 
   public List<KV<String, Mutation>> filterGraphKVMutations(
       List<KV<String, Mutation>> kvs,
-      Set<String> seenNodes,
-      Set<String> seenEdges,
+      Map<String, Boolean> seenNodes,
+      Map<String, Boolean> seenEdges,
       Counter duplicateNodesCounter,
       Counter duplicateEdgesCounter) {
     var filtered = new ArrayList<KV<String, Mutation>>();
@@ -206,19 +206,19 @@ public class SpannerClient implements Serializable {
       // Skip duplicate node mutations for the same subject_id
       if (mutation.getTable().equals(nodeTableName)) {
         String subjectId = getSubjectId(mutation);
-        if (seenNodes.contains(subjectId)) {
+        if (seenNodes.get(subjectId) != null) {
           duplicateNodesCounter.inc();
           continue;
         }
-        seenNodes.add(subjectId);
+        seenNodes.putIfAbsent(subjectId, true);
       } else if (mutation.getTable().equals(edgeTableName)) {
         // Skip duplicate edge mutations for the same edge key
         String edgeKey = getEdgeKey(mutation);
-        if (seenEdges.contains(edgeKey)) {
+        if (seenEdges.get(edgeKey) != null) {
           duplicateEdgesCounter.inc();
           continue;
         }
-        seenEdges.add(edgeKey);
+        seenEdges.putIfAbsent(edgeKey, true);
       }
 
       filtered.add(kv);
