@@ -1,14 +1,17 @@
 package org.datacommons.ingestion.data;
 
-import java.io.Serializable;
 import java.util.Objects;
-import org.apache.beam.sdk.coders.DefaultCoder;
-import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
+
 import org.datacommons.proto.Storage.Observations;
 
-/** Models a statvar observation time series. */
-@DefaultCoder(AvroCoder.class)
-public class Observation implements Serializable {
+/**
+ * Models a statvar observation time series.
+ * 
+ * This class is used to store the result of
+ * parsing a time series row in memory. It is not inserted into the pipeline.
+ * 
+ */
+public class Observation {
 
   private String variableMeasured;
   private String observationAbout;
@@ -19,6 +22,8 @@ public class Observation implements Serializable {
   private String scalingFactor;
   private String importName;
   private String provenanceUrl;
+  private String facetId;
+  private boolean isDcAggregate;
 
   private Observation(Builder builder) {
     this.variableMeasured = builder.variableMeasured;
@@ -30,6 +35,8 @@ public class Observation implements Serializable {
     this.scalingFactor = builder.scalingFactor;
     this.importName = builder.importName;
     this.provenanceUrl = builder.provenanceUrl;
+    this.facetId = builder.facetId;
+    this.isDcAggregate = builder.isDcAggregate;
   }
 
   public static Builder builder() {
@@ -72,59 +79,12 @@ public class Observation implements Serializable {
     return provenanceUrl;
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    Observation that = (Observation) o;
-    return Objects.equals(variableMeasured, that.variableMeasured)
-        && Objects.equals(observationAbout, that.observationAbout)
-        && Objects.equals(observations, that.observations)
-        && Objects.equals(observationPeriod, that.observationPeriod)
-        && Objects.equals(measurementMethod, that.measurementMethod)
-        && Objects.equals(unit, that.unit)
-        && Objects.equals(scalingFactor, that.scalingFactor)
-        && Objects.equals(importName, that.importName)
-        && Objects.equals(provenanceUrl, that.provenanceUrl);
+  public String getFacetId() {
+    return facetId;
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(
-        variableMeasured,
-        observationAbout,
-        observations,
-        observationPeriod,
-        measurementMethod,
-        unit,
-        scalingFactor,
-        importName,
-        provenanceUrl);
-  }
-
-  @Override
-  public String toString() {
-    return String.format(
-        "Observation{"
-            + "variableMeasured='%s', "
-            + "observationAbout='%s', "
-            + "observations=%s, "
-            + "observationPeriod='%s', "
-            + "measurementMethod='%s', "
-            + "unit='%s', "
-            + "scalingFactor='%s', "
-            + "importName='%s', "
-            + "provenanceUrl='%s'"
-            + "}",
-        variableMeasured,
-        observationAbout,
-        observations,
-        observationPeriod,
-        measurementMethod,
-        unit,
-        scalingFactor,
-        importName,
-        provenanceUrl);
+  public boolean isDcAggregate() {
+    return isDcAggregate;
   }
 
   // Builder for Observation
@@ -138,6 +98,8 @@ public class Observation implements Serializable {
     private String scalingFactor = "";
     private String importName = "";
     private String provenanceUrl = "";
+    private String facetId = "";
+    private boolean isDcAggregate = false;
 
     public Builder variableMeasured(String variableMeasured) {
       this.variableMeasured = variableMeasured;
@@ -174,6 +136,11 @@ public class Observation implements Serializable {
       return this;
     }
 
+    public Builder isDcAggregate(boolean isDcAggregate) {
+      this.isDcAggregate = isDcAggregate;
+      return this;
+    }
+
     public Builder scalingFactor(String scalingFactor) {
       this.scalingFactor = scalingFactor;
       return this;
@@ -190,6 +157,14 @@ public class Observation implements Serializable {
     }
 
     public Observation build() {
+      this.facetId = String
+          .valueOf(
+              Objects.hash(
+                  importName,
+                  measurementMethod,
+                  observationPeriod,
+                  scalingFactor,
+                  unit));
       return new Observation(this);
     }
   }
