@@ -87,6 +87,42 @@ public class Observation {
     return isDcAggregate;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    Observation that = (Observation) o;
+    return Objects.equals(variableMeasured, that.variableMeasured)
+        && Objects.equals(observationAbout, that.observationAbout)
+        && Objects.equals(observations, that.observations)
+        && Objects.equals(observationPeriod, that.observationPeriod)
+        && Objects.equals(measurementMethod, that.measurementMethod)
+        && Objects.equals(unit, that.unit)
+        && Objects.equals(scalingFactor, that.scalingFactor)
+        && Objects.equals(importName, that.importName)
+        && Objects.equals(provenanceUrl, that.provenanceUrl)
+        && Objects.equals(facetId, that.facetId)
+        && Objects.equals(isDcAggregate, that.isDcAggregate);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        variableMeasured,
+        observationAbout,
+        observations,
+        observationPeriod,
+        measurementMethod,
+        unit,
+        scalingFactor,
+        importName,
+        provenanceUrl,
+        facetId,
+        isDcAggregate);
+  }
+
   // Builder for Observation
   public static class Builder {
     private String variableMeasured = "";
