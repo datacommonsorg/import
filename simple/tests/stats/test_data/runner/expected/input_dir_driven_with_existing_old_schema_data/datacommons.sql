@@ -163,5 +163,7 @@ INSERT INTO "triples" VALUES('country/ESH','typeOf','Country','');
 INSERT INTO "triples" VALUES('country/USA','typeOf','Country','');
 INSERT INTO "triples" VALUES('country/IND','typeOf','Country','');
 CREATE INDEX observations_entity_variable on observations (entity, variable);
+CREATE INDEX observations_variable on observations (variable);
 CREATE INDEX triples_subject_id on triples (subject_id);
+CREATE INDEX triples_subject_id_predicate on triples (subject_id, predicate);
 COMMIT;

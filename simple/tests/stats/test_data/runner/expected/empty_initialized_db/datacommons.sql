@@ -28,4 +28,6 @@ CREATE TABLE triples (
 );
 CREATE INDEX observations_entity_variable on observations (entity, variable);
 CREATE INDEX triples_subject_id on triples (subject_id);
+CREATE INDEX triples_subject_id_predicate on triples (subject_id, predicate);
+CREATE INDEX observations_variable on observations (variable);
 COMMIT;
