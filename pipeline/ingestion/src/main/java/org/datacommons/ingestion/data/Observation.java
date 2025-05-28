@@ -164,7 +164,8 @@ public class Observation {
                   measurementMethod,
                   observationPeriod,
                   scalingFactor,
-                  unit));
+                  unit,
+                  isDcAggregate));
       return new Observation(this);
     }
   }
