@@ -37,9 +37,7 @@ _CUSTOM_PROPERTY_ID_PREFIX = "c/prop/"
 _CUSTOM_EVENT_TYPE_ID_PREFIX = "c/e/"
 _CUSTOM_ENTITY_TYPE_ID_PREFIX = "c/n/"
 # Pattern to check if a string conforms to that of a valid DCID.
-# Note that slashes ("/") are intentionally not considered here
-# since it can be confusing for custom DCs.
-_DCID_PATTERN = r"^[A-Za-z0-9_]+$"
+_DCID_PATTERN = r"^[A-Za-z0-9_/]+$"
 # If group path for a variable is empty, we'll put it under a default custom group.
 _DEFAULT_CUSTOM_GROUP_PATH = "__DEFAULT__"
 _DEFAULT_CUSTOM_GROUP = StatVarGroup(sc.DEFAULT_CUSTOM_ROOT_SVG_ID,
@@ -225,7 +223,7 @@ class Nodes:
     if re.fullmatch(_DCID_PATTERN, dcid):
       return dcid
     self._entity_type_generated_id_count += 1
-    return f"{_CUSTOM_ENTITY_TYPE_ID_PREFIX}{self._entity_generated_id_count}"
+    return f"{_CUSTOM_ENTITY_TYPE_ID_PREFIX}{self._entity_type_generated_id_count}"
 
   def group(self, group_path: str) -> StatVarGroup | None:
     if not group_path:
