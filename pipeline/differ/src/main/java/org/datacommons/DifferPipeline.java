@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 public class DifferPipeline {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DifferPipeline.class);
+  private static final String DIFF_HEADER =
+      "variableMeasured,observationAbout,observationDate,observationPeriod,measurementMethod,unit,scalingFactor,valueCurrent,valuePrevious,diff";
 
   public static void main(String[] args) throws Exception {
 
@@ -24,12 +26,12 @@ public class DifferPipeline {
     PCollection<McfGraph> previous_nodes, current_nodes;
     if (options.getUseOptimizedGraphFormat().isAccessible()) {
       LOGGER.info("Using tfrecord file format");
-      current_nodes = DifferUtils.readMcfGraph(options.getCurrentData(), p);
-      previous_nodes = DifferUtils.readMcfGraph(options.getPreviousData(), p);
+      current_nodes = GraphUtils.readMcfGraph(options.getCurrentData(), p);
+      previous_nodes = GraphUtils.readMcfGraph(options.getPreviousData(), p);
     } else {
       LOGGER.info("Using mcf file format");
-      previous_nodes = DifferUtils.readMcfFile(options.getPreviousData(), p);
-      current_nodes = DifferUtils.readMcfFile(options.getCurrentData(), p);
+      previous_nodes = GraphUtils.readMcfFile(options.getPreviousData(), p);
+      current_nodes = GraphUtils.readMcfFile(options.getCurrentData(), p);
     }
 
     // Process the input and perform diff operation.
@@ -38,7 +40,8 @@ public class DifferPipeline {
     PCollection<String> merged = DifferUtils.performDiff(nCollection, pCollection);
 
     merged.apply(
-        "Write diff output", TextIO.write().to(options.getOutputLocation()).withSuffix(".csv"));
+        "Write diff output",
+        TextIO.write().to(options.getOutputLocation()).withSuffix(".csv").withHeader(DIFF_HEADER));
     p.run();
   }
 }
