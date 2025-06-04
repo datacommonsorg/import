@@ -18,6 +18,7 @@ import org.apache.beam.sdk.values.*;
 import org.datacommons.ingestion.data.CacheReader;
 import org.datacommons.ingestion.data.ImportGroupVersions;
 import org.datacommons.ingestion.data.NodesEdges;
+import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,11 +81,7 @@ public class Transforms {
     public void processElement(@Element String row, MultiOutputReceiver out) {
       if (CacheReader.isArcCacheRow(row) && skipProcessing != SKIP_GRAPH) {
         NodesEdges nodesEdges = cacheReader.parseArcRow(row);
-        var kvs = spannerClient.toGraphKVMutations(nodesEdges.getNodes(), nodesEdges.getEdges());
-        var filtered =
-            spannerClient.filterGraphKVMutations(
-                kvs, seenNodes, seenEdges, DUPLICATE_NODES_COUNTER, DUPLICATE_EDGES_COUNTER);
-        filtered.forEach(out.get(graphTag)::output);
+        outputGraphMutations(nodesEdges, out);
       } else if (CacheReader.isObsTimeSeriesCacheRow(row) && skipProcessing != SKIP_OBS) {
         var obs = cacheReader.parseTimeSeriesRow(row);
         var kvs = spannerClient.toObservationKVMutations(obs);
@@ -95,7 +92,17 @@ public class Transforms {
         if (dups > 0) {
           DUPLICATE_OBS_COUNTER.inc(dups);
         }
+
+        obs.stream().map(Observation::getObsGraph).forEach(obsGraph -> outputGraphMutations(obsGraph, out));
       }
+    }
+
+    private void outputGraphMutations(NodesEdges nodesEdges, MultiOutputReceiver out) {
+      var kvs = spannerClient.toGraphKVMutations(nodesEdges.getNodes(), nodesEdges.getEdges());
+      var filtered =
+          spannerClient.filterGraphKVMutations(
+              kvs, seenNodes, seenEdges, DUPLICATE_NODES_COUNTER, DUPLICATE_EDGES_COUNTER);
+      filtered.forEach(out.get(graphTag)::output);
     }
   }
 

@@ -1,8 +1,11 @@
 package org.datacommons.ingestion.data;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.datacommons.proto.Storage.Observations;
+
+import com.google.common.base.Joiner;
 
 /**
  * Models a statvar observation time series.
@@ -12,6 +15,13 @@ import org.datacommons.proto.Storage.Observations;
  * 
  */
 public class Observation {
+  private static final String OBS_SERIES_DCID_PREFIX = "dc/os/";
+  private static final String OBS_SERIES_TYPE = "StatVarObsSeries";
+  private static final String VARIABLE_MEASURED_PREDICATE = "variableMeasured";
+  private static final String OBSERVATION_ABOUT_PREDICATE = "observationAbout";
+  private static final String NAME_PREDICATE = "name";
+  private static final String TYPE_OF_PREDICATE = "typeOf";
+  private static final String PROVENANCE_DCID_PREFIX = "dc/base/";
 
   private String variableMeasured;
   private String observationAbout;
@@ -24,6 +34,7 @@ public class Observation {
   private String provenanceUrl;
   private String facetId;
   private boolean isDcAggregate;
+  private NodesEdges obsGraph;
 
   private Observation(Builder builder) {
     this.variableMeasured = builder.variableMeasured;
@@ -37,6 +48,7 @@ public class Observation {
     this.provenanceUrl = builder.provenanceUrl;
     this.facetId = builder.facetId;
     this.isDcAggregate = builder.isDcAggregate;
+    this.obsGraph = toObsGraph();
   }
 
   public static Builder builder() {
@@ -85,6 +97,61 @@ public class Observation {
 
   public boolean isDcAggregate() {
     return isDcAggregate;
+  }
+
+  public NodesEdges getObsGraph() {
+    return obsGraph;
+  }
+
+  private NodesEdges toObsGraph() {
+    var graph = new NodesEdges();
+    var seriesDcid = OBS_SERIES_DCID_PREFIX + Joiner.on("_").join(replaceSlashesWithUnderscores(variableMeasured),
+        replaceSlashesWithUnderscores(observationAbout), facetId);
+    var seriesName = Joiner.on(" | ").join(variableMeasured, observationAbout, facetId);
+    var provenanceDcid = PROVENANCE_DCID_PREFIX + importName;
+
+    // Add series node
+    graph.addNode(Node.builder()
+        .subjectId(seriesDcid)
+        .name(seriesName)
+        .types(List.of(OBS_SERIES_TYPE))
+        .build());
+
+    // Add variableMeasured edge
+    graph.addEdge(Edge.builder()
+        .subjectId(seriesDcid)
+        .predicate(VARIABLE_MEASURED_PREDICATE)
+        .objectId(variableMeasured)
+        .provenance(provenanceDcid)
+        .build());
+    // Add observationAbout edge
+    graph.addEdge(Edge.builder()
+        .subjectId(seriesDcid)
+        .predicate(OBSERVATION_ABOUT_PREDICATE)
+        .objectId(observationAbout)
+        .provenance(provenanceDcid)
+        .build());
+    // Add name edge
+    graph.addEdge(Edge.builder()
+        .subjectId(seriesDcid)
+        .predicate(NAME_PREDICATE)
+        .objectId(seriesDcid)
+        .objectValue(seriesName)
+        .provenance(provenanceDcid)
+        .build());
+    // Add typeOf edge
+    graph.addEdge(Edge.builder()
+        .subjectId(seriesDcid)
+        .predicate(TYPE_OF_PREDICATE)
+        .objectId(OBS_SERIES_TYPE)
+        .provenance(provenanceDcid)
+        .build());
+
+    return graph;
+  }
+
+  private static String replaceSlashesWithUnderscores(String s) {
+    return s == null ? null : s.replace('/', '_');
   }
 
   @Override
@@ -193,15 +260,15 @@ public class Observation {
     }
 
     public Observation build() {
-      this.facetId = String
-          .valueOf(
-              Objects.hash(
-                  importName,
-                  measurementMethod,
-                  observationPeriod,
-                  scalingFactor,
-                  unit,
-                  isDcAggregate));
+      int intHash = Objects.hash(
+          importName,
+          measurementMethod,
+          observationPeriod,
+          scalingFactor,
+          unit,
+          isDcAggregate);
+      // Convert to positive long and then to string
+      this.facetId = String.valueOf((long) intHash & 0x7fffffffL);
       return new Observation(this);
     }
   }
