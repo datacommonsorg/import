@@ -1,0 +1,26 @@
+{
+ "nodes": [
+  {
+   "dcid": [
+    "topic1"
+   ],
+   "typeOf": [
+    "Topic"
+   ],
+   "name": [
+    "Topic1 Name"
+   ]
+  },
+  {
+   "dcid": [
+    "topic2"
+   ],
+   "typeOf": [
+    "Topic"
+   ],
+   "name": [
+    "Topic2 Name"
+   ]
+  }
+ ]
+}

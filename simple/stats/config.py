@@ -53,7 +53,6 @@ _ROW_ENTITY_TYPE_FIELD = "rowEntityType"
 _ENTITY_COLUMNS = "entityColumns"
 _ENTITIES_FIELD = "entities"
 _GROUP_STAT_VARS_BY_PROPERTY = "groupStatVarsByProperty"
-_GENERATE_TOPICS = "generateTopics"
 _OBSERVATION_PROPERTIES = "observationProperties"
 _INCLUDE_INPUT_SUBDIRS_PROPERTY = "includeInputSubdirs"
 
@@ -187,9 +186,6 @@ class Config:
       if special_file_name:
         special_files[special_file_type] = special_file_name
     return special_files
-
-  def generate_topics(self) -> bool:
-    return self.data.get(_GENERATE_TOPICS) or False
 
   def _per_file_config(self, input_file: File) -> dict:
     """ Looks up the config for a given file.
