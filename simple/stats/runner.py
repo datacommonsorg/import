@@ -220,22 +220,20 @@ class Runner:
 
   def _generate_nl_artifacts(self):
     triples: list[Triple] = []
-    # Get topic triples if generating topics else get SV triples.
-    generate_topics = self.config.generate_topics()
-    if generate_topics:
-      triples = self.db.select_triples_by_subject_type(sc.TYPE_TOPIC)
-    else:
-      triples = self.db.select_triples_by_subject_type(
-          sc.TYPE_STATISTICAL_VARIABLE)
+    topic_triples = self.db.select_triples_by_subject_type(sc.TYPE_TOPIC)
+    sv_triples = self.db.select_triples_by_subject_type(
+        sc.TYPE_STATISTICAL_VARIABLE)
+    triples = topic_triples + sv_triples
 
     # Generate sentences.
     nl.generate_nl_sentences(triples, self.nl_dir)
 
     # If generating topics, fetch svpg triples as well and generate topic cache
-    if generate_topics:
-      triples = triples + self.db.select_triples_by_subject_type(
+    if topic_triples:
+      sv_peer_group_triples = self.db.select_triples_by_subject_type(
           sc.TYPE_STAT_VAR_PEER_GROUP)
-      nl.generate_topic_cache(triples, self.nl_dir)
+      topic_cache_triples = topic_triples + sv_peer_group_triples
+      nl.generate_topic_cache(topic_cache_triples, self.nl_dir)
 
   def _generate_svg_hierarchy(self):
     if self.mode == RunMode.MAIN_DC:
