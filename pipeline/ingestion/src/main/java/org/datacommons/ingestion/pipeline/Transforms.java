@@ -18,6 +18,7 @@ import org.apache.beam.sdk.values.*;
 import org.datacommons.ingestion.data.CacheReader;
 import org.datacommons.ingestion.data.ImportGroupVersions;
 import org.datacommons.ingestion.data.NodesEdges;
+import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ public class Transforms {
     private final CacheReader cacheReader;
     private final SpannerClient spannerClient;
     private final SkipProcessing skipProcessing;
+    private final boolean writeObsGraph;
     private final TupleTag<KV<String, Mutation>> graphTag;
     private final TupleTag<KV<String, Mutation>> observationTag;
     // Using a bounded cache to prevent excessive memory consumption.
@@ -53,11 +55,13 @@ public class Transforms {
         CacheReader cacheReader,
         SpannerClient spannerClient,
         SkipProcessing skipProcessing,
+        boolean writeObsGraph,
         TupleTag<KV<String, Mutation>> graphTag,
         TupleTag<KV<String, Mutation>> observationTag) {
       this.cacheReader = cacheReader;
       this.spannerClient = spannerClient;
       this.skipProcessing = skipProcessing;
+      this.writeObsGraph = writeObsGraph;
       this.graphTag = graphTag;
       this.observationTag = observationTag;
     }
@@ -80,11 +84,7 @@ public class Transforms {
     public void processElement(@Element String row, MultiOutputReceiver out) {
       if (CacheReader.isArcCacheRow(row) && skipProcessing != SKIP_GRAPH) {
         NodesEdges nodesEdges = cacheReader.parseArcRow(row);
-        var kvs = spannerClient.toGraphKVMutations(nodesEdges.getNodes(), nodesEdges.getEdges());
-        var filtered =
-            spannerClient.filterGraphKVMutations(
-                kvs, seenNodes, seenEdges, DUPLICATE_NODES_COUNTER, DUPLICATE_EDGES_COUNTER);
-        filtered.forEach(out.get(graphTag)::output);
+        outputGraphMutations(nodesEdges, out);
       } else if (CacheReader.isObsTimeSeriesCacheRow(row) && skipProcessing != SKIP_OBS) {
         var obs = cacheReader.parseTimeSeriesRow(row);
         var kvs = spannerClient.toObservationKVMutations(obs);
@@ -95,7 +95,21 @@ public class Transforms {
         if (dups > 0) {
           DUPLICATE_OBS_COUNTER.inc(dups);
         }
+
+        if (writeObsGraph) {
+          obs.stream()
+              .map(Observation::getObsGraph)
+              .forEach(obsGraph -> outputGraphMutations(obsGraph, out));
+        }
       }
+    }
+
+    private void outputGraphMutations(NodesEdges nodesEdges, MultiOutputReceiver out) {
+      var kvs = spannerClient.toGraphKVMutations(nodesEdges.getNodes(), nodesEdges.getEdges());
+      var filtered =
+          spannerClient.filterGraphKVMutations(
+              kvs, seenNodes, seenEdges, DUPLICATE_NODES_COUNTER, DUPLICATE_EDGES_COUNTER);
+      filtered.forEach(out.get(graphTag)::output);
     }
   }
 
@@ -158,12 +172,17 @@ public class Transforms {
     private final CacheReader cacheReader;
     private final SpannerClient spannerClient;
     private final SkipProcessing skipProcessing;
+    private final boolean writeObsGraph;
 
     public ImportGroupTransform(
-        CacheReader cacheReader, SpannerClient spannerClient, SkipProcessing skipProcessing) {
+        CacheReader cacheReader,
+        SpannerClient spannerClient,
+        SkipProcessing skipProcessing,
+        boolean writeObsGraph) {
       this.cacheReader = cacheReader;
       this.spannerClient = spannerClient;
       this.skipProcessing = skipProcessing;
+      this.writeObsGraph = writeObsGraph;
     }
 
     @Override
@@ -182,7 +201,12 @@ public class Transforms {
               "CreateMutations",
               ParDo.of(
                       new CacheRowKVMutationsDoFn(
-                          cacheReader, spannerClient, skipProcessing, graphTag, observationTag))
+                          cacheReader,
+                          spannerClient,
+                          skipProcessing,
+                          writeObsGraph,
+                          graphTag,
+                          observationTag))
                   .withOutputTags(graphTag, TupleTagList.of(observationTag)));
 
       var observations =
@@ -215,7 +239,10 @@ public class Transforms {
         .apply(
             "Ingest: " + importGroupName,
             new Transforms.ImportGroupTransform(
-                cacheReader, spannerClient, options.getSkipProcessing()));
+                cacheReader,
+                spannerClient,
+                options.getSkipProcessing(),
+                options.getWriteObsGraph()));
   }
 
   static void buildIngestionPipeline(

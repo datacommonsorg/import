@@ -126,9 +126,52 @@ public class CacheReaderTest {
                 .importName("NOAA_GFS_WeatherForecast")
                 .build());
 
+    NodesEdges expectedGraph = new NodesEdges()
+            .addNode(
+                    Node.builder()
+                            .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755143")
+                            .name("Mean Precipitable Water Atmosphere | geoId/sch2915390 | 870755143")
+                            .types(List.of("StatVarObsSeries"))
+                            .build())
+            .addEdge(
+                    Edge.builder()
+                            .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755143")
+                            .predicate("variableMeasured")
+                            .objectId("Mean_PrecipitableWater_Atmosphere")
+                            .objectValue("")
+                            .provenance("dc/base/NOAA_GFS_WeatherForecast")
+                            .build())
+            .addEdge(
+                    Edge.builder()
+                            .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755143")
+                            .predicate("observationAbout")
+                            .objectId("geoId/sch2915390")
+                            .objectValue("")
+                            .provenance("dc/base/NOAA_GFS_WeatherForecast")
+                            .build())
+            .addEdge(
+                    Edge.builder()
+                            .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755143")
+                            .predicate("name")
+                            .objectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755143")
+                            .objectValue("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 870755143")
+                            .provenance("dc/base/NOAA_GFS_WeatherForecast")
+                            .build())
+            .addEdge(
+                    Edge.builder()
+                            .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755143")
+                            .predicate("typeOf")
+                            .objectId("StatVarObsSeries")
+                            .objectValue("")
+                            .provenance("dc/base/NOAA_GFS_WeatherForecast")
+                            .build());
+                    
+
     List<Observation> actual = reader.parseTimeSeriesRow(row);
 
     assertEquals(expected, actual);
+
+    assertEquals(expectedGraph, actual.get(0).getObsGraph());
   }
 
   private static CacheReader newCacheReader() {

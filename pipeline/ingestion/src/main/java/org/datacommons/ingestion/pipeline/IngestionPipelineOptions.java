@@ -57,6 +57,12 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setSkipProcessing(SkipProcessing skipProcessing);
 
+  @Description("Whether to write observation graph to Spanner.")
+  @Default.Boolean(false)
+  boolean getWriteObsGraph();
+
+  void setWriteObsGraph(boolean writeObsGraph);
+
   @Description("Spanner Observation table name")
   @Default.String("Observation")
   String getSpannerObservationTableName();
