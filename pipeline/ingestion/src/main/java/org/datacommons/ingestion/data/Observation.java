@@ -1,15 +1,13 @@
 package org.datacommons.ingestion.data;
 
 import java.util.Objects;
-
 import org.datacommons.proto.Storage.Observations;
 
 /**
  * Models a statvar observation time series.
- * 
- * This class is used to store the result of
- * parsing a time series row in memory. It is not inserted into the pipeline.
- * 
+ *
+ * <p>This class is used to store the result of parsing a time series row in memory. It is not
+ * inserted into the pipeline.
  */
 public class Observation {
 
@@ -89,10 +87,8 @@ public class Observation {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
     Observation that = (Observation) o;
     return Objects.equals(variableMeasured, that.variableMeasured)
         && Objects.equals(observationAbout, that.observationAbout)
@@ -193,8 +189,8 @@ public class Observation {
     }
 
     public Observation build() {
-      this.facetId = String
-          .valueOf(
+      this.facetId =
+          String.valueOf(
               Objects.hash(
                   importName,
                   measurementMethod,

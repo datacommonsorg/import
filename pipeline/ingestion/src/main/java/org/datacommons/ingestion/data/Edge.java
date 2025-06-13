@@ -1,14 +1,12 @@
 package org.datacommons.ingestion.data;
 
+import com.google.common.hash.Hashing;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Objects;
-
 import org.apache.beam.sdk.coders.DefaultCoder;
 import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
-
-import com.google.common.hash.Hashing;
 
 /** Models a graph edge. */
 @DefaultCoder(AvroCoder.class)
