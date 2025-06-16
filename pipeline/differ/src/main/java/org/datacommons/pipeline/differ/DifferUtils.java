@@ -1,4 +1,4 @@
-package org.datacommons;
+package org.datacommons.pipeline.differ;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -8,9 +8,8 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
-import org.datacommons.GraphUtils.Property;
 import org.datacommons.proto.Mcf.McfGraph;
-import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
+import org.datacommons.util.GraphUtils;
 
 /** Util functions for the differ pipeline. */
 public class DifferUtils {
@@ -36,17 +35,9 @@ public class DifferUtils {
                 new DoFn<McfGraph, KV<String, String>>() {
                   @ProcessElement
                   public void process(ProcessContext c) {
-                    try {
-                      McfGraph g = c.element();
-                      for (PropertyValues pvs : g.getNodesMap().values()) {
-                        if (GraphUtils.GetPropertyValue(pvs.getPvsMap(), Property.typeOf.name())
-                            .equals(Property.dcid.name() + ":" + GraphUtils.STAT_VAR_OB)) {
-                          String[] pv = GraphUtils.GetPropValKV(pvs);
-                          c.output(KV.of(pv[0], pv[1]));
-                        }
-                      }
-                    } catch (Exception e) {
-                      // return null;
+                    McfGraph g = c.element();
+                    for (String[] pv : GraphUtils.getSeriesValues(g)) {
+                      c.output(KV.of(pv[0], pv[1]));
                     }
                   }
                 }));

@@ -1,4 +1,4 @@
-package org.datacommons;
+package org.datacommons.pipeline.differ;
 
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;

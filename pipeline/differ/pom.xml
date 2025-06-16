@@ -13,6 +13,7 @@
   <groupId>org.example</groupId>
   <artifactId>differ</artifactId>
   <version>${revision}</version>
+  <name>Data Commons - Differ Pipeline</name>
 
   <packaging>jar</packaging>
 

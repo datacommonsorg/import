@@ -13,12 +13,18 @@
     <groupId>org.datacommons</groupId>
     <artifactId>util</artifactId>
     <version>${revision}</version>
+    <name>Data Commons - Ingestion Utils</name>
 
   <dependencies>
     <dependency>
       <groupId>org.datacommons</groupId>
       <artifactId>model</artifactId>
       <version>${revision}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.datacommons</groupId>
+      <artifactId>datacommons-import-util</artifactId>
+      <version>0.1-alpha.1</version>
     </dependency>
     <dependency>
         <groupId>org.apache.beam</groupId>
