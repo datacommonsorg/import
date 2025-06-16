@@ -1,9 +1,6 @@
 package org.datacommons.ingestion.pipeline;
 
-import java.util.Collections;
-import java.util.List;
 import org.apache.beam.sdk.options.Default;
-import org.apache.beam.sdk.options.DefaultValueFactory;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 

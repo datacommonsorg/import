@@ -2,10 +2,6 @@ steps:
   - name: 'maven:3.9.1'
     args: ['package']
     entrypoint: mvn
-  - name: 'maven:3.9.1'
-    args: ['package']
-    entrypoint: mvn
-    dir: 'pipeline'
 
 artifacts:
   objects:

@@ -1,9 +1,14 @@
 package org.datacommons.ingestion.spanner;
 
+import com.google.cloud.ByteArray;
+import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Mutation.WriteBuilder;
+import com.google.cloud.spanner.Value;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
-import org.datacommons.ingestion.data.Observation;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +17,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
-
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.Write;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.WriteGrouped;
@@ -21,14 +25,8 @@ import org.apache.beam.sdk.options.ValueProvider;
 import org.apache.beam.sdk.values.KV;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
+import org.datacommons.ingestion.data.Observation;
 import org.joda.time.Duration;
-
-import com.google.cloud.ByteArray;
-import com.google.cloud.spanner.Mutation;
-import com.google.cloud.spanner.Mutation.WriteBuilder;
-import com.google.cloud.spanner.Value;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
 
 public class SpannerClient implements Serializable {
   // Decrease batch size for observations (bigger rows)

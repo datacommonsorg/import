@@ -17,11 +17,7 @@
 
 # Generate protoc, build, check-format and run test
 steps:
-  - id: "import"
-    name: "maven:3-jdk-11"
-    entrypoint: "mvn"
-    args: ["com.spotify.fmt:fmt-maven-plugin:check", "test"]
-  - id: "pipeline"
+  - id: "format & test"
     name: "maven:3-openjdk-17"
     entrypoint: "mvn"
-    args: ["test"]
+    args: ["com.spotify.fmt:fmt-maven-plugin:check", "test"]

@@ -1,18 +1,15 @@
 package org.datacommons.ingestion.data;
 
+import com.google.common.base.Joiner;
 import java.util.List;
 import java.util.Objects;
-
 import org.datacommons.proto.Storage.Observations;
-
-import com.google.common.base.Joiner;
 
 /**
  * Models a statvar observation time series.
- * 
- * This class is used to store the result of
- * parsing a time series row in memory. It is not inserted into the pipeline.
- * 
+ *
+ * <p>This class is used to store the result of parsing a time series row in memory. It is not
+ * inserted into the pipeline.
  */
 public class Observation {
   private static final String OBS_SERIES_DCID_PREFIX = "dc/os/";
@@ -105,47 +102,57 @@ public class Observation {
 
   private NodesEdges toObsGraph() {
     var graph = new NodesEdges();
-    var seriesDcid = OBS_SERIES_DCID_PREFIX + Joiner.on("_").join(replaceSlashesWithUnderscores(variableMeasured),
-        replaceSlashesWithUnderscores(observationAbout), facetId);
+    var seriesDcid =
+        OBS_SERIES_DCID_PREFIX
+            + Joiner.on("_")
+                .join(
+                    replaceSlashesWithUnderscores(variableMeasured),
+                    replaceSlashesWithUnderscores(observationAbout),
+                    facetId);
     var seriesName = Joiner.on(" | ").join(variableMeasured, observationAbout, facetId);
     var provenanceDcid = PROVENANCE_DCID_PREFIX + importName;
 
     // Add series node
-    graph.addNode(Node.builder()
-        .subjectId(seriesDcid)
-        .name(seriesName)
-        .types(List.of(OBS_SERIES_TYPE))
-        .build());
+    graph.addNode(
+        Node.builder()
+            .subjectId(seriesDcid)
+            .name(seriesName)
+            .types(List.of(OBS_SERIES_TYPE))
+            .build());
 
     // Add variableMeasured edge
-    graph.addEdge(Edge.builder()
-        .subjectId(seriesDcid)
-        .predicate(VARIABLE_MEASURED_PREDICATE)
-        .objectId(variableMeasured)
-        .provenance(provenanceDcid)
-        .build());
+    graph.addEdge(
+        Edge.builder()
+            .subjectId(seriesDcid)
+            .predicate(VARIABLE_MEASURED_PREDICATE)
+            .objectId(variableMeasured)
+            .provenance(provenanceDcid)
+            .build());
     // Add observationAbout edge
-    graph.addEdge(Edge.builder()
-        .subjectId(seriesDcid)
-        .predicate(OBSERVATION_ABOUT_PREDICATE)
-        .objectId(observationAbout)
-        .provenance(provenanceDcid)
-        .build());
+    graph.addEdge(
+        Edge.builder()
+            .subjectId(seriesDcid)
+            .predicate(OBSERVATION_ABOUT_PREDICATE)
+            .objectId(observationAbout)
+            .provenance(provenanceDcid)
+            .build());
     // Add name edge
-    graph.addEdge(Edge.builder()
-        .subjectId(seriesDcid)
-        .predicate(NAME_PREDICATE)
-        .objectId(seriesDcid)
-        .objectValue(seriesName)
-        .provenance(provenanceDcid)
-        .build());
+    graph.addEdge(
+        Edge.builder()
+            .subjectId(seriesDcid)
+            .predicate(NAME_PREDICATE)
+            .objectId(seriesDcid)
+            .objectValue(seriesName)
+            .provenance(provenanceDcid)
+            .build());
     // Add typeOf edge
-    graph.addEdge(Edge.builder()
-        .subjectId(seriesDcid)
-        .predicate(TYPE_OF_PREDICATE)
-        .objectId(OBS_SERIES_TYPE)
-        .provenance(provenanceDcid)
-        .build());
+    graph.addEdge(
+        Edge.builder()
+            .subjectId(seriesDcid)
+            .predicate(TYPE_OF_PREDICATE)
+            .objectId(OBS_SERIES_TYPE)
+            .provenance(provenanceDcid)
+            .build());
 
     return graph;
   }
@@ -156,10 +163,8 @@ public class Observation {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
     Observation that = (Observation) o;
     return Objects.equals(variableMeasured, that.variableMeasured)
         && Objects.equals(observationAbout, that.observationAbout)
@@ -260,13 +265,9 @@ public class Observation {
     }
 
     public Observation build() {
-      int intHash = Objects.hash(
-          importName,
-          measurementMethod,
-          observationPeriod,
-          scalingFactor,
-          unit,
-          isDcAggregate);
+      int intHash =
+          Objects.hash(
+              importName, measurementMethod, observationPeriod, scalingFactor, unit, isDcAggregate);
       // Convert to positive long and then to string
       this.facetId = String.valueOf((long) intHash & 0x7fffffffL);
       return new Observation(this);
