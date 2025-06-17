@@ -8,12 +8,16 @@ import org.apache.beam.sdk.io.TFRecordIO;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.ValueProvider;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.SimpleFunction;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
+import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,5 +115,62 @@ public class GraphUtils {
                   }
                 }));
     return mcf;
+  }
+
+  /**
+   * Builds an optimized MCF graph from a PCollection of McfGraph protos.
+   *
+   * @param graph PCollection of McfGraph protos.()
+   * @return PCollection of McfOptimizedGraph protos.
+   */
+  public static PCollection<McfOptimizedGraph> buildOptimizedMcfGraph(PCollection<McfGraph> graph) {
+    PCollection<McfOptimizedGraph> svObs =
+        graph
+            .apply(
+                ParDo.of(
+                    new DoFn<
+                        McfGraph, KV<McfStatVarObsSeries.Key, McfStatVarObsSeries.StatVarObs>>() {
+                      @ProcessElement
+                      public void processElement(
+                          @Element McfGraph graph,
+                          OutputReceiver<
+                                  KV<McfStatVarObsSeries.Key, McfStatVarObsSeries.StatVarObs>>
+                              receiver) {
+                        for (PropertyValues pv : graph.getNodesMap().values()) {
+                          if (org.datacommons.util.GraphUtils.isObservation(pv)) {
+                            McfStatVarObsSeries svoSeries =
+                                org.datacommons.util.GraphUtils
+                                    .convertMcfGraphToMcfStatVarObsSeries(pv);
+                            receiver.output(KV.of(svoSeries.getKey(), svoSeries.getSvObsList(0)));
+                          }
+                        }
+                      }
+                    }))
+            .apply(GroupByKey.create())
+            .apply(
+                ParDo.of(
+                    new DoFn<
+                        KV<McfStatVarObsSeries.Key, Iterable<McfStatVarObsSeries.StatVarObs>>,
+                        McfOptimizedGraph>() {
+                      @ProcessElement
+                      public void processElement(
+                          @Element
+                              KV<McfStatVarObsSeries.Key, Iterable<McfStatVarObsSeries.StatVarObs>>
+                                  element,
+                          OutputReceiver<McfOptimizedGraph> receiver) {
+                        McfStatVarObsSeries.Builder svObsSeries = McfStatVarObsSeries.newBuilder();
+
+                        svObsSeries.setKey(element.getKey());
+                        for (McfStatVarObsSeries.StatVarObs svo : element.getValue()) {
+                          svObsSeries.addSvObsList(svo);
+                        }
+                        McfOptimizedGraph.Builder res =
+                            McfOptimizedGraph.newBuilder().setSvObsSeries(svObsSeries);
+                        receiver.output(res.build());
+                        LOGGER.info(res.build().toString());
+                      }
+                    }));
+
+    return svObs;
   }
 }
