@@ -1,10 +1,11 @@
-package org.datacommons;
+package org.datacommons.pipeline.differ;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.datacommons.pipeline.util.GraphUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
