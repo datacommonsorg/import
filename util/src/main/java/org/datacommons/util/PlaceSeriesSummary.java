@@ -82,6 +82,9 @@ public class PlaceSeriesSummary {
         DataPoint dp = timeSeriesDataPoint.getValue();
         if (SeriesSummary.getTypeOfDataPoint(dp) != ValueType.NUMBER) continue;
 
+        // JFreeChart used for generating the charts only supports years between 1900 and 9999.
+        if (localDateTime.getYear() < 1900 || localDateTime.getYear() > 9999) continue;
+
         timeSeries.addOrUpdate(
             new Day(
                 localDateTime.getDayOfMonth(),
