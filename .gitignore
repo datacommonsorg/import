@@ -17,3 +17,5 @@ target/
 **/node_modules/**
 /wizard/build/**
 !wizard/build/.empty
+.gemini/logs.json
+.tool-versions
