@@ -159,9 +159,9 @@ public class SummaryReportGenerator {
             StringUtil.getValidISO8601DatePattern(
                 timeSeries.getTimePeriods().iterator().next().toString());
         if (StringUtil.getValidISO8601DateTemplate(datePattern).isEmpty()) {
-          xAxis.setDateFormatOverride(new SimpleDateFormat("yyyy-MM-dd"));
+          xAxis.setDateFormatOverride(new SimpleDateFormat("yyyy-MM-dd", Locale.US));
         } else {
-          xAxis.setDateFormatOverride(new SimpleDateFormat(datePattern));
+          xAxis.setDateFormatOverride(new SimpleDateFormat(datePattern, Locale.US));
         }
       }
       SVGGraphics2D svg = new SVGGraphics2D(CHART_WIDTH, CHART_HEIGHT);
