@@ -2,7 +2,8 @@ steps:
   - name: 'maven:3.9.1'
     args: ['package']
     entrypoint: mvn
+
 artifacts:
   objects:
     location: 'gs://datacommons_public/import_tools'
-    paths: ['tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar']
+    paths: ['tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar', 'pipeline/differ/target/differ-bundled-0.1-SNAPSHOT.jar']

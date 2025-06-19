@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.datacommons</groupId>
+    <artifactId>pipeline</artifactId>
+    <version>${revision}</version>
+  </parent>
+
+    <groupId>org.datacommons</groupId>
+    <artifactId>util</artifactId>
+    <version>${revision}</version>
+    <name>Data Commons - Ingestion Utils</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.datacommons</groupId>
+      <artifactId>model</artifactId>
+      <version>${revision}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.datacommons</groupId>
+      <artifactId>datacommons-import-util</artifactId>
+      <version>0.1-alpha.1</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-core</artifactId>
+        <version>${beam.version}</version>
+    </dependency>
+  </dependencies>
+</project>

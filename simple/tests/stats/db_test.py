@@ -81,6 +81,11 @@ _CURRENT_IMPORT_TUPLE = ("2023-01-01 00:00:00", "SUCCESS",
 
 _KEY_VALUE = ("k1", "v1")
 
+_INDEXES = [('observations_entity_variable', 'observations'),
+            ('triples_subject_id', 'triples'),
+            ('triples_subject_id_predicate', 'triples'),
+            ('observations_variable', 'observations')]
+
 
 class TestDb(unittest.TestCase):
 
@@ -108,7 +113,7 @@ class TestDb(unittest.TestCase):
     actual_indexes = db.execute(
         "select name, tbl_name from sqlite_master where type = 'index'"
     ).fetchall()
-    self.assertListEqual(actual_indexes, indexes)
+    self.assertListEqual(sorted(actual_indexes), sorted(indexes))
 
     db.close()
 
@@ -147,8 +152,7 @@ class TestDb(unittest.TestCase):
           observations=list(map(lambda x: x.db_tuple(), _OBSERVATIONS)),
           key_values=[_KEY_VALUE],
           imports=[_CURRENT_IMPORT_TUPLE],
-          indexes=[('observations_entity_variable', 'observations'),
-                   ('triples_subject_id', 'triples')])
+          indexes=_INDEXES)
 
   @freeze_time("2023-01-01")
   def test_sql_db_schema_update(self):
@@ -171,8 +175,7 @@ class TestDb(unittest.TestCase):
           observations=_OLD_OBSERVATION_TUPLES_AFTER_UPDATE,
           key_values=[_KEY_VALUE],
           imports=[_OLD_IMPORT_TUPLE],
-          indexes=[('observations_entity_variable', 'observations'),
-                   ('triples_subject_id', 'triples')])
+          indexes=_INDEXES)
 
   @freeze_time("2023-01-01")
   def test_sql_db_reimport_with_schema_update(self):
@@ -204,8 +207,7 @@ class TestDb(unittest.TestCase):
           observations=list(map(lambda x: x.db_tuple(), _OBSERVATIONS)),
           key_values=[_KEY_VALUE],
           imports=[_OLD_IMPORT_TUPLE, _CURRENT_IMPORT_TUPLE],
-          indexes=[('observations_entity_variable', 'observations'),
-                   ('triples_subject_id', 'triples')])
+          indexes=_INDEXES)
 
   @freeze_time("2023-01-01")
   def test_sql_db_reimport_without_schema_update(self):
@@ -238,8 +240,7 @@ class TestDb(unittest.TestCase):
           observations=list(map(lambda x: x.db_tuple(), _OBSERVATIONS)),
           key_values=[_KEY_VALUE],
           imports=[_DIFFERENT_IMPORT_TUPLE, _CURRENT_IMPORT_TUPLE],
-          indexes=[('observations_entity_variable', 'observations'),
-                   ('triples_subject_id', 'triples')])
+          indexes=_INDEXES)
 
   @freeze_time("2023-01-01")
   def test_main_dc_db(self):

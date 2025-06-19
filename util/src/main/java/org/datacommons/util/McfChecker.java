@@ -103,6 +103,7 @@ public class McfChecker {
       throws IOException, InterruptedException {
     return new McfChecker(graph, columns, existenceChecker, null, false, true, logCtx).check();
   }
+
   // Version of checkTemplate that allows to specify "allowNanSVObs"
   public static boolean checkTemplate(
       Mcf.McfGraph graph,

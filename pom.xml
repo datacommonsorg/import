@@ -10,8 +10,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
     <!-- List the sub-dirs so that they all get included in an IntelliJ project -->
@@ -19,6 +19,7 @@
         <module>tool</module>
         <module>util</module>
         <module>server</module>
+        <module>pipeline</module>
     </modules>
 
     <build>
@@ -61,7 +62,7 @@
                 <!-- For google-java-format check. Order this after generate-sources since they are in the same phase. -->
                 <groupId>com.spotify.fmt</groupId>
                 <artifactId>fmt-maven-plugin</artifactId>
-                <version>2.19</version>
+                <version>2.25</version>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>

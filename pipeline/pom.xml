@@ -10,10 +10,11 @@
     <url>https://datacommons.org</url>
     <packaging>pom</packaging>
 
-
   <modules>
+    <module>differ</module>
     <module>ingestion</module>
     <module>model</module>
+    <module>util</module>
   </modules>
 
   <build>
@@ -43,5 +44,12 @@
     <protobuf.maven.plugin.version>0.6.1</protobuf.maven.plugin.version>
     <protoc.version>3.21.12</protoc.version>
     <protobuf.java.version>3.25.3</protobuf.java.version>
+    <junit.version>4.13.1</junit.version>
+    <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
+    <maven-exec-plugin.version>1.6.0</maven-exec-plugin.version>
+    <maven-jar-plugin.version>3.0.2</maven-jar-plugin.version>
+    <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
+    <mockito.version>3.7.7</mockito.version>
+    <slf4j.version>1.7.30</slf4j.version>
   </properties>
 </project>
