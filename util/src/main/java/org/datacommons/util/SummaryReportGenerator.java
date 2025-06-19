@@ -152,6 +152,7 @@ public class SummaryReportGenerator {
         yAxis.setRange(singleValue - 1, singleValue + 1);
       }
       DateAxis xAxis = (DateAxis) plot.getDomainAxis();
+      xAxis.setLocale(Locale.US);
       if (timeSeries.getTimePeriods().size() == 1) {
         // Override the date formatter for the x-axis when there is only one data point. Otherwise,
         // the chart library will label the single date as 00:00:00.
