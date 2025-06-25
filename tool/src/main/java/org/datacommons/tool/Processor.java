@@ -16,6 +16,7 @@ package org.datacommons.tool;
 
 import freemarker.template.TemplateException;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
+import org.datacommons.proto.Mcf.OptimizedMcfGraph;
 import org.datacommons.util.*;
 
 public class Processor {
@@ -252,6 +254,7 @@ public class Processor {
             csvFile);
     Mcf.McfGraph g;
     int numNodeSuccesses = 0, numPVSuccesses = 0, numRowSuccesses = 0, numRowsProcessed = 0;
+    List<Mcf.McfGraph> graphList = new ArrayList<>();
     while ((g = parser.parseNextRow()) != null) {
       g = McfMutator.mutate(g.toBuilder(), logCtx);
 
@@ -283,9 +286,17 @@ public class Processor {
         }
       }
       numRowsProcessed++;
+      graphList.add(g);
       if (!logCtx.trackStatus(1, "rows processed")) {
         throw new DCTooManyFailuresException("encountered too many failures");
       }
+    }
+    logger.info("Writing optimized graph file");
+    OptimizedMcfGraph og = GraphUtils.buildOptimizedMcfGraph(graphList);
+    try (FileOutputStream output = new FileOutputStream("graph.tfrecord")) {
+      og.writeTo(output);
+    } catch (IOException e) {
+      e.printStackTrace();
     }
     logCtx.incrementInfoCounterBy("NumRowSuccesses", numRowSuccesses);
     logCtx.incrementInfoCounterBy("NumNodeSuccesses", numNodeSuccesses);

@@ -7,12 +7,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.McfType;
+import org.datacommons.proto.Mcf.OptimizedMcfGraph;
 import org.datacommons.proto.Mcf.ValueType;
 
 /** Util functions for processing MCF graphs. */
@@ -352,5 +354,41 @@ public class GraphUtils {
     }
     scanner.close();
     return graphList;
+  }
+
+  /**
+   * Builds an OptimizedMcfGraph proto from a list of McfGraph protos. This function groups
+   * StatVarObservations by their key.
+   *
+   * @param graph A list of McfGraph protos, typically representing StatVarObservations.
+   * @return An OptimizedMcfGraph proto containing the grouped StatVarObservations.
+   */
+  public static OptimizedMcfGraph buildOptimizedMcfGraph(List<McfGraph> graph) {
+    List<McfStatVarObsSeries> svoList = new ArrayList<>();
+    for (McfGraph g : graph) {
+      for (PropertyValues pv : g.getNodesMap().values()) {
+        if (isObservation(pv)) {
+          McfStatVarObsSeries svoSeries = convertMcfGraphToMcfStatVarObsSeries(pv);
+          svoList.add(svoSeries);
+        }
+      }
+    }
+
+    Map<McfStatVarObsSeries.Key, List<McfStatVarObsSeries>> svoByKey =
+        svoList.stream().collect(Collectors.groupingBy(McfStatVarObsSeries::getKey));
+    OptimizedMcfGraph.Builder res = OptimizedMcfGraph.newBuilder();
+    svoByKey.forEach(
+        (K, V) -> {
+          McfOptimizedGraph.Builder g = McfOptimizedGraph.newBuilder();
+
+          McfStatVarObsSeries.Builder svObsSeries = McfStatVarObsSeries.newBuilder();
+          svObsSeries.setKey(K);
+          for (McfStatVarObsSeries svo : V) {
+            svObsSeries.addAllSvObsList(svo.getSvObsListList());
+          }
+          g.setSvObsSeries(svObsSeries.build());
+          res.addGraph(g.build());
+        });
+    return res.build();
   }
 }
