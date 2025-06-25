@@ -1,7 +1,8 @@
 package org.datacommons.util;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
+import org.datacommons.proto.Mcf.McfGraph.TypedValue;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
@@ -128,6 +130,23 @@ public class GraphUtils {
       value = String.format("\"%s\"", value);
     }
     return value;
+  }
+
+  /**
+   * Gets values for a property from a map of PVs
+   *
+   * @param pvs a map of property-values
+   * @param key property to fetch
+   * @return list of property values
+   */
+  public static List<String> getPropertyValues(Map<String, McfGraph.Values> pvs, String key) {
+    List<String> result = new ArrayList<>();
+    if (pvs.get(key) != null && pvs.get(key).getTypedValuesCount() > 0) {
+      for (TypedValue val : pvs.get(key).getTypedValuesList()) {
+        result.add(val.getValue());
+      }
+    }
+    return result;
   }
 
   /**
@@ -325,7 +344,7 @@ public class GraphUtils {
       int colon = line.indexOf(":");
       String lhs = line.substring(0, colon).trim();
       String rhs = line.substring(colon + 1).trim();
-      if (lhs.equals(Property.dcid.name())) {
+      if (lhs.equals(Property.dcid.name()) || lhs.equals("Node")) {
         node_id = rhs;
       }
       setPropVal(lhs, ValueType.TEXT, rhs, base_node);
@@ -341,8 +360,7 @@ public class GraphUtils {
    * @return A list of McfGraph protos, where each proto represents a node or block from the MCF
    *     file.
    */
-  public static List<McfGraph> readMcfFile(String fileName) throws FileNotFoundException {
-
+  public static List<McfGraph> readMcfFile(String fileName) throws IOException {
     List<McfGraph> graphList = new ArrayList<>();
     File file = new File(fileName);
     Scanner scanner = new Scanner(file);
@@ -390,5 +408,16 @@ public class GraphUtils {
           res.addGraph(g.build());
         });
     return res.build();
+  }
+
+  /**
+   * Reads an optimized MCF graph from a file.
+   *
+   * @param file The path to the optimized MCF graph file.
+   * @return A list of McfOptimizedGraph protos.
+   */
+  public static List<McfOptimizedGraph> readOptimizedGraph(String file) throws IOException {
+    OptimizedMcfGraph graph = OptimizedMcfGraph.parseFrom(new FileInputStream(file));
+    return graph.getGraphList();
   }
 }
