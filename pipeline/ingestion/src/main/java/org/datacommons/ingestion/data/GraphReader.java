@@ -15,8 +15,10 @@ import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
+import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.proto.Storage.Observations;
 import org.datacommons.util.GraphUtils;
+import org.datacommons.util.Vocabulary;
 
 public class GraphReader implements Serializable {
   public static List<Node> graphToNodes(McfGraph graph) {
@@ -41,13 +43,21 @@ public class GraphReader implements Serializable {
       PropertyValues pvs = nodeEntry.getValue();
       if (!GraphUtils.isObservation(pvs)) {
         Map<String, McfGraph.Values> pv = pvs.getPvsMap();
+        String provenance = GraphUtils.getPropertyValue(pv, "provenance");
         String subjectId = nodeEntry.getKey(); // Use the map key as the subjectId
         for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) { // Iterate over properties
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
             Edge.Builder edge = Edge.builder();
             edge.subjectId(subjectId);
             edge.predicate(entry.getKey());
-            edge.objectId(val.getValue());
+            edge.provenance(provenance);
+            if (val.getType() == ValueType.RESOLVED_REF) {
+              edge.objectId(Vocabulary.DCID_PREFIX + val.getValue());
+            } else {
+              edge.objectId(val.getValue());
+              edge.objectValue(val.getValue());
+            }
+            // TODO: popuplate object hash.
             edges.add(edge.build());
           }
         }
@@ -64,6 +74,7 @@ public class GraphReader implements Serializable {
     obs.variableMeasured(graph.getSvObsSeries().getKey().getVariableMeasured());
     obs.unit(graph.getSvObsSeries().getKey().getUnit());
     obs.scalingFactor(graph.getSvObsSeries().getKey().getScalingFactor());
+    obs.isDcAggregate(false);
     Observations.Builder ob = Observations.newBuilder();
     for (StatVarObs svo : graph.getSvObsSeries().getSvObsListList()) {
       if (svo.hasNumber()) {

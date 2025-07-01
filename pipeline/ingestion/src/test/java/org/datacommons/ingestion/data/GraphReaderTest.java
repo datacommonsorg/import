@@ -174,17 +174,23 @@ public class GraphReaderTest {
                 .subjectId("dcid_subject")
                 .predicate("name")
                 .objectId("Subject Node")
+                .objectValue("Subject Node")
                 .build(),
-            Edge.builder().subjectId("dcid_subject").predicate("typeOf").objectId("Class").build(),
+            Edge.builder()
+                .subjectId("dcid_subject")
+                .predicate("typeOf")
+                .objectId("dcid:Class")
+                .build(),
             Edge.builder()
                 .subjectId("dcid_subject")
                 .predicate("containedInPlace")
-                .objectId("geoId/06")
+                .objectId("dcid:geoId/06")
                 .build(),
             Edge.builder()
                 .subjectId("dcid_subject")
                 .predicate("description")
                 .objectId("A test description")
+                .objectValue("A test description")
                 .build());
 
     List<Edge> actualEdges = GraphReader.graphToEdges(graph);
@@ -193,7 +199,8 @@ public class GraphReaderTest {
     Comparator<Edge> edgeComparator =
         Comparator.comparing(Edge::getSubjectId)
             .thenComparing(Edge::getPredicate)
-            .thenComparing(Edge::getObjectId);
+            .thenComparing(Edge::getObjectId)
+            .thenComparing(Edge::getObjectValue);
     actualEdges.sort(edgeComparator);
     expectedEdges.sort(edgeComparator);
 
