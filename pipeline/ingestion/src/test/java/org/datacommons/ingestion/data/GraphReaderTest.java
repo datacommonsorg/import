@@ -173,23 +173,19 @@ public class GraphReaderTest {
             Edge.builder()
                 .subjectId("dcid_subject")
                 .predicate("name")
-                .objectId("Subject Node")
+                .objectId("dcid_subject")
                 .objectValue("Subject Node")
                 .build(),
-            Edge.builder()
-                .subjectId("dcid_subject")
-                .predicate("typeOf")
-                .objectId("dcid:Class")
-                .build(),
+            Edge.builder().subjectId("dcid_subject").predicate("typeOf").objectId("Class").build(),
             Edge.builder()
                 .subjectId("dcid_subject")
                 .predicate("containedInPlace")
-                .objectId("dcid:geoId/06")
+                .objectId("geoId/06")
                 .build(),
             Edge.builder()
                 .subjectId("dcid_subject")
                 .predicate("description")
-                .objectId("A test description")
+                .objectId("dcid_subject")
                 .objectValue("A test description")
                 .build());
 
@@ -221,7 +217,7 @@ public class GraphReaderTest {
                             .setObservationAbout("geoId/testPlace")
                             .setVariableMeasured("testStatVar")
                             .setObservationPeriod("P1Y")
-                            .setMeasurementMethod("testMethod")
+                            .setMeasurementMethod("dcAggregate/testMethod")
                             .setUnit("testUnit")
                             .setScalingFactor("100"))
                     .addSvObsList(
@@ -241,6 +237,7 @@ public class GraphReaderTest {
             .observationAbout("geoId/testPlace")
             .variableMeasured("testStatVar")
             .measurementMethod("testMethod")
+            .isDcAggregate(true)
             .observationPeriod("P1Y")
             .unit("testUnit")
             .scalingFactor("100")

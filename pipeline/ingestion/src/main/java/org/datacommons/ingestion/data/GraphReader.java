@@ -18,9 +18,11 @@ import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.proto.Storage.Observations;
 import org.datacommons.util.GraphUtils;
-import org.datacommons.util.Vocabulary;
 
 public class GraphReader implements Serializable {
+  private static final String DC_AGGREGATE = "dcAggregate/";
+  private static final String DATCOM_AGGREGATE = "DataCommonsAggregate";
+
   public static List<Node> graphToNodes(McfGraph graph) {
     List<Node> nodes = new ArrayList<>();
     for (Map.Entry<String, PropertyValues> entry : graph.getNodesMap().entrySet()) {
@@ -52,9 +54,9 @@ public class GraphReader implements Serializable {
             edge.predicate(entry.getKey());
             edge.provenance(provenance);
             if (val.getType() == ValueType.RESOLVED_REF) {
-              edge.objectId(Vocabulary.DCID_PREFIX + val.getValue());
-            } else {
               edge.objectId(val.getValue());
+            } else {
+              edge.objectId(subjectId);
               edge.objectValue(val.getValue());
             }
             // TODO: popuplate object hash.
@@ -68,13 +70,21 @@ public class GraphReader implements Serializable {
 
   public static Observation graphToObservations(McfOptimizedGraph graph) {
     Observation.Builder obs = Observation.builder();
+    String measurementMethod = graph.getSvObsSeries().getKey().getMeasurementMethod();
     obs.observationAbout(graph.getSvObsSeries().getKey().getObservationAbout());
     obs.observationPeriod(graph.getSvObsSeries().getKey().getObservationPeriod());
-    obs.measurementMethod(graph.getSvObsSeries().getKey().getMeasurementMethod());
+    if (measurementMethod.startsWith(DC_AGGREGATE)) {
+      obs.isDcAggregate(true);
+      measurementMethod = measurementMethod.replace(DC_AGGREGATE, "");
+    }
+    if (measurementMethod == DATCOM_AGGREGATE) {
+      obs.isDcAggregate(true);
+      measurementMethod = "";
+    }
+    obs.measurementMethod(measurementMethod);
     obs.variableMeasured(graph.getSvObsSeries().getKey().getVariableMeasured());
     obs.unit(graph.getSvObsSeries().getKey().getUnit());
     obs.scalingFactor(graph.getSvObsSeries().getKey().getScalingFactor());
-    obs.isDcAggregate(false);
     Observations.Builder ob = Observations.newBuilder();
     for (StatVarObs svo : graph.getSvObsSeries().getSvObsListList()) {
       if (svo.hasNumber()) {
