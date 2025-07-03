@@ -3,10 +3,17 @@ package org.datacommons.pipeline.util;
 import static org.apache.beam.sdk.io.Compression.GZIP;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TFRecordIO;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.ValueProvider;
+import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -16,6 +23,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
+import org.datacommons.proto.Mcf.McfGraph.Values;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.slf4j.Logger;
@@ -172,5 +180,108 @@ public class GraphUtils {
                     }));
 
     return svObs;
+  }
+
+  /**
+   * Combines nodes from multiple McfGraph protos into a single PCollection of McfGraph protos,
+   * where each output McfGraph contains a single combined node.
+   *
+   * @param graph A PCollection of McfGraph protos to combine.
+   * @return A PCollection of McfGraph protos, each containing a single combined node.
+   */
+  public static PCollection<McfGraph> combineGraphNodes(PCollection<McfGraph> graph) {
+    PCollection<KV<String, PropertyValues>> graphNodes =
+        graph.apply(
+            "MapGraphToNodes",
+            ParDo.of(
+                new DoFn<McfGraph, KV<String, PropertyValues>>() {
+                  @ProcessElement
+                  public void processElement(
+                      @Element McfGraph graph,
+                      OutputReceiver<KV<String, PropertyValues>> receiver) {
+                    Map<String, PropertyValues> nodes = graph.getNodesMap();
+                    for (Map.Entry<String, PropertyValues> node : nodes.entrySet()) {
+                      receiver.output(KV.of(node.getKey(), node.getValue()));
+                    }
+                  }
+                }));
+
+    PCollection<KV<String, PropertyValues>> combined =
+        graphNodes.apply(
+            "CombineGraphNodes",
+            Combine.perKey(
+                new Combine.CombineFn<PropertyValues, List<PropertyValues>, PropertyValues>() {
+                  @Override
+                  public List<PropertyValues> createAccumulator() {
+                    return new ArrayList<>();
+                  }
+
+                  @Override
+                  public List<PropertyValues> addInput(
+                      List<PropertyValues> accumulator, PropertyValues input) {
+                    accumulator.add(input);
+                    return accumulator;
+                  }
+
+                  @Override
+                  public List<PropertyValues> mergeAccumulators(
+                      Iterable<List<PropertyValues>> accumulators) {
+                    List<PropertyValues> merged = new ArrayList<>();
+                    for (List<PropertyValues> acc : accumulators) {
+                      merged.addAll(acc);
+                    }
+                    return merged;
+                  }
+
+                  @Override
+                  public PropertyValues extractOutput(List<PropertyValues> accumulator) {
+                    PropertyValues.Builder combined = PropertyValues.newBuilder();
+                    Map<String, Values> props = new HashMap<>();
+                    for (PropertyValues pv : accumulator) {
+                      for (Map.Entry<String, Values> entry : pv.getPvsMap().entrySet()) {
+                        String property = entry.getKey();
+                        Values values = entry.getValue();
+                        if (!props.containsKey(property)) {
+                          props.put(property, values);
+                        } else {
+                          Values v = props.get(property);
+                          Values.Builder val = Values.newBuilder();
+                          val.addAllTypedValues(v.getTypedValuesList());
+                          val.addAllTypedValues(values.getTypedValuesList());
+                          // Add logic to remove duplicates from val
+                          Set<String> seenValues = new HashSet<>();
+                          Values.Builder uniqueVal = Values.newBuilder();
+                          for (org.datacommons.proto.Mcf.McfGraph.TypedValue tv :
+                              val.getTypedValuesList()) {
+                            if (!seenValues.contains(tv.getValue())) {
+                              uniqueVal.addTypedValues(tv);
+                              seenValues.add(tv.getValue());
+                            }
+                          }
+                          props.put(property, uniqueVal.build());
+                        }
+                      }
+                    }
+                    combined.putAllPvs(props);
+                    return combined.build();
+                  }
+                }));
+
+    PCollection<McfGraph> combinedGraph =
+        combined.apply(
+            "MapCombinedNodesToGraph",
+            ParDo.of(
+                new DoFn<KV<String, PropertyValues>, McfGraph>() {
+                  @ProcessElement
+                  public void processElement(
+                      @Element KV<String, PropertyValues> element,
+                      OutputReceiver<McfGraph> receiver) {
+                    McfGraph.Builder graphBuilder = McfGraph.newBuilder();
+                    graphBuilder.putNodes(element.getKey(), element.getValue());
+                    receiver.output(graphBuilder.build());
+                    System.out.println(graphBuilder.build().toString());
+                  }
+                }));
+    return combinedGraph;
   }
 }
