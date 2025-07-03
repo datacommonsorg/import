@@ -16,7 +16,6 @@ import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.McfType;
-import org.datacommons.proto.Mcf.OptimizedMcfGraph;
 import org.datacommons.proto.Mcf.ValueType;
 
 /** Util functions for processing MCF graphs. */
@@ -381,7 +380,7 @@ public class GraphUtils {
    * @param graph A list of McfGraph protos, typically representing StatVarObservations.
    * @return An OptimizedMcfGraph proto containing the grouped StatVarObservations.
    */
-  public static OptimizedMcfGraph buildOptimizedMcfGraph(List<McfGraph> graph) {
+  public static List<McfOptimizedGraph> buildOptimizedMcfGraph(List<McfGraph> graph) {
     List<McfStatVarObsSeries> svoList = new ArrayList<>();
     for (McfGraph g : graph) {
       for (PropertyValues pv : g.getNodesMap().values()) {
@@ -394,7 +393,7 @@ public class GraphUtils {
 
     Map<McfStatVarObsSeries.Key, List<McfStatVarObsSeries>> svoByKey =
         svoList.stream().collect(Collectors.groupingBy(McfStatVarObsSeries::getKey));
-    OptimizedMcfGraph.Builder res = OptimizedMcfGraph.newBuilder();
+    List<McfOptimizedGraph> res = new ArrayList<>();
     svoByKey.forEach(
         (K, V) -> {
           McfOptimizedGraph.Builder g = McfOptimizedGraph.newBuilder();
@@ -405,9 +404,9 @@ public class GraphUtils {
             svObsSeries.addAllSvObsList(svo.getSvObsListList());
           }
           g.setSvObsSeries(svObsSeries.build());
-          res.addGraph(g.build());
+          res.add(g.build());
         });
-    return res.build();
+    return res;
   }
 
   /**
@@ -416,8 +415,17 @@ public class GraphUtils {
    * @param file The path to the optimized MCF graph file.
    * @return A list of McfOptimizedGraph protos.
    */
-  public static List<McfOptimizedGraph> readOptimizedGraph(String file) throws IOException {
-    OptimizedMcfGraph graph = OptimizedMcfGraph.parseFrom(new FileInputStream(file));
-    return graph.getGraphList();
+  public static List<McfOptimizedGraph> readOptimizedGraph(String file) {
+    try (FileInputStream fis = new FileInputStream(file)) {
+      List<McfOptimizedGraph> result = new ArrayList<>();
+      McfOptimizedGraph graph;
+      while ((graph = McfOptimizedGraph.parseDelimitedFrom(fis)) != null) {
+        result.add(graph);
+      }
+      return result;
+    } catch (IOException e) {
+      e.printStackTrace();
+      return null;
+    }
   }
 }

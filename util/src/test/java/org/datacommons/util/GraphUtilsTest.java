@@ -9,7 +9,6 @@ import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.proto.Mcf.McfType;
-import org.datacommons.proto.Mcf.OptimizedMcfGraph;
 import org.datacommons.proto.Mcf.ValueType;
 import org.junit.Test;
 
@@ -85,12 +84,12 @@ public class GraphUtilsTest {
     graphBuilder.putNodes("l:node1", svoNode);
     McfGraph mcfGraph = graphBuilder.build();
 
-    OptimizedMcfGraph result = GraphUtils.buildOptimizedMcfGraph(List.of(mcfGraph));
+    List<McfOptimizedGraph> result = GraphUtils.buildOptimizedMcfGraph(List.of(mcfGraph));
 
     assertNotNull(result);
-    assertEquals(1, result.getGraphCount());
+    assertEquals(1, result.size());
 
-    McfOptimizedGraph optimizedEntry = result.getGraph(0);
+    McfOptimizedGraph optimizedEntry = result.get(0);
     McfStatVarObsSeries series = optimizedEntry.getSvObsSeries();
 
     McfStatVarObsSeries.Key expectedKey =
@@ -146,12 +145,12 @@ public class GraphUtilsTest {
     graphBuilder.putNodes("l:node2", svoNode2);
     McfGraph mcfGraph = graphBuilder.build();
 
-    OptimizedMcfGraph result = GraphUtils.buildOptimizedMcfGraph(List.of(mcfGraph));
+    List<McfOptimizedGraph> result = GraphUtils.buildOptimizedMcfGraph(List.of(mcfGraph));
 
     assertNotNull(result);
-    assertEquals(1, result.getGraphCount());
+    assertEquals(1, result.size());
 
-    McfOptimizedGraph optimizedEntry = result.getGraph(0);
+    McfOptimizedGraph optimizedEntry = result.get(0);
     McfStatVarObsSeries series = optimizedEntry.getSvObsSeries();
 
     McfStatVarObsSeries.Key expectedKey =
@@ -212,9 +211,9 @@ public class GraphUtilsTest {
     graphBuilder.putNodes("l:node2", svoNode2);
     McfGraph mcfGraph = graphBuilder.build();
 
-    OptimizedMcfGraph result = GraphUtils.buildOptimizedMcfGraph(List.of(mcfGraph));
+    List<McfOptimizedGraph> result = GraphUtils.buildOptimizedMcfGraph(List.of(mcfGraph));
 
     assertNotNull(result);
-    assertEquals(2, result.getGraphCount());
+    assertEquals(2, result.size());
   }
 }
