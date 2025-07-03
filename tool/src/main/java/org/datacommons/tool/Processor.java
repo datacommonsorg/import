@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
-import org.datacommons.proto.Mcf.OptimizedMcfGraph;
+import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.util.*;
 
 public class Processor {
@@ -291,10 +292,13 @@ public class Processor {
         throw new DCTooManyFailuresException("encountered too many failures");
       }
     }
-    logger.info("Writing optimized graph file");
-    OptimizedMcfGraph og = GraphUtils.buildOptimizedMcfGraph(graphList);
-    try (FileOutputStream output = new FileOutputStream("graph.tfrecord")) {
-      og.writeTo(output);
+    String filePath = Paths.get(args.outputDir.toString(), "optimized_graph.pb").toString();
+    logger.info("Writing optimized graph file to {}", filePath);
+    List<McfOptimizedGraph> og = GraphUtils.buildOptimizedMcfGraph(graphList);
+    try (FileOutputStream output = new FileOutputStream(filePath)) {
+      for (McfOptimizedGraph graph : og) {
+        graph.writeDelimitedTo(output);
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }

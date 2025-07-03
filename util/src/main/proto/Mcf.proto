@@ -135,7 +135,3 @@ message McfOptimizedGraph {
     McfStatVarObsSeries sv_obs_series = 1;
   }
 }
-
-message OptimizedMcfGraph {
-  repeated McfOptimizedGraph graph = 1;
-}
