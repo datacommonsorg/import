@@ -14,6 +14,7 @@
 
 from dataclasses import dataclass
 from dataclasses import replace
+import hashlib
 import json
 import logging
 import re
@@ -24,6 +25,11 @@ from stats.data import ParentSVG2ChildSpecializedNames
 from stats.data import StatVarHierarchyResult
 from stats.data import Triple
 from stats.data import VerticalSpec
+
+# The maximum length of a SVG ID is 255 characters to match the subject_id column length.
+MAX_SVG_ID_LENGTH = 255
+# The length of the hash suffix added to the SVG ID to avoid collisions.
+SVG_ID_HASH_LENGTH = 8
 
 
 def generate(triples: list[Triple], vertical_specs: list[VerticalSpec],
@@ -112,6 +118,16 @@ class SVPropVals:
     svg_id = f"{sc.CUSTOM_SVG_PREFIX}{_to_dcid_token(self.population_type)}"
     for pv in self.pvs:
       svg_id = f"{svg_id}_{pv.gen_pv_id()}"
+    # SVG IDs cannot exceed the maximum length of the subject_id column.
+    # If the SVG ID exceeds the maximum length, truncate it and add a hash suffix.
+    if len(svg_id) > MAX_SVG_ID_LENGTH:
+      # Get SHA-256 hash of full svg_id
+      hash_suffix = hashlib.sha256(
+          svg_id.encode()).hexdigest()[:SVG_ID_HASH_LENGTH]
+
+      # Truncate svg_id to leave room for hash suffix and dash.
+      max_base_length = MAX_SVG_ID_LENGTH - SVG_ID_HASH_LENGTH - 1  # -1 for dash
+      svg_id = f"{svg_id[:max_base_length]}-{hash_suffix}"
     return svg_id
 
   def gen_svg_name(self, dcid2name: dict[str, str]):

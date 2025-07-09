@@ -45,15 +45,17 @@ class RunMode(StrEnum):
 
 
 class Runner:
-  """Runs and coordinates all imports.
-    """
+  """Runs and coordinates all imports."""
 
-  def __init__(self,
-               config_file_path: str,
-               input_dir_path: str,
-               output_dir_path: str,
-               mode: RunMode = RunMode.CUSTOM_DC) -> None:
-    assert config_file_path or input_dir_path, "One of config_file or input_dir must be specified"
+  def __init__(
+      self,
+      config_file_path: str,
+      input_dir_path: str,
+      output_dir_path: str,
+      mode: RunMode = RunMode.CUSTOM_DC,
+  ) -> None:
+    assert (config_file_path or
+            input_dir_path), "One of config_file or input_dir must be specified"
     assert output_dir_path, "output_dir must be specified"
 
     self.mode = mode
@@ -88,7 +90,8 @@ class Runner:
 
       self._read_config_from_file(
           config_file_path=constants.CONFIG_JSON_FILE_NAME,
-          config_file_dir=input_store.as_dir())
+          config_file_dir=input_store.as_dir(),
+      )
 
     # Get dict of special file type string to special file name.
     # Example entry: verticalSpecsFile -> vertical_specs.json
@@ -117,7 +120,7 @@ class Runner:
 
   def run(self):
     try:
-      if (self.db is None):
+      if self.db is None:
         self.db = create_and_update_db(self._get_db_config())
         self.db_cache = get_db_cache_from_env()
 
@@ -358,11 +361,13 @@ class Runner:
     # locations.
     output_file = output_dir.open_file(input_file.path)
     reporter = self.reporter.get_file_reporter(input_file)
-    return McfImporter(input_file=input_file,
-                       output_file=output_file,
-                       db=self.db,
-                       reporter=reporter,
-                       is_main_dc=is_main_dc)
+    return McfImporter(
+        input_file=input_file,
+        output_file=output_file,
+        db=self.db,
+        reporter=reporter,
+        is_main_dc=is_main_dc,
+    )
 
   def _create_importer(self, input_file: File) -> Importer:
     import_type = self.config.import_type(input_file)
@@ -375,22 +380,28 @@ class Runner:
     if import_type == ImportType.OBSERVATIONS:
       input_file_format = self.config.format(input_file)
       if input_file_format == InputFileFormat.VARIABLE_PER_ROW:
-        return VariablePerRowImporter(input_file=input_file,
-                                      db=self.db,
-                                      reporter=reporter,
-                                      nodes=self.nodes)
-      return ObservationsImporter(input_file=input_file,
-                                  db=self.db,
-                                  debug_resolve_file=debug_resolve_file,
-                                  reporter=reporter,
-                                  nodes=self.nodes)
+        return VariablePerRowImporter(
+            input_file=input_file,
+            db=self.db,
+            reporter=reporter,
+            nodes=self.nodes,
+        )
+      return ObservationsImporter(
+          input_file=input_file,
+          db=self.db,
+          debug_resolve_file=debug_resolve_file,
+          reporter=reporter,
+          nodes=self.nodes,
+      )
 
     if import_type == ImportType.EVENTS:
-      return EventsImporter(input_file=input_file,
-                            db=self.db,
-                            debug_resolve_file=debug_resolve_file,
-                            reporter=reporter,
-                            nodes=self.nodes)
+      return EventsImporter(
+          input_file=input_file,
+          db=self.db,
+          debug_resolve_file=debug_resolve_file,
+          reporter=reporter,
+          nodes=self.nodes,
+      )
 
     if import_type == ImportType.ENTITIES:
       return EntitiesImporter(input_file=input_file,
@@ -405,7 +416,8 @@ class Runner:
 def _check_not_overlapping(input_store: Store, output_store: Store):
   input_path = input_store.full_path()
   output_path = output_store.full_path()
-  if fspath.issamedir(input_path, output_path) or fspath.isparent(
-      input_path, output_path) or fspath.isparent(output_path, input_path):
+  if (fspath.issamedir(input_path, output_path) or
+      fspath.isparent(input_path, output_path) or
+      fspath.isparent(output_path, input_path)):
     raise ValueError(
         f"Input path (${input_path}) overlaps with output dir ({output_path})")
