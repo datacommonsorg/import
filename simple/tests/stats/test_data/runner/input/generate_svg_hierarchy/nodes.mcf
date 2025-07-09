@@ -22,3 +22,12 @@ name: "Number of people"
 Node: dcid:PersonAgeVertical
 typeOf: dcs:Thing
 name: "Age of people"
+
+Node: dcid:some_var_with_long_property_values
+typeOf: dcs:StatisticalVariable
+measuredProperty: dcs:count
+name: "Some Variable With Long Property Values"
+description: "Some Variable 3 Description"
+populationType: schema:Person
+propertyWithAReallyLongValue: dcs:HereIsAPropertyWithAReallyLongValueToTestCausingASubjectIDOverflowOfMoreThan255CharactersWhenLoadingIntoTheDatabase
+anotherPropertyWithAReallyLongValue: dcs:HereIsAotherPropertyWithAReallyLongValueToTestCausingASubjectIDOverflowOfMoreThan255CharactersWhenLoadingIntoTheDatabase
