@@ -5,108 +5,126 @@ package org.datacommons.proto;
 
 public final class ChartStoreOuterClass {
   private ChartStoreOuterClass() {}
-  public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistryLite registry) {
+
+  public static void registerAllExtensions(com.google.protobuf.ExtensionRegistryLite registry) {}
+
+  public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
+    registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
   }
 
-  public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistry registry) {
-    registerAllExtensions(
-        (com.google.protobuf.ExtensionRegistryLite) registry);
-  }
-  public interface FacetOrBuilder extends
+  public interface FacetOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.Facet)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <code>string import_name = 1;</code>
+     *
      * @return The importName.
      */
     java.lang.String getImportName();
+
     /**
      * <code>string import_name = 1;</code>
+     *
      * @return The bytes for importName.
      */
-    com.google.protobuf.ByteString
-        getImportNameBytes();
+    com.google.protobuf.ByteString getImportNameBytes();
 
     /**
      * <code>string provenance_url = 2;</code>
+     *
      * @return The provenanceUrl.
      */
     java.lang.String getProvenanceUrl();
+
     /**
      * <code>string provenance_url = 2;</code>
+     *
      * @return The bytes for provenanceUrl.
      */
-    com.google.protobuf.ByteString
-        getProvenanceUrlBytes();
+    com.google.protobuf.ByteString getProvenanceUrlBytes();
 
     /**
      * <code>string measurement_method = 3;</code>
+     *
      * @return The measurementMethod.
      */
     java.lang.String getMeasurementMethod();
+
     /**
      * <code>string measurement_method = 3;</code>
+     *
      * @return The bytes for measurementMethod.
      */
-    com.google.protobuf.ByteString
-        getMeasurementMethodBytes();
+    com.google.protobuf.ByteString getMeasurementMethodBytes();
 
     /**
      * <code>string observation_period = 4;</code>
+     *
      * @return The observationPeriod.
      */
     java.lang.String getObservationPeriod();
+
     /**
      * <code>string observation_period = 4;</code>
+     *
      * @return The bytes for observationPeriod.
      */
-    com.google.protobuf.ByteString
-        getObservationPeriodBytes();
+    com.google.protobuf.ByteString getObservationPeriodBytes();
 
     /**
      * <code>string scaling_factor = 5;</code>
+     *
      * @return The scalingFactor.
      */
     java.lang.String getScalingFactor();
+
     /**
      * <code>string scaling_factor = 5;</code>
+     *
      * @return The bytes for scalingFactor.
      */
-    com.google.protobuf.ByteString
-        getScalingFactorBytes();
+    com.google.protobuf.ByteString getScalingFactorBytes();
 
     /**
      * <code>string unit = 6;</code>
+     *
      * @return The unit.
      */
     java.lang.String getUnit();
+
     /**
      * <code>string unit = 6;</code>
+     *
      * @return The bytes for unit.
      */
-    com.google.protobuf.ByteString
-        getUnitBytes();
+    com.google.protobuf.ByteString getUnitBytes();
 
     /**
      * <code>bool is_dc_aggregate = 7;</code>
+     *
      * @return The isDcAggregate.
      */
     boolean getIsDcAggregate();
 
     /**
+     *
+     *
      * <pre>
      * Whether this facet is imputed by Data Commons.
      * </pre>
      *
      * <code>bool is_dc_imputed = 8;</code>
+     *
      * @return The isDcImputed.
      */
     boolean getIsDcImputed();
   }
+
   /**
+   *
+   *
    * <pre>
    * Facet contains the source and measurement information for a statistical
    * observation.
@@ -114,15 +132,17 @@ public final class ChartStoreOuterClass {
    *
    * Protobuf type {@code org.datacommons.proto.Facet}
    */
-  public static final class Facet extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class Facet extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.Facet)
       FacetOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use Facet.newBuilder() to construct.
     private Facet(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private Facet() {
       importName_ = "";
       provenanceUrl_ = "";
@@ -134,16 +154,15 @@ public final class ChartStoreOuterClass {
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new Facet();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private Facet(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -162,88 +181,98 @@ public final class ChartStoreOuterClass {
             case 0:
               done = true;
               break;
-            case 10: {
-              java.lang.String s = input.readStringRequireUtf8();
+            case 10:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
 
-              importName_ = s;
-              break;
-            }
-            case 18: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              provenanceUrl_ = s;
-              break;
-            }
-            case 26: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              measurementMethod_ = s;
-              break;
-            }
-            case 34: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              observationPeriod_ = s;
-              break;
-            }
-            case 42: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              scalingFactor_ = s;
-              break;
-            }
-            case 50: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              unit_ = s;
-              break;
-            }
-            case 56: {
-
-              isDcAggregate_ = input.readBool();
-              break;
-            }
-            case 64: {
-
-              isDcImputed_ = input.readBool();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+                importName_ = s;
+                break;
               }
-              break;
-            }
+            case 18:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
+
+                provenanceUrl_ = s;
+                break;
+              }
+            case 26:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
+
+                measurementMethod_ = s;
+                break;
+              }
+            case 34:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
+
+                observationPeriod_ = s;
+                break;
+              }
+            case 42:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
+
+                scalingFactor_ = s;
+                break;
+              }
+            case 50:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
+
+                unit_ = s;
+                break;
+              }
+            case 56:
+              {
+                isDcAggregate_ = input.readBool();
+                break;
+              }
+            case 64:
+              {
+                isDcImputed_ = input.readBool();
+                break;
+              }
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_Facet_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.ChartStoreOuterClass
+          .internal_static_org_datacommons_proto_Facet_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_Facet_fieldAccessorTable
+      return org.datacommons.proto.ChartStoreOuterClass
+          .internal_static_org_datacommons_proto_Facet_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.ChartStoreOuterClass.Facet.class, org.datacommons.proto.ChartStoreOuterClass.Facet.Builder.class);
+              org.datacommons.proto.ChartStoreOuterClass.Facet.class,
+              org.datacommons.proto.ChartStoreOuterClass.Facet.Builder.class);
     }
 
     public static final int IMPORT_NAME_FIELD_NUMBER = 1;
     private volatile java.lang.Object importName_;
+
     /**
      * <code>string import_name = 1;</code>
+     *
      * @return The importName.
      */
     @java.lang.Override
@@ -252,25 +281,24 @@ public final class ChartStoreOuterClass {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         importName_ = s;
         return s;
       }
     }
+
     /**
      * <code>string import_name = 1;</code>
+     *
      * @return The bytes for importName.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getImportNameBytes() {
+    public com.google.protobuf.ByteString getImportNameBytes() {
       java.lang.Object ref = importName_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         importName_ = b;
         return b;
       } else {
@@ -280,8 +308,10 @@ public final class ChartStoreOuterClass {
 
     public static final int PROVENANCE_URL_FIELD_NUMBER = 2;
     private volatile java.lang.Object provenanceUrl_;
+
     /**
      * <code>string provenance_url = 2;</code>
+     *
      * @return The provenanceUrl.
      */
     @java.lang.Override
@@ -290,25 +320,24 @@ public final class ChartStoreOuterClass {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         provenanceUrl_ = s;
         return s;
       }
     }
+
     /**
      * <code>string provenance_url = 2;</code>
+     *
      * @return The bytes for provenanceUrl.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getProvenanceUrlBytes() {
+    public com.google.protobuf.ByteString getProvenanceUrlBytes() {
       java.lang.Object ref = provenanceUrl_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         provenanceUrl_ = b;
         return b;
       } else {
@@ -318,8 +347,10 @@ public final class ChartStoreOuterClass {
 
     public static final int MEASUREMENT_METHOD_FIELD_NUMBER = 3;
     private volatile java.lang.Object measurementMethod_;
+
     /**
      * <code>string measurement_method = 3;</code>
+     *
      * @return The measurementMethod.
      */
     @java.lang.Override
@@ -328,25 +359,24 @@ public final class ChartStoreOuterClass {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         measurementMethod_ = s;
         return s;
       }
     }
+
     /**
      * <code>string measurement_method = 3;</code>
+     *
      * @return The bytes for measurementMethod.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getMeasurementMethodBytes() {
+    public com.google.protobuf.ByteString getMeasurementMethodBytes() {
       java.lang.Object ref = measurementMethod_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         measurementMethod_ = b;
         return b;
       } else {
@@ -356,8 +386,10 @@ public final class ChartStoreOuterClass {
 
     public static final int OBSERVATION_PERIOD_FIELD_NUMBER = 4;
     private volatile java.lang.Object observationPeriod_;
+
     /**
      * <code>string observation_period = 4;</code>
+     *
      * @return The observationPeriod.
      */
     @java.lang.Override
@@ -366,25 +398,24 @@ public final class ChartStoreOuterClass {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         observationPeriod_ = s;
         return s;
       }
     }
+
     /**
      * <code>string observation_period = 4;</code>
+     *
      * @return The bytes for observationPeriod.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getObservationPeriodBytes() {
+    public com.google.protobuf.ByteString getObservationPeriodBytes() {
       java.lang.Object ref = observationPeriod_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         observationPeriod_ = b;
         return b;
       } else {
@@ -394,8 +425,10 @@ public final class ChartStoreOuterClass {
 
     public static final int SCALING_FACTOR_FIELD_NUMBER = 5;
     private volatile java.lang.Object scalingFactor_;
+
     /**
      * <code>string scaling_factor = 5;</code>
+     *
      * @return The scalingFactor.
      */
     @java.lang.Override
@@ -404,25 +437,24 @@ public final class ChartStoreOuterClass {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         scalingFactor_ = s;
         return s;
       }
     }
+
     /**
      * <code>string scaling_factor = 5;</code>
+     *
      * @return The bytes for scalingFactor.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getScalingFactorBytes() {
+    public com.google.protobuf.ByteString getScalingFactorBytes() {
       java.lang.Object ref = scalingFactor_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         scalingFactor_ = b;
         return b;
       } else {
@@ -432,8 +464,10 @@ public final class ChartStoreOuterClass {
 
     public static final int UNIT_FIELD_NUMBER = 6;
     private volatile java.lang.Object unit_;
+
     /**
      * <code>string unit = 6;</code>
+     *
      * @return The unit.
      */
     @java.lang.Override
@@ -442,25 +476,24 @@ public final class ChartStoreOuterClass {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         unit_ = s;
         return s;
       }
     }
+
     /**
      * <code>string unit = 6;</code>
+     *
      * @return The bytes for unit.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getUnitBytes() {
+    public com.google.protobuf.ByteString getUnitBytes() {
       java.lang.Object ref = unit_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         unit_ = b;
         return b;
       } else {
@@ -470,8 +503,10 @@ public final class ChartStoreOuterClass {
 
     public static final int IS_DC_AGGREGATE_FIELD_NUMBER = 7;
     private boolean isDcAggregate_;
+
     /**
      * <code>bool is_dc_aggregate = 7;</code>
+     *
      * @return The isDcAggregate.
      */
     @java.lang.Override
@@ -481,12 +516,16 @@ public final class ChartStoreOuterClass {
 
     public static final int IS_DC_IMPUTED_FIELD_NUMBER = 8;
     private boolean isDcImputed_;
+
     /**
+     *
+     *
      * <pre>
      * Whether this facet is imputed by Data Commons.
      * </pre>
      *
      * <code>bool is_dc_imputed = 8;</code>
+     *
      * @return The isDcImputed.
      */
     @java.lang.Override
@@ -495,6 +534,7 @@ public final class ChartStoreOuterClass {
     }
 
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -506,8 +546,7 @@ public final class ChartStoreOuterClass {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       if (!getImportNameBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, importName_);
       }
@@ -560,12 +599,10 @@ public final class ChartStoreOuterClass {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, unit_);
       }
       if (isDcAggregate_ != false) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(7, isDcAggregate_);
+        size += com.google.protobuf.CodedOutputStream.computeBoolSize(7, isDcAggregate_);
       }
       if (isDcImputed_ != false) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(8, isDcImputed_);
+        size += com.google.protobuf.CodedOutputStream.computeBoolSize(8, isDcImputed_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -575,29 +612,22 @@ public final class ChartStoreOuterClass {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.ChartStoreOuterClass.Facet)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.ChartStoreOuterClass.Facet other = (org.datacommons.proto.ChartStoreOuterClass.Facet) obj;
+      org.datacommons.proto.ChartStoreOuterClass.Facet other =
+          (org.datacommons.proto.ChartStoreOuterClass.Facet) obj;
 
-      if (!getImportName()
-          .equals(other.getImportName())) return false;
-      if (!getProvenanceUrl()
-          .equals(other.getProvenanceUrl())) return false;
-      if (!getMeasurementMethod()
-          .equals(other.getMeasurementMethod())) return false;
-      if (!getObservationPeriod()
-          .equals(other.getObservationPeriod())) return false;
-      if (!getScalingFactor()
-          .equals(other.getScalingFactor())) return false;
-      if (!getUnit()
-          .equals(other.getUnit())) return false;
-      if (getIsDcAggregate()
-          != other.getIsDcAggregate()) return false;
-      if (getIsDcImputed()
-          != other.getIsDcImputed()) return false;
+      if (!getImportName().equals(other.getImportName())) return false;
+      if (!getProvenanceUrl().equals(other.getProvenanceUrl())) return false;
+      if (!getMeasurementMethod().equals(other.getMeasurementMethod())) return false;
+      if (!getObservationPeriod().equals(other.getObservationPeriod())) return false;
+      if (!getScalingFactor().equals(other.getScalingFactor())) return false;
+      if (!getUnit().equals(other.getUnit())) return false;
+      if (getIsDcAggregate() != other.getIsDcAggregate()) return false;
+      if (getIsDcImputed() != other.getIsDcImputed()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -622,98 +652,102 @@ public final class ChartStoreOuterClass {
       hash = (37 * hash) + UNIT_FIELD_NUMBER;
       hash = (53 * hash) + getUnit().hashCode();
       hash = (37 * hash) + IS_DC_AGGREGATE_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-          getIsDcAggregate());
+      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getIsDcAggregate());
       hash = (37 * hash) + IS_DC_IMPUTED_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-          getIsDcImputed());
+      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getIsDcImputed());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
     }
 
     public static org.datacommons.proto.ChartStoreOuterClass.Facet parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.Facet parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.Facet parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.Facet parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.Facet parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.Facet parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.datacommons.proto.ChartStoreOuterClass.Facet parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.ChartStoreOuterClass.Facet parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
-    public static org.datacommons.proto.ChartStoreOuterClass.Facet parseDelimitedFrom(java.io.InputStream input)
+
+    public static org.datacommons.proto.ChartStoreOuterClass.Facet parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.Facet parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.ChartStoreOuterClass.Facet parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.ChartStoreOuterClass.Facet parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.Facet parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
+
     public static Builder newBuilder(org.datacommons.proto.ChartStoreOuterClass.Facet prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -722,7 +756,10 @@ public final class ChartStoreOuterClass {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
+     *
+     *
      * <pre>
      * Facet contains the source and measurement information for a statistical
      * observation.
@@ -730,21 +767,24 @@ public final class ChartStoreOuterClass {
      *
      * Protobuf type {@code org.datacommons.proto.Facet}
      */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.Facet)
         org.datacommons.proto.ChartStoreOuterClass.FacetOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_Facet_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_Facet_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_Facet_fieldAccessorTable
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_Facet_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.ChartStoreOuterClass.Facet.class, org.datacommons.proto.ChartStoreOuterClass.Facet.Builder.class);
+                org.datacommons.proto.ChartStoreOuterClass.Facet.class,
+                org.datacommons.proto.ChartStoreOuterClass.Facet.Builder.class);
       }
 
       // Construct using org.datacommons.proto.ChartStoreOuterClass.Facet.newBuilder()
@@ -752,16 +792,15 @@ public final class ChartStoreOuterClass {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -785,9 +824,9 @@ public final class ChartStoreOuterClass {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_Facet_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_Facet_descriptor;
       }
 
       @java.lang.Override
@@ -806,7 +845,8 @@ public final class ChartStoreOuterClass {
 
       @java.lang.Override
       public org.datacommons.proto.ChartStoreOuterClass.Facet buildPartial() {
-        org.datacommons.proto.ChartStoreOuterClass.Facet result = new org.datacommons.proto.ChartStoreOuterClass.Facet(this);
+        org.datacommons.proto.ChartStoreOuterClass.Facet result =
+            new org.datacommons.proto.ChartStoreOuterClass.Facet(this);
         result.importName_ = importName_;
         result.provenanceUrl_ = provenanceUrl_;
         result.measurementMethod_ = measurementMethod_;
@@ -823,38 +863,41 @@ public final class ChartStoreOuterClass {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.ChartStoreOuterClass.Facet) {
-          return mergeFrom((org.datacommons.proto.ChartStoreOuterClass.Facet)other);
+          return mergeFrom((org.datacommons.proto.ChartStoreOuterClass.Facet) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -862,7 +905,8 @@ public final class ChartStoreOuterClass {
       }
 
       public Builder mergeFrom(org.datacommons.proto.ChartStoreOuterClass.Facet other) {
-        if (other == org.datacommons.proto.ChartStoreOuterClass.Facet.getDefaultInstance()) return this;
+        if (other == org.datacommons.proto.ChartStoreOuterClass.Facet.getDefaultInstance())
+          return this;
         if (!other.getImportName().isEmpty()) {
           importName_ = other.importName_;
           onChanged();
@@ -912,7 +956,8 @@ public final class ChartStoreOuterClass {
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.ChartStoreOuterClass.Facet) e.getUnfinishedMessage();
+          parsedMessage =
+              (org.datacommons.proto.ChartStoreOuterClass.Facet) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -923,15 +968,16 @@ public final class ChartStoreOuterClass {
       }
 
       private java.lang.Object importName_ = "";
+
       /**
        * <code>string import_name = 1;</code>
+       *
        * @return The importName.
        */
       public java.lang.String getImportName() {
         java.lang.Object ref = importName_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           importName_ = s;
           return s;
@@ -939,75 +985,80 @@ public final class ChartStoreOuterClass {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string import_name = 1;</code>
+       *
        * @return The bytes for importName.
        */
-      public com.google.protobuf.ByteString
-          getImportNameBytes() {
+      public com.google.protobuf.ByteString getImportNameBytes() {
         java.lang.Object ref = importName_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           importName_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string import_name = 1;</code>
+       *
        * @param value The importName to set.
        * @return This builder for chaining.
        */
-      public Builder setImportName(
-          java.lang.String value) {
+      public Builder setImportName(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         importName_ = value;
         onChanged();
         return this;
       }
+
       /**
        * <code>string import_name = 1;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearImportName() {
-        
+
         importName_ = getDefaultInstance().getImportName();
         onChanged();
         return this;
       }
+
       /**
        * <code>string import_name = 1;</code>
+       *
        * @param value The bytes for importName to set.
        * @return This builder for chaining.
        */
-      public Builder setImportNameBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setImportNameBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         importName_ = value;
         onChanged();
         return this;
       }
 
       private java.lang.Object provenanceUrl_ = "";
+
       /**
        * <code>string provenance_url = 2;</code>
+       *
        * @return The provenanceUrl.
        */
       public java.lang.String getProvenanceUrl() {
         java.lang.Object ref = provenanceUrl_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           provenanceUrl_ = s;
           return s;
@@ -1015,75 +1066,80 @@ public final class ChartStoreOuterClass {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string provenance_url = 2;</code>
+       *
        * @return The bytes for provenanceUrl.
        */
-      public com.google.protobuf.ByteString
-          getProvenanceUrlBytes() {
+      public com.google.protobuf.ByteString getProvenanceUrlBytes() {
         java.lang.Object ref = provenanceUrl_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           provenanceUrl_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string provenance_url = 2;</code>
+       *
        * @param value The provenanceUrl to set.
        * @return This builder for chaining.
        */
-      public Builder setProvenanceUrl(
-          java.lang.String value) {
+      public Builder setProvenanceUrl(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         provenanceUrl_ = value;
         onChanged();
         return this;
       }
+
       /**
        * <code>string provenance_url = 2;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearProvenanceUrl() {
-        
+
         provenanceUrl_ = getDefaultInstance().getProvenanceUrl();
         onChanged();
         return this;
       }
+
       /**
        * <code>string provenance_url = 2;</code>
+       *
        * @param value The bytes for provenanceUrl to set.
        * @return This builder for chaining.
        */
-      public Builder setProvenanceUrlBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setProvenanceUrlBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         provenanceUrl_ = value;
         onChanged();
         return this;
       }
 
       private java.lang.Object measurementMethod_ = "";
+
       /**
        * <code>string measurement_method = 3;</code>
+       *
        * @return The measurementMethod.
        */
       public java.lang.String getMeasurementMethod() {
         java.lang.Object ref = measurementMethod_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           measurementMethod_ = s;
           return s;
@@ -1091,75 +1147,80 @@ public final class ChartStoreOuterClass {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string measurement_method = 3;</code>
+       *
        * @return The bytes for measurementMethod.
        */
-      public com.google.protobuf.ByteString
-          getMeasurementMethodBytes() {
+      public com.google.protobuf.ByteString getMeasurementMethodBytes() {
         java.lang.Object ref = measurementMethod_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           measurementMethod_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string measurement_method = 3;</code>
+       *
        * @param value The measurementMethod to set.
        * @return This builder for chaining.
        */
-      public Builder setMeasurementMethod(
-          java.lang.String value) {
+      public Builder setMeasurementMethod(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         measurementMethod_ = value;
         onChanged();
         return this;
       }
+
       /**
        * <code>string measurement_method = 3;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearMeasurementMethod() {
-        
+
         measurementMethod_ = getDefaultInstance().getMeasurementMethod();
         onChanged();
         return this;
       }
+
       /**
        * <code>string measurement_method = 3;</code>
+       *
        * @param value The bytes for measurementMethod to set.
        * @return This builder for chaining.
        */
-      public Builder setMeasurementMethodBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setMeasurementMethodBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         measurementMethod_ = value;
         onChanged();
         return this;
       }
 
       private java.lang.Object observationPeriod_ = "";
+
       /**
        * <code>string observation_period = 4;</code>
+       *
        * @return The observationPeriod.
        */
       public java.lang.String getObservationPeriod() {
         java.lang.Object ref = observationPeriod_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           observationPeriod_ = s;
           return s;
@@ -1167,75 +1228,80 @@ public final class ChartStoreOuterClass {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string observation_period = 4;</code>
+       *
        * @return The bytes for observationPeriod.
        */
-      public com.google.protobuf.ByteString
-          getObservationPeriodBytes() {
+      public com.google.protobuf.ByteString getObservationPeriodBytes() {
         java.lang.Object ref = observationPeriod_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           observationPeriod_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string observation_period = 4;</code>
+       *
        * @param value The observationPeriod to set.
        * @return This builder for chaining.
        */
-      public Builder setObservationPeriod(
-          java.lang.String value) {
+      public Builder setObservationPeriod(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         observationPeriod_ = value;
         onChanged();
         return this;
       }
+
       /**
        * <code>string observation_period = 4;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearObservationPeriod() {
-        
+
         observationPeriod_ = getDefaultInstance().getObservationPeriod();
         onChanged();
         return this;
       }
+
       /**
        * <code>string observation_period = 4;</code>
+       *
        * @param value The bytes for observationPeriod to set.
        * @return This builder for chaining.
        */
-      public Builder setObservationPeriodBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setObservationPeriodBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         observationPeriod_ = value;
         onChanged();
         return this;
       }
 
       private java.lang.Object scalingFactor_ = "";
+
       /**
        * <code>string scaling_factor = 5;</code>
+       *
        * @return The scalingFactor.
        */
       public java.lang.String getScalingFactor() {
         java.lang.Object ref = scalingFactor_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           scalingFactor_ = s;
           return s;
@@ -1243,75 +1309,80 @@ public final class ChartStoreOuterClass {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string scaling_factor = 5;</code>
+       *
        * @return The bytes for scalingFactor.
        */
-      public com.google.protobuf.ByteString
-          getScalingFactorBytes() {
+      public com.google.protobuf.ByteString getScalingFactorBytes() {
         java.lang.Object ref = scalingFactor_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           scalingFactor_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string scaling_factor = 5;</code>
+       *
        * @param value The scalingFactor to set.
        * @return This builder for chaining.
        */
-      public Builder setScalingFactor(
-          java.lang.String value) {
+      public Builder setScalingFactor(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         scalingFactor_ = value;
         onChanged();
         return this;
       }
+
       /**
        * <code>string scaling_factor = 5;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearScalingFactor() {
-        
+
         scalingFactor_ = getDefaultInstance().getScalingFactor();
         onChanged();
         return this;
       }
+
       /**
        * <code>string scaling_factor = 5;</code>
+       *
        * @param value The bytes for scalingFactor to set.
        * @return This builder for chaining.
        */
-      public Builder setScalingFactorBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setScalingFactorBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         scalingFactor_ = value;
         onChanged();
         return this;
       }
 
       private java.lang.Object unit_ = "";
+
       /**
        * <code>string unit = 6;</code>
+       *
        * @return The unit.
        */
       public java.lang.String getUnit() {
         java.lang.Object ref = unit_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           unit_ = s;
           return s;
@@ -1319,138 +1390,161 @@ public final class ChartStoreOuterClass {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string unit = 6;</code>
+       *
        * @return The bytes for unit.
        */
-      public com.google.protobuf.ByteString
-          getUnitBytes() {
+      public com.google.protobuf.ByteString getUnitBytes() {
         java.lang.Object ref = unit_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           unit_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string unit = 6;</code>
+       *
        * @param value The unit to set.
        * @return This builder for chaining.
        */
-      public Builder setUnit(
-          java.lang.String value) {
+      public Builder setUnit(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
-        unit_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string unit = 6;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearUnit() {
-        
-        unit_ = getDefaultInstance().getUnit();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string unit = 6;</code>
-       * @param value The bytes for unit to set.
-       * @return This builder for chaining.
-       */
-      public Builder setUnitBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+
         unit_ = value;
         onChanged();
         return this;
       }
 
-      private boolean isDcAggregate_ ;
+      /**
+       * <code>string unit = 6;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearUnit() {
+
+        unit_ = getDefaultInstance().getUnit();
+        onChanged();
+        return this;
+      }
+
+      /**
+       * <code>string unit = 6;</code>
+       *
+       * @param value The bytes for unit to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUnitBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
+        unit_ = value;
+        onChanged();
+        return this;
+      }
+
+      private boolean isDcAggregate_;
+
       /**
        * <code>bool is_dc_aggregate = 7;</code>
+       *
        * @return The isDcAggregate.
        */
       @java.lang.Override
       public boolean getIsDcAggregate() {
         return isDcAggregate_;
       }
+
       /**
        * <code>bool is_dc_aggregate = 7;</code>
+       *
        * @param value The isDcAggregate to set.
        * @return This builder for chaining.
        */
       public Builder setIsDcAggregate(boolean value) {
-        
+
         isDcAggregate_ = value;
         onChanged();
         return this;
       }
+
       /**
        * <code>bool is_dc_aggregate = 7;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearIsDcAggregate() {
-        
+
         isDcAggregate_ = false;
         onChanged();
         return this;
       }
 
-      private boolean isDcImputed_ ;
+      private boolean isDcImputed_;
+
       /**
+       *
+       *
        * <pre>
        * Whether this facet is imputed by Data Commons.
        * </pre>
        *
        * <code>bool is_dc_imputed = 8;</code>
+       *
        * @return The isDcImputed.
        */
       @java.lang.Override
       public boolean getIsDcImputed() {
         return isDcImputed_;
       }
+
       /**
+       *
+       *
        * <pre>
        * Whether this facet is imputed by Data Commons.
        * </pre>
        *
        * <code>bool is_dc_imputed = 8;</code>
+       *
        * @param value The isDcImputed to set.
        * @return This builder for chaining.
        */
       public Builder setIsDcImputed(boolean value) {
-        
+
         isDcImputed_ = value;
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * Whether this facet is imputed by Data Commons.
        * </pre>
        *
        * <code>bool is_dc_imputed = 8;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearIsDcImputed() {
-        
+
         isDcImputed_ = false;
         onChanged();
         return this;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -1463,12 +1557,12 @@ public final class ChartStoreOuterClass {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.Facet)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.Facet)
     private static final org.datacommons.proto.ChartStoreOuterClass.Facet DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.ChartStoreOuterClass.Facet();
     }
@@ -1477,16 +1571,16 @@ public final class ChartStoreOuterClass {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<Facet>
-        PARSER = new com.google.protobuf.AbstractParser<Facet>() {
-      @java.lang.Override
-      public Facet parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Facet(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<Facet> PARSER =
+        new com.google.protobuf.AbstractParser<Facet>() {
+          @java.lang.Override
+          public Facet parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new Facet(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<Facet> parser() {
       return PARSER;
@@ -1501,70 +1595,88 @@ public final class ChartStoreOuterClass {
     public org.datacommons.proto.ChartStoreOuterClass.Facet getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface ObsTimeSeriesOrBuilder extends
+  public interface ObsTimeSeriesOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ObsTimeSeries)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <code>string place_name = 3;</code>
+     *
      * @return The placeName.
      */
     java.lang.String getPlaceName();
-    /**
-     * <code>string place_name = 3;</code>
-     * @return The bytes for placeName.
-     */
-    com.google.protobuf.ByteString
-        getPlaceNameBytes();
 
     /**
+     * <code>string place_name = 3;</code>
+     *
+     * @return The bytes for placeName.
+     */
+    com.google.protobuf.ByteString getPlaceNameBytes();
+
+    /**
+     *
+     *
      * <pre>
      * Only set if the key uses mid.
      * </pre>
      *
      * <code>string place_dcid = 5;</code>
+     *
      * @return The placeDcid.
      */
     java.lang.String getPlaceDcid();
+
     /**
+     *
+     *
      * <pre>
      * Only set if the key uses mid.
      * </pre>
      *
      * <code>string place_dcid = 5;</code>
+     *
      * @return The bytes for placeDcid.
      */
-    com.google.protobuf.ByteString
-        getPlaceDcidBytes();
+    com.google.protobuf.ByteString getPlaceDcidBytes();
 
     /**
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
      */
-    java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries> 
+    java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>
         getSourceSeriesList();
+
     /**
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
      */
-    org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getSourceSeries(int index);
+    org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getSourceSeries(
+        int index);
+
     /**
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
      */
     int getSourceSeriesCount();
+
     /**
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
      */
-    java.util.List<? extends org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder> 
+    java.util.List<
+            ? extends
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>
         getSourceSeriesOrBuilderList();
+
     /**
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
      */
-    org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder getSourceSeriesOrBuilder(
-        int index);
+    org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder
+        getSourceSeriesOrBuilder(int index);
   }
+
   /**
+   *
+   *
    * <pre>
    * Observation time series for a given place, measured property, stat type,
    * pop type, and an optional list of pop PVs. Used for Common Knowledge in
@@ -1573,15 +1685,17 @@ public final class ChartStoreOuterClass {
    *
    * Protobuf type {@code org.datacommons.proto.ObsTimeSeries}
    */
-  public static final class ObsTimeSeries extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class ObsTimeSeries extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ObsTimeSeries)
       ObsTimeSeriesOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use ObsTimeSeries.newBuilder() to construct.
     private ObsTimeSeries(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private ObsTimeSeries() {
       placeName_ = "";
       placeDcid_ = "";
@@ -1590,16 +1704,15 @@ public final class ChartStoreOuterClass {
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new ObsTimeSeries();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private ObsTimeSeries(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1619,41 +1732,48 @@ public final class ChartStoreOuterClass {
             case 0:
               done = true;
               break;
-            case 26: {
-              java.lang.String s = input.readStringRequireUtf8();
+            case 26:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
 
-              placeName_ = s;
-              break;
-            }
-            case 42: {
-              java.lang.String s = input.readStringRequireUtf8();
+                placeName_ = s;
+                break;
+              }
+            case 42:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
 
-              placeDcid_ = s;
-              break;
-            }
-            case 50: {
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                sourceSeries_ = new java.util.ArrayList<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>();
-                mutable_bitField0_ |= 0x00000001;
+                placeDcid_ = s;
+                break;
               }
-              sourceSeries_.add(
-                  input.readMessage(org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.parser(), extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+            case 50:
+              {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  sourceSeries_ =
+                      new java.util.ArrayList<
+                          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                sourceSeries_.add(
+                    input.readMessage(
+                        org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+                            .parser(),
+                        extensionRegistry));
+                break;
               }
-              break;
-            }
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           sourceSeries_ = java.util.Collections.unmodifiableList(sourceSeries_);
@@ -1662,24 +1782,30 @@ public final class ChartStoreOuterClass {
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsTimeSeries_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.ChartStoreOuterClass
+          .internal_static_org_datacommons_proto_ObsTimeSeries_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsTimeSeries_fieldAccessorTable
+      return org.datacommons.proto.ChartStoreOuterClass
+          .internal_static_org_datacommons_proto_ObsTimeSeries_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.class, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder.class);
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.class,
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder.class);
     }
 
-    public interface SourceSeriesOrBuilder extends
+    public interface SourceSeriesOrBuilder
+        extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ObsTimeSeries.SourceSeries)
         com.google.protobuf.MessageOrBuilder {
 
       /**
+       *
+       *
        * <pre>
        * Note on the key and value of "val" and "str_val".
        * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -1698,7 +1824,10 @@ public final class ChartStoreOuterClass {
        * <code>map&lt;string, double&gt; val = 1;</code>
        */
       int getValCount();
+
       /**
+       *
+       *
        * <pre>
        * Note on the key and value of "val" and "str_val".
        * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -1716,15 +1845,15 @@ public final class ChartStoreOuterClass {
        *
        * <code>map&lt;string, double&gt; val = 1;</code>
        */
-      boolean containsVal(
-          java.lang.String key);
-      /**
-       * Use {@link #getValMap()} instead.
-       */
+      boolean containsVal(java.lang.String key);
+
+      /** Use {@link #getValMap()} instead. */
       @java.lang.Deprecated
-      java.util.Map<java.lang.String, java.lang.Double>
-      getVal();
+      java.util.Map<java.lang.String, java.lang.Double> getVal();
+
       /**
+       *
+       *
        * <pre>
        * Note on the key and value of "val" and "str_val".
        * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -1742,9 +1871,11 @@ public final class ChartStoreOuterClass {
        *
        * <code>map&lt;string, double&gt; val = 1;</code>
        */
-      java.util.Map<java.lang.String, java.lang.Double>
-      getValMap();
+      java.util.Map<java.lang.String, java.lang.Double> getValMap();
+
       /**
+       *
+       *
        * <pre>
        * Note on the key and value of "val" and "str_val".
        * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -1762,11 +1893,11 @@ public final class ChartStoreOuterClass {
        *
        * <code>map&lt;string, double&gt; val = 1;</code>
        */
+      double getValOrDefault(java.lang.String key, double defaultValue);
 
-      double getValOrDefault(
-          java.lang.String key,
-          double defaultValue);
       /**
+       *
+       *
        * <pre>
        * Note on the key and value of "val" and "str_val".
        * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -1784,11 +1915,11 @@ public final class ChartStoreOuterClass {
        *
        * <code>map&lt;string, double&gt; val = 1;</code>
        */
-
-      double getValOrThrow(
-          java.lang.String key);
+      double getValOrThrow(java.lang.String key);
 
       /**
+       *
+       *
        * <pre>
        * Used for enum or string values.
        * </pre>
@@ -1796,143 +1927,163 @@ public final class ChartStoreOuterClass {
        * <code>map&lt;string, string&gt; str_val = 12;</code>
        */
       int getStrValCount();
+
       /**
+       *
+       *
        * <pre>
        * Used for enum or string values.
        * </pre>
        *
        * <code>map&lt;string, string&gt; str_val = 12;</code>
        */
-      boolean containsStrVal(
-          java.lang.String key);
-      /**
-       * Use {@link #getStrValMap()} instead.
-       */
+      boolean containsStrVal(java.lang.String key);
+
+      /** Use {@link #getStrValMap()} instead. */
       @java.lang.Deprecated
-      java.util.Map<java.lang.String, java.lang.String>
-      getStrVal();
-      /**
-       * <pre>
-       * Used for enum or string values.
-       * </pre>
-       *
-       * <code>map&lt;string, string&gt; str_val = 12;</code>
-       */
-      java.util.Map<java.lang.String, java.lang.String>
-      getStrValMap();
-      /**
-       * <pre>
-       * Used for enum or string values.
-       * </pre>
-       *
-       * <code>map&lt;string, string&gt; str_val = 12;</code>
-       */
+      java.util.Map<java.lang.String, java.lang.String> getStrVal();
 
-      java.lang.String getStrValOrDefault(
-          java.lang.String key,
-          java.lang.String defaultValue);
       /**
+       *
+       *
        * <pre>
        * Used for enum or string values.
        * </pre>
        *
        * <code>map&lt;string, string&gt; str_val = 12;</code>
        */
+      java.util.Map<java.lang.String, java.lang.String> getStrValMap();
 
-      java.lang.String getStrValOrThrow(
-          java.lang.String key);
+      /**
+       *
+       *
+       * <pre>
+       * Used for enum or string values.
+       * </pre>
+       *
+       * <code>map&lt;string, string&gt; str_val = 12;</code>
+       */
+      java.lang.String getStrValOrDefault(java.lang.String key, java.lang.String defaultValue);
+
+      /**
+       *
+       *
+       * <pre>
+       * Used for enum or string values.
+       * </pre>
+       *
+       * <code>map&lt;string, string&gt; str_val = 12;</code>
+       */
+      java.lang.String getStrValOrThrow(java.lang.String key);
 
       /**
        * <code>string measurement_method = 3;</code>
+       *
        * @return The measurementMethod.
        */
       java.lang.String getMeasurementMethod();
+
       /**
        * <code>string measurement_method = 3;</code>
+       *
        * @return The bytes for measurementMethod.
        */
-      com.google.protobuf.ByteString
-          getMeasurementMethodBytes();
+      com.google.protobuf.ByteString getMeasurementMethodBytes();
 
       /**
        * <code>string observation_period = 4;</code>
+       *
        * @return The observationPeriod.
        */
       java.lang.String getObservationPeriod();
+
       /**
        * <code>string observation_period = 4;</code>
+       *
        * @return The bytes for observationPeriod.
        */
-      com.google.protobuf.ByteString
-          getObservationPeriodBytes();
+      com.google.protobuf.ByteString getObservationPeriodBytes();
 
       /**
        * <code>string import_name = 5;</code>
+       *
        * @return The importName.
        */
       java.lang.String getImportName();
+
       /**
        * <code>string import_name = 5;</code>
+       *
        * @return The bytes for importName.
        */
-      com.google.protobuf.ByteString
-          getImportNameBytes();
+      com.google.protobuf.ByteString getImportNameBytes();
 
       /**
        * <code>string provenance_domain = 6;</code>
+       *
        * @return The provenanceDomain.
        */
       java.lang.String getProvenanceDomain();
+
       /**
        * <code>string provenance_domain = 6;</code>
+       *
        * @return The bytes for provenanceDomain.
        */
-      com.google.protobuf.ByteString
-          getProvenanceDomainBytes();
+      com.google.protobuf.ByteString getProvenanceDomainBytes();
 
       /**
        * <code>string scaling_factor = 7;</code>
+       *
        * @return The scalingFactor.
        */
       java.lang.String getScalingFactor();
+
       /**
        * <code>string scaling_factor = 7;</code>
+       *
        * @return The bytes for scalingFactor.
        */
-      com.google.protobuf.ByteString
-          getScalingFactorBytes();
+      com.google.protobuf.ByteString getScalingFactorBytes();
 
       /**
        * <code>string unit = 8;</code>
+       *
        * @return The unit.
        */
       java.lang.String getUnit();
+
       /**
        * <code>string unit = 8;</code>
+       *
        * @return The bytes for unit.
        */
-      com.google.protobuf.ByteString
-          getUnitBytes();
+      com.google.protobuf.ByteString getUnitBytes();
 
       /**
        * <code>bool is_dc_aggregate = 9;</code>
+       *
        * @return The isDcAggregate.
        */
       boolean getIsDcAggregate();
 
       /**
        * <code>string provenance_url = 10;</code>
+       *
        * @return The provenanceUrl.
        */
       java.lang.String getProvenanceUrl();
-      /**
-       * <code>string provenance_url = 10;</code>
-       * @return The bytes for provenanceUrl.
-       */
-      com.google.protobuf.ByteString
-          getProvenanceUrlBytes();
 
       /**
+       * <code>string provenance_url = 10;</code>
+       *
+       * @return The bytes for provenanceUrl.
+       */
+      com.google.protobuf.ByteString getProvenanceUrlBytes();
+
+      /**
+       *
+       *
        * <pre>
        * Only used for latest date obs collection.
        * </pre>
@@ -1940,83 +2091,100 @@ public final class ChartStoreOuterClass {
        * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
        */
       int getPlaceToLatestDateCount();
+
       /**
+       *
+       *
        * <pre>
        * Only used for latest date obs collection.
        * </pre>
        *
        * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
        */
-      boolean containsPlaceToLatestDate(
-          java.lang.String key);
-      /**
-       * Use {@link #getPlaceToLatestDateMap()} instead.
-       */
+      boolean containsPlaceToLatestDate(java.lang.String key);
+
+      /** Use {@link #getPlaceToLatestDateMap()} instead. */
       @java.lang.Deprecated
-      java.util.Map<java.lang.String, java.lang.String>
-      getPlaceToLatestDate();
-      /**
-       * <pre>
-       * Only used for latest date obs collection.
-       * </pre>
-       *
-       * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
-       */
-      java.util.Map<java.lang.String, java.lang.String>
-      getPlaceToLatestDateMap();
-      /**
-       * <pre>
-       * Only used for latest date obs collection.
-       * </pre>
-       *
-       * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
-       */
+      java.util.Map<java.lang.String, java.lang.String> getPlaceToLatestDate();
 
+      /**
+       *
+       *
+       * <pre>
+       * Only used for latest date obs collection.
+       * </pre>
+       *
+       * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
+       */
+      java.util.Map<java.lang.String, java.lang.String> getPlaceToLatestDateMap();
+
+      /**
+       *
+       *
+       * <pre>
+       * Only used for latest date obs collection.
+       * </pre>
+       *
+       * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
+       */
       java.lang.String getPlaceToLatestDateOrDefault(
-          java.lang.String key,
-          java.lang.String defaultValue);
+          java.lang.String key, java.lang.String defaultValue);
+
       /**
+       *
+       *
        * <pre>
        * Only used for latest date obs collection.
        * </pre>
        *
        * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
        */
-
-      java.lang.String getPlaceToLatestDateOrThrow(
-          java.lang.String key);
+      java.lang.String getPlaceToLatestDateOrThrow(java.lang.String key);
 
       /**
+       *
+       *
        * <pre>
        * Whether this source series is imputed by Data Commons.
        * </pre>
        *
        * <code>bool is_dc_imputed = 13;</code>
+       *
        * @return The isDcImputed.
        */
       boolean getIsDcImputed();
 
       /**
+       *
+       *
        * <pre>
        * Facet for this source series.
        * TODO: Migrate other fields to use Facet.
        * </pre>
        *
        * <code>.org.datacommons.proto.Facet facet = 14;</code>
+       *
        * @return Whether the facet field is set.
        */
       boolean hasFacet();
+
       /**
+       *
+       *
        * <pre>
        * Facet for this source series.
        * TODO: Migrate other fields to use Facet.
        * </pre>
        *
        * <code>.org.datacommons.proto.Facet facet = 14;</code>
+       *
        * @return The facet.
        */
       org.datacommons.proto.ChartStoreOuterClass.Facet getFacet();
+
       /**
+       *
+       *
        * <pre>
        * Facet for this source series.
        * TODO: Migrate other fields to use Facet.
@@ -2026,22 +2194,27 @@ public final class ChartStoreOuterClass {
        */
       org.datacommons.proto.ChartStoreOuterClass.FacetOrBuilder getFacetOrBuilder();
     }
+
     /**
+     *
+     *
      * <pre>
      * Next ID: 15.
      * </pre>
      *
      * Protobuf type {@code org.datacommons.proto.ObsTimeSeries.SourceSeries}
      */
-    public static final class SourceSeries extends
-        com.google.protobuf.GeneratedMessageV3 implements
+    public static final class SourceSeries extends com.google.protobuf.GeneratedMessageV3
+        implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.ObsTimeSeries.SourceSeries)
         SourceSeriesOrBuilder {
-    private static final long serialVersionUID = 0L;
+      private static final long serialVersionUID = 0L;
+
       // Use SourceSeries.newBuilder() to construct.
       private SourceSeries(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
       }
+
       private SourceSeries() {
         measurementMethod_ = "";
         observationPeriod_ = "";
@@ -2054,16 +2227,15 @@ public final class ChartStoreOuterClass {
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(
-          UnusedPrivateParameter unused) {
+      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
         return new SourceSeries();
       }
 
       @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet
-      getUnknownFields() {
+      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
         return this.unknownFields;
       }
+
       private SourceSeries(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2083,138 +2255,157 @@ public final class ChartStoreOuterClass {
               case 0:
                 done = true;
                 break;
-              case 10: {
-                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                  val_ = com.google.protobuf.MapField.newMapField(
-                      ValDefaultEntryHolder.defaultEntry);
-                  mutable_bitField0_ |= 0x00000001;
+              case 10:
+                {
+                  if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                    val_ =
+                        com.google.protobuf.MapField.newMapField(
+                            ValDefaultEntryHolder.defaultEntry);
+                    mutable_bitField0_ |= 0x00000001;
+                  }
+                  com.google.protobuf.MapEntry<java.lang.String, java.lang.Double> val__ =
+                      input.readMessage(
+                          ValDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+                  val_.getMutableMap().put(val__.getKey(), val__.getValue());
+                  break;
                 }
-                com.google.protobuf.MapEntry<java.lang.String, java.lang.Double>
-                val__ = input.readMessage(
-                    ValDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
-                val_.getMutableMap().put(
-                    val__.getKey(), val__.getValue());
-                break;
-              }
-              case 26: {
-                java.lang.String s = input.readStringRequireUtf8();
+              case 26:
+                {
+                  java.lang.String s = input.readStringRequireUtf8();
 
-                measurementMethod_ = s;
-                break;
-              }
-              case 34: {
-                java.lang.String s = input.readStringRequireUtf8();
-
-                observationPeriod_ = s;
-                break;
-              }
-              case 42: {
-                java.lang.String s = input.readStringRequireUtf8();
-
-                importName_ = s;
-                break;
-              }
-              case 50: {
-                java.lang.String s = input.readStringRequireUtf8();
-
-                provenanceDomain_ = s;
-                break;
-              }
-              case 58: {
-                java.lang.String s = input.readStringRequireUtf8();
-
-                scalingFactor_ = s;
-                break;
-              }
-              case 66: {
-                java.lang.String s = input.readStringRequireUtf8();
-
-                unit_ = s;
-                break;
-              }
-              case 72: {
-
-                isDcAggregate_ = input.readBool();
-                break;
-              }
-              case 82: {
-                java.lang.String s = input.readStringRequireUtf8();
-
-                provenanceUrl_ = s;
-                break;
-              }
-              case 90: {
-                if (!((mutable_bitField0_ & 0x00000004) != 0)) {
-                  placeToLatestDate_ = com.google.protobuf.MapField.newMapField(
-                      PlaceToLatestDateDefaultEntryHolder.defaultEntry);
-                  mutable_bitField0_ |= 0x00000004;
+                  measurementMethod_ = s;
+                  break;
                 }
-                com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
-                placeToLatestDate__ = input.readMessage(
-                    PlaceToLatestDateDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
-                placeToLatestDate_.getMutableMap().put(
-                    placeToLatestDate__.getKey(), placeToLatestDate__.getValue());
-                break;
-              }
-              case 98: {
-                if (!((mutable_bitField0_ & 0x00000002) != 0)) {
-                  strVal_ = com.google.protobuf.MapField.newMapField(
-                      StrValDefaultEntryHolder.defaultEntry);
-                  mutable_bitField0_ |= 0x00000002;
-                }
-                com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
-                strVal__ = input.readMessage(
-                    StrValDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
-                strVal_.getMutableMap().put(
-                    strVal__.getKey(), strVal__.getValue());
-                break;
-              }
-              case 104: {
+              case 34:
+                {
+                  java.lang.String s = input.readStringRequireUtf8();
 
-                isDcImputed_ = input.readBool();
-                break;
-              }
-              case 114: {
-                org.datacommons.proto.ChartStoreOuterClass.Facet.Builder subBuilder = null;
-                if (facet_ != null) {
-                  subBuilder = facet_.toBuilder();
+                  observationPeriod_ = s;
+                  break;
                 }
-                facet_ = input.readMessage(org.datacommons.proto.ChartStoreOuterClass.Facet.parser(), extensionRegistry);
-                if (subBuilder != null) {
-                  subBuilder.mergeFrom(facet_);
-                  facet_ = subBuilder.buildPartial();
-                }
+              case 42:
+                {
+                  java.lang.String s = input.readStringRequireUtf8();
 
-                break;
-              }
-              default: {
-                if (!parseUnknownField(
-                    input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
+                  importName_ = s;
+                  break;
                 }
-                break;
-              }
+              case 50:
+                {
+                  java.lang.String s = input.readStringRequireUtf8();
+
+                  provenanceDomain_ = s;
+                  break;
+                }
+              case 58:
+                {
+                  java.lang.String s = input.readStringRequireUtf8();
+
+                  scalingFactor_ = s;
+                  break;
+                }
+              case 66:
+                {
+                  java.lang.String s = input.readStringRequireUtf8();
+
+                  unit_ = s;
+                  break;
+                }
+              case 72:
+                {
+                  isDcAggregate_ = input.readBool();
+                  break;
+                }
+              case 82:
+                {
+                  java.lang.String s = input.readStringRequireUtf8();
+
+                  provenanceUrl_ = s;
+                  break;
+                }
+              case 90:
+                {
+                  if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+                    placeToLatestDate_ =
+                        com.google.protobuf.MapField.newMapField(
+                            PlaceToLatestDateDefaultEntryHolder.defaultEntry);
+                    mutable_bitField0_ |= 0x00000004;
+                  }
+                  com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
+                      placeToLatestDate__ =
+                          input.readMessage(
+                              PlaceToLatestDateDefaultEntryHolder.defaultEntry.getParserForType(),
+                              extensionRegistry);
+                  placeToLatestDate_
+                      .getMutableMap()
+                      .put(placeToLatestDate__.getKey(), placeToLatestDate__.getValue());
+                  break;
+                }
+              case 98:
+                {
+                  if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                    strVal_ =
+                        com.google.protobuf.MapField.newMapField(
+                            StrValDefaultEntryHolder.defaultEntry);
+                    mutable_bitField0_ |= 0x00000002;
+                  }
+                  com.google.protobuf.MapEntry<java.lang.String, java.lang.String> strVal__ =
+                      input.readMessage(
+                          StrValDefaultEntryHolder.defaultEntry.getParserForType(),
+                          extensionRegistry);
+                  strVal_.getMutableMap().put(strVal__.getKey(), strVal__.getValue());
+                  break;
+                }
+              case 104:
+                {
+                  isDcImputed_ = input.readBool();
+                  break;
+                }
+              case 114:
+                {
+                  org.datacommons.proto.ChartStoreOuterClass.Facet.Builder subBuilder = null;
+                  if (facet_ != null) {
+                    subBuilder = facet_.toBuilder();
+                  }
+                  facet_ =
+                      input.readMessage(
+                          org.datacommons.proto.ChartStoreOuterClass.Facet.parser(),
+                          extensionRegistry);
+                  if (subBuilder != null) {
+                    subBuilder.mergeFrom(facet_);
+                    facet_ = subBuilder.buildPartial();
+                  }
+
+                  break;
+                }
+              default:
+                {
+                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(
-              e).setUnfinishedMessage(this);
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(this);
         } finally {
           this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
         }
       }
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor;
+
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor;
       }
 
       @SuppressWarnings({"rawtypes"})
       @java.lang.Override
-      protected com.google.protobuf.MapField internalGetMapField(
-          int number) {
+      protected com.google.protobuf.MapField internalGetMapField(int number) {
         switch (number) {
           case 1:
             return internalGetVal();
@@ -2223,37 +2414,39 @@ public final class ChartStoreOuterClass {
           case 11:
             return internalGetPlaceToLatestDate();
           default:
-            throw new RuntimeException(
-                "Invalid map field number: " + number);
+            throw new RuntimeException("Invalid map field number: " + number);
         }
       }
+
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_fieldAccessorTable
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.class, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder.class);
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.class,
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+                    .class);
       }
 
       public static final int VAL_FIELD_NUMBER = 1;
+
       private static final class ValDefaultEntryHolder {
-        static final com.google.protobuf.MapEntry<
-            java.lang.String, java.lang.Double> defaultEntry =
-                com.google.protobuf.MapEntry
-                .<java.lang.String, java.lang.Double>newDefaultInstance(
-                    org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_ValEntry_descriptor, 
-                    com.google.protobuf.WireFormat.FieldType.STRING,
-                    "",
-                    com.google.protobuf.WireFormat.FieldType.DOUBLE,
-                    0D);
+        static final com.google.protobuf.MapEntry<java.lang.String, java.lang.Double> defaultEntry =
+            com.google.protobuf.MapEntry.<java.lang.String, java.lang.Double>newDefaultInstance(
+                org.datacommons.proto.ChartStoreOuterClass
+                    .internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_ValEntry_descriptor,
+                com.google.protobuf.WireFormat.FieldType.STRING,
+                "",
+                com.google.protobuf.WireFormat.FieldType.DOUBLE,
+                0D);
       }
-      private com.google.protobuf.MapField<
-          java.lang.String, java.lang.Double> val_;
-      private com.google.protobuf.MapField<java.lang.String, java.lang.Double>
-      internalGetVal() {
+
+      private com.google.protobuf.MapField<java.lang.String, java.lang.Double> val_;
+
+      private com.google.protobuf.MapField<java.lang.String, java.lang.Double> internalGetVal() {
         if (val_ == null) {
-          return com.google.protobuf.MapField.emptyMapField(
-              ValDefaultEntryHolder.defaultEntry);
+          return com.google.protobuf.MapField.emptyMapField(ValDefaultEntryHolder.defaultEntry);
         }
         return val_;
       }
@@ -2261,7 +2454,10 @@ public final class ChartStoreOuterClass {
       public int getValCount() {
         return internalGetVal().getMap().size();
       }
+
       /**
+       *
+       *
        * <pre>
        * Note on the key and value of "val" and "str_val".
        * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -2279,22 +2475,24 @@ public final class ChartStoreOuterClass {
        *
        * <code>map&lt;string, double&gt; val = 1;</code>
        */
-
       @java.lang.Override
-      public boolean containsVal(
-          java.lang.String key) {
-        if (key == null) { throw new java.lang.NullPointerException(); }
+      public boolean containsVal(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
         return internalGetVal().getMap().containsKey(key);
       }
-      /**
-       * Use {@link #getValMap()} instead.
-       */
+
+      /** Use {@link #getValMap()} instead. */
       @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, java.lang.Double> getVal() {
         return getValMap();
       }
+
       /**
+       *
+       *
        * <pre>
        * Note on the key and value of "val" and "str_val".
        * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -2313,11 +2511,13 @@ public final class ChartStoreOuterClass {
        * <code>map&lt;string, double&gt; val = 1;</code>
        */
       @java.lang.Override
-
       public java.util.Map<java.lang.String, java.lang.Double> getValMap() {
         return internalGetVal().getMap();
       }
+
       /**
+       *
+       *
        * <pre>
        * Note on the key and value of "val" and "str_val".
        * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -2336,16 +2536,17 @@ public final class ChartStoreOuterClass {
        * <code>map&lt;string, double&gt; val = 1;</code>
        */
       @java.lang.Override
-
-      public double getValOrDefault(
-          java.lang.String key,
-          double defaultValue) {
-        if (key == null) { throw new java.lang.NullPointerException(); }
-        java.util.Map<java.lang.String, java.lang.Double> map =
-            internalGetVal().getMap();
+      public double getValOrDefault(java.lang.String key, double defaultValue) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        java.util.Map<java.lang.String, java.lang.Double> map = internalGetVal().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
+
       /**
+       *
+       *
        * <pre>
        * Note on the key and value of "val" and "str_val".
        * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -2364,12 +2565,11 @@ public final class ChartStoreOuterClass {
        * <code>map&lt;string, double&gt; val = 1;</code>
        */
       @java.lang.Override
-
-      public double getValOrThrow(
-          java.lang.String key) {
-        if (key == null) { throw new java.lang.NullPointerException(); }
-        java.util.Map<java.lang.String, java.lang.Double> map =
-            internalGetVal().getMap();
+      public double getValOrThrow(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        java.util.Map<java.lang.String, java.lang.Double> map = internalGetVal().getMap();
         if (!map.containsKey(key)) {
           throw new java.lang.IllegalArgumentException();
         }
@@ -2377,24 +2577,23 @@ public final class ChartStoreOuterClass {
       }
 
       public static final int STR_VAL_FIELD_NUMBER = 12;
+
       private static final class StrValDefaultEntryHolder {
-        static final com.google.protobuf.MapEntry<
-            java.lang.String, java.lang.String> defaultEntry =
-                com.google.protobuf.MapEntry
-                .<java.lang.String, java.lang.String>newDefaultInstance(
-                    org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_StrValEntry_descriptor, 
-                    com.google.protobuf.WireFormat.FieldType.STRING,
-                    "",
-                    com.google.protobuf.WireFormat.FieldType.STRING,
-                    "");
+        static final com.google.protobuf.MapEntry<java.lang.String, java.lang.String> defaultEntry =
+            com.google.protobuf.MapEntry.<java.lang.String, java.lang.String>newDefaultInstance(
+                org.datacommons.proto.ChartStoreOuterClass
+                    .internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_StrValEntry_descriptor,
+                com.google.protobuf.WireFormat.FieldType.STRING,
+                "",
+                com.google.protobuf.WireFormat.FieldType.STRING,
+                "");
       }
-      private com.google.protobuf.MapField<
-          java.lang.String, java.lang.String> strVal_;
-      private com.google.protobuf.MapField<java.lang.String, java.lang.String>
-      internalGetStrVal() {
+
+      private com.google.protobuf.MapField<java.lang.String, java.lang.String> strVal_;
+
+      private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetStrVal() {
         if (strVal_ == null) {
-          return com.google.protobuf.MapField.emptyMapField(
-              StrValDefaultEntryHolder.defaultEntry);
+          return com.google.protobuf.MapField.emptyMapField(StrValDefaultEntryHolder.defaultEntry);
         }
         return strVal_;
       }
@@ -2402,29 +2601,34 @@ public final class ChartStoreOuterClass {
       public int getStrValCount() {
         return internalGetStrVal().getMap().size();
       }
+
       /**
+       *
+       *
        * <pre>
        * Used for enum or string values.
        * </pre>
        *
        * <code>map&lt;string, string&gt; str_val = 12;</code>
        */
-
       @java.lang.Override
-      public boolean containsStrVal(
-          java.lang.String key) {
-        if (key == null) { throw new java.lang.NullPointerException(); }
+      public boolean containsStrVal(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
         return internalGetStrVal().getMap().containsKey(key);
       }
-      /**
-       * Use {@link #getStrValMap()} instead.
-       */
+
+      /** Use {@link #getStrValMap()} instead. */
       @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, java.lang.String> getStrVal() {
         return getStrValMap();
       }
+
       /**
+       *
+       *
        * <pre>
        * Used for enum or string values.
        * </pre>
@@ -2432,11 +2636,13 @@ public final class ChartStoreOuterClass {
        * <code>map&lt;string, string&gt; str_val = 12;</code>
        */
       @java.lang.Override
-
       public java.util.Map<java.lang.String, java.lang.String> getStrValMap() {
         return internalGetStrVal().getMap();
       }
+
       /**
+       *
+       *
        * <pre>
        * Used for enum or string values.
        * </pre>
@@ -2444,16 +2650,18 @@ public final class ChartStoreOuterClass {
        * <code>map&lt;string, string&gt; str_val = 12;</code>
        */
       @java.lang.Override
-
       public java.lang.String getStrValOrDefault(
-          java.lang.String key,
-          java.lang.String defaultValue) {
-        if (key == null) { throw new java.lang.NullPointerException(); }
-        java.util.Map<java.lang.String, java.lang.String> map =
-            internalGetStrVal().getMap();
+          java.lang.String key, java.lang.String defaultValue) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        java.util.Map<java.lang.String, java.lang.String> map = internalGetStrVal().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
+
       /**
+       *
+       *
        * <pre>
        * Used for enum or string values.
        * </pre>
@@ -2461,12 +2669,11 @@ public final class ChartStoreOuterClass {
        * <code>map&lt;string, string&gt; str_val = 12;</code>
        */
       @java.lang.Override
-
-      public java.lang.String getStrValOrThrow(
-          java.lang.String key) {
-        if (key == null) { throw new java.lang.NullPointerException(); }
-        java.util.Map<java.lang.String, java.lang.String> map =
-            internalGetStrVal().getMap();
+      public java.lang.String getStrValOrThrow(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
+        java.util.Map<java.lang.String, java.lang.String> map = internalGetStrVal().getMap();
         if (!map.containsKey(key)) {
           throw new java.lang.IllegalArgumentException();
         }
@@ -2475,8 +2682,10 @@ public final class ChartStoreOuterClass {
 
       public static final int MEASUREMENT_METHOD_FIELD_NUMBER = 3;
       private volatile java.lang.Object measurementMethod_;
+
       /**
        * <code>string measurement_method = 3;</code>
+       *
        * @return The measurementMethod.
        */
       @java.lang.Override
@@ -2485,25 +2694,24 @@ public final class ChartStoreOuterClass {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           measurementMethod_ = s;
           return s;
         }
       }
+
       /**
        * <code>string measurement_method = 3;</code>
+       *
        * @return The bytes for measurementMethod.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString
-          getMeasurementMethodBytes() {
+      public com.google.protobuf.ByteString getMeasurementMethodBytes() {
         java.lang.Object ref = measurementMethod_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           measurementMethod_ = b;
           return b;
         } else {
@@ -2513,8 +2721,10 @@ public final class ChartStoreOuterClass {
 
       public static final int OBSERVATION_PERIOD_FIELD_NUMBER = 4;
       private volatile java.lang.Object observationPeriod_;
+
       /**
        * <code>string observation_period = 4;</code>
+       *
        * @return The observationPeriod.
        */
       @java.lang.Override
@@ -2523,25 +2733,24 @@ public final class ChartStoreOuterClass {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           observationPeriod_ = s;
           return s;
         }
       }
+
       /**
        * <code>string observation_period = 4;</code>
+       *
        * @return The bytes for observationPeriod.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString
-          getObservationPeriodBytes() {
+      public com.google.protobuf.ByteString getObservationPeriodBytes() {
         java.lang.Object ref = observationPeriod_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           observationPeriod_ = b;
           return b;
         } else {
@@ -2551,8 +2760,10 @@ public final class ChartStoreOuterClass {
 
       public static final int IMPORT_NAME_FIELD_NUMBER = 5;
       private volatile java.lang.Object importName_;
+
       /**
        * <code>string import_name = 5;</code>
+       *
        * @return The importName.
        */
       @java.lang.Override
@@ -2561,25 +2772,24 @@ public final class ChartStoreOuterClass {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           importName_ = s;
           return s;
         }
       }
+
       /**
        * <code>string import_name = 5;</code>
+       *
        * @return The bytes for importName.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString
-          getImportNameBytes() {
+      public com.google.protobuf.ByteString getImportNameBytes() {
         java.lang.Object ref = importName_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           importName_ = b;
           return b;
         } else {
@@ -2589,8 +2799,10 @@ public final class ChartStoreOuterClass {
 
       public static final int PROVENANCE_DOMAIN_FIELD_NUMBER = 6;
       private volatile java.lang.Object provenanceDomain_;
+
       /**
        * <code>string provenance_domain = 6;</code>
+       *
        * @return The provenanceDomain.
        */
       @java.lang.Override
@@ -2599,25 +2811,24 @@ public final class ChartStoreOuterClass {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           provenanceDomain_ = s;
           return s;
         }
       }
+
       /**
        * <code>string provenance_domain = 6;</code>
+       *
        * @return The bytes for provenanceDomain.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString
-          getProvenanceDomainBytes() {
+      public com.google.protobuf.ByteString getProvenanceDomainBytes() {
         java.lang.Object ref = provenanceDomain_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           provenanceDomain_ = b;
           return b;
         } else {
@@ -2627,8 +2838,10 @@ public final class ChartStoreOuterClass {
 
       public static final int SCALING_FACTOR_FIELD_NUMBER = 7;
       private volatile java.lang.Object scalingFactor_;
+
       /**
        * <code>string scaling_factor = 7;</code>
+       *
        * @return The scalingFactor.
        */
       @java.lang.Override
@@ -2637,25 +2850,24 @@ public final class ChartStoreOuterClass {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           scalingFactor_ = s;
           return s;
         }
       }
+
       /**
        * <code>string scaling_factor = 7;</code>
+       *
        * @return The bytes for scalingFactor.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString
-          getScalingFactorBytes() {
+      public com.google.protobuf.ByteString getScalingFactorBytes() {
         java.lang.Object ref = scalingFactor_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           scalingFactor_ = b;
           return b;
         } else {
@@ -2665,8 +2877,10 @@ public final class ChartStoreOuterClass {
 
       public static final int UNIT_FIELD_NUMBER = 8;
       private volatile java.lang.Object unit_;
+
       /**
        * <code>string unit = 8;</code>
+       *
        * @return The unit.
        */
       @java.lang.Override
@@ -2675,25 +2889,24 @@ public final class ChartStoreOuterClass {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           unit_ = s;
           return s;
         }
       }
+
       /**
        * <code>string unit = 8;</code>
+       *
        * @return The bytes for unit.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString
-          getUnitBytes() {
+      public com.google.protobuf.ByteString getUnitBytes() {
         java.lang.Object ref = unit_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           unit_ = b;
           return b;
         } else {
@@ -2703,8 +2916,10 @@ public final class ChartStoreOuterClass {
 
       public static final int IS_DC_AGGREGATE_FIELD_NUMBER = 9;
       private boolean isDcAggregate_;
+
       /**
        * <code>bool is_dc_aggregate = 9;</code>
+       *
        * @return The isDcAggregate.
        */
       @java.lang.Override
@@ -2714,8 +2929,10 @@ public final class ChartStoreOuterClass {
 
       public static final int PROVENANCE_URL_FIELD_NUMBER = 10;
       private volatile java.lang.Object provenanceUrl_;
+
       /**
        * <code>string provenance_url = 10;</code>
+       *
        * @return The provenanceUrl.
        */
       @java.lang.Override
@@ -2724,25 +2941,24 @@ public final class ChartStoreOuterClass {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           provenanceUrl_ = s;
           return s;
         }
       }
+
       /**
        * <code>string provenance_url = 10;</code>
+       *
        * @return The bytes for provenanceUrl.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString
-          getProvenanceUrlBytes() {
+      public com.google.protobuf.ByteString getProvenanceUrlBytes() {
         java.lang.Object ref = provenanceUrl_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           provenanceUrl_ = b;
           return b;
         } else {
@@ -2751,21 +2967,22 @@ public final class ChartStoreOuterClass {
       }
 
       public static final int PLACE_TO_LATEST_DATE_FIELD_NUMBER = 11;
+
       private static final class PlaceToLatestDateDefaultEntryHolder {
-        static final com.google.protobuf.MapEntry<
-            java.lang.String, java.lang.String> defaultEntry =
-                com.google.protobuf.MapEntry
-                .<java.lang.String, java.lang.String>newDefaultInstance(
-                    org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_PlaceToLatestDateEntry_descriptor, 
-                    com.google.protobuf.WireFormat.FieldType.STRING,
-                    "",
-                    com.google.protobuf.WireFormat.FieldType.STRING,
-                    "");
+        static final com.google.protobuf.MapEntry<java.lang.String, java.lang.String> defaultEntry =
+            com.google.protobuf.MapEntry.<java.lang.String, java.lang.String>newDefaultInstance(
+                org.datacommons.proto.ChartStoreOuterClass
+                    .internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_PlaceToLatestDateEntry_descriptor,
+                com.google.protobuf.WireFormat.FieldType.STRING,
+                "",
+                com.google.protobuf.WireFormat.FieldType.STRING,
+                "");
       }
-      private com.google.protobuf.MapField<
-          java.lang.String, java.lang.String> placeToLatestDate_;
+
+      private com.google.protobuf.MapField<java.lang.String, java.lang.String> placeToLatestDate_;
+
       private com.google.protobuf.MapField<java.lang.String, java.lang.String>
-      internalGetPlaceToLatestDate() {
+          internalGetPlaceToLatestDate() {
         if (placeToLatestDate_ == null) {
           return com.google.protobuf.MapField.emptyMapField(
               PlaceToLatestDateDefaultEntryHolder.defaultEntry);
@@ -2776,29 +2993,34 @@ public final class ChartStoreOuterClass {
       public int getPlaceToLatestDateCount() {
         return internalGetPlaceToLatestDate().getMap().size();
       }
+
       /**
+       *
+       *
        * <pre>
        * Only used for latest date obs collection.
        * </pre>
        *
        * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
        */
-
       @java.lang.Override
-      public boolean containsPlaceToLatestDate(
-          java.lang.String key) {
-        if (key == null) { throw new java.lang.NullPointerException(); }
+      public boolean containsPlaceToLatestDate(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
         return internalGetPlaceToLatestDate().getMap().containsKey(key);
       }
-      /**
-       * Use {@link #getPlaceToLatestDateMap()} instead.
-       */
+
+      /** Use {@link #getPlaceToLatestDateMap()} instead. */
       @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, java.lang.String> getPlaceToLatestDate() {
         return getPlaceToLatestDateMap();
       }
+
       /**
+       *
+       *
        * <pre>
        * Only used for latest date obs collection.
        * </pre>
@@ -2806,11 +3028,13 @@ public final class ChartStoreOuterClass {
        * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
        */
       @java.lang.Override
-
       public java.util.Map<java.lang.String, java.lang.String> getPlaceToLatestDateMap() {
         return internalGetPlaceToLatestDate().getMap();
       }
+
       /**
+       *
+       *
        * <pre>
        * Only used for latest date obs collection.
        * </pre>
@@ -2818,16 +3042,19 @@ public final class ChartStoreOuterClass {
        * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
        */
       @java.lang.Override
-
       public java.lang.String getPlaceToLatestDateOrDefault(
-          java.lang.String key,
-          java.lang.String defaultValue) {
-        if (key == null) { throw new java.lang.NullPointerException(); }
+          java.lang.String key, java.lang.String defaultValue) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
         java.util.Map<java.lang.String, java.lang.String> map =
             internalGetPlaceToLatestDate().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
+
       /**
+       *
+       *
        * <pre>
        * Only used for latest date obs collection.
        * </pre>
@@ -2835,10 +3062,10 @@ public final class ChartStoreOuterClass {
        * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
        */
       @java.lang.Override
-
-      public java.lang.String getPlaceToLatestDateOrThrow(
-          java.lang.String key) {
-        if (key == null) { throw new java.lang.NullPointerException(); }
+      public java.lang.String getPlaceToLatestDateOrThrow(java.lang.String key) {
+        if (key == null) {
+          throw new java.lang.NullPointerException();
+        }
         java.util.Map<java.lang.String, java.lang.String> map =
             internalGetPlaceToLatestDate().getMap();
         if (!map.containsKey(key)) {
@@ -2849,12 +3076,16 @@ public final class ChartStoreOuterClass {
 
       public static final int IS_DC_IMPUTED_FIELD_NUMBER = 13;
       private boolean isDcImputed_;
+
       /**
+       *
+       *
        * <pre>
        * Whether this source series is imputed by Data Commons.
        * </pre>
        *
        * <code>bool is_dc_imputed = 13;</code>
+       *
        * @return The isDcImputed.
        */
       @java.lang.Override
@@ -2864,33 +3095,46 @@ public final class ChartStoreOuterClass {
 
       public static final int FACET_FIELD_NUMBER = 14;
       private org.datacommons.proto.ChartStoreOuterClass.Facet facet_;
+
       /**
+       *
+       *
        * <pre>
        * Facet for this source series.
        * TODO: Migrate other fields to use Facet.
        * </pre>
        *
        * <code>.org.datacommons.proto.Facet facet = 14;</code>
+       *
        * @return Whether the facet field is set.
        */
       @java.lang.Override
       public boolean hasFacet() {
         return facet_ != null;
       }
+
       /**
+       *
+       *
        * <pre>
        * Facet for this source series.
        * TODO: Migrate other fields to use Facet.
        * </pre>
        *
        * <code>.org.datacommons.proto.Facet facet = 14;</code>
+       *
        * @return The facet.
        */
       @java.lang.Override
       public org.datacommons.proto.ChartStoreOuterClass.Facet getFacet() {
-        return facet_ == null ? org.datacommons.proto.ChartStoreOuterClass.Facet.getDefaultInstance() : facet_;
+        return facet_ == null
+            ? org.datacommons.proto.ChartStoreOuterClass.Facet.getDefaultInstance()
+            : facet_;
       }
+
       /**
+       *
+       *
        * <pre>
        * Facet for this source series.
        * TODO: Migrate other fields to use Facet.
@@ -2904,6 +3148,7 @@ public final class ChartStoreOuterClass {
       }
 
       private byte memoizedIsInitialized = -1;
+
       @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -2915,14 +3160,9 @@ public final class ChartStoreOuterClass {
       }
 
       @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
-                          throws java.io.IOException {
-        com.google.protobuf.GeneratedMessageV3
-          .serializeStringMapTo(
-            output,
-            internalGetVal(),
-            ValDefaultEntryHolder.defaultEntry,
-            1);
+      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+        com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
+            output, internalGetVal(), ValDefaultEntryHolder.defaultEntry, 1);
         if (!getMeasurementMethodBytes().isEmpty()) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 3, measurementMethod_);
         }
@@ -2947,18 +3187,13 @@ public final class ChartStoreOuterClass {
         if (!getProvenanceUrlBytes().isEmpty()) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 10, provenanceUrl_);
         }
-        com.google.protobuf.GeneratedMessageV3
-          .serializeStringMapTo(
+        com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
             output,
             internalGetPlaceToLatestDate(),
             PlaceToLatestDateDefaultEntryHolder.defaultEntry,
             11);
-        com.google.protobuf.GeneratedMessageV3
-          .serializeStringMapTo(
-            output,
-            internalGetStrVal(),
-            StrValDefaultEntryHolder.defaultEntry,
-            12);
+        com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
+            output, internalGetStrVal(), StrValDefaultEntryHolder.defaultEntry, 12);
         if (isDcImputed_ != false) {
           output.writeBool(13, isDcImputed_);
         }
@@ -2974,15 +3209,15 @@ public final class ChartStoreOuterClass {
         if (size != -1) return size;
 
         size = 0;
-        for (java.util.Map.Entry<java.lang.String, java.lang.Double> entry
-             : internalGetVal().getMap().entrySet()) {
-          com.google.protobuf.MapEntry<java.lang.String, java.lang.Double>
-          val__ = ValDefaultEntryHolder.defaultEntry.newBuilderForType()
-              .setKey(entry.getKey())
-              .setValue(entry.getValue())
-              .build();
-          size += com.google.protobuf.CodedOutputStream
-              .computeMessageSize(1, val__);
+        for (java.util.Map.Entry<java.lang.String, java.lang.Double> entry :
+            internalGetVal().getMap().entrySet()) {
+          com.google.protobuf.MapEntry<java.lang.String, java.lang.Double> val__ =
+              ValDefaultEntryHolder.defaultEntry
+                  .newBuilderForType()
+                  .setKey(entry.getKey())
+                  .setValue(entry.getValue())
+                  .build();
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, val__);
         }
         if (!getMeasurementMethodBytes().isEmpty()) {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, measurementMethod_);
@@ -3003,39 +3238,36 @@ public final class ChartStoreOuterClass {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, unit_);
         }
         if (isDcAggregate_ != false) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeBoolSize(9, isDcAggregate_);
+          size += com.google.protobuf.CodedOutputStream.computeBoolSize(9, isDcAggregate_);
         }
         if (!getProvenanceUrlBytes().isEmpty()) {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(10, provenanceUrl_);
         }
-        for (java.util.Map.Entry<java.lang.String, java.lang.String> entry
-             : internalGetPlaceToLatestDate().getMap().entrySet()) {
-          com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
-          placeToLatestDate__ = PlaceToLatestDateDefaultEntryHolder.defaultEntry.newBuilderForType()
-              .setKey(entry.getKey())
-              .setValue(entry.getValue())
-              .build();
-          size += com.google.protobuf.CodedOutputStream
-              .computeMessageSize(11, placeToLatestDate__);
+        for (java.util.Map.Entry<java.lang.String, java.lang.String> entry :
+            internalGetPlaceToLatestDate().getMap().entrySet()) {
+          com.google.protobuf.MapEntry<java.lang.String, java.lang.String> placeToLatestDate__ =
+              PlaceToLatestDateDefaultEntryHolder.defaultEntry
+                  .newBuilderForType()
+                  .setKey(entry.getKey())
+                  .setValue(entry.getValue())
+                  .build();
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(11, placeToLatestDate__);
         }
-        for (java.util.Map.Entry<java.lang.String, java.lang.String> entry
-             : internalGetStrVal().getMap().entrySet()) {
-          com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
-          strVal__ = StrValDefaultEntryHolder.defaultEntry.newBuilderForType()
-              .setKey(entry.getKey())
-              .setValue(entry.getValue())
-              .build();
-          size += com.google.protobuf.CodedOutputStream
-              .computeMessageSize(12, strVal__);
+        for (java.util.Map.Entry<java.lang.String, java.lang.String> entry :
+            internalGetStrVal().getMap().entrySet()) {
+          com.google.protobuf.MapEntry<java.lang.String, java.lang.String> strVal__ =
+              StrValDefaultEntryHolder.defaultEntry
+                  .newBuilderForType()
+                  .setKey(entry.getKey())
+                  .setValue(entry.getValue())
+                  .build();
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(12, strVal__);
         }
         if (isDcImputed_ != false) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeBoolSize(13, isDcImputed_);
+          size += com.google.protobuf.CodedOutputStream.computeBoolSize(13, isDcImputed_);
         }
         if (facet_ != null) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(14, getFacet());
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(14, getFacet());
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -3045,41 +3277,31 @@ public final class ChartStoreOuterClass {
       @java.lang.Override
       public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
-         return true;
+          return true;
         }
-        if (!(obj instanceof org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries)) {
+        if (!(obj
+            instanceof org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries)) {
           return super.equals(obj);
         }
-        org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries other = (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries) obj;
+        org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries other =
+            (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries) obj;
 
-        if (!internalGetVal().equals(
-            other.internalGetVal())) return false;
-        if (!internalGetStrVal().equals(
-            other.internalGetStrVal())) return false;
-        if (!getMeasurementMethod()
-            .equals(other.getMeasurementMethod())) return false;
-        if (!getObservationPeriod()
-            .equals(other.getObservationPeriod())) return false;
-        if (!getImportName()
-            .equals(other.getImportName())) return false;
-        if (!getProvenanceDomain()
-            .equals(other.getProvenanceDomain())) return false;
-        if (!getScalingFactor()
-            .equals(other.getScalingFactor())) return false;
-        if (!getUnit()
-            .equals(other.getUnit())) return false;
-        if (getIsDcAggregate()
-            != other.getIsDcAggregate()) return false;
-        if (!getProvenanceUrl()
-            .equals(other.getProvenanceUrl())) return false;
-        if (!internalGetPlaceToLatestDate().equals(
-            other.internalGetPlaceToLatestDate())) return false;
-        if (getIsDcImputed()
-            != other.getIsDcImputed()) return false;
+        if (!internalGetVal().equals(other.internalGetVal())) return false;
+        if (!internalGetStrVal().equals(other.internalGetStrVal())) return false;
+        if (!getMeasurementMethod().equals(other.getMeasurementMethod())) return false;
+        if (!getObservationPeriod().equals(other.getObservationPeriod())) return false;
+        if (!getImportName().equals(other.getImportName())) return false;
+        if (!getProvenanceDomain().equals(other.getProvenanceDomain())) return false;
+        if (!getScalingFactor().equals(other.getScalingFactor())) return false;
+        if (!getUnit().equals(other.getUnit())) return false;
+        if (getIsDcAggregate() != other.getIsDcAggregate()) return false;
+        if (!getProvenanceUrl().equals(other.getProvenanceUrl())) return false;
+        if (!internalGetPlaceToLatestDate().equals(other.internalGetPlaceToLatestDate()))
+          return false;
+        if (getIsDcImputed() != other.getIsDcImputed()) return false;
         if (hasFacet() != other.hasFacet()) return false;
         if (hasFacet()) {
-          if (!getFacet()
-              .equals(other.getFacet())) return false;
+          if (!getFacet().equals(other.getFacet())) return false;
         }
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
@@ -3113,8 +3335,7 @@ public final class ChartStoreOuterClass {
         hash = (37 * hash) + UNIT_FIELD_NUMBER;
         hash = (53 * hash) + getUnit().hashCode();
         hash = (37 * hash) + IS_DC_AGGREGATE_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-            getIsDcAggregate());
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getIsDcAggregate());
         hash = (37 * hash) + PROVENANCE_URL_FIELD_NUMBER;
         hash = (53 * hash) + getProvenanceUrl().hashCode();
         if (!internalGetPlaceToLatestDate().getMap().isEmpty()) {
@@ -3122,8 +3343,7 @@ public final class ChartStoreOuterClass {
           hash = (53 * hash) + internalGetPlaceToLatestDate().hashCode();
         }
         hash = (37 * hash) + IS_DC_IMPUTED_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-            getIsDcImputed());
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getIsDcImputed());
         if (hasFacet()) {
           hash = (37 * hash) + FACET_FIELD_NUMBER;
           hash = (53 * hash) + getFacet().hashCode();
@@ -3134,87 +3354,96 @@ public final class ChartStoreOuterClass {
       }
 
       public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseFrom(
-          java.nio.ByteBuffer data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseFrom(
-          java.nio.ByteBuffer data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
+
       public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseFrom(byte[] data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+
+      public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseFrom(
+          byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseFrom(
-          byte[] data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
-      }
+
       public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+          java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
       }
-      public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseDelimitedFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input);
-      }
-      public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseDelimitedFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-      }
+
       public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseFrom(
-          com.google.protobuf.CodedInputStream input)
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
+
+      public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+          parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+          parseDelimitedFrom(
+              java.io.InputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseFrom(
+          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
       public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
 
       @java.lang.Override
-      public Builder newBuilderForType() { return newBuilder(); }
+      public Builder newBuilderForType() {
+        return newBuilder();
+      }
+
       public static Builder newBuilder() {
         return DEFAULT_INSTANCE.toBuilder();
       }
-      public static Builder newBuilder(org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries prototype) {
+
+      public static Builder newBuilder(
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries prototype) {
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
+
       @java.lang.Override
       public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE
-            ? new Builder() : new Builder().mergeFrom(this);
+        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
       }
 
       @java.lang.Override
@@ -3223,25 +3452,28 @@ public final class ChartStoreOuterClass {
         Builder builder = new Builder(parent);
         return builder;
       }
+
       /**
+       *
+       *
        * <pre>
        * Next ID: 15.
        * </pre>
        *
        * Protobuf type {@code org.datacommons.proto.ObsTimeSeries.SourceSeries}
        */
-      public static final class Builder extends
-          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+      public static final class Builder
+          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+          implements
           // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ObsTimeSeries.SourceSeries)
           org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor
-            getDescriptor() {
-          return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+          return org.datacommons.proto.ChartStoreOuterClass
+              .internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor;
         }
 
         @SuppressWarnings({"rawtypes"})
-        protected com.google.protobuf.MapField internalGetMapField(
-            int number) {
+        protected com.google.protobuf.MapField internalGetMapField(int number) {
           switch (number) {
             case 1:
               return internalGetVal();
@@ -3250,13 +3482,12 @@ public final class ChartStoreOuterClass {
             case 11:
               return internalGetPlaceToLatestDate();
             default:
-              throw new RuntimeException(
-                  "Invalid map field number: " + number);
+              throw new RuntimeException("Invalid map field number: " + number);
           }
         }
+
         @SuppressWarnings({"rawtypes"})
-        protected com.google.protobuf.MapField internalGetMutableMapField(
-            int number) {
+        protected com.google.protobuf.MapField internalGetMutableMapField(int number) {
           switch (number) {
             case 1:
               return internalGetMutableVal();
@@ -3265,33 +3496,36 @@ public final class ChartStoreOuterClass {
             case 11:
               return internalGetMutablePlaceToLatestDate();
             default:
-              throw new RuntimeException(
-                  "Invalid map field number: " + number);
+              throw new RuntimeException("Invalid map field number: " + number);
           }
         }
+
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_fieldAccessorTable
+          return org.datacommons.proto.ChartStoreOuterClass
+              .internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.class, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder.class);
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.class,
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+                      .class);
         }
 
-        // Construct using org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.newBuilder()
+        // Construct using
+        // org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.newBuilder()
         private Builder() {
           maybeForceBuilderInitialization();
         }
 
-        private Builder(
-            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
+
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3
-                  .alwaysUseFieldBuilders) {
-          }
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
         }
+
         @java.lang.Override
         public Builder clear() {
           super.clear();
@@ -3326,19 +3560,22 @@ public final class ChartStoreOuterClass {
         }
 
         @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor
-            getDescriptorForType() {
-          return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor;
+        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+          return org.datacommons.proto.ChartStoreOuterClass
+              .internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor;
         }
 
         @java.lang.Override
-        public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getDefaultInstanceForType() {
-          return org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.getDefaultInstance();
+        public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+            getDefaultInstanceForType() {
+          return org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+              .getDefaultInstance();
         }
 
         @java.lang.Override
         public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries build() {
-          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries result = buildPartial();
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries result =
+              buildPartial();
           if (!result.isInitialized()) {
             throw newUninitializedMessageException(result);
           }
@@ -3346,8 +3583,10 @@ public final class ChartStoreOuterClass {
         }
 
         @java.lang.Override
-        public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries buildPartial() {
-          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries result = new org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries(this);
+        public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+            buildPartial() {
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries result =
+              new org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries(this);
           int from_bitField0_ = bitField0_;
           result.val_ = internalGetVal();
           result.val_.makeImmutable();
@@ -3377,50 +3616,56 @@ public final class ChartStoreOuterClass {
         public Builder clone() {
           return super.clone();
         }
+
         @java.lang.Override
         public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.setField(field, value);
         }
+
         @java.lang.Override
-        public Builder clearField(
-            com.google.protobuf.Descriptors.FieldDescriptor field) {
+        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
           return super.clearField(field);
         }
+
         @java.lang.Override
-        public Builder clearOneof(
-            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
           return super.clearOneof(oneof);
         }
+
         @java.lang.Override
         public Builder setRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index, java.lang.Object value) {
+            int index,
+            java.lang.Object value) {
           return super.setRepeatedField(field, index, value);
         }
+
         @java.lang.Override
         public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.addRepeatedField(field, value);
         }
+
         @java.lang.Override
         public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries) {
-            return mergeFrom((org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries)other);
+          if (other
+              instanceof org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries) {
+            return mergeFrom(
+                (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries) other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries other) {
-          if (other == org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.getDefaultInstance()) return this;
-          internalGetMutableVal().mergeFrom(
-              other.internalGetVal());
-          internalGetMutableStrVal().mergeFrom(
-              other.internalGetStrVal());
+        public Builder mergeFrom(
+            org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries other) {
+          if (other
+              == org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+                  .getDefaultInstance()) return this;
+          internalGetMutableVal().mergeFrom(other.internalGetVal());
+          internalGetMutableStrVal().mergeFrom(other.internalGetStrVal());
           if (!other.getMeasurementMethod().isEmpty()) {
             measurementMethod_ = other.measurementMethod_;
             onChanged();
@@ -3452,8 +3697,7 @@ public final class ChartStoreOuterClass {
             provenanceUrl_ = other.provenanceUrl_;
             onChanged();
           }
-          internalGetMutablePlaceToLatestDate().mergeFrom(
-              other.internalGetPlaceToLatestDate());
+          internalGetMutablePlaceToLatestDate().mergeFrom(other.internalGetPlaceToLatestDate());
           if (other.getIsDcImputed() != false) {
             setIsDcImputed(other.getIsDcImputed());
           }
@@ -3475,11 +3719,14 @@ public final class ChartStoreOuterClass {
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parsedMessage = null;
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries parsedMessage =
+              null;
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries) e.getUnfinishedMessage();
+            parsedMessage =
+                (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries)
+                    e.getUnfinishedMessage();
             throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
@@ -3488,24 +3735,24 @@ public final class ChartStoreOuterClass {
           }
           return this;
         }
+
         private int bitField0_;
 
-        private com.google.protobuf.MapField<
-            java.lang.String, java.lang.Double> val_;
-        private com.google.protobuf.MapField<java.lang.String, java.lang.Double>
-        internalGetVal() {
+        private com.google.protobuf.MapField<java.lang.String, java.lang.Double> val_;
+
+        private com.google.protobuf.MapField<java.lang.String, java.lang.Double> internalGetVal() {
           if (val_ == null) {
-            return com.google.protobuf.MapField.emptyMapField(
-                ValDefaultEntryHolder.defaultEntry);
+            return com.google.protobuf.MapField.emptyMapField(ValDefaultEntryHolder.defaultEntry);
           }
           return val_;
         }
+
         private com.google.protobuf.MapField<java.lang.String, java.lang.Double>
-        internalGetMutableVal() {
-          onChanged();;
+            internalGetMutableVal() {
+          onChanged();
+          ;
           if (val_ == null) {
-            val_ = com.google.protobuf.MapField.newMapField(
-                ValDefaultEntryHolder.defaultEntry);
+            val_ = com.google.protobuf.MapField.newMapField(ValDefaultEntryHolder.defaultEntry);
           }
           if (!val_.isMutable()) {
             val_ = val_.copy();
@@ -3516,7 +3763,10 @@ public final class ChartStoreOuterClass {
         public int getValCount() {
           return internalGetVal().getMap().size();
         }
+
         /**
+         *
+         *
          * <pre>
          * Note on the key and value of "val" and "str_val".
          * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -3534,22 +3784,24 @@ public final class ChartStoreOuterClass {
          *
          * <code>map&lt;string, double&gt; val = 1;</code>
          */
-
         @java.lang.Override
-        public boolean containsVal(
-            java.lang.String key) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
+        public boolean containsVal(java.lang.String key) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
           return internalGetVal().getMap().containsKey(key);
         }
-        /**
-         * Use {@link #getValMap()} instead.
-         */
+
+        /** Use {@link #getValMap()} instead. */
         @java.lang.Override
         @java.lang.Deprecated
         public java.util.Map<java.lang.String, java.lang.Double> getVal() {
           return getValMap();
         }
+
         /**
+         *
+         *
          * <pre>
          * Note on the key and value of "val" and "str_val".
          * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -3568,11 +3820,13 @@ public final class ChartStoreOuterClass {
          * <code>map&lt;string, double&gt; val = 1;</code>
          */
         @java.lang.Override
-
         public java.util.Map<java.lang.String, java.lang.Double> getValMap() {
           return internalGetVal().getMap();
         }
+
         /**
+         *
+         *
          * <pre>
          * Note on the key and value of "val" and "str_val".
          * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -3591,16 +3845,17 @@ public final class ChartStoreOuterClass {
          * <code>map&lt;string, double&gt; val = 1;</code>
          */
         @java.lang.Override
-
-        public double getValOrDefault(
-            java.lang.String key,
-            double defaultValue) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          java.util.Map<java.lang.String, java.lang.Double> map =
-              internalGetVal().getMap();
+        public double getValOrDefault(java.lang.String key, double defaultValue) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+          java.util.Map<java.lang.String, java.lang.Double> map = internalGetVal().getMap();
           return map.containsKey(key) ? map.get(key) : defaultValue;
         }
+
         /**
+         *
+         *
          * <pre>
          * Note on the key and value of "val" and "str_val".
          * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -3619,12 +3874,11 @@ public final class ChartStoreOuterClass {
          * <code>map&lt;string, double&gt; val = 1;</code>
          */
         @java.lang.Override
-
-        public double getValOrThrow(
-            java.lang.String key) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          java.util.Map<java.lang.String, java.lang.Double> map =
-              internalGetVal().getMap();
+        public double getValOrThrow(java.lang.String key) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+          java.util.Map<java.lang.String, java.lang.Double> map = internalGetVal().getMap();
           if (!map.containsKey(key)) {
             throw new java.lang.IllegalArgumentException();
           }
@@ -3632,11 +3886,13 @@ public final class ChartStoreOuterClass {
         }
 
         public Builder clearVal() {
-          internalGetMutableVal().getMutableMap()
-              .clear();
+          internalGetMutableVal().getMutableMap().clear();
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Note on the key and value of "val" and "str_val".
          * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -3654,23 +3910,23 @@ public final class ChartStoreOuterClass {
          *
          * <code>map&lt;string, double&gt; val = 1;</code>
          */
-
-        public Builder removeVal(
-            java.lang.String key) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          internalGetMutableVal().getMutableMap()
-              .remove(key);
+        public Builder removeVal(java.lang.String key) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+          internalGetMutableVal().getMutableMap().remove(key);
           return this;
         }
-        /**
-         * Use alternate mutation accessors instead.
-         */
+
+        /** Use alternate mutation accessors instead. */
         @java.lang.Deprecated
-        public java.util.Map<java.lang.String, java.lang.Double>
-        getMutableVal() {
+        public java.util.Map<java.lang.String, java.lang.Double> getMutableVal() {
           return internalGetMutableVal().getMutableMap();
         }
+
         /**
+         *
+         *
          * <pre>
          * Note on the key and value of "val" and "str_val".
          * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -3688,16 +3944,18 @@ public final class ChartStoreOuterClass {
          *
          * <code>map&lt;string, double&gt; val = 1;</code>
          */
-        public Builder putVal(
-            java.lang.String key,
-            double value) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          
-          internalGetMutableVal().getMutableMap()
-              .put(key, value);
+        public Builder putVal(java.lang.String key, double value) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+
+          internalGetMutableVal().getMutableMap().put(key, value);
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Note on the key and value of "val" and "str_val".
          * 1. For SourceSeries in ObsTimeSeries, the key is observation date and
@@ -3715,30 +3973,29 @@ public final class ChartStoreOuterClass {
          *
          * <code>map&lt;string, double&gt; val = 1;</code>
          */
-
-        public Builder putAllVal(
-            java.util.Map<java.lang.String, java.lang.Double> values) {
-          internalGetMutableVal().getMutableMap()
-              .putAll(values);
+        public Builder putAllVal(java.util.Map<java.lang.String, java.lang.Double> values) {
+          internalGetMutableVal().getMutableMap().putAll(values);
           return this;
         }
 
-        private com.google.protobuf.MapField<
-            java.lang.String, java.lang.String> strVal_;
+        private com.google.protobuf.MapField<java.lang.String, java.lang.String> strVal_;
+
         private com.google.protobuf.MapField<java.lang.String, java.lang.String>
-        internalGetStrVal() {
+            internalGetStrVal() {
           if (strVal_ == null) {
             return com.google.protobuf.MapField.emptyMapField(
                 StrValDefaultEntryHolder.defaultEntry);
           }
           return strVal_;
         }
+
         private com.google.protobuf.MapField<java.lang.String, java.lang.String>
-        internalGetMutableStrVal() {
-          onChanged();;
+            internalGetMutableStrVal() {
+          onChanged();
+          ;
           if (strVal_ == null) {
-            strVal_ = com.google.protobuf.MapField.newMapField(
-                StrValDefaultEntryHolder.defaultEntry);
+            strVal_ =
+                com.google.protobuf.MapField.newMapField(StrValDefaultEntryHolder.defaultEntry);
           }
           if (!strVal_.isMutable()) {
             strVal_ = strVal_.copy();
@@ -3749,29 +4006,34 @@ public final class ChartStoreOuterClass {
         public int getStrValCount() {
           return internalGetStrVal().getMap().size();
         }
+
         /**
+         *
+         *
          * <pre>
          * Used for enum or string values.
          * </pre>
          *
          * <code>map&lt;string, string&gt; str_val = 12;</code>
          */
-
         @java.lang.Override
-        public boolean containsStrVal(
-            java.lang.String key) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
+        public boolean containsStrVal(java.lang.String key) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
           return internalGetStrVal().getMap().containsKey(key);
         }
-        /**
-         * Use {@link #getStrValMap()} instead.
-         */
+
+        /** Use {@link #getStrValMap()} instead. */
         @java.lang.Override
         @java.lang.Deprecated
         public java.util.Map<java.lang.String, java.lang.String> getStrVal() {
           return getStrValMap();
         }
+
         /**
+         *
+         *
          * <pre>
          * Used for enum or string values.
          * </pre>
@@ -3779,11 +4041,13 @@ public final class ChartStoreOuterClass {
          * <code>map&lt;string, string&gt; str_val = 12;</code>
          */
         @java.lang.Override
-
         public java.util.Map<java.lang.String, java.lang.String> getStrValMap() {
           return internalGetStrVal().getMap();
         }
+
         /**
+         *
+         *
          * <pre>
          * Used for enum or string values.
          * </pre>
@@ -3791,16 +4055,18 @@ public final class ChartStoreOuterClass {
          * <code>map&lt;string, string&gt; str_val = 12;</code>
          */
         @java.lang.Override
-
         public java.lang.String getStrValOrDefault(
-            java.lang.String key,
-            java.lang.String defaultValue) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          java.util.Map<java.lang.String, java.lang.String> map =
-              internalGetStrVal().getMap();
+            java.lang.String key, java.lang.String defaultValue) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+          java.util.Map<java.lang.String, java.lang.String> map = internalGetStrVal().getMap();
           return map.containsKey(key) ? map.get(key) : defaultValue;
         }
+
         /**
+         *
+         *
          * <pre>
          * Used for enum or string values.
          * </pre>
@@ -3808,12 +4074,11 @@ public final class ChartStoreOuterClass {
          * <code>map&lt;string, string&gt; str_val = 12;</code>
          */
         @java.lang.Override
-
-        public java.lang.String getStrValOrThrow(
-            java.lang.String key) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          java.util.Map<java.lang.String, java.lang.String> map =
-              internalGetStrVal().getMap();
+        public java.lang.String getStrValOrThrow(java.lang.String key) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+          java.util.Map<java.lang.String, java.lang.String> map = internalGetStrVal().getMap();
           if (!map.containsKey(key)) {
             throw new java.lang.IllegalArgumentException();
           }
@@ -3821,74 +4086,78 @@ public final class ChartStoreOuterClass {
         }
 
         public Builder clearStrVal() {
-          internalGetMutableStrVal().getMutableMap()
-              .clear();
+          internalGetMutableStrVal().getMutableMap().clear();
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Used for enum or string values.
          * </pre>
          *
          * <code>map&lt;string, string&gt; str_val = 12;</code>
          */
-
-        public Builder removeStrVal(
-            java.lang.String key) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          internalGetMutableStrVal().getMutableMap()
-              .remove(key);
+        public Builder removeStrVal(java.lang.String key) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+          internalGetMutableStrVal().getMutableMap().remove(key);
           return this;
         }
-        /**
-         * Use alternate mutation accessors instead.
-         */
+
+        /** Use alternate mutation accessors instead. */
         @java.lang.Deprecated
-        public java.util.Map<java.lang.String, java.lang.String>
-        getMutableStrVal() {
+        public java.util.Map<java.lang.String, java.lang.String> getMutableStrVal() {
           return internalGetMutableStrVal().getMutableMap();
         }
+
         /**
+         *
+         *
          * <pre>
          * Used for enum or string values.
          * </pre>
          *
          * <code>map&lt;string, string&gt; str_val = 12;</code>
          */
-        public Builder putStrVal(
-            java.lang.String key,
-            java.lang.String value) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          if (value == null) { throw new java.lang.NullPointerException(); }
-          internalGetMutableStrVal().getMutableMap()
-              .put(key, value);
+        public Builder putStrVal(java.lang.String key, java.lang.String value) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+          if (value == null) {
+            throw new java.lang.NullPointerException();
+          }
+          internalGetMutableStrVal().getMutableMap().put(key, value);
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Used for enum or string values.
          * </pre>
          *
          * <code>map&lt;string, string&gt; str_val = 12;</code>
          */
-
-        public Builder putAllStrVal(
-            java.util.Map<java.lang.String, java.lang.String> values) {
-          internalGetMutableStrVal().getMutableMap()
-              .putAll(values);
+        public Builder putAllStrVal(java.util.Map<java.lang.String, java.lang.String> values) {
+          internalGetMutableStrVal().getMutableMap().putAll(values);
           return this;
         }
 
         private java.lang.Object measurementMethod_ = "";
+
         /**
          * <code>string measurement_method = 3;</code>
+         *
          * @return The measurementMethod.
          */
         public java.lang.String getMeasurementMethod() {
           java.lang.Object ref = measurementMethod_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             measurementMethod_ = s;
             return s;
@@ -3896,75 +4165,80 @@ public final class ChartStoreOuterClass {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string measurement_method = 3;</code>
+         *
          * @return The bytes for measurementMethod.
          */
-        public com.google.protobuf.ByteString
-            getMeasurementMethodBytes() {
+        public com.google.protobuf.ByteString getMeasurementMethodBytes() {
           java.lang.Object ref = measurementMethod_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
             measurementMethod_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string measurement_method = 3;</code>
+         *
          * @param value The measurementMethod to set.
          * @return This builder for chaining.
          */
-        public Builder setMeasurementMethod(
-            java.lang.String value) {
+        public Builder setMeasurementMethod(java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  
+            throw new NullPointerException();
+          }
+
           measurementMethod_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>string measurement_method = 3;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearMeasurementMethod() {
-          
+
           measurementMethod_ = getDefaultInstance().getMeasurementMethod();
           onChanged();
           return this;
         }
+
         /**
          * <code>string measurement_method = 3;</code>
+         *
          * @param value The bytes for measurementMethod to set.
          * @return This builder for chaining.
          */
-        public Builder setMeasurementMethodBytes(
-            com.google.protobuf.ByteString value) {
+        public Builder setMeasurementMethodBytes(com.google.protobuf.ByteString value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
+            throw new NullPointerException();
+          }
+          checkByteStringIsUtf8(value);
+
           measurementMethod_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object observationPeriod_ = "";
+
         /**
          * <code>string observation_period = 4;</code>
+         *
          * @return The observationPeriod.
          */
         public java.lang.String getObservationPeriod() {
           java.lang.Object ref = observationPeriod_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             observationPeriod_ = s;
             return s;
@@ -3972,75 +4246,80 @@ public final class ChartStoreOuterClass {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string observation_period = 4;</code>
+         *
          * @return The bytes for observationPeriod.
          */
-        public com.google.protobuf.ByteString
-            getObservationPeriodBytes() {
+        public com.google.protobuf.ByteString getObservationPeriodBytes() {
           java.lang.Object ref = observationPeriod_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
             observationPeriod_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string observation_period = 4;</code>
+         *
          * @param value The observationPeriod to set.
          * @return This builder for chaining.
          */
-        public Builder setObservationPeriod(
-            java.lang.String value) {
+        public Builder setObservationPeriod(java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  
+            throw new NullPointerException();
+          }
+
           observationPeriod_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>string observation_period = 4;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearObservationPeriod() {
-          
+
           observationPeriod_ = getDefaultInstance().getObservationPeriod();
           onChanged();
           return this;
         }
+
         /**
          * <code>string observation_period = 4;</code>
+         *
          * @param value The bytes for observationPeriod to set.
          * @return This builder for chaining.
          */
-        public Builder setObservationPeriodBytes(
-            com.google.protobuf.ByteString value) {
+        public Builder setObservationPeriodBytes(com.google.protobuf.ByteString value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
+            throw new NullPointerException();
+          }
+          checkByteStringIsUtf8(value);
+
           observationPeriod_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object importName_ = "";
+
         /**
          * <code>string import_name = 5;</code>
+         *
          * @return The importName.
          */
         public java.lang.String getImportName() {
           java.lang.Object ref = importName_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             importName_ = s;
             return s;
@@ -4048,75 +4327,80 @@ public final class ChartStoreOuterClass {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string import_name = 5;</code>
+         *
          * @return The bytes for importName.
          */
-        public com.google.protobuf.ByteString
-            getImportNameBytes() {
+        public com.google.protobuf.ByteString getImportNameBytes() {
           java.lang.Object ref = importName_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
             importName_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string import_name = 5;</code>
+         *
          * @param value The importName to set.
          * @return This builder for chaining.
          */
-        public Builder setImportName(
-            java.lang.String value) {
+        public Builder setImportName(java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  
+            throw new NullPointerException();
+          }
+
           importName_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>string import_name = 5;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearImportName() {
-          
+
           importName_ = getDefaultInstance().getImportName();
           onChanged();
           return this;
         }
+
         /**
          * <code>string import_name = 5;</code>
+         *
          * @param value The bytes for importName to set.
          * @return This builder for chaining.
          */
-        public Builder setImportNameBytes(
-            com.google.protobuf.ByteString value) {
+        public Builder setImportNameBytes(com.google.protobuf.ByteString value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
+            throw new NullPointerException();
+          }
+          checkByteStringIsUtf8(value);
+
           importName_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object provenanceDomain_ = "";
+
         /**
          * <code>string provenance_domain = 6;</code>
+         *
          * @return The provenanceDomain.
          */
         public java.lang.String getProvenanceDomain() {
           java.lang.Object ref = provenanceDomain_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             provenanceDomain_ = s;
             return s;
@@ -4124,75 +4408,80 @@ public final class ChartStoreOuterClass {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string provenance_domain = 6;</code>
+         *
          * @return The bytes for provenanceDomain.
          */
-        public com.google.protobuf.ByteString
-            getProvenanceDomainBytes() {
+        public com.google.protobuf.ByteString getProvenanceDomainBytes() {
           java.lang.Object ref = provenanceDomain_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
             provenanceDomain_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string provenance_domain = 6;</code>
+         *
          * @param value The provenanceDomain to set.
          * @return This builder for chaining.
          */
-        public Builder setProvenanceDomain(
-            java.lang.String value) {
+        public Builder setProvenanceDomain(java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  
+            throw new NullPointerException();
+          }
+
           provenanceDomain_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>string provenance_domain = 6;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearProvenanceDomain() {
-          
+
           provenanceDomain_ = getDefaultInstance().getProvenanceDomain();
           onChanged();
           return this;
         }
+
         /**
          * <code>string provenance_domain = 6;</code>
+         *
          * @param value The bytes for provenanceDomain to set.
          * @return This builder for chaining.
          */
-        public Builder setProvenanceDomainBytes(
-            com.google.protobuf.ByteString value) {
+        public Builder setProvenanceDomainBytes(com.google.protobuf.ByteString value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
+            throw new NullPointerException();
+          }
+          checkByteStringIsUtf8(value);
+
           provenanceDomain_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object scalingFactor_ = "";
+
         /**
          * <code>string scaling_factor = 7;</code>
+         *
          * @return The scalingFactor.
          */
         public java.lang.String getScalingFactor() {
           java.lang.Object ref = scalingFactor_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             scalingFactor_ = s;
             return s;
@@ -4200,75 +4489,80 @@ public final class ChartStoreOuterClass {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string scaling_factor = 7;</code>
+         *
          * @return The bytes for scalingFactor.
          */
-        public com.google.protobuf.ByteString
-            getScalingFactorBytes() {
+        public com.google.protobuf.ByteString getScalingFactorBytes() {
           java.lang.Object ref = scalingFactor_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
             scalingFactor_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string scaling_factor = 7;</code>
+         *
          * @param value The scalingFactor to set.
          * @return This builder for chaining.
          */
-        public Builder setScalingFactor(
-            java.lang.String value) {
+        public Builder setScalingFactor(java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  
+            throw new NullPointerException();
+          }
+
           scalingFactor_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>string scaling_factor = 7;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearScalingFactor() {
-          
+
           scalingFactor_ = getDefaultInstance().getScalingFactor();
           onChanged();
           return this;
         }
+
         /**
          * <code>string scaling_factor = 7;</code>
+         *
          * @param value The bytes for scalingFactor to set.
          * @return This builder for chaining.
          */
-        public Builder setScalingFactorBytes(
-            com.google.protobuf.ByteString value) {
+        public Builder setScalingFactorBytes(com.google.protobuf.ByteString value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
+            throw new NullPointerException();
+          }
+          checkByteStringIsUtf8(value);
+
           scalingFactor_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object unit_ = "";
+
         /**
          * <code>string unit = 8;</code>
+         *
          * @return The unit.
          */
         public java.lang.String getUnit() {
           java.lang.Object ref = unit_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             unit_ = s;
             return s;
@@ -4276,106 +4570,117 @@ public final class ChartStoreOuterClass {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string unit = 8;</code>
+         *
          * @return The bytes for unit.
          */
-        public com.google.protobuf.ByteString
-            getUnitBytes() {
+        public com.google.protobuf.ByteString getUnitBytes() {
           java.lang.Object ref = unit_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
             unit_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string unit = 8;</code>
+         *
          * @param value The unit to set.
          * @return This builder for chaining.
          */
-        public Builder setUnit(
-            java.lang.String value) {
+        public Builder setUnit(java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  
-          unit_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string unit = 8;</code>
-         * @return This builder for chaining.
-         */
-        public Builder clearUnit() {
-          
-          unit_ = getDefaultInstance().getUnit();
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string unit = 8;</code>
-         * @param value The bytes for unit to set.
-         * @return This builder for chaining.
-         */
-        public Builder setUnitBytes(
-            com.google.protobuf.ByteString value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
+            throw new NullPointerException();
+          }
+
           unit_ = value;
           onChanged();
           return this;
         }
 
-        private boolean isDcAggregate_ ;
+        /**
+         * <code>string unit = 8;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearUnit() {
+
+          unit_ = getDefaultInstance().getUnit();
+          onChanged();
+          return this;
+        }
+
+        /**
+         * <code>string unit = 8;</code>
+         *
+         * @param value The bytes for unit to set.
+         * @return This builder for chaining.
+         */
+        public Builder setUnitBytes(com.google.protobuf.ByteString value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          checkByteStringIsUtf8(value);
+
+          unit_ = value;
+          onChanged();
+          return this;
+        }
+
+        private boolean isDcAggregate_;
+
         /**
          * <code>bool is_dc_aggregate = 9;</code>
+         *
          * @return The isDcAggregate.
          */
         @java.lang.Override
         public boolean getIsDcAggregate() {
           return isDcAggregate_;
         }
+
         /**
          * <code>bool is_dc_aggregate = 9;</code>
+         *
          * @param value The isDcAggregate to set.
          * @return This builder for chaining.
          */
         public Builder setIsDcAggregate(boolean value) {
-          
+
           isDcAggregate_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>bool is_dc_aggregate = 9;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearIsDcAggregate() {
-          
+
           isDcAggregate_ = false;
           onChanged();
           return this;
         }
 
         private java.lang.Object provenanceUrl_ = "";
+
         /**
          * <code>string provenance_url = 10;</code>
+         *
          * @return The provenanceUrl.
          */
         public java.lang.String getProvenanceUrl() {
           java.lang.Object ref = provenanceUrl_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             provenanceUrl_ = s;
             return s;
@@ -4383,81 +4688,88 @@ public final class ChartStoreOuterClass {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string provenance_url = 10;</code>
+         *
          * @return The bytes for provenanceUrl.
          */
-        public com.google.protobuf.ByteString
-            getProvenanceUrlBytes() {
+        public com.google.protobuf.ByteString getProvenanceUrlBytes() {
           java.lang.Object ref = provenanceUrl_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
             provenanceUrl_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string provenance_url = 10;</code>
+         *
          * @param value The provenanceUrl to set.
          * @return This builder for chaining.
          */
-        public Builder setProvenanceUrl(
-            java.lang.String value) {
+        public Builder setProvenanceUrl(java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  
-          provenanceUrl_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string provenance_url = 10;</code>
-         * @return This builder for chaining.
-         */
-        public Builder clearProvenanceUrl() {
-          
-          provenanceUrl_ = getDefaultInstance().getProvenanceUrl();
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string provenance_url = 10;</code>
-         * @param value The bytes for provenanceUrl to set.
-         * @return This builder for chaining.
-         */
-        public Builder setProvenanceUrlBytes(
-            com.google.protobuf.ByteString value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
+            throw new NullPointerException();
+          }
+
           provenanceUrl_ = value;
           onChanged();
           return this;
         }
 
-        private com.google.protobuf.MapField<
-            java.lang.String, java.lang.String> placeToLatestDate_;
+        /**
+         * <code>string provenance_url = 10;</code>
+         *
+         * @return This builder for chaining.
+         */
+        public Builder clearProvenanceUrl() {
+
+          provenanceUrl_ = getDefaultInstance().getProvenanceUrl();
+          onChanged();
+          return this;
+        }
+
+        /**
+         * <code>string provenance_url = 10;</code>
+         *
+         * @param value The bytes for provenanceUrl to set.
+         * @return This builder for chaining.
+         */
+        public Builder setProvenanceUrlBytes(com.google.protobuf.ByteString value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          checkByteStringIsUtf8(value);
+
+          provenanceUrl_ = value;
+          onChanged();
+          return this;
+        }
+
+        private com.google.protobuf.MapField<java.lang.String, java.lang.String> placeToLatestDate_;
+
         private com.google.protobuf.MapField<java.lang.String, java.lang.String>
-        internalGetPlaceToLatestDate() {
+            internalGetPlaceToLatestDate() {
           if (placeToLatestDate_ == null) {
             return com.google.protobuf.MapField.emptyMapField(
                 PlaceToLatestDateDefaultEntryHolder.defaultEntry);
           }
           return placeToLatestDate_;
         }
+
         private com.google.protobuf.MapField<java.lang.String, java.lang.String>
-        internalGetMutablePlaceToLatestDate() {
-          onChanged();;
+            internalGetMutablePlaceToLatestDate() {
+          onChanged();
+          ;
           if (placeToLatestDate_ == null) {
-            placeToLatestDate_ = com.google.protobuf.MapField.newMapField(
-                PlaceToLatestDateDefaultEntryHolder.defaultEntry);
+            placeToLatestDate_ =
+                com.google.protobuf.MapField.newMapField(
+                    PlaceToLatestDateDefaultEntryHolder.defaultEntry);
           }
           if (!placeToLatestDate_.isMutable()) {
             placeToLatestDate_ = placeToLatestDate_.copy();
@@ -4468,29 +4780,34 @@ public final class ChartStoreOuterClass {
         public int getPlaceToLatestDateCount() {
           return internalGetPlaceToLatestDate().getMap().size();
         }
+
         /**
+         *
+         *
          * <pre>
          * Only used for latest date obs collection.
          * </pre>
          *
          * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
          */
-
         @java.lang.Override
-        public boolean containsPlaceToLatestDate(
-            java.lang.String key) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
+        public boolean containsPlaceToLatestDate(java.lang.String key) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
           return internalGetPlaceToLatestDate().getMap().containsKey(key);
         }
-        /**
-         * Use {@link #getPlaceToLatestDateMap()} instead.
-         */
+
+        /** Use {@link #getPlaceToLatestDateMap()} instead. */
         @java.lang.Override
         @java.lang.Deprecated
         public java.util.Map<java.lang.String, java.lang.String> getPlaceToLatestDate() {
           return getPlaceToLatestDateMap();
         }
+
         /**
+         *
+         *
          * <pre>
          * Only used for latest date obs collection.
          * </pre>
@@ -4498,11 +4815,13 @@ public final class ChartStoreOuterClass {
          * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
          */
         @java.lang.Override
-
         public java.util.Map<java.lang.String, java.lang.String> getPlaceToLatestDateMap() {
           return internalGetPlaceToLatestDate().getMap();
         }
+
         /**
+         *
+         *
          * <pre>
          * Only used for latest date obs collection.
          * </pre>
@@ -4510,16 +4829,19 @@ public final class ChartStoreOuterClass {
          * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
          */
         @java.lang.Override
-
         public java.lang.String getPlaceToLatestDateOrDefault(
-            java.lang.String key,
-            java.lang.String defaultValue) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
+            java.lang.String key, java.lang.String defaultValue) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
           java.util.Map<java.lang.String, java.lang.String> map =
               internalGetPlaceToLatestDate().getMap();
           return map.containsKey(key) ? map.get(key) : defaultValue;
         }
+
         /**
+         *
+         *
          * <pre>
          * Only used for latest date obs collection.
          * </pre>
@@ -4527,10 +4849,10 @@ public final class ChartStoreOuterClass {
          * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
          */
         @java.lang.Override
-
-        public java.lang.String getPlaceToLatestDateOrThrow(
-            java.lang.String key) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
+        public java.lang.String getPlaceToLatestDateOrThrow(java.lang.String key) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
           java.util.Map<java.lang.String, java.lang.String> map =
               internalGetPlaceToLatestDate().getMap();
           if (!map.containsKey(key)) {
@@ -4540,102 +4862,118 @@ public final class ChartStoreOuterClass {
         }
 
         public Builder clearPlaceToLatestDate() {
-          internalGetMutablePlaceToLatestDate().getMutableMap()
-              .clear();
+          internalGetMutablePlaceToLatestDate().getMutableMap().clear();
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Only used for latest date obs collection.
          * </pre>
          *
          * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
          */
-
-        public Builder removePlaceToLatestDate(
-            java.lang.String key) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          internalGetMutablePlaceToLatestDate().getMutableMap()
-              .remove(key);
+        public Builder removePlaceToLatestDate(java.lang.String key) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+          internalGetMutablePlaceToLatestDate().getMutableMap().remove(key);
           return this;
         }
-        /**
-         * Use alternate mutation accessors instead.
-         */
+
+        /** Use alternate mutation accessors instead. */
         @java.lang.Deprecated
-        public java.util.Map<java.lang.String, java.lang.String>
-        getMutablePlaceToLatestDate() {
+        public java.util.Map<java.lang.String, java.lang.String> getMutablePlaceToLatestDate() {
           return internalGetMutablePlaceToLatestDate().getMutableMap();
         }
+
         /**
+         *
+         *
          * <pre>
          * Only used for latest date obs collection.
          * </pre>
          *
          * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
          */
-        public Builder putPlaceToLatestDate(
-            java.lang.String key,
-            java.lang.String value) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          if (value == null) { throw new java.lang.NullPointerException(); }
-          internalGetMutablePlaceToLatestDate().getMutableMap()
-              .put(key, value);
+        public Builder putPlaceToLatestDate(java.lang.String key, java.lang.String value) {
+          if (key == null) {
+            throw new java.lang.NullPointerException();
+          }
+          if (value == null) {
+            throw new java.lang.NullPointerException();
+          }
+          internalGetMutablePlaceToLatestDate().getMutableMap().put(key, value);
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Only used for latest date obs collection.
          * </pre>
          *
          * <code>map&lt;string, string&gt; place_to_latest_date = 11;</code>
          */
-
         public Builder putAllPlaceToLatestDate(
             java.util.Map<java.lang.String, java.lang.String> values) {
-          internalGetMutablePlaceToLatestDate().getMutableMap()
-              .putAll(values);
+          internalGetMutablePlaceToLatestDate().getMutableMap().putAll(values);
           return this;
         }
 
-        private boolean isDcImputed_ ;
+        private boolean isDcImputed_;
+
         /**
+         *
+         *
          * <pre>
          * Whether this source series is imputed by Data Commons.
          * </pre>
          *
          * <code>bool is_dc_imputed = 13;</code>
+         *
          * @return The isDcImputed.
          */
         @java.lang.Override
         public boolean getIsDcImputed() {
           return isDcImputed_;
         }
+
         /**
+         *
+         *
          * <pre>
          * Whether this source series is imputed by Data Commons.
          * </pre>
          *
          * <code>bool is_dc_imputed = 13;</code>
+         *
          * @param value The isDcImputed to set.
          * @return This builder for chaining.
          */
         public Builder setIsDcImputed(boolean value) {
-          
+
           isDcImputed_ = value;
           onChanged();
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Whether this source series is imputed by Data Commons.
          * </pre>
          *
          * <code>bool is_dc_imputed = 13;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearIsDcImputed() {
-          
+
           isDcImputed_ = false;
           onChanged();
           return this;
@@ -4643,36 +4981,52 @@ public final class ChartStoreOuterClass {
 
         private org.datacommons.proto.ChartStoreOuterClass.Facet facet_;
         private com.google.protobuf.SingleFieldBuilderV3<
-            org.datacommons.proto.ChartStoreOuterClass.Facet, org.datacommons.proto.ChartStoreOuterClass.Facet.Builder, org.datacommons.proto.ChartStoreOuterClass.FacetOrBuilder> facetBuilder_;
+                org.datacommons.proto.ChartStoreOuterClass.Facet,
+                org.datacommons.proto.ChartStoreOuterClass.Facet.Builder,
+                org.datacommons.proto.ChartStoreOuterClass.FacetOrBuilder>
+            facetBuilder_;
+
         /**
+         *
+         *
          * <pre>
          * Facet for this source series.
          * TODO: Migrate other fields to use Facet.
          * </pre>
          *
          * <code>.org.datacommons.proto.Facet facet = 14;</code>
+         *
          * @return Whether the facet field is set.
          */
         public boolean hasFacet() {
           return facetBuilder_ != null || facet_ != null;
         }
+
         /**
+         *
+         *
          * <pre>
          * Facet for this source series.
          * TODO: Migrate other fields to use Facet.
          * </pre>
          *
          * <code>.org.datacommons.proto.Facet facet = 14;</code>
+         *
          * @return The facet.
          */
         public org.datacommons.proto.ChartStoreOuterClass.Facet getFacet() {
           if (facetBuilder_ == null) {
-            return facet_ == null ? org.datacommons.proto.ChartStoreOuterClass.Facet.getDefaultInstance() : facet_;
+            return facet_ == null
+                ? org.datacommons.proto.ChartStoreOuterClass.Facet.getDefaultInstance()
+                : facet_;
           } else {
             return facetBuilder_.getMessage();
           }
         }
+
         /**
+         *
+         *
          * <pre>
          * Facet for this source series.
          * TODO: Migrate other fields to use Facet.
@@ -4693,7 +5047,10 @@ public final class ChartStoreOuterClass {
 
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Facet for this source series.
          * TODO: Migrate other fields to use Facet.
@@ -4712,7 +5069,10 @@ public final class ChartStoreOuterClass {
 
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Facet for this source series.
          * TODO: Migrate other fields to use Facet.
@@ -4724,7 +5084,9 @@ public final class ChartStoreOuterClass {
           if (facetBuilder_ == null) {
             if (facet_ != null) {
               facet_ =
-                org.datacommons.proto.ChartStoreOuterClass.Facet.newBuilder(facet_).mergeFrom(value).buildPartial();
+                  org.datacommons.proto.ChartStoreOuterClass.Facet.newBuilder(facet_)
+                      .mergeFrom(value)
+                      .buildPartial();
             } else {
               facet_ = value;
             }
@@ -4735,7 +5097,10 @@ public final class ChartStoreOuterClass {
 
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Facet for this source series.
          * TODO: Migrate other fields to use Facet.
@@ -4754,7 +5119,10 @@ public final class ChartStoreOuterClass {
 
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Facet for this source series.
          * TODO: Migrate other fields to use Facet.
@@ -4763,11 +5131,14 @@ public final class ChartStoreOuterClass {
          * <code>.org.datacommons.proto.Facet facet = 14;</code>
          */
         public org.datacommons.proto.ChartStoreOuterClass.Facet.Builder getFacetBuilder() {
-          
+
           onChanged();
           return getFacetFieldBuilder().getBuilder();
         }
+
         /**
+         *
+         *
          * <pre>
          * Facet for this source series.
          * TODO: Migrate other fields to use Facet.
@@ -4779,11 +5150,15 @@ public final class ChartStoreOuterClass {
           if (facetBuilder_ != null) {
             return facetBuilder_.getMessageOrBuilder();
           } else {
-            return facet_ == null ?
-                org.datacommons.proto.ChartStoreOuterClass.Facet.getDefaultInstance() : facet_;
+            return facet_ == null
+                ? org.datacommons.proto.ChartStoreOuterClass.Facet.getDefaultInstance()
+                : facet_;
           }
         }
+
         /**
+         *
+         *
          * <pre>
          * Facet for this source series.
          * TODO: Migrate other fields to use Facet.
@@ -4792,18 +5167,22 @@ public final class ChartStoreOuterClass {
          * <code>.org.datacommons.proto.Facet facet = 14;</code>
          */
         private com.google.protobuf.SingleFieldBuilderV3<
-            org.datacommons.proto.ChartStoreOuterClass.Facet, org.datacommons.proto.ChartStoreOuterClass.Facet.Builder, org.datacommons.proto.ChartStoreOuterClass.FacetOrBuilder> 
+                org.datacommons.proto.ChartStoreOuterClass.Facet,
+                org.datacommons.proto.ChartStoreOuterClass.Facet.Builder,
+                org.datacommons.proto.ChartStoreOuterClass.FacetOrBuilder>
             getFacetFieldBuilder() {
           if (facetBuilder_ == null) {
-            facetBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-                org.datacommons.proto.ChartStoreOuterClass.Facet, org.datacommons.proto.ChartStoreOuterClass.Facet.Builder, org.datacommons.proto.ChartStoreOuterClass.FacetOrBuilder>(
-                    getFacet(),
-                    getParentForChildren(),
-                    isClean());
+            facetBuilder_ =
+                new com.google.protobuf.SingleFieldBuilderV3<
+                    org.datacommons.proto.ChartStoreOuterClass.Facet,
+                    org.datacommons.proto.ChartStoreOuterClass.Facet.Builder,
+                    org.datacommons.proto.ChartStoreOuterClass.FacetOrBuilder>(
+                    getFacet(), getParentForChildren(), isClean());
             facet_ = null;
           }
           return facetBuilder_;
         }
+
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -4816,30 +5195,33 @@ public final class ChartStoreOuterClass {
           return super.mergeUnknownFields(unknownFields);
         }
 
-
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ObsTimeSeries.SourceSeries)
       }
 
       // @@protoc_insertion_point(class_scope:org.datacommons.proto.ObsTimeSeries.SourceSeries)
-      private static final org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries DEFAULT_INSTANCE;
+      private static final org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+          DEFAULT_INSTANCE;
+
       static {
-        DEFAULT_INSTANCE = new org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries();
+        DEFAULT_INSTANCE =
+            new org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries();
       }
 
-      public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getDefaultInstance() {
+      public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+          getDefaultInstance() {
         return DEFAULT_INSTANCE;
       }
 
-      private static final com.google.protobuf.Parser<SourceSeries>
-          PARSER = new com.google.protobuf.AbstractParser<SourceSeries>() {
-        @java.lang.Override
-        public SourceSeries parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SourceSeries(input, extensionRegistry);
-        }
-      };
+      private static final com.google.protobuf.Parser<SourceSeries> PARSER =
+          new com.google.protobuf.AbstractParser<SourceSeries>() {
+            @java.lang.Override
+            public SourceSeries parsePartialFrom(
+                com.google.protobuf.CodedInputStream input,
+                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+              return new SourceSeries(input, extensionRegistry);
+            }
+          };
 
       public static com.google.protobuf.Parser<SourceSeries> parser() {
         return PARSER;
@@ -4851,16 +5233,18 @@ public final class ChartStoreOuterClass {
       }
 
       @java.lang.Override
-      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getDefaultInstanceForType() {
+      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+          getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
-
     }
 
     public static final int PLACE_NAME_FIELD_NUMBER = 3;
     private volatile java.lang.Object placeName_;
+
     /**
      * <code>string place_name = 3;</code>
+     *
      * @return The placeName.
      */
     @java.lang.Override
@@ -4869,25 +5253,24 @@ public final class ChartStoreOuterClass {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         placeName_ = s;
         return s;
       }
     }
+
     /**
      * <code>string place_name = 3;</code>
+     *
      * @return The bytes for placeName.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getPlaceNameBytes() {
+    public com.google.protobuf.ByteString getPlaceNameBytes() {
       java.lang.Object ref = placeName_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         placeName_ = b;
         return b;
       } else {
@@ -4897,12 +5280,16 @@ public final class ChartStoreOuterClass {
 
     public static final int PLACE_DCID_FIELD_NUMBER = 5;
     private volatile java.lang.Object placeDcid_;
+
     /**
+     *
+     *
      * <pre>
      * Only set if the key uses mid.
      * </pre>
      *
      * <code>string place_dcid = 5;</code>
+     *
      * @return The placeDcid.
      */
     @java.lang.Override
@@ -4911,29 +5298,30 @@ public final class ChartStoreOuterClass {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         placeDcid_ = s;
         return s;
       }
     }
+
     /**
+     *
+     *
      * <pre>
      * Only set if the key uses mid.
      * </pre>
      *
      * <code>string place_dcid = 5;</code>
+     *
      * @return The bytes for placeDcid.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getPlaceDcidBytes() {
+    public com.google.protobuf.ByteString getPlaceDcidBytes() {
       java.lang.Object ref = placeDcid_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         placeDcid_ = b;
         return b;
       } else {
@@ -4942,22 +5330,29 @@ public final class ChartStoreOuterClass {
     }
 
     public static final int SOURCE_SERIES_FIELD_NUMBER = 6;
-    private java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries> sourceSeries_;
+    private java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>
+        sourceSeries_;
+
     /**
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
      */
     @java.lang.Override
-    public java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries> getSourceSeriesList() {
+    public java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>
+        getSourceSeriesList() {
       return sourceSeries_;
     }
+
     /**
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder> 
+    public java.util.List<
+            ? extends
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>
         getSourceSeriesOrBuilderList() {
       return sourceSeries_;
     }
+
     /**
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
      */
@@ -4965,23 +5360,27 @@ public final class ChartStoreOuterClass {
     public int getSourceSeriesCount() {
       return sourceSeries_.size();
     }
+
     /**
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
      */
     @java.lang.Override
-    public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getSourceSeries(int index) {
-      return sourceSeries_.get(index);
-    }
-    /**
-     * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
-     */
-    @java.lang.Override
-    public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder getSourceSeriesOrBuilder(
+    public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getSourceSeries(
         int index) {
       return sourceSeries_.get(index);
     }
 
+    /**
+     * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
+     */
+    @java.lang.Override
+    public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder
+        getSourceSeriesOrBuilder(int index) {
+      return sourceSeries_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -4993,8 +5392,7 @@ public final class ChartStoreOuterClass {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       if (!getPlaceNameBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, placeName_);
       }
@@ -5020,8 +5418,7 @@ public final class ChartStoreOuterClass {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, placeDcid_);
       }
       for (int i = 0; i < sourceSeries_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(6, sourceSeries_.get(i));
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(6, sourceSeries_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5031,19 +5428,17 @@ public final class ChartStoreOuterClass {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries other = (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) obj;
+      org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries other =
+          (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) obj;
 
-      if (!getPlaceName()
-          .equals(other.getPlaceName())) return false;
-      if (!getPlaceDcid()
-          .equals(other.getPlaceDcid())) return false;
-      if (!getSourceSeriesList()
-          .equals(other.getSourceSeriesList())) return false;
+      if (!getPlaceName().equals(other.getPlaceName())) return false;
+      if (!getPlaceDcid().equals(other.getPlaceDcid())) return false;
+      if (!getSourceSeriesList().equals(other.getSourceSeriesList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -5069,87 +5464,94 @@ public final class ChartStoreOuterClass {
     }
 
     public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
-    public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseDelimitedFrom(java.io.InputStream input)
+
+    public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries prototype) {
+
+    public static Builder newBuilder(
+        org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -5158,7 +5560,10 @@ public final class ChartStoreOuterClass {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
+     *
+     *
      * <pre>
      * Observation time series for a given place, measured property, stat type,
      * pop type, and an optional list of pop PVs. Used for Common Knowledge in
@@ -5167,21 +5572,24 @@ public final class ChartStoreOuterClass {
      *
      * Protobuf type {@code org.datacommons.proto.ObsTimeSeries}
      */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ObsTimeSeries)
         org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeriesOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsTimeSeries_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ObsTimeSeries_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsTimeSeries_fieldAccessorTable
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ObsTimeSeries_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.class, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder.class);
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.class,
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder.class);
       }
 
       // Construct using org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.newBuilder()
@@ -5189,17 +5597,17 @@ public final class ChartStoreOuterClass {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getSourceSeriesFieldBuilder();
         }
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -5217,9 +5625,9 @@ public final class ChartStoreOuterClass {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsTimeSeries_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ObsTimeSeries_descriptor;
       }
 
       @java.lang.Override
@@ -5238,7 +5646,8 @@ public final class ChartStoreOuterClass {
 
       @java.lang.Override
       public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries buildPartial() {
-        org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries result = new org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries(this);
+        org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries result =
+            new org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries(this);
         int from_bitField0_ = bitField0_;
         result.placeName_ = placeName_;
         result.placeDcid_ = placeDcid_;
@@ -5259,38 +5668,41 @@ public final class ChartStoreOuterClass {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) {
-          return mergeFrom((org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries)other);
+          return mergeFrom((org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -5298,7 +5710,8 @@ public final class ChartStoreOuterClass {
       }
 
       public Builder mergeFrom(org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries other) {
-        if (other == org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.getDefaultInstance()) return this;
+        if (other == org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.getDefaultInstance())
+          return this;
         if (!other.getPlaceName().isEmpty()) {
           placeName_ = other.placeName_;
           onChanged();
@@ -5325,9 +5738,10 @@ public final class ChartStoreOuterClass {
               sourceSeriesBuilder_ = null;
               sourceSeries_ = other.sourceSeries_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              sourceSeriesBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getSourceSeriesFieldBuilder() : null;
+              sourceSeriesBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getSourceSeriesFieldBuilder()
+                      : null;
             } else {
               sourceSeriesBuilder_.addAllMessages(other.sourceSeries_);
             }
@@ -5352,7 +5766,8 @@ public final class ChartStoreOuterClass {
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) e.getUnfinishedMessage();
+          parsedMessage =
+              (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -5361,18 +5776,20 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       private int bitField0_;
 
       private java.lang.Object placeName_ = "";
+
       /**
        * <code>string place_name = 3;</code>
+       *
        * @return The placeName.
        */
       public java.lang.String getPlaceName() {
         java.lang.Object ref = placeName_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           placeName_ = s;
           return s;
@@ -5380,79 +5797,86 @@ public final class ChartStoreOuterClass {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string place_name = 3;</code>
+       *
        * @return The bytes for placeName.
        */
-      public com.google.protobuf.ByteString
-          getPlaceNameBytes() {
+      public com.google.protobuf.ByteString getPlaceNameBytes() {
         java.lang.Object ref = placeName_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           placeName_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string place_name = 3;</code>
+       *
        * @param value The placeName to set.
        * @return This builder for chaining.
        */
-      public Builder setPlaceName(
-          java.lang.String value) {
+      public Builder setPlaceName(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         placeName_ = value;
         onChanged();
         return this;
       }
+
       /**
        * <code>string place_name = 3;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearPlaceName() {
-        
+
         placeName_ = getDefaultInstance().getPlaceName();
         onChanged();
         return this;
       }
+
       /**
        * <code>string place_name = 3;</code>
+       *
        * @param value The bytes for placeName to set.
        * @return This builder for chaining.
        */
-      public Builder setPlaceNameBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setPlaceNameBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         placeName_ = value;
         onChanged();
         return this;
       }
 
       private java.lang.Object placeDcid_ = "";
+
       /**
+       *
+       *
        * <pre>
        * Only set if the key uses mid.
        * </pre>
        *
        * <code>string place_dcid = 5;</code>
+       *
        * @return The placeDcid.
        */
       public java.lang.String getPlaceDcid() {
         java.lang.Object ref = placeDcid_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           placeDcid_ = s;
           return s;
@@ -5460,103 +5884,124 @@ public final class ChartStoreOuterClass {
           return (java.lang.String) ref;
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * Only set if the key uses mid.
        * </pre>
        *
        * <code>string place_dcid = 5;</code>
+       *
        * @return The bytes for placeDcid.
        */
-      public com.google.protobuf.ByteString
-          getPlaceDcidBytes() {
+      public com.google.protobuf.ByteString getPlaceDcidBytes() {
         java.lang.Object ref = placeDcid_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           placeDcid_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * Only set if the key uses mid.
        * </pre>
        *
        * <code>string place_dcid = 5;</code>
+       *
        * @param value The placeDcid to set.
        * @return This builder for chaining.
        */
-      public Builder setPlaceDcid(
-          java.lang.String value) {
+      public Builder setPlaceDcid(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         placeDcid_ = value;
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * Only set if the key uses mid.
        * </pre>
        *
        * <code>string place_dcid = 5;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearPlaceDcid() {
-        
+
         placeDcid_ = getDefaultInstance().getPlaceDcid();
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * Only set if the key uses mid.
        * </pre>
        *
        * <code>string place_dcid = 5;</code>
+       *
        * @param value The bytes for placeDcid to set.
        * @return This builder for chaining.
        */
-      public Builder setPlaceDcidBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setPlaceDcidBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         placeDcid_ = value;
         onChanged();
         return this;
       }
 
-      private java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries> sourceSeries_ =
-        java.util.Collections.emptyList();
+      private java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>
+          sourceSeries_ = java.util.Collections.emptyList();
+
       private void ensureSourceSeriesIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
-          sourceSeries_ = new java.util.ArrayList<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>(sourceSeries_);
+          sourceSeries_ =
+              new java.util.ArrayList<
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>(
+                  sourceSeries_);
           bitField0_ |= 0x00000001;
-         }
+        }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder> sourceSeriesBuilder_;
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries,
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder,
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>
+          sourceSeriesBuilder_;
 
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
-      public java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries> getSourceSeriesList() {
+      public java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>
+          getSourceSeriesList() {
         if (sourceSeriesBuilder_ == null) {
           return java.util.Collections.unmodifiableList(sourceSeries_);
         } else {
           return sourceSeriesBuilder_.getMessageList();
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
@@ -5567,16 +6012,19 @@ public final class ChartStoreOuterClass {
           return sourceSeriesBuilder_.getCount();
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
-      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getSourceSeries(int index) {
+      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getSourceSeries(
+          int index) {
         if (sourceSeriesBuilder_ == null) {
           return sourceSeries_.get(index);
         } else {
           return sourceSeriesBuilder_.getMessage(index);
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
@@ -5594,11 +6042,14 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
       public Builder setSourceSeries(
-          int index, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder builderForValue) {
+          int index,
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+              builderForValue) {
         if (sourceSeriesBuilder_ == null) {
           ensureSourceSeriesIsMutable();
           sourceSeries_.set(index, builderForValue.build());
@@ -5608,10 +6059,12 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
-      public Builder addSourceSeries(org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries value) {
+      public Builder addSourceSeries(
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries value) {
         if (sourceSeriesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -5624,6 +6077,7 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
@@ -5641,11 +6095,13 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
       public Builder addSourceSeries(
-          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder builderForValue) {
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+              builderForValue) {
         if (sourceSeriesBuilder_ == null) {
           ensureSourceSeriesIsMutable();
           sourceSeries_.add(builderForValue.build());
@@ -5655,11 +6111,14 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
       public Builder addSourceSeries(
-          int index, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder builderForValue) {
+          int index,
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+              builderForValue) {
         if (sourceSeriesBuilder_ == null) {
           ensureSourceSeriesIsMutable();
           sourceSeries_.add(index, builderForValue.build());
@@ -5669,21 +6128,24 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
       public Builder addAllSourceSeries(
-          java.lang.Iterable<? extends org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries> values) {
+          java.lang.Iterable<
+                  ? extends org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>
+              values) {
         if (sourceSeriesBuilder_ == null) {
           ensureSourceSeriesIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, sourceSeries_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, sourceSeries_);
           onChanged();
         } else {
           sourceSeriesBuilder_.addAllMessages(values);
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
@@ -5697,6 +6159,7 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
@@ -5710,62 +6173,84 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
-      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder getSourceSeriesBuilder(
-          int index) {
+      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+          getSourceSeriesBuilder(int index) {
         return getSourceSeriesFieldBuilder().getBuilder(index);
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
-      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder getSourceSeriesOrBuilder(
-          int index) {
+      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder
+          getSourceSeriesOrBuilder(int index) {
         if (sourceSeriesBuilder_ == null) {
-          return sourceSeries_.get(index);  } else {
+          return sourceSeries_.get(index);
+        } else {
           return sourceSeriesBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
-      public java.util.List<? extends org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder> 
-           getSourceSeriesOrBuilderList() {
+      public java.util.List<
+              ? extends
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>
+          getSourceSeriesOrBuilderList() {
         if (sourceSeriesBuilder_ != null) {
           return sourceSeriesBuilder_.getMessageOrBuilderList();
         } else {
           return java.util.Collections.unmodifiableList(sourceSeries_);
         }
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
-      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder addSourceSeriesBuilder() {
-        return getSourceSeriesFieldBuilder().addBuilder(
-            org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.getDefaultInstance());
+      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+          addSourceSeriesBuilder() {
+        return getSourceSeriesFieldBuilder()
+            .addBuilder(
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+                    .getDefaultInstance());
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
-      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder addSourceSeriesBuilder(
-          int index) {
-        return getSourceSeriesFieldBuilder().addBuilder(
-            index, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.getDefaultInstance());
+      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+          addSourceSeriesBuilder(int index) {
+        return getSourceSeriesFieldBuilder()
+            .addBuilder(
+                index,
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+                    .getDefaultInstance());
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_series = 6;</code>
        */
-      public java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder> 
-           getSourceSeriesBuilderList() {
+      public java.util.List<
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder>
+          getSourceSeriesBuilderList() {
         return getSourceSeriesFieldBuilder().getBuilderList();
       }
+
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder> 
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries,
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder,
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>
           getSourceSeriesFieldBuilder() {
         if (sourceSeriesBuilder_ == null) {
-          sourceSeriesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>(
+          sourceSeriesBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries,
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder,
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>(
                   sourceSeries_,
                   ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
@@ -5774,6 +6259,7 @@ public final class ChartStoreOuterClass {
         }
         return sourceSeriesBuilder_;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -5786,12 +6272,12 @@ public final class ChartStoreOuterClass {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ObsTimeSeries)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.ObsTimeSeries)
     private static final org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries();
     }
@@ -5800,16 +6286,16 @@ public final class ChartStoreOuterClass {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<ObsTimeSeries>
-        PARSER = new com.google.protobuf.AbstractParser<ObsTimeSeries>() {
-      @java.lang.Override
-      public ObsTimeSeries parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ObsTimeSeries(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<ObsTimeSeries> PARSER =
+        new com.google.protobuf.AbstractParser<ObsTimeSeries>() {
+          @java.lang.Override
+          public ObsTimeSeries parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new ObsTimeSeries(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<ObsTimeSeries> parser() {
       return PARSER;
@@ -5824,31 +6310,40 @@ public final class ChartStoreOuterClass {
     public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface ObsCollectionOrBuilder extends
+  public interface ObsCollectionOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ObsCollection)
       com.google.protobuf.MessageOrBuilder {
 
     /**
+     *
+     *
      * <pre>
      * NOTE: The key in SourceSeries.val is place DCID.
      * </pre>
      *
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
      */
-    java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries> 
+    java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>
         getSourceCohortsList();
+
     /**
+     *
+     *
      * <pre>
      * NOTE: The key in SourceSeries.val is place DCID.
      * </pre>
      *
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
      */
-    org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getSourceCohorts(int index);
+    org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getSourceCohorts(
+        int index);
+
     /**
+     *
+     *
      * <pre>
      * NOTE: The key in SourceSeries.val is place DCID.
      * </pre>
@@ -5856,26 +6351,37 @@ public final class ChartStoreOuterClass {
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
      */
     int getSourceCohortsCount();
+
     /**
+     *
+     *
      * <pre>
      * NOTE: The key in SourceSeries.val is place DCID.
      * </pre>
      *
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
      */
-    java.util.List<? extends org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder> 
+    java.util.List<
+            ? extends
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>
         getSourceCohortsOrBuilderList();
+
     /**
+     *
+     *
      * <pre>
      * NOTE: The key in SourceSeries.val is place DCID.
      * </pre>
      *
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
      */
-    org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder getSourceCohortsOrBuilder(
-        int index);
+    org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder
+        getSourceCohortsOrBuilder(int index);
   }
+
   /**
+   *
+   *
    * <pre>
    * A collection of observation values for various places with the same parent
    * and place type, for a given Stat Var and date.
@@ -5883,31 +6389,32 @@ public final class ChartStoreOuterClass {
    *
    * Protobuf type {@code org.datacommons.proto.ObsCollection}
    */
-  public static final class ObsCollection extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class ObsCollection extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ObsCollection)
       ObsCollectionOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use ObsCollection.newBuilder() to construct.
     private ObsCollection(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private ObsCollection() {
       sourceCohorts_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new ObsCollection();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private ObsCollection(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5927,29 +6434,34 @@ public final class ChartStoreOuterClass {
             case 0:
               done = true;
               break;
-            case 42: {
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                sourceCohorts_ = new java.util.ArrayList<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>();
-                mutable_bitField0_ |= 0x00000001;
+            case 42:
+              {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  sourceCohorts_ =
+                      new java.util.ArrayList<
+                          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                sourceCohorts_.add(
+                    input.readMessage(
+                        org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+                            .parser(),
+                        extensionRegistry));
+                break;
               }
-              sourceCohorts_.add(
-                  input.readMessage(org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.parser(), extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
               }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           sourceCohorts_ = java.util.Collections.unmodifiableList(sourceCohorts_);
@@ -5958,22 +6470,29 @@ public final class ChartStoreOuterClass {
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsCollection_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.ChartStoreOuterClass
+          .internal_static_org_datacommons_proto_ObsCollection_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsCollection_fieldAccessorTable
+      return org.datacommons.proto.ChartStoreOuterClass
+          .internal_static_org_datacommons_proto_ObsCollection_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.ChartStoreOuterClass.ObsCollection.class, org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder.class);
+              org.datacommons.proto.ChartStoreOuterClass.ObsCollection.class,
+              org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder.class);
     }
 
     public static final int SOURCE_COHORTS_FIELD_NUMBER = 5;
-    private java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries> sourceCohorts_;
+    private java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>
+        sourceCohorts_;
+
     /**
+     *
+     *
      * <pre>
      * NOTE: The key in SourceSeries.val is place DCID.
      * </pre>
@@ -5981,10 +6500,14 @@ public final class ChartStoreOuterClass {
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
      */
     @java.lang.Override
-    public java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries> getSourceCohortsList() {
+    public java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>
+        getSourceCohortsList() {
       return sourceCohorts_;
     }
+
     /**
+     *
+     *
      * <pre>
      * NOTE: The key in SourceSeries.val is place DCID.
      * </pre>
@@ -5992,11 +6515,16 @@ public final class ChartStoreOuterClass {
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder> 
+    public java.util.List<
+            ? extends
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>
         getSourceCohortsOrBuilderList() {
       return sourceCohorts_;
     }
+
     /**
+     *
+     *
      * <pre>
      * NOTE: The key in SourceSeries.val is place DCID.
      * </pre>
@@ -6007,7 +6535,10 @@ public final class ChartStoreOuterClass {
     public int getSourceCohortsCount() {
       return sourceCohorts_.size();
     }
+
     /**
+     *
+     *
      * <pre>
      * NOTE: The key in SourceSeries.val is place DCID.
      * </pre>
@@ -6015,23 +6546,28 @@ public final class ChartStoreOuterClass {
      * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
      */
     @java.lang.Override
-    public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getSourceCohorts(int index) {
-      return sourceCohorts_.get(index);
-    }
-    /**
-     * <pre>
-     * NOTE: The key in SourceSeries.val is place DCID.
-     * </pre>
-     *
-     * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
-     */
-    @java.lang.Override
-    public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder getSourceCohortsOrBuilder(
+    public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getSourceCohorts(
         int index) {
       return sourceCohorts_.get(index);
     }
 
+    /**
+     *
+     *
+     * <pre>
+     * NOTE: The key in SourceSeries.val is place DCID.
+     * </pre>
+     *
+     * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
+     */
+    @java.lang.Override
+    public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder
+        getSourceCohortsOrBuilder(int index) {
+      return sourceCohorts_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -6043,8 +6579,7 @@ public final class ChartStoreOuterClass {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       for (int i = 0; i < sourceCohorts_.size(); i++) {
         output.writeMessage(5, sourceCohorts_.get(i));
       }
@@ -6058,8 +6593,7 @@ public final class ChartStoreOuterClass {
 
       size = 0;
       for (int i = 0; i < sourceCohorts_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(5, sourceCohorts_.get(i));
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(5, sourceCohorts_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -6069,15 +6603,15 @@ public final class ChartStoreOuterClass {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.ChartStoreOuterClass.ObsCollection)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.ChartStoreOuterClass.ObsCollection other = (org.datacommons.proto.ChartStoreOuterClass.ObsCollection) obj;
+      org.datacommons.proto.ChartStoreOuterClass.ObsCollection other =
+          (org.datacommons.proto.ChartStoreOuterClass.ObsCollection) obj;
 
-      if (!getSourceCohortsList()
-          .equals(other.getSourceCohortsList())) return false;
+      if (!getSourceCohortsList().equals(other.getSourceCohortsList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -6099,87 +6633,94 @@ public final class ChartStoreOuterClass {
     }
 
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
-    public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseDelimitedFrom(java.io.InputStream input)
+
+    public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCollection parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.datacommons.proto.ChartStoreOuterClass.ObsCollection prototype) {
+
+    public static Builder newBuilder(
+        org.datacommons.proto.ChartStoreOuterClass.ObsCollection prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -6188,7 +6729,10 @@ public final class ChartStoreOuterClass {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
+     *
+     *
      * <pre>
      * A collection of observation values for various places with the same parent
      * and place type, for a given Stat Var and date.
@@ -6196,21 +6740,24 @@ public final class ChartStoreOuterClass {
      *
      * Protobuf type {@code org.datacommons.proto.ObsCollection}
      */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ObsCollection)
         org.datacommons.proto.ChartStoreOuterClass.ObsCollectionOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsCollection_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ObsCollection_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsCollection_fieldAccessorTable
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ObsCollection_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.ChartStoreOuterClass.ObsCollection.class, org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder.class);
+                org.datacommons.proto.ChartStoreOuterClass.ObsCollection.class,
+                org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder.class);
       }
 
       // Construct using org.datacommons.proto.ChartStoreOuterClass.ObsCollection.newBuilder()
@@ -6218,17 +6765,17 @@ public final class ChartStoreOuterClass {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getSourceCohortsFieldBuilder();
         }
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -6242,9 +6789,9 @@ public final class ChartStoreOuterClass {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsCollection_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ObsCollection_descriptor;
       }
 
       @java.lang.Override
@@ -6263,7 +6810,8 @@ public final class ChartStoreOuterClass {
 
       @java.lang.Override
       public org.datacommons.proto.ChartStoreOuterClass.ObsCollection buildPartial() {
-        org.datacommons.proto.ChartStoreOuterClass.ObsCollection result = new org.datacommons.proto.ChartStoreOuterClass.ObsCollection(this);
+        org.datacommons.proto.ChartStoreOuterClass.ObsCollection result =
+            new org.datacommons.proto.ChartStoreOuterClass.ObsCollection(this);
         int from_bitField0_ = bitField0_;
         if (sourceCohortsBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
@@ -6282,38 +6830,41 @@ public final class ChartStoreOuterClass {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.ChartStoreOuterClass.ObsCollection) {
-          return mergeFrom((org.datacommons.proto.ChartStoreOuterClass.ObsCollection)other);
+          return mergeFrom((org.datacommons.proto.ChartStoreOuterClass.ObsCollection) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -6321,7 +6872,8 @@ public final class ChartStoreOuterClass {
       }
 
       public Builder mergeFrom(org.datacommons.proto.ChartStoreOuterClass.ObsCollection other) {
-        if (other == org.datacommons.proto.ChartStoreOuterClass.ObsCollection.getDefaultInstance()) return this;
+        if (other == org.datacommons.proto.ChartStoreOuterClass.ObsCollection.getDefaultInstance())
+          return this;
         if (sourceCohortsBuilder_ == null) {
           if (!other.sourceCohorts_.isEmpty()) {
             if (sourceCohorts_.isEmpty()) {
@@ -6340,9 +6892,10 @@ public final class ChartStoreOuterClass {
               sourceCohortsBuilder_ = null;
               sourceCohorts_ = other.sourceCohorts_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              sourceCohortsBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getSourceCohortsFieldBuilder() : null;
+              sourceCohortsBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getSourceCohortsFieldBuilder()
+                      : null;
             } else {
               sourceCohortsBuilder_.addAllMessages(other.sourceCohorts_);
             }
@@ -6367,7 +6920,8 @@ public final class ChartStoreOuterClass {
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.ChartStoreOuterClass.ObsCollection) e.getUnfinishedMessage();
+          parsedMessage =
+              (org.datacommons.proto.ChartStoreOuterClass.ObsCollection) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -6376,35 +6930,49 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       private int bitField0_;
 
-      private java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries> sourceCohorts_ =
-        java.util.Collections.emptyList();
+      private java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>
+          sourceCohorts_ = java.util.Collections.emptyList();
+
       private void ensureSourceCohortsIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
-          sourceCohorts_ = new java.util.ArrayList<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>(sourceCohorts_);
+          sourceCohorts_ =
+              new java.util.ArrayList<
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>(
+                  sourceCohorts_);
           bitField0_ |= 0x00000001;
-         }
+        }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder> sourceCohortsBuilder_;
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries,
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder,
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>
+          sourceCohortsBuilder_;
 
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
        */
-      public java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries> getSourceCohortsList() {
+      public java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>
+          getSourceCohortsList() {
         if (sourceCohortsBuilder_ == null) {
           return java.util.Collections.unmodifiableList(sourceCohorts_);
         } else {
           return sourceCohortsBuilder_.getMessageList();
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
@@ -6418,21 +6986,28 @@ public final class ChartStoreOuterClass {
           return sourceCohortsBuilder_.getCount();
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
        */
-      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getSourceCohorts(int index) {
+      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries getSourceCohorts(
+          int index) {
         if (sourceCohortsBuilder_ == null) {
           return sourceCohorts_.get(index);
         } else {
           return sourceCohortsBuilder_.getMessage(index);
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
@@ -6453,7 +7028,10 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
@@ -6461,7 +7039,9 @@ public final class ChartStoreOuterClass {
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
        */
       public Builder setSourceCohorts(
-          int index, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder builderForValue) {
+          int index,
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+              builderForValue) {
         if (sourceCohortsBuilder_ == null) {
           ensureSourceCohortsIsMutable();
           sourceCohorts_.set(index, builderForValue.build());
@@ -6471,14 +7051,18 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
        */
-      public Builder addSourceCohorts(org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries value) {
+      public Builder addSourceCohorts(
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries value) {
         if (sourceCohortsBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -6491,7 +7075,10 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
@@ -6512,7 +7099,10 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
@@ -6520,7 +7110,8 @@ public final class ChartStoreOuterClass {
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
        */
       public Builder addSourceCohorts(
-          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder builderForValue) {
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+              builderForValue) {
         if (sourceCohortsBuilder_ == null) {
           ensureSourceCohortsIsMutable();
           sourceCohorts_.add(builderForValue.build());
@@ -6530,7 +7121,10 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
@@ -6538,7 +7132,9 @@ public final class ChartStoreOuterClass {
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
        */
       public Builder addSourceCohorts(
-          int index, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder builderForValue) {
+          int index,
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+              builderForValue) {
         if (sourceCohortsBuilder_ == null) {
           ensureSourceCohortsIsMutable();
           sourceCohorts_.add(index, builderForValue.build());
@@ -6548,7 +7144,10 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
@@ -6556,18 +7155,22 @@ public final class ChartStoreOuterClass {
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
        */
       public Builder addAllSourceCohorts(
-          java.lang.Iterable<? extends org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries> values) {
+          java.lang.Iterable<
+                  ? extends org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries>
+              values) {
         if (sourceCohortsBuilder_ == null) {
           ensureSourceCohortsIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, sourceCohorts_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, sourceCohorts_);
           onChanged();
         } else {
           sourceCohortsBuilder_.addAllMessages(values);
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
@@ -6584,7 +7187,10 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
@@ -6601,86 +7207,120 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
        */
-      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder getSourceCohortsBuilder(
-          int index) {
+      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+          getSourceCohortsBuilder(int index) {
         return getSourceCohortsFieldBuilder().getBuilder(index);
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
        */
-      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder getSourceCohortsOrBuilder(
-          int index) {
+      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder
+          getSourceCohortsOrBuilder(int index) {
         if (sourceCohortsBuilder_ == null) {
-          return sourceCohorts_.get(index);  } else {
+          return sourceCohorts_.get(index);
+        } else {
           return sourceCohortsBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
        */
-      public java.util.List<? extends org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder> 
-           getSourceCohortsOrBuilderList() {
+      public java.util.List<
+              ? extends
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>
+          getSourceCohortsOrBuilderList() {
         if (sourceCohortsBuilder_ != null) {
           return sourceCohortsBuilder_.getMessageOrBuilderList();
         } else {
           return java.util.Collections.unmodifiableList(sourceCohorts_);
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
        */
-      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder addSourceCohortsBuilder() {
-        return getSourceCohortsFieldBuilder().addBuilder(
-            org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.getDefaultInstance());
+      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+          addSourceCohortsBuilder() {
+        return getSourceCohortsFieldBuilder()
+            .addBuilder(
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+                    .getDefaultInstance());
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
        */
-      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder addSourceCohortsBuilder(
-          int index) {
-        return getSourceCohortsFieldBuilder().addBuilder(
-            index, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.getDefaultInstance());
+      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder
+          addSourceCohortsBuilder(int index) {
+        return getSourceCohortsFieldBuilder()
+            .addBuilder(
+                index,
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries
+                    .getDefaultInstance());
       }
+
       /**
+       *
+       *
        * <pre>
        * NOTE: The key in SourceSeries.val is place DCID.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.ObsTimeSeries.SourceSeries source_cohorts = 5;</code>
        */
-      public java.util.List<org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder> 
-           getSourceCohortsBuilderList() {
+      public java.util.List<
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder>
+          getSourceCohortsBuilderList() {
         return getSourceCohortsFieldBuilder().getBuilderList();
       }
+
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder> 
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries,
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder,
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>
           getSourceCohortsFieldBuilder() {
         if (sourceCohortsBuilder_ == null) {
-          sourceCohortsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>(
+          sourceCohortsBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries,
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeries.Builder,
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.SourceSeriesOrBuilder>(
                   sourceCohorts_,
                   ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
@@ -6689,6 +7329,7 @@ public final class ChartStoreOuterClass {
         }
         return sourceCohortsBuilder_;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -6701,12 +7342,12 @@ public final class ChartStoreOuterClass {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ObsCollection)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.ObsCollection)
     private static final org.datacommons.proto.ChartStoreOuterClass.ObsCollection DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.ChartStoreOuterClass.ObsCollection();
     }
@@ -6715,16 +7356,16 @@ public final class ChartStoreOuterClass {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<ObsCollection>
-        PARSER = new com.google.protobuf.AbstractParser<ObsCollection>() {
-      @java.lang.Override
-      public ObsCollection parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ObsCollection(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<ObsCollection> PARSER =
+        new com.google.protobuf.AbstractParser<ObsCollection>() {
+          @java.lang.Override
+          public ObsCollection parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new ObsCollection(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<ObsCollection> parser() {
       return PARSER;
@@ -6739,63 +7380,75 @@ public final class ChartStoreOuterClass {
     public org.datacommons.proto.ChartStoreOuterClass.ObsCollection getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface ObsCategoriesOrBuilder extends
+  public interface ObsCategoriesOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ObsCategories)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <code>repeated string categories = 1;</code>
+     *
      * @return A list containing the categories.
      */
-    java.util.List<java.lang.String>
-        getCategoriesList();
+    java.util.List<java.lang.String> getCategoriesList();
+
     /**
      * <code>repeated string categories = 1;</code>
+     *
      * @return The count of categories.
      */
     int getCategoriesCount();
+
     /**
      * <code>repeated string categories = 1;</code>
+     *
      * @param index The index of the element to return.
      * @return The categories at the given index.
      */
     java.lang.String getCategories(int index);
+
     /**
      * <code>repeated string categories = 1;</code>
+     *
      * @param index The index of the value to return.
      * @return The bytes of the categories at the given index.
      */
-    com.google.protobuf.ByteString
-        getCategoriesBytes(int index);
+    com.google.protobuf.ByteString getCategoriesBytes(int index);
 
     /**
      * <code>string place_name = 2;</code>
+     *
      * @return The placeName.
      */
     java.lang.String getPlaceName();
+
     /**
      * <code>string place_name = 2;</code>
+     *
      * @return The bytes for placeName.
      */
-    com.google.protobuf.ByteString
-        getPlaceNameBytes();
+    com.google.protobuf.ByteString getPlaceNameBytes();
 
     /**
      * <code>string place_dcid = 3;</code>
+     *
      * @return The placeDcid.
      */
     java.lang.String getPlaceDcid();
+
     /**
      * <code>string place_dcid = 3;</code>
+     *
      * @return The bytes for placeDcid.
      */
-    com.google.protobuf.ByteString
-        getPlaceDcidBytes();
+    com.google.protobuf.ByteString getPlaceDcidBytes();
   }
+
   /**
+   *
+   *
    * <pre>
    * List of categories of observations for a given place. These correspond to the
    * sections of the Place Explorer (https://datacommons.org/place/geoId/06).
@@ -6803,15 +7456,17 @@ public final class ChartStoreOuterClass {
    *
    * Protobuf type {@code org.datacommons.proto.ObsCategories}
    */
-  public static final class ObsCategories extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class ObsCategories extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ObsCategories)
       ObsCategoriesOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use ObsCategories.newBuilder() to construct.
     private ObsCategories(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private ObsCategories() {
       categories_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       placeName_ = "";
@@ -6820,16 +7475,15 @@ public final class ChartStoreOuterClass {
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new ObsCategories();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private ObsCategories(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6849,41 +7503,43 @@ public final class ChartStoreOuterClass {
             case 0:
               done = true;
               break;
-            case 10: {
-              java.lang.String s = input.readStringRequireUtf8();
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                categories_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000001;
+            case 10:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  categories_ = new com.google.protobuf.LazyStringArrayList();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                categories_.add(s);
+                break;
               }
-              categories_.add(s);
-              break;
-            }
-            case 18: {
-              java.lang.String s = input.readStringRequireUtf8();
+            case 18:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
 
-              placeName_ = s;
-              break;
-            }
-            case 26: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              placeDcid_ = s;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+                placeName_ = s;
+                break;
               }
-              break;
-            }
+            case 26:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
+
+                placeDcid_ = s;
+                break;
+              }
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           categories_ = categories_.getUnmodifiableView();
@@ -6892,58 +7548,69 @@ public final class ChartStoreOuterClass {
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsCategories_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.ChartStoreOuterClass
+          .internal_static_org_datacommons_proto_ObsCategories_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsCategories_fieldAccessorTable
+      return org.datacommons.proto.ChartStoreOuterClass
+          .internal_static_org_datacommons_proto_ObsCategories_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.ChartStoreOuterClass.ObsCategories.class, org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder.class);
+              org.datacommons.proto.ChartStoreOuterClass.ObsCategories.class,
+              org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder.class);
     }
 
     public static final int CATEGORIES_FIELD_NUMBER = 1;
     private com.google.protobuf.LazyStringList categories_;
+
     /**
      * <code>repeated string categories = 1;</code>
+     *
      * @return A list containing the categories.
      */
-    public com.google.protobuf.ProtocolStringList
-        getCategoriesList() {
+    public com.google.protobuf.ProtocolStringList getCategoriesList() {
       return categories_;
     }
+
     /**
      * <code>repeated string categories = 1;</code>
+     *
      * @return The count of categories.
      */
     public int getCategoriesCount() {
       return categories_.size();
     }
+
     /**
      * <code>repeated string categories = 1;</code>
+     *
      * @param index The index of the element to return.
      * @return The categories at the given index.
      */
     public java.lang.String getCategories(int index) {
       return categories_.get(index);
     }
+
     /**
      * <code>repeated string categories = 1;</code>
+     *
      * @param index The index of the value to return.
      * @return The bytes of the categories at the given index.
      */
-    public com.google.protobuf.ByteString
-        getCategoriesBytes(int index) {
+    public com.google.protobuf.ByteString getCategoriesBytes(int index) {
       return categories_.getByteString(index);
     }
 
     public static final int PLACE_NAME_FIELD_NUMBER = 2;
     private volatile java.lang.Object placeName_;
+
     /**
      * <code>string place_name = 2;</code>
+     *
      * @return The placeName.
      */
     @java.lang.Override
@@ -6952,25 +7619,24 @@ public final class ChartStoreOuterClass {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         placeName_ = s;
         return s;
       }
     }
+
     /**
      * <code>string place_name = 2;</code>
+     *
      * @return The bytes for placeName.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getPlaceNameBytes() {
+    public com.google.protobuf.ByteString getPlaceNameBytes() {
       java.lang.Object ref = placeName_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         placeName_ = b;
         return b;
       } else {
@@ -6980,8 +7646,10 @@ public final class ChartStoreOuterClass {
 
     public static final int PLACE_DCID_FIELD_NUMBER = 3;
     private volatile java.lang.Object placeDcid_;
+
     /**
      * <code>string place_dcid = 3;</code>
+     *
      * @return The placeDcid.
      */
     @java.lang.Override
@@ -6990,25 +7658,24 @@ public final class ChartStoreOuterClass {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         placeDcid_ = s;
         return s;
       }
     }
+
     /**
      * <code>string place_dcid = 3;</code>
+     *
      * @return The bytes for placeDcid.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getPlaceDcidBytes() {
+    public com.google.protobuf.ByteString getPlaceDcidBytes() {
       java.lang.Object ref = placeDcid_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         placeDcid_ = b;
         return b;
       } else {
@@ -7017,6 +7684,7 @@ public final class ChartStoreOuterClass {
     }
 
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -7028,8 +7696,7 @@ public final class ChartStoreOuterClass {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       for (int i = 0; i < categories_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, categories_.getRaw(i));
       }
@@ -7070,19 +7737,17 @@ public final class ChartStoreOuterClass {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.ChartStoreOuterClass.ObsCategories)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.ChartStoreOuterClass.ObsCategories other = (org.datacommons.proto.ChartStoreOuterClass.ObsCategories) obj;
+      org.datacommons.proto.ChartStoreOuterClass.ObsCategories other =
+          (org.datacommons.proto.ChartStoreOuterClass.ObsCategories) obj;
 
-      if (!getCategoriesList()
-          .equals(other.getCategoriesList())) return false;
-      if (!getPlaceName()
-          .equals(other.getPlaceName())) return false;
-      if (!getPlaceDcid()
-          .equals(other.getPlaceDcid())) return false;
+      if (!getCategoriesList().equals(other.getCategoriesList())) return false;
+      if (!getPlaceName().equals(other.getPlaceName())) return false;
+      if (!getPlaceDcid().equals(other.getPlaceDcid())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -7108,87 +7773,94 @@ public final class ChartStoreOuterClass {
     }
 
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
-    public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseDelimitedFrom(java.io.InputStream input)
+
+    public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ObsCategories parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.datacommons.proto.ChartStoreOuterClass.ObsCategories prototype) {
+
+    public static Builder newBuilder(
+        org.datacommons.proto.ChartStoreOuterClass.ObsCategories prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -7197,7 +7869,10 @@ public final class ChartStoreOuterClass {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
+     *
+     *
      * <pre>
      * List of categories of observations for a given place. These correspond to the
      * sections of the Place Explorer (https://datacommons.org/place/geoId/06).
@@ -7205,21 +7880,24 @@ public final class ChartStoreOuterClass {
      *
      * Protobuf type {@code org.datacommons.proto.ObsCategories}
      */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ObsCategories)
         org.datacommons.proto.ChartStoreOuterClass.ObsCategoriesOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsCategories_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ObsCategories_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsCategories_fieldAccessorTable
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ObsCategories_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.ChartStoreOuterClass.ObsCategories.class, org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder.class);
+                org.datacommons.proto.ChartStoreOuterClass.ObsCategories.class,
+                org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder.class);
       }
 
       // Construct using org.datacommons.proto.ChartStoreOuterClass.ObsCategories.newBuilder()
@@ -7227,16 +7905,15 @@ public final class ChartStoreOuterClass {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -7250,9 +7927,9 @@ public final class ChartStoreOuterClass {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ObsCategories_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ObsCategories_descriptor;
       }
 
       @java.lang.Override
@@ -7271,7 +7948,8 @@ public final class ChartStoreOuterClass {
 
       @java.lang.Override
       public org.datacommons.proto.ChartStoreOuterClass.ObsCategories buildPartial() {
-        org.datacommons.proto.ChartStoreOuterClass.ObsCategories result = new org.datacommons.proto.ChartStoreOuterClass.ObsCategories(this);
+        org.datacommons.proto.ChartStoreOuterClass.ObsCategories result =
+            new org.datacommons.proto.ChartStoreOuterClass.ObsCategories(this);
         int from_bitField0_ = bitField0_;
         if (((bitField0_ & 0x00000001) != 0)) {
           categories_ = categories_.getUnmodifiableView();
@@ -7288,38 +7966,41 @@ public final class ChartStoreOuterClass {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.ChartStoreOuterClass.ObsCategories) {
-          return mergeFrom((org.datacommons.proto.ChartStoreOuterClass.ObsCategories)other);
+          return mergeFrom((org.datacommons.proto.ChartStoreOuterClass.ObsCategories) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -7327,7 +8008,8 @@ public final class ChartStoreOuterClass {
       }
 
       public Builder mergeFrom(org.datacommons.proto.ChartStoreOuterClass.ObsCategories other) {
-        if (other == org.datacommons.proto.ChartStoreOuterClass.ObsCategories.getDefaultInstance()) return this;
+        if (other == org.datacommons.proto.ChartStoreOuterClass.ObsCategories.getDefaultInstance())
+          return this;
         if (!other.categories_.isEmpty()) {
           if (categories_.isEmpty()) {
             categories_ = other.categories_;
@@ -7365,7 +8047,8 @@ public final class ChartStoreOuterClass {
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.ChartStoreOuterClass.ObsCategories) e.getUnfinishedMessage();
+          parsedMessage =
+              (org.datacommons.proto.ChartStoreOuterClass.ObsCategories) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -7374,93 +8057,106 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       private int bitField0_;
 
-      private com.google.protobuf.LazyStringList categories_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private com.google.protobuf.LazyStringList categories_ =
+          com.google.protobuf.LazyStringArrayList.EMPTY;
+
       private void ensureCategoriesIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
           categories_ = new com.google.protobuf.LazyStringArrayList(categories_);
           bitField0_ |= 0x00000001;
-         }
+        }
       }
+
       /**
        * <code>repeated string categories = 1;</code>
+       *
        * @return A list containing the categories.
        */
-      public com.google.protobuf.ProtocolStringList
-          getCategoriesList() {
+      public com.google.protobuf.ProtocolStringList getCategoriesList() {
         return categories_.getUnmodifiableView();
       }
+
       /**
        * <code>repeated string categories = 1;</code>
+       *
        * @return The count of categories.
        */
       public int getCategoriesCount() {
         return categories_.size();
       }
+
       /**
        * <code>repeated string categories = 1;</code>
+       *
        * @param index The index of the element to return.
        * @return The categories at the given index.
        */
       public java.lang.String getCategories(int index) {
         return categories_.get(index);
       }
+
       /**
        * <code>repeated string categories = 1;</code>
+       *
        * @param index The index of the value to return.
        * @return The bytes of the categories at the given index.
        */
-      public com.google.protobuf.ByteString
-          getCategoriesBytes(int index) {
+      public com.google.protobuf.ByteString getCategoriesBytes(int index) {
         return categories_.getByteString(index);
       }
+
       /**
        * <code>repeated string categories = 1;</code>
+       *
        * @param index The index to set the value at.
        * @param value The categories to set.
        * @return This builder for chaining.
        */
-      public Builder setCategories(
-          int index, java.lang.String value) {
+      public Builder setCategories(int index, java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureCategoriesIsMutable();
+          throw new NullPointerException();
+        }
+        ensureCategoriesIsMutable();
         categories_.set(index, value);
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string categories = 1;</code>
+       *
        * @param value The categories to add.
        * @return This builder for chaining.
        */
-      public Builder addCategories(
-          java.lang.String value) {
+      public Builder addCategories(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureCategoriesIsMutable();
+          throw new NullPointerException();
+        }
+        ensureCategoriesIsMutable();
         categories_.add(value);
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string categories = 1;</code>
+       *
        * @param values The categories to add.
        * @return This builder for chaining.
        */
-      public Builder addAllCategories(
-          java.lang.Iterable<java.lang.String> values) {
+      public Builder addAllCategories(java.lang.Iterable<java.lang.String> values) {
         ensureCategoriesIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, categories_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, categories_);
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string categories = 1;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearCategories() {
@@ -7469,17 +8165,18 @@ public final class ChartStoreOuterClass {
         onChanged();
         return this;
       }
+
       /**
        * <code>repeated string categories = 1;</code>
+       *
        * @param value The bytes of the categories to add.
        * @return This builder for chaining.
        */
-      public Builder addCategoriesBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder addCategoriesBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
         ensureCategoriesIsMutable();
         categories_.add(value);
         onChanged();
@@ -7487,15 +8184,16 @@ public final class ChartStoreOuterClass {
       }
 
       private java.lang.Object placeName_ = "";
+
       /**
        * <code>string place_name = 2;</code>
+       *
        * @return The placeName.
        */
       public java.lang.String getPlaceName() {
         java.lang.Object ref = placeName_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           placeName_ = s;
           return s;
@@ -7503,75 +8201,80 @@ public final class ChartStoreOuterClass {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string place_name = 2;</code>
+       *
        * @return The bytes for placeName.
        */
-      public com.google.protobuf.ByteString
-          getPlaceNameBytes() {
+      public com.google.protobuf.ByteString getPlaceNameBytes() {
         java.lang.Object ref = placeName_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           placeName_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string place_name = 2;</code>
+       *
        * @param value The placeName to set.
        * @return This builder for chaining.
        */
-      public Builder setPlaceName(
-          java.lang.String value) {
+      public Builder setPlaceName(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         placeName_ = value;
         onChanged();
         return this;
       }
+
       /**
        * <code>string place_name = 2;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearPlaceName() {
-        
+
         placeName_ = getDefaultInstance().getPlaceName();
         onChanged();
         return this;
       }
+
       /**
        * <code>string place_name = 2;</code>
+       *
        * @param value The bytes for placeName to set.
        * @return This builder for chaining.
        */
-      public Builder setPlaceNameBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setPlaceNameBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         placeName_ = value;
         onChanged();
         return this;
       }
 
       private java.lang.Object placeDcid_ = "";
+
       /**
        * <code>string place_dcid = 3;</code>
+       *
        * @return The placeDcid.
        */
       public java.lang.String getPlaceDcid() {
         java.lang.Object ref = placeDcid_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           placeDcid_ = s;
           return s;
@@ -7579,64 +8282,69 @@ public final class ChartStoreOuterClass {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string place_dcid = 3;</code>
+       *
        * @return The bytes for placeDcid.
        */
-      public com.google.protobuf.ByteString
-          getPlaceDcidBytes() {
+      public com.google.protobuf.ByteString getPlaceDcidBytes() {
         java.lang.Object ref = placeDcid_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           placeDcid_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string place_dcid = 3;</code>
+       *
        * @param value The placeDcid to set.
        * @return This builder for chaining.
        */
-      public Builder setPlaceDcid(
-          java.lang.String value) {
+      public Builder setPlaceDcid(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         placeDcid_ = value;
         onChanged();
         return this;
       }
+
       /**
        * <code>string place_dcid = 3;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearPlaceDcid() {
-        
+
         placeDcid_ = getDefaultInstance().getPlaceDcid();
         onChanged();
         return this;
       }
+
       /**
        * <code>string place_dcid = 3;</code>
+       *
        * @param value The bytes for placeDcid to set.
        * @return This builder for chaining.
        */
-      public Builder setPlaceDcidBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setPlaceDcidBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         placeDcid_ = value;
         onChanged();
         return this;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -7649,12 +8357,12 @@ public final class ChartStoreOuterClass {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ObsCategories)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.ObsCategories)
     private static final org.datacommons.proto.ChartStoreOuterClass.ObsCategories DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.ChartStoreOuterClass.ObsCategories();
     }
@@ -7663,16 +8371,16 @@ public final class ChartStoreOuterClass {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<ObsCategories>
-        PARSER = new com.google.protobuf.AbstractParser<ObsCategories>() {
-      @java.lang.Override
-      public ObsCategories parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ObsCategories(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<ObsCategories> PARSER =
+        new com.google.protobuf.AbstractParser<ObsCategories>() {
+          @java.lang.Override
+          public ObsCategories parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new ObsCategories(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<ObsCategories> parser() {
       return PARSER;
@@ -7687,91 +8395,100 @@ public final class ChartStoreOuterClass {
     public org.datacommons.proto.ChartStoreOuterClass.ObsCategories getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface ChartStoreOrBuilder extends
+  public interface ChartStoreOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ChartStore)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
+     *
      * @return Whether the obsTimeSeries field is set.
      */
     boolean hasObsTimeSeries();
+
     /**
      * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
+     *
      * @return The obsTimeSeries.
      */
     org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries getObsTimeSeries();
-    /**
-     * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
-     */
+
+    /** <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code> */
     org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeriesOrBuilder getObsTimeSeriesOrBuilder();
 
     /**
      * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
+     *
      * @return Whether the obsCollection field is set.
      */
     boolean hasObsCollection();
+
     /**
      * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
+     *
      * @return The obsCollection.
      */
     org.datacommons.proto.ChartStoreOuterClass.ObsCollection getObsCollection();
-    /**
-     * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
-     */
+
+    /** <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code> */
     org.datacommons.proto.ChartStoreOuterClass.ObsCollectionOrBuilder getObsCollectionOrBuilder();
 
     /**
      * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
+     *
      * @return Whether the obsCategories field is set.
      */
     boolean hasObsCategories();
+
     /**
      * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
+     *
      * @return The obsCategories.
      */
     org.datacommons.proto.ChartStoreOuterClass.ObsCategories getObsCategories();
-    /**
-     * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
-     */
+
+    /** <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code> */
     org.datacommons.proto.ChartStoreOuterClass.ObsCategoriesOrBuilder getObsCategoriesOrBuilder();
 
     public org.datacommons.proto.ChartStoreOuterClass.ChartStore.ValCase getValCase();
   }
+
   /**
+   *
+   *
    * <pre>
    * Wrapper message for DC Laelaps value.
    * </pre>
    *
    * Protobuf type {@code org.datacommons.proto.ChartStore}
    */
-  public static final class ChartStore extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class ChartStore extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ChartStore)
       ChartStoreOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use ChartStore.newBuilder() to construct.
     private ChartStore(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private ChartStore() {
-    }
+
+    private ChartStore() {}
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new ChartStore();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private ChartStore(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7790,93 +8507,114 @@ public final class ChartStoreOuterClass {
             case 0:
               done = true;
               break;
-            case 10: {
-              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder subBuilder = null;
-              if (valCase_ == 1) {
-                subBuilder = ((org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_).toBuilder();
+            case 10:
+              {
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder subBuilder = null;
+                if (valCase_ == 1) {
+                  subBuilder =
+                      ((org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_).toBuilder();
+                }
+                val_ =
+                    input.readMessage(
+                        org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.parser(),
+                        extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(
+                      (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_);
+                  val_ = subBuilder.buildPartial();
+                }
+                valCase_ = 1;
+                break;
               }
-              val_ =
-                  input.readMessage(org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom((org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_);
-                val_ = subBuilder.buildPartial();
+            case 18:
+              {
+                org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder subBuilder = null;
+                if (valCase_ == 2) {
+                  subBuilder =
+                      ((org.datacommons.proto.ChartStoreOuterClass.ObsCollection) val_).toBuilder();
+                }
+                val_ =
+                    input.readMessage(
+                        org.datacommons.proto.ChartStoreOuterClass.ObsCollection.parser(),
+                        extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(
+                      (org.datacommons.proto.ChartStoreOuterClass.ObsCollection) val_);
+                  val_ = subBuilder.buildPartial();
+                }
+                valCase_ = 2;
+                break;
               }
-              valCase_ = 1;
-              break;
-            }
-            case 18: {
-              org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder subBuilder = null;
-              if (valCase_ == 2) {
-                subBuilder = ((org.datacommons.proto.ChartStoreOuterClass.ObsCollection) val_).toBuilder();
+            case 26:
+              {
+                org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder subBuilder = null;
+                if (valCase_ == 3) {
+                  subBuilder =
+                      ((org.datacommons.proto.ChartStoreOuterClass.ObsCategories) val_).toBuilder();
+                }
+                val_ =
+                    input.readMessage(
+                        org.datacommons.proto.ChartStoreOuterClass.ObsCategories.parser(),
+                        extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(
+                      (org.datacommons.proto.ChartStoreOuterClass.ObsCategories) val_);
+                  val_ = subBuilder.buildPartial();
+                }
+                valCase_ = 3;
+                break;
               }
-              val_ =
-                  input.readMessage(org.datacommons.proto.ChartStoreOuterClass.ObsCollection.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom((org.datacommons.proto.ChartStoreOuterClass.ObsCollection) val_);
-                val_ = subBuilder.buildPartial();
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
               }
-              valCase_ = 2;
-              break;
-            }
-            case 26: {
-              org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder subBuilder = null;
-              if (valCase_ == 3) {
-                subBuilder = ((org.datacommons.proto.ChartStoreOuterClass.ObsCategories) val_).toBuilder();
-              }
-              val_ =
-                  input.readMessage(org.datacommons.proto.ChartStoreOuterClass.ObsCategories.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom((org.datacommons.proto.ChartStoreOuterClass.ObsCategories) val_);
-                val_ = subBuilder.buildPartial();
-              }
-              valCase_ = 3;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ChartStore_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.ChartStoreOuterClass
+          .internal_static_org_datacommons_proto_ChartStore_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ChartStore_fieldAccessorTable
+      return org.datacommons.proto.ChartStoreOuterClass
+          .internal_static_org_datacommons_proto_ChartStore_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.ChartStoreOuterClass.ChartStore.class, org.datacommons.proto.ChartStoreOuterClass.ChartStore.Builder.class);
+              org.datacommons.proto.ChartStoreOuterClass.ChartStore.class,
+              org.datacommons.proto.ChartStoreOuterClass.ChartStore.Builder.class);
     }
 
     private int valCase_ = 0;
     private java.lang.Object val_;
+
     public enum ValCase
-        implements com.google.protobuf.Internal.EnumLite,
+        implements
+            com.google.protobuf.Internal.EnumLite,
             com.google.protobuf.AbstractMessage.InternalOneOfEnum {
       OBS_TIME_SERIES(1),
       OBS_COLLECTION(2),
       OBS_CATEGORIES(3),
       VAL_NOT_SET(0);
       private final int value;
+
       private ValCase(int value) {
         this.value = value;
       }
+
       /**
        * @param value The number of the enum to look for.
        * @return The enum associated with the given number.
@@ -7889,118 +8627,135 @@ public final class ChartStoreOuterClass {
 
       public static ValCase forNumber(int value) {
         switch (value) {
-          case 1: return OBS_TIME_SERIES;
-          case 2: return OBS_COLLECTION;
-          case 3: return OBS_CATEGORIES;
-          case 0: return VAL_NOT_SET;
-          default: return null;
+          case 1:
+            return OBS_TIME_SERIES;
+          case 2:
+            return OBS_COLLECTION;
+          case 3:
+            return OBS_CATEGORIES;
+          case 0:
+            return VAL_NOT_SET;
+          default:
+            return null;
         }
       }
+
       public int getNumber() {
         return this.value;
       }
     };
 
-    public ValCase
-    getValCase() {
-      return ValCase.forNumber(
-          valCase_);
+    public ValCase getValCase() {
+      return ValCase.forNumber(valCase_);
     }
 
     public static final int OBS_TIME_SERIES_FIELD_NUMBER = 1;
+
     /**
      * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
+     *
      * @return Whether the obsTimeSeries field is set.
      */
     @java.lang.Override
     public boolean hasObsTimeSeries() {
       return valCase_ == 1;
     }
+
     /**
      * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
+     *
      * @return The obsTimeSeries.
      */
     @java.lang.Override
     public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries getObsTimeSeries() {
       if (valCase_ == 1) {
-         return (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_;
+        return (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_;
       }
       return org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.getDefaultInstance();
     }
-    /**
-     * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
-     */
+
+    /** <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code> */
     @java.lang.Override
-    public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeriesOrBuilder getObsTimeSeriesOrBuilder() {
+    public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeriesOrBuilder
+        getObsTimeSeriesOrBuilder() {
       if (valCase_ == 1) {
-         return (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_;
+        return (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_;
       }
       return org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.getDefaultInstance();
     }
 
     public static final int OBS_COLLECTION_FIELD_NUMBER = 2;
+
     /**
      * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
+     *
      * @return Whether the obsCollection field is set.
      */
     @java.lang.Override
     public boolean hasObsCollection() {
       return valCase_ == 2;
     }
+
     /**
      * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
+     *
      * @return The obsCollection.
      */
     @java.lang.Override
     public org.datacommons.proto.ChartStoreOuterClass.ObsCollection getObsCollection() {
       if (valCase_ == 2) {
-         return (org.datacommons.proto.ChartStoreOuterClass.ObsCollection) val_;
+        return (org.datacommons.proto.ChartStoreOuterClass.ObsCollection) val_;
       }
       return org.datacommons.proto.ChartStoreOuterClass.ObsCollection.getDefaultInstance();
     }
-    /**
-     * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
-     */
+
+    /** <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code> */
     @java.lang.Override
-    public org.datacommons.proto.ChartStoreOuterClass.ObsCollectionOrBuilder getObsCollectionOrBuilder() {
+    public org.datacommons.proto.ChartStoreOuterClass.ObsCollectionOrBuilder
+        getObsCollectionOrBuilder() {
       if (valCase_ == 2) {
-         return (org.datacommons.proto.ChartStoreOuterClass.ObsCollection) val_;
+        return (org.datacommons.proto.ChartStoreOuterClass.ObsCollection) val_;
       }
       return org.datacommons.proto.ChartStoreOuterClass.ObsCollection.getDefaultInstance();
     }
 
     public static final int OBS_CATEGORIES_FIELD_NUMBER = 3;
+
     /**
      * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
+     *
      * @return Whether the obsCategories field is set.
      */
     @java.lang.Override
     public boolean hasObsCategories() {
       return valCase_ == 3;
     }
+
     /**
      * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
+     *
      * @return The obsCategories.
      */
     @java.lang.Override
     public org.datacommons.proto.ChartStoreOuterClass.ObsCategories getObsCategories() {
       if (valCase_ == 3) {
-         return (org.datacommons.proto.ChartStoreOuterClass.ObsCategories) val_;
+        return (org.datacommons.proto.ChartStoreOuterClass.ObsCategories) val_;
       }
       return org.datacommons.proto.ChartStoreOuterClass.ObsCategories.getDefaultInstance();
     }
-    /**
-     * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
-     */
+
+    /** <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code> */
     @java.lang.Override
-    public org.datacommons.proto.ChartStoreOuterClass.ObsCategoriesOrBuilder getObsCategoriesOrBuilder() {
+    public org.datacommons.proto.ChartStoreOuterClass.ObsCategoriesOrBuilder
+        getObsCategoriesOrBuilder() {
       if (valCase_ == 3) {
-         return (org.datacommons.proto.ChartStoreOuterClass.ObsCategories) val_;
+        return (org.datacommons.proto.ChartStoreOuterClass.ObsCategories) val_;
       }
       return org.datacommons.proto.ChartStoreOuterClass.ObsCategories.getDefaultInstance();
     }
 
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -8012,8 +8767,7 @@ public final class ChartStoreOuterClass {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       if (valCase_ == 1) {
         output.writeMessage(1, (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_);
       }
@@ -8033,16 +8787,19 @@ public final class ChartStoreOuterClass {
 
       size = 0;
       if (valCase_ == 1) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_);
+        size +=
+            com.google.protobuf.CodedOutputStream.computeMessageSize(
+                1, (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_);
       }
       if (valCase_ == 2) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, (org.datacommons.proto.ChartStoreOuterClass.ObsCollection) val_);
+        size +=
+            com.google.protobuf.CodedOutputStream.computeMessageSize(
+                2, (org.datacommons.proto.ChartStoreOuterClass.ObsCollection) val_);
       }
       if (valCase_ == 3) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, (org.datacommons.proto.ChartStoreOuterClass.ObsCategories) val_);
+        size +=
+            com.google.protobuf.CodedOutputStream.computeMessageSize(
+                3, (org.datacommons.proto.ChartStoreOuterClass.ObsCategories) val_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -8052,26 +8809,24 @@ public final class ChartStoreOuterClass {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.ChartStoreOuterClass.ChartStore)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.ChartStoreOuterClass.ChartStore other = (org.datacommons.proto.ChartStoreOuterClass.ChartStore) obj;
+      org.datacommons.proto.ChartStoreOuterClass.ChartStore other =
+          (org.datacommons.proto.ChartStoreOuterClass.ChartStore) obj;
 
       if (!getValCase().equals(other.getValCase())) return false;
       switch (valCase_) {
         case 1:
-          if (!getObsTimeSeries()
-              .equals(other.getObsTimeSeries())) return false;
+          if (!getObsTimeSeries().equals(other.getObsTimeSeries())) return false;
           break;
         case 2:
-          if (!getObsCollection()
-              .equals(other.getObsCollection())) return false;
+          if (!getObsCollection().equals(other.getObsCollection())) return false;
           break;
         case 3:
-          if (!getObsCategories()
-              .equals(other.getObsCategories())) return false;
+          if (!getObsCategories().equals(other.getObsCategories())) return false;
           break;
         case 0:
         default:
@@ -8109,87 +8864,94 @@ public final class ChartStoreOuterClass {
     }
 
     public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
-    public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseDelimitedFrom(java.io.InputStream input)
+
+    public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.ChartStoreOuterClass.ChartStore parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.datacommons.proto.ChartStoreOuterClass.ChartStore prototype) {
+
+    public static Builder newBuilder(
+        org.datacommons.proto.ChartStoreOuterClass.ChartStore prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -8198,28 +8960,34 @@ public final class ChartStoreOuterClass {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
+     *
+     *
      * <pre>
      * Wrapper message for DC Laelaps value.
      * </pre>
      *
      * Protobuf type {@code org.datacommons.proto.ChartStore}
      */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ChartStore)
         org.datacommons.proto.ChartStoreOuterClass.ChartStoreOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ChartStore_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ChartStore_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ChartStore_fieldAccessorTable
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ChartStore_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.ChartStoreOuterClass.ChartStore.class, org.datacommons.proto.ChartStoreOuterClass.ChartStore.Builder.class);
+                org.datacommons.proto.ChartStoreOuterClass.ChartStore.class,
+                org.datacommons.proto.ChartStoreOuterClass.ChartStore.Builder.class);
       }
 
       // Construct using org.datacommons.proto.ChartStoreOuterClass.ChartStore.newBuilder()
@@ -8227,16 +8995,15 @@ public final class ChartStoreOuterClass {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -8246,9 +9013,9 @@ public final class ChartStoreOuterClass {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.ChartStoreOuterClass.internal_static_org_datacommons_proto_ChartStore_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.ChartStoreOuterClass
+            .internal_static_org_datacommons_proto_ChartStore_descriptor;
       }
 
       @java.lang.Override
@@ -8267,7 +9034,8 @@ public final class ChartStoreOuterClass {
 
       @java.lang.Override
       public org.datacommons.proto.ChartStoreOuterClass.ChartStore buildPartial() {
-        org.datacommons.proto.ChartStoreOuterClass.ChartStore result = new org.datacommons.proto.ChartStoreOuterClass.ChartStore(this);
+        org.datacommons.proto.ChartStoreOuterClass.ChartStore result =
+            new org.datacommons.proto.ChartStoreOuterClass.ChartStore(this);
         if (valCase_ == 1) {
           if (obsTimeSeriesBuilder_ == null) {
             result.val_ = val_;
@@ -8298,38 +9066,41 @@ public final class ChartStoreOuterClass {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.ChartStoreOuterClass.ChartStore) {
-          return mergeFrom((org.datacommons.proto.ChartStoreOuterClass.ChartStore)other);
+          return mergeFrom((org.datacommons.proto.ChartStoreOuterClass.ChartStore) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -8337,23 +9108,28 @@ public final class ChartStoreOuterClass {
       }
 
       public Builder mergeFrom(org.datacommons.proto.ChartStoreOuterClass.ChartStore other) {
-        if (other == org.datacommons.proto.ChartStoreOuterClass.ChartStore.getDefaultInstance()) return this;
+        if (other == org.datacommons.proto.ChartStoreOuterClass.ChartStore.getDefaultInstance())
+          return this;
         switch (other.getValCase()) {
-          case OBS_TIME_SERIES: {
-            mergeObsTimeSeries(other.getObsTimeSeries());
-            break;
-          }
-          case OBS_COLLECTION: {
-            mergeObsCollection(other.getObsCollection());
-            break;
-          }
-          case OBS_CATEGORIES: {
-            mergeObsCategories(other.getObsCategories());
-            break;
-          }
-          case VAL_NOT_SET: {
-            break;
-          }
+          case OBS_TIME_SERIES:
+            {
+              mergeObsTimeSeries(other.getObsTimeSeries());
+              break;
+            }
+          case OBS_COLLECTION:
+            {
+              mergeObsCollection(other.getObsCollection());
+              break;
+            }
+          case OBS_CATEGORIES:
+            {
+              mergeObsCategories(other.getObsCategories());
+              break;
+            }
+          case VAL_NOT_SET:
+            {
+              break;
+            }
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -8374,7 +9150,8 @@ public final class ChartStoreOuterClass {
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.ChartStoreOuterClass.ChartStore) e.getUnfinishedMessage();
+          parsedMessage =
+              (org.datacommons.proto.ChartStoreOuterClass.ChartStore) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -8383,12 +9160,12 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
+
       private int valCase_ = 0;
       private java.lang.Object val_;
-      public ValCase
-          getValCase() {
-        return ValCase.forNumber(
-            valCase_);
+
+      public ValCase getValCase() {
+        return ValCase.forNumber(valCase_);
       }
 
       public Builder clearVal() {
@@ -8398,19 +9175,25 @@ public final class ChartStoreOuterClass {
         return this;
       }
 
-
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeriesOrBuilder> obsTimeSeriesBuilder_;
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries,
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder,
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeriesOrBuilder>
+          obsTimeSeriesBuilder_;
+
       /**
        * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
+       *
        * @return Whether the obsTimeSeries field is set.
        */
       @java.lang.Override
       public boolean hasObsTimeSeries() {
         return valCase_ == 1;
       }
+
       /**
        * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
+       *
        * @return The obsTimeSeries.
        */
       @java.lang.Override
@@ -8427,10 +9210,10 @@ public final class ChartStoreOuterClass {
           return org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.getDefaultInstance();
         }
       }
-      /**
-       * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
-       */
-      public Builder setObsTimeSeries(org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries value) {
+
+      /** <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code> */
+      public Builder setObsTimeSeries(
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries value) {
         if (obsTimeSeriesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -8443,9 +9226,8 @@ public final class ChartStoreOuterClass {
         valCase_ = 1;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
-       */
+
+      /** <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code> */
       public Builder setObsTimeSeries(
           org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder builderForValue) {
         if (obsTimeSeriesBuilder_ == null) {
@@ -8457,15 +9239,20 @@ public final class ChartStoreOuterClass {
         valCase_ = 1;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
-       */
-      public Builder mergeObsTimeSeries(org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries value) {
+
+      /** <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code> */
+      public Builder mergeObsTimeSeries(
+          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries value) {
         if (obsTimeSeriesBuilder_ == null) {
-          if (valCase_ == 1 &&
-              val_ != org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.getDefaultInstance()) {
-            val_ = org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.newBuilder((org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_)
-                .mergeFrom(value).buildPartial();
+          if (valCase_ == 1
+              && val_
+                  != org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries
+                      .getDefaultInstance()) {
+            val_ =
+                org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.newBuilder(
+                        (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_)
+                    .mergeFrom(value)
+                    .buildPartial();
           } else {
             val_ = value;
           }
@@ -8479,9 +9266,8 @@ public final class ChartStoreOuterClass {
         valCase_ = 1;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
-       */
+
+      /** <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code> */
       public Builder clearObsTimeSeries() {
         if (obsTimeSeriesBuilder_ == null) {
           if (valCase_ == 1) {
@@ -8498,17 +9284,17 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
-       */
-      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder getObsTimeSeriesBuilder() {
+
+      /** <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code> */
+      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder
+          getObsTimeSeriesBuilder() {
         return getObsTimeSeriesFieldBuilder().getBuilder();
       }
-      /**
-       * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
-       */
+
+      /** <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code> */
       @java.lang.Override
-      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeriesOrBuilder getObsTimeSeriesOrBuilder() {
+      public org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeriesOrBuilder
+          getObsTimeSeriesOrBuilder() {
         if ((valCase_ == 1) && (obsTimeSeriesBuilder_ != null)) {
           return obsTimeSeriesBuilder_.getMessageOrBuilder();
         } else {
@@ -8518,40 +9304,52 @@ public final class ChartStoreOuterClass {
           return org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.getDefaultInstance();
         }
       }
-      /**
-       * <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code>
-       */
+
+      /** <code>.org.datacommons.proto.ObsTimeSeries obs_time_series = 1;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeriesOrBuilder> 
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries,
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder,
+              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeriesOrBuilder>
           getObsTimeSeriesFieldBuilder() {
         if (obsTimeSeriesBuilder_ == null) {
           if (!(valCase_ == 1)) {
             val_ = org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.getDefaultInstance();
           }
-          obsTimeSeriesBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeriesOrBuilder>(
+          obsTimeSeriesBuilder_ =
+              new com.google.protobuf.SingleFieldBuilderV3<
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries,
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries.Builder,
+                  org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeriesOrBuilder>(
                   (org.datacommons.proto.ChartStoreOuterClass.ObsTimeSeries) val_,
                   getParentForChildren(),
                   isClean());
           val_ = null;
         }
         valCase_ = 1;
-        onChanged();;
+        onChanged();
+        ;
         return obsTimeSeriesBuilder_;
       }
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.ChartStoreOuterClass.ObsCollection, org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsCollectionOrBuilder> obsCollectionBuilder_;
+              org.datacommons.proto.ChartStoreOuterClass.ObsCollection,
+              org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder,
+              org.datacommons.proto.ChartStoreOuterClass.ObsCollectionOrBuilder>
+          obsCollectionBuilder_;
+
       /**
        * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
+       *
        * @return Whether the obsCollection field is set.
        */
       @java.lang.Override
       public boolean hasObsCollection() {
         return valCase_ == 2;
       }
+
       /**
        * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
+       *
        * @return The obsCollection.
        */
       @java.lang.Override
@@ -8568,10 +9366,10 @@ public final class ChartStoreOuterClass {
           return org.datacommons.proto.ChartStoreOuterClass.ObsCollection.getDefaultInstance();
         }
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
-       */
-      public Builder setObsCollection(org.datacommons.proto.ChartStoreOuterClass.ObsCollection value) {
+
+      /** <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code> */
+      public Builder setObsCollection(
+          org.datacommons.proto.ChartStoreOuterClass.ObsCollection value) {
         if (obsCollectionBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -8584,9 +9382,8 @@ public final class ChartStoreOuterClass {
         valCase_ = 2;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code> */
       public Builder setObsCollection(
           org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder builderForValue) {
         if (obsCollectionBuilder_ == null) {
@@ -8598,15 +9395,20 @@ public final class ChartStoreOuterClass {
         valCase_ = 2;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
-       */
-      public Builder mergeObsCollection(org.datacommons.proto.ChartStoreOuterClass.ObsCollection value) {
+
+      /** <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code> */
+      public Builder mergeObsCollection(
+          org.datacommons.proto.ChartStoreOuterClass.ObsCollection value) {
         if (obsCollectionBuilder_ == null) {
-          if (valCase_ == 2 &&
-              val_ != org.datacommons.proto.ChartStoreOuterClass.ObsCollection.getDefaultInstance()) {
-            val_ = org.datacommons.proto.ChartStoreOuterClass.ObsCollection.newBuilder((org.datacommons.proto.ChartStoreOuterClass.ObsCollection) val_)
-                .mergeFrom(value).buildPartial();
+          if (valCase_ == 2
+              && val_
+                  != org.datacommons.proto.ChartStoreOuterClass.ObsCollection
+                      .getDefaultInstance()) {
+            val_ =
+                org.datacommons.proto.ChartStoreOuterClass.ObsCollection.newBuilder(
+                        (org.datacommons.proto.ChartStoreOuterClass.ObsCollection) val_)
+                    .mergeFrom(value)
+                    .buildPartial();
           } else {
             val_ = value;
           }
@@ -8620,9 +9422,8 @@ public final class ChartStoreOuterClass {
         valCase_ = 2;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code> */
       public Builder clearObsCollection() {
         if (obsCollectionBuilder_ == null) {
           if (valCase_ == 2) {
@@ -8639,17 +9440,17 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
-       */
-      public org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder getObsCollectionBuilder() {
+
+      /** <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code> */
+      public org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder
+          getObsCollectionBuilder() {
         return getObsCollectionFieldBuilder().getBuilder();
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code> */
       @java.lang.Override
-      public org.datacommons.proto.ChartStoreOuterClass.ObsCollectionOrBuilder getObsCollectionOrBuilder() {
+      public org.datacommons.proto.ChartStoreOuterClass.ObsCollectionOrBuilder
+          getObsCollectionOrBuilder() {
         if ((valCase_ == 2) && (obsCollectionBuilder_ != null)) {
           return obsCollectionBuilder_.getMessageOrBuilder();
         } else {
@@ -8659,40 +9460,52 @@ public final class ChartStoreOuterClass {
           return org.datacommons.proto.ChartStoreOuterClass.ObsCollection.getDefaultInstance();
         }
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.ObsCollection obs_collection = 2;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.ChartStoreOuterClass.ObsCollection, org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsCollectionOrBuilder> 
+              org.datacommons.proto.ChartStoreOuterClass.ObsCollection,
+              org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder,
+              org.datacommons.proto.ChartStoreOuterClass.ObsCollectionOrBuilder>
           getObsCollectionFieldBuilder() {
         if (obsCollectionBuilder_ == null) {
           if (!(valCase_ == 2)) {
             val_ = org.datacommons.proto.ChartStoreOuterClass.ObsCollection.getDefaultInstance();
           }
-          obsCollectionBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.ChartStoreOuterClass.ObsCollection, org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsCollectionOrBuilder>(
+          obsCollectionBuilder_ =
+              new com.google.protobuf.SingleFieldBuilderV3<
+                  org.datacommons.proto.ChartStoreOuterClass.ObsCollection,
+                  org.datacommons.proto.ChartStoreOuterClass.ObsCollection.Builder,
+                  org.datacommons.proto.ChartStoreOuterClass.ObsCollectionOrBuilder>(
                   (org.datacommons.proto.ChartStoreOuterClass.ObsCollection) val_,
                   getParentForChildren(),
                   isClean());
           val_ = null;
         }
         valCase_ = 2;
-        onChanged();;
+        onChanged();
+        ;
         return obsCollectionBuilder_;
       }
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.ChartStoreOuterClass.ObsCategories, org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsCategoriesOrBuilder> obsCategoriesBuilder_;
+              org.datacommons.proto.ChartStoreOuterClass.ObsCategories,
+              org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder,
+              org.datacommons.proto.ChartStoreOuterClass.ObsCategoriesOrBuilder>
+          obsCategoriesBuilder_;
+
       /**
        * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
+       *
        * @return Whether the obsCategories field is set.
        */
       @java.lang.Override
       public boolean hasObsCategories() {
         return valCase_ == 3;
       }
+
       /**
        * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
+       *
        * @return The obsCategories.
        */
       @java.lang.Override
@@ -8709,10 +9522,10 @@ public final class ChartStoreOuterClass {
           return org.datacommons.proto.ChartStoreOuterClass.ObsCategories.getDefaultInstance();
         }
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
-       */
-      public Builder setObsCategories(org.datacommons.proto.ChartStoreOuterClass.ObsCategories value) {
+
+      /** <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code> */
+      public Builder setObsCategories(
+          org.datacommons.proto.ChartStoreOuterClass.ObsCategories value) {
         if (obsCategoriesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -8725,9 +9538,8 @@ public final class ChartStoreOuterClass {
         valCase_ = 3;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
-       */
+
+      /** <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code> */
       public Builder setObsCategories(
           org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder builderForValue) {
         if (obsCategoriesBuilder_ == null) {
@@ -8739,15 +9551,20 @@ public final class ChartStoreOuterClass {
         valCase_ = 3;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
-       */
-      public Builder mergeObsCategories(org.datacommons.proto.ChartStoreOuterClass.ObsCategories value) {
+
+      /** <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code> */
+      public Builder mergeObsCategories(
+          org.datacommons.proto.ChartStoreOuterClass.ObsCategories value) {
         if (obsCategoriesBuilder_ == null) {
-          if (valCase_ == 3 &&
-              val_ != org.datacommons.proto.ChartStoreOuterClass.ObsCategories.getDefaultInstance()) {
-            val_ = org.datacommons.proto.ChartStoreOuterClass.ObsCategories.newBuilder((org.datacommons.proto.ChartStoreOuterClass.ObsCategories) val_)
-                .mergeFrom(value).buildPartial();
+          if (valCase_ == 3
+              && val_
+                  != org.datacommons.proto.ChartStoreOuterClass.ObsCategories
+                      .getDefaultInstance()) {
+            val_ =
+                org.datacommons.proto.ChartStoreOuterClass.ObsCategories.newBuilder(
+                        (org.datacommons.proto.ChartStoreOuterClass.ObsCategories) val_)
+                    .mergeFrom(value)
+                    .buildPartial();
           } else {
             val_ = value;
           }
@@ -8761,9 +9578,8 @@ public final class ChartStoreOuterClass {
         valCase_ = 3;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
-       */
+
+      /** <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code> */
       public Builder clearObsCategories() {
         if (obsCategoriesBuilder_ == null) {
           if (valCase_ == 3) {
@@ -8780,17 +9596,17 @@ public final class ChartStoreOuterClass {
         }
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
-       */
-      public org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder getObsCategoriesBuilder() {
+
+      /** <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code> */
+      public org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder
+          getObsCategoriesBuilder() {
         return getObsCategoriesFieldBuilder().getBuilder();
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
-       */
+
+      /** <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code> */
       @java.lang.Override
-      public org.datacommons.proto.ChartStoreOuterClass.ObsCategoriesOrBuilder getObsCategoriesOrBuilder() {
+      public org.datacommons.proto.ChartStoreOuterClass.ObsCategoriesOrBuilder
+          getObsCategoriesOrBuilder() {
         if ((valCase_ == 3) && (obsCategoriesBuilder_ != null)) {
           return obsCategoriesBuilder_.getMessageOrBuilder();
         } else {
@@ -8800,27 +9616,33 @@ public final class ChartStoreOuterClass {
           return org.datacommons.proto.ChartStoreOuterClass.ObsCategories.getDefaultInstance();
         }
       }
-      /**
-       * <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code>
-       */
+
+      /** <code>.org.datacommons.proto.ObsCategories obs_categories = 3;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.ChartStoreOuterClass.ObsCategories, org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsCategoriesOrBuilder> 
+              org.datacommons.proto.ChartStoreOuterClass.ObsCategories,
+              org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder,
+              org.datacommons.proto.ChartStoreOuterClass.ObsCategoriesOrBuilder>
           getObsCategoriesFieldBuilder() {
         if (obsCategoriesBuilder_ == null) {
           if (!(valCase_ == 3)) {
             val_ = org.datacommons.proto.ChartStoreOuterClass.ObsCategories.getDefaultInstance();
           }
-          obsCategoriesBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.ChartStoreOuterClass.ObsCategories, org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder, org.datacommons.proto.ChartStoreOuterClass.ObsCategoriesOrBuilder>(
+          obsCategoriesBuilder_ =
+              new com.google.protobuf.SingleFieldBuilderV3<
+                  org.datacommons.proto.ChartStoreOuterClass.ObsCategories,
+                  org.datacommons.proto.ChartStoreOuterClass.ObsCategories.Builder,
+                  org.datacommons.proto.ChartStoreOuterClass.ObsCategoriesOrBuilder>(
                   (org.datacommons.proto.ChartStoreOuterClass.ObsCategories) val_,
                   getParentForChildren(),
                   isClean());
           val_ = null;
         }
         valCase_ = 3;
-        onChanged();;
+        onChanged();
+        ;
         return obsCategoriesBuilder_;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -8833,12 +9655,12 @@ public final class ChartStoreOuterClass {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ChartStore)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.ChartStore)
     private static final org.datacommons.proto.ChartStoreOuterClass.ChartStore DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.ChartStoreOuterClass.ChartStore();
     }
@@ -8847,16 +9669,16 @@ public final class ChartStoreOuterClass {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<ChartStore>
-        PARSER = new com.google.protobuf.AbstractParser<ChartStore>() {
-      @java.lang.Override
-      public ChartStore parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ChartStore(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<ChartStore> PARSER =
+        new com.google.protobuf.AbstractParser<ChartStore>() {
+          @java.lang.Override
+          public ChartStore parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new ChartStore(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<ChartStore> parser() {
       return PARSER;
@@ -8871,160 +9693,192 @@ public final class ChartStoreOuterClass {
     public org.datacommons.proto.ChartStoreOuterClass.ChartStore getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_Facet_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_Facet_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_Facet_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ObsTimeSeries_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ObsTimeSeries_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ObsTimeSeries_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_ValEntry_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_ValEntry_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_ValEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_StrValEntry_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_StrValEntry_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_StrValEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_PlaceToLatestDateEntry_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_PlaceToLatestDateEntry_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_PlaceToLatestDateEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ObsCollection_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ObsCollection_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ObsCollection_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ObsCategories_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ObsCategories_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ObsCategories_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ChartStore_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ChartStore_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ChartStore_fieldAccessorTable;
 
-  public static com.google.protobuf.Descriptors.FileDescriptor
-      getDescriptor() {
+  public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
   }
-  private static  com.google.protobuf.Descriptors.FileDescriptor
-      descriptor;
+
+  private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
+
   static {
     java.lang.String[] descriptorData = {
-      "\n\021chart_store.proto\022\025org.datacommons.pro" +
-      "to\"\302\001\n\005Facet\022\023\n\013import_name\030\001 \001(\t\022\026\n\016pro" +
-      "venance_url\030\002 \001(\t\022\032\n\022measurement_method\030" +
-      "\003 \001(\t\022\032\n\022observation_period\030\004 \001(\t\022\026\n\016sca" +
-      "ling_factor\030\005 \001(\t\022\014\n\004unit\030\006 \001(\t\022\027\n\017is_dc" +
-      "_aggregate\030\007 \001(\010\022\025\n\ris_dc_imputed\030\010 \001(\010\"" +
-      "\303\006\n\rObsTimeSeries\022\022\n\nplace_name\030\003 \001(\t\022\022\n" +
-      "\nplace_dcid\030\005 \001(\t\022H\n\rsource_series\030\006 \003(\013" +
-      "21.org.datacommons.proto.ObsTimeSeries.S" +
-      "ourceSeries\032\255\005\n\014SourceSeries\022G\n\003val\030\001 \003(" +
-      "\0132:.org.datacommons.proto.ObsTimeSeries." +
-      "SourceSeries.ValEntry\022N\n\007str_val\030\014 \003(\0132=" +
-      ".org.datacommons.proto.ObsTimeSeries.Sou" +
-      "rceSeries.StrValEntry\022\032\n\022measurement_met" +
-      "hod\030\003 \001(\t\022\032\n\022observation_period\030\004 \001(\t\022\023\n" +
-      "\013import_name\030\005 \001(\t\022\031\n\021provenance_domain\030" +
-      "\006 \001(\t\022\026\n\016scaling_factor\030\007 \001(\t\022\014\n\004unit\030\010 " +
-      "\001(\t\022\027\n\017is_dc_aggregate\030\t \001(\010\022\026\n\016provenan" +
-      "ce_url\030\n \001(\t\022f\n\024place_to_latest_date\030\013 \003" +
-      "(\0132H.org.datacommons.proto.ObsTimeSeries" +
-      ".SourceSeries.PlaceToLatestDateEntry\022\025\n\r" +
-      "is_dc_imputed\030\r \001(\010\022+\n\005facet\030\016 \001(\0132\034.org" +
-      ".datacommons.proto.Facet\032*\n\010ValEntry\022\013\n\003" +
-      "key\030\001 \001(\t\022\r\n\005value\030\002 \001(\001:\0028\001\032-\n\013StrValEn" +
-      "try\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\0328\n\026P" +
-      "laceToLatestDateEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005va" +
-      "lue\030\002 \001(\t:\0028\001J\004\010\002\020\003J\004\010\001\020\002J\004\010\002\020\003J\004\010\004\020\005\"r\n" +
-      "\rObsCollection\022I\n\016source_cohorts\030\005 \003(\01321" +
-      ".org.datacommons.proto.ObsTimeSeries.Sou" +
-      "rceSeriesJ\004\010\001\020\002J\004\010\002\020\003J\004\010\003\020\004J\004\010\004\020\005\"K\n\rObs" +
-      "Categories\022\022\n\ncategories\030\001 \003(\t\022\022\n\nplace_" +
-      "name\030\002 \001(\t\022\022\n\nplace_dcid\030\003 \001(\t\"\324\001\n\nChart" +
-      "Store\022?\n\017obs_time_series\030\001 \001(\0132$.org.dat" +
-      "acommons.proto.ObsTimeSeriesH\000\022>\n\016obs_co" +
-      "llection\030\002 \001(\0132$.org.datacommons.proto.O" +
-      "bsCollectionH\000\022>\n\016obs_categories\030\003 \001(\0132$" +
-      ".org.datacommons.proto.ObsCategoriesH\000B\005" +
-      "\n\003valb\006proto3"
+      "\n\021chart_store.proto\022\025org.datacommons.pro"
+          + "to\"\302\001\n\005Facet\022\023\n\013import_name\030\001 \001(\t\022\026\n\016pro"
+          + "venance_url\030\002 \001(\t\022\032\n\022measurement_method\030"
+          + "\003 \001(\t\022\032\n\022observation_period\030\004 \001(\t\022\026\n\016sca"
+          + "ling_factor\030\005 \001(\t\022\014\n\004unit\030\006 \001(\t\022\027\n\017is_dc"
+          + "_aggregate\030\007 \001(\010\022\025\n\ris_dc_imputed\030\010 \001(\010\""
+          + "\303\006\n\rObsTimeSeries\022\022\n\nplace_name\030\003 \001(\t\022\022\n"
+          + "\nplace_dcid\030\005 \001(\t\022H\n\rsource_series\030\006 \003(\013"
+          + "21.org.datacommons.proto.ObsTimeSeries.S"
+          + "ourceSeries\032\255\005\n\014SourceSeries\022G\n\003val\030\001 \003("
+          + "\0132:.org.datacommons.proto.ObsTimeSeries."
+          + "SourceSeries.ValEntry\022N\n\007str_val\030\014 \003(\0132="
+          + ".org.datacommons.proto.ObsTimeSeries.Sou"
+          + "rceSeries.StrValEntry\022\032\n\022measurement_met"
+          + "hod\030\003 \001(\t\022\032\n\022observation_period\030\004 \001(\t\022\023\n"
+          + "\013import_name\030\005 \001(\t\022\031\n\021provenance_domain\030"
+          + "\006 \001(\t\022\026\n\016scaling_factor\030\007 \001(\t\022\014\n\004unit\030\010 "
+          + "\001(\t\022\027\n\017is_dc_aggregate\030\t \001(\010\022\026\n\016provenan"
+          + "ce_url\030\n \001(\t\022f\n\024place_to_latest_date\030\013 \003"
+          + "(\0132H.org.datacommons.proto.ObsTimeSeries"
+          + ".SourceSeries.PlaceToLatestDateEntry\022\025\n\r"
+          + "is_dc_imputed\030\r \001(\010\022+\n\005facet\030\016 \001(\0132\034.org"
+          + ".datacommons.proto.Facet\032*\n\010ValEntry\022\013\n\003"
+          + "key\030\001 \001(\t\022\r\n\005value\030\002 \001(\001:\0028\001\032-\n\013StrValEn"
+          + "try\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\0328\n\026P"
+          + "laceToLatestDateEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005va"
+          + "lue\030\002 \001(\t:\0028\001J\004\010\002\020\003J\004\010\001\020\002J\004\010\002\020\003J\004\010\004\020\005\"r\n"
+          + "\rObsCollection\022I\n\016source_cohorts\030\005 \003(\01321"
+          + ".org.datacommons.proto.ObsTimeSeries.Sou"
+          + "rceSeriesJ\004\010\001\020\002J\004\010\002\020\003J\004\010\003\020\004J\004\010\004\020\005\"K\n\rObs"
+          + "Categories\022\022\n\ncategories\030\001 \003(\t\022\022\n\nplace_"
+          + "name\030\002 \001(\t\022\022\n\nplace_dcid\030\003 \001(\t\"\324\001\n\nChart"
+          + "Store\022?\n\017obs_time_series\030\001 \001(\0132$.org.dat"
+          + "acommons.proto.ObsTimeSeriesH\000\022>\n\016obs_co"
+          + "llection\030\002 \001(\0132$.org.datacommons.proto.O"
+          + "bsCollectionH\000\022>\n\016obs_categories\030\003 \001(\0132$"
+          + ".org.datacommons.proto.ObsCategoriesH\000B\005"
+          + "\n\003valb\006proto3"
     };
-    descriptor = com.google.protobuf.Descriptors.FileDescriptor
-      .internalBuildGeneratedFileFrom(descriptorData,
-        new com.google.protobuf.Descriptors.FileDescriptor[] {
-        });
+    descriptor =
+        com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+            descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
     internal_static_org_datacommons_proto_Facet_descriptor =
-      getDescriptor().getMessageTypes().get(0);
-    internal_static_org_datacommons_proto_Facet_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_Facet_descriptor,
-        new java.lang.String[] { "ImportName", "ProvenanceUrl", "MeasurementMethod", "ObservationPeriod", "ScalingFactor", "Unit", "IsDcAggregate", "IsDcImputed", });
+        getDescriptor().getMessageTypes().get(0);
+    internal_static_org_datacommons_proto_Facet_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_Facet_descriptor,
+            new java.lang.String[] {
+              "ImportName",
+              "ProvenanceUrl",
+              "MeasurementMethod",
+              "ObservationPeriod",
+              "ScalingFactor",
+              "Unit",
+              "IsDcAggregate",
+              "IsDcImputed",
+            });
     internal_static_org_datacommons_proto_ObsTimeSeries_descriptor =
-      getDescriptor().getMessageTypes().get(1);
-    internal_static_org_datacommons_proto_ObsTimeSeries_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ObsTimeSeries_descriptor,
-        new java.lang.String[] { "PlaceName", "PlaceDcid", "SourceSeries", });
+        getDescriptor().getMessageTypes().get(1);
+    internal_static_org_datacommons_proto_ObsTimeSeries_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ObsTimeSeries_descriptor,
+            new java.lang.String[] {
+              "PlaceName", "PlaceDcid", "SourceSeries",
+            });
     internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor =
-      internal_static_org_datacommons_proto_ObsTimeSeries_descriptor.getNestedTypes().get(0);
-    internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor,
-        new java.lang.String[] { "Val", "StrVal", "MeasurementMethod", "ObservationPeriod", "ImportName", "ProvenanceDomain", "ScalingFactor", "Unit", "IsDcAggregate", "ProvenanceUrl", "PlaceToLatestDate", "IsDcImputed", "Facet", });
+        internal_static_org_datacommons_proto_ObsTimeSeries_descriptor.getNestedTypes().get(0);
+    internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor,
+            new java.lang.String[] {
+              "Val",
+              "StrVal",
+              "MeasurementMethod",
+              "ObservationPeriod",
+              "ImportName",
+              "ProvenanceDomain",
+              "ScalingFactor",
+              "Unit",
+              "IsDcAggregate",
+              "ProvenanceUrl",
+              "PlaceToLatestDate",
+              "IsDcImputed",
+              "Facet",
+            });
     internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_ValEntry_descriptor =
-      internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor.getNestedTypes().get(0);
-    internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_ValEntry_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_ValEntry_descriptor,
-        new java.lang.String[] { "Key", "Value", });
+        internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor
+            .getNestedTypes()
+            .get(0);
+    internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_ValEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_ValEntry_descriptor,
+            new java.lang.String[] {
+              "Key", "Value",
+            });
     internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_StrValEntry_descriptor =
-      internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor.getNestedTypes().get(1);
-    internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_StrValEntry_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_StrValEntry_descriptor,
-        new java.lang.String[] { "Key", "Value", });
+        internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor
+            .getNestedTypes()
+            .get(1);
+    internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_StrValEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_StrValEntry_descriptor,
+            new java.lang.String[] {
+              "Key", "Value",
+            });
     internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_PlaceToLatestDateEntry_descriptor =
-      internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor.getNestedTypes().get(2);
-    internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_PlaceToLatestDateEntry_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_PlaceToLatestDateEntry_descriptor,
-        new java.lang.String[] { "Key", "Value", });
+        internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_descriptor
+            .getNestedTypes()
+            .get(2);
+    internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_PlaceToLatestDateEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ObsTimeSeries_SourceSeries_PlaceToLatestDateEntry_descriptor,
+            new java.lang.String[] {
+              "Key", "Value",
+            });
     internal_static_org_datacommons_proto_ObsCollection_descriptor =
-      getDescriptor().getMessageTypes().get(2);
-    internal_static_org_datacommons_proto_ObsCollection_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ObsCollection_descriptor,
-        new java.lang.String[] { "SourceCohorts", });
+        getDescriptor().getMessageTypes().get(2);
+    internal_static_org_datacommons_proto_ObsCollection_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ObsCollection_descriptor,
+            new java.lang.String[] {
+              "SourceCohorts",
+            });
     internal_static_org_datacommons_proto_ObsCategories_descriptor =
-      getDescriptor().getMessageTypes().get(3);
-    internal_static_org_datacommons_proto_ObsCategories_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ObsCategories_descriptor,
-        new java.lang.String[] { "Categories", "PlaceName", "PlaceDcid", });
+        getDescriptor().getMessageTypes().get(3);
+    internal_static_org_datacommons_proto_ObsCategories_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ObsCategories_descriptor,
+            new java.lang.String[] {
+              "Categories", "PlaceName", "PlaceDcid",
+            });
     internal_static_org_datacommons_proto_ChartStore_descriptor =
-      getDescriptor().getMessageTypes().get(4);
-    internal_static_org_datacommons_proto_ChartStore_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ChartStore_descriptor,
-        new java.lang.String[] { "ObsTimeSeries", "ObsCollection", "ObsCategories", "Val", });
+        getDescriptor().getMessageTypes().get(4);
+    internal_static_org_datacommons_proto_ChartStore_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ChartStore_descriptor,
+            new java.lang.String[] {
+              "ObsTimeSeries", "ObsCollection", "ObsCategories", "Val",
+            });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

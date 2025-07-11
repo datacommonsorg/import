@@ -5,148 +5,185 @@ package org.datacommons.proto;
 
 public final class CacheData {
   private CacheData() {}
-  public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistryLite registry) {
+
+  public static void registerAllExtensions(com.google.protobuf.ExtensionRegistryLite registry) {}
+
+  public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
+    registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
   }
 
-  public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistry registry) {
-    registerAllExtensions(
-        (com.google.protobuf.ExtensionRegistryLite) registry);
-  }
-  public interface EntityInfoOrBuilder extends
+  public interface EntityInfoOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.EntityInfo)
       com.google.protobuf.MessageOrBuilder {
 
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>string name = 1;</code>
+     *
      * @return The name.
      */
     java.lang.String getName();
+
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>string name = 1;</code>
+     *
      * @return The bytes for name.
      */
-    com.google.protobuf.ByteString
-        getNameBytes();
+    com.google.protobuf.ByteString getNameBytes();
 
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>repeated string types = 2;</code>
+     *
      * @return A list containing the types.
      */
-    java.util.List<java.lang.String>
-        getTypesList();
+    java.util.List<java.lang.String> getTypesList();
+
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>repeated string types = 2;</code>
+     *
      * @return The count of types.
      */
     int getTypesCount();
+
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>repeated string types = 2;</code>
+     *
      * @param index The index of the element to return.
      * @return The types at the given index.
      */
     java.lang.String getTypes(int index);
+
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>repeated string types = 2;</code>
+     *
      * @param index The index of the value to return.
      * @return The bytes of the types at the given index.
      */
-    com.google.protobuf.ByteString
-        getTypesBytes(int index);
+    com.google.protobuf.ByteString getTypesBytes(int index);
 
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>string dcid = 3;</code>
+     *
      * @return The dcid.
      */
     java.lang.String getDcid();
+
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>string dcid = 3;</code>
+     *
      * @return The bytes for dcid.
      */
-    com.google.protobuf.ByteString
-        getDcidBytes();
+    com.google.protobuf.ByteString getDcidBytes();
 
     /**
      * <code>string provenance_id = 4;</code>
+     *
      * @return The provenanceId.
      */
     java.lang.String getProvenanceId();
-    /**
-     * <code>string provenance_id = 4;</code>
-     * @return The bytes for provenanceId.
-     */
-    com.google.protobuf.ByteString
-        getProvenanceIdBytes();
 
     /**
+     * <code>string provenance_id = 4;</code>
+     *
+     * @return The bytes for provenanceId.
+     */
+    com.google.protobuf.ByteString getProvenanceIdBytes();
+
+    /**
+     *
+     *
      * <pre>
      * Only for object value.
      * </pre>
      *
      * <code>string value = 5;</code>
+     *
      * @return The value.
      */
     java.lang.String getValue();
+
     /**
+     *
+     *
      * <pre>
      * Only for object value.
      * </pre>
      *
      * <code>string value = 5;</code>
+     *
      * @return The bytes for value.
      */
-    com.google.protobuf.ByteString
-        getValueBytes();
+    com.google.protobuf.ByteString getValueBytes();
   }
+
   /**
+   *
+   *
    * <pre>
    * Basic info for an entity (subject or object).
    * </pre>
    *
    * Protobuf type {@code org.datacommons.proto.EntityInfo}
    */
-  public static final class EntityInfo extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class EntityInfo extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.EntityInfo)
       EntityInfoOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use EntityInfo.newBuilder() to construct.
     private EntityInfo(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private EntityInfo() {
       name_ = "";
       types_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -157,16 +194,15 @@ public final class CacheData {
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new EntityInfo();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private EntityInfo(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -186,53 +222,57 @@ public final class CacheData {
             case 0:
               done = true;
               break;
-            case 10: {
-              java.lang.String s = input.readStringRequireUtf8();
+            case 10:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
 
-              name_ = s;
-              break;
-            }
-            case 18: {
-              java.lang.String s = input.readStringRequireUtf8();
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                types_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000001;
+                name_ = s;
+                break;
               }
-              types_.add(s);
-              break;
-            }
-            case 26: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              dcid_ = s;
-              break;
-            }
-            case 34: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              provenanceId_ = s;
-              break;
-            }
-            case 42: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              value_ = s;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+            case 18:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  types_ = new com.google.protobuf.LazyStringArrayList();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                types_.add(s);
+                break;
               }
-              break;
-            }
+            case 26:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
+
+                dcid_ = s;
+                break;
+              }
+            case 34:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
+
+                provenanceId_ = s;
+                break;
+              }
+            case 42:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
+
+                value_ = s;
+                break;
+              }
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           types_ = types_.getUnmodifiableView();
@@ -241,27 +281,34 @@ public final class CacheData {
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_EntityInfo_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.CacheData
+          .internal_static_org_datacommons_proto_EntityInfo_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_EntityInfo_fieldAccessorTable
+      return org.datacommons.proto.CacheData
+          .internal_static_org_datacommons_proto_EntityInfo_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.CacheData.EntityInfo.class, org.datacommons.proto.CacheData.EntityInfo.Builder.class);
+              org.datacommons.proto.CacheData.EntityInfo.class,
+              org.datacommons.proto.CacheData.EntityInfo.Builder.class);
     }
 
     public static final int NAME_FIELD_NUMBER = 1;
     private volatile java.lang.Object name_;
+
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>string name = 1;</code>
+     *
      * @return The name.
      */
     @java.lang.Override
@@ -270,29 +317,30 @@ public final class CacheData {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         name_ = s;
         return s;
       }
     }
+
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>string name = 1;</code>
+     *
      * @return The bytes for name.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getNameBytes() {
+    public com.google.protobuf.ByteString getNameBytes() {
       java.lang.Object ref = name_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         name_ = b;
         return b;
       } else {
@@ -302,63 +350,81 @@ public final class CacheData {
 
     public static final int TYPES_FIELD_NUMBER = 2;
     private com.google.protobuf.LazyStringList types_;
+
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>repeated string types = 2;</code>
+     *
      * @return A list containing the types.
      */
-    public com.google.protobuf.ProtocolStringList
-        getTypesList() {
+    public com.google.protobuf.ProtocolStringList getTypesList() {
       return types_;
     }
+
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>repeated string types = 2;</code>
+     *
      * @return The count of types.
      */
     public int getTypesCount() {
       return types_.size();
     }
+
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>repeated string types = 2;</code>
+     *
      * @param index The index of the element to return.
      * @return The types at the given index.
      */
     public java.lang.String getTypes(int index) {
       return types_.get(index);
     }
+
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>repeated string types = 2;</code>
+     *
      * @param index The index of the value to return.
      * @return The bytes of the types at the given index.
      */
-    public com.google.protobuf.ByteString
-        getTypesBytes(int index) {
+    public com.google.protobuf.ByteString getTypesBytes(int index) {
       return types_.getByteString(index);
     }
 
     public static final int DCID_FIELD_NUMBER = 3;
     private volatile java.lang.Object dcid_;
+
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>string dcid = 3;</code>
+     *
      * @return The dcid.
      */
     @java.lang.Override
@@ -367,29 +433,30 @@ public final class CacheData {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         dcid_ = s;
         return s;
       }
     }
+
     /**
+     *
+     *
      * <pre>
      * Only for reference object.
      * </pre>
      *
      * <code>string dcid = 3;</code>
+     *
      * @return The bytes for dcid.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getDcidBytes() {
+    public com.google.protobuf.ByteString getDcidBytes() {
       java.lang.Object ref = dcid_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         dcid_ = b;
         return b;
       } else {
@@ -399,8 +466,10 @@ public final class CacheData {
 
     public static final int PROVENANCE_ID_FIELD_NUMBER = 4;
     private volatile java.lang.Object provenanceId_;
+
     /**
      * <code>string provenance_id = 4;</code>
+     *
      * @return The provenanceId.
      */
     @java.lang.Override
@@ -409,25 +478,24 @@ public final class CacheData {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         provenanceId_ = s;
         return s;
       }
     }
+
     /**
      * <code>string provenance_id = 4;</code>
+     *
      * @return The bytes for provenanceId.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getProvenanceIdBytes() {
+    public com.google.protobuf.ByteString getProvenanceIdBytes() {
       java.lang.Object ref = provenanceId_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         provenanceId_ = b;
         return b;
       } else {
@@ -437,12 +505,16 @@ public final class CacheData {
 
     public static final int VALUE_FIELD_NUMBER = 5;
     private volatile java.lang.Object value_;
+
     /**
+     *
+     *
      * <pre>
      * Only for object value.
      * </pre>
      *
      * <code>string value = 5;</code>
+     *
      * @return The value.
      */
     @java.lang.Override
@@ -451,29 +523,30 @@ public final class CacheData {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         value_ = s;
         return s;
       }
     }
+
     /**
+     *
+     *
      * <pre>
      * Only for object value.
      * </pre>
      *
      * <code>string value = 5;</code>
+     *
      * @return The bytes for value.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getValueBytes() {
+    public com.google.protobuf.ByteString getValueBytes() {
       java.lang.Object ref = value_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         value_ = b;
         return b;
       } else {
@@ -482,6 +555,7 @@ public final class CacheData {
     }
 
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -493,8 +567,7 @@ public final class CacheData {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       if (!getNameBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
       }
@@ -547,23 +620,19 @@ public final class CacheData {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.CacheData.EntityInfo)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.CacheData.EntityInfo other = (org.datacommons.proto.CacheData.EntityInfo) obj;
+      org.datacommons.proto.CacheData.EntityInfo other =
+          (org.datacommons.proto.CacheData.EntityInfo) obj;
 
-      if (!getName()
-          .equals(other.getName())) return false;
-      if (!getTypesList()
-          .equals(other.getTypesList())) return false;
-      if (!getDcid()
-          .equals(other.getDcid())) return false;
-      if (!getProvenanceId()
-          .equals(other.getProvenanceId())) return false;
-      if (!getValue()
-          .equals(other.getValue())) return false;
+      if (!getName().equals(other.getName())) return false;
+      if (!getTypesList().equals(other.getTypesList())) return false;
+      if (!getDcid().equals(other.getDcid())) return false;
+      if (!getProvenanceId().equals(other.getProvenanceId())) return false;
+      if (!getValue().equals(other.getValue())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -592,88 +661,94 @@ public final class CacheData {
       return hash;
     }
 
-    public static org.datacommons.proto.CacheData.EntityInfo parseFrom(
-        java.nio.ByteBuffer data)
+    public static org.datacommons.proto.CacheData.EntityInfo parseFrom(java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfo parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfo parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfo parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfo parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfo parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfo parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfo parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
-    public static org.datacommons.proto.CacheData.EntityInfo parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.CacheData.EntityInfo parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.CacheData.EntityInfo parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.CacheData.EntityInfo parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfo parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
+
     public static Builder newBuilder(org.datacommons.proto.CacheData.EntityInfo prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -682,28 +757,34 @@ public final class CacheData {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
+     *
+     *
      * <pre>
      * Basic info for an entity (subject or object).
      * </pre>
      *
      * Protobuf type {@code org.datacommons.proto.EntityInfo}
      */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.EntityInfo)
         org.datacommons.proto.CacheData.EntityInfoOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_EntityInfo_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.CacheData
+            .internal_static_org_datacommons_proto_EntityInfo_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_EntityInfo_fieldAccessorTable
+        return org.datacommons.proto.CacheData
+            .internal_static_org_datacommons_proto_EntityInfo_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.CacheData.EntityInfo.class, org.datacommons.proto.CacheData.EntityInfo.Builder.class);
+                org.datacommons.proto.CacheData.EntityInfo.class,
+                org.datacommons.proto.CacheData.EntityInfo.Builder.class);
       }
 
       // Construct using org.datacommons.proto.CacheData.EntityInfo.newBuilder()
@@ -711,16 +792,15 @@ public final class CacheData {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -738,9 +818,9 @@ public final class CacheData {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_EntityInfo_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.CacheData
+            .internal_static_org_datacommons_proto_EntityInfo_descriptor;
       }
 
       @java.lang.Override
@@ -759,7 +839,8 @@ public final class CacheData {
 
       @java.lang.Override
       public org.datacommons.proto.CacheData.EntityInfo buildPartial() {
-        org.datacommons.proto.CacheData.EntityInfo result = new org.datacommons.proto.CacheData.EntityInfo(this);
+        org.datacommons.proto.CacheData.EntityInfo result =
+            new org.datacommons.proto.CacheData.EntityInfo(this);
         int from_bitField0_ = bitField0_;
         result.name_ = name_;
         if (((bitField0_ & 0x00000001) != 0)) {
@@ -778,38 +859,41 @@ public final class CacheData {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.CacheData.EntityInfo) {
-          return mergeFrom((org.datacommons.proto.CacheData.EntityInfo)other);
+          return mergeFrom((org.datacommons.proto.CacheData.EntityInfo) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -872,22 +956,26 @@ public final class CacheData {
         }
         return this;
       }
+
       private int bitField0_;
 
       private java.lang.Object name_ = "";
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>string name = 1;</code>
+       *
        * @return The name.
        */
       public java.lang.String getName() {
         java.lang.Object ref = name_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           name_ = s;
           return s;
@@ -895,198 +983,238 @@ public final class CacheData {
           return (java.lang.String) ref;
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>string name = 1;</code>
+       *
        * @return The bytes for name.
        */
-      public com.google.protobuf.ByteString
-          getNameBytes() {
+      public com.google.protobuf.ByteString getNameBytes() {
         java.lang.Object ref = name_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           name_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>string name = 1;</code>
+       *
        * @param value The name to set.
        * @return This builder for chaining.
        */
-      public Builder setName(
-          java.lang.String value) {
+      public Builder setName(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
-        name_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Only for reference object.
-       * </pre>
-       *
-       * <code>string name = 1;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearName() {
-        
-        name_ = getDefaultInstance().getName();
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Only for reference object.
-       * </pre>
-       *
-       * <code>string name = 1;</code>
-       * @param value The bytes for name to set.
-       * @return This builder for chaining.
-       */
-      public Builder setNameBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+
         name_ = value;
         onChanged();
         return this;
       }
 
-      private com.google.protobuf.LazyStringList types_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      /**
+       *
+       *
+       * <pre>
+       * Only for reference object.
+       * </pre>
+       *
+       * <code>string name = 1;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearName() {
+
+        name_ = getDefaultInstance().getName();
+        onChanged();
+        return this;
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * Only for reference object.
+       * </pre>
+       *
+       * <code>string name = 1;</code>
+       *
+       * @param value The bytes for name to set.
+       * @return This builder for chaining.
+       */
+      public Builder setNameBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
+        name_ = value;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList types_ =
+          com.google.protobuf.LazyStringArrayList.EMPTY;
+
       private void ensureTypesIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
           types_ = new com.google.protobuf.LazyStringArrayList(types_);
           bitField0_ |= 0x00000001;
-         }
+        }
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>repeated string types = 2;</code>
+       *
        * @return A list containing the types.
        */
-      public com.google.protobuf.ProtocolStringList
-          getTypesList() {
+      public com.google.protobuf.ProtocolStringList getTypesList() {
         return types_.getUnmodifiableView();
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>repeated string types = 2;</code>
+       *
        * @return The count of types.
        */
       public int getTypesCount() {
         return types_.size();
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>repeated string types = 2;</code>
+       *
        * @param index The index of the element to return.
        * @return The types at the given index.
        */
       public java.lang.String getTypes(int index) {
         return types_.get(index);
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>repeated string types = 2;</code>
+       *
        * @param index The index of the value to return.
        * @return The bytes of the types at the given index.
        */
-      public com.google.protobuf.ByteString
-          getTypesBytes(int index) {
+      public com.google.protobuf.ByteString getTypesBytes(int index) {
         return types_.getByteString(index);
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>repeated string types = 2;</code>
+       *
        * @param index The index to set the value at.
        * @param value The types to set.
        * @return This builder for chaining.
        */
-      public Builder setTypes(
-          int index, java.lang.String value) {
+      public Builder setTypes(int index, java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureTypesIsMutable();
+          throw new NullPointerException();
+        }
+        ensureTypesIsMutable();
         types_.set(index, value);
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>repeated string types = 2;</code>
+       *
        * @param value The types to add.
        * @return This builder for chaining.
        */
-      public Builder addTypes(
-          java.lang.String value) {
+      public Builder addTypes(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureTypesIsMutable();
+          throw new NullPointerException();
+        }
+        ensureTypesIsMutable();
         types_.add(value);
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>repeated string types = 2;</code>
+       *
        * @param values The types to add.
        * @return This builder for chaining.
        */
-      public Builder addAllTypes(
-          java.lang.Iterable<java.lang.String> values) {
+      public Builder addAllTypes(java.lang.Iterable<java.lang.String> values) {
         ensureTypesIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, types_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, types_);
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>repeated string types = 2;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearTypes() {
@@ -1095,21 +1223,24 @@ public final class CacheData {
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>repeated string types = 2;</code>
+       *
        * @param value The bytes of the types to add.
        * @return This builder for chaining.
        */
-      public Builder addTypesBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder addTypesBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
         ensureTypesIsMutable();
         types_.add(value);
         onChanged();
@@ -1117,19 +1248,22 @@ public final class CacheData {
       }
 
       private java.lang.Object dcid_ = "";
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>string dcid = 3;</code>
+       *
        * @return The dcid.
        */
       public java.lang.String getDcid() {
         java.lang.Object ref = dcid_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           dcid_ = s;
           return s;
@@ -1137,91 +1271,104 @@ public final class CacheData {
           return (java.lang.String) ref;
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>string dcid = 3;</code>
+       *
        * @return The bytes for dcid.
        */
-      public com.google.protobuf.ByteString
-          getDcidBytes() {
+      public com.google.protobuf.ByteString getDcidBytes() {
         java.lang.Object ref = dcid_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           dcid_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>string dcid = 3;</code>
+       *
        * @param value The dcid to set.
        * @return This builder for chaining.
        */
-      public Builder setDcid(
-          java.lang.String value) {
+      public Builder setDcid(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         dcid_ = value;
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>string dcid = 3;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearDcid() {
-        
+
         dcid_ = getDefaultInstance().getDcid();
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for reference object.
        * </pre>
        *
        * <code>string dcid = 3;</code>
+       *
        * @param value The bytes for dcid to set.
        * @return This builder for chaining.
        */
-      public Builder setDcidBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setDcidBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         dcid_ = value;
         onChanged();
         return this;
       }
 
       private java.lang.Object provenanceId_ = "";
+
       /**
        * <code>string provenance_id = 4;</code>
+       *
        * @return The provenanceId.
        */
       public java.lang.String getProvenanceId() {
         java.lang.Object ref = provenanceId_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           provenanceId_ = s;
           return s;
@@ -1229,79 +1376,86 @@ public final class CacheData {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string provenance_id = 4;</code>
+       *
        * @return The bytes for provenanceId.
        */
-      public com.google.protobuf.ByteString
-          getProvenanceIdBytes() {
+      public com.google.protobuf.ByteString getProvenanceIdBytes() {
         java.lang.Object ref = provenanceId_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           provenanceId_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string provenance_id = 4;</code>
+       *
        * @param value The provenanceId to set.
        * @return This builder for chaining.
        */
-      public Builder setProvenanceId(
-          java.lang.String value) {
+      public Builder setProvenanceId(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         provenanceId_ = value;
         onChanged();
         return this;
       }
+
       /**
        * <code>string provenance_id = 4;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearProvenanceId() {
-        
+
         provenanceId_ = getDefaultInstance().getProvenanceId();
         onChanged();
         return this;
       }
+
       /**
        * <code>string provenance_id = 4;</code>
+       *
        * @param value The bytes for provenanceId to set.
        * @return This builder for chaining.
        */
-      public Builder setProvenanceIdBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setProvenanceIdBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         provenanceId_ = value;
         onChanged();
         return this;
       }
 
       private java.lang.Object value_ = "";
+
       /**
+       *
+       *
        * <pre>
        * Only for object value.
        * </pre>
        *
        * <code>string value = 5;</code>
+       *
        * @return The value.
        */
       public java.lang.String getValue() {
         java.lang.Object ref = value_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           value_ = s;
           return s;
@@ -1309,80 +1463,93 @@ public final class CacheData {
           return (java.lang.String) ref;
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for object value.
        * </pre>
        *
        * <code>string value = 5;</code>
+       *
        * @return The bytes for value.
        */
-      public com.google.protobuf.ByteString
-          getValueBytes() {
+      public com.google.protobuf.ByteString getValueBytes() {
         java.lang.Object ref = value_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           value_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for object value.
        * </pre>
        *
        * <code>string value = 5;</code>
+       *
        * @param value The value to set.
        * @return This builder for chaining.
        */
-      public Builder setValue(
-          java.lang.String value) {
+      public Builder setValue(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         value_ = value;
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for object value.
        * </pre>
        *
        * <code>string value = 5;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearValue() {
-        
+
         value_ = getDefaultInstance().getValue();
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * Only for object value.
        * </pre>
        *
        * <code>string value = 5;</code>
+       *
        * @param value The bytes for value to set.
        * @return This builder for chaining.
        */
-      public Builder setValueBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setValueBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         value_ = value;
         onChanged();
         return this;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -1395,12 +1562,12 @@ public final class CacheData {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.EntityInfo)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.EntityInfo)
     private static final org.datacommons.proto.CacheData.EntityInfo DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.CacheData.EntityInfo();
     }
@@ -1409,16 +1576,16 @@ public final class CacheData {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<EntityInfo>
-        PARSER = new com.google.protobuf.AbstractParser<EntityInfo>() {
-      @java.lang.Override
-      public EntityInfo parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new EntityInfo(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<EntityInfo> PARSER =
+        new com.google.protobuf.AbstractParser<EntityInfo>() {
+          @java.lang.Override
+          public EntityInfo parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new EntityInfo(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<EntityInfo> parser() {
       return PARSER;
@@ -1433,79 +1600,78 @@ public final class CacheData {
     public org.datacommons.proto.CacheData.EntityInfo getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface EntityInfoCollectionOrBuilder extends
+  public interface EntityInfoCollectionOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.EntityInfoCollection)
       com.google.protobuf.MessageOrBuilder {
 
-    /**
-     * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-     */
-    java.util.List<org.datacommons.proto.CacheData.EntityInfo> 
-        getEntitiesList();
-    /**
-     * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-     */
+    /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
+    java.util.List<org.datacommons.proto.CacheData.EntityInfo> getEntitiesList();
+
+    /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
     org.datacommons.proto.CacheData.EntityInfo getEntities(int index);
-    /**
-     * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
     int getEntitiesCount();
-    /**
-     * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-     */
-    java.util.List<? extends org.datacommons.proto.CacheData.EntityInfoOrBuilder> 
+
+    /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
+    java.util.List<? extends org.datacommons.proto.CacheData.EntityInfoOrBuilder>
         getEntitiesOrBuilderList();
-    /**
-     * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-     */
-    org.datacommons.proto.CacheData.EntityInfoOrBuilder getEntitiesOrBuilder(
-        int index);
+
+    /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
+    org.datacommons.proto.CacheData.EntityInfoOrBuilder getEntitiesOrBuilder(int index);
 
     /**
+     *
+     *
      * <pre>
      * Before potential truncation, might exceed INT32_MAX.
      * </pre>
      *
      * <code>double total = 3;</code>
+     *
      * @return The total.
      */
     double getTotal();
   }
+
   /**
+   *
+   *
    * <pre>
    * Basic info for a collection of entities.
    * </pre>
    *
    * Protobuf type {@code org.datacommons.proto.EntityInfoCollection}
    */
-  public static final class EntityInfoCollection extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class EntityInfoCollection extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.EntityInfoCollection)
       EntityInfoCollectionOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use EntityInfoCollection.newBuilder() to construct.
     private EntityInfoCollection(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private EntityInfoCollection() {
       entities_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new EntityInfoCollection();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private EntityInfoCollection(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1525,34 +1691,35 @@ public final class CacheData {
             case 0:
               done = true;
               break;
-            case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                entities_ = new java.util.ArrayList<org.datacommons.proto.CacheData.EntityInfo>();
-                mutable_bitField0_ |= 0x00000001;
+            case 10:
+              {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  entities_ = new java.util.ArrayList<org.datacommons.proto.CacheData.EntityInfo>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                entities_.add(
+                    input.readMessage(
+                        org.datacommons.proto.CacheData.EntityInfo.parser(), extensionRegistry));
+                break;
               }
-              entities_.add(
-                  input.readMessage(org.datacommons.proto.CacheData.EntityInfo.parser(), extensionRegistry));
-              break;
-            }
-            case 25: {
-
-              total_ = input.readDouble();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+            case 25:
+              {
+                total_ = input.readDouble();
+                break;
               }
-              break;
-            }
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           entities_ = java.util.Collections.unmodifiableList(entities_);
@@ -1561,67 +1728,68 @@ public final class CacheData {
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_EntityInfoCollection_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.CacheData
+          .internal_static_org_datacommons_proto_EntityInfoCollection_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_EntityInfoCollection_fieldAccessorTable
+      return org.datacommons.proto.CacheData
+          .internal_static_org_datacommons_proto_EntityInfoCollection_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.CacheData.EntityInfoCollection.class, org.datacommons.proto.CacheData.EntityInfoCollection.Builder.class);
+              org.datacommons.proto.CacheData.EntityInfoCollection.class,
+              org.datacommons.proto.CacheData.EntityInfoCollection.Builder.class);
     }
 
     public static final int ENTITIES_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.CacheData.EntityInfo> entities_;
-    /**
-     * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
     @java.lang.Override
     public java.util.List<org.datacommons.proto.CacheData.EntityInfo> getEntitiesList() {
       return entities_;
     }
-    /**
-     * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
     @java.lang.Override
-    public java.util.List<? extends org.datacommons.proto.CacheData.EntityInfoOrBuilder> 
+    public java.util.List<? extends org.datacommons.proto.CacheData.EntityInfoOrBuilder>
         getEntitiesOrBuilderList() {
       return entities_;
     }
-    /**
-     * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
     @java.lang.Override
     public int getEntitiesCount() {
       return entities_.size();
     }
-    /**
-     * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.CacheData.EntityInfo getEntities(int index) {
       return entities_.get(index);
     }
-    /**
-     * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
     @java.lang.Override
-    public org.datacommons.proto.CacheData.EntityInfoOrBuilder getEntitiesOrBuilder(
-        int index) {
+    public org.datacommons.proto.CacheData.EntityInfoOrBuilder getEntitiesOrBuilder(int index) {
       return entities_.get(index);
     }
 
     public static final int TOTAL_FIELD_NUMBER = 3;
     private double total_;
+
     /**
+     *
+     *
      * <pre>
      * Before potential truncation, might exceed INT32_MAX.
      * </pre>
      *
      * <code>double total = 3;</code>
+     *
      * @return The total.
      */
     @java.lang.Override
@@ -1630,6 +1798,7 @@ public final class CacheData {
     }
 
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -1641,8 +1810,7 @@ public final class CacheData {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       for (int i = 0; i < entities_.size(); i++) {
         output.writeMessage(1, entities_.get(i));
       }
@@ -1659,12 +1827,10 @@ public final class CacheData {
 
       size = 0;
       for (int i = 0; i < entities_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, entities_.get(i));
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, entities_.get(i));
       }
       if (total_ != 0D) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeDoubleSize(3, total_);
+        size += com.google.protobuf.CodedOutputStream.computeDoubleSize(3, total_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1674,18 +1840,17 @@ public final class CacheData {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.CacheData.EntityInfoCollection)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.CacheData.EntityInfoCollection other = (org.datacommons.proto.CacheData.EntityInfoCollection) obj;
+      org.datacommons.proto.CacheData.EntityInfoCollection other =
+          (org.datacommons.proto.CacheData.EntityInfoCollection) obj;
 
-      if (!getEntitiesList()
-          .equals(other.getEntitiesList())) return false;
+      if (!getEntitiesList().equals(other.getEntitiesList())) return false;
       if (java.lang.Double.doubleToLongBits(getTotal())
-          != java.lang.Double.doubleToLongBits(
-              other.getTotal())) return false;
+          != java.lang.Double.doubleToLongBits(other.getTotal())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -1702,95 +1867,104 @@ public final class CacheData {
         hash = (53 * hash) + getEntitiesList().hashCode();
       }
       hash = (37 * hash) + TOTAL_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-          java.lang.Double.doubleToLongBits(getTotal()));
+      hash =
+          (53 * hash)
+              + com.google.protobuf.Internal.hashLong(
+                  java.lang.Double.doubleToLongBits(getTotal()));
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
     }
 
     public static org.datacommons.proto.CacheData.EntityInfoCollection parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfoCollection parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfoCollection parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfoCollection parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfoCollection parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfoCollection parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.datacommons.proto.CacheData.EntityInfoCollection parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.CacheData.EntityInfoCollection parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
-    public static org.datacommons.proto.CacheData.EntityInfoCollection parseDelimitedFrom(java.io.InputStream input)
+
+    public static org.datacommons.proto.CacheData.EntityInfoCollection parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfoCollection parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.CacheData.EntityInfoCollection parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.CacheData.EntityInfoCollection parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.CacheData.EntityInfoCollection parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.datacommons.proto.CacheData.EntityInfoCollection prototype) {
+
+    public static Builder newBuilder(
+        org.datacommons.proto.CacheData.EntityInfoCollection prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -1799,28 +1973,34 @@ public final class CacheData {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
+     *
+     *
      * <pre>
      * Basic info for a collection of entities.
      * </pre>
      *
      * Protobuf type {@code org.datacommons.proto.EntityInfoCollection}
      */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.EntityInfoCollection)
         org.datacommons.proto.CacheData.EntityInfoCollectionOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_EntityInfoCollection_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.CacheData
+            .internal_static_org_datacommons_proto_EntityInfoCollection_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_EntityInfoCollection_fieldAccessorTable
+        return org.datacommons.proto.CacheData
+            .internal_static_org_datacommons_proto_EntityInfoCollection_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.CacheData.EntityInfoCollection.class, org.datacommons.proto.CacheData.EntityInfoCollection.Builder.class);
+                org.datacommons.proto.CacheData.EntityInfoCollection.class,
+                org.datacommons.proto.CacheData.EntityInfoCollection.Builder.class);
       }
 
       // Construct using org.datacommons.proto.CacheData.EntityInfoCollection.newBuilder()
@@ -1828,17 +2008,17 @@ public final class CacheData {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getEntitiesFieldBuilder();
         }
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -1854,9 +2034,9 @@ public final class CacheData {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_EntityInfoCollection_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.CacheData
+            .internal_static_org_datacommons_proto_EntityInfoCollection_descriptor;
       }
 
       @java.lang.Override
@@ -1875,7 +2055,8 @@ public final class CacheData {
 
       @java.lang.Override
       public org.datacommons.proto.CacheData.EntityInfoCollection buildPartial() {
-        org.datacommons.proto.CacheData.EntityInfoCollection result = new org.datacommons.proto.CacheData.EntityInfoCollection(this);
+        org.datacommons.proto.CacheData.EntityInfoCollection result =
+            new org.datacommons.proto.CacheData.EntityInfoCollection(this);
         int from_bitField0_ = bitField0_;
         if (entitiesBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
@@ -1895,38 +2076,41 @@ public final class CacheData {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.CacheData.EntityInfoCollection) {
-          return mergeFrom((org.datacommons.proto.CacheData.EntityInfoCollection)other);
+          return mergeFrom((org.datacommons.proto.CacheData.EntityInfoCollection) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -1934,7 +2118,8 @@ public final class CacheData {
       }
 
       public Builder mergeFrom(org.datacommons.proto.CacheData.EntityInfoCollection other) {
-        if (other == org.datacommons.proto.CacheData.EntityInfoCollection.getDefaultInstance()) return this;
+        if (other == org.datacommons.proto.CacheData.EntityInfoCollection.getDefaultInstance())
+          return this;
         if (entitiesBuilder_ == null) {
           if (!other.entities_.isEmpty()) {
             if (entities_.isEmpty()) {
@@ -1953,9 +2138,10 @@ public final class CacheData {
               entitiesBuilder_ = null;
               entities_ = other.entities_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              entitiesBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getEntitiesFieldBuilder() : null;
+              entitiesBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getEntitiesFieldBuilder()
+                      : null;
             } else {
               entitiesBuilder_.addAllMessages(other.entities_);
             }
@@ -1983,7 +2169,8 @@ public final class CacheData {
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.CacheData.EntityInfoCollection) e.getUnfinishedMessage();
+          parsedMessage =
+              (org.datacommons.proto.CacheData.EntityInfoCollection) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -1992,23 +2179,27 @@ public final class CacheData {
         }
         return this;
       }
+
       private int bitField0_;
 
       private java.util.List<org.datacommons.proto.CacheData.EntityInfo> entities_ =
-        java.util.Collections.emptyList();
+          java.util.Collections.emptyList();
+
       private void ensureEntitiesIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
-          entities_ = new java.util.ArrayList<org.datacommons.proto.CacheData.EntityInfo>(entities_);
+          entities_ =
+              new java.util.ArrayList<org.datacommons.proto.CacheData.EntityInfo>(entities_);
           bitField0_ |= 0x00000001;
-         }
+        }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.CacheData.EntityInfo, org.datacommons.proto.CacheData.EntityInfo.Builder, org.datacommons.proto.CacheData.EntityInfoOrBuilder> entitiesBuilder_;
+              org.datacommons.proto.CacheData.EntityInfo,
+              org.datacommons.proto.CacheData.EntityInfo.Builder,
+              org.datacommons.proto.CacheData.EntityInfoOrBuilder>
+          entitiesBuilder_;
 
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
       public java.util.List<org.datacommons.proto.CacheData.EntityInfo> getEntitiesList() {
         if (entitiesBuilder_ == null) {
           return java.util.Collections.unmodifiableList(entities_);
@@ -2016,9 +2207,8 @@ public final class CacheData {
           return entitiesBuilder_.getMessageList();
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
       public int getEntitiesCount() {
         if (entitiesBuilder_ == null) {
           return entities_.size();
@@ -2026,9 +2216,8 @@ public final class CacheData {
           return entitiesBuilder_.getCount();
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
       public org.datacommons.proto.CacheData.EntityInfo getEntities(int index) {
         if (entitiesBuilder_ == null) {
           return entities_.get(index);
@@ -2036,11 +2225,9 @@ public final class CacheData {
           return entitiesBuilder_.getMessage(index);
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
-      public Builder setEntities(
-          int index, org.datacommons.proto.CacheData.EntityInfo value) {
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
+      public Builder setEntities(int index, org.datacommons.proto.CacheData.EntityInfo value) {
         if (entitiesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -2053,9 +2240,8 @@ public final class CacheData {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
       public Builder setEntities(
           int index, org.datacommons.proto.CacheData.EntityInfo.Builder builderForValue) {
         if (entitiesBuilder_ == null) {
@@ -2067,9 +2253,8 @@ public final class CacheData {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
       public Builder addEntities(org.datacommons.proto.CacheData.EntityInfo value) {
         if (entitiesBuilder_ == null) {
           if (value == null) {
@@ -2083,11 +2268,9 @@ public final class CacheData {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
-      public Builder addEntities(
-          int index, org.datacommons.proto.CacheData.EntityInfo value) {
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
+      public Builder addEntities(int index, org.datacommons.proto.CacheData.EntityInfo value) {
         if (entitiesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -2100,9 +2283,8 @@ public final class CacheData {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
       public Builder addEntities(
           org.datacommons.proto.CacheData.EntityInfo.Builder builderForValue) {
         if (entitiesBuilder_ == null) {
@@ -2114,9 +2296,8 @@ public final class CacheData {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
       public Builder addEntities(
           int index, org.datacommons.proto.CacheData.EntityInfo.Builder builderForValue) {
         if (entitiesBuilder_ == null) {
@@ -2128,24 +2309,21 @@ public final class CacheData {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
       public Builder addAllEntities(
           java.lang.Iterable<? extends org.datacommons.proto.CacheData.EntityInfo> values) {
         if (entitiesBuilder_ == null) {
           ensureEntitiesIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, entities_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, entities_);
           onChanged();
         } else {
           entitiesBuilder_.addAllMessages(values);
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
       public Builder clearEntities() {
         if (entitiesBuilder_ == null) {
           entities_ = java.util.Collections.emptyList();
@@ -2156,9 +2334,8 @@ public final class CacheData {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
       public Builder removeEntities(int index) {
         if (entitiesBuilder_ == null) {
           ensureEntitiesIsMutable();
@@ -2169,113 +2346,121 @@ public final class CacheData {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
-      public org.datacommons.proto.CacheData.EntityInfo.Builder getEntitiesBuilder(
-          int index) {
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
+      public org.datacommons.proto.CacheData.EntityInfo.Builder getEntitiesBuilder(int index) {
         return getEntitiesFieldBuilder().getBuilder(index);
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
-      public org.datacommons.proto.CacheData.EntityInfoOrBuilder getEntitiesOrBuilder(
-          int index) {
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
+      public org.datacommons.proto.CacheData.EntityInfoOrBuilder getEntitiesOrBuilder(int index) {
         if (entitiesBuilder_ == null) {
-          return entities_.get(index);  } else {
+          return entities_.get(index);
+        } else {
           return entitiesBuilder_.getMessageOrBuilder(index);
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
-      public java.util.List<? extends org.datacommons.proto.CacheData.EntityInfoOrBuilder> 
-           getEntitiesOrBuilderList() {
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
+      public java.util.List<? extends org.datacommons.proto.CacheData.EntityInfoOrBuilder>
+          getEntitiesOrBuilderList() {
         if (entitiesBuilder_ != null) {
           return entitiesBuilder_.getMessageOrBuilderList();
         } else {
           return java.util.Collections.unmodifiableList(entities_);
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
       public org.datacommons.proto.CacheData.EntityInfo.Builder addEntitiesBuilder() {
-        return getEntitiesFieldBuilder().addBuilder(
-            org.datacommons.proto.CacheData.EntityInfo.getDefaultInstance());
+        return getEntitiesFieldBuilder()
+            .addBuilder(org.datacommons.proto.CacheData.EntityInfo.getDefaultInstance());
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
-      public org.datacommons.proto.CacheData.EntityInfo.Builder addEntitiesBuilder(
-          int index) {
-        return getEntitiesFieldBuilder().addBuilder(
-            index, org.datacommons.proto.CacheData.EntityInfo.getDefaultInstance());
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
+      public org.datacommons.proto.CacheData.EntityInfo.Builder addEntitiesBuilder(int index) {
+        return getEntitiesFieldBuilder()
+            .addBuilder(index, org.datacommons.proto.CacheData.EntityInfo.getDefaultInstance());
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
-       */
-      public java.util.List<org.datacommons.proto.CacheData.EntityInfo.Builder> 
-           getEntitiesBuilderList() {
+
+      /** <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code> */
+      public java.util.List<org.datacommons.proto.CacheData.EntityInfo.Builder>
+          getEntitiesBuilderList() {
         return getEntitiesFieldBuilder().getBuilderList();
       }
+
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.CacheData.EntityInfo, org.datacommons.proto.CacheData.EntityInfo.Builder, org.datacommons.proto.CacheData.EntityInfoOrBuilder> 
+              org.datacommons.proto.CacheData.EntityInfo,
+              org.datacommons.proto.CacheData.EntityInfo.Builder,
+              org.datacommons.proto.CacheData.EntityInfoOrBuilder>
           getEntitiesFieldBuilder() {
         if (entitiesBuilder_ == null) {
-          entitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.CacheData.EntityInfo, org.datacommons.proto.CacheData.EntityInfo.Builder, org.datacommons.proto.CacheData.EntityInfoOrBuilder>(
-                  entities_,
-                  ((bitField0_ & 0x00000001) != 0),
-                  getParentForChildren(),
-                  isClean());
+          entitiesBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.CacheData.EntityInfo,
+                  org.datacommons.proto.CacheData.EntityInfo.Builder,
+                  org.datacommons.proto.CacheData.EntityInfoOrBuilder>(
+                  entities_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
           entities_ = null;
         }
         return entitiesBuilder_;
       }
 
-      private double total_ ;
+      private double total_;
+
       /**
+       *
+       *
        * <pre>
        * Before potential truncation, might exceed INT32_MAX.
        * </pre>
        *
        * <code>double total = 3;</code>
+       *
        * @return The total.
        */
       @java.lang.Override
       public double getTotal() {
         return total_;
       }
+
       /**
+       *
+       *
        * <pre>
        * Before potential truncation, might exceed INT32_MAX.
        * </pre>
        *
        * <code>double total = 3;</code>
+       *
        * @param value The total to set.
        * @return This builder for chaining.
        */
       public Builder setTotal(double value) {
-        
+
         total_ = value;
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * Before potential truncation, might exceed INT32_MAX.
        * </pre>
        *
        * <code>double total = 3;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearTotal() {
-        
+
         total_ = 0D;
         onChanged();
         return this;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -2288,12 +2473,12 @@ public final class CacheData {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.EntityInfoCollection)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.EntityInfoCollection)
     private static final org.datacommons.proto.CacheData.EntityInfoCollection DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.CacheData.EntityInfoCollection();
     }
@@ -2302,16 +2487,16 @@ public final class CacheData {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<EntityInfoCollection>
-        PARSER = new com.google.protobuf.AbstractParser<EntityInfoCollection>() {
-      @java.lang.Override
-      public EntityInfoCollection parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new EntityInfoCollection(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<EntityInfoCollection> PARSER =
+        new com.google.protobuf.AbstractParser<EntityInfoCollection>() {
+          @java.lang.Override
+          public EntityInfoCollection parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new EntityInfoCollection(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<EntityInfoCollection> parser() {
       return PARSER;
@@ -2326,23 +2511,27 @@ public final class CacheData {
     public org.datacommons.proto.CacheData.EntityInfoCollection getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface PagedEntitiesOrBuilder extends
+  public interface PagedEntitiesOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.PagedEntities)
       com.google.protobuf.MessageOrBuilder {
 
     /**
+     *
+     *
      * <pre>
      * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
      * </pre>
      *
      * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
      */
-    java.util.List<org.datacommons.proto.CacheData.EntityInfo> 
-        getEntitiesList();
+    java.util.List<org.datacommons.proto.CacheData.EntityInfo> getEntitiesList();
+
     /**
+     *
+     *
      * <pre>
      * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
      * </pre>
@@ -2350,7 +2539,10 @@ public final class CacheData {
      * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
      */
     org.datacommons.proto.CacheData.EntityInfo getEntities(int index);
+
     /**
+     *
+     *
      * <pre>
      * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
      * </pre>
@@ -2358,32 +2550,41 @@ public final class CacheData {
      * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
      */
     int getEntitiesCount();
+
     /**
+     *
+     *
      * <pre>
      * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
      * </pre>
      *
      * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
      */
-    java.util.List<? extends org.datacommons.proto.CacheData.EntityInfoOrBuilder> 
+    java.util.List<? extends org.datacommons.proto.CacheData.EntityInfoOrBuilder>
         getEntitiesOrBuilderList();
+
     /**
+     *
+     *
      * <pre>
      * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
      * </pre>
      *
      * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
      */
-    org.datacommons.proto.CacheData.EntityInfoOrBuilder getEntitiesOrBuilder(
-        int index);
+    org.datacommons.proto.CacheData.EntityInfoOrBuilder getEntitiesOrBuilder(int index);
 
     /**
      * <code>double total_page_count = 2;</code>
+     *
      * @return The totalPageCount.
      */
     double getTotalPageCount();
   }
+
   /**
+   *
+   *
    * <pre>
    * A page of entities. The page number starts from 0, and is in the cache key.
    * Page size is set by ::datacommons::prophet::kPageSize.
@@ -2391,31 +2592,32 @@ public final class CacheData {
    *
    * Protobuf type {@code org.datacommons.proto.PagedEntities}
    */
-  public static final class PagedEntities extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class PagedEntities extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.PagedEntities)
       PagedEntitiesOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use PagedEntities.newBuilder() to construct.
     private PagedEntities(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private PagedEntities() {
       entities_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new PagedEntities();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private PagedEntities(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2435,34 +2637,35 @@ public final class CacheData {
             case 0:
               done = true;
               break;
-            case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                entities_ = new java.util.ArrayList<org.datacommons.proto.CacheData.EntityInfo>();
-                mutable_bitField0_ |= 0x00000001;
+            case 10:
+              {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  entities_ = new java.util.ArrayList<org.datacommons.proto.CacheData.EntityInfo>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                entities_.add(
+                    input.readMessage(
+                        org.datacommons.proto.CacheData.EntityInfo.parser(), extensionRegistry));
+                break;
               }
-              entities_.add(
-                  input.readMessage(org.datacommons.proto.CacheData.EntityInfo.parser(), extensionRegistry));
-              break;
-            }
-            case 17: {
-
-              totalPageCount_ = input.readDouble();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+            case 17:
+              {
+                totalPageCount_ = input.readDouble();
+                break;
               }
-              break;
-            }
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           entities_ = java.util.Collections.unmodifiableList(entities_);
@@ -2471,22 +2674,28 @@ public final class CacheData {
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_PagedEntities_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.CacheData
+          .internal_static_org_datacommons_proto_PagedEntities_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_PagedEntities_fieldAccessorTable
+      return org.datacommons.proto.CacheData
+          .internal_static_org_datacommons_proto_PagedEntities_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.CacheData.PagedEntities.class, org.datacommons.proto.CacheData.PagedEntities.Builder.class);
+              org.datacommons.proto.CacheData.PagedEntities.class,
+              org.datacommons.proto.CacheData.PagedEntities.Builder.class);
     }
 
     public static final int ENTITIES_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.CacheData.EntityInfo> entities_;
+
     /**
+     *
+     *
      * <pre>
      * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
      * </pre>
@@ -2497,7 +2706,10 @@ public final class CacheData {
     public java.util.List<org.datacommons.proto.CacheData.EntityInfo> getEntitiesList() {
       return entities_;
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
      * </pre>
@@ -2505,11 +2717,14 @@ public final class CacheData {
      * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.datacommons.proto.CacheData.EntityInfoOrBuilder> 
+    public java.util.List<? extends org.datacommons.proto.CacheData.EntityInfoOrBuilder>
         getEntitiesOrBuilderList() {
       return entities_;
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
      * </pre>
@@ -2520,7 +2735,10 @@ public final class CacheData {
     public int getEntitiesCount() {
       return entities_.size();
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
      * </pre>
@@ -2531,7 +2749,10 @@ public final class CacheData {
     public org.datacommons.proto.CacheData.EntityInfo getEntities(int index) {
       return entities_.get(index);
     }
+
     /**
+     *
+     *
      * <pre>
      * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
      * </pre>
@@ -2539,15 +2760,16 @@ public final class CacheData {
      * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
      */
     @java.lang.Override
-    public org.datacommons.proto.CacheData.EntityInfoOrBuilder getEntitiesOrBuilder(
-        int index) {
+    public org.datacommons.proto.CacheData.EntityInfoOrBuilder getEntitiesOrBuilder(int index) {
       return entities_.get(index);
     }
 
     public static final int TOTAL_PAGE_COUNT_FIELD_NUMBER = 2;
     private double totalPageCount_;
+
     /**
      * <code>double total_page_count = 2;</code>
+     *
      * @return The totalPageCount.
      */
     @java.lang.Override
@@ -2556,6 +2778,7 @@ public final class CacheData {
     }
 
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -2567,8 +2790,7 @@ public final class CacheData {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       for (int i = 0; i < entities_.size(); i++) {
         output.writeMessage(1, entities_.get(i));
       }
@@ -2585,12 +2807,10 @@ public final class CacheData {
 
       size = 0;
       for (int i = 0; i < entities_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, entities_.get(i));
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, entities_.get(i));
       }
       if (totalPageCount_ != 0D) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeDoubleSize(2, totalPageCount_);
+        size += com.google.protobuf.CodedOutputStream.computeDoubleSize(2, totalPageCount_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2600,18 +2820,17 @@ public final class CacheData {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.CacheData.PagedEntities)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.CacheData.PagedEntities other = (org.datacommons.proto.CacheData.PagedEntities) obj;
+      org.datacommons.proto.CacheData.PagedEntities other =
+          (org.datacommons.proto.CacheData.PagedEntities) obj;
 
-      if (!getEntitiesList()
-          .equals(other.getEntitiesList())) return false;
+      if (!getEntitiesList().equals(other.getEntitiesList())) return false;
       if (java.lang.Double.doubleToLongBits(getTotalPageCount())
-          != java.lang.Double.doubleToLongBits(
-              other.getTotalPageCount())) return false;
+          != java.lang.Double.doubleToLongBits(other.getTotalPageCount())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -2628,95 +2847,103 @@ public final class CacheData {
         hash = (53 * hash) + getEntitiesList().hashCode();
       }
       hash = (37 * hash) + TOTAL_PAGE_COUNT_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-          java.lang.Double.doubleToLongBits(getTotalPageCount()));
+      hash =
+          (53 * hash)
+              + com.google.protobuf.Internal.hashLong(
+                  java.lang.Double.doubleToLongBits(getTotalPageCount()));
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
     }
 
-    public static org.datacommons.proto.CacheData.PagedEntities parseFrom(
-        java.nio.ByteBuffer data)
+    public static org.datacommons.proto.CacheData.PagedEntities parseFrom(java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.CacheData.PagedEntities parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.CacheData.PagedEntities parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.CacheData.PagedEntities parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.CacheData.PagedEntities parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.CacheData.PagedEntities parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.CacheData.PagedEntities parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.CacheData.PagedEntities parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
-    public static org.datacommons.proto.CacheData.PagedEntities parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.CacheData.PagedEntities parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.CacheData.PagedEntities parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.CacheData.PagedEntities parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.CacheData.PagedEntities parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
+
     public static Builder newBuilder(org.datacommons.proto.CacheData.PagedEntities prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -2725,7 +2952,10 @@ public final class CacheData {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
+     *
+     *
      * <pre>
      * A page of entities. The page number starts from 0, and is in the cache key.
      * Page size is set by ::datacommons::prophet::kPageSize.
@@ -2733,21 +2963,24 @@ public final class CacheData {
      *
      * Protobuf type {@code org.datacommons.proto.PagedEntities}
      */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.PagedEntities)
         org.datacommons.proto.CacheData.PagedEntitiesOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_PagedEntities_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.CacheData
+            .internal_static_org_datacommons_proto_PagedEntities_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_PagedEntities_fieldAccessorTable
+        return org.datacommons.proto.CacheData
+            .internal_static_org_datacommons_proto_PagedEntities_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.CacheData.PagedEntities.class, org.datacommons.proto.CacheData.PagedEntities.Builder.class);
+                org.datacommons.proto.CacheData.PagedEntities.class,
+                org.datacommons.proto.CacheData.PagedEntities.Builder.class);
       }
 
       // Construct using org.datacommons.proto.CacheData.PagedEntities.newBuilder()
@@ -2755,17 +2988,17 @@ public final class CacheData {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getEntitiesFieldBuilder();
         }
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -2781,9 +3014,9 @@ public final class CacheData {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.CacheData.internal_static_org_datacommons_proto_PagedEntities_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.CacheData
+            .internal_static_org_datacommons_proto_PagedEntities_descriptor;
       }
 
       @java.lang.Override
@@ -2802,7 +3035,8 @@ public final class CacheData {
 
       @java.lang.Override
       public org.datacommons.proto.CacheData.PagedEntities buildPartial() {
-        org.datacommons.proto.CacheData.PagedEntities result = new org.datacommons.proto.CacheData.PagedEntities(this);
+        org.datacommons.proto.CacheData.PagedEntities result =
+            new org.datacommons.proto.CacheData.PagedEntities(this);
         int from_bitField0_ = bitField0_;
         if (entitiesBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
@@ -2822,38 +3056,41 @@ public final class CacheData {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.CacheData.PagedEntities) {
-          return mergeFrom((org.datacommons.proto.CacheData.PagedEntities)other);
+          return mergeFrom((org.datacommons.proto.CacheData.PagedEntities) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -2861,7 +3098,8 @@ public final class CacheData {
       }
 
       public Builder mergeFrom(org.datacommons.proto.CacheData.PagedEntities other) {
-        if (other == org.datacommons.proto.CacheData.PagedEntities.getDefaultInstance()) return this;
+        if (other == org.datacommons.proto.CacheData.PagedEntities.getDefaultInstance())
+          return this;
         if (entitiesBuilder_ == null) {
           if (!other.entities_.isEmpty()) {
             if (entities_.isEmpty()) {
@@ -2880,9 +3118,10 @@ public final class CacheData {
               entitiesBuilder_ = null;
               entities_ = other.entities_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              entitiesBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getEntitiesFieldBuilder() : null;
+              entitiesBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getEntitiesFieldBuilder()
+                      : null;
             } else {
               entitiesBuilder_.addAllMessages(other.entities_);
             }
@@ -2919,21 +3158,29 @@ public final class CacheData {
         }
         return this;
       }
+
       private int bitField0_;
 
       private java.util.List<org.datacommons.proto.CacheData.EntityInfo> entities_ =
-        java.util.Collections.emptyList();
+          java.util.Collections.emptyList();
+
       private void ensureEntitiesIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
-          entities_ = new java.util.ArrayList<org.datacommons.proto.CacheData.EntityInfo>(entities_);
+          entities_ =
+              new java.util.ArrayList<org.datacommons.proto.CacheData.EntityInfo>(entities_);
           bitField0_ |= 0x00000001;
-         }
+        }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.CacheData.EntityInfo, org.datacommons.proto.CacheData.EntityInfo.Builder, org.datacommons.proto.CacheData.EntityInfoOrBuilder> entitiesBuilder_;
+              org.datacommons.proto.CacheData.EntityInfo,
+              org.datacommons.proto.CacheData.EntityInfo.Builder,
+              org.datacommons.proto.CacheData.EntityInfoOrBuilder>
+          entitiesBuilder_;
 
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
@@ -2947,7 +3194,10 @@ public final class CacheData {
           return entitiesBuilder_.getMessageList();
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
@@ -2961,7 +3211,10 @@ public final class CacheData {
           return entitiesBuilder_.getCount();
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
@@ -2975,15 +3228,17 @@ public final class CacheData {
           return entitiesBuilder_.getMessage(index);
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
        */
-      public Builder setEntities(
-          int index, org.datacommons.proto.CacheData.EntityInfo value) {
+      public Builder setEntities(int index, org.datacommons.proto.CacheData.EntityInfo value) {
         if (entitiesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -2996,7 +3251,10 @@ public final class CacheData {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
@@ -3014,7 +3272,10 @@ public final class CacheData {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
@@ -3034,15 +3295,17 @@ public final class CacheData {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
        */
-      public Builder addEntities(
-          int index, org.datacommons.proto.CacheData.EntityInfo value) {
+      public Builder addEntities(int index, org.datacommons.proto.CacheData.EntityInfo value) {
         if (entitiesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -3055,7 +3318,10 @@ public final class CacheData {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
@@ -3073,7 +3339,10 @@ public final class CacheData {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
@@ -3091,7 +3360,10 @@ public final class CacheData {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
@@ -3102,15 +3374,17 @@ public final class CacheData {
           java.lang.Iterable<? extends org.datacommons.proto.CacheData.EntityInfo> values) {
         if (entitiesBuilder_ == null) {
           ensureEntitiesIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, entities_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, entities_);
           onChanged();
         } else {
           entitiesBuilder_.addAllMessages(values);
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
@@ -3127,7 +3401,10 @@ public final class CacheData {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
@@ -3144,47 +3421,58 @@ public final class CacheData {
         }
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
        */
-      public org.datacommons.proto.CacheData.EntityInfo.Builder getEntitiesBuilder(
-          int index) {
+      public org.datacommons.proto.CacheData.EntityInfo.Builder getEntitiesBuilder(int index) {
         return getEntitiesFieldBuilder().getBuilder(index);
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
        */
-      public org.datacommons.proto.CacheData.EntityInfoOrBuilder getEntitiesOrBuilder(
-          int index) {
+      public org.datacommons.proto.CacheData.EntityInfoOrBuilder getEntitiesOrBuilder(int index) {
         if (entitiesBuilder_ == null) {
-          return entities_.get(index);  } else {
+          return entities_.get(index);
+        } else {
           return entitiesBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
        */
-      public java.util.List<? extends org.datacommons.proto.CacheData.EntityInfoOrBuilder> 
-           getEntitiesOrBuilderList() {
+      public java.util.List<? extends org.datacommons.proto.CacheData.EntityInfoOrBuilder>
+          getEntitiesOrBuilderList() {
         if (entitiesBuilder_ != null) {
           return entitiesBuilder_.getMessageOrBuilderList();
         } else {
           return java.util.Collections.unmodifiableList(entities_);
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
@@ -3192,77 +3480,92 @@ public final class CacheData {
        * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
        */
       public org.datacommons.proto.CacheData.EntityInfo.Builder addEntitiesBuilder() {
-        return getEntitiesFieldBuilder().addBuilder(
-            org.datacommons.proto.CacheData.EntityInfo.getDefaultInstance());
+        return getEntitiesFieldBuilder()
+            .addBuilder(org.datacommons.proto.CacheData.EntityInfo.getDefaultInstance());
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
        */
-      public org.datacommons.proto.CacheData.EntityInfo.Builder addEntitiesBuilder(
-          int index) {
-        return getEntitiesFieldBuilder().addBuilder(
-            index, org.datacommons.proto.CacheData.EntityInfo.getDefaultInstance());
+      public org.datacommons.proto.CacheData.EntityInfo.Builder addEntitiesBuilder(int index) {
+        return getEntitiesFieldBuilder()
+            .addBuilder(index, org.datacommons.proto.CacheData.EntityInfo.getDefaultInstance());
       }
+
       /**
+       *
+       *
        * <pre>
        * A list of EntityInfo messages for PagedPropVal{In|Out} cache result.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.EntityInfo entities = 1;</code>
        */
-      public java.util.List<org.datacommons.proto.CacheData.EntityInfo.Builder> 
-           getEntitiesBuilderList() {
+      public java.util.List<org.datacommons.proto.CacheData.EntityInfo.Builder>
+          getEntitiesBuilderList() {
         return getEntitiesFieldBuilder().getBuilderList();
       }
+
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.CacheData.EntityInfo, org.datacommons.proto.CacheData.EntityInfo.Builder, org.datacommons.proto.CacheData.EntityInfoOrBuilder> 
+              org.datacommons.proto.CacheData.EntityInfo,
+              org.datacommons.proto.CacheData.EntityInfo.Builder,
+              org.datacommons.proto.CacheData.EntityInfoOrBuilder>
           getEntitiesFieldBuilder() {
         if (entitiesBuilder_ == null) {
-          entitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.CacheData.EntityInfo, org.datacommons.proto.CacheData.EntityInfo.Builder, org.datacommons.proto.CacheData.EntityInfoOrBuilder>(
-                  entities_,
-                  ((bitField0_ & 0x00000001) != 0),
-                  getParentForChildren(),
-                  isClean());
+          entitiesBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.CacheData.EntityInfo,
+                  org.datacommons.proto.CacheData.EntityInfo.Builder,
+                  org.datacommons.proto.CacheData.EntityInfoOrBuilder>(
+                  entities_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
           entities_ = null;
         }
         return entitiesBuilder_;
       }
 
-      private double totalPageCount_ ;
+      private double totalPageCount_;
+
       /**
        * <code>double total_page_count = 2;</code>
+       *
        * @return The totalPageCount.
        */
       @java.lang.Override
       public double getTotalPageCount() {
         return totalPageCount_;
       }
+
       /**
        * <code>double total_page_count = 2;</code>
+       *
        * @param value The totalPageCount to set.
        * @return This builder for chaining.
        */
       public Builder setTotalPageCount(double value) {
-        
+
         totalPageCount_ = value;
         onChanged();
         return this;
       }
+
       /**
        * <code>double total_page_count = 2;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearTotalPageCount() {
-        
+
         totalPageCount_ = 0D;
         onChanged();
         return this;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -3275,12 +3578,12 @@ public final class CacheData {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.PagedEntities)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.PagedEntities)
     private static final org.datacommons.proto.CacheData.PagedEntities DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.CacheData.PagedEntities();
     }
@@ -3289,16 +3592,16 @@ public final class CacheData {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<PagedEntities>
-        PARSER = new com.google.protobuf.AbstractParser<PagedEntities>() {
-      @java.lang.Override
-      public PagedEntities parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new PagedEntities(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<PagedEntities> PARSER =
+        new com.google.protobuf.AbstractParser<PagedEntities>() {
+          @java.lang.Override
+          public PagedEntities parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new PagedEntities(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<PagedEntities> parser() {
       return PARSER;
@@ -3313,65 +3616,66 @@ public final class CacheData {
     public org.datacommons.proto.CacheData.PagedEntities getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_EntityInfo_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_EntityInfo_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_EntityInfo_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_EntityInfoCollection_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_EntityInfoCollection_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_EntityInfoCollection_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_PagedEntities_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_PagedEntities_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_PagedEntities_fieldAccessorTable;
 
-  public static com.google.protobuf.Descriptors.FileDescriptor
-      getDescriptor() {
+  public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
   }
-  private static  com.google.protobuf.Descriptors.FileDescriptor
-      descriptor;
+
+  private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
+
   static {
     java.lang.String[] descriptorData = {
-      "\n\020cache_data.proto\022\025org.datacommons.prot" +
-      "o\"]\n\nEntityInfo\022\014\n\004name\030\001 \001(\t\022\r\n\005types\030\002" +
-      " \003(\t\022\014\n\004dcid\030\003 \001(\t\022\025\n\rprovenance_id\030\004 \001(" +
-      "\t\022\r\n\005value\030\005 \001(\t\"`\n\024EntityInfoCollection" +
-      "\0223\n\010entities\030\001 \003(\0132!.org.datacommons.pro" +
-      "to.EntityInfo\022\r\n\005total\030\003 \001(\001J\004\010\002\020\003\"^\n\rPa" +
-      "gedEntities\0223\n\010entities\030\001 \003(\0132!.org.data" +
-      "commons.proto.EntityInfo\022\030\n\020total_page_c" +
-      "ount\030\002 \001(\001b\006proto3"
+      "\n\020cache_data.proto\022\025org.datacommons.prot"
+          + "o\"]\n\nEntityInfo\022\014\n\004name\030\001 \001(\t\022\r\n\005types\030\002"
+          + " \003(\t\022\014\n\004dcid\030\003 \001(\t\022\025\n\rprovenance_id\030\004 \001("
+          + "\t\022\r\n\005value\030\005 \001(\t\"`\n\024EntityInfoCollection"
+          + "\0223\n\010entities\030\001 \003(\0132!.org.datacommons.pro"
+          + "to.EntityInfo\022\r\n\005total\030\003 \001(\001J\004\010\002\020\003\"^\n\rPa"
+          + "gedEntities\0223\n\010entities\030\001 \003(\0132!.org.data"
+          + "commons.proto.EntityInfo\022\030\n\020total_page_c"
+          + "ount\030\002 \001(\001b\006proto3"
     };
-    descriptor = com.google.protobuf.Descriptors.FileDescriptor
-      .internalBuildGeneratedFileFrom(descriptorData,
-        new com.google.protobuf.Descriptors.FileDescriptor[] {
-        });
+    descriptor =
+        com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+            descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
     internal_static_org_datacommons_proto_EntityInfo_descriptor =
-      getDescriptor().getMessageTypes().get(0);
-    internal_static_org_datacommons_proto_EntityInfo_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_EntityInfo_descriptor,
-        new java.lang.String[] { "Name", "Types", "Dcid", "ProvenanceId", "Value", });
+        getDescriptor().getMessageTypes().get(0);
+    internal_static_org_datacommons_proto_EntityInfo_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_EntityInfo_descriptor,
+            new java.lang.String[] {
+              "Name", "Types", "Dcid", "ProvenanceId", "Value",
+            });
     internal_static_org_datacommons_proto_EntityInfoCollection_descriptor =
-      getDescriptor().getMessageTypes().get(1);
-    internal_static_org_datacommons_proto_EntityInfoCollection_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_EntityInfoCollection_descriptor,
-        new java.lang.String[] { "Entities", "Total", });
+        getDescriptor().getMessageTypes().get(1);
+    internal_static_org_datacommons_proto_EntityInfoCollection_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_EntityInfoCollection_descriptor,
+            new java.lang.String[] {
+              "Entities", "Total",
+            });
     internal_static_org_datacommons_proto_PagedEntities_descriptor =
-      getDescriptor().getMessageTypes().get(2);
-    internal_static_org_datacommons_proto_PagedEntities_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_PagedEntities_descriptor,
-        new java.lang.String[] { "Entities", "TotalPageCount", });
+        getDescriptor().getMessageTypes().get(2);
+    internal_static_org_datacommons_proto_PagedEntities_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_PagedEntities_descriptor,
+            new java.lang.String[] {
+              "Entities", "TotalPageCount",
+            });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -5,55 +5,59 @@ package org.datacommons.proto;
 
 public final class Recon {
   private Recon() {}
-  public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistryLite registry) {
+
+  public static void registerAllExtensions(com.google.protobuf.ExtensionRegistryLite registry) {}
+
+  public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
+    registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
   }
 
-  public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistry registry) {
-    registerAllExtensions(
-        (com.google.protobuf.ExtensionRegistryLite) registry);
-  }
-  public interface IdWithPropertyOrBuilder extends
+  public interface IdWithPropertyOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.IdWithProperty)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <code>string prop = 1;</code>
+     *
      * @return The prop.
      */
     java.lang.String getProp();
+
     /**
      * <code>string prop = 1;</code>
+     *
      * @return The bytes for prop.
      */
-    com.google.protobuf.ByteString
-        getPropBytes();
+    com.google.protobuf.ByteString getPropBytes();
 
     /**
      * <code>string val = 2;</code>
+     *
      * @return The val.
      */
     java.lang.String getVal();
+
     /**
      * <code>string val = 2;</code>
+     *
      * @return The bytes for val.
      */
-    com.google.protobuf.ByteString
-        getValBytes();
+    com.google.protobuf.ByteString getValBytes();
   }
-  /**
-   * Protobuf type {@code org.datacommons.proto.IdWithProperty}
-   */
-  public static final class IdWithProperty extends
-      com.google.protobuf.GeneratedMessageV3 implements
+
+  /** Protobuf type {@code org.datacommons.proto.IdWithProperty} */
+  public static final class IdWithProperty extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.IdWithProperty)
       IdWithPropertyOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use IdWithProperty.newBuilder() to construct.
     private IdWithProperty(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private IdWithProperty() {
       prop_ = "";
       val_ = "";
@@ -61,16 +65,15 @@ public final class Recon {
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new IdWithProperty();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private IdWithProperty(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -89,54 +92,60 @@ public final class Recon {
             case 0:
               done = true;
               break;
-            case 10: {
-              java.lang.String s = input.readStringRequireUtf8();
+            case 10:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
 
-              prop_ = s;
-              break;
-            }
-            case 18: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              val_ = s;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+                prop_ = s;
+                break;
               }
-              break;
-            }
+            case 18:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
+
+                val_ = s;
+                break;
+              }
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_IdWithProperty_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_IdWithProperty_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_IdWithProperty_fieldAccessorTable
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_IdWithProperty_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Recon.IdWithProperty.class, org.datacommons.proto.Recon.IdWithProperty.Builder.class);
+              org.datacommons.proto.Recon.IdWithProperty.class,
+              org.datacommons.proto.Recon.IdWithProperty.Builder.class);
     }
 
     public static final int PROP_FIELD_NUMBER = 1;
     private volatile java.lang.Object prop_;
+
     /**
      * <code>string prop = 1;</code>
+     *
      * @return The prop.
      */
     @java.lang.Override
@@ -145,25 +154,24 @@ public final class Recon {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         prop_ = s;
         return s;
       }
     }
+
     /**
      * <code>string prop = 1;</code>
+     *
      * @return The bytes for prop.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getPropBytes() {
+    public com.google.protobuf.ByteString getPropBytes() {
       java.lang.Object ref = prop_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         prop_ = b;
         return b;
       } else {
@@ -173,8 +181,10 @@ public final class Recon {
 
     public static final int VAL_FIELD_NUMBER = 2;
     private volatile java.lang.Object val_;
+
     /**
      * <code>string val = 2;</code>
+     *
      * @return The val.
      */
     @java.lang.Override
@@ -183,25 +193,24 @@ public final class Recon {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         val_ = s;
         return s;
       }
     }
+
     /**
      * <code>string val = 2;</code>
+     *
      * @return The bytes for val.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getValBytes() {
+    public com.google.protobuf.ByteString getValBytes() {
       java.lang.Object ref = val_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         val_ = b;
         return b;
       } else {
@@ -210,6 +219,7 @@ public final class Recon {
     }
 
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -221,8 +231,7 @@ public final class Recon {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       if (!getPropBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, prop_);
       }
@@ -252,17 +261,16 @@ public final class Recon {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.Recon.IdWithProperty)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.Recon.IdWithProperty other = (org.datacommons.proto.Recon.IdWithProperty) obj;
+      org.datacommons.proto.Recon.IdWithProperty other =
+          (org.datacommons.proto.Recon.IdWithProperty) obj;
 
-      if (!getProp()
-          .equals(other.getProp())) return false;
-      if (!getVal()
-          .equals(other.getVal())) return false;
+      if (!getProp().equals(other.getProp())) return false;
+      if (!getVal().equals(other.getVal())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -283,88 +291,94 @@ public final class Recon {
       return hash;
     }
 
-    public static org.datacommons.proto.Recon.IdWithProperty parseFrom(
-        java.nio.ByteBuffer data)
+    public static org.datacommons.proto.Recon.IdWithProperty parseFrom(java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.IdWithProperty parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.IdWithProperty parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.IdWithProperty parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.IdWithProperty parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.IdWithProperty parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.IdWithProperty parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.IdWithProperty parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
-    public static org.datacommons.proto.Recon.IdWithProperty parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.Recon.IdWithProperty parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.Recon.IdWithProperty parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.Recon.IdWithProperty parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.IdWithProperty parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
+
     public static Builder newBuilder(org.datacommons.proto.Recon.IdWithProperty prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -373,24 +387,26 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.IdWithProperty}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+    /** Protobuf type {@code org.datacommons.proto.IdWithProperty} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.IdWithProperty)
         org.datacommons.proto.Recon.IdWithPropertyOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_IdWithProperty_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_IdWithProperty_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_IdWithProperty_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_IdWithProperty_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.IdWithProperty.class, org.datacommons.proto.Recon.IdWithProperty.Builder.class);
+                org.datacommons.proto.Recon.IdWithProperty.class,
+                org.datacommons.proto.Recon.IdWithProperty.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Recon.IdWithProperty.newBuilder()
@@ -398,16 +414,15 @@ public final class Recon {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -419,9 +434,9 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_IdWithProperty_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_IdWithProperty_descriptor;
       }
 
       @java.lang.Override
@@ -440,7 +455,8 @@ public final class Recon {
 
       @java.lang.Override
       public org.datacommons.proto.Recon.IdWithProperty buildPartial() {
-        org.datacommons.proto.Recon.IdWithProperty result = new org.datacommons.proto.Recon.IdWithProperty(this);
+        org.datacommons.proto.Recon.IdWithProperty result =
+            new org.datacommons.proto.Recon.IdWithProperty(this);
         result.prop_ = prop_;
         result.val_ = val_;
         onBuilt();
@@ -451,38 +467,41 @@ public final class Recon {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Recon.IdWithProperty) {
-          return mergeFrom((org.datacommons.proto.Recon.IdWithProperty)other);
+          return mergeFrom((org.datacommons.proto.Recon.IdWithProperty) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -529,15 +548,16 @@ public final class Recon {
       }
 
       private java.lang.Object prop_ = "";
+
       /**
        * <code>string prop = 1;</code>
+       *
        * @return The prop.
        */
       public java.lang.String getProp() {
         java.lang.Object ref = prop_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           prop_ = s;
           return s;
@@ -545,75 +565,80 @@ public final class Recon {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string prop = 1;</code>
+       *
        * @return The bytes for prop.
        */
-      public com.google.protobuf.ByteString
-          getPropBytes() {
+      public com.google.protobuf.ByteString getPropBytes() {
         java.lang.Object ref = prop_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           prop_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string prop = 1;</code>
+       *
        * @param value The prop to set.
        * @return This builder for chaining.
        */
-      public Builder setProp(
-          java.lang.String value) {
+      public Builder setProp(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         prop_ = value;
         onChanged();
         return this;
       }
+
       /**
        * <code>string prop = 1;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearProp() {
-        
+
         prop_ = getDefaultInstance().getProp();
         onChanged();
         return this;
       }
+
       /**
        * <code>string prop = 1;</code>
+       *
        * @param value The bytes for prop to set.
        * @return This builder for chaining.
        */
-      public Builder setPropBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setPropBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         prop_ = value;
         onChanged();
         return this;
       }
 
       private java.lang.Object val_ = "";
+
       /**
        * <code>string val = 2;</code>
+       *
        * @return The val.
        */
       public java.lang.String getVal() {
         java.lang.Object ref = val_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           val_ = s;
           return s;
@@ -621,64 +646,69 @@ public final class Recon {
           return (java.lang.String) ref;
         }
       }
+
       /**
        * <code>string val = 2;</code>
+       *
        * @return The bytes for val.
        */
-      public com.google.protobuf.ByteString
-          getValBytes() {
+      public com.google.protobuf.ByteString getValBytes() {
         java.lang.Object ref = val_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           val_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
        * <code>string val = 2;</code>
+       *
        * @param value The val to set.
        * @return This builder for chaining.
        */
-      public Builder setVal(
-          java.lang.String value) {
+      public Builder setVal(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         val_ = value;
         onChanged();
         return this;
       }
+
       /**
        * <code>string val = 2;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearVal() {
-        
+
         val_ = getDefaultInstance().getVal();
         onChanged();
         return this;
       }
+
       /**
        * <code>string val = 2;</code>
+       *
        * @param value The bytes for val to set.
        * @return This builder for chaining.
        */
-      public Builder setValBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setValBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         val_ = value;
         onChanged();
         return this;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -691,12 +721,12 @@ public final class Recon {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.IdWithProperty)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.IdWithProperty)
     private static final org.datacommons.proto.Recon.IdWithProperty DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Recon.IdWithProperty();
     }
@@ -705,16 +735,16 @@ public final class Recon {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<IdWithProperty>
-        PARSER = new com.google.protobuf.AbstractParser<IdWithProperty>() {
-      @java.lang.Override
-      public IdWithProperty parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new IdWithProperty(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<IdWithProperty> PARSER =
+        new com.google.protobuf.AbstractParser<IdWithProperty>() {
+          @java.lang.Override
+          public IdWithProperty parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new IdWithProperty(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<IdWithProperty> parser() {
       return PARSER;
@@ -729,65 +759,57 @@ public final class Recon {
     public org.datacommons.proto.Recon.IdWithProperty getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface EntityIdsOrBuilder extends
+  public interface EntityIdsOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.EntityIds)
       com.google.protobuf.MessageOrBuilder {
 
-    /**
-     * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-     */
-    java.util.List<org.datacommons.proto.Recon.IdWithProperty> 
-        getIdsList();
-    /**
-     * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-     */
+    /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+    java.util.List<org.datacommons.proto.Recon.IdWithProperty> getIdsList();
+
+    /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     org.datacommons.proto.Recon.IdWithProperty getIds(int index);
-    /**
-     * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     int getIdsCount();
-    /**
-     * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-     */
-    java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder> 
+
+    /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+    java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
         getIdsOrBuilderList();
-    /**
-     * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-     */
-    org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(
-        int index);
+
+    /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+    org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index);
   }
-  /**
-   * Protobuf type {@code org.datacommons.proto.EntityIds}
-   */
-  public static final class EntityIds extends
-      com.google.protobuf.GeneratedMessageV3 implements
+
+  /** Protobuf type {@code org.datacommons.proto.EntityIds} */
+  public static final class EntityIds extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.EntityIds)
       EntityIdsOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use EntityIds.newBuilder() to construct.
     private EntityIds(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private EntityIds() {
       ids_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new EntityIds();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private EntityIds(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -807,29 +829,30 @@ public final class Recon {
             case 0:
               done = true;
               break;
-            case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                ids_ = new java.util.ArrayList<org.datacommons.proto.Recon.IdWithProperty>();
-                mutable_bitField0_ |= 0x00000001;
+            case 10:
+              {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  ids_ = new java.util.ArrayList<org.datacommons.proto.Recon.IdWithProperty>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                ids_.add(
+                    input.readMessage(
+                        org.datacommons.proto.Recon.IdWithProperty.parser(), extensionRegistry));
+                break;
               }
-              ids_.add(
-                  input.readMessage(org.datacommons.proto.Recon.IdWithProperty.parser(), extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
               }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           ids_ = java.util.Collections.unmodifiableList(ids_);
@@ -838,60 +861,57 @@ public final class Recon {
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
       return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntityIds_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntityIds_fieldAccessorTable
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_EntityIds_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Recon.EntityIds.class, org.datacommons.proto.Recon.EntityIds.Builder.class);
+              org.datacommons.proto.Recon.EntityIds.class,
+              org.datacommons.proto.Recon.EntityIds.Builder.class);
     }
 
     public static final int IDS_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Recon.IdWithProperty> ids_;
-    /**
-     * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     @java.lang.Override
     public java.util.List<org.datacommons.proto.Recon.IdWithProperty> getIdsList() {
       return ids_;
     }
-    /**
-     * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     @java.lang.Override
-    public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder> 
+    public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
         getIdsOrBuilderList() {
       return ids_;
     }
-    /**
-     * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     @java.lang.Override
     public int getIdsCount() {
       return ids_.size();
     }
-    /**
-     * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.IdWithProperty getIds(int index) {
       return ids_.get(index);
     }
-    /**
-     * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
     @java.lang.Override
-    public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(
-        int index) {
+    public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index) {
       return ids_.get(index);
     }
 
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -903,8 +923,7 @@ public final class Recon {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       for (int i = 0; i < ids_.size(); i++) {
         output.writeMessage(1, ids_.get(i));
       }
@@ -918,8 +937,7 @@ public final class Recon {
 
       size = 0;
       for (int i = 0; i < ids_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, ids_.get(i));
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, ids_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -929,15 +947,14 @@ public final class Recon {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.Recon.EntityIds)) {
         return super.equals(obj);
       }
       org.datacommons.proto.Recon.EntityIds other = (org.datacommons.proto.Recon.EntityIds) obj;
 
-      if (!getIdsList()
-          .equals(other.getIdsList())) return false;
+      if (!getIdsList().equals(other.getIdsList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -958,88 +975,94 @@ public final class Recon {
       return hash;
     }
 
-    public static org.datacommons.proto.Recon.EntityIds parseFrom(
-        java.nio.ByteBuffer data)
+    public static org.datacommons.proto.Recon.EntityIds parseFrom(java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.EntityIds parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.EntityIds parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.EntityIds parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.EntityIds parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.EntityIds parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.EntityIds parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.EntityIds parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
-    public static org.datacommons.proto.Recon.EntityIds parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.Recon.EntityIds parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.Recon.EntityIds parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.Recon.EntityIds parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.EntityIds parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
+
     public static Builder newBuilder(org.datacommons.proto.Recon.EntityIds prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -1048,24 +1071,26 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.EntityIds}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+    /** Protobuf type {@code org.datacommons.proto.EntityIds} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.EntityIds)
         org.datacommons.proto.Recon.EntityIdsOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntityIds_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_EntityIds_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntityIds_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_EntityIds_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.EntityIds.class, org.datacommons.proto.Recon.EntityIds.Builder.class);
+                org.datacommons.proto.Recon.EntityIds.class,
+                org.datacommons.proto.Recon.EntityIds.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Recon.EntityIds.newBuilder()
@@ -1073,17 +1098,17 @@ public final class Recon {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getIdsFieldBuilder();
         }
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -1097,9 +1122,9 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntityIds_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_EntityIds_descriptor;
       }
 
       @java.lang.Override
@@ -1118,7 +1143,8 @@ public final class Recon {
 
       @java.lang.Override
       public org.datacommons.proto.Recon.EntityIds buildPartial() {
-        org.datacommons.proto.Recon.EntityIds result = new org.datacommons.proto.Recon.EntityIds(this);
+        org.datacommons.proto.Recon.EntityIds result =
+            new org.datacommons.proto.Recon.EntityIds(this);
         int from_bitField0_ = bitField0_;
         if (idsBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
@@ -1137,38 +1163,41 @@ public final class Recon {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Recon.EntityIds) {
-          return mergeFrom((org.datacommons.proto.Recon.EntityIds)other);
+          return mergeFrom((org.datacommons.proto.Recon.EntityIds) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -1195,9 +1224,10 @@ public final class Recon {
               idsBuilder_ = null;
               ids_ = other.ids_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              idsBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getIdsFieldBuilder() : null;
+              idsBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getIdsFieldBuilder()
+                      : null;
             } else {
               idsBuilder_.addAllMessages(other.ids_);
             }
@@ -1231,23 +1261,26 @@ public final class Recon {
         }
         return this;
       }
+
       private int bitField0_;
 
       private java.util.List<org.datacommons.proto.Recon.IdWithProperty> ids_ =
-        java.util.Collections.emptyList();
+          java.util.Collections.emptyList();
+
       private void ensureIdsIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
           ids_ = new java.util.ArrayList<org.datacommons.proto.Recon.IdWithProperty>(ids_);
           bitField0_ |= 0x00000001;
-         }
+        }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.IdWithProperty, org.datacommons.proto.Recon.IdWithProperty.Builder, org.datacommons.proto.Recon.IdWithPropertyOrBuilder> idsBuilder_;
+              org.datacommons.proto.Recon.IdWithProperty,
+              org.datacommons.proto.Recon.IdWithProperty.Builder,
+              org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
+          idsBuilder_;
 
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public java.util.List<org.datacommons.proto.Recon.IdWithProperty> getIdsList() {
         if (idsBuilder_ == null) {
           return java.util.Collections.unmodifiableList(ids_);
@@ -1255,9 +1288,8 @@ public final class Recon {
           return idsBuilder_.getMessageList();
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public int getIdsCount() {
         if (idsBuilder_ == null) {
           return ids_.size();
@@ -1265,9 +1297,8 @@ public final class Recon {
           return idsBuilder_.getCount();
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public org.datacommons.proto.Recon.IdWithProperty getIds(int index) {
         if (idsBuilder_ == null) {
           return ids_.get(index);
@@ -1275,11 +1306,9 @@ public final class Recon {
           return idsBuilder_.getMessage(index);
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
-      public Builder setIds(
-          int index, org.datacommons.proto.Recon.IdWithProperty value) {
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      public Builder setIds(int index, org.datacommons.proto.Recon.IdWithProperty value) {
         if (idsBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -1292,9 +1321,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder setIds(
           int index, org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
         if (idsBuilder_ == null) {
@@ -1306,9 +1334,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder addIds(org.datacommons.proto.Recon.IdWithProperty value) {
         if (idsBuilder_ == null) {
           if (value == null) {
@@ -1322,11 +1349,9 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
-      public Builder addIds(
-          int index, org.datacommons.proto.Recon.IdWithProperty value) {
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      public Builder addIds(int index, org.datacommons.proto.Recon.IdWithProperty value) {
         if (idsBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -1339,11 +1364,9 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
-      public Builder addIds(
-          org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      public Builder addIds(org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
         if (idsBuilder_ == null) {
           ensureIdsIsMutable();
           ids_.add(builderForValue.build());
@@ -1353,9 +1376,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder addIds(
           int index, org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
         if (idsBuilder_ == null) {
@@ -1367,24 +1389,21 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder addAllIds(
           java.lang.Iterable<? extends org.datacommons.proto.Recon.IdWithProperty> values) {
         if (idsBuilder_ == null) {
           ensureIdsIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, ids_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, ids_);
           onChanged();
         } else {
           idsBuilder_.addAllMessages(values);
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder clearIds() {
         if (idsBuilder_ == null) {
           ids_ = java.util.Collections.emptyList();
@@ -1395,9 +1414,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public Builder removeIds(int index) {
         if (idsBuilder_ == null) {
           ensureIdsIsMutable();
@@ -1408,70 +1426,66 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
-      public org.datacommons.proto.Recon.IdWithProperty.Builder getIdsBuilder(
-          int index) {
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      public org.datacommons.proto.Recon.IdWithProperty.Builder getIdsBuilder(int index) {
         return getIdsFieldBuilder().getBuilder(index);
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
-      public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(
-          int index) {
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index) {
         if (idsBuilder_ == null) {
-          return ids_.get(index);  } else {
+          return ids_.get(index);
+        } else {
           return idsBuilder_.getMessageOrBuilder(index);
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
-      public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder> 
-           getIdsOrBuilderList() {
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
+          getIdsOrBuilderList() {
         if (idsBuilder_ != null) {
           return idsBuilder_.getMessageOrBuilderList();
         } else {
           return java.util.Collections.unmodifiableList(ids_);
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       public org.datacommons.proto.Recon.IdWithProperty.Builder addIdsBuilder() {
-        return getIdsFieldBuilder().addBuilder(
-            org.datacommons.proto.Recon.IdWithProperty.getDefaultInstance());
+        return getIdsFieldBuilder()
+            .addBuilder(org.datacommons.proto.Recon.IdWithProperty.getDefaultInstance());
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
-      public org.datacommons.proto.Recon.IdWithProperty.Builder addIdsBuilder(
-          int index) {
-        return getIdsFieldBuilder().addBuilder(
-            index, org.datacommons.proto.Recon.IdWithProperty.getDefaultInstance());
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      public org.datacommons.proto.Recon.IdWithProperty.Builder addIdsBuilder(int index) {
+        return getIdsFieldBuilder()
+            .addBuilder(index, org.datacommons.proto.Recon.IdWithProperty.getDefaultInstance());
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
-      public java.util.List<org.datacommons.proto.Recon.IdWithProperty.Builder> 
-           getIdsBuilderList() {
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      public java.util.List<org.datacommons.proto.Recon.IdWithProperty.Builder>
+          getIdsBuilderList() {
         return getIdsFieldBuilder().getBuilderList();
       }
+
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.IdWithProperty, org.datacommons.proto.Recon.IdWithProperty.Builder, org.datacommons.proto.Recon.IdWithPropertyOrBuilder> 
+              org.datacommons.proto.Recon.IdWithProperty,
+              org.datacommons.proto.Recon.IdWithProperty.Builder,
+              org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
           getIdsFieldBuilder() {
         if (idsBuilder_ == null) {
-          idsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Recon.IdWithProperty, org.datacommons.proto.Recon.IdWithProperty.Builder, org.datacommons.proto.Recon.IdWithPropertyOrBuilder>(
-                  ids_,
-                  ((bitField0_ & 0x00000001) != 0),
-                  getParentForChildren(),
-                  isClean());
+          idsBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.Recon.IdWithProperty,
+                  org.datacommons.proto.Recon.IdWithProperty.Builder,
+                  org.datacommons.proto.Recon.IdWithPropertyOrBuilder>(
+                  ids_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
           ids_ = null;
         }
         return idsBuilder_;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -1484,12 +1498,12 @@ public final class Recon {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.EntityIds)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.EntityIds)
     private static final org.datacommons.proto.Recon.EntityIds DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Recon.EntityIds();
     }
@@ -1498,16 +1512,16 @@ public final class Recon {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<EntityIds>
-        PARSER = new com.google.protobuf.AbstractParser<EntityIds>() {
-      @java.lang.Override
-      public EntityIds parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new EntityIds(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<EntityIds> PARSER =
+        new com.google.protobuf.AbstractParser<EntityIds>() {
+          @java.lang.Override
+          public EntityIds parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new EntityIds(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<EntityIds> parser() {
       return PARSER;
@@ -1522,97 +1536,112 @@ public final class Recon {
     public org.datacommons.proto.Recon.EntityIds getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface EntitySubGraphOrBuilder extends
+  public interface EntitySubGraphOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.EntitySubGraph)
       com.google.protobuf.MessageOrBuilder {
 
     /**
+     *
+     *
      * <pre>
      * REQUIRED: source_id must be a key within `sub_graph.nodes`, or one of the `ids`.
      * </pre>
      *
      * <code>string source_id = 1;</code>
+     *
      * @return The sourceId.
      */
     java.lang.String getSourceId();
+
     /**
+     *
+     *
      * <pre>
      * REQUIRED: source_id must be a key within `sub_graph.nodes`, or one of the `ids`.
      * </pre>
      *
      * <code>string source_id = 1;</code>
+     *
      * @return The bytes for sourceId.
      */
-    com.google.protobuf.ByteString
-        getSourceIdBytes();
+    com.google.protobuf.ByteString getSourceIdBytes();
 
     /**
      * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
+     *
      * @return Whether the subGraph field is set.
      */
     boolean hasSubGraph();
+
     /**
      * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
+     *
      * @return The subGraph.
      */
     org.datacommons.proto.Mcf.McfGraph getSubGraph();
-    /**
-     * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
-     */
+
+    /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
     org.datacommons.proto.Mcf.McfGraphOrBuilder getSubGraphOrBuilder();
 
     /**
      * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
+     *
      * @return Whether the entityIds field is set.
      */
     boolean hasEntityIds();
+
     /**
      * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
+     *
      * @return The entityIds.
      */
     org.datacommons.proto.Recon.EntityIds getEntityIds();
-    /**
-     * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
-     */
+
+    /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
     org.datacommons.proto.Recon.EntityIdsOrBuilder getEntityIdsOrBuilder();
 
-    public org.datacommons.proto.Recon.EntitySubGraph.GraphRepresentationCase getGraphRepresentationCase();
+    public org.datacommons.proto.Recon.EntitySubGraph.GraphRepresentationCase
+        getGraphRepresentationCase();
   }
+
   /**
+   *
+   *
    * <pre>
    * An entity is represented by a subgraph, which contains itself and its neighbors.
    * </pre>
    *
    * Protobuf type {@code org.datacommons.proto.EntitySubGraph}
    */
-  public static final class EntitySubGraph extends
-      com.google.protobuf.GeneratedMessageV3 implements
+  public static final class EntitySubGraph extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.EntitySubGraph)
       EntitySubGraphOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use EntitySubGraph.newBuilder() to construct.
     private EntitySubGraph(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private EntitySubGraph() {
       sourceId_ = "";
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new EntitySubGraph();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private EntitySubGraph(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1631,84 +1660,97 @@ public final class Recon {
             case 0:
               done = true;
               break;
-            case 10: {
-              java.lang.String s = input.readStringRequireUtf8();
+            case 10:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
 
-              sourceId_ = s;
-              break;
-            }
-            case 18: {
-              org.datacommons.proto.Mcf.McfGraph.Builder subBuilder = null;
-              if (graphRepresentationCase_ == 2) {
-                subBuilder = ((org.datacommons.proto.Mcf.McfGraph) graphRepresentation_).toBuilder();
+                sourceId_ = s;
+                break;
               }
-              graphRepresentation_ =
-                  input.readMessage(org.datacommons.proto.Mcf.McfGraph.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom((org.datacommons.proto.Mcf.McfGraph) graphRepresentation_);
-                graphRepresentation_ = subBuilder.buildPartial();
+            case 18:
+              {
+                org.datacommons.proto.Mcf.McfGraph.Builder subBuilder = null;
+                if (graphRepresentationCase_ == 2) {
+                  subBuilder =
+                      ((org.datacommons.proto.Mcf.McfGraph) graphRepresentation_).toBuilder();
+                }
+                graphRepresentation_ =
+                    input.readMessage(org.datacommons.proto.Mcf.McfGraph.PARSER, extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom((org.datacommons.proto.Mcf.McfGraph) graphRepresentation_);
+                  graphRepresentation_ = subBuilder.buildPartial();
+                }
+                graphRepresentationCase_ = 2;
+                break;
               }
-              graphRepresentationCase_ = 2;
-              break;
-            }
-            case 26: {
-              org.datacommons.proto.Recon.EntityIds.Builder subBuilder = null;
-              if (graphRepresentationCase_ == 3) {
-                subBuilder = ((org.datacommons.proto.Recon.EntityIds) graphRepresentation_).toBuilder();
+            case 26:
+              {
+                org.datacommons.proto.Recon.EntityIds.Builder subBuilder = null;
+                if (graphRepresentationCase_ == 3) {
+                  subBuilder =
+                      ((org.datacommons.proto.Recon.EntityIds) graphRepresentation_).toBuilder();
+                }
+                graphRepresentation_ =
+                    input.readMessage(
+                        org.datacommons.proto.Recon.EntityIds.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(
+                      (org.datacommons.proto.Recon.EntityIds) graphRepresentation_);
+                  graphRepresentation_ = subBuilder.buildPartial();
+                }
+                graphRepresentationCase_ = 3;
+                break;
               }
-              graphRepresentation_ =
-                  input.readMessage(org.datacommons.proto.Recon.EntityIds.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom((org.datacommons.proto.Recon.EntityIds) graphRepresentation_);
-                graphRepresentation_ = subBuilder.buildPartial();
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
               }
-              graphRepresentationCase_ = 3;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntitySubGraph_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_EntitySubGraph_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntitySubGraph_fieldAccessorTable
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_EntitySubGraph_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Recon.EntitySubGraph.class, org.datacommons.proto.Recon.EntitySubGraph.Builder.class);
+              org.datacommons.proto.Recon.EntitySubGraph.class,
+              org.datacommons.proto.Recon.EntitySubGraph.Builder.class);
     }
 
     private int graphRepresentationCase_ = 0;
     private java.lang.Object graphRepresentation_;
+
     public enum GraphRepresentationCase
-        implements com.google.protobuf.Internal.EnumLite,
+        implements
+            com.google.protobuf.Internal.EnumLite,
             com.google.protobuf.AbstractMessage.InternalOneOfEnum {
       SUB_GRAPH(2),
       ENTITY_IDS(3),
       GRAPHREPRESENTATION_NOT_SET(0);
       private final int value;
+
       private GraphRepresentationCase(int value) {
         this.value = value;
       }
+
       /**
        * @param value The number of the enum to look for.
        * @return The enum associated with the given number.
@@ -1721,31 +1763,38 @@ public final class Recon {
 
       public static GraphRepresentationCase forNumber(int value) {
         switch (value) {
-          case 2: return SUB_GRAPH;
-          case 3: return ENTITY_IDS;
-          case 0: return GRAPHREPRESENTATION_NOT_SET;
-          default: return null;
+          case 2:
+            return SUB_GRAPH;
+          case 3:
+            return ENTITY_IDS;
+          case 0:
+            return GRAPHREPRESENTATION_NOT_SET;
+          default:
+            return null;
         }
       }
+
       public int getNumber() {
         return this.value;
       }
     };
 
-    public GraphRepresentationCase
-    getGraphRepresentationCase() {
-      return GraphRepresentationCase.forNumber(
-          graphRepresentationCase_);
+    public GraphRepresentationCase getGraphRepresentationCase() {
+      return GraphRepresentationCase.forNumber(graphRepresentationCase_);
     }
 
     public static final int SOURCE_ID_FIELD_NUMBER = 1;
     private volatile java.lang.Object sourceId_;
+
     /**
+     *
+     *
      * <pre>
      * REQUIRED: source_id must be a key within `sub_graph.nodes`, or one of the `ids`.
      * </pre>
      *
      * <code>string source_id = 1;</code>
+     *
      * @return The sourceId.
      */
     @java.lang.Override
@@ -1754,29 +1803,30 @@ public final class Recon {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         sourceId_ = s;
         return s;
       }
     }
+
     /**
+     *
+     *
      * <pre>
      * REQUIRED: source_id must be a key within `sub_graph.nodes`, or one of the `ids`.
      * </pre>
      *
      * <code>string source_id = 1;</code>
+     *
      * @return The bytes for sourceId.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString
-        getSourceIdBytes() {
+    public com.google.protobuf.ByteString getSourceIdBytes() {
       java.lang.Object ref = sourceId_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
         sourceId_ = b;
         return b;
       } else {
@@ -1785,68 +1835,75 @@ public final class Recon {
     }
 
     public static final int SUB_GRAPH_FIELD_NUMBER = 2;
+
     /**
      * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
+     *
      * @return Whether the subGraph field is set.
      */
     @java.lang.Override
     public boolean hasSubGraph() {
       return graphRepresentationCase_ == 2;
     }
+
     /**
      * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
+     *
      * @return The subGraph.
      */
     @java.lang.Override
     public org.datacommons.proto.Mcf.McfGraph getSubGraph() {
       if (graphRepresentationCase_ == 2) {
-         return (org.datacommons.proto.Mcf.McfGraph) graphRepresentation_;
+        return (org.datacommons.proto.Mcf.McfGraph) graphRepresentation_;
       }
       return org.datacommons.proto.Mcf.McfGraph.getDefaultInstance();
     }
-    /**
-     * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
-     */
+
+    /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
     @java.lang.Override
     public org.datacommons.proto.Mcf.McfGraphOrBuilder getSubGraphOrBuilder() {
       if (graphRepresentationCase_ == 2) {
-         return (org.datacommons.proto.Mcf.McfGraph) graphRepresentation_;
+        return (org.datacommons.proto.Mcf.McfGraph) graphRepresentation_;
       }
       return org.datacommons.proto.Mcf.McfGraph.getDefaultInstance();
     }
 
     public static final int ENTITY_IDS_FIELD_NUMBER = 3;
+
     /**
      * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
+     *
      * @return Whether the entityIds field is set.
      */
     @java.lang.Override
     public boolean hasEntityIds() {
       return graphRepresentationCase_ == 3;
     }
+
     /**
      * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
+     *
      * @return The entityIds.
      */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntityIds getEntityIds() {
       if (graphRepresentationCase_ == 3) {
-         return (org.datacommons.proto.Recon.EntityIds) graphRepresentation_;
+        return (org.datacommons.proto.Recon.EntityIds) graphRepresentation_;
       }
       return org.datacommons.proto.Recon.EntityIds.getDefaultInstance();
     }
-    /**
-     * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
-     */
+
+    /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntityIdsOrBuilder getEntityIdsOrBuilder() {
       if (graphRepresentationCase_ == 3) {
-         return (org.datacommons.proto.Recon.EntityIds) graphRepresentation_;
+        return (org.datacommons.proto.Recon.EntityIds) graphRepresentation_;
       }
       return org.datacommons.proto.Recon.EntityIds.getDefaultInstance();
     }
 
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -1858,8 +1915,7 @@ public final class Recon {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       if (!getSourceIdBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, sourceId_);
       }
@@ -1882,12 +1938,14 @@ public final class Recon {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, sourceId_);
       }
       if (graphRepresentationCase_ == 2) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, (org.datacommons.proto.Mcf.McfGraph) graphRepresentation_);
+        size +=
+            com.google.protobuf.CodedOutputStream.computeMessageSize(
+                2, (org.datacommons.proto.Mcf.McfGraph) graphRepresentation_);
       }
       if (graphRepresentationCase_ == 3) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, (org.datacommons.proto.Recon.EntityIds) graphRepresentation_);
+        size +=
+            com.google.protobuf.CodedOutputStream.computeMessageSize(
+                3, (org.datacommons.proto.Recon.EntityIds) graphRepresentation_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1897,24 +1955,22 @@ public final class Recon {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.Recon.EntitySubGraph)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.Recon.EntitySubGraph other = (org.datacommons.proto.Recon.EntitySubGraph) obj;
+      org.datacommons.proto.Recon.EntitySubGraph other =
+          (org.datacommons.proto.Recon.EntitySubGraph) obj;
 
-      if (!getSourceId()
-          .equals(other.getSourceId())) return false;
+      if (!getSourceId().equals(other.getSourceId())) return false;
       if (!getGraphRepresentationCase().equals(other.getGraphRepresentationCase())) return false;
       switch (graphRepresentationCase_) {
         case 2:
-          if (!getSubGraph()
-              .equals(other.getSubGraph())) return false;
+          if (!getSubGraph().equals(other.getSubGraph())) return false;
           break;
         case 3:
-          if (!getEntityIds()
-              .equals(other.getEntityIds())) return false;
+          if (!getEntityIds().equals(other.getEntityIds())) return false;
           break;
         case 0:
         default:
@@ -1949,88 +2005,94 @@ public final class Recon {
       return hash;
     }
 
-    public static org.datacommons.proto.Recon.EntitySubGraph parseFrom(
-        java.nio.ByteBuffer data)
+    public static org.datacommons.proto.Recon.EntitySubGraph parseFrom(java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.EntitySubGraph parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.EntitySubGraph parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.EntitySubGraph parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.EntitySubGraph parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.EntitySubGraph parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.EntitySubGraph parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.EntitySubGraph parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
-    public static org.datacommons.proto.Recon.EntitySubGraph parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.Recon.EntitySubGraph parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.Recon.EntitySubGraph parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.Recon.EntitySubGraph parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.EntitySubGraph parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
+
     public static Builder newBuilder(org.datacommons.proto.Recon.EntitySubGraph prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -2039,28 +2101,34 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
+
     /**
+     *
+     *
      * <pre>
      * An entity is represented by a subgraph, which contains itself and its neighbors.
      * </pre>
      *
      * Protobuf type {@code org.datacommons.proto.EntitySubGraph}
      */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.EntitySubGraph)
         org.datacommons.proto.Recon.EntitySubGraphOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntitySubGraph_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_EntitySubGraph_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntitySubGraph_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_EntitySubGraph_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.EntitySubGraph.class, org.datacommons.proto.Recon.EntitySubGraph.Builder.class);
+                org.datacommons.proto.Recon.EntitySubGraph.class,
+                org.datacommons.proto.Recon.EntitySubGraph.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Recon.EntitySubGraph.newBuilder()
@@ -2068,16 +2136,15 @@ public final class Recon {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -2089,9 +2156,9 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntitySubGraph_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_EntitySubGraph_descriptor;
       }
 
       @java.lang.Override
@@ -2110,7 +2177,8 @@ public final class Recon {
 
       @java.lang.Override
       public org.datacommons.proto.Recon.EntitySubGraph buildPartial() {
-        org.datacommons.proto.Recon.EntitySubGraph result = new org.datacommons.proto.Recon.EntitySubGraph(this);
+        org.datacommons.proto.Recon.EntitySubGraph result =
+            new org.datacommons.proto.Recon.EntitySubGraph(this);
         result.sourceId_ = sourceId_;
         if (graphRepresentationCase_ == 2) {
           if (subGraphBuilder_ == null) {
@@ -2135,38 +2203,41 @@ public final class Recon {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Recon.EntitySubGraph) {
-          return mergeFrom((org.datacommons.proto.Recon.EntitySubGraph)other);
+          return mergeFrom((org.datacommons.proto.Recon.EntitySubGraph) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -2180,17 +2251,20 @@ public final class Recon {
           onChanged();
         }
         switch (other.getGraphRepresentationCase()) {
-          case SUB_GRAPH: {
-            mergeSubGraph(other.getSubGraph());
-            break;
-          }
-          case ENTITY_IDS: {
-            mergeEntityIds(other.getEntityIds());
-            break;
-          }
-          case GRAPHREPRESENTATION_NOT_SET: {
-            break;
-          }
+          case SUB_GRAPH:
+            {
+              mergeSubGraph(other.getSubGraph());
+              break;
+            }
+          case ENTITY_IDS:
+            {
+              mergeEntityIds(other.getEntityIds());
+              break;
+            }
+          case GRAPHREPRESENTATION_NOT_SET:
+            {
+              break;
+            }
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2220,12 +2294,12 @@ public final class Recon {
         }
         return this;
       }
+
       private int graphRepresentationCase_ = 0;
       private java.lang.Object graphRepresentation_;
-      public GraphRepresentationCase
-          getGraphRepresentationCase() {
-        return GraphRepresentationCase.forNumber(
-            graphRepresentationCase_);
+
+      public GraphRepresentationCase getGraphRepresentationCase() {
+        return GraphRepresentationCase.forNumber(graphRepresentationCase_);
       }
 
       public Builder clearGraphRepresentation() {
@@ -2235,21 +2309,23 @@ public final class Recon {
         return this;
       }
 
-
       private java.lang.Object sourceId_ = "";
+
       /**
+       *
+       *
        * <pre>
        * REQUIRED: source_id must be a key within `sub_graph.nodes`, or one of the `ids`.
        * </pre>
        *
        * <code>string source_id = 1;</code>
+       *
        * @return The sourceId.
        */
       public java.lang.String getSourceId() {
         java.lang.Object ref = sourceId_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           sourceId_ = s;
           return s;
@@ -2257,93 +2333,112 @@ public final class Recon {
           return (java.lang.String) ref;
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * REQUIRED: source_id must be a key within `sub_graph.nodes`, or one of the `ids`.
        * </pre>
        *
        * <code>string source_id = 1;</code>
+       *
        * @return The bytes for sourceId.
        */
-      public com.google.protobuf.ByteString
-          getSourceIdBytes() {
+      public com.google.protobuf.ByteString getSourceIdBytes() {
         java.lang.Object ref = sourceId_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           sourceId_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
+
       /**
+       *
+       *
        * <pre>
        * REQUIRED: source_id must be a key within `sub_graph.nodes`, or one of the `ids`.
        * </pre>
        *
        * <code>string source_id = 1;</code>
+       *
        * @param value The sourceId to set.
        * @return This builder for chaining.
        */
-      public Builder setSourceId(
-          java.lang.String value) {
+      public Builder setSourceId(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  
+          throw new NullPointerException();
+        }
+
         sourceId_ = value;
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * REQUIRED: source_id must be a key within `sub_graph.nodes`, or one of the `ids`.
        * </pre>
        *
        * <code>string source_id = 1;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearSourceId() {
-        
+
         sourceId_ = getDefaultInstance().getSourceId();
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * REQUIRED: source_id must be a key within `sub_graph.nodes`, or one of the `ids`.
        * </pre>
        *
        * <code>string source_id = 1;</code>
+       *
        * @param value The bytes for sourceId to set.
        * @return This builder for chaining.
        */
-      public Builder setSourceIdBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder setSourceIdBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
+
         sourceId_ = value;
         onChanged();
         return this;
       }
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.Mcf.McfGraph, org.datacommons.proto.Mcf.McfGraph.Builder, org.datacommons.proto.Mcf.McfGraphOrBuilder> subGraphBuilder_;
+              org.datacommons.proto.Mcf.McfGraph,
+              org.datacommons.proto.Mcf.McfGraph.Builder,
+              org.datacommons.proto.Mcf.McfGraphOrBuilder>
+          subGraphBuilder_;
+
       /**
        * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
+       *
        * @return Whether the subGraph field is set.
        */
       @java.lang.Override
       public boolean hasSubGraph() {
         return graphRepresentationCase_ == 2;
       }
+
       /**
        * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
+       *
        * @return The subGraph.
        */
       @java.lang.Override
@@ -2360,9 +2455,8 @@ public final class Recon {
           return org.datacommons.proto.Mcf.McfGraph.getDefaultInstance();
         }
       }
-      /**
-       * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
       public Builder setSubGraph(org.datacommons.proto.Mcf.McfGraph value) {
         if (subGraphBuilder_ == null) {
           if (value == null) {
@@ -2376,11 +2470,9 @@ public final class Recon {
         graphRepresentationCase_ = 2;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
-       */
-      public Builder setSubGraph(
-          org.datacommons.proto.Mcf.McfGraph.Builder builderForValue) {
+
+      /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
+      public Builder setSubGraph(org.datacommons.proto.Mcf.McfGraph.Builder builderForValue) {
         if (subGraphBuilder_ == null) {
           graphRepresentation_ = builderForValue.build();
           onChanged();
@@ -2390,15 +2482,17 @@ public final class Recon {
         graphRepresentationCase_ = 2;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
       public Builder mergeSubGraph(org.datacommons.proto.Mcf.McfGraph value) {
         if (subGraphBuilder_ == null) {
-          if (graphRepresentationCase_ == 2 &&
-              graphRepresentation_ != org.datacommons.proto.Mcf.McfGraph.getDefaultInstance()) {
-            graphRepresentation_ = org.datacommons.proto.Mcf.McfGraph.newBuilder((org.datacommons.proto.Mcf.McfGraph) graphRepresentation_)
-                .mergeFrom(value).buildPartial();
+          if (graphRepresentationCase_ == 2
+              && graphRepresentation_ != org.datacommons.proto.Mcf.McfGraph.getDefaultInstance()) {
+            graphRepresentation_ =
+                org.datacommons.proto.Mcf.McfGraph.newBuilder(
+                        (org.datacommons.proto.Mcf.McfGraph) graphRepresentation_)
+                    .mergeFrom(value)
+                    .buildPartial();
           } else {
             graphRepresentation_ = value;
           }
@@ -2412,9 +2506,8 @@ public final class Recon {
         graphRepresentationCase_ = 2;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
       public Builder clearSubGraph() {
         if (subGraphBuilder_ == null) {
           if (graphRepresentationCase_ == 2) {
@@ -2431,15 +2524,13 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
       public org.datacommons.proto.Mcf.McfGraph.Builder getSubGraphBuilder() {
         return getSubGraphFieldBuilder().getBuilder();
       }
-      /**
-       * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
       @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraphOrBuilder getSubGraphOrBuilder() {
         if ((graphRepresentationCase_ == 2) && (subGraphBuilder_ != null)) {
@@ -2451,40 +2542,52 @@ public final class Recon {
           return org.datacommons.proto.Mcf.McfGraph.getDefaultInstance();
         }
       }
-      /**
-       * <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.McfGraph sub_graph = 2;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.Mcf.McfGraph, org.datacommons.proto.Mcf.McfGraph.Builder, org.datacommons.proto.Mcf.McfGraphOrBuilder> 
+              org.datacommons.proto.Mcf.McfGraph,
+              org.datacommons.proto.Mcf.McfGraph.Builder,
+              org.datacommons.proto.Mcf.McfGraphOrBuilder>
           getSubGraphFieldBuilder() {
         if (subGraphBuilder_ == null) {
           if (!(graphRepresentationCase_ == 2)) {
             graphRepresentation_ = org.datacommons.proto.Mcf.McfGraph.getDefaultInstance();
           }
-          subGraphBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Mcf.McfGraph, org.datacommons.proto.Mcf.McfGraph.Builder, org.datacommons.proto.Mcf.McfGraphOrBuilder>(
+          subGraphBuilder_ =
+              new com.google.protobuf.SingleFieldBuilderV3<
+                  org.datacommons.proto.Mcf.McfGraph,
+                  org.datacommons.proto.Mcf.McfGraph.Builder,
+                  org.datacommons.proto.Mcf.McfGraphOrBuilder>(
                   (org.datacommons.proto.Mcf.McfGraph) graphRepresentation_,
                   getParentForChildren(),
                   isClean());
           graphRepresentation_ = null;
         }
         graphRepresentationCase_ = 2;
-        onChanged();;
+        onChanged();
+        ;
         return subGraphBuilder_;
       }
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.Recon.EntityIds, org.datacommons.proto.Recon.EntityIds.Builder, org.datacommons.proto.Recon.EntityIdsOrBuilder> entityIdsBuilder_;
+              org.datacommons.proto.Recon.EntityIds,
+              org.datacommons.proto.Recon.EntityIds.Builder,
+              org.datacommons.proto.Recon.EntityIdsOrBuilder>
+          entityIdsBuilder_;
+
       /**
        * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
+       *
        * @return Whether the entityIds field is set.
        */
       @java.lang.Override
       public boolean hasEntityIds() {
         return graphRepresentationCase_ == 3;
       }
+
       /**
        * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
+       *
        * @return The entityIds.
        */
       @java.lang.Override
@@ -2501,9 +2604,8 @@ public final class Recon {
           return org.datacommons.proto.Recon.EntityIds.getDefaultInstance();
         }
       }
-      /**
-       * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
       public Builder setEntityIds(org.datacommons.proto.Recon.EntityIds value) {
         if (entityIdsBuilder_ == null) {
           if (value == null) {
@@ -2517,11 +2619,9 @@ public final class Recon {
         graphRepresentationCase_ = 3;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
-       */
-      public Builder setEntityIds(
-          org.datacommons.proto.Recon.EntityIds.Builder builderForValue) {
+
+      /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
+      public Builder setEntityIds(org.datacommons.proto.Recon.EntityIds.Builder builderForValue) {
         if (entityIdsBuilder_ == null) {
           graphRepresentation_ = builderForValue.build();
           onChanged();
@@ -2531,15 +2631,18 @@ public final class Recon {
         graphRepresentationCase_ = 3;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
       public Builder mergeEntityIds(org.datacommons.proto.Recon.EntityIds value) {
         if (entityIdsBuilder_ == null) {
-          if (graphRepresentationCase_ == 3 &&
-              graphRepresentation_ != org.datacommons.proto.Recon.EntityIds.getDefaultInstance()) {
-            graphRepresentation_ = org.datacommons.proto.Recon.EntityIds.newBuilder((org.datacommons.proto.Recon.EntityIds) graphRepresentation_)
-                .mergeFrom(value).buildPartial();
+          if (graphRepresentationCase_ == 3
+              && graphRepresentation_
+                  != org.datacommons.proto.Recon.EntityIds.getDefaultInstance()) {
+            graphRepresentation_ =
+                org.datacommons.proto.Recon.EntityIds.newBuilder(
+                        (org.datacommons.proto.Recon.EntityIds) graphRepresentation_)
+                    .mergeFrom(value)
+                    .buildPartial();
           } else {
             graphRepresentation_ = value;
           }
@@ -2553,9 +2656,8 @@ public final class Recon {
         graphRepresentationCase_ = 3;
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
       public Builder clearEntityIds() {
         if (entityIdsBuilder_ == null) {
           if (graphRepresentationCase_ == 3) {
@@ -2572,15 +2674,13 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
       public org.datacommons.proto.Recon.EntityIds.Builder getEntityIdsBuilder() {
         return getEntityIdsFieldBuilder().getBuilder();
       }
-      /**
-       * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
       @java.lang.Override
       public org.datacommons.proto.Recon.EntityIdsOrBuilder getEntityIdsOrBuilder() {
         if ((graphRepresentationCase_ == 3) && (entityIdsBuilder_ != null)) {
@@ -2592,27 +2692,33 @@ public final class Recon {
           return org.datacommons.proto.Recon.EntityIds.getDefaultInstance();
         }
       }
-      /**
-       * <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntityIds entity_ids = 3;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.Recon.EntityIds, org.datacommons.proto.Recon.EntityIds.Builder, org.datacommons.proto.Recon.EntityIdsOrBuilder> 
+              org.datacommons.proto.Recon.EntityIds,
+              org.datacommons.proto.Recon.EntityIds.Builder,
+              org.datacommons.proto.Recon.EntityIdsOrBuilder>
           getEntityIdsFieldBuilder() {
         if (entityIdsBuilder_ == null) {
           if (!(graphRepresentationCase_ == 3)) {
             graphRepresentation_ = org.datacommons.proto.Recon.EntityIds.getDefaultInstance();
           }
-          entityIdsBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Recon.EntityIds, org.datacommons.proto.Recon.EntityIds.Builder, org.datacommons.proto.Recon.EntityIdsOrBuilder>(
+          entityIdsBuilder_ =
+              new com.google.protobuf.SingleFieldBuilderV3<
+                  org.datacommons.proto.Recon.EntityIds,
+                  org.datacommons.proto.Recon.EntityIds.Builder,
+                  org.datacommons.proto.Recon.EntityIdsOrBuilder>(
                   (org.datacommons.proto.Recon.EntityIds) graphRepresentation_,
                   getParentForChildren(),
                   isClean());
           graphRepresentation_ = null;
         }
         graphRepresentationCase_ = 3;
-        onChanged();;
+        onChanged();
+        ;
         return entityIdsBuilder_;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -2625,12 +2731,12 @@ public final class Recon {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.EntitySubGraph)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.EntitySubGraph)
     private static final org.datacommons.proto.Recon.EntitySubGraph DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Recon.EntitySubGraph();
     }
@@ -2639,16 +2745,16 @@ public final class Recon {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<EntitySubGraph>
-        PARSER = new com.google.protobuf.AbstractParser<EntitySubGraph>() {
-      @java.lang.Override
-      public EntitySubGraph parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new EntitySubGraph(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<EntitySubGraph> PARSER =
+        new com.google.protobuf.AbstractParser<EntitySubGraph>() {
+          @java.lang.Override
+          public EntitySubGraph parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new EntitySubGraph(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<EntitySubGraph> parser() {
       return PARSER;
@@ -2663,70 +2769,73 @@ public final class Recon {
     public org.datacommons.proto.Recon.EntitySubGraph getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface EntityPairOrBuilder extends
+  public interface EntityPairOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.EntityPair)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
+     *
      * @return Whether the entityOne field is set.
      */
     boolean hasEntityOne();
+
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
+     *
      * @return The entityOne.
      */
     org.datacommons.proto.Recon.EntitySubGraph getEntityOne();
-    /**
-     * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
-     */
+
+    /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
     org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityOneOrBuilder();
 
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
+     *
      * @return Whether the entityTwo field is set.
      */
     boolean hasEntityTwo();
+
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
+     *
      * @return The entityTwo.
      */
     org.datacommons.proto.Recon.EntitySubGraph getEntityTwo();
-    /**
-     * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
-     */
+
+    /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
     org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityTwoOrBuilder();
   }
-  /**
-   * Protobuf type {@code org.datacommons.proto.EntityPair}
-   */
-  public static final class EntityPair extends
-      com.google.protobuf.GeneratedMessageV3 implements
+
+  /** Protobuf type {@code org.datacommons.proto.EntityPair} */
+  public static final class EntityPair extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.EntityPair)
       EntityPairOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use EntityPair.newBuilder() to construct.
     private EntityPair(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private EntityPair() {
-    }
+
+    private EntityPair() {}
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new EntityPair();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private EntityPair(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2745,85 +2854,98 @@ public final class Recon {
             case 0:
               done = true;
               break;
-            case 10: {
-              org.datacommons.proto.Recon.EntitySubGraph.Builder subBuilder = null;
-              if (entityOne_ != null) {
-                subBuilder = entityOne_.toBuilder();
-              }
-              entityOne_ = input.readMessage(org.datacommons.proto.Recon.EntitySubGraph.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(entityOne_);
-                entityOne_ = subBuilder.buildPartial();
-              }
+            case 10:
+              {
+                org.datacommons.proto.Recon.EntitySubGraph.Builder subBuilder = null;
+                if (entityOne_ != null) {
+                  subBuilder = entityOne_.toBuilder();
+                }
+                entityOne_ =
+                    input.readMessage(
+                        org.datacommons.proto.Recon.EntitySubGraph.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(entityOne_);
+                  entityOne_ = subBuilder.buildPartial();
+                }
 
-              break;
-            }
-            case 18: {
-              org.datacommons.proto.Recon.EntitySubGraph.Builder subBuilder = null;
-              if (entityTwo_ != null) {
-                subBuilder = entityTwo_.toBuilder();
+                break;
               }
-              entityTwo_ = input.readMessage(org.datacommons.proto.Recon.EntitySubGraph.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(entityTwo_);
-                entityTwo_ = subBuilder.buildPartial();
-              }
+            case 18:
+              {
+                org.datacommons.proto.Recon.EntitySubGraph.Builder subBuilder = null;
+                if (entityTwo_ != null) {
+                  subBuilder = entityTwo_.toBuilder();
+                }
+                entityTwo_ =
+                    input.readMessage(
+                        org.datacommons.proto.Recon.EntitySubGraph.parser(), extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(entityTwo_);
+                  entityTwo_ = subBuilder.buildPartial();
+                }
 
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+                break;
               }
-              break;
-            }
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntityPair_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_EntityPair_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntityPair_fieldAccessorTable
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_EntityPair_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Recon.EntityPair.class, org.datacommons.proto.Recon.EntityPair.Builder.class);
+              org.datacommons.proto.Recon.EntityPair.class,
+              org.datacommons.proto.Recon.EntityPair.Builder.class);
     }
 
     public static final int ENTITY_ONE_FIELD_NUMBER = 1;
     private org.datacommons.proto.Recon.EntitySubGraph entityOne_;
+
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
+     *
      * @return Whether the entityOne field is set.
      */
     @java.lang.Override
     public boolean hasEntityOne() {
       return entityOne_ != null;
     }
+
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
+     *
      * @return The entityOne.
      */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraph getEntityOne() {
-      return entityOne_ == null ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance() : entityOne_;
+      return entityOne_ == null
+          ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance()
+          : entityOne_;
     }
-    /**
-     * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
-     */
+
+    /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityOneOrBuilder() {
       return getEntityOne();
@@ -2831,31 +2953,37 @@ public final class Recon {
 
     public static final int ENTITY_TWO_FIELD_NUMBER = 2;
     private org.datacommons.proto.Recon.EntitySubGraph entityTwo_;
+
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
+     *
      * @return Whether the entityTwo field is set.
      */
     @java.lang.Override
     public boolean hasEntityTwo() {
       return entityTwo_ != null;
     }
+
     /**
      * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
+     *
      * @return The entityTwo.
      */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraph getEntityTwo() {
-      return entityTwo_ == null ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance() : entityTwo_;
+      return entityTwo_ == null
+          ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance()
+          : entityTwo_;
     }
-    /**
-     * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
-     */
+
+    /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityTwoOrBuilder() {
       return getEntityTwo();
     }
 
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -2867,8 +2995,7 @@ public final class Recon {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       if (entityOne_ != null) {
         output.writeMessage(1, getEntityOne());
       }
@@ -2885,12 +3012,10 @@ public final class Recon {
 
       size = 0;
       if (entityOne_ != null) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, getEntityOne());
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, getEntityOne());
       }
       if (entityTwo_ != null) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, getEntityTwo());
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getEntityTwo());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2900,7 +3025,7 @@ public final class Recon {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.Recon.EntityPair)) {
         return super.equals(obj);
@@ -2909,13 +3034,11 @@ public final class Recon {
 
       if (hasEntityOne() != other.hasEntityOne()) return false;
       if (hasEntityOne()) {
-        if (!getEntityOne()
-            .equals(other.getEntityOne())) return false;
+        if (!getEntityOne().equals(other.getEntityOne())) return false;
       }
       if (hasEntityTwo() != other.hasEntityTwo()) return false;
       if (hasEntityTwo()) {
-        if (!getEntityTwo()
-            .equals(other.getEntityTwo())) return false;
+        if (!getEntityTwo().equals(other.getEntityTwo())) return false;
       }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
@@ -2941,88 +3064,94 @@ public final class Recon {
       return hash;
     }
 
-    public static org.datacommons.proto.Recon.EntityPair parseFrom(
-        java.nio.ByteBuffer data)
+    public static org.datacommons.proto.Recon.EntityPair parseFrom(java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.EntityPair parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.EntityPair parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.EntityPair parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.EntityPair parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.EntityPair parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.EntityPair parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.EntityPair parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
-    public static org.datacommons.proto.Recon.EntityPair parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.Recon.EntityPair parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.Recon.EntityPair parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.Recon.EntityPair parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.EntityPair parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
+
     public static Builder newBuilder(org.datacommons.proto.Recon.EntityPair prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -3031,24 +3160,26 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.EntityPair}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+    /** Protobuf type {@code org.datacommons.proto.EntityPair} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.EntityPair)
         org.datacommons.proto.Recon.EntityPairOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntityPair_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_EntityPair_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntityPair_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_EntityPair_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.EntityPair.class, org.datacommons.proto.Recon.EntityPair.Builder.class);
+                org.datacommons.proto.Recon.EntityPair.class,
+                org.datacommons.proto.Recon.EntityPair.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Recon.EntityPair.newBuilder()
@@ -3056,16 +3187,15 @@ public final class Recon {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -3085,9 +3215,9 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_EntityPair_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_EntityPair_descriptor;
       }
 
       @java.lang.Override
@@ -3106,7 +3236,8 @@ public final class Recon {
 
       @java.lang.Override
       public org.datacommons.proto.Recon.EntityPair buildPartial() {
-        org.datacommons.proto.Recon.EntityPair result = new org.datacommons.proto.Recon.EntityPair(this);
+        org.datacommons.proto.Recon.EntityPair result =
+            new org.datacommons.proto.Recon.EntityPair(this);
         if (entityOneBuilder_ == null) {
           result.entityOne_ = entityOne_;
         } else {
@@ -3125,38 +3256,41 @@ public final class Recon {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Recon.EntityPair) {
-          return mergeFrom((org.datacommons.proto.Recon.EntityPair)other);
+          return mergeFrom((org.datacommons.proto.Recon.EntityPair) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -3202,28 +3336,36 @@ public final class Recon {
 
       private org.datacommons.proto.Recon.EntitySubGraph entityOne_;
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.Recon.EntitySubGraph, org.datacommons.proto.Recon.EntitySubGraph.Builder, org.datacommons.proto.Recon.EntitySubGraphOrBuilder> entityOneBuilder_;
+              org.datacommons.proto.Recon.EntitySubGraph,
+              org.datacommons.proto.Recon.EntitySubGraph.Builder,
+              org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
+          entityOneBuilder_;
+
       /**
        * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
+       *
        * @return Whether the entityOne field is set.
        */
       public boolean hasEntityOne() {
         return entityOneBuilder_ != null || entityOne_ != null;
       }
+
       /**
        * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
+       *
        * @return The entityOne.
        */
       public org.datacommons.proto.Recon.EntitySubGraph getEntityOne() {
         if (entityOneBuilder_ == null) {
-          return entityOne_ == null ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance() : entityOne_;
+          return entityOne_ == null
+              ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance()
+              : entityOne_;
         } else {
           return entityOneBuilder_.getMessage();
         }
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       public Builder setEntityOne(org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entityOneBuilder_ == null) {
           if (value == null) {
@@ -3237,9 +3379,8 @@ public final class Recon {
 
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       public Builder setEntityOne(
           org.datacommons.proto.Recon.EntitySubGraph.Builder builderForValue) {
         if (entityOneBuilder_ == null) {
@@ -3251,14 +3392,15 @@ public final class Recon {
 
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       public Builder mergeEntityOne(org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entityOneBuilder_ == null) {
           if (entityOne_ != null) {
             entityOne_ =
-              org.datacommons.proto.Recon.EntitySubGraph.newBuilder(entityOne_).mergeFrom(value).buildPartial();
+                org.datacommons.proto.Recon.EntitySubGraph.newBuilder(entityOne_)
+                    .mergeFrom(value)
+                    .buildPartial();
           } else {
             entityOne_ = value;
           }
@@ -3269,9 +3411,8 @@ public final class Recon {
 
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       public Builder clearEntityOne() {
         if (entityOneBuilder_ == null) {
           entityOne_ = null;
@@ -3283,37 +3424,38 @@ public final class Recon {
 
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       public org.datacommons.proto.Recon.EntitySubGraph.Builder getEntityOneBuilder() {
-        
+
         onChanged();
         return getEntityOneFieldBuilder().getBuilder();
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityOneOrBuilder() {
         if (entityOneBuilder_ != null) {
           return entityOneBuilder_.getMessageOrBuilder();
         } else {
-          return entityOne_ == null ?
-              org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance() : entityOne_;
+          return entityOne_ == null
+              ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance()
+              : entityOne_;
         }
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_one = 1;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.Recon.EntitySubGraph, org.datacommons.proto.Recon.EntitySubGraph.Builder, org.datacommons.proto.Recon.EntitySubGraphOrBuilder> 
+              org.datacommons.proto.Recon.EntitySubGraph,
+              org.datacommons.proto.Recon.EntitySubGraph.Builder,
+              org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
           getEntityOneFieldBuilder() {
         if (entityOneBuilder_ == null) {
-          entityOneBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Recon.EntitySubGraph, org.datacommons.proto.Recon.EntitySubGraph.Builder, org.datacommons.proto.Recon.EntitySubGraphOrBuilder>(
-                  getEntityOne(),
-                  getParentForChildren(),
-                  isClean());
+          entityOneBuilder_ =
+              new com.google.protobuf.SingleFieldBuilderV3<
+                  org.datacommons.proto.Recon.EntitySubGraph,
+                  org.datacommons.proto.Recon.EntitySubGraph.Builder,
+                  org.datacommons.proto.Recon.EntitySubGraphOrBuilder>(
+                  getEntityOne(), getParentForChildren(), isClean());
           entityOne_ = null;
         }
         return entityOneBuilder_;
@@ -3321,28 +3463,36 @@ public final class Recon {
 
       private org.datacommons.proto.Recon.EntitySubGraph entityTwo_;
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.Recon.EntitySubGraph, org.datacommons.proto.Recon.EntitySubGraph.Builder, org.datacommons.proto.Recon.EntitySubGraphOrBuilder> entityTwoBuilder_;
+              org.datacommons.proto.Recon.EntitySubGraph,
+              org.datacommons.proto.Recon.EntitySubGraph.Builder,
+              org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
+          entityTwoBuilder_;
+
       /**
        * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
+       *
        * @return Whether the entityTwo field is set.
        */
       public boolean hasEntityTwo() {
         return entityTwoBuilder_ != null || entityTwo_ != null;
       }
+
       /**
        * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
+       *
        * @return The entityTwo.
        */
       public org.datacommons.proto.Recon.EntitySubGraph getEntityTwo() {
         if (entityTwoBuilder_ == null) {
-          return entityTwo_ == null ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance() : entityTwo_;
+          return entityTwo_ == null
+              ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance()
+              : entityTwo_;
         } else {
           return entityTwoBuilder_.getMessage();
         }
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       public Builder setEntityTwo(org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entityTwoBuilder_ == null) {
           if (value == null) {
@@ -3356,9 +3506,8 @@ public final class Recon {
 
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       public Builder setEntityTwo(
           org.datacommons.proto.Recon.EntitySubGraph.Builder builderForValue) {
         if (entityTwoBuilder_ == null) {
@@ -3370,14 +3519,15 @@ public final class Recon {
 
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       public Builder mergeEntityTwo(org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entityTwoBuilder_ == null) {
           if (entityTwo_ != null) {
             entityTwo_ =
-              org.datacommons.proto.Recon.EntitySubGraph.newBuilder(entityTwo_).mergeFrom(value).buildPartial();
+                org.datacommons.proto.Recon.EntitySubGraph.newBuilder(entityTwo_)
+                    .mergeFrom(value)
+                    .buildPartial();
           } else {
             entityTwo_ = value;
           }
@@ -3388,9 +3538,8 @@ public final class Recon {
 
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       public Builder clearEntityTwo() {
         if (entityTwoBuilder_ == null) {
           entityTwo_ = null;
@@ -3402,41 +3551,43 @@ public final class Recon {
 
         return this;
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       public org.datacommons.proto.Recon.EntitySubGraph.Builder getEntityTwoBuilder() {
-        
+
         onChanged();
         return getEntityTwoFieldBuilder().getBuilder();
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntityTwoOrBuilder() {
         if (entityTwoBuilder_ != null) {
           return entityTwoBuilder_.getMessageOrBuilder();
         } else {
-          return entityTwo_ == null ?
-              org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance() : entityTwo_;
+          return entityTwo_ == null
+              ? org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance()
+              : entityTwo_;
         }
       }
-      /**
-       * <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code>
-       */
+
+      /** <code>.org.datacommons.proto.EntitySubGraph entity_two = 2;</code> */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.datacommons.proto.Recon.EntitySubGraph, org.datacommons.proto.Recon.EntitySubGraph.Builder, org.datacommons.proto.Recon.EntitySubGraphOrBuilder> 
+              org.datacommons.proto.Recon.EntitySubGraph,
+              org.datacommons.proto.Recon.EntitySubGraph.Builder,
+              org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
           getEntityTwoFieldBuilder() {
         if (entityTwoBuilder_ == null) {
-          entityTwoBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Recon.EntitySubGraph, org.datacommons.proto.Recon.EntitySubGraph.Builder, org.datacommons.proto.Recon.EntitySubGraphOrBuilder>(
-                  getEntityTwo(),
-                  getParentForChildren(),
-                  isClean());
+          entityTwoBuilder_ =
+              new com.google.protobuf.SingleFieldBuilderV3<
+                  org.datacommons.proto.Recon.EntitySubGraph,
+                  org.datacommons.proto.Recon.EntitySubGraph.Builder,
+                  org.datacommons.proto.Recon.EntitySubGraphOrBuilder>(
+                  getEntityTwo(), getParentForChildren(), isClean());
           entityTwo_ = null;
         }
         return entityTwoBuilder_;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -3449,12 +3600,12 @@ public final class Recon {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.EntityPair)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.EntityPair)
     private static final org.datacommons.proto.Recon.EntityPair DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Recon.EntityPair();
     }
@@ -3463,16 +3614,16 @@ public final class Recon {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<EntityPair>
-        PARSER = new com.google.protobuf.AbstractParser<EntityPair>() {
-      @java.lang.Override
-      public EntityPair parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new EntityPair(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<EntityPair> PARSER =
+        new com.google.protobuf.AbstractParser<EntityPair>() {
+          @java.lang.Override
+          public EntityPair parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new EntityPair(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<EntityPair> parser() {
       return PARSER;
@@ -3487,65 +3638,57 @@ public final class Recon {
     public org.datacommons.proto.Recon.EntityPair getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface CompareEntitiesRequestOrBuilder extends
+  public interface CompareEntitiesRequestOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.CompareEntitiesRequest)
       com.google.protobuf.MessageOrBuilder {
 
-    /**
-     * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-     */
-    java.util.List<org.datacommons.proto.Recon.EntityPair> 
-        getEntityPairsList();
-    /**
-     * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-     */
+    /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+    java.util.List<org.datacommons.proto.Recon.EntityPair> getEntityPairsList();
+
+    /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     org.datacommons.proto.Recon.EntityPair getEntityPairs(int index);
-    /**
-     * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     int getEntityPairsCount();
-    /**
-     * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-     */
-    java.util.List<? extends org.datacommons.proto.Recon.EntityPairOrBuilder> 
+
+    /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+    java.util.List<? extends org.datacommons.proto.Recon.EntityPairOrBuilder>
         getEntityPairsOrBuilderList();
-    /**
-     * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-     */
-    org.datacommons.proto.Recon.EntityPairOrBuilder getEntityPairsOrBuilder(
-        int index);
+
+    /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+    org.datacommons.proto.Recon.EntityPairOrBuilder getEntityPairsOrBuilder(int index);
   }
-  /**
-   * Protobuf type {@code org.datacommons.proto.CompareEntitiesRequest}
-   */
-  public static final class CompareEntitiesRequest extends
-      com.google.protobuf.GeneratedMessageV3 implements
+
+  /** Protobuf type {@code org.datacommons.proto.CompareEntitiesRequest} */
+  public static final class CompareEntitiesRequest extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.CompareEntitiesRequest)
       CompareEntitiesRequestOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use CompareEntitiesRequest.newBuilder() to construct.
     private CompareEntitiesRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private CompareEntitiesRequest() {
       entityPairs_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new CompareEntitiesRequest();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private CompareEntitiesRequest(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3565,29 +3708,30 @@ public final class Recon {
             case 0:
               done = true;
               break;
-            case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                entityPairs_ = new java.util.ArrayList<org.datacommons.proto.Recon.EntityPair>();
-                mutable_bitField0_ |= 0x00000001;
+            case 10:
+              {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  entityPairs_ = new java.util.ArrayList<org.datacommons.proto.Recon.EntityPair>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                entityPairs_.add(
+                    input.readMessage(
+                        org.datacommons.proto.Recon.EntityPair.parser(), extensionRegistry));
+                break;
               }
-              entityPairs_.add(
-                  input.readMessage(org.datacommons.proto.Recon.EntityPair.parser(), extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
               }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           entityPairs_ = java.util.Collections.unmodifiableList(entityPairs_);
@@ -3596,60 +3740,58 @@ public final class Recon {
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesRequest_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_CompareEntitiesRequest_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesRequest_fieldAccessorTable
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_CompareEntitiesRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Recon.CompareEntitiesRequest.class, org.datacommons.proto.Recon.CompareEntitiesRequest.Builder.class);
+              org.datacommons.proto.Recon.CompareEntitiesRequest.class,
+              org.datacommons.proto.Recon.CompareEntitiesRequest.Builder.class);
     }
 
     public static final int ENTITY_PAIRS_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Recon.EntityPair> entityPairs_;
-    /**
-     * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     @java.lang.Override
     public java.util.List<org.datacommons.proto.Recon.EntityPair> getEntityPairsList() {
       return entityPairs_;
     }
-    /**
-     * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     @java.lang.Override
-    public java.util.List<? extends org.datacommons.proto.Recon.EntityPairOrBuilder> 
+    public java.util.List<? extends org.datacommons.proto.Recon.EntityPairOrBuilder>
         getEntityPairsOrBuilderList() {
       return entityPairs_;
     }
-    /**
-     * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     @java.lang.Override
     public int getEntityPairsCount() {
       return entityPairs_.size();
     }
-    /**
-     * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntityPair getEntityPairs(int index) {
       return entityPairs_.get(index);
     }
-    /**
-     * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
     @java.lang.Override
-    public org.datacommons.proto.Recon.EntityPairOrBuilder getEntityPairsOrBuilder(
-        int index) {
+    public org.datacommons.proto.Recon.EntityPairOrBuilder getEntityPairsOrBuilder(int index) {
       return entityPairs_.get(index);
     }
 
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -3661,8 +3803,7 @@ public final class Recon {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       for (int i = 0; i < entityPairs_.size(); i++) {
         output.writeMessage(1, entityPairs_.get(i));
       }
@@ -3676,8 +3817,7 @@ public final class Recon {
 
       size = 0;
       for (int i = 0; i < entityPairs_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, entityPairs_.get(i));
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, entityPairs_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -3687,15 +3827,15 @@ public final class Recon {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.Recon.CompareEntitiesRequest)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.Recon.CompareEntitiesRequest other = (org.datacommons.proto.Recon.CompareEntitiesRequest) obj;
+      org.datacommons.proto.Recon.CompareEntitiesRequest other =
+          (org.datacommons.proto.Recon.CompareEntitiesRequest) obj;
 
-      if (!getEntityPairsList()
-          .equals(other.getEntityPairsList())) return false;
+      if (!getEntityPairsList().equals(other.getEntityPairsList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -3717,87 +3857,93 @@ public final class Recon {
     }
 
     public static org.datacommons.proto.Recon.CompareEntitiesRequest parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesRequest parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesRequest parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesRequest parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesRequest parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesRequest parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.datacommons.proto.Recon.CompareEntitiesRequest parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.Recon.CompareEntitiesRequest parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
-    public static org.datacommons.proto.Recon.CompareEntitiesRequest parseDelimitedFrom(java.io.InputStream input)
+
+    public static org.datacommons.proto.Recon.CompareEntitiesRequest parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesRequest parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.Recon.CompareEntitiesRequest parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.Recon.CompareEntitiesRequest parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesRequest parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
+
     public static Builder newBuilder(org.datacommons.proto.Recon.CompareEntitiesRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -3806,24 +3952,26 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.CompareEntitiesRequest}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+    /** Protobuf type {@code org.datacommons.proto.CompareEntitiesRequest} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.CompareEntitiesRequest)
         org.datacommons.proto.Recon.CompareEntitiesRequestOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesRequest_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_CompareEntitiesRequest_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesRequest_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_CompareEntitiesRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.CompareEntitiesRequest.class, org.datacommons.proto.Recon.CompareEntitiesRequest.Builder.class);
+                org.datacommons.proto.Recon.CompareEntitiesRequest.class,
+                org.datacommons.proto.Recon.CompareEntitiesRequest.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Recon.CompareEntitiesRequest.newBuilder()
@@ -3831,17 +3979,17 @@ public final class Recon {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getEntityPairsFieldBuilder();
         }
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -3855,9 +4003,9 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesRequest_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_CompareEntitiesRequest_descriptor;
       }
 
       @java.lang.Override
@@ -3876,7 +4024,8 @@ public final class Recon {
 
       @java.lang.Override
       public org.datacommons.proto.Recon.CompareEntitiesRequest buildPartial() {
-        org.datacommons.proto.Recon.CompareEntitiesRequest result = new org.datacommons.proto.Recon.CompareEntitiesRequest(this);
+        org.datacommons.proto.Recon.CompareEntitiesRequest result =
+            new org.datacommons.proto.Recon.CompareEntitiesRequest(this);
         int from_bitField0_ = bitField0_;
         if (entityPairsBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
@@ -3895,38 +4044,41 @@ public final class Recon {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Recon.CompareEntitiesRequest) {
-          return mergeFrom((org.datacommons.proto.Recon.CompareEntitiesRequest)other);
+          return mergeFrom((org.datacommons.proto.Recon.CompareEntitiesRequest) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -3934,7 +4086,8 @@ public final class Recon {
       }
 
       public Builder mergeFrom(org.datacommons.proto.Recon.CompareEntitiesRequest other) {
-        if (other == org.datacommons.proto.Recon.CompareEntitiesRequest.getDefaultInstance()) return this;
+        if (other == org.datacommons.proto.Recon.CompareEntitiesRequest.getDefaultInstance())
+          return this;
         if (entityPairsBuilder_ == null) {
           if (!other.entityPairs_.isEmpty()) {
             if (entityPairs_.isEmpty()) {
@@ -3953,9 +4106,10 @@ public final class Recon {
               entityPairsBuilder_ = null;
               entityPairs_ = other.entityPairs_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              entityPairsBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getEntityPairsFieldBuilder() : null;
+              entityPairsBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getEntityPairsFieldBuilder()
+                      : null;
             } else {
               entityPairsBuilder_.addAllMessages(other.entityPairs_);
             }
@@ -3980,7 +4134,8 @@ public final class Recon {
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.Recon.CompareEntitiesRequest) e.getUnfinishedMessage();
+          parsedMessage =
+              (org.datacommons.proto.Recon.CompareEntitiesRequest) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -3989,23 +4144,27 @@ public final class Recon {
         }
         return this;
       }
+
       private int bitField0_;
 
       private java.util.List<org.datacommons.proto.Recon.EntityPair> entityPairs_ =
-        java.util.Collections.emptyList();
+          java.util.Collections.emptyList();
+
       private void ensureEntityPairsIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
-          entityPairs_ = new java.util.ArrayList<org.datacommons.proto.Recon.EntityPair>(entityPairs_);
+          entityPairs_ =
+              new java.util.ArrayList<org.datacommons.proto.Recon.EntityPair>(entityPairs_);
           bitField0_ |= 0x00000001;
-         }
+        }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.EntityPair, org.datacommons.proto.Recon.EntityPair.Builder, org.datacommons.proto.Recon.EntityPairOrBuilder> entityPairsBuilder_;
+              org.datacommons.proto.Recon.EntityPair,
+              org.datacommons.proto.Recon.EntityPair.Builder,
+              org.datacommons.proto.Recon.EntityPairOrBuilder>
+          entityPairsBuilder_;
 
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public java.util.List<org.datacommons.proto.Recon.EntityPair> getEntityPairsList() {
         if (entityPairsBuilder_ == null) {
           return java.util.Collections.unmodifiableList(entityPairs_);
@@ -4013,9 +4172,8 @@ public final class Recon {
           return entityPairsBuilder_.getMessageList();
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public int getEntityPairsCount() {
         if (entityPairsBuilder_ == null) {
           return entityPairs_.size();
@@ -4023,9 +4181,8 @@ public final class Recon {
           return entityPairsBuilder_.getCount();
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public org.datacommons.proto.Recon.EntityPair getEntityPairs(int index) {
         if (entityPairsBuilder_ == null) {
           return entityPairs_.get(index);
@@ -4033,11 +4190,9 @@ public final class Recon {
           return entityPairsBuilder_.getMessage(index);
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
-      public Builder setEntityPairs(
-          int index, org.datacommons.proto.Recon.EntityPair value) {
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+      public Builder setEntityPairs(int index, org.datacommons.proto.Recon.EntityPair value) {
         if (entityPairsBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -4050,9 +4205,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder setEntityPairs(
           int index, org.datacommons.proto.Recon.EntityPair.Builder builderForValue) {
         if (entityPairsBuilder_ == null) {
@@ -4064,9 +4218,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder addEntityPairs(org.datacommons.proto.Recon.EntityPair value) {
         if (entityPairsBuilder_ == null) {
           if (value == null) {
@@ -4080,11 +4233,9 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
-      public Builder addEntityPairs(
-          int index, org.datacommons.proto.Recon.EntityPair value) {
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+      public Builder addEntityPairs(int index, org.datacommons.proto.Recon.EntityPair value) {
         if (entityPairsBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -4097,9 +4248,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder addEntityPairs(
           org.datacommons.proto.Recon.EntityPair.Builder builderForValue) {
         if (entityPairsBuilder_ == null) {
@@ -4111,9 +4261,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder addEntityPairs(
           int index, org.datacommons.proto.Recon.EntityPair.Builder builderForValue) {
         if (entityPairsBuilder_ == null) {
@@ -4125,24 +4274,21 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder addAllEntityPairs(
           java.lang.Iterable<? extends org.datacommons.proto.Recon.EntityPair> values) {
         if (entityPairsBuilder_ == null) {
           ensureEntityPairsIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, entityPairs_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, entityPairs_);
           onChanged();
         } else {
           entityPairsBuilder_.addAllMessages(values);
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder clearEntityPairs() {
         if (entityPairsBuilder_ == null) {
           entityPairs_ = java.util.Collections.emptyList();
@@ -4153,9 +4299,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public Builder removeEntityPairs(int index) {
         if (entityPairsBuilder_ == null) {
           ensureEntityPairsIsMutable();
@@ -4166,62 +4311,60 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
-      public org.datacommons.proto.Recon.EntityPair.Builder getEntityPairsBuilder(
-          int index) {
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+      public org.datacommons.proto.Recon.EntityPair.Builder getEntityPairsBuilder(int index) {
         return getEntityPairsFieldBuilder().getBuilder(index);
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
-      public org.datacommons.proto.Recon.EntityPairOrBuilder getEntityPairsOrBuilder(
-          int index) {
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+      public org.datacommons.proto.Recon.EntityPairOrBuilder getEntityPairsOrBuilder(int index) {
         if (entityPairsBuilder_ == null) {
-          return entityPairs_.get(index);  } else {
+          return entityPairs_.get(index);
+        } else {
           return entityPairsBuilder_.getMessageOrBuilder(index);
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
-      public java.util.List<? extends org.datacommons.proto.Recon.EntityPairOrBuilder> 
-           getEntityPairsOrBuilderList() {
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+      public java.util.List<? extends org.datacommons.proto.Recon.EntityPairOrBuilder>
+          getEntityPairsOrBuilderList() {
         if (entityPairsBuilder_ != null) {
           return entityPairsBuilder_.getMessageOrBuilderList();
         } else {
           return java.util.Collections.unmodifiableList(entityPairs_);
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
       public org.datacommons.proto.Recon.EntityPair.Builder addEntityPairsBuilder() {
-        return getEntityPairsFieldBuilder().addBuilder(
-            org.datacommons.proto.Recon.EntityPair.getDefaultInstance());
+        return getEntityPairsFieldBuilder()
+            .addBuilder(org.datacommons.proto.Recon.EntityPair.getDefaultInstance());
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
-      public org.datacommons.proto.Recon.EntityPair.Builder addEntityPairsBuilder(
-          int index) {
-        return getEntityPairsFieldBuilder().addBuilder(
-            index, org.datacommons.proto.Recon.EntityPair.getDefaultInstance());
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+      public org.datacommons.proto.Recon.EntityPair.Builder addEntityPairsBuilder(int index) {
+        return getEntityPairsFieldBuilder()
+            .addBuilder(index, org.datacommons.proto.Recon.EntityPair.getDefaultInstance());
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code>
-       */
-      public java.util.List<org.datacommons.proto.Recon.EntityPair.Builder> 
-           getEntityPairsBuilderList() {
+
+      /** <code>repeated .org.datacommons.proto.EntityPair entity_pairs = 1;</code> */
+      public java.util.List<org.datacommons.proto.Recon.EntityPair.Builder>
+          getEntityPairsBuilderList() {
         return getEntityPairsFieldBuilder().getBuilderList();
       }
+
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.EntityPair, org.datacommons.proto.Recon.EntityPair.Builder, org.datacommons.proto.Recon.EntityPairOrBuilder> 
+              org.datacommons.proto.Recon.EntityPair,
+              org.datacommons.proto.Recon.EntityPair.Builder,
+              org.datacommons.proto.Recon.EntityPairOrBuilder>
           getEntityPairsFieldBuilder() {
         if (entityPairsBuilder_ == null) {
-          entityPairsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Recon.EntityPair, org.datacommons.proto.Recon.EntityPair.Builder, org.datacommons.proto.Recon.EntityPairOrBuilder>(
+          entityPairsBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.Recon.EntityPair,
+                  org.datacommons.proto.Recon.EntityPair.Builder,
+                  org.datacommons.proto.Recon.EntityPairOrBuilder>(
                   entityPairs_,
                   ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
@@ -4230,6 +4373,7 @@ public final class Recon {
         }
         return entityPairsBuilder_;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -4242,12 +4386,12 @@ public final class Recon {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.CompareEntitiesRequest)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.CompareEntitiesRequest)
     private static final org.datacommons.proto.Recon.CompareEntitiesRequest DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Recon.CompareEntitiesRequest();
     }
@@ -4256,16 +4400,16 @@ public final class Recon {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<CompareEntitiesRequest>
-        PARSER = new com.google.protobuf.AbstractParser<CompareEntitiesRequest>() {
-      @java.lang.Override
-      public CompareEntitiesRequest parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CompareEntitiesRequest(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<CompareEntitiesRequest> PARSER =
+        new com.google.protobuf.AbstractParser<CompareEntitiesRequest>() {
+          @java.lang.Override
+          public CompareEntitiesRequest parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new CompareEntitiesRequest(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<CompareEntitiesRequest> parser() {
       return PARSER;
@@ -4280,65 +4424,75 @@ public final class Recon {
     public org.datacommons.proto.Recon.CompareEntitiesRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface CompareEntitiesResponseOrBuilder extends
+  public interface CompareEntitiesResponseOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.CompareEntitiesResponse)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+     * </code>
      */
-    java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison> 
+    java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison>
         getComparisonsList();
+
     /**
-     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+     * </code>
      */
     org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison getComparisons(int index);
+
     /**
-     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+     * </code>
      */
     int getComparisonsCount();
+
     /**
-     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+     * </code>
      */
-    java.util.List<? extends org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder> 
+    java.util.List<
+            ? extends org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder>
         getComparisonsOrBuilderList();
+
     /**
-     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+     * </code>
      */
     org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder getComparisonsOrBuilder(
         int index);
   }
-  /**
-   * Protobuf type {@code org.datacommons.proto.CompareEntitiesResponse}
-   */
-  public static final class CompareEntitiesResponse extends
-      com.google.protobuf.GeneratedMessageV3 implements
+
+  /** Protobuf type {@code org.datacommons.proto.CompareEntitiesResponse} */
+  public static final class CompareEntitiesResponse extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.CompareEntitiesResponse)
       CompareEntitiesResponseOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use CompareEntitiesResponse.newBuilder() to construct.
     private CompareEntitiesResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private CompareEntitiesResponse() {
       comparisons_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new CompareEntitiesResponse();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private CompareEntitiesResponse(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4358,29 +4512,33 @@ public final class Recon {
             case 0:
               done = true;
               break;
-            case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                comparisons_ = new java.util.ArrayList<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison>();
-                mutable_bitField0_ |= 0x00000001;
+            case 10:
+              {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  comparisons_ =
+                      new java.util.ArrayList<
+                          org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                comparisons_.add(
+                    input.readMessage(
+                        org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.parser(),
+                        extensionRegistry));
+                break;
               }
-              comparisons_.add(
-                  input.readMessage(org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.parser(), extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
               }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           comparisons_ = java.util.Collections.unmodifiableList(comparisons_);
@@ -4389,98 +4547,116 @@ public final class Recon {
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesResponse_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_CompareEntitiesResponse_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesResponse_fieldAccessorTable
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_CompareEntitiesResponse_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Recon.CompareEntitiesResponse.class, org.datacommons.proto.Recon.CompareEntitiesResponse.Builder.class);
+              org.datacommons.proto.Recon.CompareEntitiesResponse.class,
+              org.datacommons.proto.Recon.CompareEntitiesResponse.Builder.class);
     }
 
-    public interface ComparisonOrBuilder extends
+    public interface ComparisonOrBuilder
+        extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.CompareEntitiesResponse.Comparison)
         com.google.protobuf.MessageOrBuilder {
 
       /**
+       *
+       *
        * <pre>
        * Must have two source_ids, one for each entity.
        * </pre>
        *
        * <code>repeated string source_ids = 1;</code>
+       *
        * @return A list containing the sourceIds.
        */
-      java.util.List<java.lang.String>
-          getSourceIdsList();
+      java.util.List<java.lang.String> getSourceIdsList();
+
       /**
+       *
+       *
        * <pre>
        * Must have two source_ids, one for each entity.
        * </pre>
        *
        * <code>repeated string source_ids = 1;</code>
+       *
        * @return The count of sourceIds.
        */
       int getSourceIdsCount();
+
       /**
+       *
+       *
        * <pre>
        * Must have two source_ids, one for each entity.
        * </pre>
        *
        * <code>repeated string source_ids = 1;</code>
+       *
        * @param index The index of the element to return.
        * @return The sourceIds at the given index.
        */
       java.lang.String getSourceIds(int index);
+
       /**
+       *
+       *
        * <pre>
        * Must have two source_ids, one for each entity.
        * </pre>
        *
        * <code>repeated string source_ids = 1;</code>
+       *
        * @param index The index of the value to return.
        * @return The bytes of the sourceIds at the given index.
        */
-      com.google.protobuf.ByteString
-          getSourceIdsBytes(int index);
+      com.google.protobuf.ByteString getSourceIdsBytes(int index);
 
       /**
        * <code>double probability = 2;</code>
+       *
        * @return The probability.
        */
       double getProbability();
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.CompareEntitiesResponse.Comparison}
-     */
-    public static final class Comparison extends
-        com.google.protobuf.GeneratedMessageV3 implements
+
+    /** Protobuf type {@code org.datacommons.proto.CompareEntitiesResponse.Comparison} */
+    public static final class Comparison extends com.google.protobuf.GeneratedMessageV3
+        implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.CompareEntitiesResponse.Comparison)
         ComparisonOrBuilder {
-    private static final long serialVersionUID = 0L;
+      private static final long serialVersionUID = 0L;
+
       // Use Comparison.newBuilder() to construct.
       private Comparison(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
       }
+
       private Comparison() {
         sourceIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       }
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(
-          UnusedPrivateParameter unused) {
+      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
         return new Comparison();
       }
 
       @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet
-      getUnknownFields() {
+      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
         return this.unknownFields;
       }
+
       private Comparison(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4500,34 +4676,35 @@ public final class Recon {
               case 0:
                 done = true;
                 break;
-              case 10: {
-                java.lang.String s = input.readStringRequireUtf8();
-                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                  sourceIds_ = new com.google.protobuf.LazyStringArrayList();
-                  mutable_bitField0_ |= 0x00000001;
+              case 10:
+                {
+                  java.lang.String s = input.readStringRequireUtf8();
+                  if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                    sourceIds_ = new com.google.protobuf.LazyStringArrayList();
+                    mutable_bitField0_ |= 0x00000001;
+                  }
+                  sourceIds_.add(s);
+                  break;
                 }
-                sourceIds_.add(s);
-                break;
-              }
-              case 17: {
-
-                probability_ = input.readDouble();
-                break;
-              }
-              default: {
-                if (!parseUnknownField(
-                    input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
+              case 17:
+                {
+                  probability_ = input.readDouble();
+                  break;
                 }
-                break;
-              }
+              default:
+                {
+                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(
-              e).setUnfinishedMessage(this);
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(this);
         } finally {
           if (((mutable_bitField0_ & 0x00000001) != 0)) {
             sourceIds_ = sourceIds_.getUnmodifiableView();
@@ -4536,74 +4713,93 @@ public final class Recon {
           makeExtensionsImmutable();
         }
       }
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_descriptor;
+
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.class, org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder.class);
+                org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.class,
+                org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder.class);
       }
 
       public static final int SOURCE_IDS_FIELD_NUMBER = 1;
       private com.google.protobuf.LazyStringList sourceIds_;
+
       /**
+       *
+       *
        * <pre>
        * Must have two source_ids, one for each entity.
        * </pre>
        *
        * <code>repeated string source_ids = 1;</code>
+       *
        * @return A list containing the sourceIds.
        */
-      public com.google.protobuf.ProtocolStringList
-          getSourceIdsList() {
+      public com.google.protobuf.ProtocolStringList getSourceIdsList() {
         return sourceIds_;
       }
+
       /**
+       *
+       *
        * <pre>
        * Must have two source_ids, one for each entity.
        * </pre>
        *
        * <code>repeated string source_ids = 1;</code>
+       *
        * @return The count of sourceIds.
        */
       public int getSourceIdsCount() {
         return sourceIds_.size();
       }
+
       /**
+       *
+       *
        * <pre>
        * Must have two source_ids, one for each entity.
        * </pre>
        *
        * <code>repeated string source_ids = 1;</code>
+       *
        * @param index The index of the element to return.
        * @return The sourceIds at the given index.
        */
       public java.lang.String getSourceIds(int index) {
         return sourceIds_.get(index);
       }
+
       /**
+       *
+       *
        * <pre>
        * Must have two source_ids, one for each entity.
        * </pre>
        *
        * <code>repeated string source_ids = 1;</code>
+       *
        * @param index The index of the value to return.
        * @return The bytes of the sourceIds at the given index.
        */
-      public com.google.protobuf.ByteString
-          getSourceIdsBytes(int index) {
+      public com.google.protobuf.ByteString getSourceIdsBytes(int index) {
         return sourceIds_.getByteString(index);
       }
 
       public static final int PROBABILITY_FIELD_NUMBER = 2;
       private double probability_;
+
       /**
        * <code>double probability = 2;</code>
+       *
        * @return The probability.
        */
       @java.lang.Override
@@ -4612,6 +4808,7 @@ public final class Recon {
       }
 
       private byte memoizedIsInitialized = -1;
+
       @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -4623,8 +4820,7 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
-                          throws java.io.IOException {
+      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
         for (int i = 0; i < sourceIds_.size(); i++) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 1, sourceIds_.getRaw(i));
         }
@@ -4649,8 +4845,7 @@ public final class Recon {
           size += 1 * getSourceIdsList().size();
         }
         if (probability_ != 0D) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeDoubleSize(2, probability_);
+          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(2, probability_);
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -4660,18 +4855,17 @@ public final class Recon {
       @java.lang.Override
       public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
-         return true;
+          return true;
         }
         if (!(obj instanceof org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison)) {
           return super.equals(obj);
         }
-        org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison other = (org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison) obj;
+        org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison other =
+            (org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison) obj;
 
-        if (!getSourceIdsList()
-            .equals(other.getSourceIdsList())) return false;
+        if (!getSourceIdsList().equals(other.getSourceIdsList())) return false;
         if (java.lang.Double.doubleToLongBits(getProbability())
-            != java.lang.Double.doubleToLongBits(
-                other.getProbability())) return false;
+            != java.lang.Double.doubleToLongBits(other.getProbability())) return false;
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -4688,95 +4882,106 @@ public final class Recon {
           hash = (53 * hash) + getSourceIdsList().hashCode();
         }
         hash = (37 * hash) + PROBABILITY_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            java.lang.Double.doubleToLongBits(getProbability()));
+        hash =
+            (53 * hash)
+                + com.google.protobuf.Internal.hashLong(
+                    java.lang.Double.doubleToLongBits(getProbability()));
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
         return hash;
       }
 
       public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseFrom(
-          java.nio.ByteBuffer data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseFrom(
-          java.nio.ByteBuffer data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
+
       public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseFrom(byte[] data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+
+      public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseFrom(
+          byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseFrom(
-          byte[] data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
-      }
+
       public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+          java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
       }
-      public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseDelimitedFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input);
-      }
-      public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseDelimitedFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-      }
+
       public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseFrom(
-          com.google.protobuf.CodedInputStream input)
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
+
+      public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison
+          parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison
+          parseDelimitedFrom(
+              java.io.InputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseFrom(
+          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
       public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
 
       @java.lang.Override
-      public Builder newBuilderForType() { return newBuilder(); }
+      public Builder newBuilderForType() {
+        return newBuilder();
+      }
+
       public static Builder newBuilder() {
         return DEFAULT_INSTANCE.toBuilder();
       }
-      public static Builder newBuilder(org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison prototype) {
+
+      public static Builder newBuilder(
+          org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison prototype) {
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
+
       @java.lang.Override
       public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE
-            ? new Builder() : new Builder().mergeFrom(this);
+        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
       }
 
       @java.lang.Override
@@ -4785,41 +4990,43 @@ public final class Recon {
         Builder builder = new Builder(parent);
         return builder;
       }
-      /**
-       * Protobuf type {@code org.datacommons.proto.CompareEntitiesResponse.Comparison}
-       */
-      public static final class Builder extends
-          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+      /** Protobuf type {@code org.datacommons.proto.CompareEntitiesResponse.Comparison} */
+      public static final class Builder
+          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+          implements
           // @@protoc_insertion_point(builder_implements:org.datacommons.proto.CompareEntitiesResponse.Comparison)
           org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor
-            getDescriptor() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_descriptor;
         }
 
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_fieldAccessorTable
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.class, org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder.class);
+                  org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.class,
+                  org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder.class);
         }
 
-        // Construct using org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.newBuilder()
+        // Construct using
+        // org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.newBuilder()
         private Builder() {
           maybeForceBuilderInitialization();
         }
 
-        private Builder(
-            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
+
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3
-                  .alwaysUseFieldBuilders) {
-          }
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
         }
+
         @java.lang.Override
         public Builder clear() {
           super.clear();
@@ -4831,14 +5038,16 @@ public final class Recon {
         }
 
         @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor
-            getDescriptorForType() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_descriptor;
+        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_descriptor;
         }
 
         @java.lang.Override
-        public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison getDefaultInstanceForType() {
-          return org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.getDefaultInstance();
+        public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison
+            getDefaultInstanceForType() {
+          return org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison
+              .getDefaultInstance();
         }
 
         @java.lang.Override
@@ -4852,7 +5061,8 @@ public final class Recon {
 
         @java.lang.Override
         public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison buildPartial() {
-          org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison result = new org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison(this);
+          org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison result =
+              new org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison(this);
           int from_bitField0_ = bitField0_;
           if (((bitField0_ & 0x00000001) != 0)) {
             sourceIds_ = sourceIds_.getUnmodifiableView();
@@ -4868,46 +5078,53 @@ public final class Recon {
         public Builder clone() {
           return super.clone();
         }
+
         @java.lang.Override
         public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.setField(field, value);
         }
+
         @java.lang.Override
-        public Builder clearField(
-            com.google.protobuf.Descriptors.FieldDescriptor field) {
+        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
           return super.clearField(field);
         }
+
         @java.lang.Override
-        public Builder clearOneof(
-            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
           return super.clearOneof(oneof);
         }
+
         @java.lang.Override
         public Builder setRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index, java.lang.Object value) {
+            int index,
+            java.lang.Object value) {
           return super.setRepeatedField(field, index, value);
         }
+
         @java.lang.Override
         public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.addRepeatedField(field, value);
         }
+
         @java.lang.Override
         public Builder mergeFrom(com.google.protobuf.Message other) {
           if (other instanceof org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison) {
-            return mergeFrom((org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison)other);
+            return mergeFrom(
+                (org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison) other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison other) {
-          if (other == org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.getDefaultInstance()) return this;
+        public Builder mergeFrom(
+            org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison other) {
+          if (other
+              == org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison
+                  .getDefaultInstance()) return this;
           if (!other.sourceIds_.isEmpty()) {
             if (sourceIds_.isEmpty()) {
               sourceIds_ = other.sourceIds_;
@@ -4940,7 +5157,9 @@ public final class Recon {
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison) e.getUnfinishedMessage();
+            parsedMessage =
+                (org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison)
+                    e.getUnfinishedMessage();
             throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
@@ -4949,125 +5168,154 @@ public final class Recon {
           }
           return this;
         }
+
         private int bitField0_;
 
-        private com.google.protobuf.LazyStringList sourceIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        private com.google.protobuf.LazyStringList sourceIds_ =
+            com.google.protobuf.LazyStringArrayList.EMPTY;
+
         private void ensureSourceIdsIsMutable() {
           if (!((bitField0_ & 0x00000001) != 0)) {
             sourceIds_ = new com.google.protobuf.LazyStringArrayList(sourceIds_);
             bitField0_ |= 0x00000001;
-           }
+          }
         }
+
         /**
+         *
+         *
          * <pre>
          * Must have two source_ids, one for each entity.
          * </pre>
          *
          * <code>repeated string source_ids = 1;</code>
+         *
          * @return A list containing the sourceIds.
          */
-        public com.google.protobuf.ProtocolStringList
-            getSourceIdsList() {
+        public com.google.protobuf.ProtocolStringList getSourceIdsList() {
           return sourceIds_.getUnmodifiableView();
         }
+
         /**
+         *
+         *
          * <pre>
          * Must have two source_ids, one for each entity.
          * </pre>
          *
          * <code>repeated string source_ids = 1;</code>
+         *
          * @return The count of sourceIds.
          */
         public int getSourceIdsCount() {
           return sourceIds_.size();
         }
+
         /**
+         *
+         *
          * <pre>
          * Must have two source_ids, one for each entity.
          * </pre>
          *
          * <code>repeated string source_ids = 1;</code>
+         *
          * @param index The index of the element to return.
          * @return The sourceIds at the given index.
          */
         public java.lang.String getSourceIds(int index) {
           return sourceIds_.get(index);
         }
+
         /**
+         *
+         *
          * <pre>
          * Must have two source_ids, one for each entity.
          * </pre>
          *
          * <code>repeated string source_ids = 1;</code>
+         *
          * @param index The index of the value to return.
          * @return The bytes of the sourceIds at the given index.
          */
-        public com.google.protobuf.ByteString
-            getSourceIdsBytes(int index) {
+        public com.google.protobuf.ByteString getSourceIdsBytes(int index) {
           return sourceIds_.getByteString(index);
         }
+
         /**
+         *
+         *
          * <pre>
          * Must have two source_ids, one for each entity.
          * </pre>
          *
          * <code>repeated string source_ids = 1;</code>
+         *
          * @param index The index to set the value at.
          * @param value The sourceIds to set.
          * @return This builder for chaining.
          */
-        public Builder setSourceIds(
-            int index, java.lang.String value) {
+        public Builder setSourceIds(int index, java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureSourceIdsIsMutable();
+            throw new NullPointerException();
+          }
+          ensureSourceIdsIsMutable();
           sourceIds_.set(index, value);
           onChanged();
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Must have two source_ids, one for each entity.
          * </pre>
          *
          * <code>repeated string source_ids = 1;</code>
+         *
          * @param value The sourceIds to add.
          * @return This builder for chaining.
          */
-        public Builder addSourceIds(
-            java.lang.String value) {
+        public Builder addSourceIds(java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureSourceIdsIsMutable();
+            throw new NullPointerException();
+          }
+          ensureSourceIdsIsMutable();
           sourceIds_.add(value);
           onChanged();
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Must have two source_ids, one for each entity.
          * </pre>
          *
          * <code>repeated string source_ids = 1;</code>
+         *
          * @param values The sourceIds to add.
          * @return This builder for chaining.
          */
-        public Builder addAllSourceIds(
-            java.lang.Iterable<java.lang.String> values) {
+        public Builder addAllSourceIds(java.lang.Iterable<java.lang.String> values) {
           ensureSourceIdsIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, sourceIds_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, sourceIds_);
           onChanged();
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Must have two source_ids, one for each entity.
          * </pre>
          *
          * <code>repeated string source_ids = 1;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearSourceIds() {
@@ -5076,57 +5324,67 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
+         *
+         *
          * <pre>
          * Must have two source_ids, one for each entity.
          * </pre>
          *
          * <code>repeated string source_ids = 1;</code>
+         *
          * @param value The bytes of the sourceIds to add.
          * @return This builder for chaining.
          */
-        public Builder addSourceIdsBytes(
-            com.google.protobuf.ByteString value) {
+        public Builder addSourceIdsBytes(com.google.protobuf.ByteString value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
+            throw new NullPointerException();
+          }
+          checkByteStringIsUtf8(value);
           ensureSourceIdsIsMutable();
           sourceIds_.add(value);
           onChanged();
           return this;
         }
 
-        private double probability_ ;
+        private double probability_;
+
         /**
          * <code>double probability = 2;</code>
+         *
          * @return The probability.
          */
         @java.lang.Override
         public double getProbability() {
           return probability_;
         }
+
         /**
          * <code>double probability = 2;</code>
+         *
          * @param value The probability to set.
          * @return This builder for chaining.
          */
         public Builder setProbability(double value) {
-          
+
           probability_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>double probability = 2;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearProbability() {
-          
+
           probability_ = 0D;
           onChanged();
           return this;
         }
+
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -5139,30 +5397,32 @@ public final class Recon {
           return super.mergeUnknownFields(unknownFields);
         }
 
-
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.CompareEntitiesResponse.Comparison)
       }
 
       // @@protoc_insertion_point(class_scope:org.datacommons.proto.CompareEntitiesResponse.Comparison)
-      private static final org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison DEFAULT_INSTANCE;
+      private static final org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison
+          DEFAULT_INSTANCE;
+
       static {
         DEFAULT_INSTANCE = new org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison();
       }
 
-      public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison getDefaultInstance() {
+      public static org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison
+          getDefaultInstance() {
         return DEFAULT_INSTANCE;
       }
 
-      private static final com.google.protobuf.Parser<Comparison>
-          PARSER = new com.google.protobuf.AbstractParser<Comparison>() {
-        @java.lang.Override
-        public Comparison parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Comparison(input, extensionRegistry);
-        }
-      };
+      private static final com.google.protobuf.Parser<Comparison> PARSER =
+          new com.google.protobuf.AbstractParser<Comparison>() {
+            @java.lang.Override
+            public Comparison parsePartialFrom(
+                com.google.protobuf.CodedInputStream input,
+                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+              return new Comparison(input, extensionRegistry);
+            }
+          };
 
       public static com.google.protobuf.Parser<Comparison> parser() {
         return PARSER;
@@ -5174,53 +5434,68 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison getDefaultInstanceForType() {
+      public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison
+          getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
-
     }
 
     public static final int COMPARISONS_FIELD_NUMBER = 1;
-    private java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison> comparisons_;
+    private java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison>
+        comparisons_;
+
     /**
-     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+     * </code>
      */
     @java.lang.Override
-    public java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison> getComparisonsList() {
+    public java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison>
+        getComparisonsList() {
       return comparisons_;
     }
+
     /**
-     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+     * </code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder> 
+    public java.util.List<
+            ? extends org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder>
         getComparisonsOrBuilderList() {
       return comparisons_;
     }
+
     /**
-     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+     * </code>
      */
     @java.lang.Override
     public int getComparisonsCount() {
       return comparisons_.size();
     }
+
     /**
-     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+     * </code>
      */
     @java.lang.Override
-    public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison getComparisons(int index) {
-      return comparisons_.get(index);
-    }
-    /**
-     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
-     */
-    @java.lang.Override
-    public org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder getComparisonsOrBuilder(
+    public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison getComparisons(
         int index) {
       return comparisons_.get(index);
     }
 
+    /**
+     * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+     * </code>
+     */
+    @java.lang.Override
+    public org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder
+        getComparisonsOrBuilder(int index) {
+      return comparisons_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -5232,8 +5507,7 @@ public final class Recon {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       for (int i = 0; i < comparisons_.size(); i++) {
         output.writeMessage(1, comparisons_.get(i));
       }
@@ -5247,8 +5521,7 @@ public final class Recon {
 
       size = 0;
       for (int i = 0; i < comparisons_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, comparisons_.get(i));
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, comparisons_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5258,15 +5531,15 @@ public final class Recon {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.Recon.CompareEntitiesResponse)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.Recon.CompareEntitiesResponse other = (org.datacommons.proto.Recon.CompareEntitiesResponse) obj;
+      org.datacommons.proto.Recon.CompareEntitiesResponse other =
+          (org.datacommons.proto.Recon.CompareEntitiesResponse) obj;
 
-      if (!getComparisonsList()
-          .equals(other.getComparisonsList())) return false;
+      if (!getComparisonsList().equals(other.getComparisonsList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -5288,87 +5561,94 @@ public final class Recon {
     }
 
     public static org.datacommons.proto.Recon.CompareEntitiesResponse parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesResponse parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesResponse parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesResponse parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesResponse parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesResponse parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.datacommons.proto.Recon.CompareEntitiesResponse parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.Recon.CompareEntitiesResponse parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
-    public static org.datacommons.proto.Recon.CompareEntitiesResponse parseDelimitedFrom(java.io.InputStream input)
+
+    public static org.datacommons.proto.Recon.CompareEntitiesResponse parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesResponse parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.Recon.CompareEntitiesResponse parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.Recon.CompareEntitiesResponse parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.CompareEntitiesResponse parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.datacommons.proto.Recon.CompareEntitiesResponse prototype) {
+
+    public static Builder newBuilder(
+        org.datacommons.proto.Recon.CompareEntitiesResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -5377,24 +5657,26 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.CompareEntitiesResponse}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+    /** Protobuf type {@code org.datacommons.proto.CompareEntitiesResponse} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.CompareEntitiesResponse)
         org.datacommons.proto.Recon.CompareEntitiesResponseOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesResponse_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_CompareEntitiesResponse_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesResponse_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_CompareEntitiesResponse_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.CompareEntitiesResponse.class, org.datacommons.proto.Recon.CompareEntitiesResponse.Builder.class);
+                org.datacommons.proto.Recon.CompareEntitiesResponse.class,
+                org.datacommons.proto.Recon.CompareEntitiesResponse.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Recon.CompareEntitiesResponse.newBuilder()
@@ -5402,17 +5684,17 @@ public final class Recon {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getComparisonsFieldBuilder();
         }
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -5426,9 +5708,9 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_CompareEntitiesResponse_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_CompareEntitiesResponse_descriptor;
       }
 
       @java.lang.Override
@@ -5447,7 +5729,8 @@ public final class Recon {
 
       @java.lang.Override
       public org.datacommons.proto.Recon.CompareEntitiesResponse buildPartial() {
-        org.datacommons.proto.Recon.CompareEntitiesResponse result = new org.datacommons.proto.Recon.CompareEntitiesResponse(this);
+        org.datacommons.proto.Recon.CompareEntitiesResponse result =
+            new org.datacommons.proto.Recon.CompareEntitiesResponse(this);
         int from_bitField0_ = bitField0_;
         if (comparisonsBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
@@ -5466,38 +5749,41 @@ public final class Recon {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Recon.CompareEntitiesResponse) {
-          return mergeFrom((org.datacommons.proto.Recon.CompareEntitiesResponse)other);
+          return mergeFrom((org.datacommons.proto.Recon.CompareEntitiesResponse) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -5505,7 +5791,8 @@ public final class Recon {
       }
 
       public Builder mergeFrom(org.datacommons.proto.Recon.CompareEntitiesResponse other) {
-        if (other == org.datacommons.proto.Recon.CompareEntitiesResponse.getDefaultInstance()) return this;
+        if (other == org.datacommons.proto.Recon.CompareEntitiesResponse.getDefaultInstance())
+          return this;
         if (comparisonsBuilder_ == null) {
           if (!other.comparisons_.isEmpty()) {
             if (comparisons_.isEmpty()) {
@@ -5524,9 +5811,10 @@ public final class Recon {
               comparisonsBuilder_ = null;
               comparisons_ = other.comparisons_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              comparisonsBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getComparisonsFieldBuilder() : null;
+              comparisonsBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getComparisonsFieldBuilder()
+                      : null;
             } else {
               comparisonsBuilder_.addAllMessages(other.comparisons_);
             }
@@ -5551,7 +5839,8 @@ public final class Recon {
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.Recon.CompareEntitiesResponse) e.getUnfinishedMessage();
+          parsedMessage =
+              (org.datacommons.proto.Recon.CompareEntitiesResponse) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -5560,32 +5849,43 @@ public final class Recon {
         }
         return this;
       }
+
       private int bitField0_;
 
-      private java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison> comparisons_ =
-        java.util.Collections.emptyList();
+      private java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison>
+          comparisons_ = java.util.Collections.emptyList();
+
       private void ensureComparisonsIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
-          comparisons_ = new java.util.ArrayList<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison>(comparisons_);
+          comparisons_ =
+              new java.util.ArrayList<
+                  org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison>(comparisons_);
           bitField0_ |= 0x00000001;
-         }
+        }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison, org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder, org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder> comparisonsBuilder_;
+              org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison,
+              org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder,
+              org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder>
+          comparisonsBuilder_;
 
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
-      public java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison> getComparisonsList() {
+      public java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison>
+          getComparisonsList() {
         if (comparisonsBuilder_ == null) {
           return java.util.Collections.unmodifiableList(comparisons_);
         } else {
           return comparisonsBuilder_.getMessageList();
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
       public int getComparisonsCount() {
         if (comparisonsBuilder_ == null) {
@@ -5594,18 +5894,23 @@ public final class Recon {
           return comparisonsBuilder_.getCount();
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison getComparisons(int index) {
+      public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison getComparisons(
+          int index) {
         if (comparisonsBuilder_ == null) {
           return comparisons_.get(index);
         } else {
           return comparisonsBuilder_.getMessage(index);
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
       public Builder setComparisons(
           int index, org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison value) {
@@ -5621,11 +5926,14 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
       public Builder setComparisons(
-          int index, org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder builderForValue) {
+          int index,
+          org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder builderForValue) {
         if (comparisonsBuilder_ == null) {
           ensureComparisonsIsMutable();
           comparisons_.set(index, builderForValue.build());
@@ -5635,10 +5943,13 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
-      public Builder addComparisons(org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison value) {
+      public Builder addComparisons(
+          org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison value) {
         if (comparisonsBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -5651,8 +5962,10 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
       public Builder addComparisons(
           int index, org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison value) {
@@ -5668,8 +5981,10 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
       public Builder addComparisons(
           org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder builderForValue) {
@@ -5682,11 +5997,14 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
       public Builder addComparisons(
-          int index, org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder builderForValue) {
+          int index,
+          org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder builderForValue) {
         if (comparisonsBuilder_ == null) {
           ensureComparisonsIsMutable();
           comparisons_.add(index, builderForValue.build());
@@ -5696,23 +6014,28 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
       public Builder addAllComparisons(
-          java.lang.Iterable<? extends org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison> values) {
+          java.lang.Iterable<
+                  ? extends org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison>
+              values) {
         if (comparisonsBuilder_ == null) {
           ensureComparisonsIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, comparisons_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, comparisons_);
           onChanged();
         } else {
           comparisonsBuilder_.addAllMessages(values);
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
       public Builder clearComparisons() {
         if (comparisonsBuilder_ == null) {
@@ -5724,8 +6047,10 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
       public Builder removeComparisons(int index) {
         if (comparisonsBuilder_ == null) {
@@ -5737,62 +6062,88 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder getComparisonsBuilder(
-          int index) {
+      public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder
+          getComparisonsBuilder(int index) {
         return getComparisonsFieldBuilder().getBuilder(index);
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder getComparisonsOrBuilder(
-          int index) {
+      public org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder
+          getComparisonsOrBuilder(int index) {
         if (comparisonsBuilder_ == null) {
-          return comparisons_.get(index);  } else {
+          return comparisons_.get(index);
+        } else {
           return comparisonsBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
-      public java.util.List<? extends org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder> 
-           getComparisonsOrBuilderList() {
+      public java.util.List<
+              ? extends org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder>
+          getComparisonsOrBuilderList() {
         if (comparisonsBuilder_ != null) {
           return comparisonsBuilder_.getMessageOrBuilderList();
         } else {
           return java.util.Collections.unmodifiableList(comparisons_);
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder addComparisonsBuilder() {
-        return getComparisonsFieldBuilder().addBuilder(
-            org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.getDefaultInstance());
+      public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder
+          addComparisonsBuilder() {
+        return getComparisonsFieldBuilder()
+            .addBuilder(
+                org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison
+                    .getDefaultInstance());
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder addComparisonsBuilder(
-          int index) {
-        return getComparisonsFieldBuilder().addBuilder(
-            index, org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.getDefaultInstance());
+      public org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder
+          addComparisonsBuilder(int index) {
+        return getComparisonsFieldBuilder()
+            .addBuilder(
+                index,
+                org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison
+                    .getDefaultInstance());
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;</code>
+       * <code>repeated .org.datacommons.proto.CompareEntitiesResponse.Comparison comparisons = 1;
+       * </code>
        */
-      public java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder> 
-           getComparisonsBuilderList() {
+      public java.util.List<org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder>
+          getComparisonsBuilderList() {
         return getComparisonsFieldBuilder().getBuilderList();
       }
+
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison, org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder, org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder> 
+              org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison,
+              org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder,
+              org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder>
           getComparisonsFieldBuilder() {
         if (comparisonsBuilder_ == null) {
-          comparisonsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison, org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder, org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder>(
+          comparisonsBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison,
+                  org.datacommons.proto.Recon.CompareEntitiesResponse.Comparison.Builder,
+                  org.datacommons.proto.Recon.CompareEntitiesResponse.ComparisonOrBuilder>(
                   comparisons_,
                   ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
@@ -5801,6 +6152,7 @@ public final class Recon {
         }
         return comparisonsBuilder_;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -5813,12 +6165,12 @@ public final class Recon {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.CompareEntitiesResponse)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.CompareEntitiesResponse)
     private static final org.datacommons.proto.Recon.CompareEntitiesResponse DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Recon.CompareEntitiesResponse();
     }
@@ -5827,16 +6179,16 @@ public final class Recon {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<CompareEntitiesResponse>
-        PARSER = new com.google.protobuf.AbstractParser<CompareEntitiesResponse>() {
-      @java.lang.Override
-      public CompareEntitiesResponse parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CompareEntitiesResponse(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<CompareEntitiesResponse> PARSER =
+        new com.google.protobuf.AbstractParser<CompareEntitiesResponse>() {
+          @java.lang.Override
+          public CompareEntitiesResponse parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new CompareEntitiesResponse(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<CompareEntitiesResponse> parser() {
       return PARSER;
@@ -5851,90 +6203,96 @@ public final class Recon {
     public org.datacommons.proto.Recon.CompareEntitiesResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface ResolveEntitiesRequestOrBuilder extends
+  public interface ResolveEntitiesRequestOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveEntitiesRequest)
       com.google.protobuf.MessageOrBuilder {
 
-    /**
-     * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-     */
-    java.util.List<org.datacommons.proto.Recon.EntitySubGraph> 
-        getEntitiesList();
-    /**
-     * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-     */
+    /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+    java.util.List<org.datacommons.proto.Recon.EntitySubGraph> getEntitiesList();
+
+    /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     org.datacommons.proto.Recon.EntitySubGraph getEntities(int index);
-    /**
-     * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     int getEntitiesCount();
-    /**
-     * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-     */
-    java.util.List<? extends org.datacommons.proto.Recon.EntitySubGraphOrBuilder> 
+
+    /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+    java.util.List<? extends org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
         getEntitiesOrBuilderList();
-    /**
-     * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-     */
-    org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntitiesOrBuilder(
-        int index);
+
+    /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+    org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntitiesOrBuilder(int index);
 
     /**
+     *
+     *
      * <pre>
      * The properties of IDs to find. If empty, all known IDs are returned.
      * </pre>
      *
      * <code>repeated string wanted_id_properties = 2;</code>
+     *
      * @return A list containing the wantedIdProperties.
      */
-    java.util.List<java.lang.String>
-        getWantedIdPropertiesList();
+    java.util.List<java.lang.String> getWantedIdPropertiesList();
+
     /**
+     *
+     *
      * <pre>
      * The properties of IDs to find. If empty, all known IDs are returned.
      * </pre>
      *
      * <code>repeated string wanted_id_properties = 2;</code>
+     *
      * @return The count of wantedIdProperties.
      */
     int getWantedIdPropertiesCount();
+
     /**
+     *
+     *
      * <pre>
      * The properties of IDs to find. If empty, all known IDs are returned.
      * </pre>
      *
      * <code>repeated string wanted_id_properties = 2;</code>
+     *
      * @param index The index of the element to return.
      * @return The wantedIdProperties at the given index.
      */
     java.lang.String getWantedIdProperties(int index);
+
     /**
+     *
+     *
      * <pre>
      * The properties of IDs to find. If empty, all known IDs are returned.
      * </pre>
      *
      * <code>repeated string wanted_id_properties = 2;</code>
+     *
      * @param index The index of the value to return.
      * @return The bytes of the wantedIdProperties at the given index.
      */
-    com.google.protobuf.ByteString
-        getWantedIdPropertiesBytes(int index);
+    com.google.protobuf.ByteString getWantedIdPropertiesBytes(int index);
   }
-  /**
-   * Protobuf type {@code org.datacommons.proto.ResolveEntitiesRequest}
-   */
-  public static final class ResolveEntitiesRequest extends
-      com.google.protobuf.GeneratedMessageV3 implements
+
+  /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesRequest} */
+  public static final class ResolveEntitiesRequest extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveEntitiesRequest)
       ResolveEntitiesRequestOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use ResolveEntitiesRequest.newBuilder() to construct.
     private ResolveEntitiesRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private ResolveEntitiesRequest() {
       entities_ = java.util.Collections.emptyList();
       wantedIdProperties_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -5942,16 +6300,15 @@ public final class Recon {
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new ResolveEntitiesRequest();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private ResolveEntitiesRequest(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5971,38 +6328,40 @@ public final class Recon {
             case 0:
               done = true;
               break;
-            case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                entities_ = new java.util.ArrayList<org.datacommons.proto.Recon.EntitySubGraph>();
-                mutable_bitField0_ |= 0x00000001;
+            case 10:
+              {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  entities_ = new java.util.ArrayList<org.datacommons.proto.Recon.EntitySubGraph>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                entities_.add(
+                    input.readMessage(
+                        org.datacommons.proto.Recon.EntitySubGraph.parser(), extensionRegistry));
+                break;
               }
-              entities_.add(
-                  input.readMessage(org.datacommons.proto.Recon.EntitySubGraph.parser(), extensionRegistry));
-              break;
-            }
-            case 18: {
-              java.lang.String s = input.readStringRequireUtf8();
-              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
-                wantedIdProperties_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000002;
+            case 18:
+              {
+                java.lang.String s = input.readStringRequireUtf8();
+                if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                  wantedIdProperties_ = new com.google.protobuf.LazyStringArrayList();
+                  mutable_bitField0_ |= 0x00000002;
+                }
+                wantedIdProperties_.add(s);
+                break;
               }
-              wantedIdProperties_.add(s);
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
               }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           entities_ = java.util.Collections.unmodifiableList(entities_);
@@ -6014,111 +6373,123 @@ public final class Recon {
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesRequest_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_ResolveEntitiesRequest_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesRequest_fieldAccessorTable
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_ResolveEntitiesRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Recon.ResolveEntitiesRequest.class, org.datacommons.proto.Recon.ResolveEntitiesRequest.Builder.class);
+              org.datacommons.proto.Recon.ResolveEntitiesRequest.class,
+              org.datacommons.proto.Recon.ResolveEntitiesRequest.Builder.class);
     }
 
     public static final int ENTITIES_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Recon.EntitySubGraph> entities_;
-    /**
-     * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     @java.lang.Override
     public java.util.List<org.datacommons.proto.Recon.EntitySubGraph> getEntitiesList() {
       return entities_;
     }
-    /**
-     * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     @java.lang.Override
-    public java.util.List<? extends org.datacommons.proto.Recon.EntitySubGraphOrBuilder> 
+    public java.util.List<? extends org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
         getEntitiesOrBuilderList() {
       return entities_;
     }
-    /**
-     * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     @java.lang.Override
     public int getEntitiesCount() {
       return entities_.size();
     }
-    /**
-     * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     @java.lang.Override
     public org.datacommons.proto.Recon.EntitySubGraph getEntities(int index) {
       return entities_.get(index);
     }
-    /**
-     * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-     */
+
+    /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
     @java.lang.Override
-    public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntitiesOrBuilder(
-        int index) {
+    public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntitiesOrBuilder(int index) {
       return entities_.get(index);
     }
 
     public static final int WANTED_ID_PROPERTIES_FIELD_NUMBER = 2;
     private com.google.protobuf.LazyStringList wantedIdProperties_;
+
     /**
+     *
+     *
      * <pre>
      * The properties of IDs to find. If empty, all known IDs are returned.
      * </pre>
      *
      * <code>repeated string wanted_id_properties = 2;</code>
+     *
      * @return A list containing the wantedIdProperties.
      */
-    public com.google.protobuf.ProtocolStringList
-        getWantedIdPropertiesList() {
+    public com.google.protobuf.ProtocolStringList getWantedIdPropertiesList() {
       return wantedIdProperties_;
     }
+
     /**
+     *
+     *
      * <pre>
      * The properties of IDs to find. If empty, all known IDs are returned.
      * </pre>
      *
      * <code>repeated string wanted_id_properties = 2;</code>
+     *
      * @return The count of wantedIdProperties.
      */
     public int getWantedIdPropertiesCount() {
       return wantedIdProperties_.size();
     }
+
     /**
+     *
+     *
      * <pre>
      * The properties of IDs to find. If empty, all known IDs are returned.
      * </pre>
      *
      * <code>repeated string wanted_id_properties = 2;</code>
+     *
      * @param index The index of the element to return.
      * @return The wantedIdProperties at the given index.
      */
     public java.lang.String getWantedIdProperties(int index) {
       return wantedIdProperties_.get(index);
     }
+
     /**
+     *
+     *
      * <pre>
      * The properties of IDs to find. If empty, all known IDs are returned.
      * </pre>
      *
      * <code>repeated string wanted_id_properties = 2;</code>
+     *
      * @param index The index of the value to return.
      * @return The bytes of the wantedIdProperties at the given index.
      */
-    public com.google.protobuf.ByteString
-        getWantedIdPropertiesBytes(int index) {
+    public com.google.protobuf.ByteString getWantedIdPropertiesBytes(int index) {
       return wantedIdProperties_.getByteString(index);
     }
 
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -6130,13 +6501,13 @@ public final class Recon {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       for (int i = 0; i < entities_.size(); i++) {
         output.writeMessage(1, entities_.get(i));
       }
       for (int i = 0; i < wantedIdProperties_.size(); i++) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, wantedIdProperties_.getRaw(i));
+        com.google.protobuf.GeneratedMessageV3.writeString(
+            output, 2, wantedIdProperties_.getRaw(i));
       }
       unknownFields.writeTo(output);
     }
@@ -6148,8 +6519,7 @@ public final class Recon {
 
       size = 0;
       for (int i = 0; i < entities_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, entities_.get(i));
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, entities_.get(i));
       }
       {
         int dataSize = 0;
@@ -6167,17 +6537,16 @@ public final class Recon {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.Recon.ResolveEntitiesRequest)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.Recon.ResolveEntitiesRequest other = (org.datacommons.proto.Recon.ResolveEntitiesRequest) obj;
+      org.datacommons.proto.Recon.ResolveEntitiesRequest other =
+          (org.datacommons.proto.Recon.ResolveEntitiesRequest) obj;
 
-      if (!getEntitiesList()
-          .equals(other.getEntitiesList())) return false;
-      if (!getWantedIdPropertiesList()
-          .equals(other.getWantedIdPropertiesList())) return false;
+      if (!getEntitiesList().equals(other.getEntitiesList())) return false;
+      if (!getWantedIdPropertiesList().equals(other.getWantedIdPropertiesList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -6203,87 +6572,93 @@ public final class Recon {
     }
 
     public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
-    public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseDelimitedFrom(java.io.InputStream input)
+
+    public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesRequest parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
+
     public static Builder newBuilder(org.datacommons.proto.Recon.ResolveEntitiesRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -6292,24 +6667,26 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.ResolveEntitiesRequest}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+    /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesRequest} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveEntitiesRequest)
         org.datacommons.proto.Recon.ResolveEntitiesRequestOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesRequest_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveEntitiesRequest_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesRequest_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveEntitiesRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.ResolveEntitiesRequest.class, org.datacommons.proto.Recon.ResolveEntitiesRequest.Builder.class);
+                org.datacommons.proto.Recon.ResolveEntitiesRequest.class,
+                org.datacommons.proto.Recon.ResolveEntitiesRequest.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Recon.ResolveEntitiesRequest.newBuilder()
@@ -6317,17 +6694,17 @@ public final class Recon {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getEntitiesFieldBuilder();
         }
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -6343,9 +6720,9 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesRequest_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveEntitiesRequest_descriptor;
       }
 
       @java.lang.Override
@@ -6364,7 +6741,8 @@ public final class Recon {
 
       @java.lang.Override
       public org.datacommons.proto.Recon.ResolveEntitiesRequest buildPartial() {
-        org.datacommons.proto.Recon.ResolveEntitiesRequest result = new org.datacommons.proto.Recon.ResolveEntitiesRequest(this);
+        org.datacommons.proto.Recon.ResolveEntitiesRequest result =
+            new org.datacommons.proto.Recon.ResolveEntitiesRequest(this);
         int from_bitField0_ = bitField0_;
         if (entitiesBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
@@ -6388,38 +6766,41 @@ public final class Recon {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Recon.ResolveEntitiesRequest) {
-          return mergeFrom((org.datacommons.proto.Recon.ResolveEntitiesRequest)other);
+          return mergeFrom((org.datacommons.proto.Recon.ResolveEntitiesRequest) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -6427,7 +6808,8 @@ public final class Recon {
       }
 
       public Builder mergeFrom(org.datacommons.proto.Recon.ResolveEntitiesRequest other) {
-        if (other == org.datacommons.proto.Recon.ResolveEntitiesRequest.getDefaultInstance()) return this;
+        if (other == org.datacommons.proto.Recon.ResolveEntitiesRequest.getDefaultInstance())
+          return this;
         if (entitiesBuilder_ == null) {
           if (!other.entities_.isEmpty()) {
             if (entities_.isEmpty()) {
@@ -6446,9 +6828,10 @@ public final class Recon {
               entitiesBuilder_ = null;
               entities_ = other.entities_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              entitiesBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getEntitiesFieldBuilder() : null;
+              entitiesBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getEntitiesFieldBuilder()
+                      : null;
             } else {
               entitiesBuilder_.addAllMessages(other.entities_);
             }
@@ -6483,7 +6866,8 @@ public final class Recon {
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.Recon.ResolveEntitiesRequest) e.getUnfinishedMessage();
+          parsedMessage =
+              (org.datacommons.proto.Recon.ResolveEntitiesRequest) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -6492,23 +6876,27 @@ public final class Recon {
         }
         return this;
       }
+
       private int bitField0_;
 
       private java.util.List<org.datacommons.proto.Recon.EntitySubGraph> entities_ =
-        java.util.Collections.emptyList();
+          java.util.Collections.emptyList();
+
       private void ensureEntitiesIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
-          entities_ = new java.util.ArrayList<org.datacommons.proto.Recon.EntitySubGraph>(entities_);
+          entities_ =
+              new java.util.ArrayList<org.datacommons.proto.Recon.EntitySubGraph>(entities_);
           bitField0_ |= 0x00000001;
-         }
+        }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.EntitySubGraph, org.datacommons.proto.Recon.EntitySubGraph.Builder, org.datacommons.proto.Recon.EntitySubGraphOrBuilder> entitiesBuilder_;
+              org.datacommons.proto.Recon.EntitySubGraph,
+              org.datacommons.proto.Recon.EntitySubGraph.Builder,
+              org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
+          entitiesBuilder_;
 
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public java.util.List<org.datacommons.proto.Recon.EntitySubGraph> getEntitiesList() {
         if (entitiesBuilder_ == null) {
           return java.util.Collections.unmodifiableList(entities_);
@@ -6516,9 +6904,8 @@ public final class Recon {
           return entitiesBuilder_.getMessageList();
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public int getEntitiesCount() {
         if (entitiesBuilder_ == null) {
           return entities_.size();
@@ -6526,9 +6913,8 @@ public final class Recon {
           return entitiesBuilder_.getCount();
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public org.datacommons.proto.Recon.EntitySubGraph getEntities(int index) {
         if (entitiesBuilder_ == null) {
           return entities_.get(index);
@@ -6536,11 +6922,9 @@ public final class Recon {
           return entitiesBuilder_.getMessage(index);
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
-      public Builder setEntities(
-          int index, org.datacommons.proto.Recon.EntitySubGraph value) {
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+      public Builder setEntities(int index, org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entitiesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -6553,9 +6937,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder setEntities(
           int index, org.datacommons.proto.Recon.EntitySubGraph.Builder builderForValue) {
         if (entitiesBuilder_ == null) {
@@ -6567,9 +6950,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder addEntities(org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entitiesBuilder_ == null) {
           if (value == null) {
@@ -6583,11 +6965,9 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
-      public Builder addEntities(
-          int index, org.datacommons.proto.Recon.EntitySubGraph value) {
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+      public Builder addEntities(int index, org.datacommons.proto.Recon.EntitySubGraph value) {
         if (entitiesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -6600,9 +6980,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder addEntities(
           org.datacommons.proto.Recon.EntitySubGraph.Builder builderForValue) {
         if (entitiesBuilder_ == null) {
@@ -6614,9 +6993,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder addEntities(
           int index, org.datacommons.proto.Recon.EntitySubGraph.Builder builderForValue) {
         if (entitiesBuilder_ == null) {
@@ -6628,24 +7006,21 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder addAllEntities(
           java.lang.Iterable<? extends org.datacommons.proto.Recon.EntitySubGraph> values) {
         if (entitiesBuilder_ == null) {
           ensureEntitiesIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, entities_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, entities_);
           onChanged();
         } else {
           entitiesBuilder_.addAllMessages(values);
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder clearEntities() {
         if (entitiesBuilder_ == null) {
           entities_ = java.util.Collections.emptyList();
@@ -6656,9 +7031,8 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public Builder removeEntities(int index) {
         if (entitiesBuilder_ == null) {
           ensureEntitiesIsMutable();
@@ -6669,188 +7043,211 @@ public final class Recon {
         }
         return this;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
-      public org.datacommons.proto.Recon.EntitySubGraph.Builder getEntitiesBuilder(
-          int index) {
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+      public org.datacommons.proto.Recon.EntitySubGraph.Builder getEntitiesBuilder(int index) {
         return getEntitiesFieldBuilder().getBuilder(index);
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
-      public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntitiesOrBuilder(
-          int index) {
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+      public org.datacommons.proto.Recon.EntitySubGraphOrBuilder getEntitiesOrBuilder(int index) {
         if (entitiesBuilder_ == null) {
-          return entities_.get(index);  } else {
+          return entities_.get(index);
+        } else {
           return entitiesBuilder_.getMessageOrBuilder(index);
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
-      public java.util.List<? extends org.datacommons.proto.Recon.EntitySubGraphOrBuilder> 
-           getEntitiesOrBuilderList() {
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+      public java.util.List<? extends org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
+          getEntitiesOrBuilderList() {
         if (entitiesBuilder_ != null) {
           return entitiesBuilder_.getMessageOrBuilderList();
         } else {
           return java.util.Collections.unmodifiableList(entities_);
         }
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
       public org.datacommons.proto.Recon.EntitySubGraph.Builder addEntitiesBuilder() {
-        return getEntitiesFieldBuilder().addBuilder(
-            org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance());
+        return getEntitiesFieldBuilder()
+            .addBuilder(org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance());
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
-      public org.datacommons.proto.Recon.EntitySubGraph.Builder addEntitiesBuilder(
-          int index) {
-        return getEntitiesFieldBuilder().addBuilder(
-            index, org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance());
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+      public org.datacommons.proto.Recon.EntitySubGraph.Builder addEntitiesBuilder(int index) {
+        return getEntitiesFieldBuilder()
+            .addBuilder(index, org.datacommons.proto.Recon.EntitySubGraph.getDefaultInstance());
       }
-      /**
-       * <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code>
-       */
-      public java.util.List<org.datacommons.proto.Recon.EntitySubGraph.Builder> 
-           getEntitiesBuilderList() {
+
+      /** <code>repeated .org.datacommons.proto.EntitySubGraph entities = 1;</code> */
+      public java.util.List<org.datacommons.proto.Recon.EntitySubGraph.Builder>
+          getEntitiesBuilderList() {
         return getEntitiesFieldBuilder().getBuilderList();
       }
+
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.EntitySubGraph, org.datacommons.proto.Recon.EntitySubGraph.Builder, org.datacommons.proto.Recon.EntitySubGraphOrBuilder> 
+              org.datacommons.proto.Recon.EntitySubGraph,
+              org.datacommons.proto.Recon.EntitySubGraph.Builder,
+              org.datacommons.proto.Recon.EntitySubGraphOrBuilder>
           getEntitiesFieldBuilder() {
         if (entitiesBuilder_ == null) {
-          entitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Recon.EntitySubGraph, org.datacommons.proto.Recon.EntitySubGraph.Builder, org.datacommons.proto.Recon.EntitySubGraphOrBuilder>(
-                  entities_,
-                  ((bitField0_ & 0x00000001) != 0),
-                  getParentForChildren(),
-                  isClean());
+          entitiesBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.Recon.EntitySubGraph,
+                  org.datacommons.proto.Recon.EntitySubGraph.Builder,
+                  org.datacommons.proto.Recon.EntitySubGraphOrBuilder>(
+                  entities_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
           entities_ = null;
         }
         return entitiesBuilder_;
       }
 
-      private com.google.protobuf.LazyStringList wantedIdProperties_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private com.google.protobuf.LazyStringList wantedIdProperties_ =
+          com.google.protobuf.LazyStringArrayList.EMPTY;
+
       private void ensureWantedIdPropertiesIsMutable() {
         if (!((bitField0_ & 0x00000002) != 0)) {
           wantedIdProperties_ = new com.google.protobuf.LazyStringArrayList(wantedIdProperties_);
           bitField0_ |= 0x00000002;
-         }
+        }
       }
+
       /**
+       *
+       *
        * <pre>
        * The properties of IDs to find. If empty, all known IDs are returned.
        * </pre>
        *
        * <code>repeated string wanted_id_properties = 2;</code>
+       *
        * @return A list containing the wantedIdProperties.
        */
-      public com.google.protobuf.ProtocolStringList
-          getWantedIdPropertiesList() {
+      public com.google.protobuf.ProtocolStringList getWantedIdPropertiesList() {
         return wantedIdProperties_.getUnmodifiableView();
       }
+
       /**
+       *
+       *
        * <pre>
        * The properties of IDs to find. If empty, all known IDs are returned.
        * </pre>
        *
        * <code>repeated string wanted_id_properties = 2;</code>
+       *
        * @return The count of wantedIdProperties.
        */
       public int getWantedIdPropertiesCount() {
         return wantedIdProperties_.size();
       }
+
       /**
+       *
+       *
        * <pre>
        * The properties of IDs to find. If empty, all known IDs are returned.
        * </pre>
        *
        * <code>repeated string wanted_id_properties = 2;</code>
+       *
        * @param index The index of the element to return.
        * @return The wantedIdProperties at the given index.
        */
       public java.lang.String getWantedIdProperties(int index) {
         return wantedIdProperties_.get(index);
       }
+
       /**
+       *
+       *
        * <pre>
        * The properties of IDs to find. If empty, all known IDs are returned.
        * </pre>
        *
        * <code>repeated string wanted_id_properties = 2;</code>
+       *
        * @param index The index of the value to return.
        * @return The bytes of the wantedIdProperties at the given index.
        */
-      public com.google.protobuf.ByteString
-          getWantedIdPropertiesBytes(int index) {
+      public com.google.protobuf.ByteString getWantedIdPropertiesBytes(int index) {
         return wantedIdProperties_.getByteString(index);
       }
+
       /**
+       *
+       *
        * <pre>
        * The properties of IDs to find. If empty, all known IDs are returned.
        * </pre>
        *
        * <code>repeated string wanted_id_properties = 2;</code>
+       *
        * @param index The index to set the value at.
        * @param value The wantedIdProperties to set.
        * @return This builder for chaining.
        */
-      public Builder setWantedIdProperties(
-          int index, java.lang.String value) {
+      public Builder setWantedIdProperties(int index, java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureWantedIdPropertiesIsMutable();
+          throw new NullPointerException();
+        }
+        ensureWantedIdPropertiesIsMutable();
         wantedIdProperties_.set(index, value);
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * The properties of IDs to find. If empty, all known IDs are returned.
        * </pre>
        *
        * <code>repeated string wanted_id_properties = 2;</code>
+       *
        * @param value The wantedIdProperties to add.
        * @return This builder for chaining.
        */
-      public Builder addWantedIdProperties(
-          java.lang.String value) {
+      public Builder addWantedIdProperties(java.lang.String value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureWantedIdPropertiesIsMutable();
+          throw new NullPointerException();
+        }
+        ensureWantedIdPropertiesIsMutable();
         wantedIdProperties_.add(value);
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * The properties of IDs to find. If empty, all known IDs are returned.
        * </pre>
        *
        * <code>repeated string wanted_id_properties = 2;</code>
+       *
        * @param values The wantedIdProperties to add.
        * @return This builder for chaining.
        */
-      public Builder addAllWantedIdProperties(
-          java.lang.Iterable<java.lang.String> values) {
+      public Builder addAllWantedIdProperties(java.lang.Iterable<java.lang.String> values) {
         ensureWantedIdPropertiesIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, wantedIdProperties_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, wantedIdProperties_);
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * The properties of IDs to find. If empty, all known IDs are returned.
        * </pre>
        *
        * <code>repeated string wanted_id_properties = 2;</code>
+       *
        * @return This builder for chaining.
        */
       public Builder clearWantedIdProperties() {
@@ -6859,26 +7256,30 @@ public final class Recon {
         onChanged();
         return this;
       }
+
       /**
+       *
+       *
        * <pre>
        * The properties of IDs to find. If empty, all known IDs are returned.
        * </pre>
        *
        * <code>repeated string wanted_id_properties = 2;</code>
+       *
        * @param value The bytes of the wantedIdProperties to add.
        * @return This builder for chaining.
        */
-      public Builder addWantedIdPropertiesBytes(
-          com.google.protobuf.ByteString value) {
+      public Builder addWantedIdPropertiesBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
+          throw new NullPointerException();
+        }
+        checkByteStringIsUtf8(value);
         ensureWantedIdPropertiesIsMutable();
         wantedIdProperties_.add(value);
         onChanged();
         return this;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -6891,12 +7292,12 @@ public final class Recon {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveEntitiesRequest)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveEntitiesRequest)
     private static final org.datacommons.proto.Recon.ResolveEntitiesRequest DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Recon.ResolveEntitiesRequest();
     }
@@ -6905,16 +7306,16 @@ public final class Recon {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<ResolveEntitiesRequest>
-        PARSER = new com.google.protobuf.AbstractParser<ResolveEntitiesRequest>() {
-      @java.lang.Override
-      public ResolveEntitiesRequest parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ResolveEntitiesRequest(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<ResolveEntitiesRequest> PARSER =
+        new com.google.protobuf.AbstractParser<ResolveEntitiesRequest>() {
+          @java.lang.Override
+          public ResolveEntitiesRequest parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new ResolveEntitiesRequest(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<ResolveEntitiesRequest> parser() {
       return PARSER;
@@ -6929,65 +7330,81 @@ public final class Recon {
     public org.datacommons.proto.Recon.ResolveEntitiesRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface ResolveEntitiesResponseOrBuilder extends
+  public interface ResolveEntitiesResponseOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveEntitiesResponse)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+     * </code>
      */
-    java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity> 
+    java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity>
         getResolvedEntitiesList();
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+     * </code>
      */
-    org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity getResolvedEntities(int index);
+    org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity getResolvedEntities(
+        int index);
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+     * </code>
      */
     int getResolvedEntitiesCount();
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+     * </code>
      */
-    java.util.List<? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder> 
+    java.util.List<
+            ? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder>
         getResolvedEntitiesOrBuilderList();
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+     * </code>
      */
-    org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder getResolvedEntitiesOrBuilder(
-        int index);
+    org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder
+        getResolvedEntitiesOrBuilder(int index);
   }
-  /**
-   * Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse}
-   */
-  public static final class ResolveEntitiesResponse extends
-      com.google.protobuf.GeneratedMessageV3 implements
+
+  /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse} */
+  public static final class ResolveEntitiesResponse extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveEntitiesResponse)
       ResolveEntitiesResponseOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use ResolveEntitiesResponse.newBuilder() to construct.
     private ResolveEntitiesResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private ResolveEntitiesResponse() {
       resolvedEntities_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new ResolveEntitiesResponse();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private ResolveEntitiesResponse(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7007,29 +7424,33 @@ public final class Recon {
             case 0:
               done = true;
               break;
-            case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                resolvedEntities_ = new java.util.ArrayList<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity>();
-                mutable_bitField0_ |= 0x00000001;
+            case 10:
+              {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  resolvedEntities_ =
+                      new java.util.ArrayList<
+                          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                resolvedEntities_.add(
+                    input.readMessage(
+                        org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.parser(),
+                        extensionRegistry));
+                break;
               }
-              resolvedEntities_.add(
-                  input.readMessage(org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.parser(), extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
               }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           resolvedEntities_ = java.util.Collections.unmodifiableList(resolvedEntities_);
@@ -7038,81 +7459,78 @@ public final class Recon {
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_fieldAccessorTable
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_ResolveEntitiesResponse_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Recon.ResolveEntitiesResponse.class, org.datacommons.proto.Recon.ResolveEntitiesResponse.Builder.class);
+              org.datacommons.proto.Recon.ResolveEntitiesResponse.class,
+              org.datacommons.proto.Recon.ResolveEntitiesResponse.Builder.class);
     }
 
-    public interface ResolvedIdOrBuilder extends
+    public interface ResolvedIdOrBuilder
+        extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveEntitiesResponse.ResolvedId)
         com.google.protobuf.MessageOrBuilder {
 
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
-      java.util.List<org.datacommons.proto.Recon.IdWithProperty> 
-          getIdsList();
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      java.util.List<org.datacommons.proto.Recon.IdWithProperty> getIdsList();
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       org.datacommons.proto.Recon.IdWithProperty getIds(int index);
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       int getIdsCount();
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
-      java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder> 
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
           getIdsOrBuilderList();
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
-      org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(
-          int index);
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+      org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index);
 
       /**
        * <code>double probability = 2;</code>
+       *
        * @return The probability.
        */
       double getProbability();
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse.ResolvedId}
-     */
-    public static final class ResolvedId extends
-        com.google.protobuf.GeneratedMessageV3 implements
+
+    /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse.ResolvedId} */
+    public static final class ResolvedId extends com.google.protobuf.GeneratedMessageV3
+        implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveEntitiesResponse.ResolvedId)
         ResolvedIdOrBuilder {
-    private static final long serialVersionUID = 0L;
+      private static final long serialVersionUID = 0L;
+
       // Use ResolvedId.newBuilder() to construct.
       private ResolvedId(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
       }
+
       private ResolvedId() {
         ids_ = java.util.Collections.emptyList();
       }
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(
-          UnusedPrivateParameter unused) {
+      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
         return new ResolvedId();
       }
 
       @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet
-      getUnknownFields() {
+      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
         return this.unknownFields;
       }
+
       private ResolvedId(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7132,34 +7550,36 @@ public final class Recon {
               case 0:
                 done = true;
                 break;
-              case 10: {
-                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                  ids_ = new java.util.ArrayList<org.datacommons.proto.Recon.IdWithProperty>();
-                  mutable_bitField0_ |= 0x00000001;
+              case 10:
+                {
+                  if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                    ids_ = new java.util.ArrayList<org.datacommons.proto.Recon.IdWithProperty>();
+                    mutable_bitField0_ |= 0x00000001;
+                  }
+                  ids_.add(
+                      input.readMessage(
+                          org.datacommons.proto.Recon.IdWithProperty.parser(), extensionRegistry));
+                  break;
                 }
-                ids_.add(
-                    input.readMessage(org.datacommons.proto.Recon.IdWithProperty.parser(), extensionRegistry));
-                break;
-              }
-              case 17: {
-
-                probability_ = input.readDouble();
-                break;
-              }
-              default: {
-                if (!parseUnknownField(
-                    input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
+              case 17:
+                {
+                  probability_ = input.readDouble();
+                  break;
                 }
-                break;
-              }
+              default:
+                {
+                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(
-              e).setUnfinishedMessage(this);
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(this);
         } finally {
           if (((mutable_bitField0_ & 0x00000001) != 0)) {
             ids_ = java.util.Collections.unmodifiableList(ids_);
@@ -7168,63 +7588,62 @@ public final class Recon {
           makeExtensionsImmutable();
         }
       }
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_descriptor;
+
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.class, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder.class);
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.class,
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder.class);
       }
 
       public static final int IDS_FIELD_NUMBER = 1;
       private java.util.List<org.datacommons.proto.Recon.IdWithProperty> ids_;
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       @java.lang.Override
       public java.util.List<org.datacommons.proto.Recon.IdWithProperty> getIdsList() {
         return ids_;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       @java.lang.Override
-      public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder> 
+      public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
           getIdsOrBuilderList() {
         return ids_;
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       @java.lang.Override
       public int getIdsCount() {
         return ids_.size();
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       @java.lang.Override
       public org.datacommons.proto.Recon.IdWithProperty getIds(int index) {
         return ids_.get(index);
       }
-      /**
-       * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-       */
+
+      /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
       @java.lang.Override
-      public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(
-          int index) {
+      public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index) {
         return ids_.get(index);
       }
 
       public static final int PROBABILITY_FIELD_NUMBER = 2;
       private double probability_;
+
       /**
        * <code>double probability = 2;</code>
+       *
        * @return The probability.
        */
       @java.lang.Override
@@ -7233,6 +7652,7 @@ public final class Recon {
       }
 
       private byte memoizedIsInitialized = -1;
+
       @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -7244,8 +7664,7 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
-                          throws java.io.IOException {
+      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
         for (int i = 0; i < ids_.size(); i++) {
           output.writeMessage(1, ids_.get(i));
         }
@@ -7262,12 +7681,10 @@ public final class Recon {
 
         size = 0;
         for (int i = 0; i < ids_.size(); i++) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(1, ids_.get(i));
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, ids_.get(i));
         }
         if (probability_ != 0D) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeDoubleSize(2, probability_);
+          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(2, probability_);
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -7277,18 +7694,17 @@ public final class Recon {
       @java.lang.Override
       public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
-         return true;
+          return true;
         }
         if (!(obj instanceof org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId)) {
           return super.equals(obj);
         }
-        org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId other = (org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId) obj;
+        org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId other =
+            (org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId) obj;
 
-        if (!getIdsList()
-            .equals(other.getIdsList())) return false;
+        if (!getIdsList().equals(other.getIdsList())) return false;
         if (java.lang.Double.doubleToLongBits(getProbability())
-            != java.lang.Double.doubleToLongBits(
-                other.getProbability())) return false;
+            != java.lang.Double.doubleToLongBits(other.getProbability())) return false;
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -7305,95 +7721,106 @@ public final class Recon {
           hash = (53 * hash) + getIdsList().hashCode();
         }
         hash = (37 * hash) + PROBABILITY_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            java.lang.Double.doubleToLongBits(getProbability()));
+        hash =
+            (53 * hash)
+                + com.google.protobuf.Internal.hashLong(
+                    java.lang.Double.doubleToLongBits(getProbability()));
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
         return hash;
       }
 
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseFrom(
-          java.nio.ByteBuffer data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseFrom(
-          java.nio.ByteBuffer data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseFrom(byte[] data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+
+      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseFrom(
+          byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseFrom(
-          byte[] data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
-      }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+          java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
       }
-      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseDelimitedFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input);
-      }
-      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseDelimitedFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-      }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseFrom(
-          com.google.protobuf.CodedInputStream input)
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
+
+      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId
+          parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId
+          parseDelimitedFrom(
+              java.io.InputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseFrom(
+          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
 
       @java.lang.Override
-      public Builder newBuilderForType() { return newBuilder(); }
+      public Builder newBuilderForType() {
+        return newBuilder();
+      }
+
       public static Builder newBuilder() {
         return DEFAULT_INSTANCE.toBuilder();
       }
-      public static Builder newBuilder(org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId prototype) {
+
+      public static Builder newBuilder(
+          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId prototype) {
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
+
       @java.lang.Override
       public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE
-            ? new Builder() : new Builder().mergeFrom(this);
+        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
       }
 
       @java.lang.Override
@@ -7402,42 +7829,45 @@ public final class Recon {
         Builder builder = new Builder(parent);
         return builder;
       }
-      /**
-       * Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse.ResolvedId}
-       */
-      public static final class Builder extends
-          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+      /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse.ResolvedId} */
+      public static final class Builder
+          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+          implements
           // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveEntitiesResponse.ResolvedId)
           org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor
-            getDescriptor() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_descriptor;
         }
 
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_fieldAccessorTable
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.class, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder.class);
+                  org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.class,
+                  org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder.class);
         }
 
-        // Construct using org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.newBuilder()
+        // Construct using
+        // org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.newBuilder()
         private Builder() {
           maybeForceBuilderInitialization();
         }
 
-        private Builder(
-            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
+
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3
-                  .alwaysUseFieldBuilders) {
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
             getIdsFieldBuilder();
           }
         }
+
         @java.lang.Override
         public Builder clear() {
           super.clear();
@@ -7453,14 +7883,16 @@ public final class Recon {
         }
 
         @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor
-            getDescriptorForType() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_descriptor;
+        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_descriptor;
         }
 
         @java.lang.Override
-        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId getDefaultInstanceForType() {
-          return org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.getDefaultInstance();
+        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId
+            getDefaultInstanceForType() {
+          return org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId
+              .getDefaultInstance();
         }
 
         @java.lang.Override
@@ -7474,7 +7906,8 @@ public final class Recon {
 
         @java.lang.Override
         public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId buildPartial() {
-          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId result = new org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId(this);
+          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId result =
+              new org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId(this);
           int from_bitField0_ = bitField0_;
           if (idsBuilder_ == null) {
             if (((bitField0_ & 0x00000001) != 0)) {
@@ -7494,46 +7927,53 @@ public final class Recon {
         public Builder clone() {
           return super.clone();
         }
+
         @java.lang.Override
         public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.setField(field, value);
         }
+
         @java.lang.Override
-        public Builder clearField(
-            com.google.protobuf.Descriptors.FieldDescriptor field) {
+        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
           return super.clearField(field);
         }
+
         @java.lang.Override
-        public Builder clearOneof(
-            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
           return super.clearOneof(oneof);
         }
+
         @java.lang.Override
         public Builder setRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index, java.lang.Object value) {
+            int index,
+            java.lang.Object value) {
           return super.setRepeatedField(field, index, value);
         }
+
         @java.lang.Override
         public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.addRepeatedField(field, value);
         }
+
         @java.lang.Override
         public Builder mergeFrom(com.google.protobuf.Message other) {
           if (other instanceof org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId) {
-            return mergeFrom((org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId)other);
+            return mergeFrom(
+                (org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId) other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId other) {
-          if (other == org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.getDefaultInstance()) return this;
+        public Builder mergeFrom(
+            org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId other) {
+          if (other
+              == org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId
+                  .getDefaultInstance()) return this;
           if (idsBuilder_ == null) {
             if (!other.ids_.isEmpty()) {
               if (ids_.isEmpty()) {
@@ -7552,9 +7992,10 @@ public final class Recon {
                 idsBuilder_ = null;
                 ids_ = other.ids_;
                 bitField0_ = (bitField0_ & ~0x00000001);
-                idsBuilder_ = 
-                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                     getIdsFieldBuilder() : null;
+                idsBuilder_ =
+                    com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                        ? getIdsFieldBuilder()
+                        : null;
               } else {
                 idsBuilder_.addAllMessages(other.ids_);
               }
@@ -7582,7 +8023,9 @@ public final class Recon {
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId) e.getUnfinishedMessage();
+            parsedMessage =
+                (org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId)
+                    e.getUnfinishedMessage();
             throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
@@ -7591,23 +8034,26 @@ public final class Recon {
           }
           return this;
         }
+
         private int bitField0_;
 
         private java.util.List<org.datacommons.proto.Recon.IdWithProperty> ids_ =
-          java.util.Collections.emptyList();
+            java.util.Collections.emptyList();
+
         private void ensureIdsIsMutable() {
           if (!((bitField0_ & 0x00000001) != 0)) {
             ids_ = new java.util.ArrayList<org.datacommons.proto.Recon.IdWithProperty>(ids_);
             bitField0_ |= 0x00000001;
-           }
+          }
         }
 
         private com.google.protobuf.RepeatedFieldBuilderV3<
-            org.datacommons.proto.Recon.IdWithProperty, org.datacommons.proto.Recon.IdWithProperty.Builder, org.datacommons.proto.Recon.IdWithPropertyOrBuilder> idsBuilder_;
+                org.datacommons.proto.Recon.IdWithProperty,
+                org.datacommons.proto.Recon.IdWithProperty.Builder,
+                org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
+            idsBuilder_;
 
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public java.util.List<org.datacommons.proto.Recon.IdWithProperty> getIdsList() {
           if (idsBuilder_ == null) {
             return java.util.Collections.unmodifiableList(ids_);
@@ -7615,9 +8061,8 @@ public final class Recon {
             return idsBuilder_.getMessageList();
           }
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public int getIdsCount() {
           if (idsBuilder_ == null) {
             return ids_.size();
@@ -7625,9 +8070,8 @@ public final class Recon {
             return idsBuilder_.getCount();
           }
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public org.datacommons.proto.Recon.IdWithProperty getIds(int index) {
           if (idsBuilder_ == null) {
             return ids_.get(index);
@@ -7635,11 +8079,9 @@ public final class Recon {
             return idsBuilder_.getMessage(index);
           }
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
-        public Builder setIds(
-            int index, org.datacommons.proto.Recon.IdWithProperty value) {
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+        public Builder setIds(int index, org.datacommons.proto.Recon.IdWithProperty value) {
           if (idsBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -7652,9 +8094,8 @@ public final class Recon {
           }
           return this;
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder setIds(
             int index, org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
           if (idsBuilder_ == null) {
@@ -7666,9 +8107,8 @@ public final class Recon {
           }
           return this;
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder addIds(org.datacommons.proto.Recon.IdWithProperty value) {
           if (idsBuilder_ == null) {
             if (value == null) {
@@ -7682,11 +8122,9 @@ public final class Recon {
           }
           return this;
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
-        public Builder addIds(
-            int index, org.datacommons.proto.Recon.IdWithProperty value) {
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+        public Builder addIds(int index, org.datacommons.proto.Recon.IdWithProperty value) {
           if (idsBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -7699,11 +8137,9 @@ public final class Recon {
           }
           return this;
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
-        public Builder addIds(
-            org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+        public Builder addIds(org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
           if (idsBuilder_ == null) {
             ensureIdsIsMutable();
             ids_.add(builderForValue.build());
@@ -7713,9 +8149,8 @@ public final class Recon {
           }
           return this;
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder addIds(
             int index, org.datacommons.proto.Recon.IdWithProperty.Builder builderForValue) {
           if (idsBuilder_ == null) {
@@ -7727,24 +8162,21 @@ public final class Recon {
           }
           return this;
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder addAllIds(
             java.lang.Iterable<? extends org.datacommons.proto.Recon.IdWithProperty> values) {
           if (idsBuilder_ == null) {
             ensureIdsIsMutable();
-            com.google.protobuf.AbstractMessageLite.Builder.addAll(
-                values, ids_);
+            com.google.protobuf.AbstractMessageLite.Builder.addAll(values, ids_);
             onChanged();
           } else {
             idsBuilder_.addAllMessages(values);
           }
           return this;
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder clearIds() {
           if (idsBuilder_ == null) {
             ids_ = java.util.Collections.emptyList();
@@ -7755,9 +8187,8 @@ public final class Recon {
           }
           return this;
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public Builder removeIds(int index) {
           if (idsBuilder_ == null) {
             ensureIdsIsMutable();
@@ -7768,101 +8199,103 @@ public final class Recon {
           }
           return this;
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
-        public org.datacommons.proto.Recon.IdWithProperty.Builder getIdsBuilder(
-            int index) {
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+        public org.datacommons.proto.Recon.IdWithProperty.Builder getIdsBuilder(int index) {
           return getIdsFieldBuilder().getBuilder(index);
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
-        public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(
-            int index) {
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+        public org.datacommons.proto.Recon.IdWithPropertyOrBuilder getIdsOrBuilder(int index) {
           if (idsBuilder_ == null) {
-            return ids_.get(index);  } else {
+            return ids_.get(index);
+          } else {
             return idsBuilder_.getMessageOrBuilder(index);
           }
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
-        public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder> 
-             getIdsOrBuilderList() {
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+        public java.util.List<? extends org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
+            getIdsOrBuilderList() {
           if (idsBuilder_ != null) {
             return idsBuilder_.getMessageOrBuilderList();
           } else {
             return java.util.Collections.unmodifiableList(ids_);
           }
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
         public org.datacommons.proto.Recon.IdWithProperty.Builder addIdsBuilder() {
-          return getIdsFieldBuilder().addBuilder(
-              org.datacommons.proto.Recon.IdWithProperty.getDefaultInstance());
+          return getIdsFieldBuilder()
+              .addBuilder(org.datacommons.proto.Recon.IdWithProperty.getDefaultInstance());
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
-        public org.datacommons.proto.Recon.IdWithProperty.Builder addIdsBuilder(
-            int index) {
-          return getIdsFieldBuilder().addBuilder(
-              index, org.datacommons.proto.Recon.IdWithProperty.getDefaultInstance());
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+        public org.datacommons.proto.Recon.IdWithProperty.Builder addIdsBuilder(int index) {
+          return getIdsFieldBuilder()
+              .addBuilder(index, org.datacommons.proto.Recon.IdWithProperty.getDefaultInstance());
         }
-        /**
-         * <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code>
-         */
-        public java.util.List<org.datacommons.proto.Recon.IdWithProperty.Builder> 
-             getIdsBuilderList() {
+
+        /** <code>repeated .org.datacommons.proto.IdWithProperty ids = 1;</code> */
+        public java.util.List<org.datacommons.proto.Recon.IdWithProperty.Builder>
+            getIdsBuilderList() {
           return getIdsFieldBuilder().getBuilderList();
         }
+
         private com.google.protobuf.RepeatedFieldBuilderV3<
-            org.datacommons.proto.Recon.IdWithProperty, org.datacommons.proto.Recon.IdWithProperty.Builder, org.datacommons.proto.Recon.IdWithPropertyOrBuilder> 
+                org.datacommons.proto.Recon.IdWithProperty,
+                org.datacommons.proto.Recon.IdWithProperty.Builder,
+                org.datacommons.proto.Recon.IdWithPropertyOrBuilder>
             getIdsFieldBuilder() {
           if (idsBuilder_ == null) {
-            idsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-                org.datacommons.proto.Recon.IdWithProperty, org.datacommons.proto.Recon.IdWithProperty.Builder, org.datacommons.proto.Recon.IdWithPropertyOrBuilder>(
-                    ids_,
-                    ((bitField0_ & 0x00000001) != 0),
-                    getParentForChildren(),
-                    isClean());
+            idsBuilder_ =
+                new com.google.protobuf.RepeatedFieldBuilderV3<
+                    org.datacommons.proto.Recon.IdWithProperty,
+                    org.datacommons.proto.Recon.IdWithProperty.Builder,
+                    org.datacommons.proto.Recon.IdWithPropertyOrBuilder>(
+                    ids_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
             ids_ = null;
           }
           return idsBuilder_;
         }
 
-        private double probability_ ;
+        private double probability_;
+
         /**
          * <code>double probability = 2;</code>
+         *
          * @return The probability.
          */
         @java.lang.Override
         public double getProbability() {
           return probability_;
         }
+
         /**
          * <code>double probability = 2;</code>
+         *
          * @param value The probability to set.
          * @return This builder for chaining.
          */
         public Builder setProbability(double value) {
-          
+
           probability_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>double probability = 2;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearProbability() {
-          
+
           probability_ = 0D;
           onChanged();
           return this;
         }
+
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -7875,30 +8308,32 @@ public final class Recon {
           return super.mergeUnknownFields(unknownFields);
         }
 
-
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveEntitiesResponse.ResolvedId)
       }
 
       // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveEntitiesResponse.ResolvedId)
-      private static final org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId DEFAULT_INSTANCE;
+      private static final org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId
+          DEFAULT_INSTANCE;
+
       static {
         DEFAULT_INSTANCE = new org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId();
       }
 
-      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId getDefaultInstance() {
+      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId
+          getDefaultInstance() {
         return DEFAULT_INSTANCE;
       }
 
-      private static final com.google.protobuf.Parser<ResolvedId>
-          PARSER = new com.google.protobuf.AbstractParser<ResolvedId>() {
-        @java.lang.Override
-        public ResolvedId parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ResolvedId(input, extensionRegistry);
-        }
-      };
+      private static final com.google.protobuf.Parser<ResolvedId> PARSER =
+          new com.google.protobuf.AbstractParser<ResolvedId>() {
+            @java.lang.Override
+            public ResolvedId parsePartialFrom(
+                com.google.protobuf.CodedInputStream input,
+                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+              return new ResolvedId(input, extensionRegistry);
+            }
+          };
 
       public static com.google.protobuf.Parser<ResolvedId> parser() {
         return PARSER;
@@ -7910,64 +8345,78 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId getDefaultInstanceForType() {
+      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId
+          getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
-
     }
 
-    public interface ResolvedEntityOrBuilder extends
+    public interface ResolvedEntityOrBuilder
+        extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity)
         com.google.protobuf.MessageOrBuilder {
 
       /**
        * <code>string source_id = 1;</code>
+       *
        * @return The sourceId.
        */
       java.lang.String getSourceId();
-      /**
-       * <code>string source_id = 1;</code>
-       * @return The bytes for sourceId.
-       */
-      com.google.protobuf.ByteString
-          getSourceIdBytes();
 
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+       * <code>string source_id = 1;</code>
+       *
+       * @return The bytes for sourceId.
        */
-      java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId> 
-          getResolvedIdsList();
+      com.google.protobuf.ByteString getSourceIdBytes();
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+       * </code>
+       */
+      java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId>
+          getResolvedIdsList();
+
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+       * </code>
        */
       org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId getResolvedIds(int index);
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+       * </code>
        */
       int getResolvedIdsCount();
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+       * </code>
        */
-      java.util.List<? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder> 
+      java.util.List<
+              ? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder>
           getResolvedIdsOrBuilderList();
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+       * </code>
        */
-      org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder getResolvedIdsOrBuilder(
-          int index);
+      org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder
+          getResolvedIdsOrBuilder(int index);
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity}
-     */
-    public static final class ResolvedEntity extends
-        com.google.protobuf.GeneratedMessageV3 implements
+
+    /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity} */
+    public static final class ResolvedEntity extends com.google.protobuf.GeneratedMessageV3
+        implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity)
         ResolvedEntityOrBuilder {
-    private static final long serialVersionUID = 0L;
+      private static final long serialVersionUID = 0L;
+
       // Use ResolvedEntity.newBuilder() to construct.
       private ResolvedEntity(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
       }
+
       private ResolvedEntity() {
         sourceId_ = "";
         resolvedIds_ = java.util.Collections.emptyList();
@@ -7975,16 +8424,15 @@ public final class Recon {
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(
-          UnusedPrivateParameter unused) {
+      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
         return new ResolvedEntity();
       }
 
       @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet
-      getUnknownFields() {
+      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
         return this.unknownFields;
       }
+
       private ResolvedEntity(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8004,35 +8452,41 @@ public final class Recon {
               case 0:
                 done = true;
                 break;
-              case 10: {
-                java.lang.String s = input.readStringRequireUtf8();
+              case 10:
+                {
+                  java.lang.String s = input.readStringRequireUtf8();
 
-                sourceId_ = s;
-                break;
-              }
-              case 18: {
-                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                  resolvedIds_ = new java.util.ArrayList<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId>();
-                  mutable_bitField0_ |= 0x00000001;
+                  sourceId_ = s;
+                  break;
                 }
-                resolvedIds_.add(
-                    input.readMessage(org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.parser(), extensionRegistry));
-                break;
-              }
-              default: {
-                if (!parseUnknownField(
-                    input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
+              case 18:
+                {
+                  if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                    resolvedIds_ =
+                        new java.util.ArrayList<
+                            org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId>();
+                    mutable_bitField0_ |= 0x00000001;
+                  }
+                  resolvedIds_.add(
+                      input.readMessage(
+                          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.parser(),
+                          extensionRegistry));
+                  break;
                 }
-                break;
-              }
+              default:
+                {
+                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(
-              e).setUnfinishedMessage(this);
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(this);
         } finally {
           if (((mutable_bitField0_ & 0x00000001) != 0)) {
             resolvedIds_ = java.util.Collections.unmodifiableList(resolvedIds_);
@@ -8041,23 +8495,28 @@ public final class Recon {
           makeExtensionsImmutable();
         }
       }
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_descriptor;
+
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.class, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder.class);
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.class,
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder.class);
       }
 
       public static final int SOURCE_ID_FIELD_NUMBER = 1;
       private volatile java.lang.Object sourceId_;
+
       /**
        * <code>string source_id = 1;</code>
+       *
        * @return The sourceId.
        */
       @java.lang.Override
@@ -8066,25 +8525,24 @@ public final class Recon {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           sourceId_ = s;
           return s;
         }
       }
+
       /**
        * <code>string source_id = 1;</code>
+       *
        * @return The bytes for sourceId.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString
-          getSourceIdBytes() {
+      public com.google.protobuf.ByteString getSourceIdBytes() {
         java.lang.Object ref = sourceId_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           sourceId_ = b;
           return b;
         } else {
@@ -8093,46 +8551,61 @@ public final class Recon {
       }
 
       public static final int RESOLVED_IDS_FIELD_NUMBER = 2;
-      private java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId> resolvedIds_;
+      private java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId>
+          resolvedIds_;
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+       * </code>
        */
       @java.lang.Override
-      public java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId> getResolvedIdsList() {
+      public java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId>
+          getResolvedIdsList() {
         return resolvedIds_;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+       * </code>
        */
       @java.lang.Override
-      public java.util.List<? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder> 
+      public java.util.List<
+              ? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder>
           getResolvedIdsOrBuilderList() {
         return resolvedIds_;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+       * </code>
        */
       @java.lang.Override
       public int getResolvedIdsCount() {
         return resolvedIds_.size();
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+       * </code>
        */
       @java.lang.Override
-      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId getResolvedIds(int index) {
-        return resolvedIds_.get(index);
-      }
-      /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
-       */
-      @java.lang.Override
-      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder getResolvedIdsOrBuilder(
+      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId getResolvedIds(
           int index) {
         return resolvedIds_.get(index);
       }
 
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+       * </code>
+       */
+      @java.lang.Override
+      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder
+          getResolvedIdsOrBuilder(int index) {
+        return resolvedIds_.get(index);
+      }
+
       private byte memoizedIsInitialized = -1;
+
       @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -8144,8 +8617,7 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
-                          throws java.io.IOException {
+      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
         if (!getSourceIdBytes().isEmpty()) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 1, sourceId_);
         }
@@ -8165,8 +8637,7 @@ public final class Recon {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, sourceId_);
         }
         for (int i = 0; i < resolvedIds_.size(); i++) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(2, resolvedIds_.get(i));
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, resolvedIds_.get(i));
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -8176,17 +8647,16 @@ public final class Recon {
       @java.lang.Override
       public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
-         return true;
+          return true;
         }
         if (!(obj instanceof org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity)) {
           return super.equals(obj);
         }
-        org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity other = (org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity) obj;
+        org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity other =
+            (org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity) obj;
 
-        if (!getSourceId()
-            .equals(other.getSourceId())) return false;
-        if (!getResolvedIdsList()
-            .equals(other.getResolvedIdsList())) return false;
+        if (!getSourceId().equals(other.getSourceId())) return false;
+        if (!getResolvedIdsList().equals(other.getResolvedIdsList())) return false;
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -8210,87 +8680,96 @@ public final class Recon {
       }
 
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseFrom(
-          java.nio.ByteBuffer data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseFrom(
-          java.nio.ByteBuffer data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseFrom(byte[] data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+
+      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseFrom(
+          byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseFrom(
-          byte[] data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
-      }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+          java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
       }
-      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseDelimitedFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input);
-      }
-      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseDelimitedFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-      }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseFrom(
-          com.google.protobuf.CodedInputStream input)
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
+
+      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity
+          parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity
+          parseDelimitedFrom(
+              java.io.InputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseFrom(
+          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
       public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
 
       @java.lang.Override
-      public Builder newBuilderForType() { return newBuilder(); }
+      public Builder newBuilderForType() {
+        return newBuilder();
+      }
+
       public static Builder newBuilder() {
         return DEFAULT_INSTANCE.toBuilder();
       }
-      public static Builder newBuilder(org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity prototype) {
+
+      public static Builder newBuilder(
+          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity prototype) {
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
+
       @java.lang.Override
       public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE
-            ? new Builder() : new Builder().mergeFrom(this);
+        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
       }
 
       @java.lang.Override
@@ -8299,42 +8778,45 @@ public final class Recon {
         Builder builder = new Builder(parent);
         return builder;
       }
-      /**
-       * Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity}
-       */
-      public static final class Builder extends
-          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+      /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity} */
+      public static final class Builder
+          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+          implements
           // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity)
           org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor
-            getDescriptor() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_descriptor;
         }
 
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_fieldAccessorTable
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.class, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder.class);
+                  org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.class,
+                  org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder.class);
         }
 
-        // Construct using org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.newBuilder()
+        // Construct using
+        // org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.newBuilder()
         private Builder() {
           maybeForceBuilderInitialization();
         }
 
-        private Builder(
-            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
+
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3
-                  .alwaysUseFieldBuilders) {
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
             getResolvedIdsFieldBuilder();
           }
         }
+
         @java.lang.Override
         public Builder clear() {
           super.clear();
@@ -8350,19 +8832,22 @@ public final class Recon {
         }
 
         @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor
-            getDescriptorForType() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_descriptor;
+        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_descriptor;
         }
 
         @java.lang.Override
-        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity getDefaultInstanceForType() {
-          return org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.getDefaultInstance();
+        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity
+            getDefaultInstanceForType() {
+          return org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity
+              .getDefaultInstance();
         }
 
         @java.lang.Override
         public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity build() {
-          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity result = buildPartial();
+          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity result =
+              buildPartial();
           if (!result.isInitialized()) {
             throw newUninitializedMessageException(result);
           }
@@ -8371,7 +8856,8 @@ public final class Recon {
 
         @java.lang.Override
         public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity buildPartial() {
-          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity result = new org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity(this);
+          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity result =
+              new org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity(this);
           int from_bitField0_ = bitField0_;
           result.sourceId_ = sourceId_;
           if (resolvedIdsBuilder_ == null) {
@@ -8391,46 +8877,53 @@ public final class Recon {
         public Builder clone() {
           return super.clone();
         }
+
         @java.lang.Override
         public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.setField(field, value);
         }
+
         @java.lang.Override
-        public Builder clearField(
-            com.google.protobuf.Descriptors.FieldDescriptor field) {
+        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
           return super.clearField(field);
         }
+
         @java.lang.Override
-        public Builder clearOneof(
-            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
           return super.clearOneof(oneof);
         }
+
         @java.lang.Override
         public Builder setRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index, java.lang.Object value) {
+            int index,
+            java.lang.Object value) {
           return super.setRepeatedField(field, index, value);
         }
+
         @java.lang.Override
         public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.addRepeatedField(field, value);
         }
+
         @java.lang.Override
         public Builder mergeFrom(com.google.protobuf.Message other) {
           if (other instanceof org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity) {
-            return mergeFrom((org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity)other);
+            return mergeFrom(
+                (org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity) other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity other) {
-          if (other == org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.getDefaultInstance()) return this;
+        public Builder mergeFrom(
+            org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity other) {
+          if (other
+              == org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity
+                  .getDefaultInstance()) return this;
           if (!other.getSourceId().isEmpty()) {
             sourceId_ = other.sourceId_;
             onChanged();
@@ -8453,9 +8946,10 @@ public final class Recon {
                 resolvedIdsBuilder_ = null;
                 resolvedIds_ = other.resolvedIds_;
                 bitField0_ = (bitField0_ & ~0x00000001);
-                resolvedIdsBuilder_ = 
-                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                     getResolvedIdsFieldBuilder() : null;
+                resolvedIdsBuilder_ =
+                    com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                        ? getResolvedIdsFieldBuilder()
+                        : null;
               } else {
                 resolvedIdsBuilder_.addAllMessages(other.resolvedIds_);
               }
@@ -8480,7 +8974,9 @@ public final class Recon {
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity) e.getUnfinishedMessage();
+            parsedMessage =
+                (org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity)
+                    e.getUnfinishedMessage();
             throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
@@ -8489,18 +8985,20 @@ public final class Recon {
           }
           return this;
         }
+
         private int bitField0_;
 
         private java.lang.Object sourceId_ = "";
+
         /**
          * <code>string source_id = 1;</code>
+         *
          * @return The sourceId.
          */
         public java.lang.String getSourceId() {
           java.lang.Object ref = sourceId_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             sourceId_ = s;
             return s;
@@ -8508,89 +9006,105 @@ public final class Recon {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string source_id = 1;</code>
+         *
          * @return The bytes for sourceId.
          */
-        public com.google.protobuf.ByteString
-            getSourceIdBytes() {
+        public com.google.protobuf.ByteString getSourceIdBytes() {
           java.lang.Object ref = sourceId_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
             sourceId_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string source_id = 1;</code>
+         *
          * @param value The sourceId to set.
          * @return This builder for chaining.
          */
-        public Builder setSourceId(
-            java.lang.String value) {
+        public Builder setSourceId(java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  
+            throw new NullPointerException();
+          }
+
           sourceId_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>string source_id = 1;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearSourceId() {
-          
+
           sourceId_ = getDefaultInstance().getSourceId();
           onChanged();
           return this;
         }
+
         /**
          * <code>string source_id = 1;</code>
+         *
          * @param value The bytes for sourceId to set.
          * @return This builder for chaining.
          */
-        public Builder setSourceIdBytes(
-            com.google.protobuf.ByteString value) {
+        public Builder setSourceIdBytes(com.google.protobuf.ByteString value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
+            throw new NullPointerException();
+          }
+          checkByteStringIsUtf8(value);
+
           sourceId_ = value;
           onChanged();
           return this;
         }
 
-        private java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId> resolvedIds_ =
-          java.util.Collections.emptyList();
+        private java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId>
+            resolvedIds_ = java.util.Collections.emptyList();
+
         private void ensureResolvedIdsIsMutable() {
           if (!((bitField0_ & 0x00000001) != 0)) {
-            resolvedIds_ = new java.util.ArrayList<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId>(resolvedIds_);
+            resolvedIds_ =
+                new java.util.ArrayList<
+                    org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId>(resolvedIds_);
             bitField0_ |= 0x00000001;
-           }
+          }
         }
 
         private com.google.protobuf.RepeatedFieldBuilderV3<
-            org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder> resolvedIdsBuilder_;
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId,
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder,
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder>
+            resolvedIdsBuilder_;
 
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
-        public java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId> getResolvedIdsList() {
+        public java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId>
+            getResolvedIdsList() {
           if (resolvedIdsBuilder_ == null) {
             return java.util.Collections.unmodifiableList(resolvedIds_);
           } else {
             return resolvedIdsBuilder_.getMessageList();
           }
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
         public int getResolvedIdsCount() {
           if (resolvedIdsBuilder_ == null) {
@@ -8599,18 +9113,25 @@ public final class Recon {
             return resolvedIdsBuilder_.getCount();
           }
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
-        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId getResolvedIds(int index) {
+        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId getResolvedIds(
+            int index) {
           if (resolvedIdsBuilder_ == null) {
             return resolvedIds_.get(index);
           } else {
             return resolvedIdsBuilder_.getMessage(index);
           }
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
         public Builder setResolvedIds(
             int index, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId value) {
@@ -8626,11 +9147,16 @@ public final class Recon {
           }
           return this;
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
         public Builder setResolvedIds(
-            int index, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder builderForValue) {
+            int index,
+            org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder
+                builderForValue) {
           if (resolvedIdsBuilder_ == null) {
             ensureResolvedIdsIsMutable();
             resolvedIds_.set(index, builderForValue.build());
@@ -8640,10 +9166,14 @@ public final class Recon {
           }
           return this;
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
-        public Builder addResolvedIds(org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId value) {
+        public Builder addResolvedIds(
+            org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId value) {
           if (resolvedIdsBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -8656,8 +9186,11 @@ public final class Recon {
           }
           return this;
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
         public Builder addResolvedIds(
             int index, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId value) {
@@ -8673,11 +9206,15 @@ public final class Recon {
           }
           return this;
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
         public Builder addResolvedIds(
-            org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder builderForValue) {
+            org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder
+                builderForValue) {
           if (resolvedIdsBuilder_ == null) {
             ensureResolvedIdsIsMutable();
             resolvedIds_.add(builderForValue.build());
@@ -8687,11 +9224,16 @@ public final class Recon {
           }
           return this;
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
         public Builder addResolvedIds(
-            int index, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder builderForValue) {
+            int index,
+            org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder
+                builderForValue) {
           if (resolvedIdsBuilder_ == null) {
             ensureResolvedIdsIsMutable();
             resolvedIds_.add(index, builderForValue.build());
@@ -8701,23 +9243,30 @@ public final class Recon {
           }
           return this;
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
         public Builder addAllResolvedIds(
-            java.lang.Iterable<? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId> values) {
+            java.lang.Iterable<
+                    ? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId>
+                values) {
           if (resolvedIdsBuilder_ == null) {
             ensureResolvedIdsIsMutable();
-            com.google.protobuf.AbstractMessageLite.Builder.addAll(
-                values, resolvedIds_);
+            com.google.protobuf.AbstractMessageLite.Builder.addAll(values, resolvedIds_);
             onChanged();
           } else {
             resolvedIdsBuilder_.addAllMessages(values);
           }
           return this;
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
         public Builder clearResolvedIds() {
           if (resolvedIdsBuilder_ == null) {
@@ -8729,8 +9278,11 @@ public final class Recon {
           }
           return this;
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
         public Builder removeResolvedIds(int index) {
           if (resolvedIdsBuilder_ == null) {
@@ -8742,62 +9294,95 @@ public final class Recon {
           }
           return this;
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
-        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder getResolvedIdsBuilder(
-            int index) {
+        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder
+            getResolvedIdsBuilder(int index) {
           return getResolvedIdsFieldBuilder().getBuilder(index);
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
-        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder getResolvedIdsOrBuilder(
-            int index) {
+        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder
+            getResolvedIdsOrBuilder(int index) {
           if (resolvedIdsBuilder_ == null) {
-            return resolvedIds_.get(index);  } else {
+            return resolvedIds_.get(index);
+          } else {
             return resolvedIdsBuilder_.getMessageOrBuilder(index);
           }
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
-        public java.util.List<? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder> 
-             getResolvedIdsOrBuilderList() {
+        public java.util.List<
+                ? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder>
+            getResolvedIdsOrBuilderList() {
           if (resolvedIdsBuilder_ != null) {
             return resolvedIdsBuilder_.getMessageOrBuilderList();
           } else {
             return java.util.Collections.unmodifiableList(resolvedIds_);
           }
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
-        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder addResolvedIdsBuilder() {
-          return getResolvedIdsFieldBuilder().addBuilder(
-              org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.getDefaultInstance());
+        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder
+            addResolvedIdsBuilder() {
+          return getResolvedIdsFieldBuilder()
+              .addBuilder(
+                  org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId
+                      .getDefaultInstance());
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
-        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder addResolvedIdsBuilder(
-            int index) {
-          return getResolvedIdsFieldBuilder().addBuilder(
-              index, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.getDefaultInstance());
+        public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder
+            addResolvedIdsBuilder(int index) {
+          return getResolvedIdsFieldBuilder()
+              .addBuilder(
+                  index,
+                  org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId
+                      .getDefaultInstance());
         }
+
         /**
-         * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;</code>
+         * <code>
+         * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedId resolved_ids = 2;
+         * </code>
          */
-        public java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder> 
-             getResolvedIdsBuilderList() {
+        public java.util.List<
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder>
+            getResolvedIdsBuilderList() {
           return getResolvedIdsFieldBuilder().getBuilderList();
         }
+
         private com.google.protobuf.RepeatedFieldBuilderV3<
-            org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder> 
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId,
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder,
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder>
             getResolvedIdsFieldBuilder() {
           if (resolvedIdsBuilder_ == null) {
-            resolvedIdsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder>(
+            resolvedIdsBuilder_ =
+                new com.google.protobuf.RepeatedFieldBuilderV3<
+                    org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId,
+                    org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedId.Builder,
+                    org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedIdOrBuilder>(
                     resolvedIds_,
                     ((bitField0_ & 0x00000001) != 0),
                     getParentForChildren(),
@@ -8806,6 +9391,7 @@ public final class Recon {
           }
           return resolvedIdsBuilder_;
         }
+
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -8818,30 +9404,32 @@ public final class Recon {
           return super.mergeUnknownFields(unknownFields);
         }
 
-
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity)
       }
 
       // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity)
-      private static final org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity DEFAULT_INSTANCE;
+      private static final org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity
+          DEFAULT_INSTANCE;
+
       static {
         DEFAULT_INSTANCE = new org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity();
       }
 
-      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity getDefaultInstance() {
+      public static org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity
+          getDefaultInstance() {
         return DEFAULT_INSTANCE;
       }
 
-      private static final com.google.protobuf.Parser<ResolvedEntity>
-          PARSER = new com.google.protobuf.AbstractParser<ResolvedEntity>() {
-        @java.lang.Override
-        public ResolvedEntity parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ResolvedEntity(input, extensionRegistry);
-        }
-      };
+      private static final com.google.protobuf.Parser<ResolvedEntity> PARSER =
+          new com.google.protobuf.AbstractParser<ResolvedEntity>() {
+            @java.lang.Override
+            public ResolvedEntity parsePartialFrom(
+                com.google.protobuf.CodedInputStream input,
+                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+              return new ResolvedEntity(input, extensionRegistry);
+            }
+          };
 
       public static com.google.protobuf.Parser<ResolvedEntity> parser() {
         return PARSER;
@@ -8853,53 +9441,73 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity getDefaultInstanceForType() {
+      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity
+          getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
-
     }
 
     public static final int RESOLVED_ENTITIES_FIELD_NUMBER = 1;
-    private java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity> resolvedEntities_;
+    private java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity>
+        resolvedEntities_;
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+     * </code>
      */
     @java.lang.Override
-    public java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity> getResolvedEntitiesList() {
+    public java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity>
+        getResolvedEntitiesList() {
       return resolvedEntities_;
     }
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+     * </code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder> 
+    public java.util.List<
+            ? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder>
         getResolvedEntitiesOrBuilderList() {
       return resolvedEntities_;
     }
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+     * </code>
      */
     @java.lang.Override
     public int getResolvedEntitiesCount() {
       return resolvedEntities_.size();
     }
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+     * </code>
      */
     @java.lang.Override
-    public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity getResolvedEntities(int index) {
-      return resolvedEntities_.get(index);
-    }
-    /**
-     * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
-     */
-    @java.lang.Override
-    public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder getResolvedEntitiesOrBuilder(
+    public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity getResolvedEntities(
         int index) {
       return resolvedEntities_.get(index);
     }
 
+    /**
+     * <code>
+     * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+     * </code>
+     */
+    @java.lang.Override
+    public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder
+        getResolvedEntitiesOrBuilder(int index) {
+      return resolvedEntities_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -8911,8 +9519,7 @@ public final class Recon {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       for (int i = 0; i < resolvedEntities_.size(); i++) {
         output.writeMessage(1, resolvedEntities_.get(i));
       }
@@ -8926,8 +9533,8 @@ public final class Recon {
 
       size = 0;
       for (int i = 0; i < resolvedEntities_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, resolvedEntities_.get(i));
+        size +=
+            com.google.protobuf.CodedOutputStream.computeMessageSize(1, resolvedEntities_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -8937,15 +9544,15 @@ public final class Recon {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.Recon.ResolveEntitiesResponse)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.Recon.ResolveEntitiesResponse other = (org.datacommons.proto.Recon.ResolveEntitiesResponse) obj;
+      org.datacommons.proto.Recon.ResolveEntitiesResponse other =
+          (org.datacommons.proto.Recon.ResolveEntitiesResponse) obj;
 
-      if (!getResolvedEntitiesList()
-          .equals(other.getResolvedEntitiesList())) return false;
+      if (!getResolvedEntitiesList().equals(other.getResolvedEntitiesList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -8967,87 +9574,94 @@ public final class Recon {
     }
 
     public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
-    public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseDelimitedFrom(java.io.InputStream input)
+
+    public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.ResolveEntitiesResponse parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.datacommons.proto.Recon.ResolveEntitiesResponse prototype) {
+
+    public static Builder newBuilder(
+        org.datacommons.proto.Recon.ResolveEntitiesResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -9056,24 +9670,26 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+    /** Protobuf type {@code org.datacommons.proto.ResolveEntitiesResponse} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveEntitiesResponse)
         org.datacommons.proto.Recon.ResolveEntitiesResponseOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveEntitiesResponse_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.ResolveEntitiesResponse.class, org.datacommons.proto.Recon.ResolveEntitiesResponse.Builder.class);
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.class,
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Recon.ResolveEntitiesResponse.newBuilder()
@@ -9081,17 +9697,17 @@ public final class Recon {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getResolvedEntitiesFieldBuilder();
         }
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -9105,9 +9721,9 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor;
       }
 
       @java.lang.Override
@@ -9126,7 +9742,8 @@ public final class Recon {
 
       @java.lang.Override
       public org.datacommons.proto.Recon.ResolveEntitiesResponse buildPartial() {
-        org.datacommons.proto.Recon.ResolveEntitiesResponse result = new org.datacommons.proto.Recon.ResolveEntitiesResponse(this);
+        org.datacommons.proto.Recon.ResolveEntitiesResponse result =
+            new org.datacommons.proto.Recon.ResolveEntitiesResponse(this);
         int from_bitField0_ = bitField0_;
         if (resolvedEntitiesBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
@@ -9145,38 +9762,41 @@ public final class Recon {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Recon.ResolveEntitiesResponse) {
-          return mergeFrom((org.datacommons.proto.Recon.ResolveEntitiesResponse)other);
+          return mergeFrom((org.datacommons.proto.Recon.ResolveEntitiesResponse) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -9184,7 +9804,8 @@ public final class Recon {
       }
 
       public Builder mergeFrom(org.datacommons.proto.Recon.ResolveEntitiesResponse other) {
-        if (other == org.datacommons.proto.Recon.ResolveEntitiesResponse.getDefaultInstance()) return this;
+        if (other == org.datacommons.proto.Recon.ResolveEntitiesResponse.getDefaultInstance())
+          return this;
         if (resolvedEntitiesBuilder_ == null) {
           if (!other.resolvedEntities_.isEmpty()) {
             if (resolvedEntities_.isEmpty()) {
@@ -9203,9 +9824,10 @@ public final class Recon {
               resolvedEntitiesBuilder_ = null;
               resolvedEntities_ = other.resolvedEntities_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              resolvedEntitiesBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getResolvedEntitiesFieldBuilder() : null;
+              resolvedEntitiesBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getResolvedEntitiesFieldBuilder()
+                      : null;
             } else {
               resolvedEntitiesBuilder_.addAllMessages(other.resolvedEntities_);
             }
@@ -9230,7 +9852,8 @@ public final class Recon {
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.Recon.ResolveEntitiesResponse) e.getUnfinishedMessage();
+          parsedMessage =
+              (org.datacommons.proto.Recon.ResolveEntitiesResponse) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -9239,32 +9862,46 @@ public final class Recon {
         }
         return this;
       }
+
       private int bitField0_;
 
-      private java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity> resolvedEntities_ =
-        java.util.Collections.emptyList();
+      private java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity>
+          resolvedEntities_ = java.util.Collections.emptyList();
+
       private void ensureResolvedEntitiesIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
-          resolvedEntities_ = new java.util.ArrayList<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity>(resolvedEntities_);
+          resolvedEntities_ =
+              new java.util.ArrayList<
+                  org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity>(
+                  resolvedEntities_);
           bitField0_ |= 0x00000001;
-         }
+        }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder> resolvedEntitiesBuilder_;
+              org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity,
+              org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder,
+              org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder>
+          resolvedEntitiesBuilder_;
 
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
-      public java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity> getResolvedEntitiesList() {
+      public java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity>
+          getResolvedEntitiesList() {
         if (resolvedEntitiesBuilder_ == null) {
           return java.util.Collections.unmodifiableList(resolvedEntities_);
         } else {
           return resolvedEntitiesBuilder_.getMessageList();
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
       public int getResolvedEntitiesCount() {
         if (resolvedEntitiesBuilder_ == null) {
@@ -9273,18 +9910,25 @@ public final class Recon {
           return resolvedEntitiesBuilder_.getCount();
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity getResolvedEntities(int index) {
+      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity getResolvedEntities(
+          int index) {
         if (resolvedEntitiesBuilder_ == null) {
           return resolvedEntities_.get(index);
         } else {
           return resolvedEntitiesBuilder_.getMessage(index);
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
       public Builder setResolvedEntities(
           int index, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity value) {
@@ -9300,11 +9944,16 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
       public Builder setResolvedEntities(
-          int index, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder builderForValue) {
+          int index,
+          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder
+              builderForValue) {
         if (resolvedEntitiesBuilder_ == null) {
           ensureResolvedEntitiesIsMutable();
           resolvedEntities_.set(index, builderForValue.build());
@@ -9314,10 +9963,14 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
-      public Builder addResolvedEntities(org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity value) {
+      public Builder addResolvedEntities(
+          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity value) {
         if (resolvedEntitiesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -9330,8 +9983,11 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
       public Builder addResolvedEntities(
           int index, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity value) {
@@ -9347,11 +10003,15 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
       public Builder addResolvedEntities(
-          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder builderForValue) {
+          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder
+              builderForValue) {
         if (resolvedEntitiesBuilder_ == null) {
           ensureResolvedEntitiesIsMutable();
           resolvedEntities_.add(builderForValue.build());
@@ -9361,11 +10021,16 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
       public Builder addResolvedEntities(
-          int index, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder builderForValue) {
+          int index,
+          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder
+              builderForValue) {
         if (resolvedEntitiesBuilder_ == null) {
           ensureResolvedEntitiesIsMutable();
           resolvedEntities_.add(index, builderForValue.build());
@@ -9375,23 +10040,30 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
       public Builder addAllResolvedEntities(
-          java.lang.Iterable<? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity> values) {
+          java.lang.Iterable<
+                  ? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity>
+              values) {
         if (resolvedEntitiesBuilder_ == null) {
           ensureResolvedEntitiesIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, resolvedEntities_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, resolvedEntities_);
           onChanged();
         } else {
           resolvedEntitiesBuilder_.addAllMessages(values);
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
       public Builder clearResolvedEntities() {
         if (resolvedEntitiesBuilder_ == null) {
@@ -9403,8 +10075,11 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
       public Builder removeResolvedEntities(int index) {
         if (resolvedEntitiesBuilder_ == null) {
@@ -9416,62 +10091,95 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder getResolvedEntitiesBuilder(
-          int index) {
+      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder
+          getResolvedEntitiesBuilder(int index) {
         return getResolvedEntitiesFieldBuilder().getBuilder(index);
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder getResolvedEntitiesOrBuilder(
-          int index) {
+      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder
+          getResolvedEntitiesOrBuilder(int index) {
         if (resolvedEntitiesBuilder_ == null) {
-          return resolvedEntities_.get(index);  } else {
+          return resolvedEntities_.get(index);
+        } else {
           return resolvedEntitiesBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
-      public java.util.List<? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder> 
-           getResolvedEntitiesOrBuilderList() {
+      public java.util.List<
+              ? extends org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder>
+          getResolvedEntitiesOrBuilderList() {
         if (resolvedEntitiesBuilder_ != null) {
           return resolvedEntitiesBuilder_.getMessageOrBuilderList();
         } else {
           return java.util.Collections.unmodifiableList(resolvedEntities_);
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder addResolvedEntitiesBuilder() {
-        return getResolvedEntitiesFieldBuilder().addBuilder(
-            org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.getDefaultInstance());
+      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder
+          addResolvedEntitiesBuilder() {
+        return getResolvedEntitiesFieldBuilder()
+            .addBuilder(
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity
+                    .getDefaultInstance());
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder addResolvedEntitiesBuilder(
-          int index) {
-        return getResolvedEntitiesFieldBuilder().addBuilder(
-            index, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.getDefaultInstance());
+      public org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder
+          addResolvedEntitiesBuilder(int index) {
+        return getResolvedEntitiesFieldBuilder()
+            .addBuilder(
+                index,
+                org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity
+                    .getDefaultInstance());
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveEntitiesResponse.ResolvedEntity resolved_entities = 1;
+       * </code>
        */
-      public java.util.List<org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder> 
-           getResolvedEntitiesBuilderList() {
+      public java.util.List<
+              org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder>
+          getResolvedEntitiesBuilderList() {
         return getResolvedEntitiesFieldBuilder().getBuilderList();
       }
+
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder> 
+              org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity,
+              org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder,
+              org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder>
           getResolvedEntitiesFieldBuilder() {
         if (resolvedEntitiesBuilder_ == null) {
-          resolvedEntitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder, org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder>(
+          resolvedEntitiesBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity,
+                  org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntity.Builder,
+                  org.datacommons.proto.Recon.ResolveEntitiesResponse.ResolvedEntityOrBuilder>(
                   resolvedEntities_,
                   ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
@@ -9480,6 +10188,7 @@ public final class Recon {
         }
         return resolvedEntitiesBuilder_;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -9492,12 +10201,12 @@ public final class Recon {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveEntitiesResponse)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveEntitiesResponse)
     private static final org.datacommons.proto.Recon.ResolveEntitiesResponse DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Recon.ResolveEntitiesResponse();
     }
@@ -9506,16 +10215,16 @@ public final class Recon {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<ResolveEntitiesResponse>
-        PARSER = new com.google.protobuf.AbstractParser<ResolveEntitiesResponse>() {
-      @java.lang.Override
-      public ResolveEntitiesResponse parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ResolveEntitiesResponse(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<ResolveEntitiesResponse> PARSER =
+        new com.google.protobuf.AbstractParser<ResolveEntitiesResponse>() {
+          @java.lang.Override
+          public ResolveEntitiesResponse parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new ResolveEntitiesResponse(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<ResolveEntitiesResponse> parser() {
       return PARSER;
@@ -9530,65 +10239,75 @@ public final class Recon {
     public org.datacommons.proto.Recon.ResolveEntitiesResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface ResolveCoordinatesRequestOrBuilder extends
+  public interface ResolveCoordinatesRequestOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveCoordinatesRequest)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
      */
-    java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate> 
+    java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
         getCoordinatesList();
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
      */
     org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate getCoordinates(int index);
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
      */
     int getCoordinatesCount();
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
      */
-    java.util.List<? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder> 
+    java.util.List<
+            ? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>
         getCoordinatesOrBuilderList();
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
      */
-    org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder getCoordinatesOrBuilder(
-        int index);
+    org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder
+        getCoordinatesOrBuilder(int index);
   }
-  /**
-   * Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest}
-   */
-  public static final class ResolveCoordinatesRequest extends
-      com.google.protobuf.GeneratedMessageV3 implements
+
+  /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest} */
+  public static final class ResolveCoordinatesRequest extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesRequest)
       ResolveCoordinatesRequestOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use ResolveCoordinatesRequest.newBuilder() to construct.
     private ResolveCoordinatesRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private ResolveCoordinatesRequest() {
       coordinates_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new ResolveCoordinatesRequest();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private ResolveCoordinatesRequest(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9608,29 +10327,33 @@ public final class Recon {
             case 0:
               done = true;
               break;
-            case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                coordinates_ = new java.util.ArrayList<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>();
-                mutable_bitField0_ |= 0x00000001;
+            case 10:
+              {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  coordinates_ =
+                      new java.util.ArrayList<
+                          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                coordinates_.add(
+                    input.readMessage(
+                        org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.parser(),
+                        extensionRegistry));
+                break;
               }
-              coordinates_.add(
-                  input.readMessage(org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.parser(), extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
               }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           coordinates_ = java.util.Collections.unmodifiableList(coordinates_);
@@ -9639,62 +10362,67 @@ public final class Recon {
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesRequest_fieldAccessorTable
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Recon.ResolveCoordinatesRequest.class, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Builder.class);
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.class,
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.Builder.class);
     }
 
-    public interface CoordinateOrBuilder extends
+    public interface CoordinateOrBuilder
+        extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveCoordinatesRequest.Coordinate)
         com.google.protobuf.MessageOrBuilder {
 
       /**
        * <code>double latitude = 1;</code>
+       *
        * @return The latitude.
        */
       double getLatitude();
 
       /**
        * <code>double longitude = 2;</code>
+       *
        * @return The longitude.
        */
       double getLongitude();
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest.Coordinate}
-     */
-    public static final class Coordinate extends
-        com.google.protobuf.GeneratedMessageV3 implements
+
+    /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest.Coordinate} */
+    public static final class Coordinate extends com.google.protobuf.GeneratedMessageV3
+        implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesRequest.Coordinate)
         CoordinateOrBuilder {
-    private static final long serialVersionUID = 0L;
+      private static final long serialVersionUID = 0L;
+
       // Use Coordinate.newBuilder() to construct.
       private Coordinate(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
       }
-      private Coordinate() {
-      }
+
+      private Coordinate() {}
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(
-          UnusedPrivateParameter unused) {
+      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
         return new Coordinate();
       }
 
       @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet
-      getUnknownFields() {
+      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
         return this.unknownFields;
       }
+
       private Coordinate(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9713,52 +10441,57 @@ public final class Recon {
               case 0:
                 done = true;
                 break;
-              case 9: {
-
-                latitude_ = input.readDouble();
-                break;
-              }
-              case 17: {
-
-                longitude_ = input.readDouble();
-                break;
-              }
-              default: {
-                if (!parseUnknownField(
-                    input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
+              case 9:
+                {
+                  latitude_ = input.readDouble();
+                  break;
                 }
-                break;
-              }
+              case 17:
+                {
+                  longitude_ = input.readDouble();
+                  break;
+                }
+              default:
+                {
+                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(
-              e).setUnfinishedMessage(this);
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(this);
         } finally {
           this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
         }
       }
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor;
+
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.class, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder.class);
+                org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.class,
+                org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder.class);
       }
 
       public static final int LATITUDE_FIELD_NUMBER = 1;
       private double latitude_;
+
       /**
        * <code>double latitude = 1;</code>
+       *
        * @return The latitude.
        */
       @java.lang.Override
@@ -9768,8 +10501,10 @@ public final class Recon {
 
       public static final int LONGITUDE_FIELD_NUMBER = 2;
       private double longitude_;
+
       /**
        * <code>double longitude = 2;</code>
+       *
        * @return The longitude.
        */
       @java.lang.Override
@@ -9778,6 +10513,7 @@ public final class Recon {
       }
 
       private byte memoizedIsInitialized = -1;
+
       @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -9789,8 +10525,7 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
-                          throws java.io.IOException {
+      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
         if (latitude_ != 0D) {
           output.writeDouble(1, latitude_);
         }
@@ -9807,12 +10542,10 @@ public final class Recon {
 
         size = 0;
         if (latitude_ != 0D) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeDoubleSize(1, latitude_);
+          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(1, latitude_);
         }
         if (longitude_ != 0D) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeDoubleSize(2, longitude_);
+          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(2, longitude_);
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -9822,19 +10555,18 @@ public final class Recon {
       @java.lang.Override
       public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
-         return true;
+          return true;
         }
         if (!(obj instanceof org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate)) {
           return super.equals(obj);
         }
-        org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate other = (org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate) obj;
+        org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate other =
+            (org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate) obj;
 
         if (java.lang.Double.doubleToLongBits(getLatitude())
-            != java.lang.Double.doubleToLongBits(
-                other.getLatitude())) return false;
+            != java.lang.Double.doubleToLongBits(other.getLatitude())) return false;
         if (java.lang.Double.doubleToLongBits(getLongitude())
-            != java.lang.Double.doubleToLongBits(
-                other.getLongitude())) return false;
+            != java.lang.Double.doubleToLongBits(other.getLongitude())) return false;
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -9847,98 +10579,111 @@ public final class Recon {
         int hash = 41;
         hash = (19 * hash) + getDescriptor().hashCode();
         hash = (37 * hash) + LATITUDE_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            java.lang.Double.doubleToLongBits(getLatitude()));
+        hash =
+            (53 * hash)
+                + com.google.protobuf.Internal.hashLong(
+                    java.lang.Double.doubleToLongBits(getLatitude()));
         hash = (37 * hash) + LONGITUDE_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            java.lang.Double.doubleToLongBits(getLongitude()));
+        hash =
+            (53 * hash)
+                + com.google.protobuf.Internal.hashLong(
+                    java.lang.Double.doubleToLongBits(getLongitude()));
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
         return hash;
       }
 
       public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
-          java.nio.ByteBuffer data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
-          java.nio.ByteBuffer data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(byte[] data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
+          byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
-          byte[] data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
-      }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+          java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseDelimitedFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input);
-      }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseDelimitedFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-      }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
-          com.google.protobuf.CodedInputStream input)
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+          parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+          parseDelimitedFrom(
+              java.io.InputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
+          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
 
       @java.lang.Override
-      public Builder newBuilderForType() { return newBuilder(); }
+      public Builder newBuilderForType() {
+        return newBuilder();
+      }
+
       public static Builder newBuilder() {
         return DEFAULT_INSTANCE.toBuilder();
       }
-      public static Builder newBuilder(org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate prototype) {
+
+      public static Builder newBuilder(
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate prototype) {
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
+
       @java.lang.Override
       public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE
-            ? new Builder() : new Builder().mergeFrom(this);
+        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
       }
 
       @java.lang.Override
@@ -9947,41 +10692,43 @@ public final class Recon {
         Builder builder = new Builder(parent);
         return builder;
       }
-      /**
-       * Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest.Coordinate}
-       */
-      public static final class Builder extends
-          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+      /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest.Coordinate} */
+      public static final class Builder
+          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+          implements
           // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveCoordinatesRequest.Coordinate)
           org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor
-            getDescriptor() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor;
         }
 
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_fieldAccessorTable
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.class, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder.class);
+                  org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.class,
+                  org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder.class);
         }
 
-        // Construct using org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.newBuilder()
+        // Construct using
+        // org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.newBuilder()
         private Builder() {
           maybeForceBuilderInitialization();
         }
 
-        private Builder(
-            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
+
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3
-                  .alwaysUseFieldBuilders) {
-          }
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
         }
+
         @java.lang.Override
         public Builder clear() {
           super.clear();
@@ -9993,14 +10740,16 @@ public final class Recon {
         }
 
         @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor
-            getDescriptorForType() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor;
+        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor;
         }
 
         @java.lang.Override
-        public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate getDefaultInstanceForType() {
-          return org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.getDefaultInstance();
+        public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+            getDefaultInstanceForType() {
+          return org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+              .getDefaultInstance();
         }
 
         @java.lang.Override
@@ -10014,7 +10763,8 @@ public final class Recon {
 
         @java.lang.Override
         public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate buildPartial() {
-          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate result = new org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate(this);
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate result =
+              new org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate(this);
           result.latitude_ = latitude_;
           result.longitude_ = longitude_;
           onBuilt();
@@ -10025,46 +10775,53 @@ public final class Recon {
         public Builder clone() {
           return super.clone();
         }
+
         @java.lang.Override
         public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.setField(field, value);
         }
+
         @java.lang.Override
-        public Builder clearField(
-            com.google.protobuf.Descriptors.FieldDescriptor field) {
+        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
           return super.clearField(field);
         }
+
         @java.lang.Override
-        public Builder clearOneof(
-            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
           return super.clearOneof(oneof);
         }
+
         @java.lang.Override
         public Builder setRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index, java.lang.Object value) {
+            int index,
+            java.lang.Object value) {
           return super.setRepeatedField(field, index, value);
         }
+
         @java.lang.Override
         public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.addRepeatedField(field, value);
         }
+
         @java.lang.Override
         public Builder mergeFrom(com.google.protobuf.Message other) {
           if (other instanceof org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate) {
-            return mergeFrom((org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate)other);
+            return mergeFrom(
+                (org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate) other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate other) {
-          if (other == org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.getDefaultInstance()) return this;
+        public Builder mergeFrom(
+            org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate other) {
+          if (other
+              == org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+                  .getDefaultInstance()) return this;
           if (other.getLatitude() != 0D) {
             setLatitude(other.getLatitude());
           }
@@ -10090,7 +10847,9 @@ public final class Recon {
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate) e.getUnfinishedMessage();
+            parsedMessage =
+                (org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate)
+                    e.getUnfinishedMessage();
             throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
@@ -10100,67 +10859,80 @@ public final class Recon {
           return this;
         }
 
-        private double latitude_ ;
+        private double latitude_;
+
         /**
          * <code>double latitude = 1;</code>
+         *
          * @return The latitude.
          */
         @java.lang.Override
         public double getLatitude() {
           return latitude_;
         }
+
         /**
          * <code>double latitude = 1;</code>
+         *
          * @param value The latitude to set.
          * @return This builder for chaining.
          */
         public Builder setLatitude(double value) {
-          
+
           latitude_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>double latitude = 1;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearLatitude() {
-          
+
           latitude_ = 0D;
           onChanged();
           return this;
         }
 
-        private double longitude_ ;
+        private double longitude_;
+
         /**
          * <code>double longitude = 2;</code>
+         *
          * @return The longitude.
          */
         @java.lang.Override
         public double getLongitude() {
           return longitude_;
         }
+
         /**
          * <code>double longitude = 2;</code>
+         *
          * @param value The longitude to set.
          * @return This builder for chaining.
          */
         public Builder setLongitude(double value) {
-          
+
           longitude_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>double longitude = 2;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearLongitude() {
-          
+
           longitude_ = 0D;
           onChanged();
           return this;
         }
+
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -10173,30 +10945,32 @@ public final class Recon {
           return super.mergeUnknownFields(unknownFields);
         }
 
-
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveCoordinatesRequest.Coordinate)
       }
 
       // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveCoordinatesRequest.Coordinate)
-      private static final org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate DEFAULT_INSTANCE;
+      private static final org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+          DEFAULT_INSTANCE;
+
       static {
         DEFAULT_INSTANCE = new org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate();
       }
 
-      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate getDefaultInstance() {
+      public static org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+          getDefaultInstance() {
         return DEFAULT_INSTANCE;
       }
 
-      private static final com.google.protobuf.Parser<Coordinate>
-          PARSER = new com.google.protobuf.AbstractParser<Coordinate>() {
-        @java.lang.Override
-        public Coordinate parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Coordinate(input, extensionRegistry);
-        }
-      };
+      private static final com.google.protobuf.Parser<Coordinate> PARSER =
+          new com.google.protobuf.AbstractParser<Coordinate>() {
+            @java.lang.Override
+            public Coordinate parsePartialFrom(
+                com.google.protobuf.CodedInputStream input,
+                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+              return new Coordinate(input, extensionRegistry);
+            }
+          };
 
       public static com.google.protobuf.Parser<Coordinate> parser() {
         return PARSER;
@@ -10208,53 +10982,68 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate getDefaultInstanceForType() {
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+          getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
-
     }
 
     public static final int COORDINATES_FIELD_NUMBER = 1;
-    private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate> coordinates_;
+    private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
+        coordinates_;
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
      */
     @java.lang.Override
-    public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate> getCoordinatesList() {
+    public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
+        getCoordinatesList() {
       return coordinates_;
     }
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder> 
+    public java.util.List<
+            ? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>
         getCoordinatesOrBuilderList() {
       return coordinates_;
     }
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
      */
     @java.lang.Override
     public int getCoordinatesCount() {
       return coordinates_.size();
     }
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
      */
     @java.lang.Override
-    public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate getCoordinates(int index) {
-      return coordinates_.get(index);
-    }
-    /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
-     */
-    @java.lang.Override
-    public org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder getCoordinatesOrBuilder(
+    public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate getCoordinates(
         int index) {
       return coordinates_.get(index);
     }
 
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+     * </code>
+     */
+    @java.lang.Override
+    public org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder
+        getCoordinatesOrBuilder(int index) {
+      return coordinates_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -10266,8 +11055,7 @@ public final class Recon {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       for (int i = 0; i < coordinates_.size(); i++) {
         output.writeMessage(1, coordinates_.get(i));
       }
@@ -10281,8 +11069,7 @@ public final class Recon {
 
       size = 0;
       for (int i = 0; i < coordinates_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, coordinates_.get(i));
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, coordinates_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -10292,15 +11079,15 @@ public final class Recon {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.Recon.ResolveCoordinatesRequest)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.Recon.ResolveCoordinatesRequest other = (org.datacommons.proto.Recon.ResolveCoordinatesRequest) obj;
+      org.datacommons.proto.Recon.ResolveCoordinatesRequest other =
+          (org.datacommons.proto.Recon.ResolveCoordinatesRequest) obj;
 
-      if (!getCoordinatesList()
-          .equals(other.getCoordinatesList())) return false;
+      if (!getCoordinatesList().equals(other.getCoordinatesList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -10322,87 +11109,94 @@ public final class Recon {
     }
 
     public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
-    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseDelimitedFrom(java.io.InputStream input)
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesRequest parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.datacommons.proto.Recon.ResolveCoordinatesRequest prototype) {
+
+    public static Builder newBuilder(
+        org.datacommons.proto.Recon.ResolveCoordinatesRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -10411,24 +11205,26 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+    /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesRequest} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveCoordinatesRequest)
         org.datacommons.proto.Recon.ResolveCoordinatesRequestOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesRequest_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.ResolveCoordinatesRequest.class, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Builder.class);
+                org.datacommons.proto.Recon.ResolveCoordinatesRequest.class,
+                org.datacommons.proto.Recon.ResolveCoordinatesRequest.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Recon.ResolveCoordinatesRequest.newBuilder()
@@ -10436,17 +11232,17 @@ public final class Recon {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getCoordinatesFieldBuilder();
         }
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -10460,9 +11256,9 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor;
       }
 
       @java.lang.Override
@@ -10481,7 +11277,8 @@ public final class Recon {
 
       @java.lang.Override
       public org.datacommons.proto.Recon.ResolveCoordinatesRequest buildPartial() {
-        org.datacommons.proto.Recon.ResolveCoordinatesRequest result = new org.datacommons.proto.Recon.ResolveCoordinatesRequest(this);
+        org.datacommons.proto.Recon.ResolveCoordinatesRequest result =
+            new org.datacommons.proto.Recon.ResolveCoordinatesRequest(this);
         int from_bitField0_ = bitField0_;
         if (coordinatesBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
@@ -10500,38 +11297,41 @@ public final class Recon {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Recon.ResolveCoordinatesRequest) {
-          return mergeFrom((org.datacommons.proto.Recon.ResolveCoordinatesRequest)other);
+          return mergeFrom((org.datacommons.proto.Recon.ResolveCoordinatesRequest) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -10539,7 +11339,8 @@ public final class Recon {
       }
 
       public Builder mergeFrom(org.datacommons.proto.Recon.ResolveCoordinatesRequest other) {
-        if (other == org.datacommons.proto.Recon.ResolveCoordinatesRequest.getDefaultInstance()) return this;
+        if (other == org.datacommons.proto.Recon.ResolveCoordinatesRequest.getDefaultInstance())
+          return this;
         if (coordinatesBuilder_ == null) {
           if (!other.coordinates_.isEmpty()) {
             if (coordinates_.isEmpty()) {
@@ -10558,9 +11359,10 @@ public final class Recon {
               coordinatesBuilder_ = null;
               coordinates_ = other.coordinates_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              coordinatesBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getCoordinatesFieldBuilder() : null;
+              coordinatesBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getCoordinatesFieldBuilder()
+                      : null;
             } else {
               coordinatesBuilder_.addAllMessages(other.coordinates_);
             }
@@ -10585,7 +11387,8 @@ public final class Recon {
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.Recon.ResolveCoordinatesRequest) e.getUnfinishedMessage();
+          parsedMessage =
+              (org.datacommons.proto.Recon.ResolveCoordinatesRequest) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -10594,32 +11397,43 @@ public final class Recon {
         }
         return this;
       }
+
       private int bitField0_;
 
-      private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate> coordinates_ =
-        java.util.Collections.emptyList();
+      private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
+          coordinates_ = java.util.Collections.emptyList();
+
       private void ensureCoordinatesIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
-          coordinates_ = new java.util.ArrayList<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>(coordinates_);
+          coordinates_ =
+              new java.util.ArrayList<
+                  org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>(coordinates_);
           bitField0_ |= 0x00000001;
-         }
+        }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder, org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder> coordinatesBuilder_;
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate,
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder,
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>
+          coordinatesBuilder_;
 
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
-      public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate> getCoordinatesList() {
+      public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
+          getCoordinatesList() {
         if (coordinatesBuilder_ == null) {
           return java.util.Collections.unmodifiableList(coordinates_);
         } else {
           return coordinatesBuilder_.getMessageList();
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
       public int getCoordinatesCount() {
         if (coordinatesBuilder_ == null) {
@@ -10628,18 +11442,23 @@ public final class Recon {
           return coordinatesBuilder_.getCount();
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate getCoordinates(int index) {
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate getCoordinates(
+          int index) {
         if (coordinatesBuilder_ == null) {
           return coordinates_.get(index);
         } else {
           return coordinatesBuilder_.getMessage(index);
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
       public Builder setCoordinates(
           int index, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate value) {
@@ -10655,11 +11474,15 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
       public Builder setCoordinates(
-          int index, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder builderForValue) {
+          int index,
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder
+              builderForValue) {
         if (coordinatesBuilder_ == null) {
           ensureCoordinatesIsMutable();
           coordinates_.set(index, builderForValue.build());
@@ -10669,10 +11492,13 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
-      public Builder addCoordinates(org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate value) {
+      public Builder addCoordinates(
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate value) {
         if (coordinatesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -10685,8 +11511,10 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
       public Builder addCoordinates(
           int index, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate value) {
@@ -10702,11 +11530,14 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
       public Builder addCoordinates(
-          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder builderForValue) {
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder
+              builderForValue) {
         if (coordinatesBuilder_ == null) {
           ensureCoordinatesIsMutable();
           coordinates_.add(builderForValue.build());
@@ -10716,11 +11547,15 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
       public Builder addCoordinates(
-          int index, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder builderForValue) {
+          int index,
+          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder
+              builderForValue) {
         if (coordinatesBuilder_ == null) {
           ensureCoordinatesIsMutable();
           coordinates_.add(index, builderForValue.build());
@@ -10730,23 +11565,28 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
       public Builder addAllCoordinates(
-          java.lang.Iterable<? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate> values) {
+          java.lang.Iterable<
+                  ? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate>
+              values) {
         if (coordinatesBuilder_ == null) {
           ensureCoordinatesIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, coordinates_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, coordinates_);
           onChanged();
         } else {
           coordinatesBuilder_.addAllMessages(values);
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
       public Builder clearCoordinates() {
         if (coordinatesBuilder_ == null) {
@@ -10758,8 +11598,10 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
       public Builder removeCoordinates(int index) {
         if (coordinatesBuilder_ == null) {
@@ -10771,62 +11613,89 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder getCoordinatesBuilder(
-          int index) {
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder
+          getCoordinatesBuilder(int index) {
         return getCoordinatesFieldBuilder().getBuilder(index);
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder getCoordinatesOrBuilder(
-          int index) {
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder
+          getCoordinatesOrBuilder(int index) {
         if (coordinatesBuilder_ == null) {
-          return coordinates_.get(index);  } else {
+          return coordinates_.get(index);
+        } else {
           return coordinatesBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
-      public java.util.List<? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder> 
-           getCoordinatesOrBuilderList() {
+      public java.util.List<
+              ? extends org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>
+          getCoordinatesOrBuilderList() {
         if (coordinatesBuilder_ != null) {
           return coordinatesBuilder_.getMessageOrBuilderList();
         } else {
           return java.util.Collections.unmodifiableList(coordinates_);
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder addCoordinatesBuilder() {
-        return getCoordinatesFieldBuilder().addBuilder(
-            org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.getDefaultInstance());
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder
+          addCoordinatesBuilder() {
+        return getCoordinatesFieldBuilder()
+            .addBuilder(
+                org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+                    .getDefaultInstance());
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder addCoordinatesBuilder(
-          int index) {
-        return getCoordinatesFieldBuilder().addBuilder(
-            index, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.getDefaultInstance());
+      public org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder
+          addCoordinatesBuilder(int index) {
+        return getCoordinatesFieldBuilder()
+            .addBuilder(
+                index,
+                org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate
+                    .getDefaultInstance());
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;</code>
+       * <code>repeated .org.datacommons.proto.ResolveCoordinatesRequest.Coordinate coordinates = 1;
+       * </code>
        */
-      public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder> 
-           getCoordinatesBuilderList() {
+      public java.util.List<
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder>
+          getCoordinatesBuilderList() {
         return getCoordinatesFieldBuilder().getBuilderList();
       }
+
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder, org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder> 
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate,
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder,
+              org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>
           getCoordinatesFieldBuilder() {
         if (coordinatesBuilder_ == null) {
-          coordinatesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate, org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder, org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>(
+          coordinatesBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate,
+                  org.datacommons.proto.Recon.ResolveCoordinatesRequest.Coordinate.Builder,
+                  org.datacommons.proto.Recon.ResolveCoordinatesRequest.CoordinateOrBuilder>(
                   coordinates_,
                   ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
@@ -10835,6 +11704,7 @@ public final class Recon {
         }
         return coordinatesBuilder_;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -10847,12 +11717,12 @@ public final class Recon {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveCoordinatesRequest)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveCoordinatesRequest)
     private static final org.datacommons.proto.Recon.ResolveCoordinatesRequest DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Recon.ResolveCoordinatesRequest();
     }
@@ -10861,16 +11731,16 @@ public final class Recon {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<ResolveCoordinatesRequest>
-        PARSER = new com.google.protobuf.AbstractParser<ResolveCoordinatesRequest>() {
-      @java.lang.Override
-      public ResolveCoordinatesRequest parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ResolveCoordinatesRequest(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<ResolveCoordinatesRequest> PARSER =
+        new com.google.protobuf.AbstractParser<ResolveCoordinatesRequest>() {
+          @java.lang.Override
+          public ResolveCoordinatesRequest parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new ResolveCoordinatesRequest(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<ResolveCoordinatesRequest> parser() {
       return PARSER;
@@ -10885,65 +11755,83 @@ public final class Recon {
     public org.datacommons.proto.Recon.ResolveCoordinatesRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
-  public interface ResolveCoordinatesResponseOrBuilder extends
+  public interface ResolveCoordinatesResponseOrBuilder
+      extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveCoordinatesResponse)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
      */
-    java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate> 
+    java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
         getPlaceCoordinatesList();
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
      */
-    org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate getPlaceCoordinates(int index);
+    org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate getPlaceCoordinates(
+        int index);
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
      */
     int getPlaceCoordinatesCount();
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
      */
-    java.util.List<? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder> 
+    java.util.List<
+            ? extends
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>
         getPlaceCoordinatesOrBuilderList();
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
      */
-    org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder getPlaceCoordinatesOrBuilder(
-        int index);
+    org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder
+        getPlaceCoordinatesOrBuilder(int index);
   }
-  /**
-   * Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse}
-   */
-  public static final class ResolveCoordinatesResponse extends
-      com.google.protobuf.GeneratedMessageV3 implements
+
+  /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse} */
+  public static final class ResolveCoordinatesResponse
+      extends com.google.protobuf.GeneratedMessageV3
+      implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesResponse)
       ResolveCoordinatesResponseOrBuilder {
-  private static final long serialVersionUID = 0L;
+    private static final long serialVersionUID = 0L;
+
     // Use ResolveCoordinatesResponse.newBuilder() to construct.
     private ResolveCoordinatesResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
+
     private ResolveCoordinatesResponse() {
       placeCoordinates_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
       return new ResolveCoordinatesResponse();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
       return this.unknownFields;
     }
+
     private ResolveCoordinatesResponse(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -10963,29 +11851,34 @@ public final class Recon {
             case 0:
               done = true;
               break;
-            case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                placeCoordinates_ = new java.util.ArrayList<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>();
-                mutable_bitField0_ |= 0x00000001;
+            case 10:
+              {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  placeCoordinates_ =
+                      new java.util.ArrayList<
+                          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>();
+                  mutable_bitField0_ |= 0x00000001;
+                }
+                placeCoordinates_.add(
+                    input.readMessage(
+                        org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+                            .parser(),
+                        extensionRegistry));
+                break;
               }
-              placeCoordinates_.add(
-                  input.readMessage(org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.parser(), extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
+            default:
+              {
+                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
               }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           placeCoordinates_ = java.util.Collections.unmodifiableList(placeCoordinates_);
@@ -10994,59 +11887,68 @@ public final class Recon {
         makeExtensionsImmutable();
       }
     }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor;
+
+    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_fieldAccessorTable
+      return org.datacommons.proto.Recon
+          .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Recon.ResolveCoordinatesResponse.class, org.datacommons.proto.Recon.ResolveCoordinatesResponse.Builder.class);
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.class,
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.Builder.class);
     }
 
-    public interface PlaceOrBuilder extends
+    public interface PlaceOrBuilder
+        extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveCoordinatesResponse.Place)
         com.google.protobuf.MessageOrBuilder {
 
       /**
        * <code>string dcid = 1;</code>
+       *
        * @return The dcid.
        */
       java.lang.String getDcid();
+
       /**
        * <code>string dcid = 1;</code>
+       *
        * @return The bytes for dcid.
        */
-      com.google.protobuf.ByteString
-          getDcidBytes();
+      com.google.protobuf.ByteString getDcidBytes();
 
       /**
        * <code>string dominant_type = 2;</code>
+       *
        * @return The dominantType.
        */
       java.lang.String getDominantType();
+
       /**
        * <code>string dominant_type = 2;</code>
+       *
        * @return The bytes for dominantType.
        */
-      com.google.protobuf.ByteString
-          getDominantTypeBytes();
+      com.google.protobuf.ByteString getDominantTypeBytes();
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.Place}
-     */
-    public static final class Place extends
-        com.google.protobuf.GeneratedMessageV3 implements
+
+    /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.Place} */
+    public static final class Place extends com.google.protobuf.GeneratedMessageV3
+        implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesResponse.Place)
         PlaceOrBuilder {
-    private static final long serialVersionUID = 0L;
+      private static final long serialVersionUID = 0L;
+
       // Use Place.newBuilder() to construct.
       private Place(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
       }
+
       private Place() {
         dcid_ = "";
         dominantType_ = "";
@@ -11054,16 +11956,15 @@ public final class Recon {
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(
-          UnusedPrivateParameter unused) {
+      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
         return new Place();
       }
 
       @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet
-      getUnknownFields() {
+      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
         return this.unknownFields;
       }
+
       private Place(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11082,54 +11983,61 @@ public final class Recon {
               case 0:
                 done = true;
                 break;
-              case 10: {
-                java.lang.String s = input.readStringRequireUtf8();
+              case 10:
+                {
+                  java.lang.String s = input.readStringRequireUtf8();
 
-                dcid_ = s;
-                break;
-              }
-              case 18: {
-                java.lang.String s = input.readStringRequireUtf8();
-
-                dominantType_ = s;
-                break;
-              }
-              default: {
-                if (!parseUnknownField(
-                    input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
+                  dcid_ = s;
+                  break;
                 }
-                break;
-              }
+              case 18:
+                {
+                  java.lang.String s = input.readStringRequireUtf8();
+
+                  dominantType_ = s;
+                  break;
+                }
+              default:
+                {
+                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(
-              e).setUnfinishedMessage(this);
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(this);
         } finally {
           this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
         }
       }
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_descriptor;
+
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.class, org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder.class);
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.class,
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder.class);
       }
 
       public static final int DCID_FIELD_NUMBER = 1;
       private volatile java.lang.Object dcid_;
+
       /**
        * <code>string dcid = 1;</code>
+       *
        * @return The dcid.
        */
       @java.lang.Override
@@ -11138,25 +12046,24 @@ public final class Recon {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           dcid_ = s;
           return s;
         }
       }
+
       /**
        * <code>string dcid = 1;</code>
+       *
        * @return The bytes for dcid.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString
-          getDcidBytes() {
+      public com.google.protobuf.ByteString getDcidBytes() {
         java.lang.Object ref = dcid_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           dcid_ = b;
           return b;
         } else {
@@ -11166,8 +12073,10 @@ public final class Recon {
 
       public static final int DOMINANT_TYPE_FIELD_NUMBER = 2;
       private volatile java.lang.Object dominantType_;
+
       /**
        * <code>string dominant_type = 2;</code>
+       *
        * @return The dominantType.
        */
       @java.lang.Override
@@ -11176,25 +12085,24 @@ public final class Recon {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           dominantType_ = s;
           return s;
         }
       }
+
       /**
        * <code>string dominant_type = 2;</code>
+       *
        * @return The bytes for dominantType.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString
-          getDominantTypeBytes() {
+      public com.google.protobuf.ByteString getDominantTypeBytes() {
         java.lang.Object ref = dominantType_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
           dominantType_ = b;
           return b;
         } else {
@@ -11203,6 +12111,7 @@ public final class Recon {
       }
 
       private byte memoizedIsInitialized = -1;
+
       @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -11214,8 +12123,7 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
-                          throws java.io.IOException {
+      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
         if (!getDcidBytes().isEmpty()) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 1, dcid_);
         }
@@ -11245,17 +12153,16 @@ public final class Recon {
       @java.lang.Override
       public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
-         return true;
+          return true;
         }
         if (!(obj instanceof org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place)) {
           return super.equals(obj);
         }
-        org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place other = (org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place) obj;
+        org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place other =
+            (org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place) obj;
 
-        if (!getDcid()
-            .equals(other.getDcid())) return false;
-        if (!getDominantType()
-            .equals(other.getDominantType())) return false;
+        if (!getDcid().equals(other.getDcid())) return false;
+        if (!getDominantType().equals(other.getDominantType())) return false;
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -11277,87 +12184,94 @@ public final class Recon {
       }
 
       public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseFrom(
-          java.nio.ByteBuffer data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseFrom(
-          java.nio.ByteBuffer data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseFrom(byte[] data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseFrom(
+          byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseFrom(
-          byte[] data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
-      }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+          java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseDelimitedFrom(java.io.InputStream input)
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseFrom(
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input);
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseDelimitedFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+          java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
       }
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseDelimitedFrom(
+          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+            PARSER, input, extensionRegistry);
+      }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseFrom(
-          com.google.protobuf.CodedInputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
+          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
       }
+
       public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
 
       @java.lang.Override
-      public Builder newBuilderForType() { return newBuilder(); }
+      public Builder newBuilderForType() {
+        return newBuilder();
+      }
+
       public static Builder newBuilder() {
         return DEFAULT_INSTANCE.toBuilder();
       }
-      public static Builder newBuilder(org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place prototype) {
+
+      public static Builder newBuilder(
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place prototype) {
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
+
       @java.lang.Override
       public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE
-            ? new Builder() : new Builder().mergeFrom(this);
+        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
       }
 
       @java.lang.Override
@@ -11366,24 +12280,26 @@ public final class Recon {
         Builder builder = new Builder(parent);
         return builder;
       }
-      /**
-       * Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.Place}
-       */
-      public static final class Builder extends
-          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+      /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.Place} */
+      public static final class Builder
+          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+          implements
           // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveCoordinatesResponse.Place)
           org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor
-            getDescriptor() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_descriptor;
         }
 
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_fieldAccessorTable
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.class, org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder.class);
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.class,
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder.class);
         }
 
         // Construct using org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.newBuilder()
@@ -11391,16 +12307,15 @@ public final class Recon {
           maybeForceBuilderInitialization();
         }
 
-        private Builder(
-            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
+
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3
-                  .alwaysUseFieldBuilders) {
-          }
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
         }
+
         @java.lang.Override
         public Builder clear() {
           super.clear();
@@ -11412,13 +12327,14 @@ public final class Recon {
         }
 
         @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor
-            getDescriptorForType() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_descriptor;
+        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_descriptor;
         }
 
         @java.lang.Override
-        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place getDefaultInstanceForType() {
+        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place
+            getDefaultInstanceForType() {
           return org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.getDefaultInstance();
         }
 
@@ -11433,7 +12349,8 @@ public final class Recon {
 
         @java.lang.Override
         public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place buildPartial() {
-          org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place result = new org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place(this);
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place result =
+              new org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place(this);
           result.dcid_ = dcid_;
           result.dominantType_ = dominantType_;
           onBuilt();
@@ -11444,46 +12361,52 @@ public final class Recon {
         public Builder clone() {
           return super.clone();
         }
+
         @java.lang.Override
         public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.setField(field, value);
         }
+
         @java.lang.Override
-        public Builder clearField(
-            com.google.protobuf.Descriptors.FieldDescriptor field) {
+        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
           return super.clearField(field);
         }
+
         @java.lang.Override
-        public Builder clearOneof(
-            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
           return super.clearOneof(oneof);
         }
+
         @java.lang.Override
         public Builder setRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index, java.lang.Object value) {
+            int index,
+            java.lang.Object value) {
           return super.setRepeatedField(field, index, value);
         }
+
         @java.lang.Override
         public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.addRepeatedField(field, value);
         }
+
         @java.lang.Override
         public Builder mergeFrom(com.google.protobuf.Message other) {
           if (other instanceof org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place) {
-            return mergeFrom((org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place)other);
+            return mergeFrom((org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place) other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place other) {
-          if (other == org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.getDefaultInstance()) return this;
+        public Builder mergeFrom(
+            org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place other) {
+          if (other
+              == org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.getDefaultInstance())
+            return this;
           if (!other.getDcid().isEmpty()) {
             dcid_ = other.dcid_;
             onChanged();
@@ -11511,7 +12434,9 @@ public final class Recon {
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place) e.getUnfinishedMessage();
+            parsedMessage =
+                (org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place)
+                    e.getUnfinishedMessage();
             throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
@@ -11522,15 +12447,16 @@ public final class Recon {
         }
 
         private java.lang.Object dcid_ = "";
+
         /**
          * <code>string dcid = 1;</code>
+         *
          * @return The dcid.
          */
         public java.lang.String getDcid() {
           java.lang.Object ref = dcid_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             dcid_ = s;
             return s;
@@ -11538,75 +12464,80 @@ public final class Recon {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string dcid = 1;</code>
+         *
          * @return The bytes for dcid.
          */
-        public com.google.protobuf.ByteString
-            getDcidBytes() {
+        public com.google.protobuf.ByteString getDcidBytes() {
           java.lang.Object ref = dcid_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
             dcid_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string dcid = 1;</code>
+         *
          * @param value The dcid to set.
          * @return This builder for chaining.
          */
-        public Builder setDcid(
-            java.lang.String value) {
+        public Builder setDcid(java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  
+            throw new NullPointerException();
+          }
+
           dcid_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>string dcid = 1;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearDcid() {
-          
+
           dcid_ = getDefaultInstance().getDcid();
           onChanged();
           return this;
         }
+
         /**
          * <code>string dcid = 1;</code>
+         *
          * @param value The bytes for dcid to set.
          * @return This builder for chaining.
          */
-        public Builder setDcidBytes(
-            com.google.protobuf.ByteString value) {
+        public Builder setDcidBytes(com.google.protobuf.ByteString value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
+            throw new NullPointerException();
+          }
+          checkByteStringIsUtf8(value);
+
           dcid_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object dominantType_ = "";
+
         /**
          * <code>string dominant_type = 2;</code>
+         *
          * @return The dominantType.
          */
         public java.lang.String getDominantType() {
           java.lang.Object ref = dominantType_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             dominantType_ = s;
             return s;
@@ -11614,64 +12545,69 @@ public final class Recon {
             return (java.lang.String) ref;
           }
         }
+
         /**
          * <code>string dominant_type = 2;</code>
+         *
          * @return The bytes for dominantType.
          */
-        public com.google.protobuf.ByteString
-            getDominantTypeBytes() {
+        public com.google.protobuf.ByteString getDominantTypeBytes() {
           java.lang.Object ref = dominantType_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
+            com.google.protobuf.ByteString b =
+                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
             dominantType_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
+
         /**
          * <code>string dominant_type = 2;</code>
+         *
          * @param value The dominantType to set.
          * @return This builder for chaining.
          */
-        public Builder setDominantType(
-            java.lang.String value) {
+        public Builder setDominantType(java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  
+            throw new NullPointerException();
+          }
+
           dominantType_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>string dominant_type = 2;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearDominantType() {
-          
+
           dominantType_ = getDefaultInstance().getDominantType();
           onChanged();
           return this;
         }
+
         /**
          * <code>string dominant_type = 2;</code>
+         *
          * @param value The bytes for dominantType to set.
          * @return This builder for chaining.
          */
-        public Builder setDominantTypeBytes(
-            com.google.protobuf.ByteString value) {
+        public Builder setDominantTypeBytes(com.google.protobuf.ByteString value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
+            throw new NullPointerException();
+          }
+          checkByteStringIsUtf8(value);
+
           dominantType_ = value;
           onChanged();
           return this;
         }
+
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -11684,30 +12620,32 @@ public final class Recon {
           return super.mergeUnknownFields(unknownFields);
         }
 
-
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveCoordinatesResponse.Place)
       }
 
       // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveCoordinatesResponse.Place)
-      private static final org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place DEFAULT_INSTANCE;
+      private static final org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place
+          DEFAULT_INSTANCE;
+
       static {
         DEFAULT_INSTANCE = new org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place();
       }
 
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place getDefaultInstance() {
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place
+          getDefaultInstance() {
         return DEFAULT_INSTANCE;
       }
 
-      private static final com.google.protobuf.Parser<Place>
-          PARSER = new com.google.protobuf.AbstractParser<Place>() {
-        @java.lang.Override
-        public Place parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Place(input, extensionRegistry);
-        }
-      };
+      private static final com.google.protobuf.Parser<Place> PARSER =
+          new com.google.protobuf.AbstractParser<Place>() {
+            @java.lang.Override
+            public Place parsePartialFrom(
+                com.google.protobuf.CodedInputStream input,
+                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+              return new Place(input, extensionRegistry);
+            }
+          };
 
       public static com.google.protobuf.Parser<Place> parser() {
         return PARSER;
@@ -11719,89 +12657,102 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place getDefaultInstanceForType() {
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place
+          getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
-
     }
 
-    public interface PlaceCoordinateOrBuilder extends
+    public interface PlaceCoordinateOrBuilder
+        extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate)
         com.google.protobuf.MessageOrBuilder {
 
       /**
        * <code>double latitude = 1;</code>
+       *
        * @return The latitude.
        */
       double getLatitude();
 
       /**
        * <code>double longitude = 2;</code>
+       *
        * @return The longitude.
        */
       double getLongitude();
 
       /**
        * <code>repeated string place_dcids = 3;</code>
+       *
        * @return A list containing the placeDcids.
        */
-      java.util.List<java.lang.String>
-          getPlaceDcidsList();
+      java.util.List<java.lang.String> getPlaceDcidsList();
+
       /**
        * <code>repeated string place_dcids = 3;</code>
+       *
        * @return The count of placeDcids.
        */
       int getPlaceDcidsCount();
+
       /**
        * <code>repeated string place_dcids = 3;</code>
+       *
        * @param index The index of the element to return.
        * @return The placeDcids at the given index.
        */
       java.lang.String getPlaceDcids(int index);
+
       /**
        * <code>repeated string place_dcids = 3;</code>
+       *
        * @param index The index of the value to return.
        * @return The bytes of the placeDcids at the given index.
        */
-      com.google.protobuf.ByteString
-          getPlaceDcidsBytes(int index);
+      com.google.protobuf.ByteString getPlaceDcidsBytes(int index);
 
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
-      java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place> 
-          getPlacesList();
+      java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place> getPlacesList();
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
       org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place getPlaces(int index);
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
       int getPlacesCount();
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
-      java.util.List<? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder> 
+      java.util.List<
+              ? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder>
           getPlacesOrBuilderList();
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
       org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder getPlacesOrBuilder(
           int index);
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate}
-     */
-    public static final class PlaceCoordinate extends
-        com.google.protobuf.GeneratedMessageV3 implements
+
+    /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate} */
+    public static final class PlaceCoordinate extends com.google.protobuf.GeneratedMessageV3
+        implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate)
         PlaceCoordinateOrBuilder {
-    private static final long serialVersionUID = 0L;
+      private static final long serialVersionUID = 0L;
+
       // Use PlaceCoordinate.newBuilder() to construct.
       private PlaceCoordinate(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
       }
+
       private PlaceCoordinate() {
         placeDcids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         places_ = java.util.Collections.emptyList();
@@ -11809,16 +12760,15 @@ public final class Recon {
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(
-          UnusedPrivateParameter unused) {
+      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
         return new PlaceCoordinate();
       }
 
       @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet
-      getUnknownFields() {
+      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
         return this.unknownFields;
       }
+
       private PlaceCoordinate(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11838,48 +12788,54 @@ public final class Recon {
               case 0:
                 done = true;
                 break;
-              case 9: {
-
-                latitude_ = input.readDouble();
-                break;
-              }
-              case 17: {
-
-                longitude_ = input.readDouble();
-                break;
-              }
-              case 26: {
-                java.lang.String s = input.readStringRequireUtf8();
-                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                  placeDcids_ = new com.google.protobuf.LazyStringArrayList();
-                  mutable_bitField0_ |= 0x00000001;
+              case 9:
+                {
+                  latitude_ = input.readDouble();
+                  break;
                 }
-                placeDcids_.add(s);
-                break;
-              }
-              case 34: {
-                if (!((mutable_bitField0_ & 0x00000002) != 0)) {
-                  places_ = new java.util.ArrayList<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place>();
-                  mutable_bitField0_ |= 0x00000002;
+              case 17:
+                {
+                  longitude_ = input.readDouble();
+                  break;
                 }
-                places_.add(
-                    input.readMessage(org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.parser(), extensionRegistry));
-                break;
-              }
-              default: {
-                if (!parseUnknownField(
-                    input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
+              case 26:
+                {
+                  java.lang.String s = input.readStringRequireUtf8();
+                  if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                    placeDcids_ = new com.google.protobuf.LazyStringArrayList();
+                    mutable_bitField0_ |= 0x00000001;
+                  }
+                  placeDcids_.add(s);
+                  break;
                 }
-                break;
-              }
+              case 34:
+                {
+                  if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                    places_ =
+                        new java.util.ArrayList<
+                            org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place>();
+                    mutable_bitField0_ |= 0x00000002;
+                  }
+                  places_.add(
+                      input.readMessage(
+                          org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.parser(),
+                          extensionRegistry));
+                  break;
+                }
+              default:
+                {
+                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(
-              e).setUnfinishedMessage(this);
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(this);
         } finally {
           if (((mutable_bitField0_ & 0x00000001) != 0)) {
             placeDcids_ = placeDcids_.getUnmodifiableView();
@@ -11891,23 +12847,29 @@ public final class Recon {
           makeExtensionsImmutable();
         }
       }
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor;
+
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.class, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder.class);
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.class,
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+                    .class);
       }
 
       public static final int LATITUDE_FIELD_NUMBER = 1;
       private double latitude_;
+
       /**
        * <code>double latitude = 1;</code>
+       *
        * @return The latitude.
        */
       @java.lang.Override
@@ -11917,8 +12879,10 @@ public final class Recon {
 
       public static final int LONGITUDE_FIELD_NUMBER = 2;
       private double longitude_;
+
       /**
        * <code>double longitude = 2;</code>
+       *
        * @return The longitude.
        */
       @java.lang.Override
@@ -11928,56 +12892,67 @@ public final class Recon {
 
       public static final int PLACE_DCIDS_FIELD_NUMBER = 3;
       private com.google.protobuf.LazyStringList placeDcids_;
+
       /**
        * <code>repeated string place_dcids = 3;</code>
+       *
        * @return A list containing the placeDcids.
        */
-      public com.google.protobuf.ProtocolStringList
-          getPlaceDcidsList() {
+      public com.google.protobuf.ProtocolStringList getPlaceDcidsList() {
         return placeDcids_;
       }
+
       /**
        * <code>repeated string place_dcids = 3;</code>
+       *
        * @return The count of placeDcids.
        */
       public int getPlaceDcidsCount() {
         return placeDcids_.size();
       }
+
       /**
        * <code>repeated string place_dcids = 3;</code>
+       *
        * @param index The index of the element to return.
        * @return The placeDcids at the given index.
        */
       public java.lang.String getPlaceDcids(int index) {
         return placeDcids_.get(index);
       }
+
       /**
        * <code>repeated string place_dcids = 3;</code>
+       *
        * @param index The index of the value to return.
        * @return The bytes of the placeDcids at the given index.
        */
-      public com.google.protobuf.ByteString
-          getPlaceDcidsBytes(int index) {
+      public com.google.protobuf.ByteString getPlaceDcidsBytes(int index) {
         return placeDcids_.getByteString(index);
       }
 
       public static final int PLACES_FIELD_NUMBER = 4;
       private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place> places_;
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
       @java.lang.Override
-      public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place> getPlacesList() {
+      public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place>
+          getPlacesList() {
         return places_;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
       @java.lang.Override
-      public java.util.List<? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder> 
+      public java.util.List<
+              ? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder>
           getPlacesOrBuilderList() {
         return places_;
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
@@ -11985,6 +12960,7 @@ public final class Recon {
       public int getPlacesCount() {
         return places_.size();
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
@@ -11992,16 +12968,18 @@ public final class Recon {
       public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place getPlaces(int index) {
         return places_.get(index);
       }
+
       /**
        * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
        */
       @java.lang.Override
-      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder getPlacesOrBuilder(
-          int index) {
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder
+          getPlacesOrBuilder(int index) {
         return places_.get(index);
       }
 
       private byte memoizedIsInitialized = -1;
+
       @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -12013,8 +12991,7 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
-                          throws java.io.IOException {
+      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
         if (latitude_ != 0D) {
           output.writeDouble(1, latitude_);
         }
@@ -12037,12 +13014,10 @@ public final class Recon {
 
         size = 0;
         if (latitude_ != 0D) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeDoubleSize(1, latitude_);
+          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(1, latitude_);
         }
         if (longitude_ != 0D) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeDoubleSize(2, longitude_);
+          size += com.google.protobuf.CodedOutputStream.computeDoubleSize(2, longitude_);
         }
         {
           int dataSize = 0;
@@ -12053,8 +13028,7 @@ public final class Recon {
           size += 1 * getPlaceDcidsList().size();
         }
         for (int i = 0; i < places_.size(); i++) {
-          size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(4, places_.get(i));
+          size += com.google.protobuf.CodedOutputStream.computeMessageSize(4, places_.get(i));
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -12064,23 +13038,21 @@ public final class Recon {
       @java.lang.Override
       public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
-         return true;
+          return true;
         }
-        if (!(obj instanceof org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate)) {
+        if (!(obj
+            instanceof org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate)) {
           return super.equals(obj);
         }
-        org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate other = (org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate) obj;
+        org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate other =
+            (org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate) obj;
 
         if (java.lang.Double.doubleToLongBits(getLatitude())
-            != java.lang.Double.doubleToLongBits(
-                other.getLatitude())) return false;
+            != java.lang.Double.doubleToLongBits(other.getLatitude())) return false;
         if (java.lang.Double.doubleToLongBits(getLongitude())
-            != java.lang.Double.doubleToLongBits(
-                other.getLongitude())) return false;
-        if (!getPlaceDcidsList()
-            .equals(other.getPlaceDcidsList())) return false;
-        if (!getPlacesList()
-            .equals(other.getPlacesList())) return false;
+            != java.lang.Double.doubleToLongBits(other.getLongitude())) return false;
+        if (!getPlaceDcidsList().equals(other.getPlaceDcidsList())) return false;
+        if (!getPlacesList().equals(other.getPlacesList())) return false;
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -12093,11 +13065,15 @@ public final class Recon {
         int hash = 41;
         hash = (19 * hash) + getDescriptor().hashCode();
         hash = (37 * hash) + LATITUDE_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            java.lang.Double.doubleToLongBits(getLatitude()));
+        hash =
+            (53 * hash)
+                + com.google.protobuf.Internal.hashLong(
+                    java.lang.Double.doubleToLongBits(getLatitude()));
         hash = (37 * hash) + LONGITUDE_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            java.lang.Double.doubleToLongBits(getLongitude()));
+        hash =
+            (53 * hash)
+                + com.google.protobuf.Internal.hashLong(
+                    java.lang.Double.doubleToLongBits(getLongitude()));
         if (getPlaceDcidsCount() > 0) {
           hash = (37 * hash) + PLACE_DCIDS_FIELD_NUMBER;
           hash = (53 * hash) + getPlaceDcidsList().hashCode();
@@ -12111,88 +13087,103 @@ public final class Recon {
         return hash;
       }
 
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parseFrom(
-          java.nio.ByteBuffer data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(java.nio.ByteBuffer data)
+              throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parseFrom(
-          java.nio.ByteBuffer data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(
+              java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parseFrom(
-          com.google.protobuf.ByteString data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(com.google.protobuf.ByteString data)
+              throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parseFrom(
-          com.google.protobuf.ByteString data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(
+              com.google.protobuf.ByteString data,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parseFrom(byte[] data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parseFrom(
-          byte[] data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parseFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parseFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(
+              java.io.InputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parseDelimitedFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input);
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parseDelimitedFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseDelimitedFrom(
+              java.io.InputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+            PARSER, input, extensionRegistry);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parseFrom(
-          com.google.protobuf.CodedInputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
       }
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parseFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
+
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          parseFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+            PARSER, input, extensionRegistry);
       }
 
       @java.lang.Override
-      public Builder newBuilderForType() { return newBuilder(); }
+      public Builder newBuilderForType() {
+        return newBuilder();
+      }
+
       public static Builder newBuilder() {
         return DEFAULT_INSTANCE.toBuilder();
       }
-      public static Builder newBuilder(org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate prototype) {
+
+      public static Builder newBuilder(
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate prototype) {
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
+
       @java.lang.Override
       public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE
-            ? new Builder() : new Builder().mergeFrom(this);
+        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
       }
 
       @java.lang.Override
@@ -12201,42 +13192,46 @@ public final class Recon {
         Builder builder = new Builder(parent);
         return builder;
       }
-      /**
-       * Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate}
-       */
-      public static final class Builder extends
-          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+      /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate} */
+      public static final class Builder
+          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+          implements
           // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate)
           org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor
-            getDescriptor() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor;
         }
 
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_fieldAccessorTable
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.class, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder.class);
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.class,
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+                      .class);
         }
 
-        // Construct using org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.newBuilder()
+        // Construct using
+        // org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.newBuilder()
         private Builder() {
           maybeForceBuilderInitialization();
         }
 
-        private Builder(
-            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
+
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3
-                  .alwaysUseFieldBuilders) {
+          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
             getPlacesFieldBuilder();
           }
         }
+
         @java.lang.Override
         public Builder clear() {
           super.clear();
@@ -12256,19 +13251,22 @@ public final class Recon {
         }
 
         @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor
-            getDescriptorForType() {
-          return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor;
+        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+          return org.datacommons.proto.Recon
+              .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor;
         }
 
         @java.lang.Override
-        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate getDefaultInstanceForType() {
-          return org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.getDefaultInstance();
+        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+            getDefaultInstanceForType() {
+          return org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+              .getDefaultInstance();
         }
 
         @java.lang.Override
         public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate build() {
-          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate result = buildPartial();
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate result =
+              buildPartial();
           if (!result.isInitialized()) {
             throw newUninitializedMessageException(result);
           }
@@ -12276,8 +13274,10 @@ public final class Recon {
         }
 
         @java.lang.Override
-        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate buildPartial() {
-          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate result = new org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate(this);
+        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+            buildPartial() {
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate result =
+              new org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate(this);
           int from_bitField0_ = bitField0_;
           result.latitude_ = latitude_;
           result.longitude_ = longitude_;
@@ -12303,46 +13303,54 @@ public final class Recon {
         public Builder clone() {
           return super.clone();
         }
+
         @java.lang.Override
         public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.setField(field, value);
         }
+
         @java.lang.Override
-        public Builder clearField(
-            com.google.protobuf.Descriptors.FieldDescriptor field) {
+        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
           return super.clearField(field);
         }
+
         @java.lang.Override
-        public Builder clearOneof(
-            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
           return super.clearOneof(oneof);
         }
+
         @java.lang.Override
         public Builder setRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index, java.lang.Object value) {
+            int index,
+            java.lang.Object value) {
           return super.setRepeatedField(field, index, value);
         }
+
         @java.lang.Override
         public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
           return super.addRepeatedField(field, value);
         }
+
         @java.lang.Override
         public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate) {
-            return mergeFrom((org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate)other);
+          if (other
+              instanceof org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate) {
+            return mergeFrom(
+                (org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate) other);
           } else {
             super.mergeFrom(other);
             return this;
           }
         }
 
-        public Builder mergeFrom(org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate other) {
-          if (other == org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.getDefaultInstance()) return this;
+        public Builder mergeFrom(
+            org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate other) {
+          if (other
+              == org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+                  .getDefaultInstance()) return this;
           if (other.getLatitude() != 0D) {
             setLatitude(other.getLatitude());
           }
@@ -12377,9 +13385,10 @@ public final class Recon {
                 placesBuilder_ = null;
                 places_ = other.places_;
                 bitField0_ = (bitField0_ & ~0x00000002);
-                placesBuilder_ = 
-                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                     getPlacesFieldBuilder() : null;
+                placesBuilder_ =
+                    com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                        ? getPlacesFieldBuilder()
+                        : null;
               } else {
                 placesBuilder_.addAllMessages(other.places_);
               }
@@ -12400,11 +13409,14 @@ public final class Recon {
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parsedMessage = null;
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate parsedMessage =
+              null;
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate) e.getUnfinishedMessage();
+            parsedMessage =
+                (org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate)
+                    e.getUnfinishedMessage();
             throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
@@ -12413,155 +13425,180 @@ public final class Recon {
           }
           return this;
         }
+
         private int bitField0_;
 
-        private double latitude_ ;
+        private double latitude_;
+
         /**
          * <code>double latitude = 1;</code>
+         *
          * @return The latitude.
          */
         @java.lang.Override
         public double getLatitude() {
           return latitude_;
         }
+
         /**
          * <code>double latitude = 1;</code>
+         *
          * @param value The latitude to set.
          * @return This builder for chaining.
          */
         public Builder setLatitude(double value) {
-          
+
           latitude_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>double latitude = 1;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearLatitude() {
-          
+
           latitude_ = 0D;
           onChanged();
           return this;
         }
 
-        private double longitude_ ;
+        private double longitude_;
+
         /**
          * <code>double longitude = 2;</code>
+         *
          * @return The longitude.
          */
         @java.lang.Override
         public double getLongitude() {
           return longitude_;
         }
+
         /**
          * <code>double longitude = 2;</code>
+         *
          * @param value The longitude to set.
          * @return This builder for chaining.
          */
         public Builder setLongitude(double value) {
-          
+
           longitude_ = value;
           onChanged();
           return this;
         }
+
         /**
          * <code>double longitude = 2;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearLongitude() {
-          
+
           longitude_ = 0D;
           onChanged();
           return this;
         }
 
-        private com.google.protobuf.LazyStringList placeDcids_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        private com.google.protobuf.LazyStringList placeDcids_ =
+            com.google.protobuf.LazyStringArrayList.EMPTY;
+
         private void ensurePlaceDcidsIsMutable() {
           if (!((bitField0_ & 0x00000001) != 0)) {
             placeDcids_ = new com.google.protobuf.LazyStringArrayList(placeDcids_);
             bitField0_ |= 0x00000001;
-           }
+          }
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
+         *
          * @return A list containing the placeDcids.
          */
-        public com.google.protobuf.ProtocolStringList
-            getPlaceDcidsList() {
+        public com.google.protobuf.ProtocolStringList getPlaceDcidsList() {
           return placeDcids_.getUnmodifiableView();
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
+         *
          * @return The count of placeDcids.
          */
         public int getPlaceDcidsCount() {
           return placeDcids_.size();
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
+         *
          * @param index The index of the element to return.
          * @return The placeDcids at the given index.
          */
         public java.lang.String getPlaceDcids(int index) {
           return placeDcids_.get(index);
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
+         *
          * @param index The index of the value to return.
          * @return The bytes of the placeDcids at the given index.
          */
-        public com.google.protobuf.ByteString
-            getPlaceDcidsBytes(int index) {
+        public com.google.protobuf.ByteString getPlaceDcidsBytes(int index) {
           return placeDcids_.getByteString(index);
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
+         *
          * @param index The index to set the value at.
          * @param value The placeDcids to set.
          * @return This builder for chaining.
          */
-        public Builder setPlaceDcids(
-            int index, java.lang.String value) {
+        public Builder setPlaceDcids(int index, java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  ensurePlaceDcidsIsMutable();
+            throw new NullPointerException();
+          }
+          ensurePlaceDcidsIsMutable();
           placeDcids_.set(index, value);
           onChanged();
           return this;
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
+         *
          * @param value The placeDcids to add.
          * @return This builder for chaining.
          */
-        public Builder addPlaceDcids(
-            java.lang.String value) {
+        public Builder addPlaceDcids(java.lang.String value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  ensurePlaceDcidsIsMutable();
+            throw new NullPointerException();
+          }
+          ensurePlaceDcidsIsMutable();
           placeDcids_.add(value);
           onChanged();
           return this;
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
+         *
          * @param values The placeDcids to add.
          * @return This builder for chaining.
          */
-        public Builder addAllPlaceDcids(
-            java.lang.Iterable<java.lang.String> values) {
+        public Builder addAllPlaceDcids(java.lang.Iterable<java.lang.String> values) {
           ensurePlaceDcidsIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, placeDcids_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, placeDcids_);
           onChanged();
           return this;
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
+         *
          * @return This builder for chaining.
          */
         public Builder clearPlaceDcids() {
@@ -12570,45 +13607,54 @@ public final class Recon {
           onChanged();
           return this;
         }
+
         /**
          * <code>repeated string place_dcids = 3;</code>
+         *
          * @param value The bytes of the placeDcids to add.
          * @return This builder for chaining.
          */
-        public Builder addPlaceDcidsBytes(
-            com.google.protobuf.ByteString value) {
+        public Builder addPlaceDcidsBytes(com.google.protobuf.ByteString value) {
           if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
+            throw new NullPointerException();
+          }
+          checkByteStringIsUtf8(value);
           ensurePlaceDcidsIsMutable();
           placeDcids_.add(value);
           onChanged();
           return this;
         }
 
-        private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place> places_ =
-          java.util.Collections.emptyList();
+        private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place>
+            places_ = java.util.Collections.emptyList();
+
         private void ensurePlacesIsMutable() {
           if (!((bitField0_ & 0x00000002) != 0)) {
-            places_ = new java.util.ArrayList<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place>(places_);
+            places_ =
+                new java.util.ArrayList<
+                    org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place>(places_);
             bitField0_ |= 0x00000002;
-           }
+          }
         }
 
         private com.google.protobuf.RepeatedFieldBuilderV3<
-            org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place, org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder> placesBuilder_;
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place,
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder,
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder>
+            placesBuilder_;
 
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
-        public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place> getPlacesList() {
+        public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place>
+            getPlacesList() {
           if (placesBuilder_ == null) {
             return java.util.Collections.unmodifiableList(places_);
           } else {
             return placesBuilder_.getMessageList();
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -12619,6 +13665,7 @@ public final class Recon {
             return placesBuilder_.getCount();
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -12629,6 +13676,7 @@ public final class Recon {
             return placesBuilder_.getMessage(index);
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -12646,11 +13694,13 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
         public Builder setPlaces(
-            int index, org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder builderForValue) {
+            int index,
+            org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder builderForValue) {
           if (placesBuilder_ == null) {
             ensurePlacesIsMutable();
             places_.set(index, builderForValue.build());
@@ -12660,10 +13710,12 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
-        public Builder addPlaces(org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place value) {
+        public Builder addPlaces(
+            org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place value) {
           if (placesBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -12676,6 +13728,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -12693,6 +13746,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -12707,11 +13761,13 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
         public Builder addPlaces(
-            int index, org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder builderForValue) {
+            int index,
+            org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder builderForValue) {
           if (placesBuilder_ == null) {
             ensurePlacesIsMutable();
             places_.add(index, builderForValue.build());
@@ -12721,21 +13777,24 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
         public Builder addAllPlaces(
-            java.lang.Iterable<? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place> values) {
+            java.lang.Iterable<
+                    ? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place>
+                values) {
           if (placesBuilder_ == null) {
             ensurePlacesIsMutable();
-            com.google.protobuf.AbstractMessageLite.Builder.addAll(
-                values, places_);
+            com.google.protobuf.AbstractMessageLite.Builder.addAll(values, places_);
             onChanged();
           } else {
             placesBuilder_.addAllMessages(values);
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -12749,6 +13808,7 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
@@ -12762,70 +13822,88 @@ public final class Recon {
           }
           return this;
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
-        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder getPlacesBuilder(
-            int index) {
+        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder
+            getPlacesBuilder(int index) {
           return getPlacesFieldBuilder().getBuilder(index);
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
-        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder getPlacesOrBuilder(
-            int index) {
+        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder
+            getPlacesOrBuilder(int index) {
           if (placesBuilder_ == null) {
-            return places_.get(index);  } else {
+            return places_.get(index);
+          } else {
             return placesBuilder_.getMessageOrBuilder(index);
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
-        public java.util.List<? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder> 
-             getPlacesOrBuilderList() {
+        public java.util.List<
+                ? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder>
+            getPlacesOrBuilderList() {
           if (placesBuilder_ != null) {
             return placesBuilder_.getMessageOrBuilderList();
           } else {
             return java.util.Collections.unmodifiableList(places_);
           }
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
-        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder addPlacesBuilder() {
-          return getPlacesFieldBuilder().addBuilder(
-              org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.getDefaultInstance());
+        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder
+            addPlacesBuilder() {
+          return getPlacesFieldBuilder()
+              .addBuilder(
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place
+                      .getDefaultInstance());
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
-        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder addPlacesBuilder(
-            int index) {
-          return getPlacesFieldBuilder().addBuilder(
-              index, org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.getDefaultInstance());
+        public org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder
+            addPlacesBuilder(int index) {
+          return getPlacesFieldBuilder()
+              .addBuilder(
+                  index,
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place
+                      .getDefaultInstance());
         }
+
         /**
          * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.Place places = 4;</code>
          */
-        public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder> 
-             getPlacesBuilderList() {
+        public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder>
+            getPlacesBuilderList() {
           return getPlacesFieldBuilder().getBuilderList();
         }
+
         private com.google.protobuf.RepeatedFieldBuilderV3<
-            org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place, org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder> 
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place,
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder,
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder>
             getPlacesFieldBuilder() {
           if (placesBuilder_ == null) {
-            placesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-                org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place, org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder>(
-                    places_,
-                    ((bitField0_ & 0x00000002) != 0),
-                    getParentForChildren(),
-                    isClean());
+            placesBuilder_ =
+                new com.google.protobuf.RepeatedFieldBuilderV3<
+                    org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place,
+                    org.datacommons.proto.Recon.ResolveCoordinatesResponse.Place.Builder,
+                    org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceOrBuilder>(
+                    places_, ((bitField0_ & 0x00000002) != 0), getParentForChildren(), isClean());
             places_ = null;
           }
           return placesBuilder_;
         }
+
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -12838,30 +13916,33 @@ public final class Recon {
           return super.mergeUnknownFields(unknownFields);
         }
 
-
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate)
       }
 
       // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate)
-      private static final org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate DEFAULT_INSTANCE;
+      private static final org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          DEFAULT_INSTANCE;
+
       static {
-        DEFAULT_INSTANCE = new org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate();
+        DEFAULT_INSTANCE =
+            new org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate();
       }
 
-      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate getDefaultInstance() {
+      public static org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          getDefaultInstance() {
         return DEFAULT_INSTANCE;
       }
 
-      private static final com.google.protobuf.Parser<PlaceCoordinate>
-          PARSER = new com.google.protobuf.AbstractParser<PlaceCoordinate>() {
-        @java.lang.Override
-        public PlaceCoordinate parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new PlaceCoordinate(input, extensionRegistry);
-        }
-      };
+      private static final com.google.protobuf.Parser<PlaceCoordinate> PARSER =
+          new com.google.protobuf.AbstractParser<PlaceCoordinate>() {
+            @java.lang.Override
+            public PlaceCoordinate parsePartialFrom(
+                com.google.protobuf.CodedInputStream input,
+                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                throws com.google.protobuf.InvalidProtocolBufferException {
+              return new PlaceCoordinate(input, extensionRegistry);
+            }
+          };
 
       public static com.google.protobuf.Parser<PlaceCoordinate> parser() {
         return PARSER;
@@ -12873,53 +13954,74 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate getDefaultInstanceForType() {
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
-
     }
 
     public static final int PLACE_COORDINATES_FIELD_NUMBER = 1;
-    private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate> placeCoordinates_;
+    private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
+        placeCoordinates_;
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
      */
     @java.lang.Override
-    public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate> getPlaceCoordinatesList() {
+    public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
+        getPlaceCoordinatesList() {
       return placeCoordinates_;
     }
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder> 
+    public java.util.List<
+            ? extends
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>
         getPlaceCoordinatesOrBuilderList() {
       return placeCoordinates_;
     }
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
      */
     @java.lang.Override
     public int getPlaceCoordinatesCount() {
       return placeCoordinates_.size();
     }
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
      */
     @java.lang.Override
-    public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate getPlaceCoordinates(int index) {
+    public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+        getPlaceCoordinates(int index) {
       return placeCoordinates_.get(index);
     }
+
     /**
-     * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+     * <code>
+     * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+     * </code>
      */
     @java.lang.Override
-    public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder getPlaceCoordinatesOrBuilder(
-        int index) {
+    public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder
+        getPlaceCoordinatesOrBuilder(int index) {
       return placeCoordinates_.get(index);
     }
 
     private byte memoizedIsInitialized = -1;
+
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -12931,8 +14033,7 @@ public final class Recon {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
       for (int i = 0; i < placeCoordinates_.size(); i++) {
         output.writeMessage(1, placeCoordinates_.get(i));
       }
@@ -12946,8 +14047,8 @@ public final class Recon {
 
       size = 0;
       for (int i = 0; i < placeCoordinates_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, placeCoordinates_.get(i));
+        size +=
+            com.google.protobuf.CodedOutputStream.computeMessageSize(1, placeCoordinates_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -12957,15 +14058,15 @@ public final class Recon {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-       return true;
+        return true;
       }
       if (!(obj instanceof org.datacommons.proto.Recon.ResolveCoordinatesResponse)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.Recon.ResolveCoordinatesResponse other = (org.datacommons.proto.Recon.ResolveCoordinatesResponse) obj;
+      org.datacommons.proto.Recon.ResolveCoordinatesResponse other =
+          (org.datacommons.proto.Recon.ResolveCoordinatesResponse) obj;
 
-      if (!getPlaceCoordinatesList()
-          .equals(other.getPlaceCoordinatesList())) return false;
+      if (!getPlaceCoordinatesList().equals(other.getPlaceCoordinatesList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -12987,87 +14088,94 @@ public final class Recon {
     }
 
     public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
+        java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
-    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseDelimitedFrom(java.io.InputStream input)
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        java.io.InputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
     }
+
+    public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseDelimitedFrom(
+        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
+          PARSER, input, extensionRegistry);
+    }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
     }
+
     public static org.datacommons.proto.Recon.ResolveCoordinatesResponse parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
+          PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
+    public Builder newBuilderForType() {
+      return newBuilder();
+    }
+
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.datacommons.proto.Recon.ResolveCoordinatesResponse prototype) {
+
+    public static Builder newBuilder(
+        org.datacommons.proto.Recon.ResolveCoordinatesResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -13076,24 +14184,26 @@ public final class Recon {
       Builder builder = new Builder(parent);
       return builder;
     }
-    /**
-     * Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+
+    /** Protobuf type {@code org.datacommons.proto.ResolveCoordinatesResponse} */
+    public static final class Builder
+        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+        implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveCoordinatesResponse)
         org.datacommons.proto.Recon.ResolveCoordinatesResponseOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_fieldAccessorTable
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Recon.ResolveCoordinatesResponse.class, org.datacommons.proto.Recon.ResolveCoordinatesResponse.Builder.class);
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.class,
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Recon.ResolveCoordinatesResponse.newBuilder()
@@ -13101,17 +14211,17 @@ public final class Recon {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
+
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getPlaceCoordinatesFieldBuilder();
         }
       }
+
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -13125,9 +14235,9 @@ public final class Recon {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.datacommons.proto.Recon.internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+        return org.datacommons.proto.Recon
+            .internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor;
       }
 
       @java.lang.Override
@@ -13146,7 +14256,8 @@ public final class Recon {
 
       @java.lang.Override
       public org.datacommons.proto.Recon.ResolveCoordinatesResponse buildPartial() {
-        org.datacommons.proto.Recon.ResolveCoordinatesResponse result = new org.datacommons.proto.Recon.ResolveCoordinatesResponse(this);
+        org.datacommons.proto.Recon.ResolveCoordinatesResponse result =
+            new org.datacommons.proto.Recon.ResolveCoordinatesResponse(this);
         int from_bitField0_ = bitField0_;
         if (placeCoordinatesBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
@@ -13165,38 +14276,41 @@ public final class Recon {
       public Builder clone() {
         return super.clone();
       }
+
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.setField(field, value);
       }
+
       @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
+
       @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
+
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
+          int index,
+          java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
+
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
+
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Recon.ResolveCoordinatesResponse) {
-          return mergeFrom((org.datacommons.proto.Recon.ResolveCoordinatesResponse)other);
+          return mergeFrom((org.datacommons.proto.Recon.ResolveCoordinatesResponse) other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -13204,7 +14318,8 @@ public final class Recon {
       }
 
       public Builder mergeFrom(org.datacommons.proto.Recon.ResolveCoordinatesResponse other) {
-        if (other == org.datacommons.proto.Recon.ResolveCoordinatesResponse.getDefaultInstance()) return this;
+        if (other == org.datacommons.proto.Recon.ResolveCoordinatesResponse.getDefaultInstance())
+          return this;
         if (placeCoordinatesBuilder_ == null) {
           if (!other.placeCoordinates_.isEmpty()) {
             if (placeCoordinates_.isEmpty()) {
@@ -13223,9 +14338,10 @@ public final class Recon {
               placeCoordinatesBuilder_ = null;
               placeCoordinates_ = other.placeCoordinates_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              placeCoordinatesBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getPlaceCoordinatesFieldBuilder() : null;
+              placeCoordinatesBuilder_ =
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
+                      ? getPlaceCoordinatesFieldBuilder()
+                      : null;
             } else {
               placeCoordinatesBuilder_.addAllMessages(other.placeCoordinates_);
             }
@@ -13250,7 +14366,8 @@ public final class Recon {
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.Recon.ResolveCoordinatesResponse) e.getUnfinishedMessage();
+          parsedMessage =
+              (org.datacommons.proto.Recon.ResolveCoordinatesResponse) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -13259,32 +14376,46 @@ public final class Recon {
         }
         return this;
       }
+
       private int bitField0_;
 
-      private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate> placeCoordinates_ =
-        java.util.Collections.emptyList();
+      private java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
+          placeCoordinates_ = java.util.Collections.emptyList();
+
       private void ensurePlaceCoordinatesIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
-          placeCoordinates_ = new java.util.ArrayList<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>(placeCoordinates_);
+          placeCoordinates_ =
+              new java.util.ArrayList<
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>(
+                  placeCoordinates_);
           bitField0_ |= 0x00000001;
-         }
+        }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder> placeCoordinatesBuilder_;
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate,
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder,
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>
+          placeCoordinatesBuilder_;
 
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
-      public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate> getPlaceCoordinatesList() {
+      public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
+          getPlaceCoordinatesList() {
         if (placeCoordinatesBuilder_ == null) {
           return java.util.Collections.unmodifiableList(placeCoordinates_);
         } else {
           return placeCoordinatesBuilder_.getMessageList();
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
       public int getPlaceCoordinatesCount() {
         if (placeCoordinatesBuilder_ == null) {
@@ -13293,18 +14424,25 @@ public final class Recon {
           return placeCoordinatesBuilder_.getCount();
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate getPlaceCoordinates(int index) {
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+          getPlaceCoordinates(int index) {
         if (placeCoordinatesBuilder_ == null) {
           return placeCoordinates_.get(index);
         } else {
           return placeCoordinatesBuilder_.getMessage(index);
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
       public Builder setPlaceCoordinates(
           int index, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate value) {
@@ -13320,11 +14458,16 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
       public Builder setPlaceCoordinates(
-          int index, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder builderForValue) {
+          int index,
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+              builderForValue) {
         if (placeCoordinatesBuilder_ == null) {
           ensurePlaceCoordinatesIsMutable();
           placeCoordinates_.set(index, builderForValue.build());
@@ -13334,10 +14477,14 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
-      public Builder addPlaceCoordinates(org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate value) {
+      public Builder addPlaceCoordinates(
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate value) {
         if (placeCoordinatesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -13350,8 +14497,11 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
       public Builder addPlaceCoordinates(
           int index, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate value) {
@@ -13367,11 +14517,15 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
       public Builder addPlaceCoordinates(
-          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder builderForValue) {
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+              builderForValue) {
         if (placeCoordinatesBuilder_ == null) {
           ensurePlaceCoordinatesIsMutable();
           placeCoordinates_.add(builderForValue.build());
@@ -13381,11 +14535,16 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
       public Builder addPlaceCoordinates(
-          int index, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder builderForValue) {
+          int index,
+          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+              builderForValue) {
         if (placeCoordinatesBuilder_ == null) {
           ensurePlaceCoordinatesIsMutable();
           placeCoordinates_.add(index, builderForValue.build());
@@ -13395,23 +14554,30 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
       public Builder addAllPlaceCoordinates(
-          java.lang.Iterable<? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate> values) {
+          java.lang.Iterable<
+                  ? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate>
+              values) {
         if (placeCoordinatesBuilder_ == null) {
           ensurePlaceCoordinatesIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, placeCoordinates_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, placeCoordinates_);
           onChanged();
         } else {
           placeCoordinatesBuilder_.addAllMessages(values);
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
       public Builder clearPlaceCoordinates() {
         if (placeCoordinatesBuilder_ == null) {
@@ -13423,8 +14589,11 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
       public Builder removePlaceCoordinates(int index) {
         if (placeCoordinatesBuilder_ == null) {
@@ -13436,62 +14605,96 @@ public final class Recon {
         }
         return this;
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder getPlaceCoordinatesBuilder(
-          int index) {
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+          getPlaceCoordinatesBuilder(int index) {
         return getPlaceCoordinatesFieldBuilder().getBuilder(index);
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder getPlaceCoordinatesOrBuilder(
-          int index) {
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder
+          getPlaceCoordinatesOrBuilder(int index) {
         if (placeCoordinatesBuilder_ == null) {
-          return placeCoordinates_.get(index);  } else {
+          return placeCoordinates_.get(index);
+        } else {
           return placeCoordinatesBuilder_.getMessageOrBuilder(index);
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
-      public java.util.List<? extends org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder> 
-           getPlaceCoordinatesOrBuilderList() {
+      public java.util.List<
+              ? extends
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>
+          getPlaceCoordinatesOrBuilderList() {
         if (placeCoordinatesBuilder_ != null) {
           return placeCoordinatesBuilder_.getMessageOrBuilderList();
         } else {
           return java.util.Collections.unmodifiableList(placeCoordinates_);
         }
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder addPlaceCoordinatesBuilder() {
-        return getPlaceCoordinatesFieldBuilder().addBuilder(
-            org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.getDefaultInstance());
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+          addPlaceCoordinatesBuilder() {
+        return getPlaceCoordinatesFieldBuilder()
+            .addBuilder(
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+                    .getDefaultInstance());
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
-      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder addPlaceCoordinatesBuilder(
-          int index) {
-        return getPlaceCoordinatesFieldBuilder().addBuilder(
-            index, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.getDefaultInstance());
+      public org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder
+          addPlaceCoordinatesBuilder(int index) {
+        return getPlaceCoordinatesFieldBuilder()
+            .addBuilder(
+                index,
+                org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate
+                    .getDefaultInstance());
       }
+
       /**
-       * <code>repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;</code>
+       * <code>
+       * repeated .org.datacommons.proto.ResolveCoordinatesResponse.PlaceCoordinate place_coordinates = 1;
+       * </code>
        */
-      public java.util.List<org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder> 
-           getPlaceCoordinatesBuilderList() {
+      public java.util.List<
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder>
+          getPlaceCoordinatesBuilderList() {
         return getPlaceCoordinatesFieldBuilder().getBuilderList();
       }
+
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder> 
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate,
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder,
+              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>
           getPlaceCoordinatesFieldBuilder() {
         if (placeCoordinatesBuilder_ == null) {
-          placeCoordinatesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder, org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>(
+          placeCoordinatesBuilder_ =
+              new com.google.protobuf.RepeatedFieldBuilderV3<
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate,
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinate.Builder,
+                  org.datacommons.proto.Recon.ResolveCoordinatesResponse.PlaceCoordinateOrBuilder>(
                   placeCoordinates_,
                   ((bitField0_ & 0x00000001) != 0),
                   getParentForChildren(),
@@ -13500,6 +14703,7 @@ public final class Recon {
         }
         return placeCoordinatesBuilder_;
       }
+
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -13512,12 +14716,12 @@ public final class Recon {
         return super.mergeUnknownFields(unknownFields);
       }
 
-
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveCoordinatesResponse)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveCoordinatesResponse)
     private static final org.datacommons.proto.Recon.ResolveCoordinatesResponse DEFAULT_INSTANCE;
+
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Recon.ResolveCoordinatesResponse();
     }
@@ -13526,16 +14730,16 @@ public final class Recon {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<ResolveCoordinatesResponse>
-        PARSER = new com.google.protobuf.AbstractParser<ResolveCoordinatesResponse>() {
-      @java.lang.Override
-      public ResolveCoordinatesResponse parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ResolveCoordinatesResponse(input, extensionRegistry);
-      }
-    };
+    private static final com.google.protobuf.Parser<ResolveCoordinatesResponse> PARSER =
+        new com.google.protobuf.AbstractParser<ResolveCoordinatesResponse>() {
+          @java.lang.Override
+          public ResolveCoordinatesResponse parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new ResolveCoordinatesResponse(input, extensionRegistry);
+          }
+        };
 
     public static com.google.protobuf.Parser<ResolveCoordinatesResponse> parser() {
       return PARSER;
@@ -13550,241 +14754,269 @@ public final class Recon {
     public org.datacommons.proto.Recon.ResolveCoordinatesResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_IdWithProperty_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_IdWithProperty_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_IdWithProperty_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_EntityIds_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_EntityIds_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_EntityIds_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_EntitySubGraph_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_EntitySubGraph_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_EntitySubGraph_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_EntityPair_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_EntityPair_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_EntityPair_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_CompareEntitiesRequest_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_CompareEntitiesRequest_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_CompareEntitiesRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_CompareEntitiesResponse_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_CompareEntitiesResponse_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_CompareEntitiesResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ResolveEntitiesRequest_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ResolveEntitiesRequest_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveEntitiesRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveEntitiesResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveCoordinatesRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveCoordinatesResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor;
+  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_fieldAccessorTable;
 
-  public static com.google.protobuf.Descriptors.FileDescriptor
-      getDescriptor() {
+  public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
   }
-  private static  com.google.protobuf.Descriptors.FileDescriptor
-      descriptor;
+
+  private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
+
   static {
     java.lang.String[] descriptorData = {
-      "\n\013recon.proto\022\025org.datacommons.proto\032\tMc" +
-      "f.proto\"+\n\016IdWithProperty\022\014\n\004prop\030\001 \001(\t\022" +
-      "\013\n\003val\030\002 \001(\t\"?\n\tEntityIds\0222\n\003ids\030\001 \003(\0132%" +
-      ".org.datacommons.proto.IdWithProperty\"\251\001" +
-      "\n\016EntitySubGraph\022\021\n\tsource_id\030\001 \001(\t\0224\n\ts" +
-      "ub_graph\030\002 \001(\0132\037.org.datacommons.proto.M" +
-      "cfGraphH\000\0226\n\nentity_ids\030\003 \001(\0132 .org.data" +
-      "commons.proto.EntityIdsH\000B\026\n\024graph_repre" +
-      "sentation\"\202\001\n\nEntityPair\0229\n\nentity_one\030\001" +
-      " \001(\0132%.org.datacommons.proto.EntitySubGr" +
-      "aph\0229\n\nentity_two\030\002 \001(\0132%.org.datacommon" +
-      "s.proto.EntitySubGraph\"Q\n\026CompareEntitie" +
-      "sRequest\0227\n\014entity_pairs\030\001 \003(\0132!.org.dat" +
-      "acommons.proto.EntityPair\"\240\001\n\027CompareEnt" +
-      "itiesResponse\022N\n\013comparisons\030\001 \003(\01329.org" +
-      ".datacommons.proto.CompareEntitiesRespon" +
-      "se.Comparison\0325\n\nComparison\022\022\n\nsource_id" +
-      "s\030\001 \003(\t\022\023\n\013probability\030\002 \001(\001\"o\n\026ResolveE" +
-      "ntitiesRequest\0227\n\010entities\030\001 \003(\0132%.org.d" +
-      "atacommons.proto.EntitySubGraph\022\034\n\024wante" +
-      "d_id_properties\030\002 \003(\t\"\300\002\n\027ResolveEntitie" +
-      "sResponse\022X\n\021resolved_entities\030\001 \003(\0132=.o" +
-      "rg.datacommons.proto.ResolveEntitiesResp" +
-      "onse.ResolvedEntity\032U\n\nResolvedId\0222\n\003ids" +
-      "\030\001 \003(\0132%.org.datacommons.proto.IdWithPro" +
-      "perty\022\023\n\013probability\030\002 \001(\001\032t\n\016ResolvedEn" +
-      "tity\022\021\n\tsource_id\030\001 \001(\t\022O\n\014resolved_ids\030" +
-      "\002 \003(\01329.org.datacommons.proto.ResolveEnt" +
-      "itiesResponse.ResolvedId\"\240\001\n\031ResolveCoor" +
-      "dinatesRequest\022P\n\013coordinates\030\001 \003(\0132;.or" +
-      "g.datacommons.proto.ResolveCoordinatesRe" +
-      "quest.Coordinate\0321\n\nCoordinate\022\020\n\010latitu" +
-      "de\030\001 \001(\001\022\021\n\tlongitude\030\002 \001(\001\"\277\002\n\032ResolveC" +
-      "oordinatesResponse\022\\\n\021place_coordinates\030" +
-      "\001 \003(\0132A.org.datacommons.proto.ResolveCoo" +
-      "rdinatesResponse.PlaceCoordinate\032,\n\005Plac" +
-      "e\022\014\n\004dcid\030\001 \001(\t\022\025\n\rdominant_type\030\002 \001(\t\032\224" +
-      "\001\n\017PlaceCoordinate\022\020\n\010latitude\030\001 \001(\001\022\021\n\t" +
-      "longitude\030\002 \001(\001\022\023\n\013place_dcids\030\003 \003(\t\022G\n\006" +
-      "places\030\004 \003(\01327.org.datacommons.proto.Res" +
-      "olveCoordinatesResponse.Placeb\006proto3"
+      "\n\013recon.proto\022\025org.datacommons.proto\032\tMc"
+          + "f.proto\"+\n\016IdWithProperty\022\014\n\004prop\030\001 \001(\t\022"
+          + "\013\n\003val\030\002 \001(\t\"?\n\tEntityIds\0222\n\003ids\030\001 \003(\0132%"
+          + ".org.datacommons.proto.IdWithProperty\"\251\001"
+          + "\n\016EntitySubGraph\022\021\n\tsource_id\030\001 \001(\t\0224\n\ts"
+          + "ub_graph\030\002 \001(\0132\037.org.datacommons.proto.M"
+          + "cfGraphH\000\0226\n\nentity_ids\030\003 \001(\0132 .org.data"
+          + "commons.proto.EntityIdsH\000B\026\n\024graph_repre"
+          + "sentation\"\202\001\n\nEntityPair\0229\n\nentity_one\030\001"
+          + " \001(\0132%.org.datacommons.proto.EntitySubGr"
+          + "aph\0229\n\nentity_two\030\002 \001(\0132%.org.datacommon"
+          + "s.proto.EntitySubGraph\"Q\n\026CompareEntitie"
+          + "sRequest\0227\n\014entity_pairs\030\001 \003(\0132!.org.dat"
+          + "acommons.proto.EntityPair\"\240\001\n\027CompareEnt"
+          + "itiesResponse\022N\n\013comparisons\030\001 \003(\01329.org"
+          + ".datacommons.proto.CompareEntitiesRespon"
+          + "se.Comparison\0325\n\nComparison\022\022\n\nsource_id"
+          + "s\030\001 \003(\t\022\023\n\013probability\030\002 \001(\001\"o\n\026ResolveE"
+          + "ntitiesRequest\0227\n\010entities\030\001 \003(\0132%.org.d"
+          + "atacommons.proto.EntitySubGraph\022\034\n\024wante"
+          + "d_id_properties\030\002 \003(\t\"\300\002\n\027ResolveEntitie"
+          + "sResponse\022X\n\021resolved_entities\030\001 \003(\0132=.o"
+          + "rg.datacommons.proto.ResolveEntitiesResp"
+          + "onse.ResolvedEntity\032U\n\nResolvedId\0222\n\003ids"
+          + "\030\001 \003(\0132%.org.datacommons.proto.IdWithPro"
+          + "perty\022\023\n\013probability\030\002 \001(\001\032t\n\016ResolvedEn"
+          + "tity\022\021\n\tsource_id\030\001 \001(\t\022O\n\014resolved_ids\030"
+          + "\002 \003(\01329.org.datacommons.proto.ResolveEnt"
+          + "itiesResponse.ResolvedId\"\240\001\n\031ResolveCoor"
+          + "dinatesRequest\022P\n\013coordinates\030\001 \003(\0132;.or"
+          + "g.datacommons.proto.ResolveCoordinatesRe"
+          + "quest.Coordinate\0321\n\nCoordinate\022\020\n\010latitu"
+          + "de\030\001 \001(\001\022\021\n\tlongitude\030\002 \001(\001\"\277\002\n\032ResolveC"
+          + "oordinatesResponse\022\\\n\021place_coordinates\030"
+          + "\001 \003(\0132A.org.datacommons.proto.ResolveCoo"
+          + "rdinatesResponse.PlaceCoordinate\032,\n\005Plac"
+          + "e\022\014\n\004dcid\030\001 \001(\t\022\025\n\rdominant_type\030\002 \001(\t\032\224"
+          + "\001\n\017PlaceCoordinate\022\020\n\010latitude\030\001 \001(\001\022\021\n\t"
+          + "longitude\030\002 \001(\001\022\023\n\013place_dcids\030\003 \003(\t\022G\n\006"
+          + "places\030\004 \003(\01327.org.datacommons.proto.Res"
+          + "olveCoordinatesResponse.Placeb\006proto3"
     };
-    descriptor = com.google.protobuf.Descriptors.FileDescriptor
-      .internalBuildGeneratedFileFrom(descriptorData,
-        new com.google.protobuf.Descriptors.FileDescriptor[] {
-          org.datacommons.proto.Mcf.getDescriptor(),
-        });
+    descriptor =
+        com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+            descriptorData,
+            new com.google.protobuf.Descriptors.FileDescriptor[] {
+              org.datacommons.proto.Mcf.getDescriptor(),
+            });
     internal_static_org_datacommons_proto_IdWithProperty_descriptor =
-      getDescriptor().getMessageTypes().get(0);
-    internal_static_org_datacommons_proto_IdWithProperty_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_IdWithProperty_descriptor,
-        new java.lang.String[] { "Prop", "Val", });
+        getDescriptor().getMessageTypes().get(0);
+    internal_static_org_datacommons_proto_IdWithProperty_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_IdWithProperty_descriptor,
+            new java.lang.String[] {
+              "Prop", "Val",
+            });
     internal_static_org_datacommons_proto_EntityIds_descriptor =
-      getDescriptor().getMessageTypes().get(1);
-    internal_static_org_datacommons_proto_EntityIds_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_EntityIds_descriptor,
-        new java.lang.String[] { "Ids", });
+        getDescriptor().getMessageTypes().get(1);
+    internal_static_org_datacommons_proto_EntityIds_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_EntityIds_descriptor,
+            new java.lang.String[] {
+              "Ids",
+            });
     internal_static_org_datacommons_proto_EntitySubGraph_descriptor =
-      getDescriptor().getMessageTypes().get(2);
-    internal_static_org_datacommons_proto_EntitySubGraph_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_EntitySubGraph_descriptor,
-        new java.lang.String[] { "SourceId", "SubGraph", "EntityIds", "GraphRepresentation", });
+        getDescriptor().getMessageTypes().get(2);
+    internal_static_org_datacommons_proto_EntitySubGraph_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_EntitySubGraph_descriptor,
+            new java.lang.String[] {
+              "SourceId", "SubGraph", "EntityIds", "GraphRepresentation",
+            });
     internal_static_org_datacommons_proto_EntityPair_descriptor =
-      getDescriptor().getMessageTypes().get(3);
-    internal_static_org_datacommons_proto_EntityPair_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_EntityPair_descriptor,
-        new java.lang.String[] { "EntityOne", "EntityTwo", });
+        getDescriptor().getMessageTypes().get(3);
+    internal_static_org_datacommons_proto_EntityPair_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_EntityPair_descriptor,
+            new java.lang.String[] {
+              "EntityOne", "EntityTwo",
+            });
     internal_static_org_datacommons_proto_CompareEntitiesRequest_descriptor =
-      getDescriptor().getMessageTypes().get(4);
-    internal_static_org_datacommons_proto_CompareEntitiesRequest_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_CompareEntitiesRequest_descriptor,
-        new java.lang.String[] { "EntityPairs", });
+        getDescriptor().getMessageTypes().get(4);
+    internal_static_org_datacommons_proto_CompareEntitiesRequest_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_CompareEntitiesRequest_descriptor,
+            new java.lang.String[] {
+              "EntityPairs",
+            });
     internal_static_org_datacommons_proto_CompareEntitiesResponse_descriptor =
-      getDescriptor().getMessageTypes().get(5);
-    internal_static_org_datacommons_proto_CompareEntitiesResponse_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_CompareEntitiesResponse_descriptor,
-        new java.lang.String[] { "Comparisons", });
+        getDescriptor().getMessageTypes().get(5);
+    internal_static_org_datacommons_proto_CompareEntitiesResponse_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_CompareEntitiesResponse_descriptor,
+            new java.lang.String[] {
+              "Comparisons",
+            });
     internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_descriptor =
-      internal_static_org_datacommons_proto_CompareEntitiesResponse_descriptor.getNestedTypes().get(0);
-    internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_descriptor,
-        new java.lang.String[] { "SourceIds", "Probability", });
+        internal_static_org_datacommons_proto_CompareEntitiesResponse_descriptor
+            .getNestedTypes()
+            .get(0);
+    internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_CompareEntitiesResponse_Comparison_descriptor,
+            new java.lang.String[] {
+              "SourceIds", "Probability",
+            });
     internal_static_org_datacommons_proto_ResolveEntitiesRequest_descriptor =
-      getDescriptor().getMessageTypes().get(6);
-    internal_static_org_datacommons_proto_ResolveEntitiesRequest_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ResolveEntitiesRequest_descriptor,
-        new java.lang.String[] { "Entities", "WantedIdProperties", });
+        getDescriptor().getMessageTypes().get(6);
+    internal_static_org_datacommons_proto_ResolveEntitiesRequest_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ResolveEntitiesRequest_descriptor,
+            new java.lang.String[] {
+              "Entities", "WantedIdProperties",
+            });
     internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor =
-      getDescriptor().getMessageTypes().get(7);
-    internal_static_org_datacommons_proto_ResolveEntitiesResponse_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor,
-        new java.lang.String[] { "ResolvedEntities", });
+        getDescriptor().getMessageTypes().get(7);
+    internal_static_org_datacommons_proto_ResolveEntitiesResponse_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor,
+            new java.lang.String[] {
+              "ResolvedEntities",
+            });
     internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_descriptor =
-      internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor.getNestedTypes().get(0);
-    internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_descriptor,
-        new java.lang.String[] { "Ids", "Probability", });
+        internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor
+            .getNestedTypes()
+            .get(0);
+    internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedId_descriptor,
+            new java.lang.String[] {
+              "Ids", "Probability",
+            });
     internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_descriptor =
-      internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor.getNestedTypes().get(1);
-    internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_descriptor,
-        new java.lang.String[] { "SourceId", "ResolvedIds", });
+        internal_static_org_datacommons_proto_ResolveEntitiesResponse_descriptor
+            .getNestedTypes()
+            .get(1);
+    internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ResolveEntitiesResponse_ResolvedEntity_descriptor,
+            new java.lang.String[] {
+              "SourceId", "ResolvedIds",
+            });
     internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor =
-      getDescriptor().getMessageTypes().get(8);
-    internal_static_org_datacommons_proto_ResolveCoordinatesRequest_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor,
-        new java.lang.String[] { "Coordinates", });
+        getDescriptor().getMessageTypes().get(8);
+    internal_static_org_datacommons_proto_ResolveCoordinatesRequest_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor,
+            new java.lang.String[] {
+              "Coordinates",
+            });
     internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor =
-      internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor.getNestedTypes().get(0);
-    internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor,
-        new java.lang.String[] { "Latitude", "Longitude", });
+        internal_static_org_datacommons_proto_ResolveCoordinatesRequest_descriptor
+            .getNestedTypes()
+            .get(0);
+    internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ResolveCoordinatesRequest_Coordinate_descriptor,
+            new java.lang.String[] {
+              "Latitude", "Longitude",
+            });
     internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor =
-      getDescriptor().getMessageTypes().get(9);
-    internal_static_org_datacommons_proto_ResolveCoordinatesResponse_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor,
-        new java.lang.String[] { "PlaceCoordinates", });
+        getDescriptor().getMessageTypes().get(9);
+    internal_static_org_datacommons_proto_ResolveCoordinatesResponse_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor,
+            new java.lang.String[] {
+              "PlaceCoordinates",
+            });
     internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_descriptor =
-      internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor.getNestedTypes().get(0);
-    internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_descriptor,
-        new java.lang.String[] { "Dcid", "DominantType", });
+        internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor
+            .getNestedTypes()
+            .get(0);
+    internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ResolveCoordinatesResponse_Place_descriptor,
+            new java.lang.String[] {
+              "Dcid", "DominantType",
+            });
     internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor =
-      internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor.getNestedTypes().get(1);
-    internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor,
-        new java.lang.String[] { "Latitude", "Longitude", "PlaceDcids", "Places", });
+        internal_static_org_datacommons_proto_ResolveCoordinatesResponse_descriptor
+            .getNestedTypes()
+            .get(1);
+    internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_org_datacommons_proto_ResolveCoordinatesResponse_PlaceCoordinate_descriptor,
+            new java.lang.String[] {
+              "Latitude", "Longitude", "PlaceDcids", "Places",
+            });
     org.datacommons.proto.Mcf.getDescriptor();
   }
 
