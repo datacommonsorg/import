@@ -5,66 +5,57 @@ package org.datacommons.proto;
 
 public final class Resolve {
   private Resolve() {}
-
-  public static void registerAllExtensions(com.google.protobuf.ExtensionRegistryLite registry) {}
-
-  public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
-    registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
+  public static void registerAllExtensions(
+      com.google.protobuf.ExtensionRegistryLite registry) {
   }
 
-  public interface ResolveRequestOrBuilder
-      extends
+  public static void registerAllExtensions(
+      com.google.protobuf.ExtensionRegistry registry) {
+    registerAllExtensions(
+        (com.google.protobuf.ExtensionRegistryLite) registry);
+  }
+  public interface ResolveRequestOrBuilder extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveRequest)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <code>repeated string nodes = 1;</code>
-     *
      * @return A list containing the nodes.
      */
-    java.util.List<java.lang.String> getNodesList();
-
+    java.util.List<java.lang.String>
+        getNodesList();
     /**
      * <code>repeated string nodes = 1;</code>
-     *
      * @return The count of nodes.
      */
     int getNodesCount();
-
     /**
      * <code>repeated string nodes = 1;</code>
-     *
      * @param index The index of the element to return.
      * @return The nodes at the given index.
      */
     java.lang.String getNodes(int index);
-
     /**
      * <code>repeated string nodes = 1;</code>
-     *
      * @param index The index of the value to return.
      * @return The bytes of the nodes at the given index.
      */
-    com.google.protobuf.ByteString getNodesBytes(int index);
+    com.google.protobuf.ByteString
+        getNodesBytes(int index);
 
     /**
      * <code>string property = 2;</code>
-     *
      * @return The property.
      */
     java.lang.String getProperty();
-
     /**
      * <code>string property = 2;</code>
-     *
      * @return The bytes for property.
      */
-    com.google.protobuf.ByteString getPropertyBytes();
+    com.google.protobuf.ByteString
+        getPropertyBytes();
   }
-
   /**
-   *
-   *
    * <pre>
    * Three modes are supported:
    * 1. ID to ID:
@@ -80,17 +71,15 @@ public final class Resolve {
    *
    * Protobuf type {@code org.datacommons.proto.ResolveRequest}
    */
-  public static final class ResolveRequest extends com.google.protobuf.GeneratedMessageV3
-      implements
+  public static final class ResolveRequest extends
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveRequest)
       ResolveRequestOrBuilder {
-    private static final long serialVersionUID = 0L;
-
+  private static final long serialVersionUID = 0L;
     // Use ResolveRequest.newBuilder() to construct.
     private ResolveRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-
     private ResolveRequest() {
       nodes_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       property_ = "";
@@ -98,15 +87,16 @@ public final class Resolve {
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
       return new ResolveRequest();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
       return this.unknownFields;
     }
-
     private ResolveRequest(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -126,36 +116,35 @@ public final class Resolve {
             case 0:
               done = true;
               break;
-            case 10:
-              {
-                java.lang.String s = input.readStringRequireUtf8();
-                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                  nodes_ = new com.google.protobuf.LazyStringArrayList();
-                  mutable_bitField0_ |= 0x00000001;
-                }
-                nodes_.add(s);
-                break;
+            case 10: {
+              java.lang.String s = input.readStringRequireUtf8();
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                nodes_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000001;
               }
-            case 18:
-              {
-                java.lang.String s = input.readStringRequireUtf8();
+              nodes_.add(s);
+              break;
+            }
+            case 18: {
+              java.lang.String s = input.readStringRequireUtf8();
 
-                property_ = s;
-                break;
+              property_ = s;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
               }
-            default:
-              {
-                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
-              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           nodes_ = nodes_.getUnmodifiableView();
@@ -164,69 +153,58 @@ public final class Resolve {
         makeExtensionsImmutable();
       }
     }
-
-    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return org.datacommons.proto.Resolve
-          .internal_static_org_datacommons_proto_ResolveRequest_descriptor;
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveRequest_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Resolve
-          .internal_static_org_datacommons_proto_ResolveRequest_fieldAccessorTable
+      return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Resolve.ResolveRequest.class,
-              org.datacommons.proto.Resolve.ResolveRequest.Builder.class);
+              org.datacommons.proto.Resolve.ResolveRequest.class, org.datacommons.proto.Resolve.ResolveRequest.Builder.class);
     }
 
     public static final int NODES_FIELD_NUMBER = 1;
     private com.google.protobuf.LazyStringList nodes_;
-
     /**
      * <code>repeated string nodes = 1;</code>
-     *
      * @return A list containing the nodes.
      */
-    public com.google.protobuf.ProtocolStringList getNodesList() {
+    public com.google.protobuf.ProtocolStringList
+        getNodesList() {
       return nodes_;
     }
-
     /**
      * <code>repeated string nodes = 1;</code>
-     *
      * @return The count of nodes.
      */
     public int getNodesCount() {
       return nodes_.size();
     }
-
     /**
      * <code>repeated string nodes = 1;</code>
-     *
      * @param index The index of the element to return.
      * @return The nodes at the given index.
      */
     public java.lang.String getNodes(int index) {
       return nodes_.get(index);
     }
-
     /**
      * <code>repeated string nodes = 1;</code>
-     *
      * @param index The index of the value to return.
      * @return The bytes of the nodes at the given index.
      */
-    public com.google.protobuf.ByteString getNodesBytes(int index) {
+    public com.google.protobuf.ByteString
+        getNodesBytes(int index) {
       return nodes_.getByteString(index);
     }
 
     public static final int PROPERTY_FIELD_NUMBER = 2;
     private volatile java.lang.Object property_;
-
     /**
      * <code>string property = 2;</code>
-     *
      * @return The property.
      */
     @java.lang.Override
@@ -235,24 +213,25 @@ public final class Resolve {
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
-        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         property_ = s;
         return s;
       }
     }
-
     /**
      * <code>string property = 2;</code>
-     *
      * @return The bytes for property.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString getPropertyBytes() {
+    public com.google.protobuf.ByteString
+        getPropertyBytes() {
       java.lang.Object ref = property_;
       if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b =
-            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
         property_ = b;
         return b;
       } else {
@@ -261,7 +240,6 @@ public final class Resolve {
     }
 
     private byte memoizedIsInitialized = -1;
-
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -273,7 +251,8 @@ public final class Resolve {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
       for (int i = 0; i < nodes_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, nodes_.getRaw(i));
       }
@@ -308,16 +287,17 @@ public final class Resolve {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-        return true;
+       return true;
       }
       if (!(obj instanceof org.datacommons.proto.Resolve.ResolveRequest)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.Resolve.ResolveRequest other =
-          (org.datacommons.proto.Resolve.ResolveRequest) obj;
+      org.datacommons.proto.Resolve.ResolveRequest other = (org.datacommons.proto.Resolve.ResolveRequest) obj;
 
-      if (!getNodesList().equals(other.getNodesList())) return false;
-      if (!getProperty().equals(other.getProperty())) return false;
+      if (!getNodesList()
+          .equals(other.getNodesList())) return false;
+      if (!getProperty()
+          .equals(other.getProperty())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -340,94 +320,88 @@ public final class Resolve {
       return hash;
     }
 
-    public static org.datacommons.proto.Resolve.ResolveRequest parseFrom(java.nio.ByteBuffer data)
+    public static org.datacommons.proto.Resolve.ResolveRequest parseFrom(
+        java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Resolve.ResolveRequest parseFrom(
-        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Resolve.ResolveRequest parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Resolve.ResolveRequest parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Resolve.ResolveRequest parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Resolve.ResolveRequest parseFrom(
-        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Resolve.ResolveRequest parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-
     public static org.datacommons.proto.Resolve.ResolveRequest parseFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
-
-    public static org.datacommons.proto.Resolve.ResolveRequest parseDelimitedFrom(
-        java.io.InputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-    }
-
-    public static org.datacommons.proto.Resolve.ResolveRequest parseDelimitedFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+    public static org.datacommons.proto.Resolve.ResolveRequest parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
-
+    public static org.datacommons.proto.Resolve.ResolveRequest parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
     public static org.datacommons.proto.Resolve.ResolveRequest parseFrom(
-        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-
     public static org.datacommons.proto.Resolve.ResolveRequest parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() {
-      return newBuilder();
-    }
-
+    public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-
     public static Builder newBuilder(org.datacommons.proto.Resolve.ResolveRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -436,10 +410,7 @@ public final class Resolve {
       Builder builder = new Builder(parent);
       return builder;
     }
-
     /**
-     *
-     *
      * <pre>
      * Three modes are supported:
      * 1. ID to ID:
@@ -455,24 +426,21 @@ public final class Resolve {
      *
      * Protobuf type {@code org.datacommons.proto.ResolveRequest}
      */
-    public static final class Builder
-        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-        implements
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveRequest)
         org.datacommons.proto.Resolve.ResolveRequestOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Resolve
-            .internal_static_org_datacommons_proto_ResolveRequest_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveRequest_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Resolve
-            .internal_static_org_datacommons_proto_ResolveRequest_fieldAccessorTable
+        return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Resolve.ResolveRequest.class,
-                org.datacommons.proto.Resolve.ResolveRequest.Builder.class);
+                org.datacommons.proto.Resolve.ResolveRequest.class, org.datacommons.proto.Resolve.ResolveRequest.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Resolve.ResolveRequest.newBuilder()
@@ -480,15 +448,16 @@ public final class Resolve {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
-
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
       }
-
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -500,9 +469,9 @@ public final class Resolve {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-        return org.datacommons.proto.Resolve
-            .internal_static_org_datacommons_proto_ResolveRequest_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveRequest_descriptor;
       }
 
       @java.lang.Override
@@ -521,8 +490,7 @@ public final class Resolve {
 
       @java.lang.Override
       public org.datacommons.proto.Resolve.ResolveRequest buildPartial() {
-        org.datacommons.proto.Resolve.ResolveRequest result =
-            new org.datacommons.proto.Resolve.ResolveRequest(this);
+        org.datacommons.proto.Resolve.ResolveRequest result = new org.datacommons.proto.Resolve.ResolveRequest(this);
         int from_bitField0_ = bitField0_;
         if (((bitField0_ & 0x00000001) != 0)) {
           nodes_ = nodes_.getUnmodifiableView();
@@ -538,41 +506,38 @@ public final class Resolve {
       public Builder clone() {
         return super.clone();
       }
-
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
         return super.setField(field, value);
       }
-
       @java.lang.Override
-      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
-
       @java.lang.Override
-      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
-
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index,
-          java.lang.Object value) {
+          int index, java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
-
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
-
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Resolve.ResolveRequest) {
-          return mergeFrom((org.datacommons.proto.Resolve.ResolveRequest) other);
+          return mergeFrom((org.datacommons.proto.Resolve.ResolveRequest)other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -623,106 +588,93 @@ public final class Resolve {
         }
         return this;
       }
-
       private int bitField0_;
 
-      private com.google.protobuf.LazyStringList nodes_ =
-          com.google.protobuf.LazyStringArrayList.EMPTY;
-
+      private com.google.protobuf.LazyStringList nodes_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureNodesIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
           nodes_ = new com.google.protobuf.LazyStringArrayList(nodes_);
           bitField0_ |= 0x00000001;
-        }
+         }
       }
-
       /**
        * <code>repeated string nodes = 1;</code>
-       *
        * @return A list containing the nodes.
        */
-      public com.google.protobuf.ProtocolStringList getNodesList() {
+      public com.google.protobuf.ProtocolStringList
+          getNodesList() {
         return nodes_.getUnmodifiableView();
       }
-
       /**
        * <code>repeated string nodes = 1;</code>
-       *
        * @return The count of nodes.
        */
       public int getNodesCount() {
         return nodes_.size();
       }
-
       /**
        * <code>repeated string nodes = 1;</code>
-       *
        * @param index The index of the element to return.
        * @return The nodes at the given index.
        */
       public java.lang.String getNodes(int index) {
         return nodes_.get(index);
       }
-
       /**
        * <code>repeated string nodes = 1;</code>
-       *
        * @param index The index of the value to return.
        * @return The bytes of the nodes at the given index.
        */
-      public com.google.protobuf.ByteString getNodesBytes(int index) {
+      public com.google.protobuf.ByteString
+          getNodesBytes(int index) {
         return nodes_.getByteString(index);
       }
-
       /**
        * <code>repeated string nodes = 1;</code>
-       *
        * @param index The index to set the value at.
        * @param value The nodes to set.
        * @return This builder for chaining.
        */
-      public Builder setNodes(int index, java.lang.String value) {
+      public Builder setNodes(
+          int index, java.lang.String value) {
         if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureNodesIsMutable();
+    throw new NullPointerException();
+  }
+  ensureNodesIsMutable();
         nodes_.set(index, value);
         onChanged();
         return this;
       }
-
       /**
        * <code>repeated string nodes = 1;</code>
-       *
        * @param value The nodes to add.
        * @return This builder for chaining.
        */
-      public Builder addNodes(java.lang.String value) {
+      public Builder addNodes(
+          java.lang.String value) {
         if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureNodesIsMutable();
+    throw new NullPointerException();
+  }
+  ensureNodesIsMutable();
         nodes_.add(value);
         onChanged();
         return this;
       }
-
       /**
        * <code>repeated string nodes = 1;</code>
-       *
        * @param values The nodes to add.
        * @return This builder for chaining.
        */
-      public Builder addAllNodes(java.lang.Iterable<java.lang.String> values) {
+      public Builder addAllNodes(
+          java.lang.Iterable<java.lang.String> values) {
         ensureNodesIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, nodes_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, nodes_);
         onChanged();
         return this;
       }
-
       /**
        * <code>repeated string nodes = 1;</code>
-       *
        * @return This builder for chaining.
        */
       public Builder clearNodes() {
@@ -731,18 +683,17 @@ public final class Resolve {
         onChanged();
         return this;
       }
-
       /**
        * <code>repeated string nodes = 1;</code>
-       *
        * @param value The bytes of the nodes to add.
        * @return This builder for chaining.
        */
-      public Builder addNodesBytes(com.google.protobuf.ByteString value) {
+      public Builder addNodesBytes(
+          com.google.protobuf.ByteString value) {
         if (value == null) {
-          throw new NullPointerException();
-        }
-        checkByteStringIsUtf8(value);
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
         ensureNodesIsMutable();
         nodes_.add(value);
         onChanged();
@@ -750,16 +701,15 @@ public final class Resolve {
       }
 
       private java.lang.Object property_ = "";
-
       /**
        * <code>string property = 2;</code>
-       *
        * @return The property.
        */
       public java.lang.String getProperty() {
         java.lang.Object ref = property_;
         if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           property_ = s;
           return s;
@@ -767,69 +717,64 @@ public final class Resolve {
           return (java.lang.String) ref;
         }
       }
-
       /**
        * <code>string property = 2;</code>
-       *
        * @return The bytes for property.
        */
-      public com.google.protobuf.ByteString getPropertyBytes() {
+      public com.google.protobuf.ByteString
+          getPropertyBytes() {
         java.lang.Object ref = property_;
         if (ref instanceof String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           property_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
         }
       }
-
       /**
        * <code>string property = 2;</code>
-       *
        * @param value The property to set.
        * @return This builder for chaining.
        */
-      public Builder setProperty(java.lang.String value) {
+      public Builder setProperty(
+          java.lang.String value) {
         if (value == null) {
-          throw new NullPointerException();
-        }
-
+    throw new NullPointerException();
+  }
+  
         property_ = value;
         onChanged();
         return this;
       }
-
       /**
        * <code>string property = 2;</code>
-       *
        * @return This builder for chaining.
        */
       public Builder clearProperty() {
-
+        
         property_ = getDefaultInstance().getProperty();
         onChanged();
         return this;
       }
-
       /**
        * <code>string property = 2;</code>
-       *
        * @param value The bytes for property to set.
        * @return This builder for chaining.
        */
-      public Builder setPropertyBytes(com.google.protobuf.ByteString value) {
+      public Builder setPropertyBytes(
+          com.google.protobuf.ByteString value) {
         if (value == null) {
-          throw new NullPointerException();
-        }
-        checkByteStringIsUtf8(value);
-
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
         property_ = value;
         onChanged();
         return this;
       }
-
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -842,12 +787,12 @@ public final class Resolve {
         return super.mergeUnknownFields(unknownFields);
       }
 
+
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveRequest)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveRequest)
     private static final org.datacommons.proto.Resolve.ResolveRequest DEFAULT_INSTANCE;
-
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Resolve.ResolveRequest();
     }
@@ -856,16 +801,16 @@ public final class Resolve {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<ResolveRequest> PARSER =
-        new com.google.protobuf.AbstractParser<ResolveRequest>() {
-          @java.lang.Override
-          public ResolveRequest parsePartialFrom(
-              com.google.protobuf.CodedInputStream input,
-              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-              throws com.google.protobuf.InvalidProtocolBufferException {
-            return new ResolveRequest(input, extensionRegistry);
-          }
-        };
+    private static final com.google.protobuf.Parser<ResolveRequest>
+        PARSER = new com.google.protobuf.AbstractParser<ResolveRequest>() {
+      @java.lang.Override
+      public ResolveRequest parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ResolveRequest(input, extensionRegistry);
+      }
+    };
 
     public static com.google.protobuf.Parser<ResolveRequest> parser() {
       return PARSER;
@@ -880,57 +825,65 @@ public final class Resolve {
     public org.datacommons.proto.Resolve.ResolveRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
+
   }
 
-  public interface ResolveResponseOrBuilder
-      extends
+  public interface ResolveResponseOrBuilder extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveResponse)
       com.google.protobuf.MessageOrBuilder {
 
-    /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
-    java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity> getEntitiesList();
-
-    /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+     */
+    java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity> 
+        getEntitiesList();
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+     */
     org.datacommons.proto.Resolve.ResolveResponse.Entity getEntities(int index);
-
-    /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+     */
     int getEntitiesCount();
-
-    /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
-    java.util.List<? extends org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder>
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+     */
+    java.util.List<? extends org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder> 
         getEntitiesOrBuilderList();
-
-    /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
-    org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder getEntitiesOrBuilder(int index);
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+     */
+    org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder getEntitiesOrBuilder(
+        int index);
   }
-
-  /** Protobuf type {@code org.datacommons.proto.ResolveResponse} */
-  public static final class ResolveResponse extends com.google.protobuf.GeneratedMessageV3
-      implements
+  /**
+   * Protobuf type {@code org.datacommons.proto.ResolveResponse}
+   */
+  public static final class ResolveResponse extends
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveResponse)
       ResolveResponseOrBuilder {
-    private static final long serialVersionUID = 0L;
-
+  private static final long serialVersionUID = 0L;
     // Use ResolveResponse.newBuilder() to construct.
     private ResolveResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-
     private ResolveResponse() {
       entities_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
       return new ResolveResponse();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
       return this.unknownFields;
     }
-
     private ResolveResponse(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -950,33 +903,29 @@ public final class Resolve {
             case 0:
               done = true;
               break;
-            case 10:
-              {
-                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                  entities_ =
-                      new java.util.ArrayList<
-                          org.datacommons.proto.Resolve.ResolveResponse.Entity>();
-                  mutable_bitField0_ |= 0x00000001;
-                }
-                entities_.add(
-                    input.readMessage(
-                        org.datacommons.proto.Resolve.ResolveResponse.Entity.parser(),
-                        extensionRegistry));
-                break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                entities_ = new java.util.ArrayList<org.datacommons.proto.Resolve.ResolveResponse.Entity>();
+                mutable_bitField0_ |= 0x00000001;
               }
-            default:
-              {
-                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
+              entities_.add(
+                  input.readMessage(org.datacommons.proto.Resolve.ResolveResponse.Entity.parser(), extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
               }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           entities_ = java.util.Collections.unmodifiableList(entities_);
@@ -985,88 +934,71 @@ public final class Resolve {
         makeExtensionsImmutable();
       }
     }
-
-    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return org.datacommons.proto.Resolve
-          .internal_static_org_datacommons_proto_ResolveResponse_descriptor;
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Resolve
-          .internal_static_org_datacommons_proto_ResolveResponse_fieldAccessorTable
+      return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Resolve.ResolveResponse.class,
-              org.datacommons.proto.Resolve.ResolveResponse.Builder.class);
+              org.datacommons.proto.Resolve.ResolveResponse.class, org.datacommons.proto.Resolve.ResolveResponse.Builder.class);
     }
 
-    public interface EntityOrBuilder
-        extends
+    public interface EntityOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveResponse.Entity)
         com.google.protobuf.MessageOrBuilder {
 
       /**
        * <code>string node = 1;</code>
-       *
        * @return The node.
        */
       java.lang.String getNode();
-
       /**
        * <code>string node = 1;</code>
-       *
        * @return The bytes for node.
        */
-      com.google.protobuf.ByteString getNodeBytes();
+      com.google.protobuf.ByteString
+          getNodeBytes();
 
       /**
-       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-       * </code>
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
        */
-      java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>
+      java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate> 
           getCandidatesList();
-
       /**
-       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-       * </code>
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
        */
       org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate getCandidates(int index);
-
       /**
-       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-       * </code>
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
        */
       int getCandidatesCount();
-
       /**
-       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-       * </code>
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
        */
-      java.util.List<
-              ? extends org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder>
+      java.util.List<? extends org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder> 
           getCandidatesOrBuilderList();
-
       /**
-       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-       * </code>
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
        */
-      org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder
-          getCandidatesOrBuilder(int index);
+      org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder getCandidatesOrBuilder(
+          int index);
     }
-
-    /** Protobuf type {@code org.datacommons.proto.ResolveResponse.Entity} */
-    public static final class Entity extends com.google.protobuf.GeneratedMessageV3
-        implements
+    /**
+     * Protobuf type {@code org.datacommons.proto.ResolveResponse.Entity}
+     */
+    public static final class Entity extends
+        com.google.protobuf.GeneratedMessageV3 implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveResponse.Entity)
         EntityOrBuilder {
-      private static final long serialVersionUID = 0L;
-
+    private static final long serialVersionUID = 0L;
       // Use Entity.newBuilder() to construct.
       private Entity(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
       }
-
       private Entity() {
         node_ = "";
         candidates_ = java.util.Collections.emptyList();
@@ -1074,15 +1006,16 @@ public final class Resolve {
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
         return new Entity();
       }
 
       @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
         return this.unknownFields;
       }
-
       private Entity(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1102,41 +1035,35 @@ public final class Resolve {
               case 0:
                 done = true;
                 break;
-              case 10:
-                {
-                  java.lang.String s = input.readStringRequireUtf8();
+              case 10: {
+                java.lang.String s = input.readStringRequireUtf8();
 
-                  node_ = s;
-                  break;
+                node_ = s;
+                break;
+              }
+              case 26: {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  candidates_ = new java.util.ArrayList<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>();
+                  mutable_bitField0_ |= 0x00000001;
                 }
-              case 26:
-                {
-                  if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                    candidates_ =
-                        new java.util.ArrayList<
-                            org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>();
-                    mutable_bitField0_ |= 0x00000001;
-                  }
-                  candidates_.add(
-                      input.readMessage(
-                          org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.parser(),
-                          extensionRegistry));
-                  break;
+                candidates_.add(
+                    input.readMessage(org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.parser(), extensionRegistry));
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
                 }
-              default:
-                {
-                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                    done = true;
-                  }
-                  break;
-                }
+                break;
+              }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(e)
-              .setUnfinishedMessage(this);
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
         } finally {
           if (((mutable_bitField0_ & 0x00000001) != 0)) {
             candidates_ = java.util.Collections.unmodifiableList(candidates_);
@@ -1145,68 +1072,59 @@ public final class Resolve {
           makeExtensionsImmutable();
         }
       }
-
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Resolve
-            .internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Resolve
-            .internal_static_org_datacommons_proto_ResolveResponse_Entity_fieldAccessorTable
+        return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_Entity_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Resolve.ResolveResponse.Entity.class,
-                org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder.class);
+                org.datacommons.proto.Resolve.ResolveResponse.Entity.class, org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder.class);
       }
 
-      public interface CandidateOrBuilder
-          extends
+      public interface CandidateOrBuilder extends
           // @@protoc_insertion_point(interface_extends:org.datacommons.proto.ResolveResponse.Entity.Candidate)
           com.google.protobuf.MessageOrBuilder {
 
         /**
          * <code>string dcid = 1;</code>
-         *
          * @return The dcid.
          */
         java.lang.String getDcid();
-
         /**
          * <code>string dcid = 1;</code>
-         *
          * @return The bytes for dcid.
          */
-        com.google.protobuf.ByteString getDcidBytes();
+        com.google.protobuf.ByteString
+            getDcidBytes();
 
         /**
          * <code>string dominant_type = 2;</code>
-         *
          * @return The dominantType.
          */
         java.lang.String getDominantType();
-
         /**
          * <code>string dominant_type = 2;</code>
-         *
          * @return The bytes for dominantType.
          */
-        com.google.protobuf.ByteString getDominantTypeBytes();
+        com.google.protobuf.ByteString
+            getDominantTypeBytes();
       }
-
-      /** Protobuf type {@code org.datacommons.proto.ResolveResponse.Entity.Candidate} */
-      public static final class Candidate extends com.google.protobuf.GeneratedMessageV3
-          implements
+      /**
+       * Protobuf type {@code org.datacommons.proto.ResolveResponse.Entity.Candidate}
+       */
+      public static final class Candidate extends
+          com.google.protobuf.GeneratedMessageV3 implements
           // @@protoc_insertion_point(message_implements:org.datacommons.proto.ResolveResponse.Entity.Candidate)
           CandidateOrBuilder {
-        private static final long serialVersionUID = 0L;
-
+      private static final long serialVersionUID = 0L;
         // Use Candidate.newBuilder() to construct.
         private Candidate(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
           super(builder);
         }
-
         private Candidate() {
           dcid_ = "";
           dominantType_ = "";
@@ -1214,15 +1132,16 @@ public final class Resolve {
 
         @java.lang.Override
         @SuppressWarnings({"unused"})
-        protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+        protected java.lang.Object newInstance(
+            UnusedPrivateParameter unused) {
           return new Candidate();
         }
 
         @java.lang.Override
-        public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+        public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
           return this.unknownFields;
         }
-
         private Candidate(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1241,61 +1160,54 @@ public final class Resolve {
                 case 0:
                   done = true;
                   break;
-                case 10:
-                  {
-                    java.lang.String s = input.readStringRequireUtf8();
+                case 10: {
+                  java.lang.String s = input.readStringRequireUtf8();
 
-                    dcid_ = s;
-                    break;
-                  }
-                case 18:
-                  {
-                    java.lang.String s = input.readStringRequireUtf8();
+                  dcid_ = s;
+                  break;
+                }
+                case 18: {
+                  java.lang.String s = input.readStringRequireUtf8();
 
-                    dominantType_ = s;
-                    break;
+                  dominantType_ = s;
+                  break;
+                }
+                default: {
+                  if (!parseUnknownField(
+                      input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
                   }
-                default:
-                  {
-                    if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                      done = true;
-                    }
-                    break;
-                  }
+                  break;
+                }
               }
             }
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
             throw e.setUnfinishedMessage(this);
           } catch (java.io.IOException e) {
-            throw new com.google.protobuf.InvalidProtocolBufferException(e)
-                .setUnfinishedMessage(this);
+            throw new com.google.protobuf.InvalidProtocolBufferException(
+                e).setUnfinishedMessage(this);
           } finally {
             this.unknownFields = unknownFields.build();
             makeExtensionsImmutable();
           }
         }
-
-        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-          return org.datacommons.proto.Resolve
-              .internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_descriptor;
         }
 
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Resolve
-              .internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_fieldAccessorTable
+          return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.class,
-                  org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder.class);
+                  org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.class, org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder.class);
         }
 
         public static final int DCID_FIELD_NUMBER = 1;
         private volatile java.lang.Object dcid_;
-
         /**
          * <code>string dcid = 1;</code>
-         *
          * @return The dcid.
          */
         @java.lang.Override
@@ -1304,24 +1216,25 @@ public final class Resolve {
           if (ref instanceof java.lang.String) {
             return (java.lang.String) ref;
           } else {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs = 
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             dcid_ = s;
             return s;
           }
         }
-
         /**
          * <code>string dcid = 1;</code>
-         *
          * @return The bytes for dcid.
          */
         @java.lang.Override
-        public com.google.protobuf.ByteString getDcidBytes() {
+        public com.google.protobuf.ByteString
+            getDcidBytes() {
           java.lang.Object ref = dcid_;
           if (ref instanceof java.lang.String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             dcid_ = b;
             return b;
           } else {
@@ -1331,10 +1244,8 @@ public final class Resolve {
 
         public static final int DOMINANT_TYPE_FIELD_NUMBER = 2;
         private volatile java.lang.Object dominantType_;
-
         /**
          * <code>string dominant_type = 2;</code>
-         *
          * @return The dominantType.
          */
         @java.lang.Override
@@ -1343,24 +1254,25 @@ public final class Resolve {
           if (ref instanceof java.lang.String) {
             return (java.lang.String) ref;
           } else {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs = 
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             dominantType_ = s;
             return s;
           }
         }
-
         /**
          * <code>string dominant_type = 2;</code>
-         *
          * @return The bytes for dominantType.
          */
         @java.lang.Override
-        public com.google.protobuf.ByteString getDominantTypeBytes() {
+        public com.google.protobuf.ByteString
+            getDominantTypeBytes() {
           java.lang.Object ref = dominantType_;
           if (ref instanceof java.lang.String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             dominantType_ = b;
             return b;
           } else {
@@ -1369,7 +1281,6 @@ public final class Resolve {
         }
 
         private byte memoizedIsInitialized = -1;
-
         @java.lang.Override
         public final boolean isInitialized() {
           byte isInitialized = memoizedIsInitialized;
@@ -1382,7 +1293,7 @@ public final class Resolve {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output)
-            throws java.io.IOException {
+                            throws java.io.IOException {
           if (!getDcidBytes().isEmpty()) {
             com.google.protobuf.GeneratedMessageV3.writeString(output, 1, dcid_);
           }
@@ -1412,16 +1323,17 @@ public final class Resolve {
         @java.lang.Override
         public boolean equals(final java.lang.Object obj) {
           if (obj == this) {
-            return true;
+           return true;
           }
           if (!(obj instanceof org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate)) {
             return super.equals(obj);
           }
-          org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate other =
-              (org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate) obj;
+          org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate other = (org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate) obj;
 
-          if (!getDcid().equals(other.getDcid())) return false;
-          if (!getDominantType().equals(other.getDominantType())) return false;
+          if (!getDcid()
+              .equals(other.getDcid())) return false;
+          if (!getDominantType()
+              .equals(other.getDominantType())) return false;
           if (!unknownFields.equals(other.unknownFields)) return false;
           return true;
         }
@@ -1443,97 +1355,87 @@ public final class Resolve {
         }
 
         public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseFrom(
-            java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+            java.nio.ByteBuffer data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
           return PARSER.parseFrom(data);
         }
-
         public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseFrom(
-            java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            java.nio.ByteBuffer data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws com.google.protobuf.InvalidProtocolBufferException {
           return PARSER.parseFrom(data, extensionRegistry);
         }
-
         public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseFrom(
             com.google.protobuf.ByteString data)
             throws com.google.protobuf.InvalidProtocolBufferException {
           return PARSER.parseFrom(data);
         }
-
         public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseFrom(
             com.google.protobuf.ByteString data,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws com.google.protobuf.InvalidProtocolBufferException {
           return PARSER.parseFrom(data, extensionRegistry);
         }
-
-        public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseFrom(
-            byte[] data) throws com.google.protobuf.InvalidProtocolBufferException {
+        public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseFrom(byte[] data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
           return PARSER.parseFrom(data);
         }
-
         public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseFrom(
-            byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            byte[] data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws com.google.protobuf.InvalidProtocolBufferException {
           return PARSER.parseFrom(data, extensionRegistry);
         }
-
-        public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseFrom(
-            java.io.InputStream input) throws java.io.IOException {
-          return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-        }
-
-        public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseFrom(
-            java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseFrom(java.io.InputStream input)
             throws java.io.IOException {
-          return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-              PARSER, input, extensionRegistry);
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
         }
-
-        public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate
-            parseDelimitedFrom(java.io.InputStream input) throws java.io.IOException {
-          return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-              PARSER, input);
-        }
-
-        public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate
-            parseDelimitedFrom(
-                java.io.InputStream input,
-                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                throws java.io.IOException {
-          return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-              PARSER, input, extensionRegistry);
-        }
-
         public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseFrom(
-            com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-          return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
         }
-
+        public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseDelimitedFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input);
+        }
+        public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseDelimitedFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseFrom(
+            com.google.protobuf.CodedInputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
         public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate parseFrom(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws java.io.IOException {
-          return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-              PARSER, input, extensionRegistry);
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
         }
 
         @java.lang.Override
-        public Builder newBuilderForType() {
-          return newBuilder();
-        }
-
+        public Builder newBuilderForType() { return newBuilder(); }
         public static Builder newBuilder() {
           return DEFAULT_INSTANCE.toBuilder();
         }
-
-        public static Builder newBuilder(
-            org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate prototype) {
+        public static Builder newBuilder(org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate prototype) {
           return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
         }
-
         @java.lang.Override
         public Builder toBuilder() {
-          return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+          return this == DEFAULT_INSTANCE
+              ? new Builder() : new Builder().mergeFrom(this);
         }
 
         @java.lang.Override
@@ -1542,43 +1444,41 @@ public final class Resolve {
           Builder builder = new Builder(parent);
           return builder;
         }
-
-        /** Protobuf type {@code org.datacommons.proto.ResolveResponse.Entity.Candidate} */
-        public static final class Builder
-            extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-            implements
+        /**
+         * Protobuf type {@code org.datacommons.proto.ResolveResponse.Entity.Candidate}
+         */
+        public static final class Builder extends
+            com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
             // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveResponse.Entity.Candidate)
             org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder {
-          public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-            return org.datacommons.proto.Resolve
-                .internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_descriptor;
+          public static final com.google.protobuf.Descriptors.Descriptor
+              getDescriptor() {
+            return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_descriptor;
           }
 
           @java.lang.Override
           protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
               internalGetFieldAccessorTable() {
-            return org.datacommons.proto.Resolve
-                .internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_fieldAccessorTable
+            return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_fieldAccessorTable
                 .ensureFieldAccessorsInitialized(
-                    org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.class,
-                    org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder.class);
+                    org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.class, org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder.class);
           }
 
-          // Construct using
-          // org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.newBuilder()
+          // Construct using org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.newBuilder()
           private Builder() {
             maybeForceBuilderInitialization();
           }
 
-          private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          private Builder(
+              com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
             super(parent);
             maybeForceBuilderInitialization();
           }
-
           private void maybeForceBuilderInitialization() {
-            if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+            if (com.google.protobuf.GeneratedMessageV3
+                    .alwaysUseFieldBuilders) {
+            }
           }
-
           @java.lang.Override
           public Builder clear() {
             super.clear();
@@ -1590,16 +1490,14 @@ public final class Resolve {
           }
 
           @java.lang.Override
-          public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-            return org.datacommons.proto.Resolve
-                .internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_descriptor;
+          public com.google.protobuf.Descriptors.Descriptor
+              getDescriptorForType() {
+            return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_descriptor;
           }
 
           @java.lang.Override
-          public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate
-              getDefaultInstanceForType() {
-            return org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate
-                .getDefaultInstance();
+          public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate getDefaultInstanceForType() {
+            return org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.getDefaultInstance();
           }
 
           @java.lang.Override
@@ -1613,8 +1511,7 @@ public final class Resolve {
 
           @java.lang.Override
           public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate buildPartial() {
-            org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate result =
-                new org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate(this);
+            org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate result = new org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate(this);
             result.dcid_ = dcid_;
             result.dominantType_ = dominantType_;
             onBuilt();
@@ -1625,53 +1522,46 @@ public final class Resolve {
           public Builder clone() {
             return super.clone();
           }
-
           @java.lang.Override
           public Builder setField(
-              com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
             return super.setField(field, value);
           }
-
           @java.lang.Override
-          public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+          public Builder clearField(
+              com.google.protobuf.Descriptors.FieldDescriptor field) {
             return super.clearField(field);
           }
-
           @java.lang.Override
-          public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          public Builder clearOneof(
+              com.google.protobuf.Descriptors.OneofDescriptor oneof) {
             return super.clearOneof(oneof);
           }
-
           @java.lang.Override
           public Builder setRepeatedField(
               com.google.protobuf.Descriptors.FieldDescriptor field,
-              int index,
-              java.lang.Object value) {
+              int index, java.lang.Object value) {
             return super.setRepeatedField(field, index, value);
           }
-
           @java.lang.Override
           public Builder addRepeatedField(
-              com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
             return super.addRepeatedField(field, value);
           }
-
           @java.lang.Override
           public Builder mergeFrom(com.google.protobuf.Message other) {
             if (other instanceof org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate) {
-              return mergeFrom(
-                  (org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate) other);
+              return mergeFrom((org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate)other);
             } else {
               super.mergeFrom(other);
               return this;
             }
           }
 
-          public Builder mergeFrom(
-              org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate other) {
-            if (other
-                == org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate
-                    .getDefaultInstance()) return this;
+          public Builder mergeFrom(org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate other) {
+            if (other == org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.getDefaultInstance()) return this;
             if (!other.getDcid().isEmpty()) {
               dcid_ = other.dcid_;
               onChanged();
@@ -1699,9 +1589,7 @@ public final class Resolve {
             try {
               parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
             } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-              parsedMessage =
-                  (org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate)
-                      e.getUnfinishedMessage();
+              parsedMessage = (org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate) e.getUnfinishedMessage();
               throw e.unwrapIOException();
             } finally {
               if (parsedMessage != null) {
@@ -1712,16 +1600,15 @@ public final class Resolve {
           }
 
           private java.lang.Object dcid_ = "";
-
           /**
            * <code>string dcid = 1;</code>
-           *
            * @return The dcid.
            */
           public java.lang.String getDcid() {
             java.lang.Object ref = dcid_;
             if (!(ref instanceof java.lang.String)) {
-              com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+              com.google.protobuf.ByteString bs =
+                  (com.google.protobuf.ByteString) ref;
               java.lang.String s = bs.toStringUtf8();
               dcid_ = s;
               return s;
@@ -1729,80 +1616,75 @@ public final class Resolve {
               return (java.lang.String) ref;
             }
           }
-
           /**
            * <code>string dcid = 1;</code>
-           *
            * @return The bytes for dcid.
            */
-          public com.google.protobuf.ByteString getDcidBytes() {
+          public com.google.protobuf.ByteString
+              getDcidBytes() {
             java.lang.Object ref = dcid_;
             if (ref instanceof String) {
-              com.google.protobuf.ByteString b =
-                  com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+              com.google.protobuf.ByteString b = 
+                  com.google.protobuf.ByteString.copyFromUtf8(
+                      (java.lang.String) ref);
               dcid_ = b;
               return b;
             } else {
               return (com.google.protobuf.ByteString) ref;
             }
           }
-
           /**
            * <code>string dcid = 1;</code>
-           *
            * @param value The dcid to set.
            * @return This builder for chaining.
            */
-          public Builder setDcid(java.lang.String value) {
+          public Builder setDcid(
+              java.lang.String value) {
             if (value == null) {
-              throw new NullPointerException();
-            }
-
+    throw new NullPointerException();
+  }
+  
             dcid_ = value;
             onChanged();
             return this;
           }
-
           /**
            * <code>string dcid = 1;</code>
-           *
            * @return This builder for chaining.
            */
           public Builder clearDcid() {
-
+            
             dcid_ = getDefaultInstance().getDcid();
             onChanged();
             return this;
           }
-
           /**
            * <code>string dcid = 1;</code>
-           *
            * @param value The bytes for dcid to set.
            * @return This builder for chaining.
            */
-          public Builder setDcidBytes(com.google.protobuf.ByteString value) {
+          public Builder setDcidBytes(
+              com.google.protobuf.ByteString value) {
             if (value == null) {
-              throw new NullPointerException();
-            }
-            checkByteStringIsUtf8(value);
-
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+            
             dcid_ = value;
             onChanged();
             return this;
           }
 
           private java.lang.Object dominantType_ = "";
-
           /**
            * <code>string dominant_type = 2;</code>
-           *
            * @return The dominantType.
            */
           public java.lang.String getDominantType() {
             java.lang.Object ref = dominantType_;
             if (!(ref instanceof java.lang.String)) {
-              com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+              com.google.protobuf.ByteString bs =
+                  (com.google.protobuf.ByteString) ref;
               java.lang.String s = bs.toStringUtf8();
               dominantType_ = s;
               return s;
@@ -1810,69 +1692,64 @@ public final class Resolve {
               return (java.lang.String) ref;
             }
           }
-
           /**
            * <code>string dominant_type = 2;</code>
-           *
            * @return The bytes for dominantType.
            */
-          public com.google.protobuf.ByteString getDominantTypeBytes() {
+          public com.google.protobuf.ByteString
+              getDominantTypeBytes() {
             java.lang.Object ref = dominantType_;
             if (ref instanceof String) {
-              com.google.protobuf.ByteString b =
-                  com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+              com.google.protobuf.ByteString b = 
+                  com.google.protobuf.ByteString.copyFromUtf8(
+                      (java.lang.String) ref);
               dominantType_ = b;
               return b;
             } else {
               return (com.google.protobuf.ByteString) ref;
             }
           }
-
           /**
            * <code>string dominant_type = 2;</code>
-           *
            * @param value The dominantType to set.
            * @return This builder for chaining.
            */
-          public Builder setDominantType(java.lang.String value) {
+          public Builder setDominantType(
+              java.lang.String value) {
             if (value == null) {
-              throw new NullPointerException();
-            }
-
+    throw new NullPointerException();
+  }
+  
             dominantType_ = value;
             onChanged();
             return this;
           }
-
           /**
            * <code>string dominant_type = 2;</code>
-           *
            * @return This builder for chaining.
            */
           public Builder clearDominantType() {
-
+            
             dominantType_ = getDefaultInstance().getDominantType();
             onChanged();
             return this;
           }
-
           /**
            * <code>string dominant_type = 2;</code>
-           *
            * @param value The bytes for dominantType to set.
            * @return This builder for chaining.
            */
-          public Builder setDominantTypeBytes(com.google.protobuf.ByteString value) {
+          public Builder setDominantTypeBytes(
+              com.google.protobuf.ByteString value) {
             if (value == null) {
-              throw new NullPointerException();
-            }
-            checkByteStringIsUtf8(value);
-
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+            
             dominantType_ = value;
             onChanged();
             return this;
           }
-
           @java.lang.Override
           public final Builder setUnknownFields(
               final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -1885,32 +1762,30 @@ public final class Resolve {
             return super.mergeUnknownFields(unknownFields);
           }
 
+
           // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveResponse.Entity.Candidate)
         }
 
         // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveResponse.Entity.Candidate)
-        private static final org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate
-            DEFAULT_INSTANCE;
-
+        private static final org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate DEFAULT_INSTANCE;
         static {
           DEFAULT_INSTANCE = new org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate();
         }
 
-        public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate
-            getDefaultInstance() {
+        public static org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate getDefaultInstance() {
           return DEFAULT_INSTANCE;
         }
 
-        private static final com.google.protobuf.Parser<Candidate> PARSER =
-            new com.google.protobuf.AbstractParser<Candidate>() {
-              @java.lang.Override
-              public Candidate parsePartialFrom(
-                  com.google.protobuf.CodedInputStream input,
-                  com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                  throws com.google.protobuf.InvalidProtocolBufferException {
-                return new Candidate(input, extensionRegistry);
-              }
-            };
+        private static final com.google.protobuf.Parser<Candidate>
+            PARSER = new com.google.protobuf.AbstractParser<Candidate>() {
+          @java.lang.Override
+          public Candidate parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+            return new Candidate(input, extensionRegistry);
+          }
+        };
 
         public static com.google.protobuf.Parser<Candidate> parser() {
           return PARSER;
@@ -1922,18 +1797,16 @@ public final class Resolve {
         }
 
         @java.lang.Override
-        public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate
-            getDefaultInstanceForType() {
+        public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate getDefaultInstanceForType() {
           return DEFAULT_INSTANCE;
         }
+
       }
 
       public static final int NODE_FIELD_NUMBER = 1;
       private volatile java.lang.Object node_;
-
       /**
        * <code>string node = 1;</code>
-       *
        * @return The node.
        */
       @java.lang.Override
@@ -1942,24 +1815,25 @@ public final class Resolve {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           node_ = s;
           return s;
         }
       }
-
       /**
        * <code>string node = 1;</code>
-       *
        * @return The bytes for node.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getNodeBytes() {
+      public com.google.protobuf.ByteString
+          getNodeBytes() {
         java.lang.Object ref = node_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           node_ = b;
           return b;
         } else {
@@ -1968,61 +1842,46 @@ public final class Resolve {
       }
 
       public static final int CANDIDATES_FIELD_NUMBER = 3;
-      private java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>
-          candidates_;
-
+      private java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate> candidates_;
       /**
-       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-       * </code>
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
        */
       @java.lang.Override
-      public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>
-          getCandidatesList() {
+      public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate> getCandidatesList() {
         return candidates_;
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-       * </code>
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
        */
       @java.lang.Override
-      public java.util.List<
-              ? extends org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder>
+      public java.util.List<? extends org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder> 
           getCandidatesOrBuilderList() {
         return candidates_;
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-       * </code>
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
        */
       @java.lang.Override
       public int getCandidatesCount() {
         return candidates_.size();
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-       * </code>
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
        */
       @java.lang.Override
-      public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate getCandidates(
+      public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate getCandidates(int index) {
+        return candidates_.get(index);
+      }
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
+       */
+      @java.lang.Override
+      public org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder getCandidatesOrBuilder(
           int index) {
         return candidates_.get(index);
       }
 
-      /**
-       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-       * </code>
-       */
-      @java.lang.Override
-      public org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder
-          getCandidatesOrBuilder(int index) {
-        return candidates_.get(index);
-      }
-
       private byte memoizedIsInitialized = -1;
-
       @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -2034,7 +1893,8 @@ public final class Resolve {
       }
 
       @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
         if (!getNodeBytes().isEmpty()) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 1, node_);
         }
@@ -2054,7 +1914,8 @@ public final class Resolve {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, node_);
         }
         for (int i = 0; i < candidates_.size(); i++) {
-          size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, candidates_.get(i));
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(3, candidates_.get(i));
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -2064,16 +1925,17 @@ public final class Resolve {
       @java.lang.Override
       public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
-          return true;
+         return true;
         }
         if (!(obj instanceof org.datacommons.proto.Resolve.ResolveResponse.Entity)) {
           return super.equals(obj);
         }
-        org.datacommons.proto.Resolve.ResolveResponse.Entity other =
-            (org.datacommons.proto.Resolve.ResolveResponse.Entity) obj;
+        org.datacommons.proto.Resolve.ResolveResponse.Entity other = (org.datacommons.proto.Resolve.ResolveResponse.Entity) obj;
 
-        if (!getNode().equals(other.getNode())) return false;
-        if (!getCandidatesList().equals(other.getCandidatesList())) return false;
+        if (!getNode()
+            .equals(other.getNode())) return false;
+        if (!getCandidatesList()
+            .equals(other.getCandidatesList())) return false;
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -2097,94 +1959,87 @@ public final class Resolve {
       }
 
       public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseFrom(
-          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseFrom(
-          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
       public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
       public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseFrom(
-          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
-      public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseFrom(
-          java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+      public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
       }
-
-      public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseDelimitedFrom(
-          java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseDelimitedFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-            PARSER, input, extensionRegistry);
-      }
-
       public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseFrom(
-          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
-
+      public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
       public static org.datacommons.proto.Resolve.ResolveResponse.Entity parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
 
       @java.lang.Override
-      public Builder newBuilderForType() {
-        return newBuilder();
-      }
-
+      public Builder newBuilderForType() { return newBuilder(); }
       public static Builder newBuilder() {
         return DEFAULT_INSTANCE.toBuilder();
       }
-
-      public static Builder newBuilder(
-          org.datacommons.proto.Resolve.ResolveResponse.Entity prototype) {
+      public static Builder newBuilder(org.datacommons.proto.Resolve.ResolveResponse.Entity prototype) {
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
-
       @java.lang.Override
       public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
       }
 
       @java.lang.Override
@@ -2193,26 +2048,24 @@ public final class Resolve {
         Builder builder = new Builder(parent);
         return builder;
       }
-
-      /** Protobuf type {@code org.datacommons.proto.ResolveResponse.Entity} */
-      public static final class Builder
-          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-          implements
+      /**
+       * Protobuf type {@code org.datacommons.proto.ResolveResponse.Entity}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
           // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveResponse.Entity)
           org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-          return org.datacommons.proto.Resolve
-              .internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor;
         }
 
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Resolve
-              .internal_static_org_datacommons_proto_ResolveResponse_Entity_fieldAccessorTable
+          return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_Entity_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Resolve.ResolveResponse.Entity.class,
-                  org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder.class);
+                  org.datacommons.proto.Resolve.ResolveResponse.Entity.class, org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder.class);
         }
 
         // Construct using org.datacommons.proto.Resolve.ResolveResponse.Entity.newBuilder()
@@ -2220,17 +2073,17 @@ public final class Resolve {
           maybeForceBuilderInitialization();
         }
 
-        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
-
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
             getCandidatesFieldBuilder();
           }
         }
-
         @java.lang.Override
         public Builder clear() {
           super.clear();
@@ -2246,9 +2099,9 @@ public final class Resolve {
         }
 
         @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-          return org.datacommons.proto.Resolve
-              .internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor;
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor;
         }
 
         @java.lang.Override
@@ -2267,8 +2120,7 @@ public final class Resolve {
 
         @java.lang.Override
         public org.datacommons.proto.Resolve.ResolveResponse.Entity buildPartial() {
-          org.datacommons.proto.Resolve.ResolveResponse.Entity result =
-              new org.datacommons.proto.Resolve.ResolveResponse.Entity(this);
+          org.datacommons.proto.Resolve.ResolveResponse.Entity result = new org.datacommons.proto.Resolve.ResolveResponse.Entity(this);
           int from_bitField0_ = bitField0_;
           result.node_ = node_;
           if (candidatesBuilder_ == null) {
@@ -2288,41 +2140,38 @@ public final class Resolve {
         public Builder clone() {
           return super.clone();
         }
-
         @java.lang.Override
         public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
           return super.setField(field, value);
         }
-
         @java.lang.Override
-        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
           return super.clearField(field);
         }
-
         @java.lang.Override
-        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
           return super.clearOneof(oneof);
         }
-
         @java.lang.Override
         public Builder setRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index,
-            java.lang.Object value) {
+            int index, java.lang.Object value) {
           return super.setRepeatedField(field, index, value);
         }
-
         @java.lang.Override
         public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
           return super.addRepeatedField(field, value);
         }
-
         @java.lang.Override
         public Builder mergeFrom(com.google.protobuf.Message other) {
           if (other instanceof org.datacommons.proto.Resolve.ResolveResponse.Entity) {
-            return mergeFrom((org.datacommons.proto.Resolve.ResolveResponse.Entity) other);
+            return mergeFrom((org.datacommons.proto.Resolve.ResolveResponse.Entity)other);
           } else {
             super.mergeFrom(other);
             return this;
@@ -2330,8 +2179,7 @@ public final class Resolve {
         }
 
         public Builder mergeFrom(org.datacommons.proto.Resolve.ResolveResponse.Entity other) {
-          if (other == org.datacommons.proto.Resolve.ResolveResponse.Entity.getDefaultInstance())
-            return this;
+          if (other == org.datacommons.proto.Resolve.ResolveResponse.Entity.getDefaultInstance()) return this;
           if (!other.getNode().isEmpty()) {
             node_ = other.node_;
             onChanged();
@@ -2354,10 +2202,9 @@ public final class Resolve {
                 candidatesBuilder_ = null;
                 candidates_ = other.candidates_;
                 bitField0_ = (bitField0_ & ~0x00000001);
-                candidatesBuilder_ =
-                    com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
-                        ? getCandidatesFieldBuilder()
-                        : null;
+                candidatesBuilder_ = 
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                     getCandidatesFieldBuilder() : null;
               } else {
                 candidatesBuilder_.addAllMessages(other.candidates_);
               }
@@ -2382,8 +2229,7 @@ public final class Resolve {
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage =
-                (org.datacommons.proto.Resolve.ResolveResponse.Entity) e.getUnfinishedMessage();
+            parsedMessage = (org.datacommons.proto.Resolve.ResolveResponse.Entity) e.getUnfinishedMessage();
             throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
@@ -2392,20 +2238,18 @@ public final class Resolve {
           }
           return this;
         }
-
         private int bitField0_;
 
         private java.lang.Object node_ = "";
-
         /**
          * <code>string node = 1;</code>
-         *
          * @return The node.
          */
         public java.lang.String getNode() {
           java.lang.Object ref = node_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             node_ = s;
             return s;
@@ -2413,103 +2257,89 @@ public final class Resolve {
             return (java.lang.String) ref;
           }
         }
-
         /**
          * <code>string node = 1;</code>
-         *
          * @return The bytes for node.
          */
-        public com.google.protobuf.ByteString getNodeBytes() {
+        public com.google.protobuf.ByteString
+            getNodeBytes() {
           java.lang.Object ref = node_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             node_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
          * <code>string node = 1;</code>
-         *
          * @param value The node to set.
          * @return This builder for chaining.
          */
-        public Builder setNode(java.lang.String value) {
+        public Builder setNode(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-
+    throw new NullPointerException();
+  }
+  
           node_ = value;
           onChanged();
           return this;
         }
-
         /**
          * <code>string node = 1;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearNode() {
-
+          
           node_ = getDefaultInstance().getNode();
           onChanged();
           return this;
         }
-
         /**
          * <code>string node = 1;</code>
-         *
          * @param value The bytes for node to set.
          * @return This builder for chaining.
          */
-        public Builder setNodeBytes(com.google.protobuf.ByteString value) {
+        public Builder setNodeBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          checkByteStringIsUtf8(value);
-
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+          
           node_ = value;
           onChanged();
           return this;
         }
 
-        private java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>
-            candidates_ = java.util.Collections.emptyList();
-
+        private java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate> candidates_ =
+          java.util.Collections.emptyList();
         private void ensureCandidatesIsMutable() {
           if (!((bitField0_ & 0x00000001) != 0)) {
-            candidates_ =
-                new java.util.ArrayList<
-                    org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>(candidates_);
+            candidates_ = new java.util.ArrayList<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>(candidates_);
             bitField0_ |= 0x00000001;
-          }
+           }
         }
 
         private com.google.protobuf.RepeatedFieldBuilderV3<
-                org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate,
-                org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder,
-                org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder>
-            candidatesBuilder_;
+            org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate, org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder, org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder> candidatesBuilder_;
 
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
-        public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>
-            getCandidatesList() {
+        public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate> getCandidatesList() {
           if (candidatesBuilder_ == null) {
             return java.util.Collections.unmodifiableList(candidates_);
           } else {
             return candidatesBuilder_.getMessageList();
           }
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
         public int getCandidatesCount() {
           if (candidatesBuilder_ == null) {
@@ -2518,23 +2348,18 @@ public final class Resolve {
             return candidatesBuilder_.getCount();
           }
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
-        public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate getCandidates(
-            int index) {
+        public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate getCandidates(int index) {
           if (candidatesBuilder_ == null) {
             return candidates_.get(index);
           } else {
             return candidatesBuilder_.getMessage(index);
           }
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
         public Builder setCandidates(
             int index, org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate value) {
@@ -2550,15 +2375,11 @@ public final class Resolve {
           }
           return this;
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
         public Builder setCandidates(
-            int index,
-            org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder
-                builderForValue) {
+            int index, org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder builderForValue) {
           if (candidatesBuilder_ == null) {
             ensureCandidatesIsMutable();
             candidates_.set(index, builderForValue.build());
@@ -2568,13 +2389,10 @@ public final class Resolve {
           }
           return this;
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
-        public Builder addCandidates(
-            org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate value) {
+        public Builder addCandidates(org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate value) {
           if (candidatesBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -2587,10 +2405,8 @@ public final class Resolve {
           }
           return this;
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
         public Builder addCandidates(
             int index, org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate value) {
@@ -2606,14 +2422,11 @@ public final class Resolve {
           }
           return this;
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
         public Builder addCandidates(
-            org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder
-                builderForValue) {
+            org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder builderForValue) {
           if (candidatesBuilder_ == null) {
             ensureCandidatesIsMutable();
             candidates_.add(builderForValue.build());
@@ -2623,15 +2436,11 @@ public final class Resolve {
           }
           return this;
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
         public Builder addCandidates(
-            int index,
-            org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder
-                builderForValue) {
+            int index, org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder builderForValue) {
           if (candidatesBuilder_ == null) {
             ensureCandidatesIsMutable();
             candidates_.add(index, builderForValue.build());
@@ -2641,28 +2450,23 @@ public final class Resolve {
           }
           return this;
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
         public Builder addAllCandidates(
-            java.lang.Iterable<
-                    ? extends org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate>
-                values) {
+            java.lang.Iterable<? extends org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate> values) {
           if (candidatesBuilder_ == null) {
             ensureCandidatesIsMutable();
-            com.google.protobuf.AbstractMessageLite.Builder.addAll(values, candidates_);
+            com.google.protobuf.AbstractMessageLite.Builder.addAll(
+                values, candidates_);
             onChanged();
           } else {
             candidatesBuilder_.addAllMessages(values);
           }
           return this;
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
         public Builder clearCandidates() {
           if (candidatesBuilder_ == null) {
@@ -2674,10 +2478,8 @@ public final class Resolve {
           }
           return this;
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
         public Builder removeCandidates(int index) {
           if (candidatesBuilder_ == null) {
@@ -2689,89 +2491,62 @@ public final class Resolve {
           }
           return this;
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
-        public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder
-            getCandidatesBuilder(int index) {
+        public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder getCandidatesBuilder(
+            int index) {
           return getCandidatesFieldBuilder().getBuilder(index);
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
-        public org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder
-            getCandidatesOrBuilder(int index) {
+        public org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder getCandidatesOrBuilder(
+            int index) {
           if (candidatesBuilder_ == null) {
-            return candidates_.get(index);
-          } else {
+            return candidates_.get(index);  } else {
             return candidatesBuilder_.getMessageOrBuilder(index);
           }
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
-        public java.util.List<
-                ? extends org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder>
-            getCandidatesOrBuilderList() {
+        public java.util.List<? extends org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder> 
+             getCandidatesOrBuilderList() {
           if (candidatesBuilder_ != null) {
             return candidatesBuilder_.getMessageOrBuilderList();
           } else {
             return java.util.Collections.unmodifiableList(candidates_);
           }
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
-        public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder
-            addCandidatesBuilder() {
-          return getCandidatesFieldBuilder()
-              .addBuilder(
-                  org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate
-                      .getDefaultInstance());
+        public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder addCandidatesBuilder() {
+          return getCandidatesFieldBuilder().addBuilder(
+              org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.getDefaultInstance());
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
-        public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder
-            addCandidatesBuilder(int index) {
-          return getCandidatesFieldBuilder()
-              .addBuilder(
-                  index,
-                  org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate
-                      .getDefaultInstance());
+        public org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder addCandidatesBuilder(
+            int index) {
+          return getCandidatesFieldBuilder().addBuilder(
+              index, org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.getDefaultInstance());
         }
-
         /**
-         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;
-         * </code>
+         * <code>repeated .org.datacommons.proto.ResolveResponse.Entity.Candidate candidates = 3;</code>
          */
-        public java.util.List<
-                org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder>
-            getCandidatesBuilderList() {
+        public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder> 
+             getCandidatesBuilderList() {
           return getCandidatesFieldBuilder().getBuilderList();
         }
-
         private com.google.protobuf.RepeatedFieldBuilderV3<
-                org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate,
-                org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder,
-                org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder>
+            org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate, org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder, org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder> 
             getCandidatesFieldBuilder() {
           if (candidatesBuilder_ == null) {
-            candidatesBuilder_ =
-                new com.google.protobuf.RepeatedFieldBuilderV3<
-                    org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate,
-                    org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder,
-                    org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder>(
+            candidatesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+                org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate, org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate.Builder, org.datacommons.proto.Resolve.ResolveResponse.Entity.CandidateOrBuilder>(
                     candidates_,
                     ((bitField0_ & 0x00000001) != 0),
                     getParentForChildren(),
@@ -2780,7 +2555,6 @@ public final class Resolve {
           }
           return candidatesBuilder_;
         }
-
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -2793,12 +2567,12 @@ public final class Resolve {
           return super.mergeUnknownFields(unknownFields);
         }
 
+
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveResponse.Entity)
       }
 
       // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveResponse.Entity)
       private static final org.datacommons.proto.Resolve.ResolveResponse.Entity DEFAULT_INSTANCE;
-
       static {
         DEFAULT_INSTANCE = new org.datacommons.proto.Resolve.ResolveResponse.Entity();
       }
@@ -2807,16 +2581,16 @@ public final class Resolve {
         return DEFAULT_INSTANCE;
       }
 
-      private static final com.google.protobuf.Parser<Entity> PARSER =
-          new com.google.protobuf.AbstractParser<Entity>() {
-            @java.lang.Override
-            public Entity parsePartialFrom(
-                com.google.protobuf.CodedInputStream input,
-                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                throws com.google.protobuf.InvalidProtocolBufferException {
-              return new Entity(input, extensionRegistry);
-            }
-          };
+      private static final com.google.protobuf.Parser<Entity>
+          PARSER = new com.google.protobuf.AbstractParser<Entity>() {
+        @java.lang.Override
+        public Entity parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Entity(input, extensionRegistry);
+        }
+      };
 
       public static com.google.protobuf.Parser<Entity> parser() {
         return PARSER;
@@ -2831,37 +2605,43 @@ public final class Resolve {
       public org.datacommons.proto.Resolve.ResolveResponse.Entity getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
+
     }
 
     public static final int ENTITIES_FIELD_NUMBER = 1;
     private java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity> entities_;
-
-    /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+     */
     @java.lang.Override
     public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity> getEntitiesList() {
       return entities_;
     }
-
-    /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+     */
     @java.lang.Override
-    public java.util.List<? extends org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder>
+    public java.util.List<? extends org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder> 
         getEntitiesOrBuilderList() {
       return entities_;
     }
-
-    /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+     */
     @java.lang.Override
     public int getEntitiesCount() {
       return entities_.size();
     }
-
-    /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+     */
     @java.lang.Override
     public org.datacommons.proto.Resolve.ResolveResponse.Entity getEntities(int index) {
       return entities_.get(index);
     }
-
-    /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+    /**
+     * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+     */
     @java.lang.Override
     public org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder getEntitiesOrBuilder(
         int index) {
@@ -2869,7 +2649,6 @@ public final class Resolve {
     }
 
     private byte memoizedIsInitialized = -1;
-
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -2881,7 +2660,8 @@ public final class Resolve {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
       for (int i = 0; i < entities_.size(); i++) {
         output.writeMessage(1, entities_.get(i));
       }
@@ -2895,7 +2675,8 @@ public final class Resolve {
 
       size = 0;
       for (int i = 0; i < entities_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, entities_.get(i));
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, entities_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2905,15 +2686,15 @@ public final class Resolve {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-        return true;
+       return true;
       }
       if (!(obj instanceof org.datacommons.proto.Resolve.ResolveResponse)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.Resolve.ResolveResponse other =
-          (org.datacommons.proto.Resolve.ResolveResponse) obj;
+      org.datacommons.proto.Resolve.ResolveResponse other = (org.datacommons.proto.Resolve.ResolveResponse) obj;
 
-      if (!getEntitiesList().equals(other.getEntitiesList())) return false;
+      if (!getEntitiesList()
+          .equals(other.getEntitiesList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -2934,94 +2715,88 @@ public final class Resolve {
       return hash;
     }
 
-    public static org.datacommons.proto.Resolve.ResolveResponse parseFrom(java.nio.ByteBuffer data)
+    public static org.datacommons.proto.Resolve.ResolveResponse parseFrom(
+        java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Resolve.ResolveResponse parseFrom(
-        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Resolve.ResolveResponse parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Resolve.ResolveResponse parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Resolve.ResolveResponse parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Resolve.ResolveResponse parseFrom(
-        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Resolve.ResolveResponse parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-
     public static org.datacommons.proto.Resolve.ResolveResponse parseFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
-
-    public static org.datacommons.proto.Resolve.ResolveResponse parseDelimitedFrom(
-        java.io.InputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-    }
-
-    public static org.datacommons.proto.Resolve.ResolveResponse parseDelimitedFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+    public static org.datacommons.proto.Resolve.ResolveResponse parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
-
+    public static org.datacommons.proto.Resolve.ResolveResponse parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
     public static org.datacommons.proto.Resolve.ResolveResponse parseFrom(
-        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-
     public static org.datacommons.proto.Resolve.ResolveResponse parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() {
-      return newBuilder();
-    }
-
+    public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-
     public static Builder newBuilder(org.datacommons.proto.Resolve.ResolveResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -3030,26 +2805,24 @@ public final class Resolve {
       Builder builder = new Builder(parent);
       return builder;
     }
-
-    /** Protobuf type {@code org.datacommons.proto.ResolveResponse} */
-    public static final class Builder
-        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-        implements
+    /**
+     * Protobuf type {@code org.datacommons.proto.ResolveResponse}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.ResolveResponse)
         org.datacommons.proto.Resolve.ResolveResponseOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Resolve
-            .internal_static_org_datacommons_proto_ResolveResponse_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Resolve
-            .internal_static_org_datacommons_proto_ResolveResponse_fieldAccessorTable
+        return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Resolve.ResolveResponse.class,
-                org.datacommons.proto.Resolve.ResolveResponse.Builder.class);
+                org.datacommons.proto.Resolve.ResolveResponse.class, org.datacommons.proto.Resolve.ResolveResponse.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Resolve.ResolveResponse.newBuilder()
@@ -3057,17 +2830,17 @@ public final class Resolve {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
-
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
           getEntitiesFieldBuilder();
         }
       }
-
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -3081,9 +2854,9 @@ public final class Resolve {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-        return org.datacommons.proto.Resolve
-            .internal_static_org_datacommons_proto_ResolveResponse_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.datacommons.proto.Resolve.internal_static_org_datacommons_proto_ResolveResponse_descriptor;
       }
 
       @java.lang.Override
@@ -3102,8 +2875,7 @@ public final class Resolve {
 
       @java.lang.Override
       public org.datacommons.proto.Resolve.ResolveResponse buildPartial() {
-        org.datacommons.proto.Resolve.ResolveResponse result =
-            new org.datacommons.proto.Resolve.ResolveResponse(this);
+        org.datacommons.proto.Resolve.ResolveResponse result = new org.datacommons.proto.Resolve.ResolveResponse(this);
         int from_bitField0_ = bitField0_;
         if (entitiesBuilder_ == null) {
           if (((bitField0_ & 0x00000001) != 0)) {
@@ -3122,41 +2894,38 @@ public final class Resolve {
       public Builder clone() {
         return super.clone();
       }
-
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
         return super.setField(field, value);
       }
-
       @java.lang.Override
-      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
-
       @java.lang.Override
-      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
-
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index,
-          java.lang.Object value) {
+          int index, java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
-
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
-
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Resolve.ResolveResponse) {
-          return mergeFrom((org.datacommons.proto.Resolve.ResolveResponse) other);
+          return mergeFrom((org.datacommons.proto.Resolve.ResolveResponse)other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -3164,8 +2933,7 @@ public final class Resolve {
       }
 
       public Builder mergeFrom(org.datacommons.proto.Resolve.ResolveResponse other) {
-        if (other == org.datacommons.proto.Resolve.ResolveResponse.getDefaultInstance())
-          return this;
+        if (other == org.datacommons.proto.Resolve.ResolveResponse.getDefaultInstance()) return this;
         if (entitiesBuilder_ == null) {
           if (!other.entities_.isEmpty()) {
             if (entities_.isEmpty()) {
@@ -3184,10 +2952,9 @@ public final class Resolve {
               entitiesBuilder_ = null;
               entities_ = other.entities_;
               bitField0_ = (bitField0_ & ~0x00000001);
-              entitiesBuilder_ =
-                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
-                      ? getEntitiesFieldBuilder()
-                      : null;
+              entitiesBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getEntitiesFieldBuilder() : null;
             } else {
               entitiesBuilder_.addAllMessages(other.entities_);
             }
@@ -3221,38 +2988,33 @@ public final class Resolve {
         }
         return this;
       }
-
       private int bitField0_;
 
       private java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity> entities_ =
-          java.util.Collections.emptyList();
-
+        java.util.Collections.emptyList();
       private void ensureEntitiesIsMutable() {
         if (!((bitField0_ & 0x00000001) != 0)) {
-          entities_ =
-              new java.util.ArrayList<org.datacommons.proto.Resolve.ResolveResponse.Entity>(
-                  entities_);
+          entities_ = new java.util.ArrayList<org.datacommons.proto.Resolve.ResolveResponse.Entity>(entities_);
           bitField0_ |= 0x00000001;
-        }
+         }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Resolve.ResolveResponse.Entity,
-              org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder,
-              org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder>
-          entitiesBuilder_;
+          org.datacommons.proto.Resolve.ResolveResponse.Entity, org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder, org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder> entitiesBuilder_;
 
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
-      public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity>
-          getEntitiesList() {
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
+      public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity> getEntitiesList() {
         if (entitiesBuilder_ == null) {
           return java.util.Collections.unmodifiableList(entities_);
         } else {
           return entitiesBuilder_.getMessageList();
         }
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public int getEntitiesCount() {
         if (entitiesBuilder_ == null) {
           return entities_.size();
@@ -3260,8 +3022,9 @@ public final class Resolve {
           return entitiesBuilder_.getCount();
         }
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public org.datacommons.proto.Resolve.ResolveResponse.Entity getEntities(int index) {
         if (entitiesBuilder_ == null) {
           return entities_.get(index);
@@ -3269,8 +3032,9 @@ public final class Resolve {
           return entitiesBuilder_.getMessage(index);
         }
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public Builder setEntities(
           int index, org.datacommons.proto.Resolve.ResolveResponse.Entity value) {
         if (entitiesBuilder_ == null) {
@@ -3285,8 +3049,9 @@ public final class Resolve {
         }
         return this;
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public Builder setEntities(
           int index, org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder builderForValue) {
         if (entitiesBuilder_ == null) {
@@ -3298,8 +3063,9 @@ public final class Resolve {
         }
         return this;
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public Builder addEntities(org.datacommons.proto.Resolve.ResolveResponse.Entity value) {
         if (entitiesBuilder_ == null) {
           if (value == null) {
@@ -3313,8 +3079,9 @@ public final class Resolve {
         }
         return this;
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public Builder addEntities(
           int index, org.datacommons.proto.Resolve.ResolveResponse.Entity value) {
         if (entitiesBuilder_ == null) {
@@ -3329,8 +3096,9 @@ public final class Resolve {
         }
         return this;
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public Builder addEntities(
           org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder builderForValue) {
         if (entitiesBuilder_ == null) {
@@ -3342,8 +3110,9 @@ public final class Resolve {
         }
         return this;
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public Builder addEntities(
           int index, org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder builderForValue) {
         if (entitiesBuilder_ == null) {
@@ -3355,22 +3124,24 @@ public final class Resolve {
         }
         return this;
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public Builder addAllEntities(
-          java.lang.Iterable<? extends org.datacommons.proto.Resolve.ResolveResponse.Entity>
-              values) {
+          java.lang.Iterable<? extends org.datacommons.proto.Resolve.ResolveResponse.Entity> values) {
         if (entitiesBuilder_ == null) {
           ensureEntitiesIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, entities_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, entities_);
           onChanged();
         } else {
           entitiesBuilder_.addAllMessages(values);
         }
         return this;
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public Builder clearEntities() {
         if (entitiesBuilder_ == null) {
           entities_ = java.util.Collections.emptyList();
@@ -3381,8 +3152,9 @@ public final class Resolve {
         }
         return this;
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public Builder removeEntities(int index) {
         if (entitiesBuilder_ == null) {
           ensureEntitiesIsMutable();
@@ -3393,70 +3165,70 @@ public final class Resolve {
         }
         return this;
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder getEntitiesBuilder(
           int index) {
         return getEntitiesFieldBuilder().getBuilder(index);
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder getEntitiesOrBuilder(
           int index) {
         if (entitiesBuilder_ == null) {
-          return entities_.get(index);
-        } else {
+          return entities_.get(index);  } else {
           return entitiesBuilder_.getMessageOrBuilder(index);
         }
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
-      public java.util.List<? extends org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder>
-          getEntitiesOrBuilderList() {
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
+      public java.util.List<? extends org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder> 
+           getEntitiesOrBuilderList() {
         if (entitiesBuilder_ != null) {
           return entitiesBuilder_.getMessageOrBuilderList();
         } else {
           return java.util.Collections.unmodifiableList(entities_);
         }
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder addEntitiesBuilder() {
-        return getEntitiesFieldBuilder()
-            .addBuilder(org.datacommons.proto.Resolve.ResolveResponse.Entity.getDefaultInstance());
+        return getEntitiesFieldBuilder().addBuilder(
+            org.datacommons.proto.Resolve.ResolveResponse.Entity.getDefaultInstance());
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
       public org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder addEntitiesBuilder(
           int index) {
-        return getEntitiesFieldBuilder()
-            .addBuilder(
-                index, org.datacommons.proto.Resolve.ResolveResponse.Entity.getDefaultInstance());
+        return getEntitiesFieldBuilder().addBuilder(
+            index, org.datacommons.proto.Resolve.ResolveResponse.Entity.getDefaultInstance());
       }
-
-      /** <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code> */
-      public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder>
-          getEntitiesBuilderList() {
+      /**
+       * <code>repeated .org.datacommons.proto.ResolveResponse.Entity entities = 1;</code>
+       */
+      public java.util.List<org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder> 
+           getEntitiesBuilderList() {
         return getEntitiesFieldBuilder().getBuilderList();
       }
-
       private com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Resolve.ResolveResponse.Entity,
-              org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder,
-              org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder>
+          org.datacommons.proto.Resolve.ResolveResponse.Entity, org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder, org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder> 
           getEntitiesFieldBuilder() {
         if (entitiesBuilder_ == null) {
-          entitiesBuilder_ =
-              new com.google.protobuf.RepeatedFieldBuilderV3<
-                  org.datacommons.proto.Resolve.ResolveResponse.Entity,
-                  org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder,
-                  org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder>(
-                  entities_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
+          entitiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Resolve.ResolveResponse.Entity, org.datacommons.proto.Resolve.ResolveResponse.Entity.Builder, org.datacommons.proto.Resolve.ResolveResponse.EntityOrBuilder>(
+                  entities_,
+                  ((bitField0_ & 0x00000001) != 0),
+                  getParentForChildren(),
+                  isClean());
           entities_ = null;
         }
         return entitiesBuilder_;
       }
-
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -3469,12 +3241,12 @@ public final class Resolve {
         return super.mergeUnknownFields(unknownFields);
       }
 
+
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.ResolveResponse)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.ResolveResponse)
     private static final org.datacommons.proto.Resolve.ResolveResponse DEFAULT_INSTANCE;
-
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Resolve.ResolveResponse();
     }
@@ -3483,16 +3255,16 @@ public final class Resolve {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<ResolveResponse> PARSER =
-        new com.google.protobuf.AbstractParser<ResolveResponse>() {
-          @java.lang.Override
-          public ResolveResponse parsePartialFrom(
-              com.google.protobuf.CodedInputStream input,
-              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-              throws com.google.protobuf.InvalidProtocolBufferException {
-            return new ResolveResponse(input, extensionRegistry);
-          }
-        };
+    private static final com.google.protobuf.Parser<ResolveResponse>
+        PARSER = new com.google.protobuf.AbstractParser<ResolveResponse>() {
+      @java.lang.Override
+      public ResolveResponse parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ResolveResponse(input, extensionRegistry);
+      }
+    };
 
     public static com.google.protobuf.Parser<ResolveResponse> parser() {
       return PARSER;
@@ -3507,80 +3279,76 @@ public final class Resolve {
     public org.datacommons.proto.Resolve.ResolveResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
+
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_ResolveRequest_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_ResolveRequest_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_ResolveResponse_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_ResolveResponse_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveResponse_Entity_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_fieldAccessorTable;
 
-  public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
+  public static com.google.protobuf.Descriptors.FileDescriptor
+      getDescriptor() {
     return descriptor;
   }
-
-  private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
-
+  private static  com.google.protobuf.Descriptors.FileDescriptor
+      descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\rresolve.proto\022\025org.datacommons.proto\"1"
-          + "\n\016ResolveRequest\022\r\n\005nodes\030\001 \003(\t\022\020\n\010prope"
-          + "rty\030\002 \001(\t\"\360\001\n\017ResolveResponse\022?\n\010entitie"
-          + "s\030\001 \003(\0132-.org.datacommons.proto.ResolveR"
-          + "esponse.Entity\032\233\001\n\006Entity\022\014\n\004node\030\001 \001(\t\022"
-          + "K\n\ncandidates\030\003 \003(\01327.org.datacommons.pr"
-          + "oto.ResolveResponse.Entity.Candidate\0320\n\t"
-          + "Candidate\022\014\n\004dcid\030\001 \001(\t\022\025\n\rdominant_type"
-          + "\030\002 \001(\tJ\004\010\002\020\003b\006proto3"
+      "\n\rresolve.proto\022\025org.datacommons.proto\"1" +
+      "\n\016ResolveRequest\022\r\n\005nodes\030\001 \003(\t\022\020\n\010prope" +
+      "rty\030\002 \001(\t\"\360\001\n\017ResolveResponse\022?\n\010entitie" +
+      "s\030\001 \003(\0132-.org.datacommons.proto.ResolveR" +
+      "esponse.Entity\032\233\001\n\006Entity\022\014\n\004node\030\001 \001(\t\022" +
+      "K\n\ncandidates\030\003 \003(\01327.org.datacommons.pr" +
+      "oto.ResolveResponse.Entity.Candidate\0320\n\t" +
+      "Candidate\022\014\n\004dcid\030\001 \001(\t\022\025\n\rdominant_type" +
+      "\030\002 \001(\tJ\004\010\002\020\003b\006proto3"
     };
-    descriptor =
-        com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-            descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
+      .internalBuildGeneratedFileFrom(descriptorData,
+        new com.google.protobuf.Descriptors.FileDescriptor[] {
+        });
     internal_static_org_datacommons_proto_ResolveRequest_descriptor =
-        getDescriptor().getMessageTypes().get(0);
-    internal_static_org_datacommons_proto_ResolveRequest_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_ResolveRequest_descriptor,
-            new java.lang.String[] {
-              "Nodes", "Property",
-            });
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_org_datacommons_proto_ResolveRequest_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_ResolveRequest_descriptor,
+        new java.lang.String[] { "Nodes", "Property", });
     internal_static_org_datacommons_proto_ResolveResponse_descriptor =
-        getDescriptor().getMessageTypes().get(1);
-    internal_static_org_datacommons_proto_ResolveResponse_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_ResolveResponse_descriptor,
-            new java.lang.String[] {
-              "Entities",
-            });
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_org_datacommons_proto_ResolveResponse_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_ResolveResponse_descriptor,
+        new java.lang.String[] { "Entities", });
     internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor =
-        internal_static_org_datacommons_proto_ResolveResponse_descriptor.getNestedTypes().get(0);
-    internal_static_org_datacommons_proto_ResolveResponse_Entity_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor,
-            new java.lang.String[] {
-              "Node", "Candidates",
-            });
+      internal_static_org_datacommons_proto_ResolveResponse_descriptor.getNestedTypes().get(0);
+    internal_static_org_datacommons_proto_ResolveResponse_Entity_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor,
+        new java.lang.String[] { "Node", "Candidates", });
     internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_descriptor =
-        internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor
-            .getNestedTypes()
-            .get(0);
-    internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_descriptor,
-            new java.lang.String[] {
-              "Dcid", "DominantType",
-            });
+      internal_static_org_datacommons_proto_ResolveResponse_Entity_descriptor.getNestedTypes().get(0);
+    internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_ResolveResponse_Entity_Candidate_descriptor,
+        new java.lang.String[] { "Dcid", "DominantType", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

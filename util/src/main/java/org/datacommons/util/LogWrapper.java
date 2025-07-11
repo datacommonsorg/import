@@ -54,6 +54,7 @@ public class LogWrapper {
   private final Path logPath;
   public final boolean persistLog;
   private Debug.Log.Builder log;
+  private final Instant startTime;
 
   // Update with lock, but read without object lock.
   private volatile Instant lastStatusAt;
@@ -68,6 +69,7 @@ public class LogWrapper {
     this.log = log;
     this.persistLog = true;
     this.logPath = Paths.get(outputDir.toString(), REPORT_JSON);
+    this.startTime = Instant.now();
     logger.info(
         "Report written periodically to {}", logPath.toAbsolutePath().normalize().toString());
     lastStatusAt = Instant.now();
@@ -78,6 +80,7 @@ public class LogWrapper {
     this.log = log;
     this.persistLog = false;
     this.logPath = null;
+    this.startTime = Instant.now();
     lastStatusAt = Instant.now();
     initCounterMap();
   }
@@ -150,9 +153,18 @@ public class LogWrapper {
     refreshCounters();
     return log.build();
   }
+  
+  // Get runtime metadata for use in other reports
+  public Debug.RuntimeMetadata getRuntimeMetadata() {
+    return RuntimeMetadataUtil.createRuntimeMetadata(startTime);
+  }
 
   private void persistLog(boolean silent) throws IOException {
     refreshCounters();
+    
+    // Add runtime metadata
+    Debug.RuntimeMetadata runtimeMetadata = RuntimeMetadataUtil.createRuntimeMetadata(startTime);
+    log.setRuntimeMetadata(runtimeMetadata);
 
     if (LogWrapper.TEST_MODE) {
       sortLogEntries();

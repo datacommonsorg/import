@@ -5,28 +5,29 @@ package org.datacommons.proto;
 
 public final class Mcf {
   private Mcf() {}
-
-  public static void registerAllExtensions(com.google.protobuf.ExtensionRegistryLite registry) {}
-
-  public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
-    registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
+  public static void registerAllExtensions(
+      com.google.protobuf.ExtensionRegistryLite registry) {
   }
 
+  public static void registerAllExtensions(
+      com.google.protobuf.ExtensionRegistry registry) {
+    registerAllExtensions(
+        (com.google.protobuf.ExtensionRegistryLite) registry);
+  }
   /**
-   *
-   *
    * <pre>
    * Type of MCF sub-graph.
    * </pre>
    *
    * Protobuf enum {@code org.datacommons.proto.McfType}
    */
-  public enum McfType implements com.google.protobuf.ProtocolMessageEnum {
-    /** <code>UNKNOWN_MCF_TYPE = 0;</code> */
+  public enum McfType
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>UNKNOWN_MCF_TYPE = 0;</code>
+     */
     UNKNOWN_MCF_TYPE(0),
     /**
-     *
-     *
      * <pre>
      * The sub-graph is made of instances.
      * </pre>
@@ -35,8 +36,6 @@ public final class Mcf {
      */
     INSTANCE_MCF(1),
     /**
-     *
-     *
      * <pre>
      * The sub-graph is made of templates.
      * </pre>
@@ -46,12 +45,11 @@ public final class Mcf {
     TEMPLATE_MCF(2),
     ;
 
-    /** <code>UNKNOWN_MCF_TYPE = 0;</code> */
-    public static final int UNKNOWN_MCF_TYPE_VALUE = 0;
-
     /**
-     *
-     *
+     * <code>UNKNOWN_MCF_TYPE = 0;</code>
+     */
+    public static final int UNKNOWN_MCF_TYPE_VALUE = 0;
+    /**
      * <pre>
      * The sub-graph is made of instances.
      * </pre>
@@ -59,10 +57,7 @@ public final class Mcf {
      * <code>INSTANCE_MCF = 1;</code>
      */
     public static final int INSTANCE_MCF_VALUE = 1;
-
     /**
-     *
-     *
      * <pre>
      * The sub-graph is made of templates.
      * </pre>
@@ -70,6 +65,7 @@ public final class Mcf {
      * <code>TEMPLATE_MCF = 2;</code>
      */
     public static final int TEMPLATE_MCF_VALUE = 2;
+
 
     public final int getNumber() {
       return value;
@@ -91,45 +87,45 @@ public final class Mcf {
      */
     public static McfType forNumber(int value) {
       switch (value) {
-        case 0:
-          return UNKNOWN_MCF_TYPE;
-        case 1:
-          return INSTANCE_MCF;
-        case 2:
-          return TEMPLATE_MCF;
-        default:
-          return null;
+        case 0: return UNKNOWN_MCF_TYPE;
+        case 1: return INSTANCE_MCF;
+        case 2: return TEMPLATE_MCF;
+        default: return null;
       }
     }
 
-    public static com.google.protobuf.Internal.EnumLiteMap<McfType> internalGetValueMap() {
+    public static com.google.protobuf.Internal.EnumLiteMap<McfType>
+        internalGetValueMap() {
       return internalValueMap;
     }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        McfType> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<McfType>() {
+            public McfType findValueByNumber(int number) {
+              return McfType.forNumber(number);
+            }
+          };
 
-    private static final com.google.protobuf.Internal.EnumLiteMap<McfType> internalValueMap =
-        new com.google.protobuf.Internal.EnumLiteMap<McfType>() {
-          public McfType findValueByNumber(int number) {
-            return McfType.forNumber(number);
-          }
-        };
-
-    public final com.google.protobuf.Descriptors.EnumValueDescriptor getValueDescriptor() {
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
       return getDescriptor().getValues().get(ordinal());
     }
-
-    public final com.google.protobuf.Descriptors.EnumDescriptor getDescriptorForType() {
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
       return getDescriptor();
     }
-
-    public static final com.google.protobuf.Descriptors.EnumDescriptor getDescriptor() {
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
       return org.datacommons.proto.Mcf.getDescriptor().getEnumTypes().get(0);
     }
 
     private static final McfType[] VALUES = values();
 
-    public static McfType valueOf(com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+    public static McfType valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
       if (desc.getType() != getDescriptor()) {
-        throw new java.lang.IllegalArgumentException("EnumValueDescriptor is not for this type.");
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
       }
       return VALUES[desc.getIndex()];
     }
@@ -144,20 +140,19 @@ public final class Mcf {
   }
 
   /**
-   *
-   *
    * <pre>
    * Represents the type of property value.
    * </pre>
    *
    * Protobuf enum {@code org.datacommons.proto.ValueType}
    */
-  public enum ValueType implements com.google.protobuf.ProtocolMessageEnum {
-    /** <code>UNKNOWN_VALUE_TYPE = 0;</code> */
+  public enum ValueType
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>UNKNOWN_VALUE_TYPE = 0;</code>
+     */
     UNKNOWN_VALUE_TYPE(0),
     /**
-     *
-     *
      * <pre>
      * Any value that has double quotes around it gets considered a text.
      * </pre>
@@ -166,8 +161,6 @@ public final class Mcf {
      */
     TEXT(1),
     /**
-     *
-     *
      * <pre>
      * Any non-text and non-reference value gets interpreted as number (int /
      * uint / double / float).
@@ -177,8 +170,6 @@ public final class Mcf {
      */
     NUMBER(2),
     /**
-     *
-     *
      * <pre>
      * Represents a reference to a node that has not yet been resolved.  These
      * types should turn into RESOLVED_REF after entity resolution.
@@ -189,8 +180,6 @@ public final class Mcf {
      */
     UNRESOLVED_REF(3),
     /**
-     *
-     *
      * <pre>
      * Represents a resolved datacommons entity. Stores a DCID value.
      * </pre>
@@ -199,8 +188,6 @@ public final class Mcf {
      */
     RESOLVED_REF(4),
     /**
-     *
-     *
      * <pre>
      * Represents a complex value corresponding to Quantity, QuantityRange, LatLng, etc.
      * </pre>
@@ -209,8 +196,6 @@ public final class Mcf {
      */
     COMPLEX_VALUE(5),
     /**
-     *
-     *
      * <pre>
      * Represents a table column for TEMPLATE_MCF.
      * </pre>
@@ -219,8 +204,6 @@ public final class Mcf {
      */
     TABLE_COLUMN(6),
     /**
-     *
-     *
      * <pre>
      * Represents a table entity for TEMPLATE_MCF.
      * </pre>
@@ -230,12 +213,11 @@ public final class Mcf {
     TABLE_ENTITY(7),
     ;
 
-    /** <code>UNKNOWN_VALUE_TYPE = 0;</code> */
-    public static final int UNKNOWN_VALUE_TYPE_VALUE = 0;
-
     /**
-     *
-     *
+     * <code>UNKNOWN_VALUE_TYPE = 0;</code>
+     */
+    public static final int UNKNOWN_VALUE_TYPE_VALUE = 0;
+    /**
      * <pre>
      * Any value that has double quotes around it gets considered a text.
      * </pre>
@@ -243,10 +225,7 @@ public final class Mcf {
      * <code>TEXT = 1;</code>
      */
     public static final int TEXT_VALUE = 1;
-
     /**
-     *
-     *
      * <pre>
      * Any non-text and non-reference value gets interpreted as number (int /
      * uint / double / float).
@@ -255,10 +234,7 @@ public final class Mcf {
      * <code>NUMBER = 2;</code>
      */
     public static final int NUMBER_VALUE = 2;
-
     /**
-     *
-     *
      * <pre>
      * Represents a reference to a node that has not yet been resolved.  These
      * types should turn into RESOLVED_REF after entity resolution.
@@ -268,10 +244,7 @@ public final class Mcf {
      * <code>UNRESOLVED_REF = 3;</code>
      */
     public static final int UNRESOLVED_REF_VALUE = 3;
-
     /**
-     *
-     *
      * <pre>
      * Represents a resolved datacommons entity. Stores a DCID value.
      * </pre>
@@ -279,10 +252,7 @@ public final class Mcf {
      * <code>RESOLVED_REF = 4;</code>
      */
     public static final int RESOLVED_REF_VALUE = 4;
-
     /**
-     *
-     *
      * <pre>
      * Represents a complex value corresponding to Quantity, QuantityRange, LatLng, etc.
      * </pre>
@@ -290,10 +260,7 @@ public final class Mcf {
      * <code>COMPLEX_VALUE = 5;</code>
      */
     public static final int COMPLEX_VALUE_VALUE = 5;
-
     /**
-     *
-     *
      * <pre>
      * Represents a table column for TEMPLATE_MCF.
      * </pre>
@@ -301,10 +268,7 @@ public final class Mcf {
      * <code>TABLE_COLUMN = 6;</code>
      */
     public static final int TABLE_COLUMN_VALUE = 6;
-
     /**
-     *
-     *
      * <pre>
      * Represents a table entity for TEMPLATE_MCF.
      * </pre>
@@ -312,6 +276,7 @@ public final class Mcf {
      * <code>TABLE_ENTITY = 7;</code>
      */
     public static final int TABLE_ENTITY_VALUE = 7;
+
 
     public final int getNumber() {
       return value;
@@ -333,55 +298,50 @@ public final class Mcf {
      */
     public static ValueType forNumber(int value) {
       switch (value) {
-        case 0:
-          return UNKNOWN_VALUE_TYPE;
-        case 1:
-          return TEXT;
-        case 2:
-          return NUMBER;
-        case 3:
-          return UNRESOLVED_REF;
-        case 4:
-          return RESOLVED_REF;
-        case 5:
-          return COMPLEX_VALUE;
-        case 6:
-          return TABLE_COLUMN;
-        case 7:
-          return TABLE_ENTITY;
-        default:
-          return null;
+        case 0: return UNKNOWN_VALUE_TYPE;
+        case 1: return TEXT;
+        case 2: return NUMBER;
+        case 3: return UNRESOLVED_REF;
+        case 4: return RESOLVED_REF;
+        case 5: return COMPLEX_VALUE;
+        case 6: return TABLE_COLUMN;
+        case 7: return TABLE_ENTITY;
+        default: return null;
       }
     }
 
-    public static com.google.protobuf.Internal.EnumLiteMap<ValueType> internalGetValueMap() {
+    public static com.google.protobuf.Internal.EnumLiteMap<ValueType>
+        internalGetValueMap() {
       return internalValueMap;
     }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        ValueType> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<ValueType>() {
+            public ValueType findValueByNumber(int number) {
+              return ValueType.forNumber(number);
+            }
+          };
 
-    private static final com.google.protobuf.Internal.EnumLiteMap<ValueType> internalValueMap =
-        new com.google.protobuf.Internal.EnumLiteMap<ValueType>() {
-          public ValueType findValueByNumber(int number) {
-            return ValueType.forNumber(number);
-          }
-        };
-
-    public final com.google.protobuf.Descriptors.EnumValueDescriptor getValueDescriptor() {
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
       return getDescriptor().getValues().get(ordinal());
     }
-
-    public final com.google.protobuf.Descriptors.EnumDescriptor getDescriptorForType() {
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
       return getDescriptor();
     }
-
-    public static final com.google.protobuf.Descriptors.EnumDescriptor getDescriptor() {
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
       return org.datacommons.proto.Mcf.getDescriptor().getEnumTypes().get(1);
     }
 
     private static final ValueType[] VALUES = values();
 
-    public static ValueType valueOf(com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+    public static ValueType valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
       if (desc.getType() != getDescriptor()) {
-        throw new java.lang.IllegalArgumentException("EnumValueDescriptor is not for this type.");
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
       }
       return VALUES[desc.getIndex()];
     }
@@ -395,40 +355,30 @@ public final class Mcf {
     // @@protoc_insertion_point(enum_scope:org.datacommons.proto.ValueType)
   }
 
-  public interface McfGraphOrBuilder
-      extends
+  public interface McfGraphOrBuilder extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.McfGraph)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     *
-     *
      * <pre>
      * Type of the sub-graph.
      * </pre>
      *
      * <code>optional .org.datacommons.proto.McfType type = 1 [default = INSTANCE_MCF];</code>
-     *
      * @return Whether the type field is set.
      */
     boolean hasType();
-
     /**
-     *
-     *
      * <pre>
      * Type of the sub-graph.
      * </pre>
      *
      * <code>optional .org.datacommons.proto.McfType type = 1 [default = INSTANCE_MCF];</code>
-     *
      * @return The type.
      */
     org.datacommons.proto.Mcf.McfType getType();
 
     /**
-     *
-     *
      * <pre>
      * A map from Local Node ID to its property and values.
      * </pre>
@@ -436,25 +386,22 @@ public final class Mcf {
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
     int getNodesCount();
-
     /**
-     *
-     *
      * <pre>
      * A map from Local Node ID to its property and values.
      * </pre>
      *
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
-    boolean containsNodes(java.lang.String key);
-
-    /** Use {@link #getNodesMap()} instead. */
-    @java.lang.Deprecated
-    java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> getNodes();
-
+    boolean containsNodes(
+        java.lang.String key);
     /**
-     *
-     *
+     * Use {@link #getNodesMap()} instead.
+     */
+    @java.lang.Deprecated
+    java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
+    getNodes();
+    /**
      * <pre>
      * A map from Local Node ID to its property and values.
      * </pre>
@@ -462,35 +409,30 @@ public final class Mcf {
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
     java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-        getNodesMap();
-
+    getNodesMap();
     /**
-     *
-     *
      * <pre>
      * A map from Local Node ID to its property and values.
      * </pre>
      *
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
+
     org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrDefault(
-        java.lang.String key, org.datacommons.proto.Mcf.McfGraph.PropertyValues defaultValue);
-
+        java.lang.String key,
+        org.datacommons.proto.Mcf.McfGraph.PropertyValues defaultValue);
     /**
-     *
-     *
      * <pre>
      * A map from Local Node ID to its property and values.
      * </pre>
      *
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
-    org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrThrow(java.lang.String key);
-  }
 
+    org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrThrow(
+        java.lang.String key);
+  }
   /**
-   *
-   *
    * <pre>
    * Proto representation of a Data Commons sub-graph which may be made of instance nodes (INSTANCE_MCF)
    * or template nodes (TEMPLATE_MCF).
@@ -498,32 +440,31 @@ public final class Mcf {
    *
    * Protobuf type {@code org.datacommons.proto.McfGraph}
    */
-  public static final class McfGraph extends com.google.protobuf.GeneratedMessageV3
-      implements
+  public static final class McfGraph extends
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.McfGraph)
       McfGraphOrBuilder {
-    private static final long serialVersionUID = 0L;
-
+  private static final long serialVersionUID = 0L;
     // Use McfGraph.newBuilder() to construct.
     private McfGraph(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-
     private McfGraph() {
       type_ = 1;
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
       return new McfGraph();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
       return this.unknownFields;
     }
-
     private McfGraph(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -543,184 +484,155 @@ public final class Mcf {
             case 0:
               done = true;
               break;
-            case 8:
-              {
-                int rawValue = input.readEnum();
+            case 8: {
+              int rawValue = input.readEnum();
                 @SuppressWarnings("deprecation")
-                org.datacommons.proto.Mcf.McfType value =
-                    org.datacommons.proto.Mcf.McfType.valueOf(rawValue);
-                if (value == null) {
-                  unknownFields.mergeVarintField(1, rawValue);
-                } else {
-                  bitField0_ |= 0x00000001;
-                  type_ = rawValue;
-                }
-                break;
+              org.datacommons.proto.Mcf.McfType value = org.datacommons.proto.Mcf.McfType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(1, rawValue);
+              } else {
+                bitField0_ |= 0x00000001;
+                type_ = rawValue;
               }
-            case 18:
-              {
-                if (!((mutable_bitField0_ & 0x00000002) != 0)) {
-                  nodes_ =
-                      com.google.protobuf.MapField.newMapField(
-                          NodesDefaultEntryHolder.defaultEntry);
-                  mutable_bitField0_ |= 0x00000002;
-                }
-                com.google.protobuf.MapEntry<
-                        java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-                    nodes__ =
-                        input.readMessage(
-                            NodesDefaultEntryHolder.defaultEntry.getParserForType(),
-                            extensionRegistry);
-                nodes_.getMutableMap().put(nodes__.getKey(), nodes__.getValue());
-                break;
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                nodes_ = com.google.protobuf.MapField.newMapField(
+                    NodesDefaultEntryHolder.defaultEntry);
+                mutable_bitField0_ |= 0x00000002;
               }
-            default:
-              {
-                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
+              com.google.protobuf.MapEntry<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
+              nodes__ = input.readMessage(
+                  NodesDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+              nodes_.getMutableMap().put(
+                  nodes__.getKey(), nodes__.getValue());
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
               }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
-
-    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
       return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_descriptor;
     }
 
     @SuppressWarnings({"rawtypes"})
     @java.lang.Override
-    protected com.google.protobuf.MapField internalGetMapField(int number) {
+    protected com.google.protobuf.MapField internalGetMapField(
+        int number) {
       switch (number) {
         case 2:
           return internalGetNodes();
         default:
-          throw new RuntimeException("Invalid map field number: " + number);
+          throw new RuntimeException(
+              "Invalid map field number: " + number);
       }
     }
-
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Mcf
-          .internal_static_org_datacommons_proto_McfGraph_fieldAccessorTable
+      return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Mcf.McfGraph.class,
-              org.datacommons.proto.Mcf.McfGraph.Builder.class);
+              org.datacommons.proto.Mcf.McfGraph.class, org.datacommons.proto.Mcf.McfGraph.Builder.class);
     }
 
-    public interface TypedValueOrBuilder
-        extends
+    public interface TypedValueOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.McfGraph.TypedValue)
         com.google.protobuf.MessageOrBuilder {
 
       /**
        * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
-       *
        * @return Whether the type field is set.
        */
       boolean hasType();
-
       /**
        * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
-       *
        * @return The type.
        */
       org.datacommons.proto.Mcf.ValueType getType();
 
       /**
        * <code>optional string value = 2;</code>
-       *
        * @return Whether the value field is set.
        */
       boolean hasValue();
-
       /**
        * <code>optional string value = 2;</code>
-       *
        * @return The value.
        */
       java.lang.String getValue();
-
       /**
        * <code>optional string value = 2;</code>
-       *
        * @return The bytes for value.
        */
-      com.google.protobuf.ByteString getValueBytes();
+      com.google.protobuf.ByteString
+          getValueBytes();
 
       /**
-       *
-       *
        * <pre>
        * Debug info.  If this value came from a CSV, then the corresponding column name.
        * The row number is within locations in PropertyValues.
        * </pre>
        *
        * <code>optional string column = 3;</code>
-       *
        * @return Whether the column field is set.
        */
       boolean hasColumn();
-
       /**
-       *
-       *
        * <pre>
        * Debug info.  If this value came from a CSV, then the corresponding column name.
        * The row number is within locations in PropertyValues.
        * </pre>
        *
        * <code>optional string column = 3;</code>
-       *
        * @return The column.
        */
       java.lang.String getColumn();
-
       /**
-       *
-       *
        * <pre>
        * Debug info.  If this value came from a CSV, then the corresponding column name.
        * The row number is within locations in PropertyValues.
        * </pre>
        *
        * <code>optional string column = 3;</code>
-       *
        * @return The bytes for column.
        */
-      com.google.protobuf.ByteString getColumnBytes();
+      com.google.protobuf.ByteString
+          getColumnBytes();
     }
-
     /**
-     *
-     *
      * <pre>
      * Represents a single value.
      * </pre>
      *
      * Protobuf type {@code org.datacommons.proto.McfGraph.TypedValue}
      */
-    public static final class TypedValue extends com.google.protobuf.GeneratedMessageV3
-        implements
+    public static final class TypedValue extends
+        com.google.protobuf.GeneratedMessageV3 implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.McfGraph.TypedValue)
         TypedValueOrBuilder {
-      private static final long serialVersionUID = 0L;
-
+    private static final long serialVersionUID = 0L;
       // Use TypedValue.newBuilder() to construct.
       private TypedValue(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
       }
-
       private TypedValue() {
         type_ = 0;
         value_ = "";
@@ -729,15 +641,16 @@ public final class Mcf {
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
         return new TypedValue();
       }
 
       @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
         return this.unknownFields;
       }
-
       private TypedValue(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -757,112 +670,94 @@ public final class Mcf {
               case 0:
                 done = true;
                 break;
-              case 8:
-                {
-                  int rawValue = input.readEnum();
+              case 8: {
+                int rawValue = input.readEnum();
                   @SuppressWarnings("deprecation")
-                  org.datacommons.proto.Mcf.ValueType value =
-                      org.datacommons.proto.Mcf.ValueType.valueOf(rawValue);
-                  if (value == null) {
-                    unknownFields.mergeVarintField(1, rawValue);
-                  } else {
-                    bitField0_ |= 0x00000001;
-                    type_ = rawValue;
-                  }
-                  break;
+                org.datacommons.proto.Mcf.ValueType value = org.datacommons.proto.Mcf.ValueType.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(1, rawValue);
+                } else {
+                  bitField0_ |= 0x00000001;
+                  type_ = rawValue;
                 }
-              case 18:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000002;
-                  value_ = bs;
-                  break;
+                break;
+              }
+              case 18: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000002;
+                value_ = bs;
+                break;
+              }
+              case 26: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000004;
+                column_ = bs;
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
                 }
-              case 26:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000004;
-                  column_ = bs;
-                  break;
-                }
-              default:
-                {
-                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                    done = true;
-                  }
-                  break;
-                }
+                break;
+              }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(e)
-              .setUnfinishedMessage(this);
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
         } finally {
           this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
         }
       }
-
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfGraph_TypedValue_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_TypedValue_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfGraph_TypedValue_fieldAccessorTable
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_TypedValue_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Mcf.McfGraph.TypedValue.class,
-                org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder.class);
+                org.datacommons.proto.Mcf.McfGraph.TypedValue.class, org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder.class);
       }
 
       private int bitField0_;
       public static final int TYPE_FIELD_NUMBER = 1;
       private int type_;
-
       /**
        * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
-       *
        * @return Whether the type field is set.
        */
-      @java.lang.Override
-      public boolean hasType() {
+      @java.lang.Override public boolean hasType() {
         return ((bitField0_ & 0x00000001) != 0);
       }
-
       /**
        * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
-       *
        * @return The type.
        */
-      @java.lang.Override
-      public org.datacommons.proto.Mcf.ValueType getType() {
+      @java.lang.Override public org.datacommons.proto.Mcf.ValueType getType() {
         @SuppressWarnings("deprecation")
-        org.datacommons.proto.Mcf.ValueType result =
-            org.datacommons.proto.Mcf.ValueType.valueOf(type_);
+        org.datacommons.proto.Mcf.ValueType result = org.datacommons.proto.Mcf.ValueType.valueOf(type_);
         return result == null ? org.datacommons.proto.Mcf.ValueType.UNKNOWN_VALUE_TYPE : result;
       }
 
       public static final int VALUE_FIELD_NUMBER = 2;
       private volatile java.lang.Object value_;
-
       /**
        * <code>optional string value = 2;</code>
-       *
        * @return Whether the value field is set.
        */
       @java.lang.Override
       public boolean hasValue() {
         return ((bitField0_ & 0x00000002) != 0);
       }
-
       /**
        * <code>optional string value = 2;</code>
-       *
        * @return The value.
        */
       @java.lang.Override
@@ -871,7 +766,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             value_ = s;
@@ -879,18 +775,18 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
        * <code>optional string value = 2;</code>
-       *
        * @return The bytes for value.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getValueBytes() {
+      public com.google.protobuf.ByteString
+          getValueBytes() {
         java.lang.Object ref = value_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           value_ = b;
           return b;
         } else {
@@ -900,34 +796,26 @@ public final class Mcf {
 
       public static final int COLUMN_FIELD_NUMBER = 3;
       private volatile java.lang.Object column_;
-
       /**
-       *
-       *
        * <pre>
        * Debug info.  If this value came from a CSV, then the corresponding column name.
        * The row number is within locations in PropertyValues.
        * </pre>
        *
        * <code>optional string column = 3;</code>
-       *
        * @return Whether the column field is set.
        */
       @java.lang.Override
       public boolean hasColumn() {
         return ((bitField0_ & 0x00000004) != 0);
       }
-
       /**
-       *
-       *
        * <pre>
        * Debug info.  If this value came from a CSV, then the corresponding column name.
        * The row number is within locations in PropertyValues.
        * </pre>
        *
        * <code>optional string column = 3;</code>
-       *
        * @return The column.
        */
       @java.lang.Override
@@ -936,7 +824,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             column_ = s;
@@ -944,25 +833,23 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
-       *
-       *
        * <pre>
        * Debug info.  If this value came from a CSV, then the corresponding column name.
        * The row number is within locations in PropertyValues.
        * </pre>
        *
        * <code>optional string column = 3;</code>
-       *
        * @return The bytes for column.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getColumnBytes() {
+      public com.google.protobuf.ByteString
+          getColumnBytes() {
         java.lang.Object ref = column_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           column_ = b;
           return b;
         } else {
@@ -971,7 +858,6 @@ public final class Mcf {
       }
 
       private byte memoizedIsInitialized = -1;
-
       @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -983,7 +869,8 @@ public final class Mcf {
       }
 
       @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
         if (((bitField0_ & 0x00000001) != 0)) {
           output.writeEnum(1, type_);
         }
@@ -1003,7 +890,8 @@ public final class Mcf {
 
         size = 0;
         if (((bitField0_ & 0x00000001) != 0)) {
-          size += com.google.protobuf.CodedOutputStream.computeEnumSize(1, type_);
+          size += com.google.protobuf.CodedOutputStream
+            .computeEnumSize(1, type_);
         }
         if (((bitField0_ & 0x00000002) != 0)) {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, value_);
@@ -1019,13 +907,12 @@ public final class Mcf {
       @java.lang.Override
       public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
-          return true;
+         return true;
         }
         if (!(obj instanceof org.datacommons.proto.Mcf.McfGraph.TypedValue)) {
           return super.equals(obj);
         }
-        org.datacommons.proto.Mcf.McfGraph.TypedValue other =
-            (org.datacommons.proto.Mcf.McfGraph.TypedValue) obj;
+        org.datacommons.proto.Mcf.McfGraph.TypedValue other = (org.datacommons.proto.Mcf.McfGraph.TypedValue) obj;
 
         if (hasType() != other.hasType()) return false;
         if (hasType()) {
@@ -1033,11 +920,13 @@ public final class Mcf {
         }
         if (hasValue() != other.hasValue()) return false;
         if (hasValue()) {
-          if (!getValue().equals(other.getValue())) return false;
+          if (!getValue()
+              .equals(other.getValue())) return false;
         }
         if (hasColumn() != other.hasColumn()) return false;
         if (hasColumn()) {
-          if (!getColumn().equals(other.getColumn())) return false;
+          if (!getColumn()
+              .equals(other.getColumn())) return false;
         }
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
@@ -1068,93 +957,87 @@ public final class Mcf {
       }
 
       public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseFrom(
-          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseFrom(
-          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseFrom(
-          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
-      public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseFrom(
-          java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+      public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
       }
-
-      public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseDelimitedFrom(
-          java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseDelimitedFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-            PARSER, input, extensionRegistry);
-      }
-
       public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseFrom(
-          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
-
+      public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
       public static org.datacommons.proto.Mcf.McfGraph.TypedValue parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
 
       @java.lang.Override
-      public Builder newBuilderForType() {
-        return newBuilder();
-      }
-
+      public Builder newBuilderForType() { return newBuilder(); }
       public static Builder newBuilder() {
         return DEFAULT_INSTANCE.toBuilder();
       }
-
       public static Builder newBuilder(org.datacommons.proto.Mcf.McfGraph.TypedValue prototype) {
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
-
       @java.lang.Override
       public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
       }
 
       @java.lang.Override
@@ -1163,34 +1046,28 @@ public final class Mcf {
         Builder builder = new Builder(parent);
         return builder;
       }
-
       /**
-       *
-       *
        * <pre>
        * Represents a single value.
        * </pre>
        *
        * Protobuf type {@code org.datacommons.proto.McfGraph.TypedValue}
        */
-      public static final class Builder
-          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-          implements
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
           // @@protoc_insertion_point(builder_implements:org.datacommons.proto.McfGraph.TypedValue)
           org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfGraph_TypedValue_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_TypedValue_descriptor;
         }
 
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfGraph_TypedValue_fieldAccessorTable
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_TypedValue_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Mcf.McfGraph.TypedValue.class,
-                  org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder.class);
+                  org.datacommons.proto.Mcf.McfGraph.TypedValue.class, org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder.class);
         }
 
         // Construct using org.datacommons.proto.Mcf.McfGraph.TypedValue.newBuilder()
@@ -1198,15 +1075,16 @@ public final class Mcf {
           maybeForceBuilderInitialization();
         }
 
-        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
-
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
         }
-
         @java.lang.Override
         public Builder clear() {
           super.clear();
@@ -1220,9 +1098,9 @@ public final class Mcf {
         }
 
         @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfGraph_TypedValue_descriptor;
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_TypedValue_descriptor;
         }
 
         @java.lang.Override
@@ -1241,8 +1119,7 @@ public final class Mcf {
 
         @java.lang.Override
         public org.datacommons.proto.Mcf.McfGraph.TypedValue buildPartial() {
-          org.datacommons.proto.Mcf.McfGraph.TypedValue result =
-              new org.datacommons.proto.Mcf.McfGraph.TypedValue(this);
+          org.datacommons.proto.Mcf.McfGraph.TypedValue result = new org.datacommons.proto.Mcf.McfGraph.TypedValue(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           if (((from_bitField0_ & 0x00000001) != 0)) {
@@ -1266,41 +1143,38 @@ public final class Mcf {
         public Builder clone() {
           return super.clone();
         }
-
         @java.lang.Override
         public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
           return super.setField(field, value);
         }
-
         @java.lang.Override
-        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
           return super.clearField(field);
         }
-
         @java.lang.Override
-        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
           return super.clearOneof(oneof);
         }
-
         @java.lang.Override
         public Builder setRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index,
-            java.lang.Object value) {
+            int index, java.lang.Object value) {
           return super.setRepeatedField(field, index, value);
         }
-
         @java.lang.Override
         public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
           return super.addRepeatedField(field, value);
         }
-
         @java.lang.Override
         public Builder mergeFrom(com.google.protobuf.Message other) {
           if (other instanceof org.datacommons.proto.Mcf.McfGraph.TypedValue) {
-            return mergeFrom((org.datacommons.proto.Mcf.McfGraph.TypedValue) other);
+            return mergeFrom((org.datacommons.proto.Mcf.McfGraph.TypedValue)other);
           } else {
             super.mergeFrom(other);
             return this;
@@ -1308,8 +1182,7 @@ public final class Mcf {
         }
 
         public Builder mergeFrom(org.datacommons.proto.Mcf.McfGraph.TypedValue other) {
-          if (other == org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance())
-            return this;
+          if (other == org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance()) return this;
           if (other.hasType()) {
             setType(other.getType());
           }
@@ -1342,8 +1215,7 @@ public final class Mcf {
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage =
-                (org.datacommons.proto.Mcf.McfGraph.TypedValue) e.getUnfinishedMessage();
+            parsedMessage = (org.datacommons.proto.Mcf.McfGraph.TypedValue) e.getUnfinishedMessage();
             throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
@@ -1352,37 +1224,28 @@ public final class Mcf {
           }
           return this;
         }
-
         private int bitField0_;
 
         private int type_ = 0;
-
         /**
          * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
-         *
          * @return Whether the type field is set.
          */
-        @java.lang.Override
-        public boolean hasType() {
+        @java.lang.Override public boolean hasType() {
           return ((bitField0_ & 0x00000001) != 0);
         }
-
         /**
          * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
-         *
          * @return The type.
          */
         @java.lang.Override
         public org.datacommons.proto.Mcf.ValueType getType() {
           @SuppressWarnings("deprecation")
-          org.datacommons.proto.Mcf.ValueType result =
-              org.datacommons.proto.Mcf.ValueType.valueOf(type_);
+          org.datacommons.proto.Mcf.ValueType result = org.datacommons.proto.Mcf.ValueType.valueOf(type_);
           return result == null ? org.datacommons.proto.Mcf.ValueType.UNKNOWN_VALUE_TYPE : result;
         }
-
         /**
          * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
-         *
          * @param value The type to set.
          * @return This builder for chaining.
          */
@@ -1395,10 +1258,8 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
          * <code>optional .org.datacommons.proto.ValueType type = 1;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearType() {
@@ -1409,25 +1270,22 @@ public final class Mcf {
         }
 
         private java.lang.Object value_ = "";
-
         /**
          * <code>optional string value = 2;</code>
-         *
          * @return Whether the value field is set.
          */
         public boolean hasValue() {
           return ((bitField0_ & 0x00000002) != 0);
         }
-
         /**
          * <code>optional string value = 2;</code>
-         *
          * @return The value.
          */
         public java.lang.String getValue() {
           java.lang.Object ref = value_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
               value_ = s;
@@ -1437,43 +1295,40 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
          * <code>optional string value = 2;</code>
-         *
          * @return The bytes for value.
          */
-        public com.google.protobuf.ByteString getValueBytes() {
+        public com.google.protobuf.ByteString
+            getValueBytes() {
           java.lang.Object ref = value_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             value_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
          * <code>optional string value = 2;</code>
-         *
          * @param value The value to set.
          * @return This builder for chaining.
          */
-        public Builder setValue(java.lang.String value) {
+        public Builder setValue(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000002;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
           value_ = value;
           onChanged();
           return this;
         }
-
         /**
          * <code>optional string value = 2;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearValue() {
@@ -1482,57 +1337,49 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
          * <code>optional string value = 2;</code>
-         *
          * @param value The bytes for value to set.
          * @return This builder for chaining.
          */
-        public Builder setValueBytes(com.google.protobuf.ByteString value) {
+        public Builder setValueBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000002;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
           value_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object column_ = "";
-
         /**
-         *
-         *
          * <pre>
          * Debug info.  If this value came from a CSV, then the corresponding column name.
          * The row number is within locations in PropertyValues.
          * </pre>
          *
          * <code>optional string column = 3;</code>
-         *
          * @return Whether the column field is set.
          */
         public boolean hasColumn() {
           return ((bitField0_ & 0x00000004) != 0);
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info.  If this value came from a CSV, then the corresponding column name.
          * The row number is within locations in PropertyValues.
          * </pre>
          *
          * <code>optional string column = 3;</code>
-         *
          * @return The column.
          */
         public java.lang.String getColumn() {
           java.lang.Object ref = column_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
               column_ = s;
@@ -1542,64 +1389,55 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info.  If this value came from a CSV, then the corresponding column name.
          * The row number is within locations in PropertyValues.
          * </pre>
          *
          * <code>optional string column = 3;</code>
-         *
          * @return The bytes for column.
          */
-        public com.google.protobuf.ByteString getColumnBytes() {
+        public com.google.protobuf.ByteString
+            getColumnBytes() {
           java.lang.Object ref = column_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             column_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info.  If this value came from a CSV, then the corresponding column name.
          * The row number is within locations in PropertyValues.
          * </pre>
          *
          * <code>optional string column = 3;</code>
-         *
          * @param value The column to set.
          * @return This builder for chaining.
          */
-        public Builder setColumn(java.lang.String value) {
+        public Builder setColumn(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000004;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
           column_ = value;
           onChanged();
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info.  If this value came from a CSV, then the corresponding column name.
          * The row number is within locations in PropertyValues.
          * </pre>
          *
          * <code>optional string column = 3;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearColumn() {
@@ -1608,30 +1446,26 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info.  If this value came from a CSV, then the corresponding column name.
          * The row number is within locations in PropertyValues.
          * </pre>
          *
          * <code>optional string column = 3;</code>
-         *
          * @param value The bytes for column to set.
          * @return This builder for chaining.
          */
-        public Builder setColumnBytes(com.google.protobuf.ByteString value) {
+        public Builder setColumnBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000004;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
           column_ = value;
           onChanged();
           return this;
         }
-
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -1644,12 +1478,12 @@ public final class Mcf {
           return super.mergeUnknownFields(unknownFields);
         }
 
+
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.McfGraph.TypedValue)
       }
 
       // @@protoc_insertion_point(class_scope:org.datacommons.proto.McfGraph.TypedValue)
       private static final org.datacommons.proto.Mcf.McfGraph.TypedValue DEFAULT_INSTANCE;
-
       static {
         DEFAULT_INSTANCE = new org.datacommons.proto.Mcf.McfGraph.TypedValue();
       }
@@ -1658,17 +1492,16 @@ public final class Mcf {
         return DEFAULT_INSTANCE;
       }
 
-      @java.lang.Deprecated
-      public static final com.google.protobuf.Parser<TypedValue> PARSER =
-          new com.google.protobuf.AbstractParser<TypedValue>() {
-            @java.lang.Override
-            public TypedValue parsePartialFrom(
-                com.google.protobuf.CodedInputStream input,
-                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                throws com.google.protobuf.InvalidProtocolBufferException {
-              return new TypedValue(input, extensionRegistry);
-            }
-          };
+      @java.lang.Deprecated public static final com.google.protobuf.Parser<TypedValue>
+          PARSER = new com.google.protobuf.AbstractParser<TypedValue>() {
+        @java.lang.Override
+        public TypedValue parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new TypedValue(input, extensionRegistry);
+        }
+      };
 
       public static com.google.protobuf.Parser<TypedValue> parser() {
         return PARSER;
@@ -1683,27 +1516,23 @@ public final class Mcf {
       public org.datacommons.proto.Mcf.McfGraph.TypedValue getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
+
     }
 
-    public interface ValuesOrBuilder
-        extends
+    public interface ValuesOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.McfGraph.Values)
         com.google.protobuf.MessageOrBuilder {
 
       /**
-       *
-       *
        * <pre>
        * A list of typed values.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
-      java.util.List<org.datacommons.proto.Mcf.McfGraph.TypedValue> getTypedValuesList();
-
+      java.util.List<org.datacommons.proto.Mcf.McfGraph.TypedValue> 
+          getTypedValuesList();
       /**
-       *
-       *
        * <pre>
        * A list of typed values.
        * </pre>
@@ -1711,10 +1540,7 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
       org.datacommons.proto.Mcf.McfGraph.TypedValue getTypedValues(int index);
-
       /**
-       *
-       *
        * <pre>
        * A list of typed values.
        * </pre>
@@ -1722,66 +1548,57 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
       int getTypedValuesCount();
-
       /**
-       *
-       *
        * <pre>
        * A list of typed values.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
-      java.util.List<? extends org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>
+      java.util.List<? extends org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder> 
           getTypedValuesOrBuilderList();
-
       /**
-       *
-       *
        * <pre>
        * A list of typed values.
        * </pre>
        *
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
-      org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getTypedValuesOrBuilder(int index);
+      org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getTypedValuesOrBuilder(
+          int index);
     }
-
     /**
-     *
-     *
      * <pre>
      * Represents a list of property values.
      * </pre>
      *
      * Protobuf type {@code org.datacommons.proto.McfGraph.Values}
      */
-    public static final class Values extends com.google.protobuf.GeneratedMessageV3
-        implements
+    public static final class Values extends
+        com.google.protobuf.GeneratedMessageV3 implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.McfGraph.Values)
         ValuesOrBuilder {
-      private static final long serialVersionUID = 0L;
-
+    private static final long serialVersionUID = 0L;
       // Use Values.newBuilder() to construct.
       private Values(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
       }
-
       private Values() {
         typedValues_ = java.util.Collections.emptyList();
       }
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
         return new Values();
       }
 
       @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
         return this.unknownFields;
       }
-
       private Values(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1801,32 +1618,29 @@ public final class Mcf {
               case 0:
                 done = true;
                 break;
-              case 10:
-                {
-                  if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                    typedValues_ =
-                        new java.util.ArrayList<org.datacommons.proto.Mcf.McfGraph.TypedValue>();
-                    mutable_bitField0_ |= 0x00000001;
-                  }
-                  typedValues_.add(
-                      input.readMessage(
-                          org.datacommons.proto.Mcf.McfGraph.TypedValue.PARSER, extensionRegistry));
-                  break;
+              case 10: {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  typedValues_ = new java.util.ArrayList<org.datacommons.proto.Mcf.McfGraph.TypedValue>();
+                  mutable_bitField0_ |= 0x00000001;
                 }
-              default:
-                {
-                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                    done = true;
-                  }
-                  break;
+                typedValues_.add(
+                    input.readMessage(org.datacommons.proto.Mcf.McfGraph.TypedValue.PARSER, extensionRegistry));
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
                 }
+                break;
+              }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(e)
-              .setUnfinishedMessage(this);
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
         } finally {
           if (((mutable_bitField0_ & 0x00000001) != 0)) {
             typedValues_ = java.util.Collections.unmodifiableList(typedValues_);
@@ -1835,28 +1649,22 @@ public final class Mcf {
           makeExtensionsImmutable();
         }
       }
-
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfGraph_Values_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_Values_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfGraph_Values_fieldAccessorTable
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_Values_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Mcf.McfGraph.Values.class,
-                org.datacommons.proto.Mcf.McfGraph.Values.Builder.class);
+                org.datacommons.proto.Mcf.McfGraph.Values.class, org.datacommons.proto.Mcf.McfGraph.Values.Builder.class);
       }
 
       public static final int TYPED_VALUES_FIELD_NUMBER = 1;
       private java.util.List<org.datacommons.proto.Mcf.McfGraph.TypedValue> typedValues_;
-
       /**
-       *
-       *
        * <pre>
        * A list of typed values.
        * </pre>
@@ -1867,10 +1675,7 @@ public final class Mcf {
       public java.util.List<org.datacommons.proto.Mcf.McfGraph.TypedValue> getTypedValuesList() {
         return typedValues_;
       }
-
       /**
-       *
-       *
        * <pre>
        * A list of typed values.
        * </pre>
@@ -1878,14 +1683,11 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
        */
       @java.lang.Override
-      public java.util.List<? extends org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>
+      public java.util.List<? extends org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder> 
           getTypedValuesOrBuilderList() {
         return typedValues_;
       }
-
       /**
-       *
-       *
        * <pre>
        * A list of typed values.
        * </pre>
@@ -1896,10 +1698,7 @@ public final class Mcf {
       public int getTypedValuesCount() {
         return typedValues_.size();
       }
-
       /**
-       *
-       *
        * <pre>
        * A list of typed values.
        * </pre>
@@ -1910,10 +1709,7 @@ public final class Mcf {
       public org.datacommons.proto.Mcf.McfGraph.TypedValue getTypedValues(int index) {
         return typedValues_.get(index);
       }
-
       /**
-       *
-       *
        * <pre>
        * A list of typed values.
        * </pre>
@@ -1927,7 +1723,6 @@ public final class Mcf {
       }
 
       private byte memoizedIsInitialized = -1;
-
       @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -1939,7 +1734,8 @@ public final class Mcf {
       }
 
       @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
         for (int i = 0; i < typedValues_.size(); i++) {
           output.writeMessage(1, typedValues_.get(i));
         }
@@ -1953,7 +1749,8 @@ public final class Mcf {
 
         size = 0;
         for (int i = 0; i < typedValues_.size(); i++) {
-          size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, typedValues_.get(i));
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(1, typedValues_.get(i));
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -1963,15 +1760,15 @@ public final class Mcf {
       @java.lang.Override
       public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
-          return true;
+         return true;
         }
         if (!(obj instanceof org.datacommons.proto.Mcf.McfGraph.Values)) {
           return super.equals(obj);
         }
-        org.datacommons.proto.Mcf.McfGraph.Values other =
-            (org.datacommons.proto.Mcf.McfGraph.Values) obj;
+        org.datacommons.proto.Mcf.McfGraph.Values other = (org.datacommons.proto.Mcf.McfGraph.Values) obj;
 
-        if (!getTypedValuesList().equals(other.getTypedValuesList())) return false;
+        if (!getTypedValuesList()
+            .equals(other.getTypedValuesList())) return false;
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -1992,94 +1789,88 @@ public final class Mcf {
         return hash;
       }
 
-      public static org.datacommons.proto.Mcf.McfGraph.Values parseFrom(java.nio.ByteBuffer data)
+      public static org.datacommons.proto.Mcf.McfGraph.Values parseFrom(
+          java.nio.ByteBuffer data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.Values parseFrom(
-          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.Values parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.Values parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.Values parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.Values parseFrom(
-          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.Values parseFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.Values parseFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
-
-      public static org.datacommons.proto.Mcf.McfGraph.Values parseDelimitedFrom(
-          java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Mcf.McfGraph.Values parseDelimitedFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+      public static org.datacommons.proto.Mcf.McfGraph.Values parseDelimitedFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-            PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
       }
-
+      public static org.datacommons.proto.Mcf.McfGraph.Values parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
       public static org.datacommons.proto.Mcf.McfGraph.Values parseFrom(
-          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.Values parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
 
       @java.lang.Override
-      public Builder newBuilderForType() {
-        return newBuilder();
-      }
-
+      public Builder newBuilderForType() { return newBuilder(); }
       public static Builder newBuilder() {
         return DEFAULT_INSTANCE.toBuilder();
       }
-
       public static Builder newBuilder(org.datacommons.proto.Mcf.McfGraph.Values prototype) {
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
-
       @java.lang.Override
       public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
       }
 
       @java.lang.Override
@@ -2088,34 +1879,28 @@ public final class Mcf {
         Builder builder = new Builder(parent);
         return builder;
       }
-
       /**
-       *
-       *
        * <pre>
        * Represents a list of property values.
        * </pre>
        *
        * Protobuf type {@code org.datacommons.proto.McfGraph.Values}
        */
-      public static final class Builder
-          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-          implements
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
           // @@protoc_insertion_point(builder_implements:org.datacommons.proto.McfGraph.Values)
           org.datacommons.proto.Mcf.McfGraph.ValuesOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfGraph_Values_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_Values_descriptor;
         }
 
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfGraph_Values_fieldAccessorTable
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_Values_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Mcf.McfGraph.Values.class,
-                  org.datacommons.proto.Mcf.McfGraph.Values.Builder.class);
+                  org.datacommons.proto.Mcf.McfGraph.Values.class, org.datacommons.proto.Mcf.McfGraph.Values.Builder.class);
         }
 
         // Construct using org.datacommons.proto.Mcf.McfGraph.Values.newBuilder()
@@ -2123,17 +1908,17 @@ public final class Mcf {
           maybeForceBuilderInitialization();
         }
 
-        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
-
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
             getTypedValuesFieldBuilder();
           }
         }
-
         @java.lang.Override
         public Builder clear() {
           super.clear();
@@ -2147,9 +1932,9 @@ public final class Mcf {
         }
 
         @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfGraph_Values_descriptor;
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_Values_descriptor;
         }
 
         @java.lang.Override
@@ -2168,8 +1953,7 @@ public final class Mcf {
 
         @java.lang.Override
         public org.datacommons.proto.Mcf.McfGraph.Values buildPartial() {
-          org.datacommons.proto.Mcf.McfGraph.Values result =
-              new org.datacommons.proto.Mcf.McfGraph.Values(this);
+          org.datacommons.proto.Mcf.McfGraph.Values result = new org.datacommons.proto.Mcf.McfGraph.Values(this);
           int from_bitField0_ = bitField0_;
           if (typedValuesBuilder_ == null) {
             if (((bitField0_ & 0x00000001) != 0)) {
@@ -2188,41 +1972,38 @@ public final class Mcf {
         public Builder clone() {
           return super.clone();
         }
-
         @java.lang.Override
         public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
           return super.setField(field, value);
         }
-
         @java.lang.Override
-        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
           return super.clearField(field);
         }
-
         @java.lang.Override
-        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
           return super.clearOneof(oneof);
         }
-
         @java.lang.Override
         public Builder setRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index,
-            java.lang.Object value) {
+            int index, java.lang.Object value) {
           return super.setRepeatedField(field, index, value);
         }
-
         @java.lang.Override
         public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
           return super.addRepeatedField(field, value);
         }
-
         @java.lang.Override
         public Builder mergeFrom(com.google.protobuf.Message other) {
           if (other instanceof org.datacommons.proto.Mcf.McfGraph.Values) {
-            return mergeFrom((org.datacommons.proto.Mcf.McfGraph.Values) other);
+            return mergeFrom((org.datacommons.proto.Mcf.McfGraph.Values)other);
           } else {
             super.mergeFrom(other);
             return this;
@@ -2249,10 +2030,9 @@ public final class Mcf {
                 typedValuesBuilder_ = null;
                 typedValues_ = other.typedValues_;
                 bitField0_ = (bitField0_ & ~0x00000001);
-                typedValuesBuilder_ =
-                    com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
-                        ? getTypedValuesFieldBuilder()
-                        : null;
+                typedValuesBuilder_ = 
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                     getTypedValuesFieldBuilder() : null;
               } else {
                 typedValuesBuilder_.addAllMessages(other.typedValues_);
               }
@@ -2286,30 +2066,21 @@ public final class Mcf {
           }
           return this;
         }
-
         private int bitField0_;
 
         private java.util.List<org.datacommons.proto.Mcf.McfGraph.TypedValue> typedValues_ =
-            java.util.Collections.emptyList();
-
+          java.util.Collections.emptyList();
         private void ensureTypedValuesIsMutable() {
           if (!((bitField0_ & 0x00000001) != 0)) {
-            typedValues_ =
-                new java.util.ArrayList<org.datacommons.proto.Mcf.McfGraph.TypedValue>(
-                    typedValues_);
+            typedValues_ = new java.util.ArrayList<org.datacommons.proto.Mcf.McfGraph.TypedValue>(typedValues_);
             bitField0_ |= 0x00000001;
-          }
+           }
         }
 
         private com.google.protobuf.RepeatedFieldBuilderV3<
-                org.datacommons.proto.Mcf.McfGraph.TypedValue,
-                org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder,
-                org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>
-            typedValuesBuilder_;
+            org.datacommons.proto.Mcf.McfGraph.TypedValue, org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder, org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder> typedValuesBuilder_;
 
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2323,10 +2094,7 @@ public final class Mcf {
             return typedValuesBuilder_.getMessageList();
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2340,10 +2108,7 @@ public final class Mcf {
             return typedValuesBuilder_.getCount();
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2357,10 +2122,7 @@ public final class Mcf {
             return typedValuesBuilder_.getMessage(index);
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2381,10 +2143,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2402,10 +2161,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2425,10 +2181,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2449,10 +2202,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2470,10 +2220,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2491,10 +2238,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2505,17 +2249,15 @@ public final class Mcf {
             java.lang.Iterable<? extends org.datacommons.proto.Mcf.McfGraph.TypedValue> values) {
           if (typedValuesBuilder_ == null) {
             ensureTypedValuesIsMutable();
-            com.google.protobuf.AbstractMessageLite.Builder.addAll(values, typedValues_);
+            com.google.protobuf.AbstractMessageLite.Builder.addAll(
+                values, typedValues_);
             onChanged();
           } else {
             typedValuesBuilder_.addAllMessages(values);
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2532,10 +2274,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2552,10 +2291,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2566,10 +2302,7 @@ public final class Mcf {
             int index) {
           return getTypedValuesFieldBuilder().getBuilder(index);
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2579,33 +2312,26 @@ public final class Mcf {
         public org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder getTypedValuesOrBuilder(
             int index) {
           if (typedValuesBuilder_ == null) {
-            return typedValues_.get(index);
-          } else {
+            return typedValues_.get(index);  } else {
             return typedValuesBuilder_.getMessageOrBuilder(index);
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
          *
          * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
          */
-        public java.util.List<? extends org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>
-            getTypedValuesOrBuilderList() {
+        public java.util.List<? extends org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder> 
+             getTypedValuesOrBuilderList() {
           if (typedValuesBuilder_ != null) {
             return typedValuesBuilder_.getMessageOrBuilderList();
           } else {
             return java.util.Collections.unmodifiableList(typedValues_);
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2613,13 +2339,10 @@ public final class Mcf {
          * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
          */
         public org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder addTypedValuesBuilder() {
-          return getTypedValuesFieldBuilder()
-              .addBuilder(org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance());
+          return getTypedValuesFieldBuilder().addBuilder(
+              org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance());
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
@@ -2628,36 +2351,26 @@ public final class Mcf {
          */
         public org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder addTypedValuesBuilder(
             int index) {
-          return getTypedValuesFieldBuilder()
-              .addBuilder(
-                  index, org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance());
+          return getTypedValuesFieldBuilder().addBuilder(
+              index, org.datacommons.proto.Mcf.McfGraph.TypedValue.getDefaultInstance());
         }
-
         /**
-         *
-         *
          * <pre>
          * A list of typed values.
          * </pre>
          *
          * <code>repeated .org.datacommons.proto.McfGraph.TypedValue typed_values = 1;</code>
          */
-        public java.util.List<org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder>
-            getTypedValuesBuilderList() {
+        public java.util.List<org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder> 
+             getTypedValuesBuilderList() {
           return getTypedValuesFieldBuilder().getBuilderList();
         }
-
         private com.google.protobuf.RepeatedFieldBuilderV3<
-                org.datacommons.proto.Mcf.McfGraph.TypedValue,
-                org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder,
-                org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>
+            org.datacommons.proto.Mcf.McfGraph.TypedValue, org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder, org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder> 
             getTypedValuesFieldBuilder() {
           if (typedValuesBuilder_ == null) {
-            typedValuesBuilder_ =
-                new com.google.protobuf.RepeatedFieldBuilderV3<
-                    org.datacommons.proto.Mcf.McfGraph.TypedValue,
-                    org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder,
-                    org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>(
+            typedValuesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+                org.datacommons.proto.Mcf.McfGraph.TypedValue, org.datacommons.proto.Mcf.McfGraph.TypedValue.Builder, org.datacommons.proto.Mcf.McfGraph.TypedValueOrBuilder>(
                     typedValues_,
                     ((bitField0_ & 0x00000001) != 0),
                     getParentForChildren(),
@@ -2666,7 +2379,6 @@ public final class Mcf {
           }
           return typedValuesBuilder_;
         }
-
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -2679,12 +2391,12 @@ public final class Mcf {
           return super.mergeUnknownFields(unknownFields);
         }
 
+
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.McfGraph.Values)
       }
 
       // @@protoc_insertion_point(class_scope:org.datacommons.proto.McfGraph.Values)
       private static final org.datacommons.proto.Mcf.McfGraph.Values DEFAULT_INSTANCE;
-
       static {
         DEFAULT_INSTANCE = new org.datacommons.proto.Mcf.McfGraph.Values();
       }
@@ -2693,17 +2405,16 @@ public final class Mcf {
         return DEFAULT_INSTANCE;
       }
 
-      @java.lang.Deprecated
-      public static final com.google.protobuf.Parser<Values> PARSER =
-          new com.google.protobuf.AbstractParser<Values>() {
-            @java.lang.Override
-            public Values parsePartialFrom(
-                com.google.protobuf.CodedInputStream input,
-                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                throws com.google.protobuf.InvalidProtocolBufferException {
-              return new Values(input, extensionRegistry);
-            }
-          };
+      @java.lang.Deprecated public static final com.google.protobuf.Parser<Values>
+          PARSER = new com.google.protobuf.AbstractParser<Values>() {
+        @java.lang.Override
+        public Values parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Values(input, extensionRegistry);
+        }
+      };
 
       public static com.google.protobuf.Parser<Values> parser() {
         return PARSER;
@@ -2718,16 +2429,14 @@ public final class Mcf {
       public org.datacommons.proto.Mcf.McfGraph.Values getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
+
     }
 
-    public interface PropertyValuesOrBuilder
-        extends
+    public interface PropertyValuesOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.McfGraph.PropertyValues)
         com.google.protobuf.MessageOrBuilder {
 
       /**
-       *
-       *
        * <pre>
        * Map of a property name to its values.
        * </pre>
@@ -2735,59 +2444,53 @@ public final class Mcf {
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
       int getPvsCount();
-
       /**
-       *
-       *
        * <pre>
        * Map of a property name to its values.
        * </pre>
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
-      boolean containsPvs(java.lang.String key);
-
-      /** Use {@link #getPvsMap()} instead. */
+      boolean containsPvs(
+          java.lang.String key);
+      /**
+       * Use {@link #getPvsMap()} instead.
+       */
       @java.lang.Deprecated
-      java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvs();
-
+      java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
+      getPvs();
       /**
-       *
-       *
        * <pre>
        * Map of a property name to its values.
        * </pre>
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
-      java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvsMap();
-
+      java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
+      getPvsMap();
       /**
-       *
-       *
        * <pre>
        * Map of a property name to its values.
        * </pre>
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
+
       org.datacommons.proto.Mcf.McfGraph.Values getPvsOrDefault(
-          java.lang.String key, org.datacommons.proto.Mcf.McfGraph.Values defaultValue);
-
+          java.lang.String key,
+          org.datacommons.proto.Mcf.McfGraph.Values defaultValue);
       /**
-       *
-       *
        * <pre>
        * Map of a property name to its values.
        * </pre>
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
-      org.datacommons.proto.Mcf.McfGraph.Values getPvsOrThrow(java.lang.String key);
+
+      org.datacommons.proto.Mcf.McfGraph.Values getPvsOrThrow(
+          java.lang.String key);
 
       /**
-       *
-       *
        * <pre>
        * Information identifying the location of this node in the source.
        * There can be multiple if PVs in this node are merged from different files.
@@ -2795,11 +2498,9 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList();
-
+      java.util.List<org.datacommons.proto.LogLocation.Location> 
+          getLocationsList();
       /**
-       *
-       *
        * <pre>
        * Information identifying the location of this node in the source.
        * There can be multiple if PVs in this node are merged from different files.
@@ -2808,10 +2509,7 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       org.datacommons.proto.LogLocation.Location getLocations(int index);
-
       /**
-       *
-       *
        * <pre>
        * Information identifying the location of this node in the source.
        * There can be multiple if PVs in this node are merged from different files.
@@ -2820,10 +2518,7 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       int getLocationsCount();
-
       /**
-       *
-       *
        * <pre>
        * Information identifying the location of this node in the source.
        * There can be multiple if PVs in this node are merged from different files.
@@ -2831,12 +2526,9 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder>
+      java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder> 
           getLocationsOrBuilderList();
-
       /**
-       *
-       *
        * <pre>
        * Information identifying the location of this node in the source.
        * There can be multiple if PVs in this node are merged from different files.
@@ -2844,107 +2536,83 @@ public final class Mcf {
        *
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
-      org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(int index);
+      org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(
+          int index);
 
       /**
-       *
-       *
        * <pre>
        * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
        * </pre>
        *
        * <code>optional string template_node = 3;</code>
-       *
        * @return Whether the templateNode field is set.
        */
       boolean hasTemplateNode();
-
       /**
-       *
-       *
        * <pre>
        * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
        * </pre>
        *
        * <code>optional string template_node = 3;</code>
-       *
        * @return The templateNode.
        */
       java.lang.String getTemplateNode();
-
       /**
-       *
-       *
        * <pre>
        * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
        * </pre>
        *
        * <code>optional string template_node = 3;</code>
-       *
        * @return The bytes for templateNode.
        */
-      com.google.protobuf.ByteString getTemplateNodeBytes();
+      com.google.protobuf.ByteString
+          getTemplateNodeBytes();
 
       /**
-       *
-       *
        * <pre>
        * Debug info. Error message for setting comments while serializing a node.
        * </pre>
        *
        * <code>optional string error_message = 4;</code>
-       *
        * @return Whether the errorMessage field is set.
        */
       boolean hasErrorMessage();
-
       /**
-       *
-       *
        * <pre>
        * Debug info. Error message for setting comments while serializing a node.
        * </pre>
        *
        * <code>optional string error_message = 4;</code>
-       *
        * @return The errorMessage.
        */
       java.lang.String getErrorMessage();
-
       /**
-       *
-       *
        * <pre>
        * Debug info. Error message for setting comments while serializing a node.
        * </pre>
        *
        * <code>optional string error_message = 4;</code>
-       *
        * @return The bytes for errorMessage.
        */
-      com.google.protobuf.ByteString getErrorMessageBytes();
+      com.google.protobuf.ByteString
+          getErrorMessageBytes();
     }
-
     /**
-     *
-     *
      * <pre>
      * Information about a node.
      * </pre>
      *
      * Protobuf type {@code org.datacommons.proto.McfGraph.PropertyValues}
      */
-    public static final class PropertyValues extends com.google.protobuf.GeneratedMessageV3
-        implements
+    public static final class PropertyValues extends
+        com.google.protobuf.GeneratedMessageV3 implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.McfGraph.PropertyValues)
         PropertyValuesOrBuilder {
-      private static final long serialVersionUID = 0L;
-
+    private static final long serialVersionUID = 0L;
       // Use PropertyValues.newBuilder() to construct.
       private PropertyValues(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
       }
-
       private PropertyValues() {
         locations_ = java.util.Collections.emptyList();
         templateNode_ = "";
@@ -2953,15 +2621,16 @@ public final class Mcf {
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
         return new PropertyValues();
       }
 
       @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
         return this.unknownFields;
       }
-
       private PropertyValues(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2981,63 +2650,54 @@ public final class Mcf {
               case 0:
                 done = true;
                 break;
-              case 10:
-                {
-                  if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                    pvs_ =
-                        com.google.protobuf.MapField.newMapField(
-                            PvsDefaultEntryHolder.defaultEntry);
-                    mutable_bitField0_ |= 0x00000001;
-                  }
-                  com.google.protobuf.MapEntry<
-                          java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
-                      pvs__ =
-                          input.readMessage(
-                              PvsDefaultEntryHolder.defaultEntry.getParserForType(),
-                              extensionRegistry);
-                  pvs_.getMutableMap().put(pvs__.getKey(), pvs__.getValue());
-                  break;
+              case 10: {
+                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                  pvs_ = com.google.protobuf.MapField.newMapField(
+                      PvsDefaultEntryHolder.defaultEntry);
+                  mutable_bitField0_ |= 0x00000001;
                 }
-              case 18:
-                {
-                  if (!((mutable_bitField0_ & 0x00000002) != 0)) {
-                    locations_ =
-                        new java.util.ArrayList<org.datacommons.proto.LogLocation.Location>();
-                    mutable_bitField0_ |= 0x00000002;
-                  }
-                  locations_.add(
-                      input.readMessage(
-                          org.datacommons.proto.LogLocation.Location.PARSER, extensionRegistry));
-                  break;
+                com.google.protobuf.MapEntry<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
+                pvs__ = input.readMessage(
+                    PvsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+                pvs_.getMutableMap().put(
+                    pvs__.getKey(), pvs__.getValue());
+                break;
+              }
+              case 18: {
+                if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                  locations_ = new java.util.ArrayList<org.datacommons.proto.LogLocation.Location>();
+                  mutable_bitField0_ |= 0x00000002;
                 }
-              case 26:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000001;
-                  templateNode_ = bs;
-                  break;
+                locations_.add(
+                    input.readMessage(org.datacommons.proto.LogLocation.Location.PARSER, extensionRegistry));
+                break;
+              }
+              case 26: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000001;
+                templateNode_ = bs;
+                break;
+              }
+              case 34: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000002;
+                errorMessage_ = bs;
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
                 }
-              case 34:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000002;
-                  errorMessage_ = bs;
-                  break;
-                }
-              default:
-                {
-                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                    done = true;
-                  }
-                  break;
-                }
+                break;
+              }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(e)
-              .setUnfinishedMessage(this);
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
         } finally {
           if (((mutable_bitField0_ & 0x00000002) != 0)) {
             locations_ = java.util.Collections.unmodifiableList(locations_);
@@ -3046,60 +2706,51 @@ public final class Mcf {
           makeExtensionsImmutable();
         }
       }
-
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor;
       }
 
       @SuppressWarnings({"rawtypes"})
       @java.lang.Override
-      protected com.google.protobuf.MapField internalGetMapField(int number) {
+      protected com.google.protobuf.MapField internalGetMapField(
+          int number) {
         switch (number) {
           case 1:
             return internalGetPvs();
           default:
-            throw new RuntimeException("Invalid map field number: " + number);
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
         }
       }
-
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfGraph_PropertyValues_fieldAccessorTable
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_PropertyValues_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Mcf.McfGraph.PropertyValues.class,
-                org.datacommons.proto.Mcf.McfGraph.PropertyValues.Builder.class);
+                org.datacommons.proto.Mcf.McfGraph.PropertyValues.class, org.datacommons.proto.Mcf.McfGraph.PropertyValues.Builder.class);
       }
 
       private int bitField0_;
       public static final int PVS_FIELD_NUMBER = 1;
-
       private static final class PvsDefaultEntryHolder {
         static final com.google.protobuf.MapEntry<
-                java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
-            defaultEntry =
+            java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> defaultEntry =
                 com.google.protobuf.MapEntry
-                    .<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
-                        newDefaultInstance(
-                            org.datacommons.proto.Mcf
-                                .internal_static_org_datacommons_proto_McfGraph_PropertyValues_PvsEntry_descriptor,
-                            com.google.protobuf.WireFormat.FieldType.STRING,
-                            "",
-                            com.google.protobuf.WireFormat.FieldType.MESSAGE,
-                            org.datacommons.proto.Mcf.McfGraph.Values.getDefaultInstance());
+                .<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>newDefaultInstance(
+                    org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_PropertyValues_PvsEntry_descriptor, 
+                    com.google.protobuf.WireFormat.FieldType.STRING,
+                    "",
+                    com.google.protobuf.WireFormat.FieldType.MESSAGE,
+                    org.datacommons.proto.Mcf.McfGraph.Values.getDefaultInstance());
       }
-
       private com.google.protobuf.MapField<
-              java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
-          pvs_;
-
-      private com.google.protobuf.MapField<
-              java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
-          internalGetPvs() {
+          java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> pvs_;
+      private com.google.protobuf.MapField<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
+      internalGetPvs() {
         if (pvs_ == null) {
-          return com.google.protobuf.MapField.emptyMapField(PvsDefaultEntryHolder.defaultEntry);
+          return com.google.protobuf.MapField.emptyMapField(
+              PvsDefaultEntryHolder.defaultEntry);
         }
         return pvs_;
       }
@@ -3107,34 +2758,29 @@ public final class Mcf {
       public int getPvsCount() {
         return internalGetPvs().getMap().size();
       }
-
       /**
-       *
-       *
        * <pre>
        * Map of a property name to its values.
        * </pre>
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
+
       @java.lang.Override
-      public boolean containsPvs(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
+      public boolean containsPvs(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
         return internalGetPvs().getMap().containsKey(key);
       }
-
-      /** Use {@link #getPvsMap()} instead. */
+      /**
+       * Use {@link #getPvsMap()} instead.
+       */
       @java.lang.Override
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvs() {
         return getPvsMap();
       }
-
       /**
-       *
-       *
        * <pre>
        * Map of a property name to its values.
        * </pre>
@@ -3142,14 +2788,11 @@ public final class Mcf {
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
       @java.lang.Override
-      public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
-          getPvsMap() {
+
+      public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvsMap() {
         return internalGetPvs().getMap();
       }
-
       /**
-       *
-       *
        * <pre>
        * Map of a property name to its values.
        * </pre>
@@ -3157,19 +2800,16 @@ public final class Mcf {
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
       @java.lang.Override
+
       public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrDefault(
-          java.lang.String key, org.datacommons.proto.Mcf.McfGraph.Values defaultValue) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
+          java.lang.String key,
+          org.datacommons.proto.Mcf.McfGraph.Values defaultValue) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
         java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> map =
             internalGetPvs().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
-
       /**
-       *
-       *
        * <pre>
        * Map of a property name to its values.
        * </pre>
@@ -3177,10 +2817,10 @@ public final class Mcf {
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
        */
       @java.lang.Override
-      public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrThrow(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
+
+      public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrThrow(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
         java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> map =
             internalGetPvs().getMap();
         if (!map.containsKey(key)) {
@@ -3191,10 +2831,7 @@ public final class Mcf {
 
       public static final int LOCATIONS_FIELD_NUMBER = 2;
       private java.util.List<org.datacommons.proto.LogLocation.Location> locations_;
-
       /**
-       *
-       *
        * <pre>
        * Information identifying the location of this node in the source.
        * There can be multiple if PVs in this node are merged from different files.
@@ -3206,10 +2843,7 @@ public final class Mcf {
       public java.util.List<org.datacommons.proto.LogLocation.Location> getLocationsList() {
         return locations_;
       }
-
       /**
-       *
-       *
        * <pre>
        * Information identifying the location of this node in the source.
        * There can be multiple if PVs in this node are merged from different files.
@@ -3218,14 +2852,11 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       @java.lang.Override
-      public java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder>
+      public java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder> 
           getLocationsOrBuilderList() {
         return locations_;
       }
-
       /**
-       *
-       *
        * <pre>
        * Information identifying the location of this node in the source.
        * There can be multiple if PVs in this node are merged from different files.
@@ -3237,10 +2868,7 @@ public final class Mcf {
       public int getLocationsCount() {
         return locations_.size();
       }
-
       /**
-       *
-       *
        * <pre>
        * Information identifying the location of this node in the source.
        * There can be multiple if PVs in this node are merged from different files.
@@ -3252,10 +2880,7 @@ public final class Mcf {
       public org.datacommons.proto.LogLocation.Location getLocations(int index) {
         return locations_.get(index);
       }
-
       /**
-       *
-       *
        * <pre>
        * Information identifying the location of this node in the source.
        * There can be multiple if PVs in this node are merged from different files.
@@ -3264,38 +2889,31 @@ public final class Mcf {
        * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
        */
       @java.lang.Override
-      public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(int index) {
+      public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(
+          int index) {
         return locations_.get(index);
       }
 
       public static final int TEMPLATE_NODE_FIELD_NUMBER = 3;
       private volatile java.lang.Object templateNode_;
-
       /**
-       *
-       *
        * <pre>
        * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
        * </pre>
        *
        * <code>optional string template_node = 3;</code>
-       *
        * @return Whether the templateNode field is set.
        */
       @java.lang.Override
       public boolean hasTemplateNode() {
         return ((bitField0_ & 0x00000001) != 0);
       }
-
       /**
-       *
-       *
        * <pre>
        * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
        * </pre>
        *
        * <code>optional string template_node = 3;</code>
-       *
        * @return The templateNode.
        */
       @java.lang.Override
@@ -3304,7 +2922,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             templateNode_ = s;
@@ -3312,24 +2931,22 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
-       *
-       *
        * <pre>
        * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
        * </pre>
        *
        * <code>optional string template_node = 3;</code>
-       *
        * @return The bytes for templateNode.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getTemplateNodeBytes() {
+      public com.google.protobuf.ByteString
+          getTemplateNodeBytes() {
         java.lang.Object ref = templateNode_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           templateNode_ = b;
           return b;
         } else {
@@ -3339,32 +2956,24 @@ public final class Mcf {
 
       public static final int ERROR_MESSAGE_FIELD_NUMBER = 4;
       private volatile java.lang.Object errorMessage_;
-
       /**
-       *
-       *
        * <pre>
        * Debug info. Error message for setting comments while serializing a node.
        * </pre>
        *
        * <code>optional string error_message = 4;</code>
-       *
        * @return Whether the errorMessage field is set.
        */
       @java.lang.Override
       public boolean hasErrorMessage() {
         return ((bitField0_ & 0x00000002) != 0);
       }
-
       /**
-       *
-       *
        * <pre>
        * Debug info. Error message for setting comments while serializing a node.
        * </pre>
        *
        * <code>optional string error_message = 4;</code>
-       *
        * @return The errorMessage.
        */
       @java.lang.Override
@@ -3373,7 +2982,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             errorMessage_ = s;
@@ -3381,24 +2991,22 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
-       *
-       *
        * <pre>
        * Debug info. Error message for setting comments while serializing a node.
        * </pre>
        *
        * <code>optional string error_message = 4;</code>
-       *
        * @return The bytes for errorMessage.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getErrorMessageBytes() {
+      public com.google.protobuf.ByteString
+          getErrorMessageBytes() {
         java.lang.Object ref = errorMessage_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           errorMessage_ = b;
           return b;
         } else {
@@ -3407,7 +3015,6 @@ public final class Mcf {
       }
 
       private byte memoizedIsInitialized = -1;
-
       @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -3419,9 +3026,14 @@ public final class Mcf {
       }
 
       @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-        com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
-            output, internalGetPvs(), PvsDefaultEntryHolder.defaultEntry, 1);
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        com.google.protobuf.GeneratedMessageV3
+          .serializeStringMapTo(
+            output,
+            internalGetPvs(),
+            PvsDefaultEntryHolder.defaultEntry,
+            1);
         for (int i = 0; i < locations_.size(); i++) {
           output.writeMessage(2, locations_.get(i));
         }
@@ -3440,19 +3052,19 @@ public final class Mcf {
         if (size != -1) return size;
 
         size = 0;
-        for (java.util.Map.Entry<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
-            entry : internalGetPvs().getMap().entrySet()) {
+        for (java.util.Map.Entry<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> entry
+             : internalGetPvs().getMap().entrySet()) {
           com.google.protobuf.MapEntry<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
-              pvs__ =
-                  PvsDefaultEntryHolder.defaultEntry
-                      .newBuilderForType()
-                      .setKey(entry.getKey())
-                      .setValue(entry.getValue())
-                      .build();
-          size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, pvs__);
+          pvs__ = PvsDefaultEntryHolder.defaultEntry.newBuilderForType()
+              .setKey(entry.getKey())
+              .setValue(entry.getValue())
+              .build();
+          size += com.google.protobuf.CodedOutputStream
+              .computeMessageSize(1, pvs__);
         }
         for (int i = 0; i < locations_.size(); i++) {
-          size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, locations_.get(i));
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(2, locations_.get(i));
         }
         if (((bitField0_ & 0x00000001) != 0)) {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, templateNode_);
@@ -3468,23 +3080,26 @@ public final class Mcf {
       @java.lang.Override
       public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
-          return true;
+         return true;
         }
         if (!(obj instanceof org.datacommons.proto.Mcf.McfGraph.PropertyValues)) {
           return super.equals(obj);
         }
-        org.datacommons.proto.Mcf.McfGraph.PropertyValues other =
-            (org.datacommons.proto.Mcf.McfGraph.PropertyValues) obj;
+        org.datacommons.proto.Mcf.McfGraph.PropertyValues other = (org.datacommons.proto.Mcf.McfGraph.PropertyValues) obj;
 
-        if (!internalGetPvs().equals(other.internalGetPvs())) return false;
-        if (!getLocationsList().equals(other.getLocationsList())) return false;
+        if (!internalGetPvs().equals(
+            other.internalGetPvs())) return false;
+        if (!getLocationsList()
+            .equals(other.getLocationsList())) return false;
         if (hasTemplateNode() != other.hasTemplateNode()) return false;
         if (hasTemplateNode()) {
-          if (!getTemplateNode().equals(other.getTemplateNode())) return false;
+          if (!getTemplateNode()
+              .equals(other.getTemplateNode())) return false;
         }
         if (hasErrorMessage() != other.hasErrorMessage()) return false;
         if (hasErrorMessage()) {
-          if (!getErrorMessage().equals(other.getErrorMessage())) return false;
+          if (!getErrorMessage()
+              .equals(other.getErrorMessage())) return false;
         }
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
@@ -3519,94 +3134,87 @@ public final class Mcf {
       }
 
       public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseFrom(
-          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseFrom(
-          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseFrom(
-          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
-      public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseFrom(
-          java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+      public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
       }
-
-      public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseDelimitedFrom(
-          java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseDelimitedFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-            PARSER, input, extensionRegistry);
-      }
-
       public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseFrom(
-          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
-
+      public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
       public static org.datacommons.proto.Mcf.McfGraph.PropertyValues parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
 
       @java.lang.Override
-      public Builder newBuilderForType() {
-        return newBuilder();
-      }
-
+      public Builder newBuilderForType() { return newBuilder(); }
       public static Builder newBuilder() {
         return DEFAULT_INSTANCE.toBuilder();
       }
-
-      public static Builder newBuilder(
-          org.datacommons.proto.Mcf.McfGraph.PropertyValues prototype) {
+      public static Builder newBuilder(org.datacommons.proto.Mcf.McfGraph.PropertyValues prototype) {
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
-
       @java.lang.Override
       public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
       }
 
       @java.lang.Override
@@ -3615,54 +3223,50 @@ public final class Mcf {
         Builder builder = new Builder(parent);
         return builder;
       }
-
       /**
-       *
-       *
        * <pre>
        * Information about a node.
        * </pre>
        *
        * Protobuf type {@code org.datacommons.proto.McfGraph.PropertyValues}
        */
-      public static final class Builder
-          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-          implements
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
           // @@protoc_insertion_point(builder_implements:org.datacommons.proto.McfGraph.PropertyValues)
           org.datacommons.proto.Mcf.McfGraph.PropertyValuesOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor;
         }
 
         @SuppressWarnings({"rawtypes"})
-        protected com.google.protobuf.MapField internalGetMapField(int number) {
+        protected com.google.protobuf.MapField internalGetMapField(
+            int number) {
           switch (number) {
             case 1:
               return internalGetPvs();
             default:
-              throw new RuntimeException("Invalid map field number: " + number);
+              throw new RuntimeException(
+                  "Invalid map field number: " + number);
           }
         }
-
         @SuppressWarnings({"rawtypes"})
-        protected com.google.protobuf.MapField internalGetMutableMapField(int number) {
+        protected com.google.protobuf.MapField internalGetMutableMapField(
+            int number) {
           switch (number) {
             case 1:
               return internalGetMutablePvs();
             default:
-              throw new RuntimeException("Invalid map field number: " + number);
+              throw new RuntimeException(
+                  "Invalid map field number: " + number);
           }
         }
-
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfGraph_PropertyValues_fieldAccessorTable
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_PropertyValues_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Mcf.McfGraph.PropertyValues.class,
-                  org.datacommons.proto.Mcf.McfGraph.PropertyValues.Builder.class);
+                  org.datacommons.proto.Mcf.McfGraph.PropertyValues.class, org.datacommons.proto.Mcf.McfGraph.PropertyValues.Builder.class);
         }
 
         // Construct using org.datacommons.proto.Mcf.McfGraph.PropertyValues.newBuilder()
@@ -3670,17 +3274,17 @@ public final class Mcf {
           maybeForceBuilderInitialization();
         }
 
-        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
-
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
             getLocationsFieldBuilder();
           }
         }
-
         @java.lang.Override
         public Builder clear() {
           super.clear();
@@ -3699,9 +3303,9 @@ public final class Mcf {
         }
 
         @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor;
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor;
         }
 
         @java.lang.Override
@@ -3720,8 +3324,7 @@ public final class Mcf {
 
         @java.lang.Override
         public org.datacommons.proto.Mcf.McfGraph.PropertyValues buildPartial() {
-          org.datacommons.proto.Mcf.McfGraph.PropertyValues result =
-              new org.datacommons.proto.Mcf.McfGraph.PropertyValues(this);
+          org.datacommons.proto.Mcf.McfGraph.PropertyValues result = new org.datacommons.proto.Mcf.McfGraph.PropertyValues(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           result.pvs_ = internalGetPvs();
@@ -3752,41 +3355,38 @@ public final class Mcf {
         public Builder clone() {
           return super.clone();
         }
-
         @java.lang.Override
         public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
           return super.setField(field, value);
         }
-
         @java.lang.Override
-        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
           return super.clearField(field);
         }
-
         @java.lang.Override
-        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
           return super.clearOneof(oneof);
         }
-
         @java.lang.Override
         public Builder setRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index,
-            java.lang.Object value) {
+            int index, java.lang.Object value) {
           return super.setRepeatedField(field, index, value);
         }
-
         @java.lang.Override
         public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
           return super.addRepeatedField(field, value);
         }
-
         @java.lang.Override
         public Builder mergeFrom(com.google.protobuf.Message other) {
           if (other instanceof org.datacommons.proto.Mcf.McfGraph.PropertyValues) {
-            return mergeFrom((org.datacommons.proto.Mcf.McfGraph.PropertyValues) other);
+            return mergeFrom((org.datacommons.proto.Mcf.McfGraph.PropertyValues)other);
           } else {
             super.mergeFrom(other);
             return this;
@@ -3794,9 +3394,9 @@ public final class Mcf {
         }
 
         public Builder mergeFrom(org.datacommons.proto.Mcf.McfGraph.PropertyValues other) {
-          if (other == org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance())
-            return this;
-          internalGetMutablePvs().mergeFrom(other.internalGetPvs());
+          if (other == org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance()) return this;
+          internalGetMutablePvs().mergeFrom(
+              other.internalGetPvs());
           if (locationsBuilder_ == null) {
             if (!other.locations_.isEmpty()) {
               if (locations_.isEmpty()) {
@@ -3815,10 +3415,9 @@ public final class Mcf {
                 locationsBuilder_ = null;
                 locations_ = other.locations_;
                 bitField0_ = (bitField0_ & ~0x00000002);
-                locationsBuilder_ =
-                    com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
-                        ? getLocationsFieldBuilder()
-                        : null;
+                locationsBuilder_ = 
+                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                     getLocationsFieldBuilder() : null;
               } else {
                 locationsBuilder_.addAllMessages(other.locations_);
               }
@@ -3853,8 +3452,7 @@ public final class Mcf {
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage =
-                (org.datacommons.proto.Mcf.McfGraph.PropertyValues) e.getUnfinishedMessage();
+            parsedMessage = (org.datacommons.proto.Mcf.McfGraph.PropertyValues) e.getUnfinishedMessage();
             throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
@@ -3863,29 +3461,24 @@ public final class Mcf {
           }
           return this;
         }
-
         private int bitField0_;
 
         private com.google.protobuf.MapField<
-                java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
-            pvs_;
-
-        private com.google.protobuf.MapField<
-                java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
-            internalGetPvs() {
+            java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> pvs_;
+        private com.google.protobuf.MapField<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
+        internalGetPvs() {
           if (pvs_ == null) {
-            return com.google.protobuf.MapField.emptyMapField(PvsDefaultEntryHolder.defaultEntry);
+            return com.google.protobuf.MapField.emptyMapField(
+                PvsDefaultEntryHolder.defaultEntry);
           }
           return pvs_;
         }
-
-        private com.google.protobuf.MapField<
-                java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
-            internalGetMutablePvs() {
-          onChanged();
-          ;
+        private com.google.protobuf.MapField<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
+        internalGetMutablePvs() {
+          onChanged();;
           if (pvs_ == null) {
-            pvs_ = com.google.protobuf.MapField.newMapField(PvsDefaultEntryHolder.defaultEntry);
+            pvs_ = com.google.protobuf.MapField.newMapField(
+                PvsDefaultEntryHolder.defaultEntry);
           }
           if (!pvs_.isMutable()) {
             pvs_ = pvs_.copy();
@@ -3896,34 +3489,29 @@ public final class Mcf {
         public int getPvsCount() {
           return internalGetPvs().getMap().size();
         }
-
         /**
-         *
-         *
          * <pre>
          * Map of a property name to its values.
          * </pre>
          *
          * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
          */
+
         @java.lang.Override
-        public boolean containsPvs(java.lang.String key) {
-          if (key == null) {
-            throw new java.lang.NullPointerException();
-          }
+        public boolean containsPvs(
+            java.lang.String key) {
+          if (key == null) { throw new java.lang.NullPointerException(); }
           return internalGetPvs().getMap().containsKey(key);
         }
-
-        /** Use {@link #getPvsMap()} instead. */
+        /**
+         * Use {@link #getPvsMap()} instead.
+         */
         @java.lang.Override
         @java.lang.Deprecated
         public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvs() {
           return getPvsMap();
         }
-
         /**
-         *
-         *
          * <pre>
          * Map of a property name to its values.
          * </pre>
@@ -3931,14 +3519,11 @@ public final class Mcf {
          * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
          */
         @java.lang.Override
-        public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
-            getPvsMap() {
+
+        public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> getPvsMap() {
           return internalGetPvs().getMap();
         }
-
         /**
-         *
-         *
          * <pre>
          * Map of a property name to its values.
          * </pre>
@@ -3946,19 +3531,16 @@ public final class Mcf {
          * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
          */
         @java.lang.Override
+
         public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrDefault(
-            java.lang.String key, org.datacommons.proto.Mcf.McfGraph.Values defaultValue) {
-          if (key == null) {
-            throw new java.lang.NullPointerException();
-          }
+            java.lang.String key,
+            org.datacommons.proto.Mcf.McfGraph.Values defaultValue) {
+          if (key == null) { throw new java.lang.NullPointerException(); }
           java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> map =
               internalGetPvs().getMap();
           return map.containsKey(key) ? map.get(key) : defaultValue;
         }
-
         /**
-         *
-         *
          * <pre>
          * Map of a property name to its values.
          * </pre>
@@ -3966,10 +3548,10 @@ public final class Mcf {
          * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
          */
         @java.lang.Override
-        public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrThrow(java.lang.String key) {
-          if (key == null) {
-            throw new java.lang.NullPointerException();
-          }
+
+        public org.datacommons.proto.Mcf.McfGraph.Values getPvsOrThrow(
+            java.lang.String key) {
+          if (key == null) { throw new java.lang.NullPointerException(); }
           java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> map =
               internalGetPvs().getMap();
           if (!map.containsKey(key)) {
@@ -3979,37 +3561,34 @@ public final class Mcf {
         }
 
         public Builder clearPvs() {
-          internalGetMutablePvs().getMutableMap().clear();
+          internalGetMutablePvs().getMutableMap()
+              .clear();
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Map of a property name to its values.
          * </pre>
          *
          * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
          */
-        public Builder removePvs(java.lang.String key) {
-          if (key == null) {
-            throw new java.lang.NullPointerException();
-          }
-          internalGetMutablePvs().getMutableMap().remove(key);
+
+        public Builder removePvs(
+            java.lang.String key) {
+          if (key == null) { throw new java.lang.NullPointerException(); }
+          internalGetMutablePvs().getMutableMap()
+              .remove(key);
           return this;
         }
-
-        /** Use alternate mutation accessors instead. */
+        /**
+         * Use alternate mutation accessors instead.
+         */
         @java.lang.Deprecated
         public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values>
-            getMutablePvs() {
+        getMutablePvs() {
           return internalGetMutablePvs().getMutableMap();
         }
-
         /**
-         *
-         *
          * <pre>
          * Map of a property name to its values.
          * </pre>
@@ -4017,52 +3596,42 @@ public final class Mcf {
          * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
          */
         public Builder putPvs(
-            java.lang.String key, org.datacommons.proto.Mcf.McfGraph.Values value) {
-          if (key == null) {
-            throw new java.lang.NullPointerException();
-          }
-          if (value == null) {
-            throw new java.lang.NullPointerException();
-          }
-          internalGetMutablePvs().getMutableMap().put(key, value);
+            java.lang.String key,
+            org.datacommons.proto.Mcf.McfGraph.Values value) {
+          if (key == null) { throw new java.lang.NullPointerException(); }
+          if (value == null) { throw new java.lang.NullPointerException(); }
+          internalGetMutablePvs().getMutableMap()
+              .put(key, value);
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Map of a property name to its values.
          * </pre>
          *
          * <code>map&lt;string, .org.datacommons.proto.McfGraph.Values&gt; pvs = 1;</code>
          */
+
         public Builder putAllPvs(
             java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.Values> values) {
-          internalGetMutablePvs().getMutableMap().putAll(values);
+          internalGetMutablePvs().getMutableMap()
+              .putAll(values);
           return this;
         }
 
         private java.util.List<org.datacommons.proto.LogLocation.Location> locations_ =
-            java.util.Collections.emptyList();
-
+          java.util.Collections.emptyList();
         private void ensureLocationsIsMutable() {
           if (!((bitField0_ & 0x00000002) != 0)) {
-            locations_ =
-                new java.util.ArrayList<org.datacommons.proto.LogLocation.Location>(locations_);
+            locations_ = new java.util.ArrayList<org.datacommons.proto.LogLocation.Location>(locations_);
             bitField0_ |= 0x00000002;
-          }
+           }
         }
 
         private com.google.protobuf.RepeatedFieldBuilderV3<
-                org.datacommons.proto.LogLocation.Location,
-                org.datacommons.proto.LogLocation.Location.Builder,
-                org.datacommons.proto.LogLocation.LocationOrBuilder>
-            locationsBuilder_;
+            org.datacommons.proto.LogLocation.Location, org.datacommons.proto.LogLocation.Location.Builder, org.datacommons.proto.LogLocation.LocationOrBuilder> locationsBuilder_;
 
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4077,10 +3646,7 @@ public final class Mcf {
             return locationsBuilder_.getMessageList();
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4095,10 +3661,7 @@ public final class Mcf {
             return locationsBuilder_.getCount();
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4113,10 +3676,7 @@ public final class Mcf {
             return locationsBuilder_.getMessage(index);
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4124,7 +3684,8 @@ public final class Mcf {
          *
          * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public Builder setLocations(int index, org.datacommons.proto.LogLocation.Location value) {
+        public Builder setLocations(
+            int index, org.datacommons.proto.LogLocation.Location value) {
           if (locationsBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -4137,10 +3698,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4159,10 +3717,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4183,10 +3738,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4194,7 +3746,8 @@ public final class Mcf {
          *
          * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public Builder addLocations(int index, org.datacommons.proto.LogLocation.Location value) {
+        public Builder addLocations(
+            int index, org.datacommons.proto.LogLocation.Location value) {
           if (locationsBuilder_ == null) {
             if (value == null) {
               throw new NullPointerException();
@@ -4207,10 +3760,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4229,10 +3779,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4251,10 +3798,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4266,17 +3810,15 @@ public final class Mcf {
             java.lang.Iterable<? extends org.datacommons.proto.LogLocation.Location> values) {
           if (locationsBuilder_ == null) {
             ensureLocationsIsMutable();
-            com.google.protobuf.AbstractMessageLite.Builder.addAll(values, locations_);
+            com.google.protobuf.AbstractMessageLite.Builder.addAll(
+                values, locations_);
             onChanged();
           } else {
             locationsBuilder_.addAllMessages(values);
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4294,10 +3836,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4315,10 +3854,7 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4326,13 +3862,11 @@ public final class Mcf {
          *
          * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public org.datacommons.proto.LogLocation.Location.Builder getLocationsBuilder(int index) {
+        public org.datacommons.proto.LogLocation.Location.Builder getLocationsBuilder(
+            int index) {
           return getLocationsFieldBuilder().getBuilder(index);
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4343,15 +3877,11 @@ public final class Mcf {
         public org.datacommons.proto.LogLocation.LocationOrBuilder getLocationsOrBuilder(
             int index) {
           if (locationsBuilder_ == null) {
-            return locations_.get(index);
-          } else {
+            return locations_.get(index);  } else {
             return locationsBuilder_.getMessageOrBuilder(index);
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4359,18 +3889,15 @@ public final class Mcf {
          *
          * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder>
-            getLocationsOrBuilderList() {
+        public java.util.List<? extends org.datacommons.proto.LogLocation.LocationOrBuilder> 
+             getLocationsOrBuilderList() {
           if (locationsBuilder_ != null) {
             return locationsBuilder_.getMessageOrBuilderList();
           } else {
             return java.util.Collections.unmodifiableList(locations_);
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4379,13 +3906,10 @@ public final class Mcf {
          * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
         public org.datacommons.proto.LogLocation.Location.Builder addLocationsBuilder() {
-          return getLocationsFieldBuilder()
-              .addBuilder(org.datacommons.proto.LogLocation.Location.getDefaultInstance());
+          return getLocationsFieldBuilder().addBuilder(
+              org.datacommons.proto.LogLocation.Location.getDefaultInstance());
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4393,14 +3917,12 @@ public final class Mcf {
          *
          * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public org.datacommons.proto.LogLocation.Location.Builder addLocationsBuilder(int index) {
-          return getLocationsFieldBuilder()
-              .addBuilder(index, org.datacommons.proto.LogLocation.Location.getDefaultInstance());
+        public org.datacommons.proto.LogLocation.Location.Builder addLocationsBuilder(
+            int index) {
+          return getLocationsFieldBuilder().addBuilder(
+              index, org.datacommons.proto.LogLocation.Location.getDefaultInstance());
         }
-
         /**
-         *
-         *
          * <pre>
          * Information identifying the location of this node in the source.
          * There can be multiple if PVs in this node are merged from different files.
@@ -4408,22 +3930,16 @@ public final class Mcf {
          *
          * <code>repeated .org.datacommons.proto.Location locations = 2;</code>
          */
-        public java.util.List<org.datacommons.proto.LogLocation.Location.Builder>
-            getLocationsBuilderList() {
+        public java.util.List<org.datacommons.proto.LogLocation.Location.Builder> 
+             getLocationsBuilderList() {
           return getLocationsFieldBuilder().getBuilderList();
         }
-
         private com.google.protobuf.RepeatedFieldBuilderV3<
-                org.datacommons.proto.LogLocation.Location,
-                org.datacommons.proto.LogLocation.Location.Builder,
-                org.datacommons.proto.LogLocation.LocationOrBuilder>
+            org.datacommons.proto.LogLocation.Location, org.datacommons.proto.LogLocation.Location.Builder, org.datacommons.proto.LogLocation.LocationOrBuilder> 
             getLocationsFieldBuilder() {
           if (locationsBuilder_ == null) {
-            locationsBuilder_ =
-                new com.google.protobuf.RepeatedFieldBuilderV3<
-                    org.datacommons.proto.LogLocation.Location,
-                    org.datacommons.proto.LogLocation.Location.Builder,
-                    org.datacommons.proto.LogLocation.LocationOrBuilder>(
+            locationsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+                org.datacommons.proto.LogLocation.Location, org.datacommons.proto.LogLocation.Location.Builder, org.datacommons.proto.LogLocation.LocationOrBuilder>(
                     locations_,
                     ((bitField0_ & 0x00000002) != 0),
                     getParentForChildren(),
@@ -4434,37 +3950,30 @@ public final class Mcf {
         }
 
         private java.lang.Object templateNode_ = "";
-
         /**
-         *
-         *
          * <pre>
          * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
          * </pre>
          *
          * <code>optional string template_node = 3;</code>
-         *
          * @return Whether the templateNode field is set.
          */
         public boolean hasTemplateNode() {
           return ((bitField0_ & 0x00000004) != 0);
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
          * </pre>
          *
          * <code>optional string template_node = 3;</code>
-         *
          * @return The templateNode.
          */
         public java.lang.String getTemplateNode() {
           java.lang.Object ref = templateNode_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
               templateNode_ = s;
@@ -4474,61 +3983,52 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
          * </pre>
          *
          * <code>optional string template_node = 3;</code>
-         *
          * @return The bytes for templateNode.
          */
-        public com.google.protobuf.ByteString getTemplateNodeBytes() {
+        public com.google.protobuf.ByteString
+            getTemplateNodeBytes() {
           java.lang.Object ref = templateNode_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             templateNode_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
          * </pre>
          *
          * <code>optional string template_node = 3;</code>
-         *
          * @param value The templateNode to set.
          * @return This builder for chaining.
          */
-        public Builder setTemplateNode(java.lang.String value) {
+        public Builder setTemplateNode(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000004;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
           templateNode_ = value;
           onChanged();
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
          * </pre>
          *
          * <code>optional string template_node = 3;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearTemplateNode() {
@@ -4537,61 +4037,51 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info. For nodes that are generated from TMCF/CSV, this refers to the template Node.
          * </pre>
          *
          * <code>optional string template_node = 3;</code>
-         *
          * @param value The bytes for templateNode to set.
          * @return This builder for chaining.
          */
-        public Builder setTemplateNodeBytes(com.google.protobuf.ByteString value) {
+        public Builder setTemplateNodeBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000004;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
           templateNode_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object errorMessage_ = "";
-
         /**
-         *
-         *
          * <pre>
          * Debug info. Error message for setting comments while serializing a node.
          * </pre>
          *
          * <code>optional string error_message = 4;</code>
-         *
          * @return Whether the errorMessage field is set.
          */
         public boolean hasErrorMessage() {
           return ((bitField0_ & 0x00000008) != 0);
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info. Error message for setting comments while serializing a node.
          * </pre>
          *
          * <code>optional string error_message = 4;</code>
-         *
          * @return The errorMessage.
          */
         public java.lang.String getErrorMessage() {
           java.lang.Object ref = errorMessage_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
               errorMessage_ = s;
@@ -4601,61 +4091,52 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info. Error message for setting comments while serializing a node.
          * </pre>
          *
          * <code>optional string error_message = 4;</code>
-         *
          * @return The bytes for errorMessage.
          */
-        public com.google.protobuf.ByteString getErrorMessageBytes() {
+        public com.google.protobuf.ByteString
+            getErrorMessageBytes() {
           java.lang.Object ref = errorMessage_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             errorMessage_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info. Error message for setting comments while serializing a node.
          * </pre>
          *
          * <code>optional string error_message = 4;</code>
-         *
          * @param value The errorMessage to set.
          * @return This builder for chaining.
          */
-        public Builder setErrorMessage(java.lang.String value) {
+        public Builder setErrorMessage(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000008;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
           errorMessage_ = value;
           onChanged();
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info. Error message for setting comments while serializing a node.
          * </pre>
          *
          * <code>optional string error_message = 4;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearErrorMessage() {
@@ -4664,29 +4145,25 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Debug info. Error message for setting comments while serializing a node.
          * </pre>
          *
          * <code>optional string error_message = 4;</code>
-         *
          * @param value The bytes for errorMessage to set.
          * @return This builder for chaining.
          */
-        public Builder setErrorMessageBytes(com.google.protobuf.ByteString value) {
+        public Builder setErrorMessageBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000008;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
           errorMessage_ = value;
           onChanged();
           return this;
         }
-
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -4699,12 +4176,12 @@ public final class Mcf {
           return super.mergeUnknownFields(unknownFields);
         }
 
+
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.McfGraph.PropertyValues)
       }
 
       // @@protoc_insertion_point(class_scope:org.datacommons.proto.McfGraph.PropertyValues)
       private static final org.datacommons.proto.Mcf.McfGraph.PropertyValues DEFAULT_INSTANCE;
-
       static {
         DEFAULT_INSTANCE = new org.datacommons.proto.Mcf.McfGraph.PropertyValues();
       }
@@ -4713,17 +4190,16 @@ public final class Mcf {
         return DEFAULT_INSTANCE;
       }
 
-      @java.lang.Deprecated
-      public static final com.google.protobuf.Parser<PropertyValues> PARSER =
-          new com.google.protobuf.AbstractParser<PropertyValues>() {
-            @java.lang.Override
-            public PropertyValues parsePartialFrom(
-                com.google.protobuf.CodedInputStream input,
-                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                throws com.google.protobuf.InvalidProtocolBufferException {
-              return new PropertyValues(input, extensionRegistry);
-            }
-          };
+      @java.lang.Deprecated public static final com.google.protobuf.Parser<PropertyValues>
+          PARSER = new com.google.protobuf.AbstractParser<PropertyValues>() {
+        @java.lang.Override
+        public PropertyValues parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new PropertyValues(input, extensionRegistry);
+        }
+      };
 
       public static com.google.protobuf.Parser<PropertyValues> parser() {
         return PARSER;
@@ -4738,72 +4214,56 @@ public final class Mcf {
       public org.datacommons.proto.Mcf.McfGraph.PropertyValues getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
+
     }
 
     private int bitField0_;
     public static final int TYPE_FIELD_NUMBER = 1;
     private int type_;
-
     /**
-     *
-     *
      * <pre>
      * Type of the sub-graph.
      * </pre>
      *
      * <code>optional .org.datacommons.proto.McfType type = 1 [default = INSTANCE_MCF];</code>
-     *
      * @return Whether the type field is set.
      */
-    @java.lang.Override
-    public boolean hasType() {
+    @java.lang.Override public boolean hasType() {
       return ((bitField0_ & 0x00000001) != 0);
     }
-
     /**
-     *
-     *
      * <pre>
      * Type of the sub-graph.
      * </pre>
      *
      * <code>optional .org.datacommons.proto.McfType type = 1 [default = INSTANCE_MCF];</code>
-     *
      * @return The type.
      */
-    @java.lang.Override
-    public org.datacommons.proto.Mcf.McfType getType() {
+    @java.lang.Override public org.datacommons.proto.Mcf.McfType getType() {
       @SuppressWarnings("deprecation")
       org.datacommons.proto.Mcf.McfType result = org.datacommons.proto.Mcf.McfType.valueOf(type_);
       return result == null ? org.datacommons.proto.Mcf.McfType.INSTANCE_MCF : result;
     }
 
     public static final int NODES_FIELD_NUMBER = 2;
-
     private static final class NodesDefaultEntryHolder {
       static final com.google.protobuf.MapEntry<
-              java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-          defaultEntry =
+          java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> defaultEntry =
               com.google.protobuf.MapEntry
-                  .<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-                      newDefaultInstance(
-                          org.datacommons.proto.Mcf
-                              .internal_static_org_datacommons_proto_McfGraph_NodesEntry_descriptor,
-                          com.google.protobuf.WireFormat.FieldType.STRING,
-                          "",
-                          com.google.protobuf.WireFormat.FieldType.MESSAGE,
-                          org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance());
+              .<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>newDefaultInstance(
+                  org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_NodesEntry_descriptor, 
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "",
+                  com.google.protobuf.WireFormat.FieldType.MESSAGE,
+                  org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance());
     }
-
     private com.google.protobuf.MapField<
-            java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-        nodes_;
-
-    private com.google.protobuf.MapField<
-            java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-        internalGetNodes() {
+        java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> nodes_;
+    private com.google.protobuf.MapField<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
+    internalGetNodes() {
       if (nodes_ == null) {
-        return com.google.protobuf.MapField.emptyMapField(NodesDefaultEntryHolder.defaultEntry);
+        return com.google.protobuf.MapField.emptyMapField(
+            NodesDefaultEntryHolder.defaultEntry);
       }
       return nodes_;
     }
@@ -4811,35 +4271,29 @@ public final class Mcf {
     public int getNodesCount() {
       return internalGetNodes().getMap().size();
     }
-
     /**
-     *
-     *
      * <pre>
      * A map from Local Node ID to its property and values.
      * </pre>
      *
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
+
     @java.lang.Override
-    public boolean containsNodes(java.lang.String key) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
+    public boolean containsNodes(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
       return internalGetNodes().getMap().containsKey(key);
     }
-
-    /** Use {@link #getNodesMap()} instead. */
+    /**
+     * Use {@link #getNodesMap()} instead.
+     */
     @java.lang.Override
     @java.lang.Deprecated
-    public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-        getNodes() {
+    public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> getNodes() {
       return getNodesMap();
     }
-
     /**
-     *
-     *
      * <pre>
      * A map from Local Node ID to its property and values.
      * </pre>
@@ -4847,14 +4301,11 @@ public final class Mcf {
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
     @java.lang.Override
-    public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-        getNodesMap() {
+
+    public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> getNodesMap() {
       return internalGetNodes().getMap();
     }
-
     /**
-     *
-     *
      * <pre>
      * A map from Local Node ID to its property and values.
      * </pre>
@@ -4862,19 +4313,16 @@ public final class Mcf {
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
     @java.lang.Override
+
     public org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrDefault(
-        java.lang.String key, org.datacommons.proto.Mcf.McfGraph.PropertyValues defaultValue) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
+        java.lang.String key,
+        org.datacommons.proto.Mcf.McfGraph.PropertyValues defaultValue) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
       java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> map =
           internalGetNodes().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
-
     /**
-     *
-     *
      * <pre>
      * A map from Local Node ID to its property and values.
      * </pre>
@@ -4882,10 +4330,10 @@ public final class Mcf {
      * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
      */
     @java.lang.Override
-    public org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrThrow(java.lang.String key) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
+
+    public org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrThrow(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
       java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> map =
           internalGetNodes().getMap();
       if (!map.containsKey(key)) {
@@ -4895,7 +4343,6 @@ public final class Mcf {
     }
 
     private byte memoizedIsInitialized = -1;
-
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -4907,12 +4354,17 @@ public final class Mcf {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
       if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, type_);
       }
-      com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
-          output, internalGetNodes(), NodesDefaultEntryHolder.defaultEntry, 2);
+      com.google.protobuf.GeneratedMessageV3
+        .serializeStringMapTo(
+          output,
+          internalGetNodes(),
+          NodesDefaultEntryHolder.defaultEntry,
+          2);
       unknownFields.writeTo(output);
     }
 
@@ -4923,19 +4375,18 @@ public final class Mcf {
 
       size = 0;
       if (((bitField0_ & 0x00000001) != 0)) {
-        size += com.google.protobuf.CodedOutputStream.computeEnumSize(1, type_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, type_);
       }
-      for (java.util.Map.Entry<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-          entry : internalGetNodes().getMap().entrySet()) {
-        com.google.protobuf.MapEntry<
-                java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-            nodes__ =
-                NodesDefaultEntryHolder.defaultEntry
-                    .newBuilderForType()
-                    .setKey(entry.getKey())
-                    .setValue(entry.getValue())
-                    .build();
-        size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, nodes__);
+      for (java.util.Map.Entry<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> entry
+           : internalGetNodes().getMap().entrySet()) {
+        com.google.protobuf.MapEntry<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
+        nodes__ = NodesDefaultEntryHolder.defaultEntry.newBuilderForType()
+            .setKey(entry.getKey())
+            .setValue(entry.getValue())
+            .build();
+        size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(2, nodes__);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -4945,7 +4396,7 @@ public final class Mcf {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-        return true;
+       return true;
       }
       if (!(obj instanceof org.datacommons.proto.Mcf.McfGraph)) {
         return super.equals(obj);
@@ -4956,7 +4407,8 @@ public final class Mcf {
       if (hasType()) {
         if (type_ != other.type_) return false;
       }
-      if (!internalGetNodes().equals(other.internalGetNodes())) return false;
+      if (!internalGetNodes().equals(
+          other.internalGetNodes())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -4981,93 +4433,88 @@ public final class Mcf {
       return hash;
     }
 
-    public static org.datacommons.proto.Mcf.McfGraph parseFrom(java.nio.ByteBuffer data)
+    public static org.datacommons.proto.Mcf.McfGraph parseFrom(
+        java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Mcf.McfGraph parseFrom(
-        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
-    public static org.datacommons.proto.Mcf.McfGraph parseFrom(com.google.protobuf.ByteString data)
+    public static org.datacommons.proto.Mcf.McfGraph parseFrom(
+        com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Mcf.McfGraph parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Mcf.McfGraph parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Mcf.McfGraph parseFrom(
-        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Mcf.McfGraph parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-
     public static org.datacommons.proto.Mcf.McfGraph parseFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
-
     public static org.datacommons.proto.Mcf.McfGraph parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
-
     public static org.datacommons.proto.Mcf.McfGraph parseDelimitedFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-
     public static org.datacommons.proto.Mcf.McfGraph parseFrom(
-        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-
     public static org.datacommons.proto.Mcf.McfGraph parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() {
-      return newBuilder();
-    }
-
+    public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-
     public static Builder newBuilder(org.datacommons.proto.Mcf.McfGraph prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -5076,10 +4523,7 @@ public final class Mcf {
       Builder builder = new Builder(parent);
       return builder;
     }
-
     /**
-     *
-     *
      * <pre>
      * Proto representation of a Data Commons sub-graph which may be made of instance nodes (INSTANCE_MCF)
      * or template nodes (TEMPLATE_MCF).
@@ -5087,43 +4531,43 @@ public final class Mcf {
      *
      * Protobuf type {@code org.datacommons.proto.McfGraph}
      */
-    public static final class Builder
-        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-        implements
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.McfGraph)
         org.datacommons.proto.Mcf.McfGraphOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
         return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_descriptor;
       }
 
       @SuppressWarnings({"rawtypes"})
-      protected com.google.protobuf.MapField internalGetMapField(int number) {
+      protected com.google.protobuf.MapField internalGetMapField(
+          int number) {
         switch (number) {
           case 2:
             return internalGetNodes();
           default:
-            throw new RuntimeException("Invalid map field number: " + number);
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
         }
       }
-
       @SuppressWarnings({"rawtypes"})
-      protected com.google.protobuf.MapField internalGetMutableMapField(int number) {
+      protected com.google.protobuf.MapField internalGetMutableMapField(
+          int number) {
         switch (number) {
           case 2:
             return internalGetMutableNodes();
           default:
-            throw new RuntimeException("Invalid map field number: " + number);
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
         }
       }
-
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfGraph_fieldAccessorTable
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Mcf.McfGraph.class,
-                org.datacommons.proto.Mcf.McfGraph.Builder.class);
+                org.datacommons.proto.Mcf.McfGraph.class, org.datacommons.proto.Mcf.McfGraph.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Mcf.McfGraph.newBuilder()
@@ -5131,15 +4575,16 @@ public final class Mcf {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
-
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
       }
-
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -5150,7 +4595,8 @@ public final class Mcf {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
         return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfGraph_descriptor;
       }
 
@@ -5188,41 +4634,38 @@ public final class Mcf {
       public Builder clone() {
         return super.clone();
       }
-
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
         return super.setField(field, value);
       }
-
       @java.lang.Override
-      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
-
       @java.lang.Override
-      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
-
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index,
-          java.lang.Object value) {
+          int index, java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
-
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
-
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Mcf.McfGraph) {
-          return mergeFrom((org.datacommons.proto.Mcf.McfGraph) other);
+          return mergeFrom((org.datacommons.proto.Mcf.McfGraph)other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -5234,7 +4677,8 @@ public final class Mcf {
         if (other.hasType()) {
           setType(other.getType());
         }
-        internalGetMutableNodes().mergeFrom(other.internalGetNodes());
+        internalGetMutableNodes().mergeFrom(
+            other.internalGetNodes());
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -5263,36 +4707,26 @@ public final class Mcf {
         }
         return this;
       }
-
       private int bitField0_;
 
       private int type_ = 1;
-
       /**
-       *
-       *
        * <pre>
        * Type of the sub-graph.
        * </pre>
        *
        * <code>optional .org.datacommons.proto.McfType type = 1 [default = INSTANCE_MCF];</code>
-       *
        * @return Whether the type field is set.
        */
-      @java.lang.Override
-      public boolean hasType() {
+      @java.lang.Override public boolean hasType() {
         return ((bitField0_ & 0x00000001) != 0);
       }
-
       /**
-       *
-       *
        * <pre>
        * Type of the sub-graph.
        * </pre>
        *
        * <code>optional .org.datacommons.proto.McfType type = 1 [default = INSTANCE_MCF];</code>
-       *
        * @return The type.
        */
       @java.lang.Override
@@ -5301,16 +4735,12 @@ public final class Mcf {
         org.datacommons.proto.Mcf.McfType result = org.datacommons.proto.Mcf.McfType.valueOf(type_);
         return result == null ? org.datacommons.proto.Mcf.McfType.INSTANCE_MCF : result;
       }
-
       /**
-       *
-       *
        * <pre>
        * Type of the sub-graph.
        * </pre>
        *
        * <code>optional .org.datacommons.proto.McfType type = 1 [default = INSTANCE_MCF];</code>
-       *
        * @param value The type to set.
        * @return This builder for chaining.
        */
@@ -5323,16 +4753,12 @@ public final class Mcf {
         onChanged();
         return this;
       }
-
       /**
-       *
-       *
        * <pre>
        * Type of the sub-graph.
        * </pre>
        *
        * <code>optional .org.datacommons.proto.McfType type = 1 [default = INSTANCE_MCF];</code>
-       *
        * @return This builder for chaining.
        */
       public Builder clearType() {
@@ -5343,25 +4769,21 @@ public final class Mcf {
       }
 
       private com.google.protobuf.MapField<
-              java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-          nodes_;
-
-      private com.google.protobuf.MapField<
-              java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-          internalGetNodes() {
+          java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> nodes_;
+      private com.google.protobuf.MapField<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
+      internalGetNodes() {
         if (nodes_ == null) {
-          return com.google.protobuf.MapField.emptyMapField(NodesDefaultEntryHolder.defaultEntry);
+          return com.google.protobuf.MapField.emptyMapField(
+              NodesDefaultEntryHolder.defaultEntry);
         }
         return nodes_;
       }
-
-      private com.google.protobuf.MapField<
-              java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-          internalGetMutableNodes() {
-        onChanged();
-        ;
+      private com.google.protobuf.MapField<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
+      internalGetMutableNodes() {
+        onChanged();;
         if (nodes_ == null) {
-          nodes_ = com.google.protobuf.MapField.newMapField(NodesDefaultEntryHolder.defaultEntry);
+          nodes_ = com.google.protobuf.MapField.newMapField(
+              NodesDefaultEntryHolder.defaultEntry);
         }
         if (!nodes_.isMutable()) {
           nodes_ = nodes_.copy();
@@ -5372,35 +4794,29 @@ public final class Mcf {
       public int getNodesCount() {
         return internalGetNodes().getMap().size();
       }
-
       /**
-       *
-       *
        * <pre>
        * A map from Local Node ID to its property and values.
        * </pre>
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
+
       @java.lang.Override
-      public boolean containsNodes(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
+      public boolean containsNodes(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
         return internalGetNodes().getMap().containsKey(key);
       }
-
-      /** Use {@link #getNodesMap()} instead. */
+      /**
+       * Use {@link #getNodesMap()} instead.
+       */
       @java.lang.Override
       @java.lang.Deprecated
-      public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-          getNodes() {
+      public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> getNodes() {
         return getNodesMap();
       }
-
       /**
-       *
-       *
        * <pre>
        * A map from Local Node ID to its property and values.
        * </pre>
@@ -5408,14 +4824,11 @@ public final class Mcf {
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
       @java.lang.Override
-      public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-          getNodesMap() {
+
+      public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> getNodesMap() {
         return internalGetNodes().getMap();
       }
-
       /**
-       *
-       *
        * <pre>
        * A map from Local Node ID to its property and values.
        * </pre>
@@ -5423,19 +4836,16 @@ public final class Mcf {
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
       @java.lang.Override
+
       public org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrDefault(
-          java.lang.String key, org.datacommons.proto.Mcf.McfGraph.PropertyValues defaultValue) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
+          java.lang.String key,
+          org.datacommons.proto.Mcf.McfGraph.PropertyValues defaultValue) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
         java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> map =
             internalGetNodes().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
-
       /**
-       *
-       *
        * <pre>
        * A map from Local Node ID to its property and values.
        * </pre>
@@ -5443,11 +4853,10 @@ public final class Mcf {
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
       @java.lang.Override
+
       public org.datacommons.proto.Mcf.McfGraph.PropertyValues getNodesOrThrow(
           java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
+        if (key == null) { throw new java.lang.NullPointerException(); }
         java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> map =
             internalGetNodes().getMap();
         if (!map.containsKey(key)) {
@@ -5457,37 +4866,34 @@ public final class Mcf {
       }
 
       public Builder clearNodes() {
-        internalGetMutableNodes().getMutableMap().clear();
+        internalGetMutableNodes().getMutableMap()
+            .clear();
         return this;
       }
-
       /**
-       *
-       *
        * <pre>
        * A map from Local Node ID to its property and values.
        * </pre>
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
-      public Builder removeNodes(java.lang.String key) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        internalGetMutableNodes().getMutableMap().remove(key);
+
+      public Builder removeNodes(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableNodes().getMutableMap()
+            .remove(key);
         return this;
       }
-
-      /** Use alternate mutation accessors instead. */
+      /**
+       * Use alternate mutation accessors instead.
+       */
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-          getMutableNodes() {
+      getMutableNodes() {
         return internalGetMutableNodes().getMutableMap();
       }
-
       /**
-       *
-       *
        * <pre>
        * A map from Local Node ID to its property and values.
        * </pre>
@@ -5495,33 +4901,28 @@ public final class Mcf {
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
       public Builder putNodes(
-          java.lang.String key, org.datacommons.proto.Mcf.McfGraph.PropertyValues value) {
-        if (key == null) {
-          throw new java.lang.NullPointerException();
-        }
-        if (value == null) {
-          throw new java.lang.NullPointerException();
-        }
-        internalGetMutableNodes().getMutableMap().put(key, value);
+          java.lang.String key,
+          org.datacommons.proto.Mcf.McfGraph.PropertyValues value) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        if (value == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableNodes().getMutableMap()
+            .put(key, value);
         return this;
       }
-
       /**
-       *
-       *
        * <pre>
        * A map from Local Node ID to its property and values.
        * </pre>
        *
        * <code>map&lt;string, .org.datacommons.proto.McfGraph.PropertyValues&gt; nodes = 2;</code>
        */
+
       public Builder putAllNodes(
-          java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
-              values) {
-        internalGetMutableNodes().getMutableMap().putAll(values);
+          java.util.Map<java.lang.String, org.datacommons.proto.Mcf.McfGraph.PropertyValues> values) {
+        internalGetMutableNodes().getMutableMap()
+            .putAll(values);
         return this;
       }
-
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -5534,12 +4935,12 @@ public final class Mcf {
         return super.mergeUnknownFields(unknownFields);
       }
 
+
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.McfGraph)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.McfGraph)
     private static final org.datacommons.proto.Mcf.McfGraph DEFAULT_INSTANCE;
-
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Mcf.McfGraph();
     }
@@ -5548,17 +4949,16 @@ public final class Mcf {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated
-    public static final com.google.protobuf.Parser<McfGraph> PARSER =
-        new com.google.protobuf.AbstractParser<McfGraph>() {
-          @java.lang.Override
-          public McfGraph parsePartialFrom(
-              com.google.protobuf.CodedInputStream input,
-              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-              throws com.google.protobuf.InvalidProtocolBufferException {
-            return new McfGraph(input, extensionRegistry);
-          }
-        };
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<McfGraph>
+        PARSER = new com.google.protobuf.AbstractParser<McfGraph>() {
+      @java.lang.Override
+      public McfGraph parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new McfGraph(input, extensionRegistry);
+      }
+    };
 
     public static com.google.protobuf.Parser<McfGraph> parser() {
       return PARSER;
@@ -5573,61 +4973,53 @@ public final class Mcf {
     public org.datacommons.proto.Mcf.McfGraph getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
+
   }
 
-  public interface McfStatVarObsSeriesOrBuilder
-      extends
+  public interface McfStatVarObsSeriesOrBuilder extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.McfStatVarObsSeries)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
-     *
      * @return Whether the key field is set.
      */
     boolean hasKey();
-
     /**
      * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
-     *
      * @return The key.
      */
     org.datacommons.proto.Mcf.McfStatVarObsSeries.Key getKey();
-
-    /** <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code> */
+    /**
+     * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
+     */
     org.datacommons.proto.Mcf.McfStatVarObsSeries.KeyOrBuilder getKeyOrBuilder();
 
     /**
      * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
      */
-    java.util.List<org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs> getSvObsListList();
-
+    java.util.List<org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs> 
+        getSvObsListList();
     /**
      * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
      */
     org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs getSvObsList(int index);
-
     /**
      * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
      */
     int getSvObsListCount();
-
     /**
      * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
      */
-    java.util.List<? extends org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder>
+    java.util.List<? extends org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder> 
         getSvObsListOrBuilderList();
-
     /**
      * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
      */
     org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder getSvObsListOrBuilder(
         int index);
   }
-
   /**
-   *
-   *
    * <pre>
    * Space-efficient representation of MCF data for one time-series of StatVarObs.
    * This is effectively similar to SourceSeries, but with free PVs per SVObs.
@@ -5635,32 +5027,31 @@ public final class Mcf {
    *
    * Protobuf type {@code org.datacommons.proto.McfStatVarObsSeries}
    */
-  public static final class McfStatVarObsSeries extends com.google.protobuf.GeneratedMessageV3
-      implements
+  public static final class McfStatVarObsSeries extends
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.McfStatVarObsSeries)
       McfStatVarObsSeriesOrBuilder {
-    private static final long serialVersionUID = 0L;
-
+  private static final long serialVersionUID = 0L;
     // Use McfStatVarObsSeries.newBuilder() to construct.
     private McfStatVarObsSeries(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-
     private McfStatVarObsSeries() {
       svObsList_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
       return new McfStatVarObsSeries();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
       return this.unknownFields;
     }
-
     private McfStatVarObsSeries(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5680,50 +5071,42 @@ public final class Mcf {
             case 0:
               done = true;
               break;
-            case 10:
-              {
-                org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder subBuilder = null;
-                if (((bitField0_ & 0x00000001) != 0)) {
-                  subBuilder = key_.toBuilder();
-                }
-                key_ =
-                    input.readMessage(
-                        org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.PARSER,
-                        extensionRegistry);
-                if (subBuilder != null) {
-                  subBuilder.mergeFrom(key_);
-                  key_ = subBuilder.buildPartial();
-                }
-                bitField0_ |= 0x00000001;
-                break;
+            case 10: {
+              org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) != 0)) {
+                subBuilder = key_.toBuilder();
               }
-            case 18:
-              {
-                if (!((mutable_bitField0_ & 0x00000002) != 0)) {
-                  svObsList_ =
-                      new java.util.ArrayList<
-                          org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs>();
-                  mutable_bitField0_ |= 0x00000002;
-                }
-                svObsList_.add(
-                    input.readMessage(
-                        org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.PARSER,
-                        extensionRegistry));
-                break;
+              key_ = input.readMessage(org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(key_);
+                key_ = subBuilder.buildPartial();
               }
-            default:
-              {
-                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+                svObsList_ = new java.util.ArrayList<org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs>();
+                mutable_bitField0_ |= 0x00000002;
               }
+              svObsList_.add(
+                  input.readMessage(org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.PARSER, extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000002) != 0)) {
           svObsList_ = java.util.Collections.unmodifiableList(svObsList_);
@@ -5732,126 +5115,97 @@ public final class Mcf {
         makeExtensionsImmutable();
       }
     }
-
-    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return org.datacommons.proto.Mcf
-          .internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor;
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Mcf
-          .internal_static_org_datacommons_proto_McfStatVarObsSeries_fieldAccessorTable
+      return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.class,
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder.class);
+              org.datacommons.proto.Mcf.McfStatVarObsSeries.class, org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder.class);
     }
 
-    public interface StatVarObsOrBuilder
-        extends
+    public interface StatVarObsOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.McfStatVarObsSeries.StatVarObs)
         com.google.protobuf.MessageOrBuilder {
 
       /**
        * <code>required string date = 1;</code>
-       *
        * @return Whether the date field is set.
        */
       boolean hasDate();
-
       /**
        * <code>required string date = 1;</code>
-       *
        * @return The date.
        */
       java.lang.String getDate();
-
       /**
        * <code>required string date = 1;</code>
-       *
        * @return The bytes for date.
        */
-      com.google.protobuf.ByteString getDateBytes();
+      com.google.protobuf.ByteString
+          getDateBytes();
 
       /**
-       *
-       *
        * <pre>
        * Vast majority of values are numbers, storing them as double will be
        * more space efficient.
        * </pre>
        *
        * <code>double number = 2;</code>
-       *
        * @return Whether the number field is set.
        */
       boolean hasNumber();
-
       /**
-       *
-       *
        * <pre>
        * Vast majority of values are numbers, storing them as double will be
        * more space efficient.
        * </pre>
        *
        * <code>double number = 2;</code>
-       *
        * @return The number.
        */
       double getNumber();
 
       /**
        * <code>string text = 3;</code>
-       *
        * @return Whether the text field is set.
        */
       boolean hasText();
-
       /**
        * <code>string text = 3;</code>
-       *
        * @return The text.
        */
       java.lang.String getText();
-
       /**
        * <code>string text = 3;</code>
-       *
        * @return The bytes for text.
        */
-      com.google.protobuf.ByteString getTextBytes();
+      com.google.protobuf.ByteString
+          getTextBytes();
 
       /**
-       *
-       *
        * <pre>
        * Any additional PVs associated with the StatVarObs.
        * </pre>
        *
        * <code>optional .org.datacommons.proto.McfGraph.PropertyValues pvs = 4;</code>
-       *
        * @return Whether the pvs field is set.
        */
       boolean hasPvs();
-
       /**
-       *
-       *
        * <pre>
        * Any additional PVs associated with the StatVarObs.
        * </pre>
        *
        * <code>optional .org.datacommons.proto.McfGraph.PropertyValues pvs = 4;</code>
-       *
        * @return The pvs.
        */
       org.datacommons.proto.Mcf.McfGraph.PropertyValues getPvs();
-
       /**
-       *
-       *
        * <pre>
        * Any additional PVs associated with the StatVarObs.
        * </pre>
@@ -5862,79 +5216,64 @@ public final class Mcf {
 
       /**
        * <code>required string dcid = 5;</code>
-       *
        * @return Whether the dcid field is set.
        */
       boolean hasDcid();
-
       /**
        * <code>required string dcid = 5;</code>
-       *
        * @return The dcid.
        */
       java.lang.String getDcid();
-
       /**
        * <code>required string dcid = 5;</code>
-       *
        * @return The bytes for dcid.
        */
-      com.google.protobuf.ByteString getDcidBytes();
+      com.google.protobuf.ByteString
+          getDcidBytes();
 
       /**
-       *
-       *
        * <pre>
        * If empty, it means that local_node_id is the same as dcid.
        * </pre>
        *
        * <code>optional string local_node_id = 6;</code>
-       *
        * @return Whether the localNodeId field is set.
        */
       boolean hasLocalNodeId();
-
       /**
-       *
-       *
        * <pre>
        * If empty, it means that local_node_id is the same as dcid.
        * </pre>
        *
        * <code>optional string local_node_id = 6;</code>
-       *
        * @return The localNodeId.
        */
       java.lang.String getLocalNodeId();
-
       /**
-       *
-       *
        * <pre>
        * If empty, it means that local_node_id is the same as dcid.
        * </pre>
        *
        * <code>optional string local_node_id = 6;</code>
-       *
        * @return The bytes for localNodeId.
        */
-      com.google.protobuf.ByteString getLocalNodeIdBytes();
+      com.google.protobuf.ByteString
+          getLocalNodeIdBytes();
 
       public org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.ValCase getValCase();
     }
-
-    /** Protobuf type {@code org.datacommons.proto.McfStatVarObsSeries.StatVarObs} */
-    public static final class StatVarObs extends com.google.protobuf.GeneratedMessageV3
-        implements
+    /**
+     * Protobuf type {@code org.datacommons.proto.McfStatVarObsSeries.StatVarObs}
+     */
+    public static final class StatVarObs extends
+        com.google.protobuf.GeneratedMessageV3 implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.McfStatVarObsSeries.StatVarObs)
         StatVarObsOrBuilder {
-      private static final long serialVersionUID = 0L;
-
+    private static final long serialVersionUID = 0L;
       // Use StatVarObs.newBuilder() to construct.
       private StatVarObs(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
       }
-
       private StatVarObs() {
         date_ = "";
         dcid_ = "";
@@ -5943,15 +5282,16 @@ public final class Mcf {
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
         return new StatVarObs();
       }
 
       @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
         return this.unknownFields;
       }
-
       private StatVarObs(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5971,109 +5311,93 @@ public final class Mcf {
               case 0:
                 done = true;
                 break;
-              case 10:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000001;
-                  date_ = bs;
-                  break;
+              case 10: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000001;
+                date_ = bs;
+                break;
+              }
+              case 17: {
+                valCase_ = 2;
+                val_ = input.readDouble();
+                break;
+              }
+              case 26: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                valCase_ = 3;
+                val_ = bs;
+                break;
+              }
+              case 34: {
+                org.datacommons.proto.Mcf.McfGraph.PropertyValues.Builder subBuilder = null;
+                if (((bitField0_ & 0x00000008) != 0)) {
+                  subBuilder = pvs_.toBuilder();
                 }
-              case 17:
-                {
-                  valCase_ = 2;
-                  val_ = input.readDouble();
-                  break;
+                pvs_ = input.readMessage(org.datacommons.proto.Mcf.McfGraph.PropertyValues.PARSER, extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(pvs_);
+                  pvs_ = subBuilder.buildPartial();
                 }
-              case 26:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  valCase_ = 3;
-                  val_ = bs;
-                  break;
+                bitField0_ |= 0x00000008;
+                break;
+              }
+              case 42: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000010;
+                dcid_ = bs;
+                break;
+              }
+              case 50: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000020;
+                localNodeId_ = bs;
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
                 }
-              case 34:
-                {
-                  org.datacommons.proto.Mcf.McfGraph.PropertyValues.Builder subBuilder = null;
-                  if (((bitField0_ & 0x00000008) != 0)) {
-                    subBuilder = pvs_.toBuilder();
-                  }
-                  pvs_ =
-                      input.readMessage(
-                          org.datacommons.proto.Mcf.McfGraph.PropertyValues.PARSER,
-                          extensionRegistry);
-                  if (subBuilder != null) {
-                    subBuilder.mergeFrom(pvs_);
-                    pvs_ = subBuilder.buildPartial();
-                  }
-                  bitField0_ |= 0x00000008;
-                  break;
-                }
-              case 42:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000010;
-                  dcid_ = bs;
-                  break;
-                }
-              case 50:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000020;
-                  localNodeId_ = bs;
-                  break;
-                }
-              default:
-                {
-                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                    done = true;
-                  }
-                  break;
-                }
+                break;
+              }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(e)
-              .setUnfinishedMessage(this);
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
         } finally {
           this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
         }
       }
-
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_fieldAccessorTable
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.class,
-                org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder.class);
+                org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.class, org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder.class);
       }
 
       private int bitField0_;
       private int valCase_ = 0;
       private java.lang.Object val_;
-
       public enum ValCase
-          implements
-              com.google.protobuf.Internal.EnumLite,
+          implements com.google.protobuf.Internal.EnumLite,
               com.google.protobuf.AbstractMessage.InternalOneOfEnum {
         NUMBER(2),
         TEXT(3),
         VAL_NOT_SET(0);
         private final int value;
-
         private ValCase(int value) {
           this.value = value;
         }
-
         /**
          * @param value The number of the enum to look for.
          * @return The enum associated with the given number.
@@ -6086,42 +5410,35 @@ public final class Mcf {
 
         public static ValCase forNumber(int value) {
           switch (value) {
-            case 2:
-              return NUMBER;
-            case 3:
-              return TEXT;
-            case 0:
-              return VAL_NOT_SET;
-            default:
-              return null;
+            case 2: return NUMBER;
+            case 3: return TEXT;
+            case 0: return VAL_NOT_SET;
+            default: return null;
           }
         }
-
         public int getNumber() {
           return this.value;
         }
       };
 
-      public ValCase getValCase() {
-        return ValCase.forNumber(valCase_);
+      public ValCase
+      getValCase() {
+        return ValCase.forNumber(
+            valCase_);
       }
 
       public static final int DATE_FIELD_NUMBER = 1;
       private volatile java.lang.Object date_;
-
       /**
        * <code>required string date = 1;</code>
-       *
        * @return Whether the date field is set.
        */
       @java.lang.Override
       public boolean hasDate() {
         return ((bitField0_ & 0x00000001) != 0);
       }
-
       /**
        * <code>required string date = 1;</code>
-       *
        * @return The date.
        */
       @java.lang.Override
@@ -6130,7 +5447,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             date_ = s;
@@ -6138,18 +5456,18 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
        * <code>required string date = 1;</code>
-       *
        * @return The bytes for date.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getDateBytes() {
+      public com.google.protobuf.ByteString
+          getDateBytes() {
         java.lang.Object ref = date_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           date_ = b;
           return b;
         } else {
@@ -6158,34 +5476,26 @@ public final class Mcf {
       }
 
       public static final int NUMBER_FIELD_NUMBER = 2;
-
       /**
-       *
-       *
        * <pre>
        * Vast majority of values are numbers, storing them as double will be
        * more space efficient.
        * </pre>
        *
        * <code>double number = 2;</code>
-       *
        * @return Whether the number field is set.
        */
       @java.lang.Override
       public boolean hasNumber() {
         return valCase_ == 2;
       }
-
       /**
-       *
-       *
        * <pre>
        * Vast majority of values are numbers, storing them as double will be
        * more space efficient.
        * </pre>
        *
        * <code>double number = 2;</code>
-       *
        * @return The number.
        */
       @java.lang.Override
@@ -6197,19 +5507,15 @@ public final class Mcf {
       }
 
       public static final int TEXT_FIELD_NUMBER = 3;
-
       /**
        * <code>string text = 3;</code>
-       *
        * @return Whether the text field is set.
        */
       public boolean hasText() {
         return valCase_ == 3;
       }
-
       /**
        * <code>string text = 3;</code>
-       *
        * @return The text.
        */
       public java.lang.String getText() {
@@ -6220,7 +5526,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8() && (valCase_ == 3)) {
             val_ = s;
@@ -6228,20 +5535,20 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
        * <code>string text = 3;</code>
-       *
        * @return The bytes for text.
        */
-      public com.google.protobuf.ByteString getTextBytes() {
+      public com.google.protobuf.ByteString
+          getTextBytes() {
         java.lang.Object ref = "";
         if (valCase_ == 3) {
           ref = val_;
         }
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           if (valCase_ == 3) {
             val_ = b;
           }
@@ -6253,44 +5560,31 @@ public final class Mcf {
 
       public static final int PVS_FIELD_NUMBER = 4;
       private org.datacommons.proto.Mcf.McfGraph.PropertyValues pvs_;
-
       /**
-       *
-       *
        * <pre>
        * Any additional PVs associated with the StatVarObs.
        * </pre>
        *
        * <code>optional .org.datacommons.proto.McfGraph.PropertyValues pvs = 4;</code>
-       *
        * @return Whether the pvs field is set.
        */
       @java.lang.Override
       public boolean hasPvs() {
         return ((bitField0_ & 0x00000008) != 0);
       }
-
       /**
-       *
-       *
        * <pre>
        * Any additional PVs associated with the StatVarObs.
        * </pre>
        *
        * <code>optional .org.datacommons.proto.McfGraph.PropertyValues pvs = 4;</code>
-       *
        * @return The pvs.
        */
       @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.PropertyValues getPvs() {
-        return pvs_ == null
-            ? org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance()
-            : pvs_;
+        return pvs_ == null ? org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance() : pvs_;
       }
-
       /**
-       *
-       *
        * <pre>
        * Any additional PVs associated with the StatVarObs.
        * </pre>
@@ -6299,27 +5593,21 @@ public final class Mcf {
        */
       @java.lang.Override
       public org.datacommons.proto.Mcf.McfGraph.PropertyValuesOrBuilder getPvsOrBuilder() {
-        return pvs_ == null
-            ? org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance()
-            : pvs_;
+        return pvs_ == null ? org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance() : pvs_;
       }
 
       public static final int DCID_FIELD_NUMBER = 5;
       private volatile java.lang.Object dcid_;
-
       /**
        * <code>required string dcid = 5;</code>
-       *
        * @return Whether the dcid field is set.
        */
       @java.lang.Override
       public boolean hasDcid() {
         return ((bitField0_ & 0x00000010) != 0);
       }
-
       /**
        * <code>required string dcid = 5;</code>
-       *
        * @return The dcid.
        */
       @java.lang.Override
@@ -6328,7 +5616,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             dcid_ = s;
@@ -6336,18 +5625,18 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
        * <code>required string dcid = 5;</code>
-       *
        * @return The bytes for dcid.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getDcidBytes() {
+      public com.google.protobuf.ByteString
+          getDcidBytes() {
         java.lang.Object ref = dcid_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           dcid_ = b;
           return b;
         } else {
@@ -6357,32 +5646,24 @@ public final class Mcf {
 
       public static final int LOCAL_NODE_ID_FIELD_NUMBER = 6;
       private volatile java.lang.Object localNodeId_;
-
       /**
-       *
-       *
        * <pre>
        * If empty, it means that local_node_id is the same as dcid.
        * </pre>
        *
        * <code>optional string local_node_id = 6;</code>
-       *
        * @return Whether the localNodeId field is set.
        */
       @java.lang.Override
       public boolean hasLocalNodeId() {
         return ((bitField0_ & 0x00000020) != 0);
       }
-
       /**
-       *
-       *
        * <pre>
        * If empty, it means that local_node_id is the same as dcid.
        * </pre>
        *
        * <code>optional string local_node_id = 6;</code>
-       *
        * @return The localNodeId.
        */
       @java.lang.Override
@@ -6391,7 +5672,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             localNodeId_ = s;
@@ -6399,24 +5681,22 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
-       *
-       *
        * <pre>
        * If empty, it means that local_node_id is the same as dcid.
        * </pre>
        *
        * <code>optional string local_node_id = 6;</code>
-       *
        * @return The bytes for localNodeId.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getLocalNodeIdBytes() {
+      public com.google.protobuf.ByteString
+          getLocalNodeIdBytes() {
         java.lang.Object ref = localNodeId_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           localNodeId_ = b;
           return b;
         } else {
@@ -6425,7 +5705,6 @@ public final class Mcf {
       }
 
       private byte memoizedIsInitialized = -1;
-
       @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -6445,12 +5724,14 @@ public final class Mcf {
       }
 
       @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
         if (((bitField0_ & 0x00000001) != 0)) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 1, date_);
         }
         if (valCase_ == 2) {
-          output.writeDouble(2, (double) ((java.lang.Double) val_));
+          output.writeDouble(
+              2, (double)((java.lang.Double) val_));
         }
         if (valCase_ == 3) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 3, val_);
@@ -6477,15 +5758,16 @@ public final class Mcf {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, date_);
         }
         if (valCase_ == 2) {
-          size +=
-              com.google.protobuf.CodedOutputStream.computeDoubleSize(
-                  2, (double) ((java.lang.Double) val_));
+          size += com.google.protobuf.CodedOutputStream
+            .computeDoubleSize(
+                2, (double)((java.lang.Double) val_));
         }
         if (valCase_ == 3) {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, val_);
         }
         if (((bitField0_ & 0x00000008) != 0)) {
-          size += com.google.protobuf.CodedOutputStream.computeMessageSize(4, getPvs());
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(4, getPvs());
         }
         if (((bitField0_ & 0x00000010) != 0)) {
           size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, dcid_);
@@ -6501,38 +5783,43 @@ public final class Mcf {
       @java.lang.Override
       public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
-          return true;
+         return true;
         }
         if (!(obj instanceof org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs)) {
           return super.equals(obj);
         }
-        org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs other =
-            (org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs) obj;
+        org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs other = (org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs) obj;
 
         if (hasDate() != other.hasDate()) return false;
         if (hasDate()) {
-          if (!getDate().equals(other.getDate())) return false;
+          if (!getDate()
+              .equals(other.getDate())) return false;
         }
         if (hasPvs() != other.hasPvs()) return false;
         if (hasPvs()) {
-          if (!getPvs().equals(other.getPvs())) return false;
+          if (!getPvs()
+              .equals(other.getPvs())) return false;
         }
         if (hasDcid() != other.hasDcid()) return false;
         if (hasDcid()) {
-          if (!getDcid().equals(other.getDcid())) return false;
+          if (!getDcid()
+              .equals(other.getDcid())) return false;
         }
         if (hasLocalNodeId() != other.hasLocalNodeId()) return false;
         if (hasLocalNodeId()) {
-          if (!getLocalNodeId().equals(other.getLocalNodeId())) return false;
+          if (!getLocalNodeId()
+              .equals(other.getLocalNodeId())) return false;
         }
         if (!getValCase().equals(other.getValCase())) return false;
         switch (valCase_) {
           case 2:
             if (java.lang.Double.doubleToLongBits(getNumber())
-                != java.lang.Double.doubleToLongBits(other.getNumber())) return false;
+                != java.lang.Double.doubleToLongBits(
+                    other.getNumber())) return false;
             break;
           case 3:
-            if (!getText().equals(other.getText())) return false;
+            if (!getText()
+                .equals(other.getText())) return false;
             break;
           case 0:
           default:
@@ -6567,10 +5854,8 @@ public final class Mcf {
         switch (valCase_) {
           case 2:
             hash = (37 * hash) + NUMBER_FIELD_NUMBER;
-            hash =
-                (53 * hash)
-                    + com.google.protobuf.Internal.hashLong(
-                        java.lang.Double.doubleToLongBits(getNumber()));
+            hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+                java.lang.Double.doubleToLongBits(getNumber()));
             break;
           case 3:
             hash = (37 * hash) + TEXT_FIELD_NUMBER;
@@ -6585,94 +5870,87 @@ public final class Mcf {
       }
 
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseFrom(
-          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseFrom(
-          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseFrom(
-          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
-      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseFrom(
-          java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
       }
-
-      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseDelimitedFrom(
-          java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseDelimitedFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-            PARSER, input, extensionRegistry);
-      }
-
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseFrom(
-          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
-
+      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
 
       @java.lang.Override
-      public Builder newBuilderForType() {
-        return newBuilder();
-      }
-
+      public Builder newBuilderForType() { return newBuilder(); }
       public static Builder newBuilder() {
         return DEFAULT_INSTANCE.toBuilder();
       }
-
-      public static Builder newBuilder(
-          org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs prototype) {
+      public static Builder newBuilder(org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs prototype) {
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
-
       @java.lang.Override
       public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
       }
 
       @java.lang.Override
@@ -6681,26 +5959,24 @@ public final class Mcf {
         Builder builder = new Builder(parent);
         return builder;
       }
-
-      /** Protobuf type {@code org.datacommons.proto.McfStatVarObsSeries.StatVarObs} */
-      public static final class Builder
-          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-          implements
+      /**
+       * Protobuf type {@code org.datacommons.proto.McfStatVarObsSeries.StatVarObs}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
           // @@protoc_insertion_point(builder_implements:org.datacommons.proto.McfStatVarObsSeries.StatVarObs)
           org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_descriptor;
         }
 
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_fieldAccessorTable
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.class,
-                  org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder.class);
+                  org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.class, org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder.class);
         }
 
         // Construct using org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.newBuilder()
@@ -6708,17 +5984,17 @@ public final class Mcf {
           maybeForceBuilderInitialization();
         }
 
-        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
-
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
             getPvsFieldBuilder();
           }
         }
-
         @java.lang.Override
         public Builder clear() {
           super.clear();
@@ -6740,14 +6016,13 @@ public final class Mcf {
         }
 
         @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_descriptor;
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_descriptor;
         }
 
         @java.lang.Override
-        public org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs
-            getDefaultInstanceForType() {
+        public org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs getDefaultInstanceForType() {
           return org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.getDefaultInstance();
         }
 
@@ -6762,8 +6037,7 @@ public final class Mcf {
 
         @java.lang.Override
         public org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs buildPartial() {
-          org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs result =
-              new org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs(this);
+          org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs result = new org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           if (((from_bitField0_ & 0x00000001) != 0)) {
@@ -6802,41 +6076,38 @@ public final class Mcf {
         public Builder clone() {
           return super.clone();
         }
-
         @java.lang.Override
         public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
           return super.setField(field, value);
         }
-
         @java.lang.Override
-        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
           return super.clearField(field);
         }
-
         @java.lang.Override
-        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
           return super.clearOneof(oneof);
         }
-
         @java.lang.Override
         public Builder setRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index,
-            java.lang.Object value) {
+            int index, java.lang.Object value) {
           return super.setRepeatedField(field, index, value);
         }
-
         @java.lang.Override
         public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
           return super.addRepeatedField(field, value);
         }
-
         @java.lang.Override
         public Builder mergeFrom(com.google.protobuf.Message other) {
           if (other instanceof org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs) {
-            return mergeFrom((org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs) other);
+            return mergeFrom((org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs)other);
           } else {
             super.mergeFrom(other);
             return this;
@@ -6844,9 +6115,7 @@ public final class Mcf {
         }
 
         public Builder mergeFrom(org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs other) {
-          if (other
-              == org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.getDefaultInstance())
-            return this;
+          if (other == org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.getDefaultInstance()) return this;
           if (other.hasDate()) {
             bitField0_ |= 0x00000001;
             date_ = other.date_;
@@ -6866,22 +6135,19 @@ public final class Mcf {
             onChanged();
           }
           switch (other.getValCase()) {
-            case NUMBER:
-              {
-                setNumber(other.getNumber());
-                break;
-              }
-            case TEXT:
-              {
-                valCase_ = 3;
-                val_ = other.val_;
-                onChanged();
-                break;
-              }
-            case VAL_NOT_SET:
-              {
-                break;
-              }
+            case NUMBER: {
+              setNumber(other.getNumber());
+              break;
+            }
+            case TEXT: {
+              valCase_ = 3;
+              val_ = other.val_;
+              onChanged();
+              break;
+            }
+            case VAL_NOT_SET: {
+              break;
+            }
           }
           this.mergeUnknownFields(other.unknownFields);
           onChanged();
@@ -6908,8 +6174,7 @@ public final class Mcf {
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage =
-                (org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs) e.getUnfinishedMessage();
+            parsedMessage = (org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs) e.getUnfinishedMessage();
             throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
@@ -6918,12 +6183,12 @@ public final class Mcf {
           }
           return this;
         }
-
         private int valCase_ = 0;
         private java.lang.Object val_;
-
-        public ValCase getValCase() {
-          return ValCase.forNumber(valCase_);
+        public ValCase
+            getValCase() {
+          return ValCase.forNumber(
+              valCase_);
         }
 
         public Builder clearVal() {
@@ -6936,25 +6201,22 @@ public final class Mcf {
         private int bitField0_;
 
         private java.lang.Object date_ = "";
-
         /**
          * <code>required string date = 1;</code>
-         *
          * @return Whether the date field is set.
          */
         public boolean hasDate() {
           return ((bitField0_ & 0x00000001) != 0);
         }
-
         /**
          * <code>required string date = 1;</code>
-         *
          * @return The date.
          */
         public java.lang.String getDate() {
           java.lang.Object ref = date_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
               date_ = s;
@@ -6964,43 +6226,40 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
          * <code>required string date = 1;</code>
-         *
          * @return The bytes for date.
          */
-        public com.google.protobuf.ByteString getDateBytes() {
+        public com.google.protobuf.ByteString
+            getDateBytes() {
           java.lang.Object ref = date_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             date_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
          * <code>required string date = 1;</code>
-         *
          * @param value The date to set.
          * @return This builder for chaining.
          */
-        public Builder setDate(java.lang.String value) {
+        public Builder setDate(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000001;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
           date_ = value;
           onChanged();
           return this;
         }
-
         /**
          * <code>required string date = 1;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearDate() {
@@ -7009,49 +6268,41 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
          * <code>required string date = 1;</code>
-         *
          * @param value The bytes for date to set.
          * @return This builder for chaining.
          */
-        public Builder setDateBytes(com.google.protobuf.ByteString value) {
+        public Builder setDateBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000001;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
           date_ = value;
           onChanged();
           return this;
         }
 
         /**
-         *
-         *
          * <pre>
          * Vast majority of values are numbers, storing them as double will be
          * more space efficient.
          * </pre>
          *
          * <code>double number = 2;</code>
-         *
          * @return Whether the number field is set.
          */
         public boolean hasNumber() {
           return valCase_ == 2;
         }
-
         /**
-         *
-         *
          * <pre>
          * Vast majority of values are numbers, storing them as double will be
          * more space efficient.
          * </pre>
          *
          * <code>double number = 2;</code>
-         *
          * @return The number.
          */
         public double getNumber() {
@@ -7060,17 +6311,13 @@ public final class Mcf {
           }
           return 0D;
         }
-
         /**
-         *
-         *
          * <pre>
          * Vast majority of values are numbers, storing them as double will be
          * more space efficient.
          * </pre>
          *
          * <code>double number = 2;</code>
-         *
          * @param value The number to set.
          * @return This builder for chaining.
          */
@@ -7080,17 +6327,13 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Vast majority of values are numbers, storing them as double will be
          * more space efficient.
          * </pre>
          *
          * <code>double number = 2;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearNumber() {
@@ -7104,17 +6347,14 @@ public final class Mcf {
 
         /**
          * <code>string text = 3;</code>
-         *
          * @return Whether the text field is set.
          */
         @java.lang.Override
         public boolean hasText() {
           return valCase_ == 3;
         }
-
         /**
          * <code>string text = 3;</code>
-         *
          * @return The text.
          */
         @java.lang.Override
@@ -7124,7 +6364,8 @@ public final class Mcf {
             ref = val_;
           }
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (valCase_ == 3) {
               if (bs.isValidUtf8()) {
@@ -7136,21 +6377,21 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
          * <code>string text = 3;</code>
-         *
          * @return The bytes for text.
          */
         @java.lang.Override
-        public com.google.protobuf.ByteString getTextBytes() {
+        public com.google.protobuf.ByteString
+            getTextBytes() {
           java.lang.Object ref = "";
           if (valCase_ == 3) {
             ref = val_;
           }
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             if (valCase_ == 3) {
               val_ = b;
             }
@@ -7159,26 +6400,23 @@ public final class Mcf {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
          * <code>string text = 3;</code>
-         *
          * @param value The text to set.
          * @return This builder for chaining.
          */
-        public Builder setText(java.lang.String value) {
+        public Builder setText(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          valCase_ = 3;
+    throw new NullPointerException();
+  }
+  valCase_ = 3;
           val_ = value;
           onChanged();
           return this;
         }
-
         /**
          * <code>string text = 3;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearText() {
@@ -7189,18 +6427,17 @@ public final class Mcf {
           }
           return this;
         }
-
         /**
          * <code>string text = 3;</code>
-         *
          * @param value The bytes for text to set.
          * @return This builder for chaining.
          */
-        public Builder setTextBytes(com.google.protobuf.ByteString value) {
+        public Builder setTextBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          valCase_ = 3;
+    throw new NullPointerException();
+  }
+  valCase_ = 3;
           val_ = value;
           onChanged();
           return this;
@@ -7208,50 +6445,34 @@ public final class Mcf {
 
         private org.datacommons.proto.Mcf.McfGraph.PropertyValues pvs_;
         private com.google.protobuf.SingleFieldBuilderV3<
-                org.datacommons.proto.Mcf.McfGraph.PropertyValues,
-                org.datacommons.proto.Mcf.McfGraph.PropertyValues.Builder,
-                org.datacommons.proto.Mcf.McfGraph.PropertyValuesOrBuilder>
-            pvsBuilder_;
-
+            org.datacommons.proto.Mcf.McfGraph.PropertyValues, org.datacommons.proto.Mcf.McfGraph.PropertyValues.Builder, org.datacommons.proto.Mcf.McfGraph.PropertyValuesOrBuilder> pvsBuilder_;
         /**
-         *
-         *
          * <pre>
          * Any additional PVs associated with the StatVarObs.
          * </pre>
          *
          * <code>optional .org.datacommons.proto.McfGraph.PropertyValues pvs = 4;</code>
-         *
          * @return Whether the pvs field is set.
          */
         public boolean hasPvs() {
           return ((bitField0_ & 0x00000008) != 0);
         }
-
         /**
-         *
-         *
          * <pre>
          * Any additional PVs associated with the StatVarObs.
          * </pre>
          *
          * <code>optional .org.datacommons.proto.McfGraph.PropertyValues pvs = 4;</code>
-         *
          * @return The pvs.
          */
         public org.datacommons.proto.Mcf.McfGraph.PropertyValues getPvs() {
           if (pvsBuilder_ == null) {
-            return pvs_ == null
-                ? org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance()
-                : pvs_;
+            return pvs_ == null ? org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance() : pvs_;
           } else {
             return pvsBuilder_.getMessage();
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * Any additional PVs associated with the StatVarObs.
          * </pre>
@@ -7271,10 +6492,7 @@ public final class Mcf {
           bitField0_ |= 0x00000008;
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Any additional PVs associated with the StatVarObs.
          * </pre>
@@ -7292,10 +6510,7 @@ public final class Mcf {
           bitField0_ |= 0x00000008;
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Any additional PVs associated with the StatVarObs.
          * </pre>
@@ -7304,13 +6519,11 @@ public final class Mcf {
          */
         public Builder mergePvs(org.datacommons.proto.Mcf.McfGraph.PropertyValues value) {
           if (pvsBuilder_ == null) {
-            if (((bitField0_ & 0x00000008) != 0)
-                && pvs_ != null
-                && pvs_ != org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance()) {
+            if (((bitField0_ & 0x00000008) != 0) &&
+                pvs_ != null &&
+                pvs_ != org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance()) {
               pvs_ =
-                  org.datacommons.proto.Mcf.McfGraph.PropertyValues.newBuilder(pvs_)
-                      .mergeFrom(value)
-                      .buildPartial();
+                org.datacommons.proto.Mcf.McfGraph.PropertyValues.newBuilder(pvs_).mergeFrom(value).buildPartial();
             } else {
               pvs_ = value;
             }
@@ -7321,10 +6534,7 @@ public final class Mcf {
           bitField0_ |= 0x00000008;
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Any additional PVs associated with the StatVarObs.
          * </pre>
@@ -7341,10 +6551,7 @@ public final class Mcf {
           bitField0_ = (bitField0_ & ~0x00000008);
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * Any additional PVs associated with the StatVarObs.
          * </pre>
@@ -7356,10 +6563,7 @@ public final class Mcf {
           onChanged();
           return getPvsFieldBuilder().getBuilder();
         }
-
         /**
-         *
-         *
          * <pre>
          * Any additional PVs associated with the StatVarObs.
          * </pre>
@@ -7370,15 +6574,11 @@ public final class Mcf {
           if (pvsBuilder_ != null) {
             return pvsBuilder_.getMessageOrBuilder();
           } else {
-            return pvs_ == null
-                ? org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance()
-                : pvs_;
+            return pvs_ == null ?
+                org.datacommons.proto.Mcf.McfGraph.PropertyValues.getDefaultInstance() : pvs_;
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * Any additional PVs associated with the StatVarObs.
          * </pre>
@@ -7386,42 +6586,36 @@ public final class Mcf {
          * <code>optional .org.datacommons.proto.McfGraph.PropertyValues pvs = 4;</code>
          */
         private com.google.protobuf.SingleFieldBuilderV3<
-                org.datacommons.proto.Mcf.McfGraph.PropertyValues,
-                org.datacommons.proto.Mcf.McfGraph.PropertyValues.Builder,
-                org.datacommons.proto.Mcf.McfGraph.PropertyValuesOrBuilder>
+            org.datacommons.proto.Mcf.McfGraph.PropertyValues, org.datacommons.proto.Mcf.McfGraph.PropertyValues.Builder, org.datacommons.proto.Mcf.McfGraph.PropertyValuesOrBuilder> 
             getPvsFieldBuilder() {
           if (pvsBuilder_ == null) {
-            pvsBuilder_ =
-                new com.google.protobuf.SingleFieldBuilderV3<
-                    org.datacommons.proto.Mcf.McfGraph.PropertyValues,
-                    org.datacommons.proto.Mcf.McfGraph.PropertyValues.Builder,
-                    org.datacommons.proto.Mcf.McfGraph.PropertyValuesOrBuilder>(
-                    getPvs(), getParentForChildren(), isClean());
+            pvsBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                org.datacommons.proto.Mcf.McfGraph.PropertyValues, org.datacommons.proto.Mcf.McfGraph.PropertyValues.Builder, org.datacommons.proto.Mcf.McfGraph.PropertyValuesOrBuilder>(
+                    getPvs(),
+                    getParentForChildren(),
+                    isClean());
             pvs_ = null;
           }
           return pvsBuilder_;
         }
 
         private java.lang.Object dcid_ = "";
-
         /**
          * <code>required string dcid = 5;</code>
-         *
          * @return Whether the dcid field is set.
          */
         public boolean hasDcid() {
           return ((bitField0_ & 0x00000010) != 0);
         }
-
         /**
          * <code>required string dcid = 5;</code>
-         *
          * @return The dcid.
          */
         public java.lang.String getDcid() {
           java.lang.Object ref = dcid_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
               dcid_ = s;
@@ -7431,43 +6625,40 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
          * <code>required string dcid = 5;</code>
-         *
          * @return The bytes for dcid.
          */
-        public com.google.protobuf.ByteString getDcidBytes() {
+        public com.google.protobuf.ByteString
+            getDcidBytes() {
           java.lang.Object ref = dcid_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             dcid_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
          * <code>required string dcid = 5;</code>
-         *
          * @param value The dcid to set.
          * @return This builder for chaining.
          */
-        public Builder setDcid(java.lang.String value) {
+        public Builder setDcid(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000010;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
           dcid_ = value;
           onChanged();
           return this;
         }
-
         /**
          * <code>required string dcid = 5;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearDcid() {
@@ -7476,55 +6667,47 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
          * <code>required string dcid = 5;</code>
-         *
          * @param value The bytes for dcid to set.
          * @return This builder for chaining.
          */
-        public Builder setDcidBytes(com.google.protobuf.ByteString value) {
+        public Builder setDcidBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000010;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
           dcid_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object localNodeId_ = "";
-
         /**
-         *
-         *
          * <pre>
          * If empty, it means that local_node_id is the same as dcid.
          * </pre>
          *
          * <code>optional string local_node_id = 6;</code>
-         *
          * @return Whether the localNodeId field is set.
          */
         public boolean hasLocalNodeId() {
           return ((bitField0_ & 0x00000020) != 0);
         }
-
         /**
-         *
-         *
          * <pre>
          * If empty, it means that local_node_id is the same as dcid.
          * </pre>
          *
          * <code>optional string local_node_id = 6;</code>
-         *
          * @return The localNodeId.
          */
         public java.lang.String getLocalNodeId() {
           java.lang.Object ref = localNodeId_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
               localNodeId_ = s;
@@ -7534,61 +6717,52 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * If empty, it means that local_node_id is the same as dcid.
          * </pre>
          *
          * <code>optional string local_node_id = 6;</code>
-         *
          * @return The bytes for localNodeId.
          */
-        public com.google.protobuf.ByteString getLocalNodeIdBytes() {
+        public com.google.protobuf.ByteString
+            getLocalNodeIdBytes() {
           java.lang.Object ref = localNodeId_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             localNodeId_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
-         *
-         *
          * <pre>
          * If empty, it means that local_node_id is the same as dcid.
          * </pre>
          *
          * <code>optional string local_node_id = 6;</code>
-         *
          * @param value The localNodeId to set.
          * @return This builder for chaining.
          */
-        public Builder setLocalNodeId(java.lang.String value) {
+        public Builder setLocalNodeId(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000020;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
           localNodeId_ = value;
           onChanged();
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * If empty, it means that local_node_id is the same as dcid.
          * </pre>
          *
          * <code>optional string local_node_id = 6;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearLocalNodeId() {
@@ -7597,29 +6771,25 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
-         *
-         *
          * <pre>
          * If empty, it means that local_node_id is the same as dcid.
          * </pre>
          *
          * <code>optional string local_node_id = 6;</code>
-         *
          * @param value The bytes for localNodeId to set.
          * @return This builder for chaining.
          */
-        public Builder setLocalNodeIdBytes(com.google.protobuf.ByteString value) {
+        public Builder setLocalNodeIdBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000020;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
           localNodeId_ = value;
           onChanged();
           return this;
         }
-
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -7632,13 +6802,12 @@ public final class Mcf {
           return super.mergeUnknownFields(unknownFields);
         }
 
+
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.McfStatVarObsSeries.StatVarObs)
       }
 
       // @@protoc_insertion_point(class_scope:org.datacommons.proto.McfStatVarObsSeries.StatVarObs)
-      private static final org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs
-          DEFAULT_INSTANCE;
-
+      private static final org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs DEFAULT_INSTANCE;
       static {
         DEFAULT_INSTANCE = new org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs();
       }
@@ -7647,17 +6816,16 @@ public final class Mcf {
         return DEFAULT_INSTANCE;
       }
 
-      @java.lang.Deprecated
-      public static final com.google.protobuf.Parser<StatVarObs> PARSER =
-          new com.google.protobuf.AbstractParser<StatVarObs>() {
-            @java.lang.Override
-            public StatVarObs parsePartialFrom(
-                com.google.protobuf.CodedInputStream input,
-                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                throws com.google.protobuf.InvalidProtocolBufferException {
-              return new StatVarObs(input, extensionRegistry);
-            }
-          };
+      @java.lang.Deprecated public static final com.google.protobuf.Parser<StatVarObs>
+          PARSER = new com.google.protobuf.AbstractParser<StatVarObs>() {
+        @java.lang.Override
+        public StatVarObs parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new StatVarObs(input, extensionRegistry);
+        }
+      };
 
       public static com.google.protobuf.Parser<StatVarObs> parser() {
         return PARSER;
@@ -7672,152 +6840,127 @@ public final class Mcf {
       public org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
+
     }
 
-    public interface KeyOrBuilder
-        extends
+    public interface KeyOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.datacommons.proto.McfStatVarObsSeries.Key)
         com.google.protobuf.MessageOrBuilder {
 
       /**
        * <code>required string observation_about = 1;</code>
-       *
        * @return Whether the observationAbout field is set.
        */
       boolean hasObservationAbout();
-
       /**
        * <code>required string observation_about = 1;</code>
-       *
        * @return The observationAbout.
        */
       java.lang.String getObservationAbout();
-
       /**
        * <code>required string observation_about = 1;</code>
-       *
        * @return The bytes for observationAbout.
        */
-      com.google.protobuf.ByteString getObservationAboutBytes();
+      com.google.protobuf.ByteString
+          getObservationAboutBytes();
 
       /**
        * <code>required string variable_measured = 2;</code>
-       *
        * @return Whether the variableMeasured field is set.
        */
       boolean hasVariableMeasured();
-
       /**
        * <code>required string variable_measured = 2;</code>
-       *
        * @return The variableMeasured.
        */
       java.lang.String getVariableMeasured();
-
       /**
        * <code>required string variable_measured = 2;</code>
-       *
        * @return The bytes for variableMeasured.
        */
-      com.google.protobuf.ByteString getVariableMeasuredBytes();
+      com.google.protobuf.ByteString
+          getVariableMeasuredBytes();
 
       /**
        * <code>optional string measurement_method = 3;</code>
-       *
        * @return Whether the measurementMethod field is set.
        */
       boolean hasMeasurementMethod();
-
       /**
        * <code>optional string measurement_method = 3;</code>
-       *
        * @return The measurementMethod.
        */
       java.lang.String getMeasurementMethod();
-
       /**
        * <code>optional string measurement_method = 3;</code>
-       *
        * @return The bytes for measurementMethod.
        */
-      com.google.protobuf.ByteString getMeasurementMethodBytes();
+      com.google.protobuf.ByteString
+          getMeasurementMethodBytes();
 
       /**
        * <code>optional string observation_period = 4;</code>
-       *
        * @return Whether the observationPeriod field is set.
        */
       boolean hasObservationPeriod();
-
       /**
        * <code>optional string observation_period = 4;</code>
-       *
        * @return The observationPeriod.
        */
       java.lang.String getObservationPeriod();
-
       /**
        * <code>optional string observation_period = 4;</code>
-       *
        * @return The bytes for observationPeriod.
        */
-      com.google.protobuf.ByteString getObservationPeriodBytes();
+      com.google.protobuf.ByteString
+          getObservationPeriodBytes();
 
       /**
        * <code>optional string scaling_factor = 5;</code>
-       *
        * @return Whether the scalingFactor field is set.
        */
       boolean hasScalingFactor();
-
       /**
        * <code>optional string scaling_factor = 5;</code>
-       *
        * @return The scalingFactor.
        */
       java.lang.String getScalingFactor();
-
       /**
        * <code>optional string scaling_factor = 5;</code>
-       *
        * @return The bytes for scalingFactor.
        */
-      com.google.protobuf.ByteString getScalingFactorBytes();
+      com.google.protobuf.ByteString
+          getScalingFactorBytes();
 
       /**
        * <code>optional string unit = 6;</code>
-       *
        * @return Whether the unit field is set.
        */
       boolean hasUnit();
-
       /**
        * <code>optional string unit = 6;</code>
-       *
        * @return The unit.
        */
       java.lang.String getUnit();
-
       /**
        * <code>optional string unit = 6;</code>
-       *
        * @return The bytes for unit.
        */
-      com.google.protobuf.ByteString getUnitBytes();
+      com.google.protobuf.ByteString
+          getUnitBytes();
     }
-
-    /** Protobuf type {@code org.datacommons.proto.McfStatVarObsSeries.Key} */
-    public static final class Key extends com.google.protobuf.GeneratedMessageV3
-        implements
+    /**
+     * Protobuf type {@code org.datacommons.proto.McfStatVarObsSeries.Key}
+     */
+    public static final class Key extends
+        com.google.protobuf.GeneratedMessageV3 implements
         // @@protoc_insertion_point(message_implements:org.datacommons.proto.McfStatVarObsSeries.Key)
         KeyOrBuilder {
-      private static final long serialVersionUID = 0L;
-
+    private static final long serialVersionUID = 0L;
       // Use Key.newBuilder() to construct.
       private Key(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
         super(builder);
       }
-
       private Key() {
         observationAbout_ = "";
         variableMeasured_ = "";
@@ -7829,15 +6972,16 @@ public final class Mcf {
 
       @java.lang.Override
       @SuppressWarnings({"unused"})
-      protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+      protected java.lang.Object newInstance(
+          UnusedPrivateParameter unused) {
         return new Key();
       }
 
       @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
         return this.unknownFields;
       }
-
       private Key(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7857,100 +7001,87 @@ public final class Mcf {
               case 0:
                 done = true;
                 break;
-              case 10:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000001;
-                  observationAbout_ = bs;
-                  break;
+              case 10: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000001;
+                observationAbout_ = bs;
+                break;
+              }
+              case 18: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000002;
+                variableMeasured_ = bs;
+                break;
+              }
+              case 26: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000004;
+                measurementMethod_ = bs;
+                break;
+              }
+              case 34: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000008;
+                observationPeriod_ = bs;
+                break;
+              }
+              case 42: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000010;
+                scalingFactor_ = bs;
+                break;
+              }
+              case 50: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000020;
+                unit_ = bs;
+                break;
+              }
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
                 }
-              case 18:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000002;
-                  variableMeasured_ = bs;
-                  break;
-                }
-              case 26:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000004;
-                  measurementMethod_ = bs;
-                  break;
-                }
-              case 34:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000008;
-                  observationPeriod_ = bs;
-                  break;
-                }
-              case 42:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000010;
-                  scalingFactor_ = bs;
-                  break;
-                }
-              case 50:
-                {
-                  com.google.protobuf.ByteString bs = input.readBytes();
-                  bitField0_ |= 0x00000020;
-                  unit_ = bs;
-                  break;
-                }
-              default:
-                {
-                  if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                    done = true;
-                  }
-                  break;
-                }
+                break;
+              }
             }
           }
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           throw e.setUnfinishedMessage(this);
         } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(e)
-              .setUnfinishedMessage(this);
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
         } finally {
           this.unknownFields = unknownFields.build();
           makeExtensionsImmutable();
         }
       }
-
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_fieldAccessorTable
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.class,
-                org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder.class);
+                org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.class, org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder.class);
       }
 
       private int bitField0_;
       public static final int OBSERVATION_ABOUT_FIELD_NUMBER = 1;
       private volatile java.lang.Object observationAbout_;
-
       /**
        * <code>required string observation_about = 1;</code>
-       *
        * @return Whether the observationAbout field is set.
        */
       @java.lang.Override
       public boolean hasObservationAbout() {
         return ((bitField0_ & 0x00000001) != 0);
       }
-
       /**
        * <code>required string observation_about = 1;</code>
-       *
        * @return The observationAbout.
        */
       @java.lang.Override
@@ -7959,7 +7090,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             observationAbout_ = s;
@@ -7967,18 +7099,18 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
        * <code>required string observation_about = 1;</code>
-       *
        * @return The bytes for observationAbout.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getObservationAboutBytes() {
+      public com.google.protobuf.ByteString
+          getObservationAboutBytes() {
         java.lang.Object ref = observationAbout_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           observationAbout_ = b;
           return b;
         } else {
@@ -7988,20 +7120,16 @@ public final class Mcf {
 
       public static final int VARIABLE_MEASURED_FIELD_NUMBER = 2;
       private volatile java.lang.Object variableMeasured_;
-
       /**
        * <code>required string variable_measured = 2;</code>
-       *
        * @return Whether the variableMeasured field is set.
        */
       @java.lang.Override
       public boolean hasVariableMeasured() {
         return ((bitField0_ & 0x00000002) != 0);
       }
-
       /**
        * <code>required string variable_measured = 2;</code>
-       *
        * @return The variableMeasured.
        */
       @java.lang.Override
@@ -8010,7 +7138,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             variableMeasured_ = s;
@@ -8018,18 +7147,18 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
        * <code>required string variable_measured = 2;</code>
-       *
        * @return The bytes for variableMeasured.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getVariableMeasuredBytes() {
+      public com.google.protobuf.ByteString
+          getVariableMeasuredBytes() {
         java.lang.Object ref = variableMeasured_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           variableMeasured_ = b;
           return b;
         } else {
@@ -8039,20 +7168,16 @@ public final class Mcf {
 
       public static final int MEASUREMENT_METHOD_FIELD_NUMBER = 3;
       private volatile java.lang.Object measurementMethod_;
-
       /**
        * <code>optional string measurement_method = 3;</code>
-       *
        * @return Whether the measurementMethod field is set.
        */
       @java.lang.Override
       public boolean hasMeasurementMethod() {
         return ((bitField0_ & 0x00000004) != 0);
       }
-
       /**
        * <code>optional string measurement_method = 3;</code>
-       *
        * @return The measurementMethod.
        */
       @java.lang.Override
@@ -8061,7 +7186,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             measurementMethod_ = s;
@@ -8069,18 +7195,18 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
        * <code>optional string measurement_method = 3;</code>
-       *
        * @return The bytes for measurementMethod.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getMeasurementMethodBytes() {
+      public com.google.protobuf.ByteString
+          getMeasurementMethodBytes() {
         java.lang.Object ref = measurementMethod_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           measurementMethod_ = b;
           return b;
         } else {
@@ -8090,20 +7216,16 @@ public final class Mcf {
 
       public static final int OBSERVATION_PERIOD_FIELD_NUMBER = 4;
       private volatile java.lang.Object observationPeriod_;
-
       /**
        * <code>optional string observation_period = 4;</code>
-       *
        * @return Whether the observationPeriod field is set.
        */
       @java.lang.Override
       public boolean hasObservationPeriod() {
         return ((bitField0_ & 0x00000008) != 0);
       }
-
       /**
        * <code>optional string observation_period = 4;</code>
-       *
        * @return The observationPeriod.
        */
       @java.lang.Override
@@ -8112,7 +7234,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             observationPeriod_ = s;
@@ -8120,18 +7243,18 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
        * <code>optional string observation_period = 4;</code>
-       *
        * @return The bytes for observationPeriod.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getObservationPeriodBytes() {
+      public com.google.protobuf.ByteString
+          getObservationPeriodBytes() {
         java.lang.Object ref = observationPeriod_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           observationPeriod_ = b;
           return b;
         } else {
@@ -8141,20 +7264,16 @@ public final class Mcf {
 
       public static final int SCALING_FACTOR_FIELD_NUMBER = 5;
       private volatile java.lang.Object scalingFactor_;
-
       /**
        * <code>optional string scaling_factor = 5;</code>
-       *
        * @return Whether the scalingFactor field is set.
        */
       @java.lang.Override
       public boolean hasScalingFactor() {
         return ((bitField0_ & 0x00000010) != 0);
       }
-
       /**
        * <code>optional string scaling_factor = 5;</code>
-       *
        * @return The scalingFactor.
        */
       @java.lang.Override
@@ -8163,7 +7282,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             scalingFactor_ = s;
@@ -8171,18 +7291,18 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
        * <code>optional string scaling_factor = 5;</code>
-       *
        * @return The bytes for scalingFactor.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getScalingFactorBytes() {
+      public com.google.protobuf.ByteString
+          getScalingFactorBytes() {
         java.lang.Object ref = scalingFactor_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           scalingFactor_ = b;
           return b;
         } else {
@@ -8192,20 +7312,16 @@ public final class Mcf {
 
       public static final int UNIT_FIELD_NUMBER = 6;
       private volatile java.lang.Object unit_;
-
       /**
        * <code>optional string unit = 6;</code>
-       *
        * @return Whether the unit field is set.
        */
       @java.lang.Override
       public boolean hasUnit() {
         return ((bitField0_ & 0x00000020) != 0);
       }
-
       /**
        * <code>optional string unit = 6;</code>
-       *
        * @return The unit.
        */
       @java.lang.Override
@@ -8214,7 +7330,8 @@ public final class Mcf {
         if (ref instanceof java.lang.String) {
           return (java.lang.String) ref;
         } else {
-          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
             unit_ = s;
@@ -8222,18 +7339,18 @@ public final class Mcf {
           return s;
         }
       }
-
       /**
        * <code>optional string unit = 6;</code>
-       *
        * @return The bytes for unit.
        */
       @java.lang.Override
-      public com.google.protobuf.ByteString getUnitBytes() {
+      public com.google.protobuf.ByteString
+          getUnitBytes() {
         java.lang.Object ref = unit_;
         if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b =
-              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
           unit_ = b;
           return b;
         } else {
@@ -8242,7 +7359,6 @@ public final class Mcf {
       }
 
       private byte memoizedIsInitialized = -1;
-
       @java.lang.Override
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
@@ -8262,7 +7378,8 @@ public final class Mcf {
       }
 
       @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
         if (((bitField0_ & 0x00000001) != 0)) {
           com.google.protobuf.GeneratedMessageV3.writeString(output, 1, observationAbout_);
         }
@@ -8316,37 +7433,42 @@ public final class Mcf {
       @java.lang.Override
       public boolean equals(final java.lang.Object obj) {
         if (obj == this) {
-          return true;
+         return true;
         }
         if (!(obj instanceof org.datacommons.proto.Mcf.McfStatVarObsSeries.Key)) {
           return super.equals(obj);
         }
-        org.datacommons.proto.Mcf.McfStatVarObsSeries.Key other =
-            (org.datacommons.proto.Mcf.McfStatVarObsSeries.Key) obj;
+        org.datacommons.proto.Mcf.McfStatVarObsSeries.Key other = (org.datacommons.proto.Mcf.McfStatVarObsSeries.Key) obj;
 
         if (hasObservationAbout() != other.hasObservationAbout()) return false;
         if (hasObservationAbout()) {
-          if (!getObservationAbout().equals(other.getObservationAbout())) return false;
+          if (!getObservationAbout()
+              .equals(other.getObservationAbout())) return false;
         }
         if (hasVariableMeasured() != other.hasVariableMeasured()) return false;
         if (hasVariableMeasured()) {
-          if (!getVariableMeasured().equals(other.getVariableMeasured())) return false;
+          if (!getVariableMeasured()
+              .equals(other.getVariableMeasured())) return false;
         }
         if (hasMeasurementMethod() != other.hasMeasurementMethod()) return false;
         if (hasMeasurementMethod()) {
-          if (!getMeasurementMethod().equals(other.getMeasurementMethod())) return false;
+          if (!getMeasurementMethod()
+              .equals(other.getMeasurementMethod())) return false;
         }
         if (hasObservationPeriod() != other.hasObservationPeriod()) return false;
         if (hasObservationPeriod()) {
-          if (!getObservationPeriod().equals(other.getObservationPeriod())) return false;
+          if (!getObservationPeriod()
+              .equals(other.getObservationPeriod())) return false;
         }
         if (hasScalingFactor() != other.hasScalingFactor()) return false;
         if (hasScalingFactor()) {
-          if (!getScalingFactor().equals(other.getScalingFactor())) return false;
+          if (!getScalingFactor()
+              .equals(other.getScalingFactor())) return false;
         }
         if (hasUnit() != other.hasUnit()) return false;
         if (hasUnit()) {
-          if (!getUnit().equals(other.getUnit())) return false;
+          if (!getUnit()
+              .equals(other.getUnit())) return false;
         }
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
@@ -8389,94 +7511,87 @@ public final class Mcf {
       }
 
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseFrom(
-          java.nio.ByteBuffer data) throws com.google.protobuf.InvalidProtocolBufferException {
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseFrom(
-          java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseFrom(
           com.google.protobuf.ByteString data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseFrom(
           com.google.protobuf.ByteString data,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseFrom(byte[] data)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data);
       }
-
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseFrom(
-          byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         return PARSER.parseFrom(data, extensionRegistry);
       }
-
-      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseFrom(
-          java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseFrom(java.io.InputStream input)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
       }
-
-      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseDelimitedFrom(
-          java.io.InputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-      }
-
-      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseDelimitedFrom(
-          java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-            PARSER, input, extensionRegistry);
-      }
-
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseFrom(
-          com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
-
+      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
       public static org.datacommons.proto.Mcf.McfStatVarObsSeries.Key parseFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-            PARSER, input, extensionRegistry);
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
       }
 
       @java.lang.Override
-      public Builder newBuilderForType() {
-        return newBuilder();
-      }
-
+      public Builder newBuilderForType() { return newBuilder(); }
       public static Builder newBuilder() {
         return DEFAULT_INSTANCE.toBuilder();
       }
-
-      public static Builder newBuilder(
-          org.datacommons.proto.Mcf.McfStatVarObsSeries.Key prototype) {
+      public static Builder newBuilder(org.datacommons.proto.Mcf.McfStatVarObsSeries.Key prototype) {
         return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
       }
-
       @java.lang.Override
       public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
       }
 
       @java.lang.Override
@@ -8485,26 +7600,24 @@ public final class Mcf {
         Builder builder = new Builder(parent);
         return builder;
       }
-
-      /** Protobuf type {@code org.datacommons.proto.McfStatVarObsSeries.Key} */
-      public static final class Builder
-          extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-          implements
+      /**
+       * Protobuf type {@code org.datacommons.proto.McfStatVarObsSeries.Key}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
           // @@protoc_insertion_point(builder_implements:org.datacommons.proto.McfStatVarObsSeries.Key)
           org.datacommons.proto.Mcf.McfStatVarObsSeries.KeyOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_descriptor;
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_descriptor;
         }
 
         @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
             internalGetFieldAccessorTable() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_fieldAccessorTable
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_fieldAccessorTable
               .ensureFieldAccessorsInitialized(
-                  org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.class,
-                  org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder.class);
+                  org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.class, org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder.class);
         }
 
         // Construct using org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.newBuilder()
@@ -8512,15 +7625,16 @@ public final class Mcf {
           maybeForceBuilderInitialization();
         }
 
-        private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
           super(parent);
           maybeForceBuilderInitialization();
         }
-
         private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
         }
-
         @java.lang.Override
         public Builder clear() {
           super.clear();
@@ -8540,9 +7654,9 @@ public final class Mcf {
         }
 
         @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-          return org.datacommons.proto.Mcf
-              .internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_descriptor;
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_descriptor;
         }
 
         @java.lang.Override
@@ -8561,8 +7675,7 @@ public final class Mcf {
 
         @java.lang.Override
         public org.datacommons.proto.Mcf.McfStatVarObsSeries.Key buildPartial() {
-          org.datacommons.proto.Mcf.McfStatVarObsSeries.Key result =
-              new org.datacommons.proto.Mcf.McfStatVarObsSeries.Key(this);
+          org.datacommons.proto.Mcf.McfStatVarObsSeries.Key result = new org.datacommons.proto.Mcf.McfStatVarObsSeries.Key(this);
           int from_bitField0_ = bitField0_;
           int to_bitField0_ = 0;
           if (((from_bitField0_ & 0x00000001) != 0)) {
@@ -8598,41 +7711,38 @@ public final class Mcf {
         public Builder clone() {
           return super.clone();
         }
-
         @java.lang.Override
         public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
           return super.setField(field, value);
         }
-
         @java.lang.Override
-        public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
           return super.clearField(field);
         }
-
         @java.lang.Override
-        public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
           return super.clearOneof(oneof);
         }
-
         @java.lang.Override
         public Builder setRepeatedField(
             com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index,
-            java.lang.Object value) {
+            int index, java.lang.Object value) {
           return super.setRepeatedField(field, index, value);
         }
-
         @java.lang.Override
         public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
           return super.addRepeatedField(field, value);
         }
-
         @java.lang.Override
         public Builder mergeFrom(com.google.protobuf.Message other) {
           if (other instanceof org.datacommons.proto.Mcf.McfStatVarObsSeries.Key) {
-            return mergeFrom((org.datacommons.proto.Mcf.McfStatVarObsSeries.Key) other);
+            return mergeFrom((org.datacommons.proto.Mcf.McfStatVarObsSeries.Key)other);
           } else {
             super.mergeFrom(other);
             return this;
@@ -8640,8 +7750,7 @@ public final class Mcf {
         }
 
         public Builder mergeFrom(org.datacommons.proto.Mcf.McfStatVarObsSeries.Key other) {
-          if (other == org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.getDefaultInstance())
-            return this;
+          if (other == org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.getDefaultInstance()) return this;
           if (other.hasObservationAbout()) {
             bitField0_ |= 0x00000001;
             observationAbout_ = other.observationAbout_;
@@ -8697,8 +7806,7 @@ public final class Mcf {
           try {
             parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
           } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage =
-                (org.datacommons.proto.Mcf.McfStatVarObsSeries.Key) e.getUnfinishedMessage();
+            parsedMessage = (org.datacommons.proto.Mcf.McfStatVarObsSeries.Key) e.getUnfinishedMessage();
             throw e.unwrapIOException();
           } finally {
             if (parsedMessage != null) {
@@ -8707,29 +7815,25 @@ public final class Mcf {
           }
           return this;
         }
-
         private int bitField0_;
 
         private java.lang.Object observationAbout_ = "";
-
         /**
          * <code>required string observation_about = 1;</code>
-         *
          * @return Whether the observationAbout field is set.
          */
         public boolean hasObservationAbout() {
           return ((bitField0_ & 0x00000001) != 0);
         }
-
         /**
          * <code>required string observation_about = 1;</code>
-         *
          * @return The observationAbout.
          */
         public java.lang.String getObservationAbout() {
           java.lang.Object ref = observationAbout_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
               observationAbout_ = s;
@@ -8739,43 +7843,40 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
          * <code>required string observation_about = 1;</code>
-         *
          * @return The bytes for observationAbout.
          */
-        public com.google.protobuf.ByteString getObservationAboutBytes() {
+        public com.google.protobuf.ByteString
+            getObservationAboutBytes() {
           java.lang.Object ref = observationAbout_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             observationAbout_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
          * <code>required string observation_about = 1;</code>
-         *
          * @param value The observationAbout to set.
          * @return This builder for chaining.
          */
-        public Builder setObservationAbout(java.lang.String value) {
+        public Builder setObservationAbout(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000001;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
           observationAbout_ = value;
           onChanged();
           return this;
         }
-
         /**
          * <code>required string observation_about = 1;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearObservationAbout() {
@@ -8784,43 +7885,39 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
          * <code>required string observation_about = 1;</code>
-         *
          * @param value The bytes for observationAbout to set.
          * @return This builder for chaining.
          */
-        public Builder setObservationAboutBytes(com.google.protobuf.ByteString value) {
+        public Builder setObservationAboutBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000001;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
           observationAbout_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object variableMeasured_ = "";
-
         /**
          * <code>required string variable_measured = 2;</code>
-         *
          * @return Whether the variableMeasured field is set.
          */
         public boolean hasVariableMeasured() {
           return ((bitField0_ & 0x00000002) != 0);
         }
-
         /**
          * <code>required string variable_measured = 2;</code>
-         *
          * @return The variableMeasured.
          */
         public java.lang.String getVariableMeasured() {
           java.lang.Object ref = variableMeasured_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
               variableMeasured_ = s;
@@ -8830,43 +7927,40 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
          * <code>required string variable_measured = 2;</code>
-         *
          * @return The bytes for variableMeasured.
          */
-        public com.google.protobuf.ByteString getVariableMeasuredBytes() {
+        public com.google.protobuf.ByteString
+            getVariableMeasuredBytes() {
           java.lang.Object ref = variableMeasured_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             variableMeasured_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
          * <code>required string variable_measured = 2;</code>
-         *
          * @param value The variableMeasured to set.
          * @return This builder for chaining.
          */
-        public Builder setVariableMeasured(java.lang.String value) {
+        public Builder setVariableMeasured(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000002;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
           variableMeasured_ = value;
           onChanged();
           return this;
         }
-
         /**
          * <code>required string variable_measured = 2;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearVariableMeasured() {
@@ -8875,43 +7969,39 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
          * <code>required string variable_measured = 2;</code>
-         *
          * @param value The bytes for variableMeasured to set.
          * @return This builder for chaining.
          */
-        public Builder setVariableMeasuredBytes(com.google.protobuf.ByteString value) {
+        public Builder setVariableMeasuredBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000002;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
           variableMeasured_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object measurementMethod_ = "";
-
         /**
          * <code>optional string measurement_method = 3;</code>
-         *
          * @return Whether the measurementMethod field is set.
          */
         public boolean hasMeasurementMethod() {
           return ((bitField0_ & 0x00000004) != 0);
         }
-
         /**
          * <code>optional string measurement_method = 3;</code>
-         *
          * @return The measurementMethod.
          */
         public java.lang.String getMeasurementMethod() {
           java.lang.Object ref = measurementMethod_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
               measurementMethod_ = s;
@@ -8921,43 +8011,40 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
          * <code>optional string measurement_method = 3;</code>
-         *
          * @return The bytes for measurementMethod.
          */
-        public com.google.protobuf.ByteString getMeasurementMethodBytes() {
+        public com.google.protobuf.ByteString
+            getMeasurementMethodBytes() {
           java.lang.Object ref = measurementMethod_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             measurementMethod_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
          * <code>optional string measurement_method = 3;</code>
-         *
          * @param value The measurementMethod to set.
          * @return This builder for chaining.
          */
-        public Builder setMeasurementMethod(java.lang.String value) {
+        public Builder setMeasurementMethod(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000004;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
           measurementMethod_ = value;
           onChanged();
           return this;
         }
-
         /**
          * <code>optional string measurement_method = 3;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearMeasurementMethod() {
@@ -8966,43 +8053,39 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
          * <code>optional string measurement_method = 3;</code>
-         *
          * @param value The bytes for measurementMethod to set.
          * @return This builder for chaining.
          */
-        public Builder setMeasurementMethodBytes(com.google.protobuf.ByteString value) {
+        public Builder setMeasurementMethodBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000004;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
           measurementMethod_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object observationPeriod_ = "";
-
         /**
          * <code>optional string observation_period = 4;</code>
-         *
          * @return Whether the observationPeriod field is set.
          */
         public boolean hasObservationPeriod() {
           return ((bitField0_ & 0x00000008) != 0);
         }
-
         /**
          * <code>optional string observation_period = 4;</code>
-         *
          * @return The observationPeriod.
          */
         public java.lang.String getObservationPeriod() {
           java.lang.Object ref = observationPeriod_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
               observationPeriod_ = s;
@@ -9012,43 +8095,40 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
          * <code>optional string observation_period = 4;</code>
-         *
          * @return The bytes for observationPeriod.
          */
-        public com.google.protobuf.ByteString getObservationPeriodBytes() {
+        public com.google.protobuf.ByteString
+            getObservationPeriodBytes() {
           java.lang.Object ref = observationPeriod_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             observationPeriod_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
          * <code>optional string observation_period = 4;</code>
-         *
          * @param value The observationPeriod to set.
          * @return This builder for chaining.
          */
-        public Builder setObservationPeriod(java.lang.String value) {
+        public Builder setObservationPeriod(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000008;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
           observationPeriod_ = value;
           onChanged();
           return this;
         }
-
         /**
          * <code>optional string observation_period = 4;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearObservationPeriod() {
@@ -9057,43 +8137,39 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
          * <code>optional string observation_period = 4;</code>
-         *
          * @param value The bytes for observationPeriod to set.
          * @return This builder for chaining.
          */
-        public Builder setObservationPeriodBytes(com.google.protobuf.ByteString value) {
+        public Builder setObservationPeriodBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000008;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
           observationPeriod_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object scalingFactor_ = "";
-
         /**
          * <code>optional string scaling_factor = 5;</code>
-         *
          * @return Whether the scalingFactor field is set.
          */
         public boolean hasScalingFactor() {
           return ((bitField0_ & 0x00000010) != 0);
         }
-
         /**
          * <code>optional string scaling_factor = 5;</code>
-         *
          * @return The scalingFactor.
          */
         public java.lang.String getScalingFactor() {
           java.lang.Object ref = scalingFactor_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
               scalingFactor_ = s;
@@ -9103,43 +8179,40 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
          * <code>optional string scaling_factor = 5;</code>
-         *
          * @return The bytes for scalingFactor.
          */
-        public com.google.protobuf.ByteString getScalingFactorBytes() {
+        public com.google.protobuf.ByteString
+            getScalingFactorBytes() {
           java.lang.Object ref = scalingFactor_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             scalingFactor_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
          * <code>optional string scaling_factor = 5;</code>
-         *
          * @param value The scalingFactor to set.
          * @return This builder for chaining.
          */
-        public Builder setScalingFactor(java.lang.String value) {
+        public Builder setScalingFactor(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000010;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
           scalingFactor_ = value;
           onChanged();
           return this;
         }
-
         /**
          * <code>optional string scaling_factor = 5;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearScalingFactor() {
@@ -9148,43 +8221,39 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
          * <code>optional string scaling_factor = 5;</code>
-         *
          * @param value The bytes for scalingFactor to set.
          * @return This builder for chaining.
          */
-        public Builder setScalingFactorBytes(com.google.protobuf.ByteString value) {
+        public Builder setScalingFactorBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000010;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
           scalingFactor_ = value;
           onChanged();
           return this;
         }
 
         private java.lang.Object unit_ = "";
-
         /**
          * <code>optional string unit = 6;</code>
-         *
          * @return Whether the unit field is set.
          */
         public boolean hasUnit() {
           return ((bitField0_ & 0x00000020) != 0);
         }
-
         /**
          * <code>optional string unit = 6;</code>
-         *
          * @return The unit.
          */
         public java.lang.String getUnit() {
           java.lang.Object ref = unit_;
           if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
             java.lang.String s = bs.toStringUtf8();
             if (bs.isValidUtf8()) {
               unit_ = s;
@@ -9194,43 +8263,40 @@ public final class Mcf {
             return (java.lang.String) ref;
           }
         }
-
         /**
          * <code>optional string unit = 6;</code>
-         *
          * @return The bytes for unit.
          */
-        public com.google.protobuf.ByteString getUnitBytes() {
+        public com.google.protobuf.ByteString
+            getUnitBytes() {
           java.lang.Object ref = unit_;
           if (ref instanceof String) {
-            com.google.protobuf.ByteString b =
-                com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
             unit_ = b;
             return b;
           } else {
             return (com.google.protobuf.ByteString) ref;
           }
         }
-
         /**
          * <code>optional string unit = 6;</code>
-         *
          * @param value The unit to set.
          * @return This builder for chaining.
          */
-        public Builder setUnit(java.lang.String value) {
+        public Builder setUnit(
+            java.lang.String value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000020;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
           unit_ = value;
           onChanged();
           return this;
         }
-
         /**
          * <code>optional string unit = 6;</code>
-         *
          * @return This builder for chaining.
          */
         public Builder clearUnit() {
@@ -9239,23 +8305,21 @@ public final class Mcf {
           onChanged();
           return this;
         }
-
         /**
          * <code>optional string unit = 6;</code>
-         *
          * @param value The bytes for unit to set.
          * @return This builder for chaining.
          */
-        public Builder setUnitBytes(com.google.protobuf.ByteString value) {
+        public Builder setUnitBytes(
+            com.google.protobuf.ByteString value) {
           if (value == null) {
-            throw new NullPointerException();
-          }
-          bitField0_ |= 0x00000020;
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
           unit_ = value;
           onChanged();
           return this;
         }
-
         @java.lang.Override
         public final Builder setUnknownFields(
             final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -9268,12 +8332,12 @@ public final class Mcf {
           return super.mergeUnknownFields(unknownFields);
         }
 
+
         // @@protoc_insertion_point(builder_scope:org.datacommons.proto.McfStatVarObsSeries.Key)
       }
 
       // @@protoc_insertion_point(class_scope:org.datacommons.proto.McfStatVarObsSeries.Key)
       private static final org.datacommons.proto.Mcf.McfStatVarObsSeries.Key DEFAULT_INSTANCE;
-
       static {
         DEFAULT_INSTANCE = new org.datacommons.proto.Mcf.McfStatVarObsSeries.Key();
       }
@@ -9282,17 +8346,16 @@ public final class Mcf {
         return DEFAULT_INSTANCE;
       }
 
-      @java.lang.Deprecated
-      public static final com.google.protobuf.Parser<Key> PARSER =
-          new com.google.protobuf.AbstractParser<Key>() {
-            @java.lang.Override
-            public Key parsePartialFrom(
-                com.google.protobuf.CodedInputStream input,
-                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                throws com.google.protobuf.InvalidProtocolBufferException {
-              return new Key(input, extensionRegistry);
-            }
-          };
+      @java.lang.Deprecated public static final com.google.protobuf.Parser<Key>
+          PARSER = new com.google.protobuf.AbstractParser<Key>() {
+        @java.lang.Override
+        public Key parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Key(input, extensionRegistry);
+        }
+      };
 
       public static com.google.protobuf.Parser<Key> parser() {
         return PARSER;
@@ -9307,64 +8370,53 @@ public final class Mcf {
       public org.datacommons.proto.Mcf.McfStatVarObsSeries.Key getDefaultInstanceForType() {
         return DEFAULT_INSTANCE;
       }
+
     }
 
     private int bitField0_;
     public static final int KEY_FIELD_NUMBER = 1;
     private org.datacommons.proto.Mcf.McfStatVarObsSeries.Key key_;
-
     /**
      * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
-     *
      * @return Whether the key field is set.
      */
     @java.lang.Override
     public boolean hasKey() {
       return ((bitField0_ & 0x00000001) != 0);
     }
-
     /**
      * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
-     *
      * @return The key.
      */
     @java.lang.Override
     public org.datacommons.proto.Mcf.McfStatVarObsSeries.Key getKey() {
-      return key_ == null
-          ? org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.getDefaultInstance()
-          : key_;
+      return key_ == null ? org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.getDefaultInstance() : key_;
     }
-
-    /** <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code> */
+    /**
+     * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
+     */
     @java.lang.Override
     public org.datacommons.proto.Mcf.McfStatVarObsSeries.KeyOrBuilder getKeyOrBuilder() {
-      return key_ == null
-          ? org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.getDefaultInstance()
-          : key_;
+      return key_ == null ? org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.getDefaultInstance() : key_;
     }
 
     public static final int SV_OBS_LIST_FIELD_NUMBER = 2;
     private java.util.List<org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs> svObsList_;
-
     /**
      * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
      */
     @java.lang.Override
-    public java.util.List<org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs>
-        getSvObsListList() {
+    public java.util.List<org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs> getSvObsListList() {
       return svObsList_;
     }
-
     /**
      * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
      */
     @java.lang.Override
-    public java.util.List<
-            ? extends org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder>
+    public java.util.List<? extends org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder> 
         getSvObsListOrBuilderList() {
       return svObsList_;
     }
-
     /**
      * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
      */
@@ -9372,7 +8424,6 @@ public final class Mcf {
     public int getSvObsListCount() {
       return svObsList_.size();
     }
-
     /**
      * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
      */
@@ -9380,7 +8431,6 @@ public final class Mcf {
     public org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs getSvObsList(int index) {
       return svObsList_.get(index);
     }
-
     /**
      * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
      */
@@ -9391,7 +8441,6 @@ public final class Mcf {
     }
 
     private byte memoizedIsInitialized = -1;
-
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -9417,7 +8466,8 @@ public final class Mcf {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
       if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getKey());
       }
@@ -9434,10 +8484,12 @@ public final class Mcf {
 
       size = 0;
       if (((bitField0_ & 0x00000001) != 0)) {
-        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, getKey());
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getKey());
       }
       for (int i = 0; i < svObsList_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, svObsList_.get(i));
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, svObsList_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -9447,19 +8499,20 @@ public final class Mcf {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-        return true;
+       return true;
       }
       if (!(obj instanceof org.datacommons.proto.Mcf.McfStatVarObsSeries)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.Mcf.McfStatVarObsSeries other =
-          (org.datacommons.proto.Mcf.McfStatVarObsSeries) obj;
+      org.datacommons.proto.Mcf.McfStatVarObsSeries other = (org.datacommons.proto.Mcf.McfStatVarObsSeries) obj;
 
       if (hasKey() != other.hasKey()) return false;
       if (hasKey()) {
-        if (!getKey().equals(other.getKey())) return false;
+        if (!getKey()
+            .equals(other.getKey())) return false;
       }
-      if (!getSvObsListList().equals(other.getSvObsListList())) return false;
+      if (!getSvObsListList()
+          .equals(other.getSvObsListList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -9484,94 +8537,88 @@ public final class Mcf {
       return hash;
     }
 
-    public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseFrom(java.nio.ByteBuffer data)
+    public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseFrom(
+        java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseFrom(
-        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseFrom(
-        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-
     public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
-
-    public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseDelimitedFrom(
-        java.io.InputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-    }
-
-    public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseDelimitedFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+    public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
-
+    public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
     public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseFrom(
-        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-
     public static org.datacommons.proto.Mcf.McfStatVarObsSeries parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() {
-      return newBuilder();
-    }
-
+    public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-
     public static Builder newBuilder(org.datacommons.proto.Mcf.McfStatVarObsSeries prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -9580,10 +8627,7 @@ public final class Mcf {
       Builder builder = new Builder(parent);
       return builder;
     }
-
     /**
-     *
-     *
      * <pre>
      * Space-efficient representation of MCF data for one time-series of StatVarObs.
      * This is effectively similar to SourceSeries, but with free PVs per SVObs.
@@ -9591,24 +8635,21 @@ public final class Mcf {
      *
      * Protobuf type {@code org.datacommons.proto.McfStatVarObsSeries}
      */
-    public static final class Builder
-        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-        implements
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.McfStatVarObsSeries)
         org.datacommons.proto.Mcf.McfStatVarObsSeriesOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfStatVarObsSeries_fieldAccessorTable
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Mcf.McfStatVarObsSeries.class,
-                org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder.class);
+                org.datacommons.proto.Mcf.McfStatVarObsSeries.class, org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Mcf.McfStatVarObsSeries.newBuilder()
@@ -9616,18 +8657,18 @@ public final class Mcf {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
-
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
           getKeyFieldBuilder();
           getSvObsListFieldBuilder();
         }
       }
-
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -9647,9 +8688,9 @@ public final class Mcf {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor;
       }
 
       @java.lang.Override
@@ -9668,8 +8709,7 @@ public final class Mcf {
 
       @java.lang.Override
       public org.datacommons.proto.Mcf.McfStatVarObsSeries buildPartial() {
-        org.datacommons.proto.Mcf.McfStatVarObsSeries result =
-            new org.datacommons.proto.Mcf.McfStatVarObsSeries(this);
+        org.datacommons.proto.Mcf.McfStatVarObsSeries result = new org.datacommons.proto.Mcf.McfStatVarObsSeries(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) != 0)) {
@@ -9698,41 +8738,38 @@ public final class Mcf {
       public Builder clone() {
         return super.clone();
       }
-
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
         return super.setField(field, value);
       }
-
       @java.lang.Override
-      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
-
       @java.lang.Override
-      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
-
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index,
-          java.lang.Object value) {
+          int index, java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
-
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
-
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Mcf.McfStatVarObsSeries) {
-          return mergeFrom((org.datacommons.proto.Mcf.McfStatVarObsSeries) other);
+          return mergeFrom((org.datacommons.proto.Mcf.McfStatVarObsSeries)other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -9740,8 +8777,7 @@ public final class Mcf {
       }
 
       public Builder mergeFrom(org.datacommons.proto.Mcf.McfStatVarObsSeries other) {
-        if (other == org.datacommons.proto.Mcf.McfStatVarObsSeries.getDefaultInstance())
-          return this;
+        if (other == org.datacommons.proto.Mcf.McfStatVarObsSeries.getDefaultInstance()) return this;
         if (other.hasKey()) {
           mergeKey(other.getKey());
         }
@@ -9763,10 +8799,9 @@ public final class Mcf {
               svObsListBuilder_ = null;
               svObsList_ = other.svObsList_;
               bitField0_ = (bitField0_ & ~0x00000002);
-              svObsListBuilder_ =
-                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
-                      ? getSvObsListFieldBuilder()
-                      : null;
+              svObsListBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getSvObsListFieldBuilder() : null;
             } else {
               svObsListBuilder_.addAllMessages(other.svObsList_);
             }
@@ -9811,41 +8846,32 @@ public final class Mcf {
         }
         return this;
       }
-
       private int bitField0_;
 
       private org.datacommons.proto.Mcf.McfStatVarObsSeries.Key key_;
       private com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.Key,
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder,
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.KeyOrBuilder>
-          keyBuilder_;
-
+          org.datacommons.proto.Mcf.McfStatVarObsSeries.Key, org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder, org.datacommons.proto.Mcf.McfStatVarObsSeries.KeyOrBuilder> keyBuilder_;
       /**
        * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
-       *
        * @return Whether the key field is set.
        */
       public boolean hasKey() {
         return ((bitField0_ & 0x00000001) != 0);
       }
-
       /**
        * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
-       *
        * @return The key.
        */
       public org.datacommons.proto.Mcf.McfStatVarObsSeries.Key getKey() {
         if (keyBuilder_ == null) {
-          return key_ == null
-              ? org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.getDefaultInstance()
-              : key_;
+          return key_ == null ? org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.getDefaultInstance() : key_;
         } else {
           return keyBuilder_.getMessage();
         }
       }
-
-      /** <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code> */
+      /**
+       * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
+       */
       public Builder setKey(org.datacommons.proto.Mcf.McfStatVarObsSeries.Key value) {
         if (keyBuilder_ == null) {
           if (value == null) {
@@ -9859,8 +8885,9 @@ public final class Mcf {
         bitField0_ |= 0x00000001;
         return this;
       }
-
-      /** <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code> */
+      /**
+       * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
+       */
       public Builder setKey(
           org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder builderForValue) {
         if (keyBuilder_ == null) {
@@ -9872,17 +8899,16 @@ public final class Mcf {
         bitField0_ |= 0x00000001;
         return this;
       }
-
-      /** <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code> */
+      /**
+       * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
+       */
       public Builder mergeKey(org.datacommons.proto.Mcf.McfStatVarObsSeries.Key value) {
         if (keyBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) != 0)
-              && key_ != null
-              && key_ != org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.getDefaultInstance()) {
+          if (((bitField0_ & 0x00000001) != 0) &&
+              key_ != null &&
+              key_ != org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.getDefaultInstance()) {
             key_ =
-                org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.newBuilder(key_)
-                    .mergeFrom(value)
-                    .buildPartial();
+              org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.newBuilder(key_).mergeFrom(value).buildPartial();
           } else {
             key_ = value;
           }
@@ -9893,8 +8919,9 @@ public final class Mcf {
         bitField0_ |= 0x00000001;
         return this;
       }
-
-      /** <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code> */
+      /**
+       * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
+       */
       public Builder clearKey() {
         if (keyBuilder_ == null) {
           key_ = null;
@@ -9905,77 +8932,66 @@ public final class Mcf {
         bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
-
-      /** <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code> */
+      /**
+       * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
+       */
       public org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder getKeyBuilder() {
         bitField0_ |= 0x00000001;
         onChanged();
         return getKeyFieldBuilder().getBuilder();
       }
-
-      /** <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code> */
+      /**
+       * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
+       */
       public org.datacommons.proto.Mcf.McfStatVarObsSeries.KeyOrBuilder getKeyOrBuilder() {
         if (keyBuilder_ != null) {
           return keyBuilder_.getMessageOrBuilder();
         } else {
-          return key_ == null
-              ? org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.getDefaultInstance()
-              : key_;
+          return key_ == null ?
+              org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.getDefaultInstance() : key_;
         }
       }
-
-      /** <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code> */
+      /**
+       * <code>required .org.datacommons.proto.McfStatVarObsSeries.Key key = 1;</code>
+       */
       private com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.Key,
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder,
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.KeyOrBuilder>
+          org.datacommons.proto.Mcf.McfStatVarObsSeries.Key, org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder, org.datacommons.proto.Mcf.McfStatVarObsSeries.KeyOrBuilder> 
           getKeyFieldBuilder() {
         if (keyBuilder_ == null) {
-          keyBuilder_ =
-              new com.google.protobuf.SingleFieldBuilderV3<
-                  org.datacommons.proto.Mcf.McfStatVarObsSeries.Key,
-                  org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder,
-                  org.datacommons.proto.Mcf.McfStatVarObsSeries.KeyOrBuilder>(
-                  getKey(), getParentForChildren(), isClean());
+          keyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              org.datacommons.proto.Mcf.McfStatVarObsSeries.Key, org.datacommons.proto.Mcf.McfStatVarObsSeries.Key.Builder, org.datacommons.proto.Mcf.McfStatVarObsSeries.KeyOrBuilder>(
+                  getKey(),
+                  getParentForChildren(),
+                  isClean());
           key_ = null;
         }
         return keyBuilder_;
       }
 
       private java.util.List<org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs> svObsList_ =
-          java.util.Collections.emptyList();
-
+        java.util.Collections.emptyList();
       private void ensureSvObsListIsMutable() {
         if (!((bitField0_ & 0x00000002) != 0)) {
-          svObsList_ =
-              new java.util.ArrayList<org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs>(
-                  svObsList_);
+          svObsList_ = new java.util.ArrayList<org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs>(svObsList_);
           bitField0_ |= 0x00000002;
-        }
+         }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs,
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder,
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder>
-          svObsListBuilder_;
+          org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs, org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder, org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder> svObsListBuilder_;
 
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
-      public java.util.List<org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs>
-          getSvObsListList() {
+      public java.util.List<org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs> getSvObsListList() {
         if (svObsListBuilder_ == null) {
           return java.util.Collections.unmodifiableList(svObsList_);
         } else {
           return svObsListBuilder_.getMessageList();
         }
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
       public int getSvObsListCount() {
         if (svObsListBuilder_ == null) {
@@ -9984,10 +9000,8 @@ public final class Mcf {
           return svObsListBuilder_.getCount();
         }
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
       public org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs getSvObsList(int index) {
         if (svObsListBuilder_ == null) {
@@ -9996,10 +9010,8 @@ public final class Mcf {
           return svObsListBuilder_.getMessage(index);
         }
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
       public Builder setSvObsList(
           int index, org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs value) {
@@ -10015,14 +9027,11 @@ public final class Mcf {
         }
         return this;
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
       public Builder setSvObsList(
-          int index,
-          org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder builderForValue) {
+          int index, org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder builderForValue) {
         if (svObsListBuilder_ == null) {
           ensureSvObsListIsMutable();
           svObsList_.set(index, builderForValue.build());
@@ -10032,10 +9041,8 @@ public final class Mcf {
         }
         return this;
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
       public Builder addSvObsList(org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs value) {
         if (svObsListBuilder_ == null) {
@@ -10050,10 +9057,8 @@ public final class Mcf {
         }
         return this;
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
       public Builder addSvObsList(
           int index, org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs value) {
@@ -10069,10 +9074,8 @@ public final class Mcf {
         }
         return this;
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
       public Builder addSvObsList(
           org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder builderForValue) {
@@ -10085,14 +9088,11 @@ public final class Mcf {
         }
         return this;
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
       public Builder addSvObsList(
-          int index,
-          org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder builderForValue) {
+          int index, org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder builderForValue) {
         if (svObsListBuilder_ == null) {
           ensureSvObsListIsMutable();
           svObsList_.add(index, builderForValue.build());
@@ -10102,27 +9102,23 @@ public final class Mcf {
         }
         return this;
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
       public Builder addAllSvObsList(
-          java.lang.Iterable<? extends org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs>
-              values) {
+          java.lang.Iterable<? extends org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs> values) {
         if (svObsListBuilder_ == null) {
           ensureSvObsListIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, svObsList_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, svObsList_);
           onChanged();
         } else {
           svObsListBuilder_.addAllMessages(values);
         }
         return this;
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
       public Builder clearSvObsList() {
         if (svObsListBuilder_ == null) {
@@ -10134,10 +9130,8 @@ public final class Mcf {
         }
         return this;
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
       public Builder removeSvObsList(int index) {
         if (svObsListBuilder_ == null) {
@@ -10149,92 +9143,70 @@ public final class Mcf {
         }
         return this;
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
       public org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder getSvObsListBuilder(
           int index) {
         return getSvObsListFieldBuilder().getBuilder(index);
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
-      public org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder
-          getSvObsListOrBuilder(int index) {
+      public org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder getSvObsListOrBuilder(
+          int index) {
         if (svObsListBuilder_ == null) {
-          return svObsList_.get(index);
-        } else {
+          return svObsList_.get(index);  } else {
           return svObsListBuilder_.getMessageOrBuilder(index);
         }
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
-      public java.util.List<
-              ? extends org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder>
-          getSvObsListOrBuilderList() {
+      public java.util.List<? extends org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder> 
+           getSvObsListOrBuilderList() {
         if (svObsListBuilder_ != null) {
           return svObsListBuilder_.getMessageOrBuilderList();
         } else {
           return java.util.Collections.unmodifiableList(svObsList_);
         }
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
-      public org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder
-          addSvObsListBuilder() {
-        return getSvObsListFieldBuilder()
-            .addBuilder(
-                org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.getDefaultInstance());
+      public org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder addSvObsListBuilder() {
+        return getSvObsListFieldBuilder().addBuilder(
+            org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.getDefaultInstance());
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
       public org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder addSvObsListBuilder(
           int index) {
-        return getSvObsListFieldBuilder()
-            .addBuilder(
-                index,
-                org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.getDefaultInstance());
+        return getSvObsListFieldBuilder().addBuilder(
+            index, org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.getDefaultInstance());
       }
-
       /**
-       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;
-       * </code>
+       * <code>repeated .org.datacommons.proto.McfStatVarObsSeries.StatVarObs sv_obs_list = 2;</code>
        */
-      public java.util.List<org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder>
-          getSvObsListBuilderList() {
+      public java.util.List<org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder> 
+           getSvObsListBuilderList() {
         return getSvObsListFieldBuilder().getBuilderList();
       }
-
       private com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs,
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder,
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder>
+          org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs, org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder, org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder> 
           getSvObsListFieldBuilder() {
         if (svObsListBuilder_ == null) {
-          svObsListBuilder_ =
-              new com.google.protobuf.RepeatedFieldBuilderV3<
-                  org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs,
-                  org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder,
-                  org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder>(
-                  svObsList_, ((bitField0_ & 0x00000002) != 0), getParentForChildren(), isClean());
+          svObsListBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs, org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs.Builder, org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObsOrBuilder>(
+                  svObsList_,
+                  ((bitField0_ & 0x00000002) != 0),
+                  getParentForChildren(),
+                  isClean());
           svObsList_ = null;
         }
         return svObsListBuilder_;
       }
-
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -10247,12 +9219,12 @@ public final class Mcf {
         return super.mergeUnknownFields(unknownFields);
       }
 
+
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.McfStatVarObsSeries)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.McfStatVarObsSeries)
     private static final org.datacommons.proto.Mcf.McfStatVarObsSeries DEFAULT_INSTANCE;
-
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Mcf.McfStatVarObsSeries();
     }
@@ -10261,17 +9233,16 @@ public final class Mcf {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated
-    public static final com.google.protobuf.Parser<McfStatVarObsSeries> PARSER =
-        new com.google.protobuf.AbstractParser<McfStatVarObsSeries>() {
-          @java.lang.Override
-          public McfStatVarObsSeries parsePartialFrom(
-              com.google.protobuf.CodedInputStream input,
-              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-              throws com.google.protobuf.InvalidProtocolBufferException {
-            return new McfStatVarObsSeries(input, extensionRegistry);
-          }
-        };
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<McfStatVarObsSeries>
+        PARSER = new com.google.protobuf.AbstractParser<McfStatVarObsSeries>() {
+      @java.lang.Override
+      public McfStatVarObsSeries parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new McfStatVarObsSeries(input, extensionRegistry);
+      }
+    };
 
     public static com.google.protobuf.Parser<McfStatVarObsSeries> parser() {
       return PARSER;
@@ -10286,66 +9257,61 @@ public final class Mcf {
     public org.datacommons.proto.Mcf.McfStatVarObsSeries getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
+
   }
 
-  public interface McfOptimizedGraphOrBuilder
-      extends
+  public interface McfOptimizedGraphOrBuilder extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.McfOptimizedGraph)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
-     *
      * @return Whether the svObsSeries field is set.
      */
     boolean hasSvObsSeries();
-
     /**
      * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
-     *
      * @return The svObsSeries.
      */
     org.datacommons.proto.Mcf.McfStatVarObsSeries getSvObsSeries();
-
-    /** <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code> */
+    /**
+     * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
+     */
     org.datacommons.proto.Mcf.McfStatVarObsSeriesOrBuilder getSvObsSeriesOrBuilder();
 
     public org.datacommons.proto.Mcf.McfOptimizedGraph.RecordCase getRecordCase();
   }
-
   /**
-   *
-   *
    * <pre>
    * A wrapper over space-efficient representations of MCF data.
    * </pre>
    *
    * Protobuf type {@code org.datacommons.proto.McfOptimizedGraph}
    */
-  public static final class McfOptimizedGraph extends com.google.protobuf.GeneratedMessageV3
-      implements
+  public static final class McfOptimizedGraph extends
+      com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:org.datacommons.proto.McfOptimizedGraph)
       McfOptimizedGraphOrBuilder {
-    private static final long serialVersionUID = 0L;
-
+  private static final long serialVersionUID = 0L;
     // Use McfOptimizedGraph.newBuilder() to construct.
     private McfOptimizedGraph(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-
-    private McfOptimizedGraph() {}
+    private McfOptimizedGraph() {
+    }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
       return new McfOptimizedGraph();
     }
 
     @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
       return this.unknownFields;
     }
-
     private McfOptimizedGraph(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -10365,73 +9331,64 @@ public final class Mcf {
             case 0:
               done = true;
               break;
-            case 10:
-              {
-                org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder subBuilder = null;
-                if (recordCase_ == 1) {
-                  subBuilder =
-                      ((org.datacommons.proto.Mcf.McfStatVarObsSeries) record_).toBuilder();
-                }
-                record_ =
-                    input.readMessage(
-                        org.datacommons.proto.Mcf.McfStatVarObsSeries.PARSER, extensionRegistry);
-                if (subBuilder != null) {
-                  subBuilder.mergeFrom((org.datacommons.proto.Mcf.McfStatVarObsSeries) record_);
-                  record_ = subBuilder.buildPartial();
-                }
-                recordCase_ = 1;
-                break;
+            case 10: {
+              org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder subBuilder = null;
+              if (recordCase_ == 1) {
+                subBuilder = ((org.datacommons.proto.Mcf.McfStatVarObsSeries) record_).toBuilder();
               }
-            default:
-              {
-                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
+              record_ =
+                  input.readMessage(org.datacommons.proto.Mcf.McfStatVarObsSeries.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((org.datacommons.proto.Mcf.McfStatVarObsSeries) record_);
+                record_ = subBuilder.buildPartial();
               }
+              recordCase_ = 1;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
-
-    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return org.datacommons.proto.Mcf
-          .internal_static_org_datacommons_proto_McfOptimizedGraph_descriptor;
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfOptimizedGraph_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Mcf
-          .internal_static_org_datacommons_proto_McfOptimizedGraph_fieldAccessorTable
+      return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfOptimizedGraph_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Mcf.McfOptimizedGraph.class,
-              org.datacommons.proto.Mcf.McfOptimizedGraph.Builder.class);
+              org.datacommons.proto.Mcf.McfOptimizedGraph.class, org.datacommons.proto.Mcf.McfOptimizedGraph.Builder.class);
     }
 
     private int bitField0_;
     private int recordCase_ = 0;
     private java.lang.Object record_;
-
     public enum RecordCase
-        implements
-            com.google.protobuf.Internal.EnumLite,
+        implements com.google.protobuf.Internal.EnumLite,
             com.google.protobuf.AbstractMessage.InternalOneOfEnum {
       SV_OBS_SERIES(1),
       RECORD_NOT_SET(0);
       private final int value;
-
       private RecordCase(int value) {
         this.value = value;
       }
-
       /**
        * @param value The number of the enum to look for.
        * @return The enum associated with the given number.
@@ -10444,60 +9401,54 @@ public final class Mcf {
 
       public static RecordCase forNumber(int value) {
         switch (value) {
-          case 1:
-            return SV_OBS_SERIES;
-          case 0:
-            return RECORD_NOT_SET;
-          default:
-            return null;
+          case 1: return SV_OBS_SERIES;
+          case 0: return RECORD_NOT_SET;
+          default: return null;
         }
       }
-
       public int getNumber() {
         return this.value;
       }
     };
 
-    public RecordCase getRecordCase() {
-      return RecordCase.forNumber(recordCase_);
+    public RecordCase
+    getRecordCase() {
+      return RecordCase.forNumber(
+          recordCase_);
     }
 
     public static final int SV_OBS_SERIES_FIELD_NUMBER = 1;
-
     /**
      * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
-     *
      * @return Whether the svObsSeries field is set.
      */
     @java.lang.Override
     public boolean hasSvObsSeries() {
       return recordCase_ == 1;
     }
-
     /**
      * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
-     *
      * @return The svObsSeries.
      */
     @java.lang.Override
     public org.datacommons.proto.Mcf.McfStatVarObsSeries getSvObsSeries() {
       if (recordCase_ == 1) {
-        return (org.datacommons.proto.Mcf.McfStatVarObsSeries) record_;
+         return (org.datacommons.proto.Mcf.McfStatVarObsSeries) record_;
       }
       return org.datacommons.proto.Mcf.McfStatVarObsSeries.getDefaultInstance();
     }
-
-    /** <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code> */
+    /**
+     * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
+     */
     @java.lang.Override
     public org.datacommons.proto.Mcf.McfStatVarObsSeriesOrBuilder getSvObsSeriesOrBuilder() {
       if (recordCase_ == 1) {
-        return (org.datacommons.proto.Mcf.McfStatVarObsSeries) record_;
+         return (org.datacommons.proto.Mcf.McfStatVarObsSeries) record_;
       }
       return org.datacommons.proto.Mcf.McfStatVarObsSeries.getDefaultInstance();
     }
 
     private byte memoizedIsInitialized = -1;
-
     @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -10515,7 +9466,8 @@ public final class Mcf {
     }
 
     @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
       if (recordCase_ == 1) {
         output.writeMessage(1, (org.datacommons.proto.Mcf.McfStatVarObsSeries) record_);
       }
@@ -10529,9 +9481,8 @@ public final class Mcf {
 
       size = 0;
       if (recordCase_ == 1) {
-        size +=
-            com.google.protobuf.CodedOutputStream.computeMessageSize(
-                1, (org.datacommons.proto.Mcf.McfStatVarObsSeries) record_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, (org.datacommons.proto.Mcf.McfStatVarObsSeries) record_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -10541,18 +9492,18 @@ public final class Mcf {
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
-        return true;
+       return true;
       }
       if (!(obj instanceof org.datacommons.proto.Mcf.McfOptimizedGraph)) {
         return super.equals(obj);
       }
-      org.datacommons.proto.Mcf.McfOptimizedGraph other =
-          (org.datacommons.proto.Mcf.McfOptimizedGraph) obj;
+      org.datacommons.proto.Mcf.McfOptimizedGraph other = (org.datacommons.proto.Mcf.McfOptimizedGraph) obj;
 
       if (!getRecordCase().equals(other.getRecordCase())) return false;
       switch (recordCase_) {
         case 1:
-          if (!getSvObsSeries().equals(other.getSvObsSeries())) return false;
+          if (!getSvObsSeries()
+              .equals(other.getSvObsSeries())) return false;
           break;
         case 0:
         default:
@@ -10581,94 +9532,88 @@ public final class Mcf {
       return hash;
     }
 
-    public static org.datacommons.proto.Mcf.McfOptimizedGraph parseFrom(java.nio.ByteBuffer data)
+    public static org.datacommons.proto.Mcf.McfOptimizedGraph parseFrom(
+        java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Mcf.McfOptimizedGraph parseFrom(
-        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Mcf.McfOptimizedGraph parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Mcf.McfOptimizedGraph parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Mcf.McfOptimizedGraph parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-
     public static org.datacommons.proto.Mcf.McfOptimizedGraph parseFrom(
-        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-
     public static org.datacommons.proto.Mcf.McfOptimizedGraph parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-
     public static org.datacommons.proto.Mcf.McfOptimizedGraph parseFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
-
-    public static org.datacommons.proto.Mcf.McfOptimizedGraph parseDelimitedFrom(
-        java.io.InputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-    }
-
-    public static org.datacommons.proto.Mcf.McfOptimizedGraph parseDelimitedFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+    public static org.datacommons.proto.Mcf.McfOptimizedGraph parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
     }
-
+    public static org.datacommons.proto.Mcf.McfOptimizedGraph parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
     public static org.datacommons.proto.Mcf.McfOptimizedGraph parseFrom(
-        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
     }
-
     public static org.datacommons.proto.Mcf.McfOptimizedGraph parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
     @java.lang.Override
-    public Builder newBuilderForType() {
-      return newBuilder();
-    }
-
+    public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-
     public static Builder newBuilder(org.datacommons.proto.Mcf.McfOptimizedGraph prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-
     @java.lang.Override
     public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
     }
 
     @java.lang.Override
@@ -10677,34 +9622,28 @@ public final class Mcf {
       Builder builder = new Builder(parent);
       return builder;
     }
-
     /**
-     *
-     *
      * <pre>
      * A wrapper over space-efficient representations of MCF data.
      * </pre>
      *
      * Protobuf type {@code org.datacommons.proto.McfOptimizedGraph}
      */
-    public static final class Builder
-        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-        implements
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
         // @@protoc_insertion_point(builder_implements:org.datacommons.proto.McfOptimizedGraph)
         org.datacommons.proto.Mcf.McfOptimizedGraphOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfOptimizedGraph_descriptor;
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfOptimizedGraph_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfOptimizedGraph_fieldAccessorTable
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfOptimizedGraph_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Mcf.McfOptimizedGraph.class,
-                org.datacommons.proto.Mcf.McfOptimizedGraph.Builder.class);
+                org.datacommons.proto.Mcf.McfOptimizedGraph.class, org.datacommons.proto.Mcf.McfOptimizedGraph.Builder.class);
       }
 
       // Construct using org.datacommons.proto.Mcf.McfOptimizedGraph.newBuilder()
@@ -10712,15 +9651,16 @@ public final class Mcf {
         maybeForceBuilderInitialization();
       }
 
-      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
-
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {}
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
       }
-
       @java.lang.Override
       public Builder clear() {
         super.clear();
@@ -10730,9 +9670,9 @@ public final class Mcf {
       }
 
       @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_McfOptimizedGraph_descriptor;
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.datacommons.proto.Mcf.internal_static_org_datacommons_proto_McfOptimizedGraph_descriptor;
       }
 
       @java.lang.Override
@@ -10751,8 +9691,7 @@ public final class Mcf {
 
       @java.lang.Override
       public org.datacommons.proto.Mcf.McfOptimizedGraph buildPartial() {
-        org.datacommons.proto.Mcf.McfOptimizedGraph result =
-            new org.datacommons.proto.Mcf.McfOptimizedGraph(this);
+        org.datacommons.proto.Mcf.McfOptimizedGraph result = new org.datacommons.proto.Mcf.McfOptimizedGraph(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (recordCase_ == 1) {
@@ -10772,41 +9711,38 @@ public final class Mcf {
       public Builder clone() {
         return super.clone();
       }
-
       @java.lang.Override
       public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
         return super.setField(field, value);
       }
-
       @java.lang.Override
-      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
         return super.clearField(field);
       }
-
       @java.lang.Override
-      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return super.clearOneof(oneof);
       }
-
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index,
-          java.lang.Object value) {
+          int index, java.lang.Object value) {
         return super.setRepeatedField(field, index, value);
       }
-
       @java.lang.Override
       public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
         return super.addRepeatedField(field, value);
       }
-
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.datacommons.proto.Mcf.McfOptimizedGraph) {
-          return mergeFrom((org.datacommons.proto.Mcf.McfOptimizedGraph) other);
+          return mergeFrom((org.datacommons.proto.Mcf.McfOptimizedGraph)other);
         } else {
           super.mergeFrom(other);
           return this;
@@ -10816,15 +9752,13 @@ public final class Mcf {
       public Builder mergeFrom(org.datacommons.proto.Mcf.McfOptimizedGraph other) {
         if (other == org.datacommons.proto.Mcf.McfOptimizedGraph.getDefaultInstance()) return this;
         switch (other.getRecordCase()) {
-          case SV_OBS_SERIES:
-            {
-              mergeSvObsSeries(other.getSvObsSeries());
-              break;
-            }
-          case RECORD_NOT_SET:
-            {
-              break;
-            }
+          case SV_OBS_SERIES: {
+            mergeSvObsSeries(other.getSvObsSeries());
+            break;
+          }
+          case RECORD_NOT_SET: {
+            break;
+          }
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -10859,12 +9793,12 @@ public final class Mcf {
         }
         return this;
       }
-
       private int recordCase_ = 0;
       private java.lang.Object record_;
-
-      public RecordCase getRecordCase() {
-        return RecordCase.forNumber(recordCase_);
+      public RecordCase
+          getRecordCase() {
+        return RecordCase.forNumber(
+            recordCase_);
       }
 
       public Builder clearRecord() {
@@ -10877,24 +9811,17 @@ public final class Mcf {
       private int bitField0_;
 
       private com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Mcf.McfStatVarObsSeries,
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder,
-              org.datacommons.proto.Mcf.McfStatVarObsSeriesOrBuilder>
-          svObsSeriesBuilder_;
-
+          org.datacommons.proto.Mcf.McfStatVarObsSeries, org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder, org.datacommons.proto.Mcf.McfStatVarObsSeriesOrBuilder> svObsSeriesBuilder_;
       /**
        * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
-       *
        * @return Whether the svObsSeries field is set.
        */
       @java.lang.Override
       public boolean hasSvObsSeries() {
         return recordCase_ == 1;
       }
-
       /**
        * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
-       *
        * @return The svObsSeries.
        */
       @java.lang.Override
@@ -10911,8 +9838,9 @@ public final class Mcf {
           return org.datacommons.proto.Mcf.McfStatVarObsSeries.getDefaultInstance();
         }
       }
-
-      /** <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code> */
+      /**
+       * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
+       */
       public Builder setSvObsSeries(org.datacommons.proto.Mcf.McfStatVarObsSeries value) {
         if (svObsSeriesBuilder_ == null) {
           if (value == null) {
@@ -10926,8 +9854,9 @@ public final class Mcf {
         recordCase_ = 1;
         return this;
       }
-
-      /** <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code> */
+      /**
+       * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
+       */
       public Builder setSvObsSeries(
           org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder builderForValue) {
         if (svObsSeriesBuilder_ == null) {
@@ -10939,17 +9868,15 @@ public final class Mcf {
         recordCase_ = 1;
         return this;
       }
-
-      /** <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code> */
+      /**
+       * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
+       */
       public Builder mergeSvObsSeries(org.datacommons.proto.Mcf.McfStatVarObsSeries value) {
         if (svObsSeriesBuilder_ == null) {
-          if (recordCase_ == 1
-              && record_ != org.datacommons.proto.Mcf.McfStatVarObsSeries.getDefaultInstance()) {
-            record_ =
-                org.datacommons.proto.Mcf.McfStatVarObsSeries.newBuilder(
-                        (org.datacommons.proto.Mcf.McfStatVarObsSeries) record_)
-                    .mergeFrom(value)
-                    .buildPartial();
+          if (recordCase_ == 1 &&
+              record_ != org.datacommons.proto.Mcf.McfStatVarObsSeries.getDefaultInstance()) {
+            record_ = org.datacommons.proto.Mcf.McfStatVarObsSeries.newBuilder((org.datacommons.proto.Mcf.McfStatVarObsSeries) record_)
+                .mergeFrom(value).buildPartial();
           } else {
             record_ = value;
           }
@@ -10963,8 +9890,9 @@ public final class Mcf {
         recordCase_ = 1;
         return this;
       }
-
-      /** <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code> */
+      /**
+       * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
+       */
       public Builder clearSvObsSeries() {
         if (svObsSeriesBuilder_ == null) {
           if (recordCase_ == 1) {
@@ -10981,13 +9909,15 @@ public final class Mcf {
         }
         return this;
       }
-
-      /** <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code> */
+      /**
+       * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
+       */
       public org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder getSvObsSeriesBuilder() {
         return getSvObsSeriesFieldBuilder().getBuilder();
       }
-
-      /** <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code> */
+      /**
+       * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
+       */
       @java.lang.Override
       public org.datacommons.proto.Mcf.McfStatVarObsSeriesOrBuilder getSvObsSeriesOrBuilder() {
         if ((recordCase_ == 1) && (svObsSeriesBuilder_ != null)) {
@@ -10999,33 +9929,27 @@ public final class Mcf {
           return org.datacommons.proto.Mcf.McfStatVarObsSeries.getDefaultInstance();
         }
       }
-
-      /** <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code> */
+      /**
+       * <code>.org.datacommons.proto.McfStatVarObsSeries sv_obs_series = 1;</code>
+       */
       private com.google.protobuf.SingleFieldBuilderV3<
-              org.datacommons.proto.Mcf.McfStatVarObsSeries,
-              org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder,
-              org.datacommons.proto.Mcf.McfStatVarObsSeriesOrBuilder>
+          org.datacommons.proto.Mcf.McfStatVarObsSeries, org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder, org.datacommons.proto.Mcf.McfStatVarObsSeriesOrBuilder> 
           getSvObsSeriesFieldBuilder() {
         if (svObsSeriesBuilder_ == null) {
           if (!(recordCase_ == 1)) {
             record_ = org.datacommons.proto.Mcf.McfStatVarObsSeries.getDefaultInstance();
           }
-          svObsSeriesBuilder_ =
-              new com.google.protobuf.SingleFieldBuilderV3<
-                  org.datacommons.proto.Mcf.McfStatVarObsSeries,
-                  org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder,
-                  org.datacommons.proto.Mcf.McfStatVarObsSeriesOrBuilder>(
+          svObsSeriesBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              org.datacommons.proto.Mcf.McfStatVarObsSeries, org.datacommons.proto.Mcf.McfStatVarObsSeries.Builder, org.datacommons.proto.Mcf.McfStatVarObsSeriesOrBuilder>(
                   (org.datacommons.proto.Mcf.McfStatVarObsSeries) record_,
                   getParentForChildren(),
                   isClean());
           record_ = null;
         }
         recordCase_ = 1;
-        onChanged();
-        ;
+        onChanged();;
         return svObsSeriesBuilder_;
       }
-
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -11038,12 +9962,12 @@ public final class Mcf {
         return super.mergeUnknownFields(unknownFields);
       }
 
+
       // @@protoc_insertion_point(builder_scope:org.datacommons.proto.McfOptimizedGraph)
     }
 
     // @@protoc_insertion_point(class_scope:org.datacommons.proto.McfOptimizedGraph)
     private static final org.datacommons.proto.Mcf.McfOptimizedGraph DEFAULT_INSTANCE;
-
     static {
       DEFAULT_INSTANCE = new org.datacommons.proto.Mcf.McfOptimizedGraph();
     }
@@ -11052,17 +9976,16 @@ public final class Mcf {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated
-    public static final com.google.protobuf.Parser<McfOptimizedGraph> PARSER =
-        new com.google.protobuf.AbstractParser<McfOptimizedGraph>() {
-          @java.lang.Override
-          public McfOptimizedGraph parsePartialFrom(
-              com.google.protobuf.CodedInputStream input,
-              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-              throws com.google.protobuf.InvalidProtocolBufferException {
-            return new McfOptimizedGraph(input, extensionRegistry);
-          }
-        };
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<McfOptimizedGraph>
+        PARSER = new com.google.protobuf.AbstractParser<McfOptimizedGraph>() {
+      @java.lang.Override
+      public McfOptimizedGraph parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new McfOptimizedGraph(input, extensionRegistry);
+      }
+    };
 
     public static com.google.protobuf.Parser<McfOptimizedGraph> parser() {
       return PARSER;
@@ -11077,999 +10000,173 @@ public final class Mcf {
     public org.datacommons.proto.Mcf.McfOptimizedGraph getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
-  }
 
-  public interface OptimizedMcfGraphOrBuilder
-      extends
-      // @@protoc_insertion_point(interface_extends:org.datacommons.proto.OptimizedMcfGraph)
-      com.google.protobuf.MessageOrBuilder {
-
-    /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-    java.util.List<org.datacommons.proto.Mcf.McfOptimizedGraph> getGraphList();
-
-    /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-    org.datacommons.proto.Mcf.McfOptimizedGraph getGraph(int index);
-
-    /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-    int getGraphCount();
-
-    /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-    java.util.List<? extends org.datacommons.proto.Mcf.McfOptimizedGraphOrBuilder>
-        getGraphOrBuilderList();
-
-    /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-    org.datacommons.proto.Mcf.McfOptimizedGraphOrBuilder getGraphOrBuilder(int index);
-  }
-
-  /** Protobuf type {@code org.datacommons.proto.OptimizedMcfGraph} */
-  public static final class OptimizedMcfGraph extends com.google.protobuf.GeneratedMessageV3
-      implements
-      // @@protoc_insertion_point(message_implements:org.datacommons.proto.OptimizedMcfGraph)
-      OptimizedMcfGraphOrBuilder {
-    private static final long serialVersionUID = 0L;
-
-    // Use OptimizedMcfGraph.newBuilder() to construct.
-    private OptimizedMcfGraph(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-
-    private OptimizedMcfGraph() {
-      graph_ = java.util.Collections.emptyList();
-    }
-
-    @java.lang.Override
-    @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
-      return new OptimizedMcfGraph();
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
-      return this.unknownFields;
-    }
-
-    private OptimizedMcfGraph(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10:
-              {
-                if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                  graph_ = new java.util.ArrayList<org.datacommons.proto.Mcf.McfOptimizedGraph>();
-                  mutable_bitField0_ |= 0x00000001;
-                }
-                graph_.add(
-                    input.readMessage(
-                        org.datacommons.proto.Mcf.McfOptimizedGraph.PARSER, extensionRegistry));
-                break;
-              }
-            default:
-              {
-                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
-              }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
-      } finally {
-        if (((mutable_bitField0_ & 0x00000001) != 0)) {
-          graph_ = java.util.Collections.unmodifiableList(graph_);
-        }
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-
-    public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return org.datacommons.proto.Mcf
-          .internal_static_org_datacommons_proto_OptimizedMcfGraph_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return org.datacommons.proto.Mcf
-          .internal_static_org_datacommons_proto_OptimizedMcfGraph_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              org.datacommons.proto.Mcf.OptimizedMcfGraph.class,
-              org.datacommons.proto.Mcf.OptimizedMcfGraph.Builder.class);
-    }
-
-    public static final int GRAPH_FIELD_NUMBER = 1;
-    private java.util.List<org.datacommons.proto.Mcf.McfOptimizedGraph> graph_;
-
-    /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-    @java.lang.Override
-    public java.util.List<org.datacommons.proto.Mcf.McfOptimizedGraph> getGraphList() {
-      return graph_;
-    }
-
-    /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-    @java.lang.Override
-    public java.util.List<? extends org.datacommons.proto.Mcf.McfOptimizedGraphOrBuilder>
-        getGraphOrBuilderList() {
-      return graph_;
-    }
-
-    /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-    @java.lang.Override
-    public int getGraphCount() {
-      return graph_.size();
-    }
-
-    /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-    @java.lang.Override
-    public org.datacommons.proto.Mcf.McfOptimizedGraph getGraph(int index) {
-      return graph_.get(index);
-    }
-
-    /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-    @java.lang.Override
-    public org.datacommons.proto.Mcf.McfOptimizedGraphOrBuilder getGraphOrBuilder(int index) {
-      return graph_.get(index);
-    }
-
-    private byte memoizedIsInitialized = -1;
-
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      for (int i = 0; i < getGraphCount(); i++) {
-        if (!getGraph(i).isInitialized()) {
-          memoizedIsInitialized = 0;
-          return false;
-        }
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-      for (int i = 0; i < graph_.size(); i++) {
-        output.writeMessage(1, graph_.get(i));
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      for (int i = 0; i < graph_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, graph_.get(i));
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-        return true;
-      }
-      if (!(obj instanceof org.datacommons.proto.Mcf.OptimizedMcfGraph)) {
-        return super.equals(obj);
-      }
-      org.datacommons.proto.Mcf.OptimizedMcfGraph other =
-          (org.datacommons.proto.Mcf.OptimizedMcfGraph) obj;
-
-      if (!getGraphList().equals(other.getGraphList())) return false;
-      if (!unknownFields.equals(other.unknownFields)) return false;
-      return true;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (getGraphCount() > 0) {
-        hash = (37 * hash) + GRAPH_FIELD_NUMBER;
-        hash = (53 * hash) + getGraphList().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static org.datacommons.proto.Mcf.OptimizedMcfGraph parseFrom(java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-
-    public static org.datacommons.proto.Mcf.OptimizedMcfGraph parseFrom(
-        java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Mcf.OptimizedMcfGraph parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-
-    public static org.datacommons.proto.Mcf.OptimizedMcfGraph parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Mcf.OptimizedMcfGraph parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-
-    public static org.datacommons.proto.Mcf.OptimizedMcfGraph parseFrom(
-        byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Mcf.OptimizedMcfGraph parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-    }
-
-    public static org.datacommons.proto.Mcf.OptimizedMcfGraph parseFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Mcf.OptimizedMcfGraph parseDelimitedFrom(
-        java.io.InputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
-    }
-
-    public static org.datacommons.proto.Mcf.OptimizedMcfGraph parseDelimitedFrom(
-        java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(
-          PARSER, input, extensionRegistry);
-    }
-
-    public static org.datacommons.proto.Mcf.OptimizedMcfGraph parseFrom(
-        com.google.protobuf.CodedInputStream input) throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
-    }
-
-    public static org.datacommons.proto.Mcf.OptimizedMcfGraph parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3.parseWithIOException(
-          PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() {
-      return newBuilder();
-    }
-
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-
-    public static Builder newBuilder(org.datacommons.proto.Mcf.OptimizedMcfGraph prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-
-    /** Protobuf type {@code org.datacommons.proto.OptimizedMcfGraph} */
-    public static final class Builder
-        extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
-        implements
-        // @@protoc_insertion_point(builder_implements:org.datacommons.proto.OptimizedMcfGraph)
-        org.datacommons.proto.Mcf.OptimizedMcfGraphOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_OptimizedMcfGraph_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_OptimizedMcfGraph_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                org.datacommons.proto.Mcf.OptimizedMcfGraph.class,
-                org.datacommons.proto.Mcf.OptimizedMcfGraph.Builder.class);
-      }
-
-      // Construct using org.datacommons.proto.Mcf.OptimizedMcfGraph.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
-          getGraphFieldBuilder();
-        }
-      }
-
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        if (graphBuilder_ == null) {
-          graph_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
-        } else {
-          graphBuilder_.clear();
-        }
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-        return org.datacommons.proto.Mcf
-            .internal_static_org_datacommons_proto_OptimizedMcfGraph_descriptor;
-      }
-
-      @java.lang.Override
-      public org.datacommons.proto.Mcf.OptimizedMcfGraph getDefaultInstanceForType() {
-        return org.datacommons.proto.Mcf.OptimizedMcfGraph.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public org.datacommons.proto.Mcf.OptimizedMcfGraph build() {
-        org.datacommons.proto.Mcf.OptimizedMcfGraph result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public org.datacommons.proto.Mcf.OptimizedMcfGraph buildPartial() {
-        org.datacommons.proto.Mcf.OptimizedMcfGraph result =
-            new org.datacommons.proto.Mcf.OptimizedMcfGraph(this);
-        int from_bitField0_ = bitField0_;
-        if (graphBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) != 0)) {
-            graph_ = java.util.Collections.unmodifiableList(graph_);
-            bitField0_ = (bitField0_ & ~0x00000001);
-          }
-          result.graph_ = graph_;
-        } else {
-          result.graph_ = graphBuilder_.build();
-        }
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return super.clone();
-      }
-
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-        return super.setField(field, value);
-      }
-
-      @java.lang.Override
-      public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return super.clearField(field);
-      }
-
-      @java.lang.Override
-      public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return super.clearOneof(oneof);
-      }
-
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index,
-          java.lang.Object value) {
-        return super.setRepeatedField(field, index, value);
-      }
-
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-        return super.addRepeatedField(field, value);
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.datacommons.proto.Mcf.OptimizedMcfGraph) {
-          return mergeFrom((org.datacommons.proto.Mcf.OptimizedMcfGraph) other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(org.datacommons.proto.Mcf.OptimizedMcfGraph other) {
-        if (other == org.datacommons.proto.Mcf.OptimizedMcfGraph.getDefaultInstance()) return this;
-        if (graphBuilder_ == null) {
-          if (!other.graph_.isEmpty()) {
-            if (graph_.isEmpty()) {
-              graph_ = other.graph_;
-              bitField0_ = (bitField0_ & ~0x00000001);
-            } else {
-              ensureGraphIsMutable();
-              graph_.addAll(other.graph_);
-            }
-            onChanged();
-          }
-        } else {
-          if (!other.graph_.isEmpty()) {
-            if (graphBuilder_.isEmpty()) {
-              graphBuilder_.dispose();
-              graphBuilder_ = null;
-              graph_ = other.graph_;
-              bitField0_ = (bitField0_ & ~0x00000001);
-              graphBuilder_ =
-                  com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders
-                      ? getGraphFieldBuilder()
-                      : null;
-            } else {
-              graphBuilder_.addAllMessages(other.graph_);
-            }
-          }
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        for (int i = 0; i < getGraphCount(); i++) {
-          if (!getGraph(i).isInitialized()) {
-            return false;
-          }
-        }
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        org.datacommons.proto.Mcf.OptimizedMcfGraph parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.datacommons.proto.Mcf.OptimizedMcfGraph) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-
-      private int bitField0_;
-
-      private java.util.List<org.datacommons.proto.Mcf.McfOptimizedGraph> graph_ =
-          java.util.Collections.emptyList();
-
-      private void ensureGraphIsMutable() {
-        if (!((bitField0_ & 0x00000001) != 0)) {
-          graph_ = new java.util.ArrayList<org.datacommons.proto.Mcf.McfOptimizedGraph>(graph_);
-          bitField0_ |= 0x00000001;
-        }
-      }
-
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Mcf.McfOptimizedGraph,
-              org.datacommons.proto.Mcf.McfOptimizedGraph.Builder,
-              org.datacommons.proto.Mcf.McfOptimizedGraphOrBuilder>
-          graphBuilder_;
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public java.util.List<org.datacommons.proto.Mcf.McfOptimizedGraph> getGraphList() {
-        if (graphBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(graph_);
-        } else {
-          return graphBuilder_.getMessageList();
-        }
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public int getGraphCount() {
-        if (graphBuilder_ == null) {
-          return graph_.size();
-        } else {
-          return graphBuilder_.getCount();
-        }
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public org.datacommons.proto.Mcf.McfOptimizedGraph getGraph(int index) {
-        if (graphBuilder_ == null) {
-          return graph_.get(index);
-        } else {
-          return graphBuilder_.getMessage(index);
-        }
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public Builder setGraph(int index, org.datacommons.proto.Mcf.McfOptimizedGraph value) {
-        if (graphBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureGraphIsMutable();
-          graph_.set(index, value);
-          onChanged();
-        } else {
-          graphBuilder_.setMessage(index, value);
-        }
-        return this;
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public Builder setGraph(
-          int index, org.datacommons.proto.Mcf.McfOptimizedGraph.Builder builderForValue) {
-        if (graphBuilder_ == null) {
-          ensureGraphIsMutable();
-          graph_.set(index, builderForValue.build());
-          onChanged();
-        } else {
-          graphBuilder_.setMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public Builder addGraph(org.datacommons.proto.Mcf.McfOptimizedGraph value) {
-        if (graphBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureGraphIsMutable();
-          graph_.add(value);
-          onChanged();
-        } else {
-          graphBuilder_.addMessage(value);
-        }
-        return this;
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public Builder addGraph(int index, org.datacommons.proto.Mcf.McfOptimizedGraph value) {
-        if (graphBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureGraphIsMutable();
-          graph_.add(index, value);
-          onChanged();
-        } else {
-          graphBuilder_.addMessage(index, value);
-        }
-        return this;
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public Builder addGraph(org.datacommons.proto.Mcf.McfOptimizedGraph.Builder builderForValue) {
-        if (graphBuilder_ == null) {
-          ensureGraphIsMutable();
-          graph_.add(builderForValue.build());
-          onChanged();
-        } else {
-          graphBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public Builder addGraph(
-          int index, org.datacommons.proto.Mcf.McfOptimizedGraph.Builder builderForValue) {
-        if (graphBuilder_ == null) {
-          ensureGraphIsMutable();
-          graph_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          graphBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public Builder addAllGraph(
-          java.lang.Iterable<? extends org.datacommons.proto.Mcf.McfOptimizedGraph> values) {
-        if (graphBuilder_ == null) {
-          ensureGraphIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(values, graph_);
-          onChanged();
-        } else {
-          graphBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public Builder clearGraph() {
-        if (graphBuilder_ == null) {
-          graph_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
-          onChanged();
-        } else {
-          graphBuilder_.clear();
-        }
-        return this;
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public Builder removeGraph(int index) {
-        if (graphBuilder_ == null) {
-          ensureGraphIsMutable();
-          graph_.remove(index);
-          onChanged();
-        } else {
-          graphBuilder_.remove(index);
-        }
-        return this;
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public org.datacommons.proto.Mcf.McfOptimizedGraph.Builder getGraphBuilder(int index) {
-        return getGraphFieldBuilder().getBuilder(index);
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public org.datacommons.proto.Mcf.McfOptimizedGraphOrBuilder getGraphOrBuilder(int index) {
-        if (graphBuilder_ == null) {
-          return graph_.get(index);
-        } else {
-          return graphBuilder_.getMessageOrBuilder(index);
-        }
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public java.util.List<? extends org.datacommons.proto.Mcf.McfOptimizedGraphOrBuilder>
-          getGraphOrBuilderList() {
-        if (graphBuilder_ != null) {
-          return graphBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(graph_);
-        }
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public org.datacommons.proto.Mcf.McfOptimizedGraph.Builder addGraphBuilder() {
-        return getGraphFieldBuilder()
-            .addBuilder(org.datacommons.proto.Mcf.McfOptimizedGraph.getDefaultInstance());
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public org.datacommons.proto.Mcf.McfOptimizedGraph.Builder addGraphBuilder(int index) {
-        return getGraphFieldBuilder()
-            .addBuilder(index, org.datacommons.proto.Mcf.McfOptimizedGraph.getDefaultInstance());
-      }
-
-      /** <code>repeated .org.datacommons.proto.McfOptimizedGraph graph = 1;</code> */
-      public java.util.List<org.datacommons.proto.Mcf.McfOptimizedGraph.Builder>
-          getGraphBuilderList() {
-        return getGraphFieldBuilder().getBuilderList();
-      }
-
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-              org.datacommons.proto.Mcf.McfOptimizedGraph,
-              org.datacommons.proto.Mcf.McfOptimizedGraph.Builder,
-              org.datacommons.proto.Mcf.McfOptimizedGraphOrBuilder>
-          getGraphFieldBuilder() {
-        if (graphBuilder_ == null) {
-          graphBuilder_ =
-              new com.google.protobuf.RepeatedFieldBuilderV3<
-                  org.datacommons.proto.Mcf.McfOptimizedGraph,
-                  org.datacommons.proto.Mcf.McfOptimizedGraph.Builder,
-                  org.datacommons.proto.Mcf.McfOptimizedGraphOrBuilder>(
-                  graph_, ((bitField0_ & 0x00000001) != 0), getParentForChildren(), isClean());
-          graph_ = null;
-        }
-        return graphBuilder_;
-      }
-
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-      // @@protoc_insertion_point(builder_scope:org.datacommons.proto.OptimizedMcfGraph)
-    }
-
-    // @@protoc_insertion_point(class_scope:org.datacommons.proto.OptimizedMcfGraph)
-    private static final org.datacommons.proto.Mcf.OptimizedMcfGraph DEFAULT_INSTANCE;
-
-    static {
-      DEFAULT_INSTANCE = new org.datacommons.proto.Mcf.OptimizedMcfGraph();
-    }
-
-    public static org.datacommons.proto.Mcf.OptimizedMcfGraph getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated
-    public static final com.google.protobuf.Parser<OptimizedMcfGraph> PARSER =
-        new com.google.protobuf.AbstractParser<OptimizedMcfGraph>() {
-          @java.lang.Override
-          public OptimizedMcfGraph parsePartialFrom(
-              com.google.protobuf.CodedInputStream input,
-              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-              throws com.google.protobuf.InvalidProtocolBufferException {
-            return new OptimizedMcfGraph(input, extensionRegistry);
-          }
-        };
-
-    public static com.google.protobuf.Parser<OptimizedMcfGraph> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<OptimizedMcfGraph> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public org.datacommons.proto.Mcf.OptimizedMcfGraph getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_McfGraph_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_McfGraph_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_McfGraph_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_McfGraph_TypedValue_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_McfGraph_TypedValue_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_McfGraph_TypedValue_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_McfGraph_Values_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_McfGraph_Values_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_McfGraph_Values_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_McfGraph_PropertyValues_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_McfGraph_PropertyValues_PvsEntry_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_McfGraph_PropertyValues_PvsEntry_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_McfGraph_PropertyValues_PvsEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_McfGraph_NodesEntry_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_McfGraph_NodesEntry_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_McfGraph_NodesEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_McfStatVarObsSeries_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_McfOptimizedGraph_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    internal_static_org_datacommons_proto_McfOptimizedGraph_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_datacommons_proto_McfOptimizedGraph_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_org_datacommons_proto_OptimizedMcfGraph_descriptor;
-  private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_org_datacommons_proto_OptimizedMcfGraph_fieldAccessorTable;
 
-  public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
+  public static com.google.protobuf.Descriptors.FileDescriptor
+      getDescriptor() {
     return descriptor;
   }
-
-  private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
-
+  private static  com.google.protobuf.Descriptors.FileDescriptor
+      descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\tMcf.proto\022\025org.datacommons.proto\032\021LogL"
-          + "ocation.proto\"\227\005\n\010McfGraph\022:\n\004type\030\001 \001(\016"
-          + "2\036.org.datacommons.proto.McfType:\014INSTAN"
-          + "CE_MCF\0229\n\005nodes\030\002 \003(\0132*.org.datacommons."
-          + "proto.McfGraph.NodesEntry\032[\n\nTypedValue\022"
-          + ".\n\004type\030\001 \001(\0162 .org.datacommons.proto.Va"
-          + "lueType\022\r\n\005value\030\002 \001(\t\022\016\n\006column\030\003 \001(\t\032J"
-          + "\n\006Values\022@\n\014typed_values\030\001 \003(\0132*.org.dat"
-          + "acommons.proto.McfGraph.TypedValue\032\214\002\n\016P"
-          + "ropertyValues\022D\n\003pvs\030\001 \003(\01327.org.datacom"
-          + "mons.proto.McfGraph.PropertyValues.PvsEn"
-          + "try\0222\n\tlocations\030\002 \003(\0132\037.org.datacommons"
-          + ".proto.Location\022\025\n\rtemplate_node\030\003 \001(\t\022\025"
-          + "\n\rerror_message\030\004 \001(\t\032R\n\010PvsEntry\022\013\n\003key"
-          + "\030\001 \001(\t\0225\n\005value\030\002 \001(\0132&.org.datacommons."
-          + "proto.McfGraph.Values:\0028\001\032\\\n\nNodesEntry\022"
-          + "\013\n\003key\030\001 \001(\t\022=\n\005value\030\002 \001(\0132..org.dataco"
-          + "mmons.proto.McfGraph.PropertyValues:\0028\001\""
-          + "\342\003\n\023McfStatVarObsSeries\022;\n\003key\030\001 \002(\0132..o"
-          + "rg.datacommons.proto.McfStatVarObsSeries"
-          + ".Key\022J\n\013sv_obs_list\030\002 \003(\01325.org.datacomm"
-          + "ons.proto.McfStatVarObsSeries.StatVarObs"
-          + "\032\245\001\n\nStatVarObs\022\014\n\004date\030\001 \002(\t\022\020\n\006number\030"
-          + "\002 \001(\001H\000\022\016\n\004text\030\003 \001(\tH\000\022;\n\003pvs\030\004 \001(\0132..o"
-          + "rg.datacommons.proto.McfGraph.PropertyVa"
-          + "lues\022\014\n\004dcid\030\005 \002(\t\022\025\n\rlocal_node_id\030\006 \001("
-          + "\tB\005\n\003val\032\231\001\n\003Key\022\031\n\021observation_about\030\001 "
-          + "\002(\t\022\031\n\021variable_measured\030\002 \002(\t\022\032\n\022measur"
-          + "ement_method\030\003 \001(\t\022\032\n\022observation_period"
-          + "\030\004 \001(\t\022\026\n\016scaling_factor\030\005 \001(\t\022\014\n\004unit\030\006"
-          + " \001(\t\"b\n\021McfOptimizedGraph\022C\n\rsv_obs_seri"
-          + "es\030\001 \001(\0132*.org.datacommons.proto.McfStat"
-          + "VarObsSeriesH\000B\010\n\006record\"L\n\021OptimizedMcf"
-          + "Graph\0227\n\005graph\030\001 \003(\0132(.org.datacommons.p"
-          + "roto.McfOptimizedGraph*C\n\007McfType\022\024\n\020UNK"
-          + "NOWN_MCF_TYPE\020\000\022\020\n\014INSTANCE_MCF\020\001\022\020\n\014TEM"
-          + "PLATE_MCF\020\002*\226\001\n\tValueType\022\026\n\022UNKNOWN_VAL"
-          + "UE_TYPE\020\000\022\010\n\004TEXT\020\001\022\n\n\006NUMBER\020\002\022\022\n\016UNRES"
-          + "OLVED_REF\020\003\022\020\n\014RESOLVED_REF\020\004\022\021\n\rCOMPLEX"
-          + "_VALUE\020\005\022\020\n\014TABLE_COLUMN\020\006\022\020\n\014TABLE_ENTI"
-          + "TY\020\007"
+      "\n\tMcf.proto\022\025org.datacommons.proto\032\021LogL" +
+      "ocation.proto\"\227\005\n\010McfGraph\022:\n\004type\030\001 \001(\016" +
+      "2\036.org.datacommons.proto.McfType:\014INSTAN" +
+      "CE_MCF\0229\n\005nodes\030\002 \003(\0132*.org.datacommons." +
+      "proto.McfGraph.NodesEntry\032[\n\nTypedValue\022" +
+      ".\n\004type\030\001 \001(\0162 .org.datacommons.proto.Va" +
+      "lueType\022\r\n\005value\030\002 \001(\t\022\016\n\006column\030\003 \001(\t\032J" +
+      "\n\006Values\022@\n\014typed_values\030\001 \003(\0132*.org.dat" +
+      "acommons.proto.McfGraph.TypedValue\032\214\002\n\016P" +
+      "ropertyValues\022D\n\003pvs\030\001 \003(\01327.org.datacom" +
+      "mons.proto.McfGraph.PropertyValues.PvsEn" +
+      "try\0222\n\tlocations\030\002 \003(\0132\037.org.datacommons" +
+      ".proto.Location\022\025\n\rtemplate_node\030\003 \001(\t\022\025" +
+      "\n\rerror_message\030\004 \001(\t\032R\n\010PvsEntry\022\013\n\003key" +
+      "\030\001 \001(\t\0225\n\005value\030\002 \001(\0132&.org.datacommons." +
+      "proto.McfGraph.Values:\0028\001\032\\\n\nNodesEntry\022" +
+      "\013\n\003key\030\001 \001(\t\022=\n\005value\030\002 \001(\0132..org.dataco" +
+      "mmons.proto.McfGraph.PropertyValues:\0028\001\"" +
+      "\342\003\n\023McfStatVarObsSeries\022;\n\003key\030\001 \002(\0132..o" +
+      "rg.datacommons.proto.McfStatVarObsSeries" +
+      ".Key\022J\n\013sv_obs_list\030\002 \003(\01325.org.datacomm" +
+      "ons.proto.McfStatVarObsSeries.StatVarObs" +
+      "\032\245\001\n\nStatVarObs\022\014\n\004date\030\001 \002(\t\022\020\n\006number\030" +
+      "\002 \001(\001H\000\022\016\n\004text\030\003 \001(\tH\000\022;\n\003pvs\030\004 \001(\0132..o" +
+      "rg.datacommons.proto.McfGraph.PropertyVa" +
+      "lues\022\014\n\004dcid\030\005 \002(\t\022\025\n\rlocal_node_id\030\006 \001(" +
+      "\tB\005\n\003val\032\231\001\n\003Key\022\031\n\021observation_about\030\001 " +
+      "\002(\t\022\031\n\021variable_measured\030\002 \002(\t\022\032\n\022measur" +
+      "ement_method\030\003 \001(\t\022\032\n\022observation_period" +
+      "\030\004 \001(\t\022\026\n\016scaling_factor\030\005 \001(\t\022\014\n\004unit\030\006" +
+      " \001(\t\"b\n\021McfOptimizedGraph\022C\n\rsv_obs_seri" +
+      "es\030\001 \001(\0132*.org.datacommons.proto.McfStat" +
+      "VarObsSeriesH\000B\010\n\006record*C\n\007McfType\022\024\n\020U" +
+      "NKNOWN_MCF_TYPE\020\000\022\020\n\014INSTANCE_MCF\020\001\022\020\n\014T" +
+      "EMPLATE_MCF\020\002*\226\001\n\tValueType\022\026\n\022UNKNOWN_V" +
+      "ALUE_TYPE\020\000\022\010\n\004TEXT\020\001\022\n\n\006NUMBER\020\002\022\022\n\016UNR" +
+      "ESOLVED_REF\020\003\022\020\n\014RESOLVED_REF\020\004\022\021\n\rCOMPL" +
+      "EX_VALUE\020\005\022\020\n\014TABLE_COLUMN\020\006\022\020\n\014TABLE_EN" +
+      "TITY\020\007"
     };
-    descriptor =
-        com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-            descriptorData,
-            new com.google.protobuf.Descriptors.FileDescriptor[] {
-              org.datacommons.proto.LogLocation.getDescriptor(),
-            });
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
+      .internalBuildGeneratedFileFrom(descriptorData,
+        new com.google.protobuf.Descriptors.FileDescriptor[] {
+          org.datacommons.proto.LogLocation.getDescriptor(),
+        });
     internal_static_org_datacommons_proto_McfGraph_descriptor =
-        getDescriptor().getMessageTypes().get(0);
-    internal_static_org_datacommons_proto_McfGraph_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_McfGraph_descriptor,
-            new java.lang.String[] {
-              "Type", "Nodes",
-            });
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_org_datacommons_proto_McfGraph_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_McfGraph_descriptor,
+        new java.lang.String[] { "Type", "Nodes", });
     internal_static_org_datacommons_proto_McfGraph_TypedValue_descriptor =
-        internal_static_org_datacommons_proto_McfGraph_descriptor.getNestedTypes().get(0);
-    internal_static_org_datacommons_proto_McfGraph_TypedValue_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_McfGraph_TypedValue_descriptor,
-            new java.lang.String[] {
-              "Type", "Value", "Column",
-            });
+      internal_static_org_datacommons_proto_McfGraph_descriptor.getNestedTypes().get(0);
+    internal_static_org_datacommons_proto_McfGraph_TypedValue_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_McfGraph_TypedValue_descriptor,
+        new java.lang.String[] { "Type", "Value", "Column", });
     internal_static_org_datacommons_proto_McfGraph_Values_descriptor =
-        internal_static_org_datacommons_proto_McfGraph_descriptor.getNestedTypes().get(1);
-    internal_static_org_datacommons_proto_McfGraph_Values_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_McfGraph_Values_descriptor,
-            new java.lang.String[] {
-              "TypedValues",
-            });
+      internal_static_org_datacommons_proto_McfGraph_descriptor.getNestedTypes().get(1);
+    internal_static_org_datacommons_proto_McfGraph_Values_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_McfGraph_Values_descriptor,
+        new java.lang.String[] { "TypedValues", });
     internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor =
-        internal_static_org_datacommons_proto_McfGraph_descriptor.getNestedTypes().get(2);
-    internal_static_org_datacommons_proto_McfGraph_PropertyValues_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor,
-            new java.lang.String[] {
-              "Pvs", "Locations", "TemplateNode", "ErrorMessage",
-            });
+      internal_static_org_datacommons_proto_McfGraph_descriptor.getNestedTypes().get(2);
+    internal_static_org_datacommons_proto_McfGraph_PropertyValues_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor,
+        new java.lang.String[] { "Pvs", "Locations", "TemplateNode", "ErrorMessage", });
     internal_static_org_datacommons_proto_McfGraph_PropertyValues_PvsEntry_descriptor =
-        internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor
-            .getNestedTypes()
-            .get(0);
-    internal_static_org_datacommons_proto_McfGraph_PropertyValues_PvsEntry_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_McfGraph_PropertyValues_PvsEntry_descriptor,
-            new java.lang.String[] {
-              "Key", "Value",
-            });
+      internal_static_org_datacommons_proto_McfGraph_PropertyValues_descriptor.getNestedTypes().get(0);
+    internal_static_org_datacommons_proto_McfGraph_PropertyValues_PvsEntry_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_McfGraph_PropertyValues_PvsEntry_descriptor,
+        new java.lang.String[] { "Key", "Value", });
     internal_static_org_datacommons_proto_McfGraph_NodesEntry_descriptor =
-        internal_static_org_datacommons_proto_McfGraph_descriptor.getNestedTypes().get(3);
-    internal_static_org_datacommons_proto_McfGraph_NodesEntry_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_McfGraph_NodesEntry_descriptor,
-            new java.lang.String[] {
-              "Key", "Value",
-            });
+      internal_static_org_datacommons_proto_McfGraph_descriptor.getNestedTypes().get(3);
+    internal_static_org_datacommons_proto_McfGraph_NodesEntry_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_McfGraph_NodesEntry_descriptor,
+        new java.lang.String[] { "Key", "Value", });
     internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor =
-        getDescriptor().getMessageTypes().get(1);
-    internal_static_org_datacommons_proto_McfStatVarObsSeries_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor,
-            new java.lang.String[] {
-              "Key", "SvObsList",
-            });
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_org_datacommons_proto_McfStatVarObsSeries_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor,
+        new java.lang.String[] { "Key", "SvObsList", });
     internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_descriptor =
-        internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor
-            .getNestedTypes()
-            .get(0);
-    internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_descriptor,
-            new java.lang.String[] {
-              "Date", "Number", "Text", "Pvs", "Dcid", "LocalNodeId", "Val",
-            });
+      internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor.getNestedTypes().get(0);
+    internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_McfStatVarObsSeries_StatVarObs_descriptor,
+        new java.lang.String[] { "Date", "Number", "Text", "Pvs", "Dcid", "LocalNodeId", "Val", });
     internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_descriptor =
-        internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor
-            .getNestedTypes()
-            .get(1);
-    internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_descriptor,
-            new java.lang.String[] {
-              "ObservationAbout",
-              "VariableMeasured",
-              "MeasurementMethod",
-              "ObservationPeriod",
-              "ScalingFactor",
-              "Unit",
-            });
+      internal_static_org_datacommons_proto_McfStatVarObsSeries_descriptor.getNestedTypes().get(1);
+    internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_McfStatVarObsSeries_Key_descriptor,
+        new java.lang.String[] { "ObservationAbout", "VariableMeasured", "MeasurementMethod", "ObservationPeriod", "ScalingFactor", "Unit", });
     internal_static_org_datacommons_proto_McfOptimizedGraph_descriptor =
-        getDescriptor().getMessageTypes().get(2);
-    internal_static_org_datacommons_proto_McfOptimizedGraph_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_McfOptimizedGraph_descriptor,
-            new java.lang.String[] {
-              "SvObsSeries", "Record",
-            });
-    internal_static_org_datacommons_proto_OptimizedMcfGraph_descriptor =
-        getDescriptor().getMessageTypes().get(3);
-    internal_static_org_datacommons_proto_OptimizedMcfGraph_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_org_datacommons_proto_OptimizedMcfGraph_descriptor,
-            new java.lang.String[] {
-              "Graph",
-            });
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_org_datacommons_proto_McfOptimizedGraph_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_McfOptimizedGraph_descriptor,
+        new java.lang.String[] { "SvObsSeries", "Record", });
     org.datacommons.proto.LogLocation.getDescriptor();
   }
 

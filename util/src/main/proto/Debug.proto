@@ -20,6 +20,22 @@ import "LogLocation.proto";
 import "Mcf.proto";
 
 //
+// Runtime metadata capturing when and how the report was generated.
+//
+message RuntimeMetadata {
+    optional string generation_timestamp = 1;  // ISO 8601 format
+    optional double generation_duration_seconds = 2;
+    optional string username = 3;
+    optional string hostname = 4;
+    optional string os_name = 5;
+    optional string os_version = 6;
+    optional string java_version = 7;
+    optional string tool_version = 8;  // From pom.xml or Main.java
+    optional string build_timestamp = 9;  // Build time if available
+    optional string git_commit_hash = 10;  // Git commit if available
+}
+
+//
 // A log of import processing with details on any warnings, errors, etc.
 //
 message Log {
@@ -59,6 +75,7 @@ message Log {
     repeated Entry entries = 3;
     repeated StatValidationResult stats_check_summary = 4;
     optional CommandArgs command_args = 5;
+    optional RuntimeMetadata runtime_metadata = 6;
     reserved 2;
 }
 

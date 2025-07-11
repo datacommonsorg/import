@@ -115,7 +115,8 @@ public class Processor {
           args.outputDir,
           processor.logCtx.getLog(),
           processor.statChecker.getSVSummaryMap(),
-          processor.statChecker.getPlaceSeriesSummaryMap());
+          processor.statChecker.getPlaceSeriesSummaryMap(),
+          processor.logCtx.getRuntimeMetadata());
     }
     return retVal;
   }
