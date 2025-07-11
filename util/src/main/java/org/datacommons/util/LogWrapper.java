@@ -153,7 +153,7 @@ public class LogWrapper {
     refreshCounters();
     return log.build();
   }
-  
+
   // Get runtime metadata for use in other reports
   public Debug.RuntimeMetadata getRuntimeMetadata() {
     return RuntimeMetadataUtil.createRuntimeMetadata(startTime);
@@ -161,7 +161,7 @@ public class LogWrapper {
 
   private void persistLog(boolean silent) throws IOException {
     refreshCounters();
-    
+
     // Add runtime metadata
     Debug.RuntimeMetadata runtimeMetadata = RuntimeMetadataUtil.createRuntimeMetadata(startTime);
     log.setRuntimeMetadata(runtimeMetadata);

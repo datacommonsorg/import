@@ -14,6 +14,2369 @@ public final class Debug {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
+  public interface RuntimeMetadataOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.datacommons.proto.RuntimeMetadata)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * ISO 8601 format
+     * </pre>
+     *
+     * <code>optional string generation_timestamp = 1;</code>
+     * @return Whether the generationTimestamp field is set.
+     */
+    boolean hasGenerationTimestamp();
+    /**
+     * <pre>
+     * ISO 8601 format
+     * </pre>
+     *
+     * <code>optional string generation_timestamp = 1;</code>
+     * @return The generationTimestamp.
+     */
+    java.lang.String getGenerationTimestamp();
+    /**
+     * <pre>
+     * ISO 8601 format
+     * </pre>
+     *
+     * <code>optional string generation_timestamp = 1;</code>
+     * @return The bytes for generationTimestamp.
+     */
+    com.google.protobuf.ByteString
+        getGenerationTimestampBytes();
+
+    /**
+     * <code>optional double generation_duration_seconds = 2;</code>
+     * @return Whether the generationDurationSeconds field is set.
+     */
+    boolean hasGenerationDurationSeconds();
+    /**
+     * <code>optional double generation_duration_seconds = 2;</code>
+     * @return The generationDurationSeconds.
+     */
+    double getGenerationDurationSeconds();
+
+    /**
+     * <code>optional string username = 3;</code>
+     * @return Whether the username field is set.
+     */
+    boolean hasUsername();
+    /**
+     * <code>optional string username = 3;</code>
+     * @return The username.
+     */
+    java.lang.String getUsername();
+    /**
+     * <code>optional string username = 3;</code>
+     * @return The bytes for username.
+     */
+    com.google.protobuf.ByteString
+        getUsernameBytes();
+
+    /**
+     * <code>optional string hostname = 4;</code>
+     * @return Whether the hostname field is set.
+     */
+    boolean hasHostname();
+    /**
+     * <code>optional string hostname = 4;</code>
+     * @return The hostname.
+     */
+    java.lang.String getHostname();
+    /**
+     * <code>optional string hostname = 4;</code>
+     * @return The bytes for hostname.
+     */
+    com.google.protobuf.ByteString
+        getHostnameBytes();
+
+    /**
+     * <code>optional string os_name = 5;</code>
+     * @return Whether the osName field is set.
+     */
+    boolean hasOsName();
+    /**
+     * <code>optional string os_name = 5;</code>
+     * @return The osName.
+     */
+    java.lang.String getOsName();
+    /**
+     * <code>optional string os_name = 5;</code>
+     * @return The bytes for osName.
+     */
+    com.google.protobuf.ByteString
+        getOsNameBytes();
+
+    /**
+     * <code>optional string os_version = 6;</code>
+     * @return Whether the osVersion field is set.
+     */
+    boolean hasOsVersion();
+    /**
+     * <code>optional string os_version = 6;</code>
+     * @return The osVersion.
+     */
+    java.lang.String getOsVersion();
+    /**
+     * <code>optional string os_version = 6;</code>
+     * @return The bytes for osVersion.
+     */
+    com.google.protobuf.ByteString
+        getOsVersionBytes();
+
+    /**
+     * <code>optional string java_version = 7;</code>
+     * @return Whether the javaVersion field is set.
+     */
+    boolean hasJavaVersion();
+    /**
+     * <code>optional string java_version = 7;</code>
+     * @return The javaVersion.
+     */
+    java.lang.String getJavaVersion();
+    /**
+     * <code>optional string java_version = 7;</code>
+     * @return The bytes for javaVersion.
+     */
+    com.google.protobuf.ByteString
+        getJavaVersionBytes();
+
+    /**
+     * <pre>
+     * From pom.xml or Main.java
+     * </pre>
+     *
+     * <code>optional string tool_version = 8;</code>
+     * @return Whether the toolVersion field is set.
+     */
+    boolean hasToolVersion();
+    /**
+     * <pre>
+     * From pom.xml or Main.java
+     * </pre>
+     *
+     * <code>optional string tool_version = 8;</code>
+     * @return The toolVersion.
+     */
+    java.lang.String getToolVersion();
+    /**
+     * <pre>
+     * From pom.xml or Main.java
+     * </pre>
+     *
+     * <code>optional string tool_version = 8;</code>
+     * @return The bytes for toolVersion.
+     */
+    com.google.protobuf.ByteString
+        getToolVersionBytes();
+
+    /**
+     * <pre>
+     * Build time if available
+     * </pre>
+     *
+     * <code>optional string build_timestamp = 9;</code>
+     * @return Whether the buildTimestamp field is set.
+     */
+    boolean hasBuildTimestamp();
+    /**
+     * <pre>
+     * Build time if available
+     * </pre>
+     *
+     * <code>optional string build_timestamp = 9;</code>
+     * @return The buildTimestamp.
+     */
+    java.lang.String getBuildTimestamp();
+    /**
+     * <pre>
+     * Build time if available
+     * </pre>
+     *
+     * <code>optional string build_timestamp = 9;</code>
+     * @return The bytes for buildTimestamp.
+     */
+    com.google.protobuf.ByteString
+        getBuildTimestampBytes();
+
+    /**
+     * <pre>
+     * Git commit if available
+     * </pre>
+     *
+     * <code>optional string git_commit_hash = 10;</code>
+     * @return Whether the gitCommitHash field is set.
+     */
+    boolean hasGitCommitHash();
+    /**
+     * <pre>
+     * Git commit if available
+     * </pre>
+     *
+     * <code>optional string git_commit_hash = 10;</code>
+     * @return The gitCommitHash.
+     */
+    java.lang.String getGitCommitHash();
+    /**
+     * <pre>
+     * Git commit if available
+     * </pre>
+     *
+     * <code>optional string git_commit_hash = 10;</code>
+     * @return The bytes for gitCommitHash.
+     */
+    com.google.protobuf.ByteString
+        getGitCommitHashBytes();
+  }
+  /**
+   * <pre>
+   * Runtime metadata capturing when and how the report was generated.
+   * </pre>
+   *
+   * Protobuf type {@code org.datacommons.proto.RuntimeMetadata}
+   */
+  public static final class RuntimeMetadata extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:org.datacommons.proto.RuntimeMetadata)
+      RuntimeMetadataOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use RuntimeMetadata.newBuilder() to construct.
+    private RuntimeMetadata(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private RuntimeMetadata() {
+      generationTimestamp_ = "";
+      username_ = "";
+      hostname_ = "";
+      osName_ = "";
+      osVersion_ = "";
+      javaVersion_ = "";
+      toolVersion_ = "";
+      buildTimestamp_ = "";
+      gitCommitHash_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new RuntimeMetadata();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private RuntimeMetadata(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              generationTimestamp_ = bs;
+              break;
+            }
+            case 17: {
+              bitField0_ |= 0x00000002;
+              generationDurationSeconds_ = input.readDouble();
+              break;
+            }
+            case 26: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000004;
+              username_ = bs;
+              break;
+            }
+            case 34: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000008;
+              hostname_ = bs;
+              break;
+            }
+            case 42: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000010;
+              osName_ = bs;
+              break;
+            }
+            case 50: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000020;
+              osVersion_ = bs;
+              break;
+            }
+            case 58: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000040;
+              javaVersion_ = bs;
+              break;
+            }
+            case 66: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000080;
+              toolVersion_ = bs;
+              break;
+            }
+            case 74: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000100;
+              buildTimestamp_ = bs;
+              break;
+            }
+            case 82: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000200;
+              gitCommitHash_ = bs;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.datacommons.proto.Debug.internal_static_org_datacommons_proto_RuntimeMetadata_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.datacommons.proto.Debug.internal_static_org_datacommons_proto_RuntimeMetadata_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.datacommons.proto.Debug.RuntimeMetadata.class, org.datacommons.proto.Debug.RuntimeMetadata.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int GENERATION_TIMESTAMP_FIELD_NUMBER = 1;
+    private volatile java.lang.Object generationTimestamp_;
+    /**
+     * <pre>
+     * ISO 8601 format
+     * </pre>
+     *
+     * <code>optional string generation_timestamp = 1;</code>
+     * @return Whether the generationTimestamp field is set.
+     */
+    @java.lang.Override
+    public boolean hasGenerationTimestamp() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <pre>
+     * ISO 8601 format
+     * </pre>
+     *
+     * <code>optional string generation_timestamp = 1;</code>
+     * @return The generationTimestamp.
+     */
+    @java.lang.Override
+    public java.lang.String getGenerationTimestamp() {
+      java.lang.Object ref = generationTimestamp_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          generationTimestamp_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * ISO 8601 format
+     * </pre>
+     *
+     * <code>optional string generation_timestamp = 1;</code>
+     * @return The bytes for generationTimestamp.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getGenerationTimestampBytes() {
+      java.lang.Object ref = generationTimestamp_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        generationTimestamp_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int GENERATION_DURATION_SECONDS_FIELD_NUMBER = 2;
+    private double generationDurationSeconds_;
+    /**
+     * <code>optional double generation_duration_seconds = 2;</code>
+     * @return Whether the generationDurationSeconds field is set.
+     */
+    @java.lang.Override
+    public boolean hasGenerationDurationSeconds() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>optional double generation_duration_seconds = 2;</code>
+     * @return The generationDurationSeconds.
+     */
+    @java.lang.Override
+    public double getGenerationDurationSeconds() {
+      return generationDurationSeconds_;
+    }
+
+    public static final int USERNAME_FIELD_NUMBER = 3;
+    private volatile java.lang.Object username_;
+    /**
+     * <code>optional string username = 3;</code>
+     * @return Whether the username field is set.
+     */
+    @java.lang.Override
+    public boolean hasUsername() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>optional string username = 3;</code>
+     * @return The username.
+     */
+    @java.lang.Override
+    public java.lang.String getUsername() {
+      java.lang.Object ref = username_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          username_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string username = 3;</code>
+     * @return The bytes for username.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getUsernameBytes() {
+      java.lang.Object ref = username_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        username_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int HOSTNAME_FIELD_NUMBER = 4;
+    private volatile java.lang.Object hostname_;
+    /**
+     * <code>optional string hostname = 4;</code>
+     * @return Whether the hostname field is set.
+     */
+    @java.lang.Override
+    public boolean hasHostname() {
+      return ((bitField0_ & 0x00000008) != 0);
+    }
+    /**
+     * <code>optional string hostname = 4;</code>
+     * @return The hostname.
+     */
+    @java.lang.Override
+    public java.lang.String getHostname() {
+      java.lang.Object ref = hostname_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          hostname_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string hostname = 4;</code>
+     * @return The bytes for hostname.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getHostnameBytes() {
+      java.lang.Object ref = hostname_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        hostname_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int OS_NAME_FIELD_NUMBER = 5;
+    private volatile java.lang.Object osName_;
+    /**
+     * <code>optional string os_name = 5;</code>
+     * @return Whether the osName field is set.
+     */
+    @java.lang.Override
+    public boolean hasOsName() {
+      return ((bitField0_ & 0x00000010) != 0);
+    }
+    /**
+     * <code>optional string os_name = 5;</code>
+     * @return The osName.
+     */
+    @java.lang.Override
+    public java.lang.String getOsName() {
+      java.lang.Object ref = osName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          osName_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string os_name = 5;</code>
+     * @return The bytes for osName.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getOsNameBytes() {
+      java.lang.Object ref = osName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        osName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int OS_VERSION_FIELD_NUMBER = 6;
+    private volatile java.lang.Object osVersion_;
+    /**
+     * <code>optional string os_version = 6;</code>
+     * @return Whether the osVersion field is set.
+     */
+    @java.lang.Override
+    public boolean hasOsVersion() {
+      return ((bitField0_ & 0x00000020) != 0);
+    }
+    /**
+     * <code>optional string os_version = 6;</code>
+     * @return The osVersion.
+     */
+    @java.lang.Override
+    public java.lang.String getOsVersion() {
+      java.lang.Object ref = osVersion_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          osVersion_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string os_version = 6;</code>
+     * @return The bytes for osVersion.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getOsVersionBytes() {
+      java.lang.Object ref = osVersion_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        osVersion_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int JAVA_VERSION_FIELD_NUMBER = 7;
+    private volatile java.lang.Object javaVersion_;
+    /**
+     * <code>optional string java_version = 7;</code>
+     * @return Whether the javaVersion field is set.
+     */
+    @java.lang.Override
+    public boolean hasJavaVersion() {
+      return ((bitField0_ & 0x00000040) != 0);
+    }
+    /**
+     * <code>optional string java_version = 7;</code>
+     * @return The javaVersion.
+     */
+    @java.lang.Override
+    public java.lang.String getJavaVersion() {
+      java.lang.Object ref = javaVersion_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          javaVersion_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string java_version = 7;</code>
+     * @return The bytes for javaVersion.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getJavaVersionBytes() {
+      java.lang.Object ref = javaVersion_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        javaVersion_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int TOOL_VERSION_FIELD_NUMBER = 8;
+    private volatile java.lang.Object toolVersion_;
+    /**
+     * <pre>
+     * From pom.xml or Main.java
+     * </pre>
+     *
+     * <code>optional string tool_version = 8;</code>
+     * @return Whether the toolVersion field is set.
+     */
+    @java.lang.Override
+    public boolean hasToolVersion() {
+      return ((bitField0_ & 0x00000080) != 0);
+    }
+    /**
+     * <pre>
+     * From pom.xml or Main.java
+     * </pre>
+     *
+     * <code>optional string tool_version = 8;</code>
+     * @return The toolVersion.
+     */
+    @java.lang.Override
+    public java.lang.String getToolVersion() {
+      java.lang.Object ref = toolVersion_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          toolVersion_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * From pom.xml or Main.java
+     * </pre>
+     *
+     * <code>optional string tool_version = 8;</code>
+     * @return The bytes for toolVersion.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getToolVersionBytes() {
+      java.lang.Object ref = toolVersion_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        toolVersion_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int BUILD_TIMESTAMP_FIELD_NUMBER = 9;
+    private volatile java.lang.Object buildTimestamp_;
+    /**
+     * <pre>
+     * Build time if available
+     * </pre>
+     *
+     * <code>optional string build_timestamp = 9;</code>
+     * @return Whether the buildTimestamp field is set.
+     */
+    @java.lang.Override
+    public boolean hasBuildTimestamp() {
+      return ((bitField0_ & 0x00000100) != 0);
+    }
+    /**
+     * <pre>
+     * Build time if available
+     * </pre>
+     *
+     * <code>optional string build_timestamp = 9;</code>
+     * @return The buildTimestamp.
+     */
+    @java.lang.Override
+    public java.lang.String getBuildTimestamp() {
+      java.lang.Object ref = buildTimestamp_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          buildTimestamp_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Build time if available
+     * </pre>
+     *
+     * <code>optional string build_timestamp = 9;</code>
+     * @return The bytes for buildTimestamp.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getBuildTimestampBytes() {
+      java.lang.Object ref = buildTimestamp_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        buildTimestamp_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int GIT_COMMIT_HASH_FIELD_NUMBER = 10;
+    private volatile java.lang.Object gitCommitHash_;
+    /**
+     * <pre>
+     * Git commit if available
+     * </pre>
+     *
+     * <code>optional string git_commit_hash = 10;</code>
+     * @return Whether the gitCommitHash field is set.
+     */
+    @java.lang.Override
+    public boolean hasGitCommitHash() {
+      return ((bitField0_ & 0x00000200) != 0);
+    }
+    /**
+     * <pre>
+     * Git commit if available
+     * </pre>
+     *
+     * <code>optional string git_commit_hash = 10;</code>
+     * @return The gitCommitHash.
+     */
+    @java.lang.Override
+    public java.lang.String getGitCommitHash() {
+      java.lang.Object ref = gitCommitHash_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          gitCommitHash_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Git commit if available
+     * </pre>
+     *
+     * <code>optional string git_commit_hash = 10;</code>
+     * @return The bytes for gitCommitHash.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getGitCommitHashBytes() {
+      java.lang.Object ref = gitCommitHash_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        gitCommitHash_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, generationTimestamp_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeDouble(2, generationDurationSeconds_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, username_);
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, hostname_);
+      }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, osName_);
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, osVersion_);
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, javaVersion_);
+      }
+      if (((bitField0_ & 0x00000080) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 8, toolVersion_);
+      }
+      if (((bitField0_ & 0x00000100) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 9, buildTimestamp_);
+      }
+      if (((bitField0_ & 0x00000200) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 10, gitCommitHash_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, generationTimestamp_);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(2, generationDurationSeconds_);
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, username_);
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, hostname_);
+      }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, osName_);
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, osVersion_);
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, javaVersion_);
+      }
+      if (((bitField0_ & 0x00000080) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, toolVersion_);
+      }
+      if (((bitField0_ & 0x00000100) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(9, buildTimestamp_);
+      }
+      if (((bitField0_ & 0x00000200) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(10, gitCommitHash_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.datacommons.proto.Debug.RuntimeMetadata)) {
+        return super.equals(obj);
+      }
+      org.datacommons.proto.Debug.RuntimeMetadata other = (org.datacommons.proto.Debug.RuntimeMetadata) obj;
+
+      if (hasGenerationTimestamp() != other.hasGenerationTimestamp()) return false;
+      if (hasGenerationTimestamp()) {
+        if (!getGenerationTimestamp()
+            .equals(other.getGenerationTimestamp())) return false;
+      }
+      if (hasGenerationDurationSeconds() != other.hasGenerationDurationSeconds()) return false;
+      if (hasGenerationDurationSeconds()) {
+        if (java.lang.Double.doubleToLongBits(getGenerationDurationSeconds())
+            != java.lang.Double.doubleToLongBits(
+                other.getGenerationDurationSeconds())) return false;
+      }
+      if (hasUsername() != other.hasUsername()) return false;
+      if (hasUsername()) {
+        if (!getUsername()
+            .equals(other.getUsername())) return false;
+      }
+      if (hasHostname() != other.hasHostname()) return false;
+      if (hasHostname()) {
+        if (!getHostname()
+            .equals(other.getHostname())) return false;
+      }
+      if (hasOsName() != other.hasOsName()) return false;
+      if (hasOsName()) {
+        if (!getOsName()
+            .equals(other.getOsName())) return false;
+      }
+      if (hasOsVersion() != other.hasOsVersion()) return false;
+      if (hasOsVersion()) {
+        if (!getOsVersion()
+            .equals(other.getOsVersion())) return false;
+      }
+      if (hasJavaVersion() != other.hasJavaVersion()) return false;
+      if (hasJavaVersion()) {
+        if (!getJavaVersion()
+            .equals(other.getJavaVersion())) return false;
+      }
+      if (hasToolVersion() != other.hasToolVersion()) return false;
+      if (hasToolVersion()) {
+        if (!getToolVersion()
+            .equals(other.getToolVersion())) return false;
+      }
+      if (hasBuildTimestamp() != other.hasBuildTimestamp()) return false;
+      if (hasBuildTimestamp()) {
+        if (!getBuildTimestamp()
+            .equals(other.getBuildTimestamp())) return false;
+      }
+      if (hasGitCommitHash() != other.hasGitCommitHash()) return false;
+      if (hasGitCommitHash()) {
+        if (!getGitCommitHash()
+            .equals(other.getGitCommitHash())) return false;
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasGenerationTimestamp()) {
+        hash = (37 * hash) + GENERATION_TIMESTAMP_FIELD_NUMBER;
+        hash = (53 * hash) + getGenerationTimestamp().hashCode();
+      }
+      if (hasGenerationDurationSeconds()) {
+        hash = (37 * hash) + GENERATION_DURATION_SECONDS_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            java.lang.Double.doubleToLongBits(getGenerationDurationSeconds()));
+      }
+      if (hasUsername()) {
+        hash = (37 * hash) + USERNAME_FIELD_NUMBER;
+        hash = (53 * hash) + getUsername().hashCode();
+      }
+      if (hasHostname()) {
+        hash = (37 * hash) + HOSTNAME_FIELD_NUMBER;
+        hash = (53 * hash) + getHostname().hashCode();
+      }
+      if (hasOsName()) {
+        hash = (37 * hash) + OS_NAME_FIELD_NUMBER;
+        hash = (53 * hash) + getOsName().hashCode();
+      }
+      if (hasOsVersion()) {
+        hash = (37 * hash) + OS_VERSION_FIELD_NUMBER;
+        hash = (53 * hash) + getOsVersion().hashCode();
+      }
+      if (hasJavaVersion()) {
+        hash = (37 * hash) + JAVA_VERSION_FIELD_NUMBER;
+        hash = (53 * hash) + getJavaVersion().hashCode();
+      }
+      if (hasToolVersion()) {
+        hash = (37 * hash) + TOOL_VERSION_FIELD_NUMBER;
+        hash = (53 * hash) + getToolVersion().hashCode();
+      }
+      if (hasBuildTimestamp()) {
+        hash = (37 * hash) + BUILD_TIMESTAMP_FIELD_NUMBER;
+        hash = (53 * hash) + getBuildTimestamp().hashCode();
+      }
+      if (hasGitCommitHash()) {
+        hash = (37 * hash) + GIT_COMMIT_HASH_FIELD_NUMBER;
+        hash = (53 * hash) + getGitCommitHash().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.datacommons.proto.Debug.RuntimeMetadata parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.datacommons.proto.Debug.RuntimeMetadata parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.datacommons.proto.Debug.RuntimeMetadata parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.datacommons.proto.Debug.RuntimeMetadata parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.datacommons.proto.Debug.RuntimeMetadata parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.datacommons.proto.Debug.RuntimeMetadata parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.datacommons.proto.Debug.RuntimeMetadata parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.datacommons.proto.Debug.RuntimeMetadata parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.datacommons.proto.Debug.RuntimeMetadata parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static org.datacommons.proto.Debug.RuntimeMetadata parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.datacommons.proto.Debug.RuntimeMetadata parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.datacommons.proto.Debug.RuntimeMetadata parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(org.datacommons.proto.Debug.RuntimeMetadata prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * Runtime metadata capturing when and how the report was generated.
+     * </pre>
+     *
+     * Protobuf type {@code org.datacommons.proto.RuntimeMetadata}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.datacommons.proto.RuntimeMetadata)
+        org.datacommons.proto.Debug.RuntimeMetadataOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.datacommons.proto.Debug.internal_static_org_datacommons_proto_RuntimeMetadata_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.datacommons.proto.Debug.internal_static_org_datacommons_proto_RuntimeMetadata_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.datacommons.proto.Debug.RuntimeMetadata.class, org.datacommons.proto.Debug.RuntimeMetadata.Builder.class);
+      }
+
+      // Construct using org.datacommons.proto.Debug.RuntimeMetadata.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        generationTimestamp_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        generationDurationSeconds_ = 0D;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        username_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        hostname_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        osName_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
+        osVersion_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
+        javaVersion_ = "";
+        bitField0_ = (bitField0_ & ~0x00000040);
+        toolVersion_ = "";
+        bitField0_ = (bitField0_ & ~0x00000080);
+        buildTimestamp_ = "";
+        bitField0_ = (bitField0_ & ~0x00000100);
+        gitCommitHash_ = "";
+        bitField0_ = (bitField0_ & ~0x00000200);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.datacommons.proto.Debug.internal_static_org_datacommons_proto_RuntimeMetadata_descriptor;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.RuntimeMetadata getDefaultInstanceForType() {
+        return org.datacommons.proto.Debug.RuntimeMetadata.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.RuntimeMetadata build() {
+        org.datacommons.proto.Debug.RuntimeMetadata result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public org.datacommons.proto.Debug.RuntimeMetadata buildPartial() {
+        org.datacommons.proto.Debug.RuntimeMetadata result = new org.datacommons.proto.Debug.RuntimeMetadata(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.generationTimestamp_ = generationTimestamp_;
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.generationDurationSeconds_ = generationDurationSeconds_;
+          to_bitField0_ |= 0x00000002;
+        }
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.username_ = username_;
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.hostname_ = hostname_;
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.osName_ = osName_;
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.osVersion_ = osVersion_;
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.javaVersion_ = javaVersion_;
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.toolVersion_ = toolVersion_;
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.buildTimestamp_ = buildTimestamp_;
+        if (((from_bitField0_ & 0x00000200) != 0)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        result.gitCommitHash_ = gitCommitHash_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.datacommons.proto.Debug.RuntimeMetadata) {
+          return mergeFrom((org.datacommons.proto.Debug.RuntimeMetadata)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.datacommons.proto.Debug.RuntimeMetadata other) {
+        if (other == org.datacommons.proto.Debug.RuntimeMetadata.getDefaultInstance()) return this;
+        if (other.hasGenerationTimestamp()) {
+          bitField0_ |= 0x00000001;
+          generationTimestamp_ = other.generationTimestamp_;
+          onChanged();
+        }
+        if (other.hasGenerationDurationSeconds()) {
+          setGenerationDurationSeconds(other.getGenerationDurationSeconds());
+        }
+        if (other.hasUsername()) {
+          bitField0_ |= 0x00000004;
+          username_ = other.username_;
+          onChanged();
+        }
+        if (other.hasHostname()) {
+          bitField0_ |= 0x00000008;
+          hostname_ = other.hostname_;
+          onChanged();
+        }
+        if (other.hasOsName()) {
+          bitField0_ |= 0x00000010;
+          osName_ = other.osName_;
+          onChanged();
+        }
+        if (other.hasOsVersion()) {
+          bitField0_ |= 0x00000020;
+          osVersion_ = other.osVersion_;
+          onChanged();
+        }
+        if (other.hasJavaVersion()) {
+          bitField0_ |= 0x00000040;
+          javaVersion_ = other.javaVersion_;
+          onChanged();
+        }
+        if (other.hasToolVersion()) {
+          bitField0_ |= 0x00000080;
+          toolVersion_ = other.toolVersion_;
+          onChanged();
+        }
+        if (other.hasBuildTimestamp()) {
+          bitField0_ |= 0x00000100;
+          buildTimestamp_ = other.buildTimestamp_;
+          onChanged();
+        }
+        if (other.hasGitCommitHash()) {
+          bitField0_ |= 0x00000200;
+          gitCommitHash_ = other.gitCommitHash_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.datacommons.proto.Debug.RuntimeMetadata parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.datacommons.proto.Debug.RuntimeMetadata) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object generationTimestamp_ = "";
+      /**
+       * <pre>
+       * ISO 8601 format
+       * </pre>
+       *
+       * <code>optional string generation_timestamp = 1;</code>
+       * @return Whether the generationTimestamp field is set.
+       */
+      public boolean hasGenerationTimestamp() {
+        return ((bitField0_ & 0x00000001) != 0);
+      }
+      /**
+       * <pre>
+       * ISO 8601 format
+       * </pre>
+       *
+       * <code>optional string generation_timestamp = 1;</code>
+       * @return The generationTimestamp.
+       */
+      public java.lang.String getGenerationTimestamp() {
+        java.lang.Object ref = generationTimestamp_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            generationTimestamp_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * ISO 8601 format
+       * </pre>
+       *
+       * <code>optional string generation_timestamp = 1;</code>
+       * @return The bytes for generationTimestamp.
+       */
+      public com.google.protobuf.ByteString
+          getGenerationTimestampBytes() {
+        java.lang.Object ref = generationTimestamp_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          generationTimestamp_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * ISO 8601 format
+       * </pre>
+       *
+       * <code>optional string generation_timestamp = 1;</code>
+       * @param value The generationTimestamp to set.
+       * @return This builder for chaining.
+       */
+      public Builder setGenerationTimestamp(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        generationTimestamp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * ISO 8601 format
+       * </pre>
+       *
+       * <code>optional string generation_timestamp = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearGenerationTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        generationTimestamp_ = getDefaultInstance().getGenerationTimestamp();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * ISO 8601 format
+       * </pre>
+       *
+       * <code>optional string generation_timestamp = 1;</code>
+       * @param value The bytes for generationTimestamp to set.
+       * @return This builder for chaining.
+       */
+      public Builder setGenerationTimestampBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        generationTimestamp_ = value;
+        onChanged();
+        return this;
+      }
+
+      private double generationDurationSeconds_ ;
+      /**
+       * <code>optional double generation_duration_seconds = 2;</code>
+       * @return Whether the generationDurationSeconds field is set.
+       */
+      @java.lang.Override
+      public boolean hasGenerationDurationSeconds() {
+        return ((bitField0_ & 0x00000002) != 0);
+      }
+      /**
+       * <code>optional double generation_duration_seconds = 2;</code>
+       * @return The generationDurationSeconds.
+       */
+      @java.lang.Override
+      public double getGenerationDurationSeconds() {
+        return generationDurationSeconds_;
+      }
+      /**
+       * <code>optional double generation_duration_seconds = 2;</code>
+       * @param value The generationDurationSeconds to set.
+       * @return This builder for chaining.
+       */
+      public Builder setGenerationDurationSeconds(double value) {
+        bitField0_ |= 0x00000002;
+        generationDurationSeconds_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double generation_duration_seconds = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearGenerationDurationSeconds() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        generationDurationSeconds_ = 0D;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object username_ = "";
+      /**
+       * <code>optional string username = 3;</code>
+       * @return Whether the username field is set.
+       */
+      public boolean hasUsername() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <code>optional string username = 3;</code>
+       * @return The username.
+       */
+      public java.lang.String getUsername() {
+        java.lang.Object ref = username_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            username_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string username = 3;</code>
+       * @return The bytes for username.
+       */
+      public com.google.protobuf.ByteString
+          getUsernameBytes() {
+        java.lang.Object ref = username_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          username_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string username = 3;</code>
+       * @param value The username to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUsername(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        username_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string username = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearUsername() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        username_ = getDefaultInstance().getUsername();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string username = 3;</code>
+       * @param value The bytes for username to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUsernameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        username_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object hostname_ = "";
+      /**
+       * <code>optional string hostname = 4;</code>
+       * @return Whether the hostname field is set.
+       */
+      public boolean hasHostname() {
+        return ((bitField0_ & 0x00000008) != 0);
+      }
+      /**
+       * <code>optional string hostname = 4;</code>
+       * @return The hostname.
+       */
+      public java.lang.String getHostname() {
+        java.lang.Object ref = hostname_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            hostname_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string hostname = 4;</code>
+       * @return The bytes for hostname.
+       */
+      public com.google.protobuf.ByteString
+          getHostnameBytes() {
+        java.lang.Object ref = hostname_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          hostname_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string hostname = 4;</code>
+       * @param value The hostname to set.
+       * @return This builder for chaining.
+       */
+      public Builder setHostname(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        hostname_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string hostname = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearHostname() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        hostname_ = getDefaultInstance().getHostname();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string hostname = 4;</code>
+       * @param value The bytes for hostname to set.
+       * @return This builder for chaining.
+       */
+      public Builder setHostnameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        hostname_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object osName_ = "";
+      /**
+       * <code>optional string os_name = 5;</code>
+       * @return Whether the osName field is set.
+       */
+      public boolean hasOsName() {
+        return ((bitField0_ & 0x00000010) != 0);
+      }
+      /**
+       * <code>optional string os_name = 5;</code>
+       * @return The osName.
+       */
+      public java.lang.String getOsName() {
+        java.lang.Object ref = osName_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            osName_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string os_name = 5;</code>
+       * @return The bytes for osName.
+       */
+      public com.google.protobuf.ByteString
+          getOsNameBytes() {
+        java.lang.Object ref = osName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          osName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string os_name = 5;</code>
+       * @param value The osName to set.
+       * @return This builder for chaining.
+       */
+      public Builder setOsName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        osName_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string os_name = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearOsName() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        osName_ = getDefaultInstance().getOsName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string os_name = 5;</code>
+       * @param value The bytes for osName to set.
+       * @return This builder for chaining.
+       */
+      public Builder setOsNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        osName_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object osVersion_ = "";
+      /**
+       * <code>optional string os_version = 6;</code>
+       * @return Whether the osVersion field is set.
+       */
+      public boolean hasOsVersion() {
+        return ((bitField0_ & 0x00000020) != 0);
+      }
+      /**
+       * <code>optional string os_version = 6;</code>
+       * @return The osVersion.
+       */
+      public java.lang.String getOsVersion() {
+        java.lang.Object ref = osVersion_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            osVersion_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string os_version = 6;</code>
+       * @return The bytes for osVersion.
+       */
+      public com.google.protobuf.ByteString
+          getOsVersionBytes() {
+        java.lang.Object ref = osVersion_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          osVersion_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string os_version = 6;</code>
+       * @param value The osVersion to set.
+       * @return This builder for chaining.
+       */
+      public Builder setOsVersion(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        osVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string os_version = 6;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearOsVersion() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        osVersion_ = getDefaultInstance().getOsVersion();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string os_version = 6;</code>
+       * @param value The bytes for osVersion to set.
+       * @return This builder for chaining.
+       */
+      public Builder setOsVersionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        osVersion_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object javaVersion_ = "";
+      /**
+       * <code>optional string java_version = 7;</code>
+       * @return Whether the javaVersion field is set.
+       */
+      public boolean hasJavaVersion() {
+        return ((bitField0_ & 0x00000040) != 0);
+      }
+      /**
+       * <code>optional string java_version = 7;</code>
+       * @return The javaVersion.
+       */
+      public java.lang.String getJavaVersion() {
+        java.lang.Object ref = javaVersion_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            javaVersion_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string java_version = 7;</code>
+       * @return The bytes for javaVersion.
+       */
+      public com.google.protobuf.ByteString
+          getJavaVersionBytes() {
+        java.lang.Object ref = javaVersion_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          javaVersion_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string java_version = 7;</code>
+       * @param value The javaVersion to set.
+       * @return This builder for chaining.
+       */
+      public Builder setJavaVersion(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+        javaVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string java_version = 7;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearJavaVersion() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        javaVersion_ = getDefaultInstance().getJavaVersion();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string java_version = 7;</code>
+       * @param value The bytes for javaVersion to set.
+       * @return This builder for chaining.
+       */
+      public Builder setJavaVersionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+        javaVersion_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object toolVersion_ = "";
+      /**
+       * <pre>
+       * From pom.xml or Main.java
+       * </pre>
+       *
+       * <code>optional string tool_version = 8;</code>
+       * @return Whether the toolVersion field is set.
+       */
+      public boolean hasToolVersion() {
+        return ((bitField0_ & 0x00000080) != 0);
+      }
+      /**
+       * <pre>
+       * From pom.xml or Main.java
+       * </pre>
+       *
+       * <code>optional string tool_version = 8;</code>
+       * @return The toolVersion.
+       */
+      public java.lang.String getToolVersion() {
+        java.lang.Object ref = toolVersion_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            toolVersion_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * From pom.xml or Main.java
+       * </pre>
+       *
+       * <code>optional string tool_version = 8;</code>
+       * @return The bytes for toolVersion.
+       */
+      public com.google.protobuf.ByteString
+          getToolVersionBytes() {
+        java.lang.Object ref = toolVersion_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          toolVersion_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * From pom.xml or Main.java
+       * </pre>
+       *
+       * <code>optional string tool_version = 8;</code>
+       * @param value The toolVersion to set.
+       * @return This builder for chaining.
+       */
+      public Builder setToolVersion(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        toolVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * From pom.xml or Main.java
+       * </pre>
+       *
+       * <code>optional string tool_version = 8;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearToolVersion() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        toolVersion_ = getDefaultInstance().getToolVersion();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * From pom.xml or Main.java
+       * </pre>
+       *
+       * <code>optional string tool_version = 8;</code>
+       * @param value The bytes for toolVersion to set.
+       * @return This builder for chaining.
+       */
+      public Builder setToolVersionBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        toolVersion_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object buildTimestamp_ = "";
+      /**
+       * <pre>
+       * Build time if available
+       * </pre>
+       *
+       * <code>optional string build_timestamp = 9;</code>
+       * @return Whether the buildTimestamp field is set.
+       */
+      public boolean hasBuildTimestamp() {
+        return ((bitField0_ & 0x00000100) != 0);
+      }
+      /**
+       * <pre>
+       * Build time if available
+       * </pre>
+       *
+       * <code>optional string build_timestamp = 9;</code>
+       * @return The buildTimestamp.
+       */
+      public java.lang.String getBuildTimestamp() {
+        java.lang.Object ref = buildTimestamp_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            buildTimestamp_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Build time if available
+       * </pre>
+       *
+       * <code>optional string build_timestamp = 9;</code>
+       * @return The bytes for buildTimestamp.
+       */
+      public com.google.protobuf.ByteString
+          getBuildTimestampBytes() {
+        java.lang.Object ref = buildTimestamp_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          buildTimestamp_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Build time if available
+       * </pre>
+       *
+       * <code>optional string build_timestamp = 9;</code>
+       * @param value The buildTimestamp to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBuildTimestamp(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+        buildTimestamp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Build time if available
+       * </pre>
+       *
+       * <code>optional string build_timestamp = 9;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearBuildTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        buildTimestamp_ = getDefaultInstance().getBuildTimestamp();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Build time if available
+       * </pre>
+       *
+       * <code>optional string build_timestamp = 9;</code>
+       * @param value The bytes for buildTimestamp to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBuildTimestampBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000100;
+        buildTimestamp_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object gitCommitHash_ = "";
+      /**
+       * <pre>
+       * Git commit if available
+       * </pre>
+       *
+       * <code>optional string git_commit_hash = 10;</code>
+       * @return Whether the gitCommitHash field is set.
+       */
+      public boolean hasGitCommitHash() {
+        return ((bitField0_ & 0x00000200) != 0);
+      }
+      /**
+       * <pre>
+       * Git commit if available
+       * </pre>
+       *
+       * <code>optional string git_commit_hash = 10;</code>
+       * @return The gitCommitHash.
+       */
+      public java.lang.String getGitCommitHash() {
+        java.lang.Object ref = gitCommitHash_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            gitCommitHash_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Git commit if available
+       * </pre>
+       *
+       * <code>optional string git_commit_hash = 10;</code>
+       * @return The bytes for gitCommitHash.
+       */
+      public com.google.protobuf.ByteString
+          getGitCommitHashBytes() {
+        java.lang.Object ref = gitCommitHash_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          gitCommitHash_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Git commit if available
+       * </pre>
+       *
+       * <code>optional string git_commit_hash = 10;</code>
+       * @param value The gitCommitHash to set.
+       * @return This builder for chaining.
+       */
+      public Builder setGitCommitHash(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000200;
+        gitCommitHash_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Git commit if available
+       * </pre>
+       *
+       * <code>optional string git_commit_hash = 10;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearGitCommitHash() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        gitCommitHash_ = getDefaultInstance().getGitCommitHash();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Git commit if available
+       * </pre>
+       *
+       * <code>optional string git_commit_hash = 10;</code>
+       * @param value The bytes for gitCommitHash to set.
+       * @return This builder for chaining.
+       */
+      public Builder setGitCommitHashBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000200;
+        gitCommitHash_ = value;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:org.datacommons.proto.RuntimeMetadata)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.datacommons.proto.RuntimeMetadata)
+    private static final org.datacommons.proto.Debug.RuntimeMetadata DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new org.datacommons.proto.Debug.RuntimeMetadata();
+    }
+
+    public static org.datacommons.proto.Debug.RuntimeMetadata getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<RuntimeMetadata>
+        PARSER = new com.google.protobuf.AbstractParser<RuntimeMetadata>() {
+      @java.lang.Override
+      public RuntimeMetadata parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new RuntimeMetadata(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<RuntimeMetadata> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<RuntimeMetadata> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.datacommons.proto.Debug.RuntimeMetadata getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface LogOrBuilder extends
       // @@protoc_insertion_point(interface_extends:org.datacommons.proto.Log)
       com.google.protobuf.MessageOrBuilder {
@@ -134,6 +2497,21 @@ public final class Debug {
      * <code>optional .org.datacommons.proto.CommandArgs command_args = 5;</code>
      */
     org.datacommons.proto.Debug.CommandArgsOrBuilder getCommandArgsOrBuilder();
+
+    /**
+     * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+     * @return Whether the runtimeMetadata field is set.
+     */
+    boolean hasRuntimeMetadata();
+    /**
+     * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+     * @return The runtimeMetadata.
+     */
+    org.datacommons.proto.Debug.RuntimeMetadata getRuntimeMetadata();
+    /**
+     * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+     */
+    org.datacommons.proto.Debug.RuntimeMetadataOrBuilder getRuntimeMetadataOrBuilder();
   }
   /**
    * <pre>
@@ -229,6 +2607,19 @@ public final class Debug {
                 commandArgs_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
+              break;
+            }
+            case 50: {
+              org.datacommons.proto.Debug.RuntimeMetadata.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) != 0)) {
+                subBuilder = runtimeMetadata_.toBuilder();
+              }
+              runtimeMetadata_ = input.readMessage(org.datacommons.proto.Debug.RuntimeMetadata.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(runtimeMetadata_);
+                runtimeMetadata_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
               break;
             }
             default: {
@@ -2944,6 +5335,32 @@ public final class Debug {
       return commandArgs_ == null ? org.datacommons.proto.Debug.CommandArgs.getDefaultInstance() : commandArgs_;
     }
 
+    public static final int RUNTIME_METADATA_FIELD_NUMBER = 6;
+    private org.datacommons.proto.Debug.RuntimeMetadata runtimeMetadata_;
+    /**
+     * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+     * @return Whether the runtimeMetadata field is set.
+     */
+    @java.lang.Override
+    public boolean hasRuntimeMetadata() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+     * @return The runtimeMetadata.
+     */
+    @java.lang.Override
+    public org.datacommons.proto.Debug.RuntimeMetadata getRuntimeMetadata() {
+      return runtimeMetadata_ == null ? org.datacommons.proto.Debug.RuntimeMetadata.getDefaultInstance() : runtimeMetadata_;
+    }
+    /**
+     * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+     */
+    @java.lang.Override
+    public org.datacommons.proto.Debug.RuntimeMetadataOrBuilder getRuntimeMetadataOrBuilder() {
+      return runtimeMetadata_ == null ? org.datacommons.proto.Debug.RuntimeMetadata.getDefaultInstance() : runtimeMetadata_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2972,6 +5389,9 @@ public final class Debug {
       }
       if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(5, getCommandArgs());
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeMessage(6, getRuntimeMetadata());
       }
       unknownFields.writeTo(output);
     }
@@ -3004,6 +5424,10 @@ public final class Debug {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(5, getCommandArgs());
       }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(6, getRuntimeMetadata());
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -3029,6 +5453,11 @@ public final class Debug {
       if (hasCommandArgs()) {
         if (!getCommandArgs()
             .equals(other.getCommandArgs())) return false;
+      }
+      if (hasRuntimeMetadata() != other.hasRuntimeMetadata()) return false;
+      if (hasRuntimeMetadata()) {
+        if (!getRuntimeMetadata()
+            .equals(other.getRuntimeMetadata())) return false;
       }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
@@ -3056,6 +5485,10 @@ public final class Debug {
       if (hasCommandArgs()) {
         hash = (37 * hash) + COMMAND_ARGS_FIELD_NUMBER;
         hash = (53 * hash) + getCommandArgs().hashCode();
+      }
+      if (hasRuntimeMetadata()) {
+        hash = (37 * hash) + RUNTIME_METADATA_FIELD_NUMBER;
+        hash = (53 * hash) + getRuntimeMetadata().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -3214,6 +5647,7 @@ public final class Debug {
           getEntriesFieldBuilder();
           getStatsCheckSummaryFieldBuilder();
           getCommandArgsFieldBuilder();
+          getRuntimeMetadataFieldBuilder();
         }
       }
       @java.lang.Override
@@ -3238,6 +5672,12 @@ public final class Debug {
           commandArgsBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000008);
+        if (runtimeMetadataBuilder_ == null) {
+          runtimeMetadata_ = null;
+        } else {
+          runtimeMetadataBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -3293,6 +5733,14 @@ public final class Debug {
             result.commandArgs_ = commandArgsBuilder_.build();
           }
           to_bitField0_ |= 0x00000001;
+        }
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          if (runtimeMetadataBuilder_ == null) {
+            result.runtimeMetadata_ = runtimeMetadata_;
+          } else {
+            result.runtimeMetadata_ = runtimeMetadataBuilder_.build();
+          }
+          to_bitField0_ |= 0x00000002;
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -3399,6 +5847,9 @@ public final class Debug {
         }
         if (other.hasCommandArgs()) {
           mergeCommandArgs(other.getCommandArgs());
+        }
+        if (other.hasRuntimeMetadata()) {
+          mergeRuntimeMetadata(other.getRuntimeMetadata());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -4184,6 +6635,126 @@ public final class Debug {
           commandArgs_ = null;
         }
         return commandArgsBuilder_;
+      }
+
+      private org.datacommons.proto.Debug.RuntimeMetadata runtimeMetadata_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.datacommons.proto.Debug.RuntimeMetadata, org.datacommons.proto.Debug.RuntimeMetadata.Builder, org.datacommons.proto.Debug.RuntimeMetadataOrBuilder> runtimeMetadataBuilder_;
+      /**
+       * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+       * @return Whether the runtimeMetadata field is set.
+       */
+      public boolean hasRuntimeMetadata() {
+        return ((bitField0_ & 0x00000010) != 0);
+      }
+      /**
+       * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+       * @return The runtimeMetadata.
+       */
+      public org.datacommons.proto.Debug.RuntimeMetadata getRuntimeMetadata() {
+        if (runtimeMetadataBuilder_ == null) {
+          return runtimeMetadata_ == null ? org.datacommons.proto.Debug.RuntimeMetadata.getDefaultInstance() : runtimeMetadata_;
+        } else {
+          return runtimeMetadataBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+       */
+      public Builder setRuntimeMetadata(org.datacommons.proto.Debug.RuntimeMetadata value) {
+        if (runtimeMetadataBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          runtimeMetadata_ = value;
+          onChanged();
+        } else {
+          runtimeMetadataBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+       */
+      public Builder setRuntimeMetadata(
+          org.datacommons.proto.Debug.RuntimeMetadata.Builder builderForValue) {
+        if (runtimeMetadataBuilder_ == null) {
+          runtimeMetadata_ = builderForValue.build();
+          onChanged();
+        } else {
+          runtimeMetadataBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+       */
+      public Builder mergeRuntimeMetadata(org.datacommons.proto.Debug.RuntimeMetadata value) {
+        if (runtimeMetadataBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) != 0) &&
+              runtimeMetadata_ != null &&
+              runtimeMetadata_ != org.datacommons.proto.Debug.RuntimeMetadata.getDefaultInstance()) {
+            runtimeMetadata_ =
+              org.datacommons.proto.Debug.RuntimeMetadata.newBuilder(runtimeMetadata_).mergeFrom(value).buildPartial();
+          } else {
+            runtimeMetadata_ = value;
+          }
+          onChanged();
+        } else {
+          runtimeMetadataBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+       */
+      public Builder clearRuntimeMetadata() {
+        if (runtimeMetadataBuilder_ == null) {
+          runtimeMetadata_ = null;
+          onChanged();
+        } else {
+          runtimeMetadataBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+      /**
+       * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+       */
+      public org.datacommons.proto.Debug.RuntimeMetadata.Builder getRuntimeMetadataBuilder() {
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return getRuntimeMetadataFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+       */
+      public org.datacommons.proto.Debug.RuntimeMetadataOrBuilder getRuntimeMetadataOrBuilder() {
+        if (runtimeMetadataBuilder_ != null) {
+          return runtimeMetadataBuilder_.getMessageOrBuilder();
+        } else {
+          return runtimeMetadata_ == null ?
+              org.datacommons.proto.Debug.RuntimeMetadata.getDefaultInstance() : runtimeMetadata_;
+        }
+      }
+      /**
+       * <code>optional .org.datacommons.proto.RuntimeMetadata runtime_metadata = 6;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.datacommons.proto.Debug.RuntimeMetadata, org.datacommons.proto.Debug.RuntimeMetadata.Builder, org.datacommons.proto.Debug.RuntimeMetadataOrBuilder> 
+          getRuntimeMetadataFieldBuilder() {
+        if (runtimeMetadataBuilder_ == null) {
+          runtimeMetadataBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              org.datacommons.proto.Debug.RuntimeMetadata, org.datacommons.proto.Debug.RuntimeMetadata.Builder, org.datacommons.proto.Debug.RuntimeMetadataOrBuilder>(
+                  getRuntimeMetadata(),
+                  getParentForChildren(),
+                  isClean());
+          runtimeMetadata_ = null;
+        }
+        return runtimeMetadataBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -11651,6 +14222,11 @@ public final class Debug {
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_datacommons_proto_RuntimeMetadata_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_datacommons_proto_RuntimeMetadata_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_datacommons_proto_Log_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -11710,14 +14286,22 @@ public final class Debug {
   static {
     java.lang.String[] descriptorData = {
       "\n\013Debug.proto\022\025org.datacommons.proto\032\021Lo" +
-      "gLocation.proto\032\tMcf.proto\"\375\005\n\003Log\022C\n\rle" +
-      "vel_summary\030\001 \003(\0132,.org.datacommons.prot" +
-      "o.Log.LevelSummaryEntry\0221\n\007entries\030\003 \003(\013" +
-      "2 .org.datacommons.proto.Log.Entry\022H\n\023st" +
-      "ats_check_summary\030\004 \003(\0132+.org.datacommon" +
-      "s.proto.StatValidationResult\0228\n\014command_" +
-      "args\030\005 \001(\0132\".org.datacommons.proto.Comma" +
-      "ndArgs\032\204\001\n\nCounterSet\022E\n\010counters\030\001 \003(\0132" +
+      "gLocation.proto\032\tMcf.proto\"\373\001\n\017RuntimeMe" +
+      "tadata\022\034\n\024generation_timestamp\030\001 \001(\t\022#\n\033" +
+      "generation_duration_seconds\030\002 \001(\001\022\020\n\010use" +
+      "rname\030\003 \001(\t\022\020\n\010hostname\030\004 \001(\t\022\017\n\007os_name" +
+      "\030\005 \001(\t\022\022\n\nos_version\030\006 \001(\t\022\024\n\014java_versi" +
+      "on\030\007 \001(\t\022\024\n\014tool_version\030\010 \001(\t\022\027\n\017build_" +
+      "timestamp\030\t \001(\t\022\027\n\017git_commit_hash\030\n \001(\t" +
+      "\"\277\006\n\003Log\022C\n\rlevel_summary\030\001 \003(\0132,.org.da" +
+      "tacommons.proto.Log.LevelSummaryEntry\0221\n" +
+      "\007entries\030\003 \003(\0132 .org.datacommons.proto.L" +
+      "og.Entry\022H\n\023stats_check_summary\030\004 \003(\0132+." +
+      "org.datacommons.proto.StatValidationResu" +
+      "lt\0228\n\014command_args\030\005 \001(\0132\".org.datacommo" +
+      "ns.proto.CommandArgs\022@\n\020runtime_metadata" +
+      "\030\006 \001(\0132&.org.datacommons.proto.RuntimeMe" +
+      "tadata\032\204\001\n\nCounterSet\022E\n\010counters\030\001 \003(\0132" +
       "3.org.datacommons.proto.Log.CounterSet.C" +
       "ountersEntry\032/\n\rCountersEntry\022\013\n\003key\030\001 \001" +
       "(\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\253\001\n\005Entry\022/\n\005level" +
@@ -11764,12 +14348,18 @@ public final class Debug {
           org.datacommons.proto.LogLocation.getDescriptor(),
           org.datacommons.proto.Mcf.getDescriptor(),
         });
-    internal_static_org_datacommons_proto_Log_descriptor =
+    internal_static_org_datacommons_proto_RuntimeMetadata_descriptor =
       getDescriptor().getMessageTypes().get(0);
+    internal_static_org_datacommons_proto_RuntimeMetadata_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_datacommons_proto_RuntimeMetadata_descriptor,
+        new java.lang.String[] { "GenerationTimestamp", "GenerationDurationSeconds", "Username", "Hostname", "OsName", "OsVersion", "JavaVersion", "ToolVersion", "BuildTimestamp", "GitCommitHash", });
+    internal_static_org_datacommons_proto_Log_descriptor =
+      getDescriptor().getMessageTypes().get(1);
     internal_static_org_datacommons_proto_Log_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_datacommons_proto_Log_descriptor,
-        new java.lang.String[] { "LevelSummary", "Entries", "StatsCheckSummary", "CommandArgs", });
+        new java.lang.String[] { "LevelSummary", "Entries", "StatsCheckSummary", "CommandArgs", "RuntimeMetadata", });
     internal_static_org_datacommons_proto_Log_CounterSet_descriptor =
       internal_static_org_datacommons_proto_Log_descriptor.getNestedTypes().get(0);
     internal_static_org_datacommons_proto_Log_CounterSet_fieldAccessorTable = new
@@ -11795,13 +14385,13 @@ public final class Debug {
         internal_static_org_datacommons_proto_Log_LevelSummaryEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
     internal_static_org_datacommons_proto_CommandArgs_descriptor =
-      getDescriptor().getMessageTypes().get(1);
+      getDescriptor().getMessageTypes().get(2);
     internal_static_org_datacommons_proto_CommandArgs_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_datacommons_proto_CommandArgs_descriptor,
         new java.lang.String[] { "ExistenceChecks", "Resolution", "NumThreads", "StatChecks", "SamplePlaces", "ObservationAbout", "AllowNanSvobs", "CheckMeasurementResult", "CoordinatesResolution", });
     internal_static_org_datacommons_proto_DataPoint_descriptor =
-      getDescriptor().getMessageTypes().get(2);
+      getDescriptor().getMessageTypes().get(3);
     internal_static_org_datacommons_proto_DataPoint_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_datacommons_proto_DataPoint_descriptor,
@@ -11813,7 +14403,7 @@ public final class Debug {
         internal_static_org_datacommons_proto_DataPoint_DataValue_descriptor,
         new java.lang.String[] { "Value", "Locations", });
     internal_static_org_datacommons_proto_StatValidationResult_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(4);
     internal_static_org_datacommons_proto_StatValidationResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_datacommons_proto_StatValidationResult_descriptor,
