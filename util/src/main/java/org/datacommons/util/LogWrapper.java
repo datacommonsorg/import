@@ -156,14 +156,15 @@ public class LogWrapper {
 
   // Get runtime metadata for use in other reports
   public Debug.RuntimeMetadata getRuntimeMetadata() {
-    return RuntimeMetadataUtil.createRuntimeMetadata(startTime);
+    return RuntimeMetadataUtil.createRuntimeMetadata(startTime.toEpochMilli());
   }
 
   private void persistLog(boolean silent) throws IOException {
     refreshCounters();
 
     // Add runtime metadata
-    Debug.RuntimeMetadata runtimeMetadata = RuntimeMetadataUtil.createRuntimeMetadata(startTime);
+    Debug.RuntimeMetadata runtimeMetadata =
+        RuntimeMetadataUtil.createRuntimeMetadata(startTime.toEpochMilli());
     log.setRuntimeMetadata(runtimeMetadata);
 
     if (LogWrapper.TEST_MODE) {

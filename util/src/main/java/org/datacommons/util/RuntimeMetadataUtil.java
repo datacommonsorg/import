@@ -32,21 +32,15 @@ public class RuntimeMetadataUtil {
   /**
    * Creates a RuntimeMetadata proto with system information.
    *
-   * @param startTime The start time of the process
+   * @param startTimeMillis The start time of the process in epoch milliseconds
    * @return RuntimeMetadata proto populated with system information
    */
-  public static Debug.RuntimeMetadata createRuntimeMetadata(Instant startTime) {
+  public static Debug.RuntimeMetadata createRuntimeMetadata(long startTimeMillis) {
     Debug.RuntimeMetadata.Builder builder = Debug.RuntimeMetadata.newBuilder();
 
-    // Set generation timestamp
-    String timestamp = DateTimeFormatter.ISO_INSTANT.format(Instant.now());
-    builder.setGenerationTimestamp(timestamp);
-
-    // Calculate generation duration
-    if (startTime != null) {
-      double durationSeconds = (Instant.now().toEpochMilli() - startTime.toEpochMilli()) / 1000.0;
-      builder.setGenerationDurationSeconds(durationSeconds);
-    }
+    // Set start and end times in epoch milliseconds
+    builder.setStartTimeMillis(startTimeMillis);
+    builder.setEndTimeMillis(System.currentTimeMillis());
 
     // Set username
     String username = System.getProperty("user.name");
@@ -89,7 +83,8 @@ public class RuntimeMetadataUtil {
     }
 
     // Build timestamp could be set during build process
-    // For now, we'll use the current timestamp as a placeholder
+    // For now, we'll use the current ISO timestamp as a placeholder
+    String timestamp = DateTimeFormatter.ISO_INSTANT.format(Instant.now());
     builder.setBuildTimestamp(timestamp);
 
     return builder.build();

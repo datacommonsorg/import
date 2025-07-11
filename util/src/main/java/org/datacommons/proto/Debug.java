@@ -20,43 +20,41 @@ public final class Debug {
 
     /**
      * <pre>
-     * ISO 8601 format
+     * Epoch time in milliseconds when generation started
      * </pre>
      *
-     * <code>optional string generation_timestamp = 1;</code>
-     * @return Whether the generationTimestamp field is set.
+     * <code>optional int64 start_time_millis = 1;</code>
+     * @return Whether the startTimeMillis field is set.
      */
-    boolean hasGenerationTimestamp();
+    boolean hasStartTimeMillis();
     /**
      * <pre>
-     * ISO 8601 format
+     * Epoch time in milliseconds when generation started
      * </pre>
      *
-     * <code>optional string generation_timestamp = 1;</code>
-     * @return The generationTimestamp.
+     * <code>optional int64 start_time_millis = 1;</code>
+     * @return The startTimeMillis.
      */
-    java.lang.String getGenerationTimestamp();
-    /**
-     * <pre>
-     * ISO 8601 format
-     * </pre>
-     *
-     * <code>optional string generation_timestamp = 1;</code>
-     * @return The bytes for generationTimestamp.
-     */
-    com.google.protobuf.ByteString
-        getGenerationTimestampBytes();
+    long getStartTimeMillis();
 
     /**
-     * <code>optional double generation_duration_seconds = 2;</code>
-     * @return Whether the generationDurationSeconds field is set.
+     * <pre>
+     * Epoch time in milliseconds when generation ended
+     * </pre>
+     *
+     * <code>optional int64 end_time_millis = 2;</code>
+     * @return Whether the endTimeMillis field is set.
      */
-    boolean hasGenerationDurationSeconds();
+    boolean hasEndTimeMillis();
     /**
-     * <code>optional double generation_duration_seconds = 2;</code>
-     * @return The generationDurationSeconds.
+     * <pre>
+     * Epoch time in milliseconds when generation ended
+     * </pre>
+     *
+     * <code>optional int64 end_time_millis = 2;</code>
+     * @return The endTimeMillis.
      */
-    double getGenerationDurationSeconds();
+    long getEndTimeMillis();
 
     /**
      * <code>optional string username = 3;</code>
@@ -247,7 +245,6 @@ public final class Debug {
       super(builder);
     }
     private RuntimeMetadata() {
-      generationTimestamp_ = "";
       username_ = "";
       hostname_ = "";
       osName_ = "";
@@ -289,15 +286,14 @@ public final class Debug {
             case 0:
               done = true;
               break;
-            case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+            case 8: {
               bitField0_ |= 0x00000001;
-              generationTimestamp_ = bs;
+              startTimeMillis_ = input.readInt64();
               break;
             }
-            case 17: {
+            case 16: {
               bitField0_ |= 0x00000002;
-              generationDurationSeconds_ = input.readDouble();
+              endTimeMillis_ = input.readInt64();
               break;
             }
             case 26: {
@@ -381,83 +377,58 @@ public final class Debug {
     }
 
     private int bitField0_;
-    public static final int GENERATION_TIMESTAMP_FIELD_NUMBER = 1;
-    private volatile java.lang.Object generationTimestamp_;
+    public static final int START_TIME_MILLIS_FIELD_NUMBER = 1;
+    private long startTimeMillis_;
     /**
      * <pre>
-     * ISO 8601 format
+     * Epoch time in milliseconds when generation started
      * </pre>
      *
-     * <code>optional string generation_timestamp = 1;</code>
-     * @return Whether the generationTimestamp field is set.
+     * <code>optional int64 start_time_millis = 1;</code>
+     * @return Whether the startTimeMillis field is set.
      */
     @java.lang.Override
-    public boolean hasGenerationTimestamp() {
+    public boolean hasStartTimeMillis() {
       return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
-     * ISO 8601 format
+     * Epoch time in milliseconds when generation started
      * </pre>
      *
-     * <code>optional string generation_timestamp = 1;</code>
-     * @return The generationTimestamp.
+     * <code>optional int64 start_time_millis = 1;</code>
+     * @return The startTimeMillis.
      */
     @java.lang.Override
-    public java.lang.String getGenerationTimestamp() {
-      java.lang.Object ref = generationTimestamp_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          generationTimestamp_ = s;
-        }
-        return s;
-      }
-    }
-    /**
-     * <pre>
-     * ISO 8601 format
-     * </pre>
-     *
-     * <code>optional string generation_timestamp = 1;</code>
-     * @return The bytes for generationTimestamp.
-     */
-    @java.lang.Override
-    public com.google.protobuf.ByteString
-        getGenerationTimestampBytes() {
-      java.lang.Object ref = generationTimestamp_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        generationTimestamp_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
+    public long getStartTimeMillis() {
+      return startTimeMillis_;
     }
 
-    public static final int GENERATION_DURATION_SECONDS_FIELD_NUMBER = 2;
-    private double generationDurationSeconds_;
+    public static final int END_TIME_MILLIS_FIELD_NUMBER = 2;
+    private long endTimeMillis_;
     /**
-     * <code>optional double generation_duration_seconds = 2;</code>
-     * @return Whether the generationDurationSeconds field is set.
+     * <pre>
+     * Epoch time in milliseconds when generation ended
+     * </pre>
+     *
+     * <code>optional int64 end_time_millis = 2;</code>
+     * @return Whether the endTimeMillis field is set.
      */
     @java.lang.Override
-    public boolean hasGenerationDurationSeconds() {
+    public boolean hasEndTimeMillis() {
       return ((bitField0_ & 0x00000002) != 0);
     }
     /**
-     * <code>optional double generation_duration_seconds = 2;</code>
-     * @return The generationDurationSeconds.
+     * <pre>
+     * Epoch time in milliseconds when generation ended
+     * </pre>
+     *
+     * <code>optional int64 end_time_millis = 2;</code>
+     * @return The endTimeMillis.
      */
     @java.lang.Override
-    public double getGenerationDurationSeconds() {
-      return generationDurationSeconds_;
+    public long getEndTimeMillis() {
+      return endTimeMillis_;
     }
 
     public static final int USERNAME_FIELD_NUMBER = 3;
@@ -895,10 +866,10 @@ public final class Debug {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) != 0)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, generationTimestamp_);
+        output.writeInt64(1, startTimeMillis_);
       }
       if (((bitField0_ & 0x00000002) != 0)) {
-        output.writeDouble(2, generationDurationSeconds_);
+        output.writeInt64(2, endTimeMillis_);
       }
       if (((bitField0_ & 0x00000004) != 0)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 3, username_);
@@ -934,11 +905,12 @@ public final class Debug {
 
       size = 0;
       if (((bitField0_ & 0x00000001) != 0)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, generationTimestamp_);
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(1, startTimeMillis_);
       }
       if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeDoubleSize(2, generationDurationSeconds_);
+          .computeInt64Size(2, endTimeMillis_);
       }
       if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, username_);
@@ -979,16 +951,15 @@ public final class Debug {
       }
       org.datacommons.proto.Debug.RuntimeMetadata other = (org.datacommons.proto.Debug.RuntimeMetadata) obj;
 
-      if (hasGenerationTimestamp() != other.hasGenerationTimestamp()) return false;
-      if (hasGenerationTimestamp()) {
-        if (!getGenerationTimestamp()
-            .equals(other.getGenerationTimestamp())) return false;
+      if (hasStartTimeMillis() != other.hasStartTimeMillis()) return false;
+      if (hasStartTimeMillis()) {
+        if (getStartTimeMillis()
+            != other.getStartTimeMillis()) return false;
       }
-      if (hasGenerationDurationSeconds() != other.hasGenerationDurationSeconds()) return false;
-      if (hasGenerationDurationSeconds()) {
-        if (java.lang.Double.doubleToLongBits(getGenerationDurationSeconds())
-            != java.lang.Double.doubleToLongBits(
-                other.getGenerationDurationSeconds())) return false;
+      if (hasEndTimeMillis() != other.hasEndTimeMillis()) return false;
+      if (hasEndTimeMillis()) {
+        if (getEndTimeMillis()
+            != other.getEndTimeMillis()) return false;
       }
       if (hasUsername() != other.hasUsername()) return false;
       if (hasUsername()) {
@@ -1041,14 +1012,15 @@ public final class Debug {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasGenerationTimestamp()) {
-        hash = (37 * hash) + GENERATION_TIMESTAMP_FIELD_NUMBER;
-        hash = (53 * hash) + getGenerationTimestamp().hashCode();
-      }
-      if (hasGenerationDurationSeconds()) {
-        hash = (37 * hash) + GENERATION_DURATION_SECONDS_FIELD_NUMBER;
+      if (hasStartTimeMillis()) {
+        hash = (37 * hash) + START_TIME_MILLIS_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-            java.lang.Double.doubleToLongBits(getGenerationDurationSeconds()));
+            getStartTimeMillis());
+      }
+      if (hasEndTimeMillis()) {
+        hash = (37 * hash) + END_TIME_MILLIS_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getEndTimeMillis());
       }
       if (hasUsername()) {
         hash = (37 * hash) + USERNAME_FIELD_NUMBER;
@@ -1219,9 +1191,9 @@ public final class Debug {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        generationTimestamp_ = "";
+        startTimeMillis_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000001);
-        generationDurationSeconds_ = 0D;
+        endTimeMillis_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000002);
         username_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -1268,11 +1240,11 @@ public final class Debug {
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.startTimeMillis_ = startTimeMillis_;
           to_bitField0_ |= 0x00000001;
         }
-        result.generationTimestamp_ = generationTimestamp_;
         if (((from_bitField0_ & 0x00000002) != 0)) {
-          result.generationDurationSeconds_ = generationDurationSeconds_;
+          result.endTimeMillis_ = endTimeMillis_;
           to_bitField0_ |= 0x00000002;
         }
         if (((from_bitField0_ & 0x00000004) != 0)) {
@@ -1356,13 +1328,11 @@ public final class Debug {
 
       public Builder mergeFrom(org.datacommons.proto.Debug.RuntimeMetadata other) {
         if (other == org.datacommons.proto.Debug.RuntimeMetadata.getDefaultInstance()) return this;
-        if (other.hasGenerationTimestamp()) {
-          bitField0_ |= 0x00000001;
-          generationTimestamp_ = other.generationTimestamp_;
-          onChanged();
+        if (other.hasStartTimeMillis()) {
+          setStartTimeMillis(other.getStartTimeMillis());
         }
-        if (other.hasGenerationDurationSeconds()) {
-          setGenerationDurationSeconds(other.getGenerationDurationSeconds());
+        if (other.hasEndTimeMillis()) {
+          setEndTimeMillis(other.getEndTimeMillis());
         }
         if (other.hasUsername()) {
           bitField0_ |= 0x00000004;
@@ -1434,149 +1404,112 @@ public final class Debug {
       }
       private int bitField0_;
 
-      private java.lang.Object generationTimestamp_ = "";
+      private long startTimeMillis_ ;
       /**
        * <pre>
-       * ISO 8601 format
+       * Epoch time in milliseconds when generation started
        * </pre>
        *
-       * <code>optional string generation_timestamp = 1;</code>
-       * @return Whether the generationTimestamp field is set.
+       * <code>optional int64 start_time_millis = 1;</code>
+       * @return Whether the startTimeMillis field is set.
        */
-      public boolean hasGenerationTimestamp() {
+      @java.lang.Override
+      public boolean hasStartTimeMillis() {
         return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
-       * ISO 8601 format
+       * Epoch time in milliseconds when generation started
        * </pre>
        *
-       * <code>optional string generation_timestamp = 1;</code>
-       * @return The generationTimestamp.
+       * <code>optional int64 start_time_millis = 1;</code>
+       * @return The startTimeMillis.
        */
-      public java.lang.String getGenerationTimestamp() {
-        java.lang.Object ref = generationTimestamp_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            generationTimestamp_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
+      @java.lang.Override
+      public long getStartTimeMillis() {
+        return startTimeMillis_;
       }
       /**
        * <pre>
-       * ISO 8601 format
+       * Epoch time in milliseconds when generation started
        * </pre>
        *
-       * <code>optional string generation_timestamp = 1;</code>
-       * @return The bytes for generationTimestamp.
-       */
-      public com.google.protobuf.ByteString
-          getGenerationTimestampBytes() {
-        java.lang.Object ref = generationTimestamp_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          generationTimestamp_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <pre>
-       * ISO 8601 format
-       * </pre>
-       *
-       * <code>optional string generation_timestamp = 1;</code>
-       * @param value The generationTimestamp to set.
+       * <code>optional int64 start_time_millis = 1;</code>
+       * @param value The startTimeMillis to set.
        * @return This builder for chaining.
        */
-      public Builder setGenerationTimestamp(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        generationTimestamp_ = value;
+      public Builder setStartTimeMillis(long value) {
+        bitField0_ |= 0x00000001;
+        startTimeMillis_ = value;
         onChanged();
         return this;
       }
       /**
        * <pre>
-       * ISO 8601 format
+       * Epoch time in milliseconds when generation started
        * </pre>
        *
-       * <code>optional string generation_timestamp = 1;</code>
+       * <code>optional int64 start_time_millis = 1;</code>
        * @return This builder for chaining.
        */
-      public Builder clearGenerationTimestamp() {
+      public Builder clearStartTimeMillis() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        generationTimestamp_ = getDefaultInstance().getGenerationTimestamp();
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * ISO 8601 format
-       * </pre>
-       *
-       * <code>optional string generation_timestamp = 1;</code>
-       * @param value The bytes for generationTimestamp to set.
-       * @return This builder for chaining.
-       */
-      public Builder setGenerationTimestampBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        generationTimestamp_ = value;
+        startTimeMillis_ = 0L;
         onChanged();
         return this;
       }
 
-      private double generationDurationSeconds_ ;
+      private long endTimeMillis_ ;
       /**
-       * <code>optional double generation_duration_seconds = 2;</code>
-       * @return Whether the generationDurationSeconds field is set.
+       * <pre>
+       * Epoch time in milliseconds when generation ended
+       * </pre>
+       *
+       * <code>optional int64 end_time_millis = 2;</code>
+       * @return Whether the endTimeMillis field is set.
        */
       @java.lang.Override
-      public boolean hasGenerationDurationSeconds() {
+      public boolean hasEndTimeMillis() {
         return ((bitField0_ & 0x00000002) != 0);
       }
       /**
-       * <code>optional double generation_duration_seconds = 2;</code>
-       * @return The generationDurationSeconds.
+       * <pre>
+       * Epoch time in milliseconds when generation ended
+       * </pre>
+       *
+       * <code>optional int64 end_time_millis = 2;</code>
+       * @return The endTimeMillis.
        */
       @java.lang.Override
-      public double getGenerationDurationSeconds() {
-        return generationDurationSeconds_;
+      public long getEndTimeMillis() {
+        return endTimeMillis_;
       }
       /**
-       * <code>optional double generation_duration_seconds = 2;</code>
-       * @param value The generationDurationSeconds to set.
+       * <pre>
+       * Epoch time in milliseconds when generation ended
+       * </pre>
+       *
+       * <code>optional int64 end_time_millis = 2;</code>
+       * @param value The endTimeMillis to set.
        * @return This builder for chaining.
        */
-      public Builder setGenerationDurationSeconds(double value) {
+      public Builder setEndTimeMillis(long value) {
         bitField0_ |= 0x00000002;
-        generationDurationSeconds_ = value;
+        endTimeMillis_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional double generation_duration_seconds = 2;</code>
+       * <pre>
+       * Epoch time in milliseconds when generation ended
+       * </pre>
+       *
+       * <code>optional int64 end_time_millis = 2;</code>
        * @return This builder for chaining.
        */
-      public Builder clearGenerationDurationSeconds() {
+      public Builder clearEndTimeMillis() {
         bitField0_ = (bitField0_ & ~0x00000002);
-        generationDurationSeconds_ = 0D;
+        endTimeMillis_ = 0L;
         onChanged();
         return this;
       }
@@ -14286,61 +14219,60 @@ public final class Debug {
   static {
     java.lang.String[] descriptorData = {
       "\n\013Debug.proto\022\025org.datacommons.proto\032\021Lo" +
-      "gLocation.proto\032\tMcf.proto\"\373\001\n\017RuntimeMe" +
-      "tadata\022\034\n\024generation_timestamp\030\001 \001(\t\022#\n\033" +
-      "generation_duration_seconds\030\002 \001(\001\022\020\n\010use" +
-      "rname\030\003 \001(\t\022\020\n\010hostname\030\004 \001(\t\022\017\n\007os_name" +
-      "\030\005 \001(\t\022\022\n\nos_version\030\006 \001(\t\022\024\n\014java_versi" +
-      "on\030\007 \001(\t\022\024\n\014tool_version\030\010 \001(\t\022\027\n\017build_" +
-      "timestamp\030\t \001(\t\022\027\n\017git_commit_hash\030\n \001(\t" +
-      "\"\277\006\n\003Log\022C\n\rlevel_summary\030\001 \003(\0132,.org.da" +
-      "tacommons.proto.Log.LevelSummaryEntry\0221\n" +
-      "\007entries\030\003 \003(\0132 .org.datacommons.proto.L" +
-      "og.Entry\022H\n\023stats_check_summary\030\004 \003(\0132+." +
-      "org.datacommons.proto.StatValidationResu" +
-      "lt\0228\n\014command_args\030\005 \001(\0132\".org.datacommo" +
-      "ns.proto.CommandArgs\022@\n\020runtime_metadata" +
-      "\030\006 \001(\0132&.org.datacommons.proto.RuntimeMe" +
-      "tadata\032\204\001\n\nCounterSet\022E\n\010counters\030\001 \003(\0132" +
-      "3.org.datacommons.proto.Log.CounterSet.C" +
-      "ountersEntry\032/\n\rCountersEntry\022\013\n\003key\030\001 \001" +
-      "(\t\022\r\n\005value\030\002 \001(\003:\0028\001\032\253\001\n\005Entry\022/\n\005level" +
-      "\030\001 \001(\0162 .org.datacommons.proto.Log.Level" +
-      "\0221\n\010location\030\002 \001(\0132\037.org.datacommons.pro" +
-      "to.Location\022\024\n\014user_message\030\003 \001(\t\022\023\n\013cou" +
-      "nter_key\030\004 \001(\t\022\023\n\013column_name\030\005 \003(\t\032Z\n\021L" +
-      "evelSummaryEntry\022\013\n\003key\030\001 \001(\t\0224\n\005value\030\002" +
-      " \001(\0132%.org.datacommons.proto.Log.Counter" +
-      "Set:\0028\001\"c\n\005Level\022\025\n\021LEVEL_UNSPECIFIED\020\000\022" +
-      "\016\n\nLEVEL_INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LE" +
-      "VEL_ERROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010\002\020\003\"\250\003\n\013C" +
-      "ommandArgs\022\030\n\020existence_checks\030\001 \001(\010\022E\n\n" +
-      "resolution\030\002 \001(\01621.org.datacommons.proto" +
-      ".CommandArgs.ResolutionMode\022\023\n\013num_threa" +
-      "ds\030\003 \001(\005\022\023\n\013stat_checks\030\004 \001(\010\022\025\n\rsample_" +
-      "places\030\005 \003(\t\022\031\n\021observation_about\030\006 \001(\010\022" +
-      "\027\n\017allow_nan_svobs\030\007 \001(\010\022 \n\030check_measur" +
-      "ement_result\030\010 \001(\010\022\036\n\026coordinates_resolu" +
-      "tion\030\t \001(\010\"\200\001\n\016ResolutionMode\022\037\n\033RESOLUT" +
-      "ION_MODE_UNSPECIFIED\020\000\022\030\n\024RESOLUTION_MOD" +
-      "E_NONE\020\001\022\031\n\025RESOLUTION_MODE_LOCAL\020\002\022\030\n\024R" +
-      "ESOLUTION_MODE_FULL\020\003\"\321\001\n\tDataPoint\022\014\n\004d" +
-      "ate\030\001 \001(\t\022:\n\006values\030\002 \003(\0132*.org.datacomm" +
-      "ons.proto.DataPoint.DataValue\032z\n\tDataVal" +
-      "ue\0229\n\005value\030\001 \001(\0132*.org.datacommons.prot" +
-      "o.McfGraph.TypedValue\0222\n\tlocations\030\002 \003(\013" +
-      "2\037.org.datacommons.proto.Location\"\234\003\n\024St" +
-      "atValidationResult\022\022\n\nplace_dcid\030\001 \001(\t\022\025" +
-      "\n\rstat_var_dcid\030\002 \001(\t\022\032\n\022measurement_met" +
-      "hod\030\003 \001(\t\022\032\n\022observation_period\030\004 \001(\t\022\026\n" +
-      "\016scaling_factor\030\005 \001(\t\022\014\n\004unit\030\006 \001(\t\022\\\n\023v" +
-      "alidation_counters\030\007 \003(\0132?.org.datacommo" +
-      "ns.proto.StatValidationResult.StatValida" +
-      "tionEntry\032\234\001\n\023StatValidationEntry\022\023\n\013cou" +
-      "nter_key\030\001 \001(\t\0228\n\016problem_points\030\002 \003(\0132 " +
-      ".org.datacommons.proto.DataPoint\022\032\n\022addi" +
-      "tional_details\030\003 \001(\t\022\032\n\022percent_differen" +
-      "ce\030\004 \001(\001"
+      "gLocation.proto\032\tMcf.proto\"\354\001\n\017RuntimeMe" +
+      "tadata\022\031\n\021start_time_millis\030\001 \001(\003\022\027\n\017end" +
+      "_time_millis\030\002 \001(\003\022\020\n\010username\030\003 \001(\t\022\020\n\010" +
+      "hostname\030\004 \001(\t\022\017\n\007os_name\030\005 \001(\t\022\022\n\nos_ve" +
+      "rsion\030\006 \001(\t\022\024\n\014java_version\030\007 \001(\t\022\024\n\014too" +
+      "l_version\030\010 \001(\t\022\027\n\017build_timestamp\030\t \001(\t" +
+      "\022\027\n\017git_commit_hash\030\n \001(\t\"\277\006\n\003Log\022C\n\rlev" +
+      "el_summary\030\001 \003(\0132,.org.datacommons.proto" +
+      ".Log.LevelSummaryEntry\0221\n\007entries\030\003 \003(\0132" +
+      " .org.datacommons.proto.Log.Entry\022H\n\023sta" +
+      "ts_check_summary\030\004 \003(\0132+.org.datacommons" +
+      ".proto.StatValidationResult\0228\n\014command_a" +
+      "rgs\030\005 \001(\0132\".org.datacommons.proto.Comman" +
+      "dArgs\022@\n\020runtime_metadata\030\006 \001(\0132&.org.da" +
+      "tacommons.proto.RuntimeMetadata\032\204\001\n\nCoun" +
+      "terSet\022E\n\010counters\030\001 \003(\01323.org.datacommo" +
+      "ns.proto.Log.CounterSet.CountersEntry\032/\n" +
+      "\rCountersEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001" +
+      "(\003:\0028\001\032\253\001\n\005Entry\022/\n\005level\030\001 \001(\0162 .org.da" +
+      "tacommons.proto.Log.Level\0221\n\010location\030\002 " +
+      "\001(\0132\037.org.datacommons.proto.Location\022\024\n\014" +
+      "user_message\030\003 \001(\t\022\023\n\013counter_key\030\004 \001(\t\022" +
+      "\023\n\013column_name\030\005 \003(\t\032Z\n\021LevelSummaryEntr" +
+      "y\022\013\n\003key\030\001 \001(\t\0224\n\005value\030\002 \001(\0132%.org.data" +
+      "commons.proto.Log.CounterSet:\0028\001\"c\n\005Leve" +
+      "l\022\025\n\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLEVEL_INFO\020\001" +
+      "\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LEVEL_ERROR\020\003\022\017\n\013" +
+      "LEVEL_FATAL\020\004J\004\010\002\020\003\"\250\003\n\013CommandArgs\022\030\n\020e" +
+      "xistence_checks\030\001 \001(\010\022E\n\nresolution\030\002 \001(" +
+      "\01621.org.datacommons.proto.CommandArgs.Re" +
+      "solutionMode\022\023\n\013num_threads\030\003 \001(\005\022\023\n\013sta" +
+      "t_checks\030\004 \001(\010\022\025\n\rsample_places\030\005 \003(\t\022\031\n" +
+      "\021observation_about\030\006 \001(\010\022\027\n\017allow_nan_sv" +
+      "obs\030\007 \001(\010\022 \n\030check_measurement_result\030\010 " +
+      "\001(\010\022\036\n\026coordinates_resolution\030\t \001(\010\"\200\001\n\016" +
+      "ResolutionMode\022\037\n\033RESOLUTION_MODE_UNSPEC" +
+      "IFIED\020\000\022\030\n\024RESOLUTION_MODE_NONE\020\001\022\031\n\025RES" +
+      "OLUTION_MODE_LOCAL\020\002\022\030\n\024RESOLUTION_MODE_" +
+      "FULL\020\003\"\321\001\n\tDataPoint\022\014\n\004date\030\001 \001(\t\022:\n\006va" +
+      "lues\030\002 \003(\0132*.org.datacommons.proto.DataP" +
+      "oint.DataValue\032z\n\tDataValue\0229\n\005value\030\001 \001" +
+      "(\0132*.org.datacommons.proto.McfGraph.Type" +
+      "dValue\0222\n\tlocations\030\002 \003(\0132\037.org.datacomm" +
+      "ons.proto.Location\"\234\003\n\024StatValidationRes" +
+      "ult\022\022\n\nplace_dcid\030\001 \001(\t\022\025\n\rstat_var_dcid" +
+      "\030\002 \001(\t\022\032\n\022measurement_method\030\003 \001(\t\022\032\n\022ob" +
+      "servation_period\030\004 \001(\t\022\026\n\016scaling_factor" +
+      "\030\005 \001(\t\022\014\n\004unit\030\006 \001(\t\022\\\n\023validation_count" +
+      "ers\030\007 \003(\0132?.org.datacommons.proto.StatVa" +
+      "lidationResult.StatValidationEntry\032\234\001\n\023S" +
+      "tatValidationEntry\022\023\n\013counter_key\030\001 \001(\t\022" +
+      "8\n\016problem_points\030\002 \003(\0132 .org.datacommon" +
+      "s.proto.DataPoint\022\032\n\022additional_details\030" +
+      "\003 \001(\t\022\032\n\022percent_difference\030\004 \001(\001"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -14353,7 +14285,7 @@ public final class Debug {
     internal_static_org_datacommons_proto_RuntimeMetadata_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_datacommons_proto_RuntimeMetadata_descriptor,
-        new java.lang.String[] { "GenerationTimestamp", "GenerationDurationSeconds", "Username", "Hostname", "OsName", "OsVersion", "JavaVersion", "ToolVersion", "BuildTimestamp", "GitCommitHash", });
+        new java.lang.String[] { "StartTimeMillis", "EndTimeMillis", "Username", "Hostname", "OsName", "OsVersion", "JavaVersion", "ToolVersion", "BuildTimestamp", "GitCommitHash", });
     internal_static_org_datacommons_proto_Log_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_org_datacommons_proto_Log_fieldAccessorTable = new
