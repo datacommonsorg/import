@@ -14,9 +14,6 @@
 
 package org.datacommons.util;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Instant;
@@ -88,25 +85,46 @@ public class RuntimeMetadataUtil {
   }
 
   /**
-   * Attempts to get the git commit hash of the current repository.
+   * Gets the git commit hash from the JAR manifest or returns a default for local development.
    *
-   * @return Git commit hash or null if unable to retrieve
+   * @return Git commit hash string
    */
   private static String getGitCommitHash() {
-    try {
-      Process process = new ProcessBuilder("git", "rev-parse", "HEAD").start();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      String commitHash = reader.readLine();
-      reader.close();
-
-      int exitCode = process.waitFor();
-      if (exitCode == 0 && commitHash != null && !commitHash.trim().isEmpty()) {
-        return commitHash.trim();
-      }
-    } catch (IOException | InterruptedException e) {
-      // Ignore errors - git might not be available or this might not be a git repo
+    String manifestHash = getManifestAttribute("Git-Commit-Hash");
+    if (manifestHash != null && !manifestHash.isEmpty()) {
+      return manifestHash;
     }
-    return null;
+    return "local-development";
+  }
+
+  /**
+   * Reads a custom attribute from the JAR manifest.
+   *
+   * @param attributeName The name of the manifest attribute to read
+   * @return The attribute value or null if not found
+   */
+  private static String getManifestAttribute(String attributeName) {
+    try {
+      Class<?> clazz = RuntimeMetadataUtil.class;
+      String className = clazz.getSimpleName() + ".class";
+      String classPath = clazz.getResource(className).toString();
+
+      if (!classPath.startsWith("jar")) {
+        // Not running from a JAR
+        return null;
+      }
+
+      String manifestPath =
+          classPath.substring(0, classPath.lastIndexOf("!") + 1) + "/META-INF/MANIFEST.MF";
+      java.util.jar.Manifest manifest =
+          new java.util.jar.Manifest(new java.net.URI(manifestPath).toURL().openStream());
+      java.util.jar.Attributes attrs = manifest.getMainAttributes();
+
+      return attrs.getValue(attributeName);
+    } catch (Exception e) {
+      // Ignore errors - might not be running from JAR or manifest might not be accessible
+      return null;
+    }
   }
 
   /**
