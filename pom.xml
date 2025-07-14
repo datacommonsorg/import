@@ -51,6 +51,8 @@
                     <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
                     <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
+                    <!-- Use native git because jgit does not work well with git worktrees.
+                         In environments without git installed, prefer commenting this line (will fallback to jgit) -->
                     <useNativeGit>true</useNativeGit>
                 </configuration>
             </plugin>
