@@ -16,15 +16,16 @@ package org.datacommons.tool;
 
 import java.io.File;
 import java.util.List;
+import org.datacommons.util.RuntimeMetadataUtil;
 import picocli.CommandLine;
 
 @CommandLine.Command(
     name = "dc-import",
     mixinStandardHelpOptions = true,
-    version = "dc-import 0.1",
+    versionProvider = Main.VersionProvider.class,
     description = "Tool for use in developing datasets for Data Commons.",
     subcommands = {Lint.class, GenMcf.class})
-class Main {
+public class Main {
   @CommandLine.Option(
       names = {"-o", "--output-dir"},
       description =
@@ -152,5 +153,12 @@ class Main {
   public static void main(String... args) {
     System.exit(
         new CommandLine(new Main()).setCaseInsensitiveEnumValuesAllowed(true).execute(args));
+  }
+
+  public static class VersionProvider implements CommandLine.IVersionProvider {
+    @Override
+    public String[] getVersion() {
+      return new String[] {"dc-import " + RuntimeMetadataUtil.getToolVersion()};
+    }
   }
 }

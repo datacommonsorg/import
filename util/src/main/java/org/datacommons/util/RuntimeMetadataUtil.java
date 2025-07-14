@@ -26,9 +26,6 @@ import org.datacommons.proto.Debug;
 /** Utility class for capturing runtime metadata about the import tool execution. */
 public class RuntimeMetadataUtil {
 
-  // Tool version - should match version in Main.java and pom.xml
-  private static final String TOOL_VERSION = "0.1-alpha.1";
-
   /**
    * Creates a RuntimeMetadata proto with system information.
    *
@@ -74,7 +71,7 @@ public class RuntimeMetadataUtil {
     }
 
     // Set tool version
-    builder.setToolVersion(TOOL_VERSION);
+    builder.setToolVersion(getToolVersion());
 
     // Try to get git commit hash
     String gitCommitHash = getGitCommitHash();
@@ -110,5 +107,21 @@ public class RuntimeMetadataUtil {
       // Ignore errors - git might not be available or this might not be a git repo
     }
     return null;
+  }
+
+  /**
+   * Gets the tool version from the JAR manifest or returns a default for local development.
+   *
+   * @return Tool version string
+   */
+  public static String getToolVersion() {
+    Package pkg = RuntimeMetadataUtil.class.getPackage();
+    if (pkg != null) {
+      String version = pkg.getImplementationVersion();
+      if (version != null && !version.isEmpty()) {
+        return version;
+      }
+    }
+    return "local-development";
   }
 }

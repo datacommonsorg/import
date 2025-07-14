@@ -162,10 +162,12 @@ public class LogWrapper {
   private void persistLog(boolean silent) throws IOException {
     refreshCounters();
 
-    // Add runtime metadata
-    Debug.RuntimeMetadata runtimeMetadata =
-        RuntimeMetadataUtil.createRuntimeMetadata(startTime.toEpochMilli());
-    log.setRuntimeMetadata(runtimeMetadata);
+    // Add runtime metadata (skip in test mode to avoid non-deterministic output)
+    if (!LogWrapper.TEST_MODE) {
+      Debug.RuntimeMetadata runtimeMetadata =
+          RuntimeMetadataUtil.createRuntimeMetadata(startTime.toEpochMilli());
+      log.setRuntimeMetadata(runtimeMetadata);
+    }
 
     if (LogWrapper.TEST_MODE) {
       sortLogEntries();

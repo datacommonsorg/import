@@ -99,6 +99,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <mainClass>org.datacommons.tool.Main</mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
                 </configuration>
@@ -122,6 +123,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <mainClass>org.datacommons.tool.Main</mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
                 </configuration>
