@@ -49,6 +49,7 @@ public class Processor {
 
   public static Integer process(Args args) throws IOException, TemplateException {
     Integer retVal = 0;
+    long startTimeMillis = System.currentTimeMillis();
     Processor processor = new Processor(args);
     try {
       // Load all the instance MCFs into memory, so we can do existence checks, resolution, etc.
@@ -109,6 +110,16 @@ public class Processor {
       logger.error("Aborting prematurely, see report.json.");
       retVal = -1;
     }
+
+    // Create and set runtime metadata before persisting log
+    if (!LogWrapper.TEST_MODE) {
+      long endTimeMillis = System.currentTimeMillis();
+      Debug.RuntimeMetadata runtimeMetadata =
+          RuntimeMetadataUtil.createRuntimeMetadata(
+              startTimeMillis, endTimeMillis, Processor.class);
+      processor.logCtx.setRuntimeMetadata(runtimeMetadata);
+    }
+
     processor.logCtx.persistLog();
     if (args.generateSummaryReport) {
       SummaryReportGenerator.generateReportSummary(
@@ -116,7 +127,7 @@ public class Processor {
           processor.logCtx.getLog(),
           processor.statChecker.getSVSummaryMap(),
           processor.statChecker.getPlaceSeriesSummaryMap(),
-          processor.logCtx.getRuntimeMetadata());
+          processor.logCtx.getRuntimeMetadata().orElse(null));
     }
     return retVal;
   }

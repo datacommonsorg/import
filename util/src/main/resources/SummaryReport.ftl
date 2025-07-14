@@ -122,6 +122,7 @@
       </h2>
       
       <h3>Runtime Information</h3>
+      <#if runtimeMetadata??>
       <table>
         <tr>
           <td>Report Generated At</td>
@@ -158,6 +159,9 @@
         </tr>
         </#if>
       </table>
+      <#else>
+      <p>Runtime metadata not available.</p>
+      </#if>
       
       <h3>Command Arguments</h3>
       <table>

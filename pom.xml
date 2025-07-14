@@ -47,7 +47,8 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <generateGitPropertiesFile>false</generateGitPropertiesFile>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
                     <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
                     <useNativeGit>true</useNativeGit>

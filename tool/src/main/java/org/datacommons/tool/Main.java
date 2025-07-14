@@ -158,7 +158,7 @@ public class Main {
   public static class VersionProvider implements CommandLine.IVersionProvider {
     @Override
     public String[] getVersion() {
-      return new String[] {"dc-import " + RuntimeMetadataUtil.getToolVersion()};
+      return new String[] {"dc-import " + RuntimeMetadataUtil.getToolVersion(Main.class)};
     }
   }
 }

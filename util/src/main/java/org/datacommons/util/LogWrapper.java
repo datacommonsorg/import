@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.io.FileUtils;
@@ -54,7 +55,6 @@ public class LogWrapper {
   private final Path logPath;
   public final boolean persistLog;
   private Debug.Log.Builder log;
-  private final Instant startTime;
 
   // Update with lock, but read without object lock.
   private volatile Instant lastStatusAt;
@@ -69,7 +69,6 @@ public class LogWrapper {
     this.log = log;
     this.persistLog = true;
     this.logPath = Paths.get(outputDir.toString(), REPORT_JSON);
-    this.startTime = Instant.now();
     logger.info(
         "Report written periodically to {}", logPath.toAbsolutePath().normalize().toString());
     lastStatusAt = Instant.now();
@@ -80,7 +79,6 @@ public class LogWrapper {
     this.log = log;
     this.persistLog = false;
     this.logPath = null;
-    this.startTime = Instant.now();
     lastStatusAt = Instant.now();
     initCounterMap();
   }
@@ -154,21 +152,35 @@ public class LogWrapper {
     return log.build();
   }
 
-  // Get runtime metadata for use in other reports
-  public Debug.RuntimeMetadata getRuntimeMetadata() {
-    return RuntimeMetadataUtil.createRuntimeMetadata(startTime.toEpochMilli());
+  /**
+   * Sets the runtime metadata for this log.
+   *
+   * <p>This method should ideally be called before {@link #persistLog()} to ensure the runtime
+   * metadata is included in the persisted log output.
+   *
+   * @param metadata The runtime metadata to set
+   */
+  public synchronized void setRuntimeMetadata(Debug.RuntimeMetadata metadata) {
+    if (log != null && metadata != null) {
+      log.setRuntimeMetadata(metadata);
+    }
+  }
+
+  /**
+   * Gets the runtime metadata from the log if it exists.
+   *
+   * @return Optional containing the runtime metadata if set, empty otherwise
+   */
+  public Optional<Debug.RuntimeMetadata> getRuntimeMetadata() {
+    if (log != null && log.hasRuntimeMetadata()) {
+      return Optional.of(log.getRuntimeMetadata());
+    }
+    return Optional.empty();
   }
 
   private void persistLog(boolean silent) throws IOException {
     refreshCounters();
-
-    // Add runtime metadata (skip in test mode to avoid non-deterministic output)
-    if (!LogWrapper.TEST_MODE) {
-      Debug.RuntimeMetadata runtimeMetadata =
-          RuntimeMetadataUtil.createRuntimeMetadata(startTime.toEpochMilli());
-      log.setRuntimeMetadata(runtimeMetadata);
-    }
-
+    // Skip sorting in test mode to maintain deterministic output
     if (LogWrapper.TEST_MODE) {
       sortLogEntries();
     }
