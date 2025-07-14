@@ -51,9 +51,7 @@
                     <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
                     <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
-                    <!-- Use native git because jgit does not work well with git worktrees.
-                         In environments without git installed, prefer commenting this line (will fallback to jgit) -->
-                    <useNativeGit>true</useNativeGit>
+                    <!-- By default uses JGit. For git worktree support, use -Pgit-worktree profile -->
                 </configuration>
             </plugin>
             <plugin>
@@ -154,4 +152,22 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>git-worktree</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>pl.project13.maven</groupId>
+                        <artifactId>git-commit-id-plugin</artifactId>
+                        <configuration>
+                            <!-- Use native git for git worktree compatibility -->
+                            <useNativeGit>true</useNativeGit>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
