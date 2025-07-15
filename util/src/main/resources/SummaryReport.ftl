@@ -152,16 +152,16 @@
           <td>Tool Version</td>
           <td>${runtimeMetadata.getToolVersion()}</td>
         </tr>
-        <#if runtimeMetadata.hasGitCommitHash()>
+        <#if runtimeMetadata.hasToolGitCommitHash()>
         <tr>
-          <td>Git Commit Hash</td>
-          <td>${runtimeMetadata.getGitCommitHash()}</td>
+          <td>Tool Git Commit Hash</td>
+          <td>${runtimeMetadata.getToolGitCommitHash()}</td>
         </tr>
         </#if>
-        <#if runtimeMetadata.hasBuildTimestamp()>
+        <#if runtimeMetadata.hasToolBuildTimestamp()>
         <tr>
-          <td>Build Time</td>
-          <td>${runtimeMetadata.getBuildTimestamp()}</td>
+          <td>Tool Build Time</td>
+          <td>${runtimeMetadata.getToolBuildTimestamp()}</td>
         </tr>
         </#if>
       </table>

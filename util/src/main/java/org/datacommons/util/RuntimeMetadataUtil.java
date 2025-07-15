@@ -122,10 +122,10 @@ public class RuntimeMetadataUtil {
     builder.setToolVersion(getToolVersion(callerClass));
 
     // Try to get git commit hash
-    getGitCommitHash().ifPresent(builder::setGitCommitHash);
+    getToolGitCommitHash().ifPresent(builder::setToolGitCommitHash);
 
     // Get build timestamp
-    getBuildTimestamp().ifPresent(builder::setBuildTimestamp);
+    getToolBuildTimestamp().ifPresent(builder::setToolBuildTimestamp);
 
     return builder.build();
   }
@@ -135,7 +135,7 @@ public class RuntimeMetadataUtil {
    *
    * @return Optional containing the git commit hash, or empty if not available
    */
-  public static Optional<String> getGitCommitHash() {
+  public static Optional<String> getToolGitCommitHash() {
     Properties gitProperties = loadGitProperties();
     String commitHash = gitProperties.getProperty("git.commit.id.abbrev");
     if (commitHash == null || commitHash.isEmpty()) {
@@ -151,7 +151,7 @@ public class RuntimeMetadataUtil {
    *
    * @return Optional containing the build timestamp, or empty if not available
    */
-  public static Optional<String> getBuildTimestamp() {
+  public static Optional<String> getToolBuildTimestamp() {
     Properties gitProperties = loadGitProperties();
     String buildTime = gitProperties.getProperty("git.build.time");
     if (buildTime != null && !buildTime.isEmpty()) {

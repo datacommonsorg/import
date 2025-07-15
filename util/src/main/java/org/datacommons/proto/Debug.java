@@ -220,11 +220,11 @@ public final class Debug {
      * Build time if available
      * </pre>
      *
-     * <code>optional string build_timestamp = 9;</code>
+     * <code>optional string tool_build_timestamp = 9;</code>
      *
-     * @return Whether the buildTimestamp field is set.
+     * @return Whether the toolBuildTimestamp field is set.
      */
-    boolean hasBuildTimestamp();
+    boolean hasToolBuildTimestamp();
 
     /**
      *
@@ -233,11 +233,11 @@ public final class Debug {
      * Build time if available
      * </pre>
      *
-     * <code>optional string build_timestamp = 9;</code>
+     * <code>optional string tool_build_timestamp = 9;</code>
      *
-     * @return The buildTimestamp.
+     * @return The toolBuildTimestamp.
      */
-    java.lang.String getBuildTimestamp();
+    java.lang.String getToolBuildTimestamp();
 
     /**
      *
@@ -246,11 +246,11 @@ public final class Debug {
      * Build time if available
      * </pre>
      *
-     * <code>optional string build_timestamp = 9;</code>
+     * <code>optional string tool_build_timestamp = 9;</code>
      *
-     * @return The bytes for buildTimestamp.
+     * @return The bytes for toolBuildTimestamp.
      */
-    com.google.protobuf.ByteString getBuildTimestampBytes();
+    com.google.protobuf.ByteString getToolBuildTimestampBytes();
 
     /**
      *
@@ -259,11 +259,11 @@ public final class Debug {
      * Git commit if available
      * </pre>
      *
-     * <code>optional string git_commit_hash = 10;</code>
+     * <code>optional string tool_git_commit_hash = 10;</code>
      *
-     * @return Whether the gitCommitHash field is set.
+     * @return Whether the toolGitCommitHash field is set.
      */
-    boolean hasGitCommitHash();
+    boolean hasToolGitCommitHash();
 
     /**
      *
@@ -272,11 +272,11 @@ public final class Debug {
      * Git commit if available
      * </pre>
      *
-     * <code>optional string git_commit_hash = 10;</code>
+     * <code>optional string tool_git_commit_hash = 10;</code>
      *
-     * @return The gitCommitHash.
+     * @return The toolGitCommitHash.
      */
-    java.lang.String getGitCommitHash();
+    java.lang.String getToolGitCommitHash();
 
     /**
      *
@@ -285,11 +285,11 @@ public final class Debug {
      * Git commit if available
      * </pre>
      *
-     * <code>optional string git_commit_hash = 10;</code>
+     * <code>optional string tool_git_commit_hash = 10;</code>
      *
-     * @return The bytes for gitCommitHash.
+     * @return The bytes for toolGitCommitHash.
      */
-    com.google.protobuf.ByteString getGitCommitHashBytes();
+    com.google.protobuf.ByteString getToolGitCommitHashBytes();
   }
 
   /**
@@ -319,8 +319,8 @@ public final class Debug {
       osVersion_ = "";
       javaVersion_ = "";
       toolVersion_ = "";
-      buildTimestamp_ = "";
-      gitCommitHash_ = "";
+      toolBuildTimestamp_ = "";
+      toolGitCommitHash_ = "";
     }
 
     @java.lang.Override
@@ -411,14 +411,14 @@ public final class Debug {
               {
                 com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000100;
-                buildTimestamp_ = bs;
+                toolBuildTimestamp_ = bs;
                 break;
               }
             case 82:
               {
                 com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000200;
-                gitCommitHash_ = bs;
+                toolGitCommitHash_ = bs;
                 break;
               }
             default:
@@ -850,8 +850,8 @@ public final class Debug {
       }
     }
 
-    public static final int BUILD_TIMESTAMP_FIELD_NUMBER = 9;
-    private volatile java.lang.Object buildTimestamp_;
+    public static final int TOOL_BUILD_TIMESTAMP_FIELD_NUMBER = 9;
+    private volatile java.lang.Object toolBuildTimestamp_;
 
     /**
      *
@@ -860,12 +860,12 @@ public final class Debug {
      * Build time if available
      * </pre>
      *
-     * <code>optional string build_timestamp = 9;</code>
+     * <code>optional string tool_build_timestamp = 9;</code>
      *
-     * @return Whether the buildTimestamp field is set.
+     * @return Whether the toolBuildTimestamp field is set.
      */
     @java.lang.Override
-    public boolean hasBuildTimestamp() {
+    public boolean hasToolBuildTimestamp() {
       return ((bitField0_ & 0x00000100) != 0);
     }
 
@@ -876,20 +876,20 @@ public final class Debug {
      * Build time if available
      * </pre>
      *
-     * <code>optional string build_timestamp = 9;</code>
+     * <code>optional string tool_build_timestamp = 9;</code>
      *
-     * @return The buildTimestamp.
+     * @return The toolBuildTimestamp.
      */
     @java.lang.Override
-    public java.lang.String getBuildTimestamp() {
-      java.lang.Object ref = buildTimestamp_;
+    public java.lang.String getToolBuildTimestamp() {
+      java.lang.Object ref = toolBuildTimestamp_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
-          buildTimestamp_ = s;
+          toolBuildTimestamp_ = s;
         }
         return s;
       }
@@ -902,25 +902,25 @@ public final class Debug {
      * Build time if available
      * </pre>
      *
-     * <code>optional string build_timestamp = 9;</code>
+     * <code>optional string tool_build_timestamp = 9;</code>
      *
-     * @return The bytes for buildTimestamp.
+     * @return The bytes for toolBuildTimestamp.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString getBuildTimestampBytes() {
-      java.lang.Object ref = buildTimestamp_;
+    public com.google.protobuf.ByteString getToolBuildTimestampBytes() {
+      java.lang.Object ref = toolBuildTimestamp_;
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-        buildTimestamp_ = b;
+        toolBuildTimestamp_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
     }
 
-    public static final int GIT_COMMIT_HASH_FIELD_NUMBER = 10;
-    private volatile java.lang.Object gitCommitHash_;
+    public static final int TOOL_GIT_COMMIT_HASH_FIELD_NUMBER = 10;
+    private volatile java.lang.Object toolGitCommitHash_;
 
     /**
      *
@@ -929,12 +929,12 @@ public final class Debug {
      * Git commit if available
      * </pre>
      *
-     * <code>optional string git_commit_hash = 10;</code>
+     * <code>optional string tool_git_commit_hash = 10;</code>
      *
-     * @return Whether the gitCommitHash field is set.
+     * @return Whether the toolGitCommitHash field is set.
      */
     @java.lang.Override
-    public boolean hasGitCommitHash() {
+    public boolean hasToolGitCommitHash() {
       return ((bitField0_ & 0x00000200) != 0);
     }
 
@@ -945,20 +945,20 @@ public final class Debug {
      * Git commit if available
      * </pre>
      *
-     * <code>optional string git_commit_hash = 10;</code>
+     * <code>optional string tool_git_commit_hash = 10;</code>
      *
-     * @return The gitCommitHash.
+     * @return The toolGitCommitHash.
      */
     @java.lang.Override
-    public java.lang.String getGitCommitHash() {
-      java.lang.Object ref = gitCommitHash_;
+    public java.lang.String getToolGitCommitHash() {
+      java.lang.Object ref = toolGitCommitHash_;
       if (ref instanceof java.lang.String) {
         return (java.lang.String) ref;
       } else {
         com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
         if (bs.isValidUtf8()) {
-          gitCommitHash_ = s;
+          toolGitCommitHash_ = s;
         }
         return s;
       }
@@ -971,17 +971,17 @@ public final class Debug {
      * Git commit if available
      * </pre>
      *
-     * <code>optional string git_commit_hash = 10;</code>
+     * <code>optional string tool_git_commit_hash = 10;</code>
      *
-     * @return The bytes for gitCommitHash.
+     * @return The bytes for toolGitCommitHash.
      */
     @java.lang.Override
-    public com.google.protobuf.ByteString getGitCommitHashBytes() {
-      java.lang.Object ref = gitCommitHash_;
+    public com.google.protobuf.ByteString getToolGitCommitHashBytes() {
+      java.lang.Object ref = toolGitCommitHash_;
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-        gitCommitHash_ = b;
+        toolGitCommitHash_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
@@ -1027,10 +1027,10 @@ public final class Debug {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 8, toolVersion_);
       }
       if (((bitField0_ & 0x00000100) != 0)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 9, buildTimestamp_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 9, toolBuildTimestamp_);
       }
       if (((bitField0_ & 0x00000200) != 0)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 10, gitCommitHash_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 10, toolGitCommitHash_);
       }
       unknownFields.writeTo(output);
     }
@@ -1066,10 +1066,10 @@ public final class Debug {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, toolVersion_);
       }
       if (((bitField0_ & 0x00000100) != 0)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(9, buildTimestamp_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(9, toolBuildTimestamp_);
       }
       if (((bitField0_ & 0x00000200) != 0)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(10, gitCommitHash_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(10, toolGitCommitHash_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1119,13 +1119,13 @@ public final class Debug {
       if (hasToolVersion()) {
         if (!getToolVersion().equals(other.getToolVersion())) return false;
       }
-      if (hasBuildTimestamp() != other.hasBuildTimestamp()) return false;
-      if (hasBuildTimestamp()) {
-        if (!getBuildTimestamp().equals(other.getBuildTimestamp())) return false;
+      if (hasToolBuildTimestamp() != other.hasToolBuildTimestamp()) return false;
+      if (hasToolBuildTimestamp()) {
+        if (!getToolBuildTimestamp().equals(other.getToolBuildTimestamp())) return false;
       }
-      if (hasGitCommitHash() != other.hasGitCommitHash()) return false;
-      if (hasGitCommitHash()) {
-        if (!getGitCommitHash().equals(other.getGitCommitHash())) return false;
+      if (hasToolGitCommitHash() != other.hasToolGitCommitHash()) return false;
+      if (hasToolGitCommitHash()) {
+        if (!getToolGitCommitHash().equals(other.getToolGitCommitHash())) return false;
       }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
@@ -1170,13 +1170,13 @@ public final class Debug {
         hash = (37 * hash) + TOOL_VERSION_FIELD_NUMBER;
         hash = (53 * hash) + getToolVersion().hashCode();
       }
-      if (hasBuildTimestamp()) {
-        hash = (37 * hash) + BUILD_TIMESTAMP_FIELD_NUMBER;
-        hash = (53 * hash) + getBuildTimestamp().hashCode();
+      if (hasToolBuildTimestamp()) {
+        hash = (37 * hash) + TOOL_BUILD_TIMESTAMP_FIELD_NUMBER;
+        hash = (53 * hash) + getToolBuildTimestamp().hashCode();
       }
-      if (hasGitCommitHash()) {
-        hash = (37 * hash) + GIT_COMMIT_HASH_FIELD_NUMBER;
-        hash = (53 * hash) + getGitCommitHash().hashCode();
+      if (hasToolGitCommitHash()) {
+        hash = (37 * hash) + TOOL_GIT_COMMIT_HASH_FIELD_NUMBER;
+        hash = (53 * hash) + getToolGitCommitHash().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -1342,9 +1342,9 @@ public final class Debug {
         bitField0_ = (bitField0_ & ~0x00000040);
         toolVersion_ = "";
         bitField0_ = (bitField0_ & ~0x00000080);
-        buildTimestamp_ = "";
+        toolBuildTimestamp_ = "";
         bitField0_ = (bitField0_ & ~0x00000100);
-        gitCommitHash_ = "";
+        toolGitCommitHash_ = "";
         bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
@@ -1410,11 +1410,11 @@ public final class Debug {
         if (((from_bitField0_ & 0x00000100) != 0)) {
           to_bitField0_ |= 0x00000100;
         }
-        result.buildTimestamp_ = buildTimestamp_;
+        result.toolBuildTimestamp_ = toolBuildTimestamp_;
         if (((from_bitField0_ & 0x00000200) != 0)) {
           to_bitField0_ |= 0x00000200;
         }
-        result.gitCommitHash_ = gitCommitHash_;
+        result.toolGitCommitHash_ = toolGitCommitHash_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1503,14 +1503,14 @@ public final class Debug {
           toolVersion_ = other.toolVersion_;
           onChanged();
         }
-        if (other.hasBuildTimestamp()) {
+        if (other.hasToolBuildTimestamp()) {
           bitField0_ |= 0x00000100;
-          buildTimestamp_ = other.buildTimestamp_;
+          toolBuildTimestamp_ = other.toolBuildTimestamp_;
           onChanged();
         }
-        if (other.hasGitCommitHash()) {
+        if (other.hasToolGitCommitHash()) {
           bitField0_ |= 0x00000200;
-          gitCommitHash_ = other.gitCommitHash_;
+          toolGitCommitHash_ = other.toolGitCommitHash_;
           onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
@@ -2268,7 +2268,7 @@ public final class Debug {
         return this;
       }
 
-      private java.lang.Object buildTimestamp_ = "";
+      private java.lang.Object toolBuildTimestamp_ = "";
 
       /**
        *
@@ -2277,11 +2277,11 @@ public final class Debug {
        * Build time if available
        * </pre>
        *
-       * <code>optional string build_timestamp = 9;</code>
+       * <code>optional string tool_build_timestamp = 9;</code>
        *
-       * @return Whether the buildTimestamp field is set.
+       * @return Whether the toolBuildTimestamp field is set.
        */
-      public boolean hasBuildTimestamp() {
+      public boolean hasToolBuildTimestamp() {
         return ((bitField0_ & 0x00000100) != 0);
       }
 
@@ -2292,17 +2292,17 @@ public final class Debug {
        * Build time if available
        * </pre>
        *
-       * <code>optional string build_timestamp = 9;</code>
+       * <code>optional string tool_build_timestamp = 9;</code>
        *
-       * @return The buildTimestamp.
+       * @return The toolBuildTimestamp.
        */
-      public java.lang.String getBuildTimestamp() {
-        java.lang.Object ref = buildTimestamp_;
+      public java.lang.String getToolBuildTimestamp() {
+        java.lang.Object ref = toolBuildTimestamp_;
         if (!(ref instanceof java.lang.String)) {
           com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
-            buildTimestamp_ = s;
+            toolBuildTimestamp_ = s;
           }
           return s;
         } else {
@@ -2317,16 +2317,16 @@ public final class Debug {
        * Build time if available
        * </pre>
        *
-       * <code>optional string build_timestamp = 9;</code>
+       * <code>optional string tool_build_timestamp = 9;</code>
        *
-       * @return The bytes for buildTimestamp.
+       * @return The bytes for toolBuildTimestamp.
        */
-      public com.google.protobuf.ByteString getBuildTimestampBytes() {
-        java.lang.Object ref = buildTimestamp_;
+      public com.google.protobuf.ByteString getToolBuildTimestampBytes() {
+        java.lang.Object ref = toolBuildTimestamp_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-          buildTimestamp_ = b;
+          toolBuildTimestamp_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
@@ -2340,17 +2340,17 @@ public final class Debug {
        * Build time if available
        * </pre>
        *
-       * <code>optional string build_timestamp = 9;</code>
+       * <code>optional string tool_build_timestamp = 9;</code>
        *
-       * @param value The buildTimestamp to set.
+       * @param value The toolBuildTimestamp to set.
        * @return This builder for chaining.
        */
-      public Builder setBuildTimestamp(java.lang.String value) {
+      public Builder setToolBuildTimestamp(java.lang.String value) {
         if (value == null) {
           throw new NullPointerException();
         }
         bitField0_ |= 0x00000100;
-        buildTimestamp_ = value;
+        toolBuildTimestamp_ = value;
         onChanged();
         return this;
       }
@@ -2362,13 +2362,13 @@ public final class Debug {
        * Build time if available
        * </pre>
        *
-       * <code>optional string build_timestamp = 9;</code>
+       * <code>optional string tool_build_timestamp = 9;</code>
        *
        * @return This builder for chaining.
        */
-      public Builder clearBuildTimestamp() {
+      public Builder clearToolBuildTimestamp() {
         bitField0_ = (bitField0_ & ~0x00000100);
-        buildTimestamp_ = getDefaultInstance().getBuildTimestamp();
+        toolBuildTimestamp_ = getDefaultInstance().getToolBuildTimestamp();
         onChanged();
         return this;
       }
@@ -2380,22 +2380,22 @@ public final class Debug {
        * Build time if available
        * </pre>
        *
-       * <code>optional string build_timestamp = 9;</code>
+       * <code>optional string tool_build_timestamp = 9;</code>
        *
-       * @param value The bytes for buildTimestamp to set.
+       * @param value The bytes for toolBuildTimestamp to set.
        * @return This builder for chaining.
        */
-      public Builder setBuildTimestampBytes(com.google.protobuf.ByteString value) {
+      public Builder setToolBuildTimestampBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
           throw new NullPointerException();
         }
         bitField0_ |= 0x00000100;
-        buildTimestamp_ = value;
+        toolBuildTimestamp_ = value;
         onChanged();
         return this;
       }
 
-      private java.lang.Object gitCommitHash_ = "";
+      private java.lang.Object toolGitCommitHash_ = "";
 
       /**
        *
@@ -2404,11 +2404,11 @@ public final class Debug {
        * Git commit if available
        * </pre>
        *
-       * <code>optional string git_commit_hash = 10;</code>
+       * <code>optional string tool_git_commit_hash = 10;</code>
        *
-       * @return Whether the gitCommitHash field is set.
+       * @return Whether the toolGitCommitHash field is set.
        */
-      public boolean hasGitCommitHash() {
+      public boolean hasToolGitCommitHash() {
         return ((bitField0_ & 0x00000200) != 0);
       }
 
@@ -2419,17 +2419,17 @@ public final class Debug {
        * Git commit if available
        * </pre>
        *
-       * <code>optional string git_commit_hash = 10;</code>
+       * <code>optional string tool_git_commit_hash = 10;</code>
        *
-       * @return The gitCommitHash.
+       * @return The toolGitCommitHash.
        */
-      public java.lang.String getGitCommitHash() {
-        java.lang.Object ref = gitCommitHash_;
+      public java.lang.String getToolGitCommitHash() {
+        java.lang.Object ref = toolGitCommitHash_;
         if (!(ref instanceof java.lang.String)) {
           com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
           if (bs.isValidUtf8()) {
-            gitCommitHash_ = s;
+            toolGitCommitHash_ = s;
           }
           return s;
         } else {
@@ -2444,16 +2444,16 @@ public final class Debug {
        * Git commit if available
        * </pre>
        *
-       * <code>optional string git_commit_hash = 10;</code>
+       * <code>optional string tool_git_commit_hash = 10;</code>
        *
-       * @return The bytes for gitCommitHash.
+       * @return The bytes for toolGitCommitHash.
        */
-      public com.google.protobuf.ByteString getGitCommitHashBytes() {
-        java.lang.Object ref = gitCommitHash_;
+      public com.google.protobuf.ByteString getToolGitCommitHashBytes() {
+        java.lang.Object ref = toolGitCommitHash_;
         if (ref instanceof String) {
           com.google.protobuf.ByteString b =
               com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-          gitCommitHash_ = b;
+          toolGitCommitHash_ = b;
           return b;
         } else {
           return (com.google.protobuf.ByteString) ref;
@@ -2467,17 +2467,17 @@ public final class Debug {
        * Git commit if available
        * </pre>
        *
-       * <code>optional string git_commit_hash = 10;</code>
+       * <code>optional string tool_git_commit_hash = 10;</code>
        *
-       * @param value The gitCommitHash to set.
+       * @param value The toolGitCommitHash to set.
        * @return This builder for chaining.
        */
-      public Builder setGitCommitHash(java.lang.String value) {
+      public Builder setToolGitCommitHash(java.lang.String value) {
         if (value == null) {
           throw new NullPointerException();
         }
         bitField0_ |= 0x00000200;
-        gitCommitHash_ = value;
+        toolGitCommitHash_ = value;
         onChanged();
         return this;
       }
@@ -2489,13 +2489,13 @@ public final class Debug {
        * Git commit if available
        * </pre>
        *
-       * <code>optional string git_commit_hash = 10;</code>
+       * <code>optional string tool_git_commit_hash = 10;</code>
        *
        * @return This builder for chaining.
        */
-      public Builder clearGitCommitHash() {
+      public Builder clearToolGitCommitHash() {
         bitField0_ = (bitField0_ & ~0x00000200);
-        gitCommitHash_ = getDefaultInstance().getGitCommitHash();
+        toolGitCommitHash_ = getDefaultInstance().getToolGitCommitHash();
         onChanged();
         return this;
       }
@@ -2507,17 +2507,17 @@ public final class Debug {
        * Git commit if available
        * </pre>
        *
-       * <code>optional string git_commit_hash = 10;</code>
+       * <code>optional string tool_git_commit_hash = 10;</code>
        *
-       * @param value The bytes for gitCommitHash to set.
+       * @param value The bytes for toolGitCommitHash to set.
        * @return This builder for chaining.
        */
-      public Builder setGitCommitHashBytes(com.google.protobuf.ByteString value) {
+      public Builder setToolGitCommitHashBytes(com.google.protobuf.ByteString value) {
         if (value == null) {
           throw new NullPointerException();
         }
         bitField0_ |= 0x00000200;
-        gitCommitHash_ = value;
+        toolGitCommitHash_ = value;
         onChanged();
         return this;
       }
@@ -15794,60 +15794,61 @@ public final class Debug {
   static {
     java.lang.String[] descriptorData = {
       "\n\013Debug.proto\022\025org.datacommons.proto\032\021Lo"
-          + "gLocation.proto\032\tMcf.proto\"\354\001\n\017RuntimeMe"
+          + "gLocation.proto\032\tMcf.proto\"\366\001\n\017RuntimeMe"
           + "tadata\022\031\n\021start_time_millis\030\001 \001(\003\022\027\n\017end"
           + "_time_millis\030\002 \001(\003\022\020\n\010username\030\003 \001(\t\022\020\n\010"
           + "hostname\030\004 \001(\t\022\017\n\007os_name\030\005 \001(\t\022\022\n\nos_ve"
           + "rsion\030\006 \001(\t\022\024\n\014java_version\030\007 \001(\t\022\024\n\014too"
-          + "l_version\030\010 \001(\t\022\027\n\017build_timestamp\030\t \001(\t"
-          + "\022\027\n\017git_commit_hash\030\n \001(\t\"\277\006\n\003Log\022C\n\rlev"
-          + "el_summary\030\001 \003(\0132,.org.datacommons.proto"
-          + ".Log.LevelSummaryEntry\0221\n\007entries\030\003 \003(\0132"
-          + " .org.datacommons.proto.Log.Entry\022H\n\023sta"
-          + "ts_check_summary\030\004 \003(\0132+.org.datacommons"
-          + ".proto.StatValidationResult\0228\n\014command_a"
-          + "rgs\030\005 \001(\0132\".org.datacommons.proto.Comman"
-          + "dArgs\022@\n\020runtime_metadata\030\006 \001(\0132&.org.da"
-          + "tacommons.proto.RuntimeMetadata\032\204\001\n\nCoun"
-          + "terSet\022E\n\010counters\030\001 \003(\01323.org.datacommo"
-          + "ns.proto.Log.CounterSet.CountersEntry\032/\n"
-          + "\rCountersEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001"
-          + "(\003:\0028\001\032\253\001\n\005Entry\022/\n\005level\030\001 \001(\0162 .org.da"
-          + "tacommons.proto.Log.Level\0221\n\010location\030\002 "
-          + "\001(\0132\037.org.datacommons.proto.Location\022\024\n\014"
-          + "user_message\030\003 \001(\t\022\023\n\013counter_key\030\004 \001(\t\022"
-          + "\023\n\013column_name\030\005 \003(\t\032Z\n\021LevelSummaryEntr"
-          + "y\022\013\n\003key\030\001 \001(\t\0224\n\005value\030\002 \001(\0132%.org.data"
-          + "commons.proto.Log.CounterSet:\0028\001\"c\n\005Leve"
-          + "l\022\025\n\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLEVEL_INFO\020\001"
-          + "\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LEVEL_ERROR\020\003\022\017\n\013"
-          + "LEVEL_FATAL\020\004J\004\010\002\020\003\"\250\003\n\013CommandArgs\022\030\n\020e"
-          + "xistence_checks\030\001 \001(\010\022E\n\nresolution\030\002 \001("
-          + "\01621.org.datacommons.proto.CommandArgs.Re"
-          + "solutionMode\022\023\n\013num_threads\030\003 \001(\005\022\023\n\013sta"
-          + "t_checks\030\004 \001(\010\022\025\n\rsample_places\030\005 \003(\t\022\031\n"
-          + "\021observation_about\030\006 \001(\010\022\027\n\017allow_nan_sv"
-          + "obs\030\007 \001(\010\022 \n\030check_measurement_result\030\010 "
-          + "\001(\010\022\036\n\026coordinates_resolution\030\t \001(\010\"\200\001\n\016"
-          + "ResolutionMode\022\037\n\033RESOLUTION_MODE_UNSPEC"
-          + "IFIED\020\000\022\030\n\024RESOLUTION_MODE_NONE\020\001\022\031\n\025RES"
-          + "OLUTION_MODE_LOCAL\020\002\022\030\n\024RESOLUTION_MODE_"
-          + "FULL\020\003\"\321\001\n\tDataPoint\022\014\n\004date\030\001 \001(\t\022:\n\006va"
-          + "lues\030\002 \003(\0132*.org.datacommons.proto.DataP"
-          + "oint.DataValue\032z\n\tDataValue\0229\n\005value\030\001 \001"
-          + "(\0132*.org.datacommons.proto.McfGraph.Type"
-          + "dValue\0222\n\tlocations\030\002 \003(\0132\037.org.datacomm"
-          + "ons.proto.Location\"\234\003\n\024StatValidationRes"
-          + "ult\022\022\n\nplace_dcid\030\001 \001(\t\022\025\n\rstat_var_dcid"
-          + "\030\002 \001(\t\022\032\n\022measurement_method\030\003 \001(\t\022\032\n\022ob"
-          + "servation_period\030\004 \001(\t\022\026\n\016scaling_factor"
-          + "\030\005 \001(\t\022\014\n\004unit\030\006 \001(\t\022\\\n\023validation_count"
-          + "ers\030\007 \003(\0132?.org.datacommons.proto.StatVa"
-          + "lidationResult.StatValidationEntry\032\234\001\n\023S"
-          + "tatValidationEntry\022\023\n\013counter_key\030\001 \001(\t\022"
-          + "8\n\016problem_points\030\002 \003(\0132 .org.datacommon"
-          + "s.proto.DataPoint\022\032\n\022additional_details\030"
-          + "\003 \001(\t\022\032\n\022percent_difference\030\004 \001(\001"
+          + "l_version\030\010 \001(\t\022\034\n\024tool_build_timestamp\030"
+          + "\t \001(\t\022\034\n\024tool_git_commit_hash\030\n \001(\t\"\277\006\n\003"
+          + "Log\022C\n\rlevel_summary\030\001 \003(\0132,.org.datacom"
+          + "mons.proto.Log.LevelSummaryEntry\0221\n\007entr"
+          + "ies\030\003 \003(\0132 .org.datacommons.proto.Log.En"
+          + "try\022H\n\023stats_check_summary\030\004 \003(\0132+.org.d"
+          + "atacommons.proto.StatValidationResult\0228\n"
+          + "\014command_args\030\005 \001(\0132\".org.datacommons.pr"
+          + "oto.CommandArgs\022@\n\020runtime_metadata\030\006 \001("
+          + "\0132&.org.datacommons.proto.RuntimeMetadat"
+          + "a\032\204\001\n\nCounterSet\022E\n\010counters\030\001 \003(\01323.org"
+          + ".datacommons.proto.Log.CounterSet.Counte"
+          + "rsEntry\032/\n\rCountersEntry\022\013\n\003key\030\001 \001(\t\022\r\n"
+          + "\005value\030\002 \001(\003:\0028\001\032\253\001\n\005Entry\022/\n\005level\030\001 \001("
+          + "\0162 .org.datacommons.proto.Log.Level\0221\n\010l"
+          + "ocation\030\002 \001(\0132\037.org.datacommons.proto.Lo"
+          + "cation\022\024\n\014user_message\030\003 \001(\t\022\023\n\013counter_"
+          + "key\030\004 \001(\t\022\023\n\013column_name\030\005 \003(\t\032Z\n\021LevelS"
+          + "ummaryEntry\022\013\n\003key\030\001 \001(\t\0224\n\005value\030\002 \001(\0132"
+          + "%.org.datacommons.proto.Log.CounterSet:\002"
+          + "8\001\"c\n\005Level\022\025\n\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLE"
+          + "VEL_INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LEVEL_E"
+          + "RROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010\002\020\003\"\250\003\n\013Comman"
+          + "dArgs\022\030\n\020existence_checks\030\001 \001(\010\022E\n\nresol"
+          + "ution\030\002 \001(\01621.org.datacommons.proto.Comm"
+          + "andArgs.ResolutionMode\022\023\n\013num_threads\030\003 "
+          + "\001(\005\022\023\n\013stat_checks\030\004 \001(\010\022\025\n\rsample_place"
+          + "s\030\005 \003(\t\022\031\n\021observation_about\030\006 \001(\010\022\027\n\017al"
+          + "low_nan_svobs\030\007 \001(\010\022 \n\030check_measurement"
+          + "_result\030\010 \001(\010\022\036\n\026coordinates_resolution\030"
+          + "\t \001(\010\"\200\001\n\016ResolutionMode\022\037\n\033RESOLUTION_M"
+          + "ODE_UNSPECIFIED\020\000\022\030\n\024RESOLUTION_MODE_NON"
+          + "E\020\001\022\031\n\025RESOLUTION_MODE_LOCAL\020\002\022\030\n\024RESOLU"
+          + "TION_MODE_FULL\020\003\"\321\001\n\tDataPoint\022\014\n\004date\030\001"
+          + " \001(\t\022:\n\006values\030\002 \003(\0132*.org.datacommons.p"
+          + "roto.DataPoint.DataValue\032z\n\tDataValue\0229\n"
+          + "\005value\030\001 \001(\0132*.org.datacommons.proto.Mcf"
+          + "Graph.TypedValue\0222\n\tlocations\030\002 \003(\0132\037.or"
+          + "g.datacommons.proto.Location\"\234\003\n\024StatVal"
+          + "idationResult\022\022\n\nplace_dcid\030\001 \001(\t\022\025\n\rsta"
+          + "t_var_dcid\030\002 \001(\t\022\032\n\022measurement_method\030\003"
+          + " \001(\t\022\032\n\022observation_period\030\004 \001(\t\022\026\n\016scal"
+          + "ing_factor\030\005 \001(\t\022\014\n\004unit\030\006 \001(\t\022\\\n\023valida"
+          + "tion_counters\030\007 \003(\0132?.org.datacommons.pr"
+          + "oto.StatValidationResult.StatValidationE"
+          + "ntry\032\234\001\n\023StatValidationEntry\022\023\n\013counter_"
+          + "key\030\001 \001(\t\0228\n\016problem_points\030\002 \003(\0132 .org."
+          + "datacommons.proto.DataPoint\022\032\n\022additiona"
+          + "l_details\030\003 \001(\t\022\032\n\022percent_difference\030\004 "
+          + "\001(\001"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -15870,8 +15871,8 @@ public final class Debug {
               "OsVersion",
               "JavaVersion",
               "ToolVersion",
-              "BuildTimestamp",
-              "GitCommitHash",
+              "ToolBuildTimestamp",
+              "ToolGitCommitHash",
             });
     internal_static_org_datacommons_proto_Log_descriptor = getDescriptor().getMessageTypes().get(1);
     internal_static_org_datacommons_proto_Log_fieldAccessorTable =

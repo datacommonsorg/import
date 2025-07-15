@@ -31,8 +31,8 @@ message RuntimeMetadata {
     optional string os_version = 6;
     optional string java_version = 7;
     optional string tool_version = 8;  // From pom.xml or Main.java
-    optional string build_timestamp = 9;  // Build time if available
-    optional string git_commit_hash = 10;  // Git commit if available
+    optional string tool_build_timestamp = 9;  // Build time if available
+    optional string tool_git_commit_hash = 10;  // Git commit if available
 }
 
 //
