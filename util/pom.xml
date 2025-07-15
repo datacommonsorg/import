@@ -115,10 +115,6 @@
                         <manifest>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
-                        <manifestEntries>
-                            <Git-Commit-Hash>${git.commit.id}</Git-Commit-Hash>
-                            <Build-Timestamp>${maven.build.timestamp}</Build-Timestamp>
-                        </manifestEntries>
                     </archive>
                 </configuration>
             </plugin>
