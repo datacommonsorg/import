@@ -23,6 +23,7 @@ class Args {
   public boolean checkObservationAbout = true;
   public boolean allowNonNumericStatVarObservation = false;
   public boolean checkMeasurementResult = false;
+  public boolean includeRuntimeMetadata = true;
 
   public String toString() {
     StringBuilder argStr = new StringBuilder();

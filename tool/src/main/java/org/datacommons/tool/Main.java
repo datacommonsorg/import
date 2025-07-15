@@ -150,6 +150,15 @@ public class Main {
               + "Defaults to true.")
   public boolean checkObservationAbout;
 
+  @CommandLine.Option(
+      names = {"--include-runtime-metadata"},
+      defaultValue = "true",
+      scope = CommandLine.ScopeType.INHERIT,
+      description =
+          "Include runtime metadata (system info, git hash, timing) in reports. "
+              + "Defaults to true.")
+  public boolean includeRuntimeMetadata;
+
   public static void main(String... args) {
     System.exit(
         new CommandLine(new Main()).setCaseInsensitiveEnumValuesAllowed(true).execute(args));

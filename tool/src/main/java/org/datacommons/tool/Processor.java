@@ -112,7 +112,7 @@ public class Processor {
     }
 
     // Create and set runtime metadata before persisting log
-    if (!LogWrapper.TEST_MODE) {
+    if (!LogWrapper.TEST_MODE && args.includeRuntimeMetadata) {
       long endTimeMillis = System.currentTimeMillis();
       Debug.RuntimeMetadata runtimeMetadata =
           RuntimeMetadataUtil.createRuntimeMetadata(
