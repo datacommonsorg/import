@@ -121,8 +121,8 @@
         <a name="import-run-details" href="#import-run-details">Import Run Details</a>
       </h2>
       
-      <h3>Runtime Information</h3>
       <#if runtimeMetadata??>
+      <h3>Runtime Information</h3>    
       <table>
         <tr>
           <td>Report Generated At</td>
@@ -158,12 +158,15 @@
           <td>${runtimeMetadata.getGitCommitHash()}</td>
         </tr>
         </#if>
+        <#if runtimeMetadata.hasBuildTimestamp()>
+        <tr>
+          <td>Build Time</td>
+          <td>${runtimeMetadata.getBuildTimestamp()}</td>
+        </tr>
+        </#if>
       </table>
-      <#else>
-      <p>Runtime metadata not available.</p>
-      </#if>
+      </#if>     
       
-      <h3>Command Arguments</h3>
       <table>
         <tr>
           <td>Existence Checks Enabled</td>
