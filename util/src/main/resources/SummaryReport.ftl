@@ -161,7 +161,7 @@
         <#if runtimeMetadata.hasToolBuildTimestamp()>
         <tr>
           <td>Tool Build Time</td>
-          <td>${runtimeMetadata.getToolBuildTimestamp()}</td>
+          <td><#if runtimeMetadata.getToolBuildTimestamp()??>${runtimeMetadata.getToolBuildTimestamp()}<#else>Not Available</#if></td>
         </tr>
         </#if>
       </table>
