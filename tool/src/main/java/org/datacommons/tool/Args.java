@@ -43,6 +43,7 @@ class Args {
     argStr.append(", observation-about=" + checkObservationAbout);
     argStr.append(", allow-non-numeric-svobs=" + allowNonNumericStatVarObservation);
     argStr.append(", check-measurement-result=" + checkMeasurementResult);
+    argStr.append(", include-runtime-metadata=" + includeRuntimeMetadata);
 
     return argStr.toString();
   }
