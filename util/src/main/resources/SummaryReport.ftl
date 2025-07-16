@@ -188,6 +188,22 @@
           <td>Sample Places Entered</td>
           <td>${commandArgs.getSamplePlacesList()?join(", ")}</td>
         </tr>
+        <tr>
+          <td>Input Files</td>
+          <td>
+            <#if commandArgs.getInputFilesList()?has_content>
+              <#list commandArgs.getInputFilesList() as file>
+                <div>${file}</div>
+              </#list>
+            <#else>
+              Not Available
+            </#if>
+          </td>
+        </tr>
+        <tr>
+          <td>CSV Delimiter</td>
+          <td>${commandArgs.getDelimiter()!"Not Available"}</td>
+        </tr>
       </table>
     </div>
 

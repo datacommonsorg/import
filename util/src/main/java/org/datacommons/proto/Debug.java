@@ -7526,6 +7526,99 @@ public final class Debug {
      * @return The includeRuntimeMetadata.
      */
     boolean getIncludeRuntimeMetadata();
+
+    /**
+     *
+     *
+     * <pre>
+     * List of input file paths
+     * </pre>
+     *
+     * <code>repeated string input_files = 11;</code>
+     *
+     * @return A list containing the inputFiles.
+     */
+    java.util.List<java.lang.String> getInputFilesList();
+
+    /**
+     *
+     *
+     * <pre>
+     * List of input file paths
+     * </pre>
+     *
+     * <code>repeated string input_files = 11;</code>
+     *
+     * @return The count of inputFiles.
+     */
+    int getInputFilesCount();
+
+    /**
+     *
+     *
+     * <pre>
+     * List of input file paths
+     * </pre>
+     *
+     * <code>repeated string input_files = 11;</code>
+     *
+     * @param index The index of the element to return.
+     * @return The inputFiles at the given index.
+     */
+    java.lang.String getInputFiles(int index);
+
+    /**
+     *
+     *
+     * <pre>
+     * List of input file paths
+     * </pre>
+     *
+     * <code>repeated string input_files = 11;</code>
+     *
+     * @param index The index of the value to return.
+     * @return The bytes of the inputFiles at the given index.
+     */
+    com.google.protobuf.ByteString getInputFilesBytes(int index);
+
+    /**
+     *
+     *
+     * <pre>
+     * CSV delimiter character
+     * </pre>
+     *
+     * <code>optional string delimiter = 12;</code>
+     *
+     * @return Whether the delimiter field is set.
+     */
+    boolean hasDelimiter();
+
+    /**
+     *
+     *
+     * <pre>
+     * CSV delimiter character
+     * </pre>
+     *
+     * <code>optional string delimiter = 12;</code>
+     *
+     * @return The delimiter.
+     */
+    java.lang.String getDelimiter();
+
+    /**
+     *
+     *
+     * <pre>
+     * CSV delimiter character
+     * </pre>
+     *
+     * <code>optional string delimiter = 12;</code>
+     *
+     * @return The bytes for delimiter.
+     */
+    com.google.protobuf.ByteString getDelimiterBytes();
   }
 
   /** Protobuf type {@code org.datacommons.proto.CommandArgs} */
@@ -7543,6 +7636,8 @@ public final class Debug {
     private CommandArgs() {
       resolution_ = 0;
       samplePlaces_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      inputFiles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      delimiter_ = "";
     }
 
     @java.lang.Override
@@ -7647,6 +7742,23 @@ public final class Debug {
                 includeRuntimeMetadata_ = input.readBool();
                 break;
               }
+            case 90:
+              {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                if (!((mutable_bitField0_ & 0x00000400) != 0)) {
+                  inputFiles_ = new com.google.protobuf.LazyStringArrayList();
+                  mutable_bitField0_ |= 0x00000400;
+                }
+                inputFiles_.add(bs);
+                break;
+              }
+            case 98:
+              {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000200;
+                delimiter_ = bs;
+                break;
+              }
             default:
               {
                 if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
@@ -7663,6 +7775,9 @@ public final class Debug {
       } finally {
         if (((mutable_bitField0_ & 0x00000010) != 0)) {
           samplePlaces_ = samplePlaces_.getUnmodifiableView();
+        }
+        if (((mutable_bitField0_ & 0x00000400) != 0)) {
+          inputFiles_ = inputFiles_.getUnmodifiableView();
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -8112,6 +8227,140 @@ public final class Debug {
       return includeRuntimeMetadata_;
     }
 
+    public static final int INPUT_FILES_FIELD_NUMBER = 11;
+    private com.google.protobuf.LazyStringList inputFiles_;
+
+    /**
+     *
+     *
+     * <pre>
+     * List of input file paths
+     * </pre>
+     *
+     * <code>repeated string input_files = 11;</code>
+     *
+     * @return A list containing the inputFiles.
+     */
+    public com.google.protobuf.ProtocolStringList getInputFilesList() {
+      return inputFiles_;
+    }
+
+    /**
+     *
+     *
+     * <pre>
+     * List of input file paths
+     * </pre>
+     *
+     * <code>repeated string input_files = 11;</code>
+     *
+     * @return The count of inputFiles.
+     */
+    public int getInputFilesCount() {
+      return inputFiles_.size();
+    }
+
+    /**
+     *
+     *
+     * <pre>
+     * List of input file paths
+     * </pre>
+     *
+     * <code>repeated string input_files = 11;</code>
+     *
+     * @param index The index of the element to return.
+     * @return The inputFiles at the given index.
+     */
+    public java.lang.String getInputFiles(int index) {
+      return inputFiles_.get(index);
+    }
+
+    /**
+     *
+     *
+     * <pre>
+     * List of input file paths
+     * </pre>
+     *
+     * <code>repeated string input_files = 11;</code>
+     *
+     * @param index The index of the value to return.
+     * @return The bytes of the inputFiles at the given index.
+     */
+    public com.google.protobuf.ByteString getInputFilesBytes(int index) {
+      return inputFiles_.getByteString(index);
+    }
+
+    public static final int DELIMITER_FIELD_NUMBER = 12;
+    private volatile java.lang.Object delimiter_;
+
+    /**
+     *
+     *
+     * <pre>
+     * CSV delimiter character
+     * </pre>
+     *
+     * <code>optional string delimiter = 12;</code>
+     *
+     * @return Whether the delimiter field is set.
+     */
+    @java.lang.Override
+    public boolean hasDelimiter() {
+      return ((bitField0_ & 0x00000200) != 0);
+    }
+
+    /**
+     *
+     *
+     * <pre>
+     * CSV delimiter character
+     * </pre>
+     *
+     * <code>optional string delimiter = 12;</code>
+     *
+     * @return The delimiter.
+     */
+    @java.lang.Override
+    public java.lang.String getDelimiter() {
+      java.lang.Object ref = delimiter_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          delimiter_ = s;
+        }
+        return s;
+      }
+    }
+
+    /**
+     *
+     *
+     * <pre>
+     * CSV delimiter character
+     * </pre>
+     *
+     * <code>optional string delimiter = 12;</code>
+     *
+     * @return The bytes for delimiter.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString getDelimiterBytes() {
+      java.lang.Object ref = delimiter_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b =
+            com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        delimiter_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
 
     @java.lang.Override
@@ -8156,6 +8405,12 @@ public final class Debug {
       if (((bitField0_ & 0x00000100) != 0)) {
         output.writeBool(10, includeRuntimeMetadata_);
       }
+      for (int i = 0; i < inputFiles_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 11, inputFiles_.getRaw(i));
+      }
+      if (((bitField0_ & 0x00000200) != 0)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 12, delimiter_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -8199,6 +8454,17 @@ public final class Debug {
       }
       if (((bitField0_ & 0x00000100) != 0)) {
         size += com.google.protobuf.CodedOutputStream.computeBoolSize(10, includeRuntimeMetadata_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < inputFiles_.size(); i++) {
+          dataSize += computeStringSizeNoTag(inputFiles_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getInputFilesList().size();
+      }
+      if (((bitField0_ & 0x00000200) != 0)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(12, delimiter_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -8252,6 +8518,11 @@ public final class Debug {
       if (hasIncludeRuntimeMetadata()) {
         if (getIncludeRuntimeMetadata() != other.getIncludeRuntimeMetadata()) return false;
       }
+      if (!getInputFilesList().equals(other.getInputFilesList())) return false;
+      if (hasDelimiter() != other.hasDelimiter()) return false;
+      if (hasDelimiter()) {
+        if (!getDelimiter().equals(other.getDelimiter())) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -8302,6 +8573,14 @@ public final class Debug {
       if (hasIncludeRuntimeMetadata()) {
         hash = (37 * hash) + INCLUDE_RUNTIME_METADATA_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getIncludeRuntimeMetadata());
+      }
+      if (getInputFilesCount() > 0) {
+        hash = (37 * hash) + INPUT_FILES_FIELD_NUMBER;
+        hash = (53 * hash) + getInputFilesList().hashCode();
+      }
+      if (hasDelimiter()) {
+        hash = (37 * hash) + DELIMITER_FIELD_NUMBER;
+        hash = (53 * hash) + getDelimiter().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -8463,6 +8742,10 @@ public final class Debug {
         bitField0_ = (bitField0_ & ~0x00000100);
         includeRuntimeMetadata_ = false;
         bitField0_ = (bitField0_ & ~0x00000200);
+        inputFiles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000400);
+        delimiter_ = "";
+        bitField0_ = (bitField0_ & ~0x00000800);
         return this;
       }
 
@@ -8533,6 +8816,15 @@ public final class Debug {
           result.includeRuntimeMetadata_ = includeRuntimeMetadata_;
           to_bitField0_ |= 0x00000100;
         }
+        if (((bitField0_ & 0x00000400) != 0)) {
+          inputFiles_ = inputFiles_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000400);
+        }
+        result.inputFiles_ = inputFiles_;
+        if (((from_bitField0_ & 0x00000800) != 0)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        result.delimiter_ = delimiter_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -8621,6 +8913,21 @@ public final class Debug {
         }
         if (other.hasIncludeRuntimeMetadata()) {
           setIncludeRuntimeMetadata(other.getIncludeRuntimeMetadata());
+        }
+        if (!other.inputFiles_.isEmpty()) {
+          if (inputFiles_.isEmpty()) {
+            inputFiles_ = other.inputFiles_;
+            bitField0_ = (bitField0_ & ~0x00000400);
+          } else {
+            ensureInputFilesIsMutable();
+            inputFiles_.addAll(other.inputFiles_);
+          }
+          onChanged();
+        }
+        if (other.hasDelimiter()) {
+          bitField0_ |= 0x00000800;
+          delimiter_ = other.delimiter_;
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -9250,6 +9557,309 @@ public final class Debug {
       public Builder clearIncludeRuntimeMetadata() {
         bitField0_ = (bitField0_ & ~0x00000200);
         includeRuntimeMetadata_ = false;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList inputFiles_ =
+          com.google.protobuf.LazyStringArrayList.EMPTY;
+
+      private void ensureInputFilesIsMutable() {
+        if (!((bitField0_ & 0x00000400) != 0)) {
+          inputFiles_ = new com.google.protobuf.LazyStringArrayList(inputFiles_);
+          bitField0_ |= 0x00000400;
+        }
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * List of input file paths
+       * </pre>
+       *
+       * <code>repeated string input_files = 11;</code>
+       *
+       * @return A list containing the inputFiles.
+       */
+      public com.google.protobuf.ProtocolStringList getInputFilesList() {
+        return inputFiles_.getUnmodifiableView();
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * List of input file paths
+       * </pre>
+       *
+       * <code>repeated string input_files = 11;</code>
+       *
+       * @return The count of inputFiles.
+       */
+      public int getInputFilesCount() {
+        return inputFiles_.size();
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * List of input file paths
+       * </pre>
+       *
+       * <code>repeated string input_files = 11;</code>
+       *
+       * @param index The index of the element to return.
+       * @return The inputFiles at the given index.
+       */
+      public java.lang.String getInputFiles(int index) {
+        return inputFiles_.get(index);
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * List of input file paths
+       * </pre>
+       *
+       * <code>repeated string input_files = 11;</code>
+       *
+       * @param index The index of the value to return.
+       * @return The bytes of the inputFiles at the given index.
+       */
+      public com.google.protobuf.ByteString getInputFilesBytes(int index) {
+        return inputFiles_.getByteString(index);
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * List of input file paths
+       * </pre>
+       *
+       * <code>repeated string input_files = 11;</code>
+       *
+       * @param index The index to set the value at.
+       * @param value The inputFiles to set.
+       * @return This builder for chaining.
+       */
+      public Builder setInputFiles(int index, java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureInputFilesIsMutable();
+        inputFiles_.set(index, value);
+        onChanged();
+        return this;
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * List of input file paths
+       * </pre>
+       *
+       * <code>repeated string input_files = 11;</code>
+       *
+       * @param value The inputFiles to add.
+       * @return This builder for chaining.
+       */
+      public Builder addInputFiles(java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureInputFilesIsMutable();
+        inputFiles_.add(value);
+        onChanged();
+        return this;
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * List of input file paths
+       * </pre>
+       *
+       * <code>repeated string input_files = 11;</code>
+       *
+       * @param values The inputFiles to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllInputFiles(java.lang.Iterable<java.lang.String> values) {
+        ensureInputFilesIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(values, inputFiles_);
+        onChanged();
+        return this;
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * List of input file paths
+       * </pre>
+       *
+       * <code>repeated string input_files = 11;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearInputFiles() {
+        inputFiles_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000400);
+        onChanged();
+        return this;
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * List of input file paths
+       * </pre>
+       *
+       * <code>repeated string input_files = 11;</code>
+       *
+       * @param value The bytes of the inputFiles to add.
+       * @return This builder for chaining.
+       */
+      public Builder addInputFilesBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureInputFilesIsMutable();
+        inputFiles_.add(value);
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object delimiter_ = "";
+
+      /**
+       *
+       *
+       * <pre>
+       * CSV delimiter character
+       * </pre>
+       *
+       * <code>optional string delimiter = 12;</code>
+       *
+       * @return Whether the delimiter field is set.
+       */
+      public boolean hasDelimiter() {
+        return ((bitField0_ & 0x00000800) != 0);
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * CSV delimiter character
+       * </pre>
+       *
+       * <code>optional string delimiter = 12;</code>
+       *
+       * @return The delimiter.
+       */
+      public java.lang.String getDelimiter() {
+        java.lang.Object ref = delimiter_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            delimiter_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * CSV delimiter character
+       * </pre>
+       *
+       * <code>optional string delimiter = 12;</code>
+       *
+       * @return The bytes for delimiter.
+       */
+      public com.google.protobuf.ByteString getDelimiterBytes() {
+        java.lang.Object ref = delimiter_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b =
+              com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+          delimiter_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * CSV delimiter character
+       * </pre>
+       *
+       * <code>optional string delimiter = 12;</code>
+       *
+       * @param value The delimiter to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDelimiter(java.lang.String value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000800;
+        delimiter_ = value;
+        onChanged();
+        return this;
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * CSV delimiter character
+       * </pre>
+       *
+       * <code>optional string delimiter = 12;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearDelimiter() {
+        bitField0_ = (bitField0_ & ~0x00000800);
+        delimiter_ = getDefaultInstance().getDelimiter();
+        onChanged();
+        return this;
+      }
+
+      /**
+       *
+       *
+       * <pre>
+       * CSV delimiter character
+       * </pre>
+       *
+       * <code>optional string delimiter = 12;</code>
+       *
+       * @param value The bytes for delimiter to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDelimiterBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000800;
+        delimiter_ = value;
         onChanged();
         return this;
       }
@@ -15934,7 +16544,7 @@ public final class Debug {
           + "%.org.datacommons.proto.Log.CounterSet:\002"
           + "8\001\"c\n\005Level\022\025\n\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLE"
           + "VEL_INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LEVEL_E"
-          + "RROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010\002\020\003\"\312\003\n\013Comman"
+          + "RROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010\002\020\003\"\362\003\n\013Comman"
           + "dArgs\022\030\n\020existence_checks\030\001 \001(\010\022E\n\nresol"
           + "ution\030\002 \001(\01621.org.datacommons.proto.Comm"
           + "andArgs.ResolutionMode\022\023\n\013num_threads\030\003 "
@@ -15942,7 +16552,8 @@ public final class Debug {
           + "s\030\005 \003(\t\022\031\n\021observation_about\030\006 \001(\010\022\027\n\017al"
           + "low_nan_svobs\030\007 \001(\010\022 \n\030check_measurement"
           + "_result\030\010 \001(\010\022\036\n\026coordinates_resolution\030"
-          + "\t \001(\010\022 \n\030include_runtime_metadata\030\n \001(\010\""
+          + "\t \001(\010\022 \n\030include_runtime_metadata\030\n \001(\010\022"
+          + "\023\n\013input_files\030\013 \003(\t\022\021\n\tdelimiter\030\014 \001(\t\""
           + "\200\001\n\016ResolutionMode\022\037\n\033RESOLUTION_MODE_UN"
           + "SPECIFIED\020\000\022\030\n\024RESOLUTION_MODE_NONE\020\001\022\031\n"
           + "\025RESOLUTION_MODE_LOCAL\020\002\022\030\n\024RESOLUTION_M"
@@ -16042,6 +16653,8 @@ public final class Debug {
               "CheckMeasurementResult",
               "CoordinatesResolution",
               "IncludeRuntimeMetadata",
+              "InputFiles",
+              "Delimiter",
             });
     internal_static_org_datacommons_proto_DataPoint_descriptor =
         getDescriptor().getMessageTypes().get(3);

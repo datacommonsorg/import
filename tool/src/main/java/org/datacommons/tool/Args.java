@@ -1,6 +1,8 @@
 package org.datacommons.tool;
 
+import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.util.Strings;
@@ -66,6 +68,31 @@ class Args {
     argsBuilder.setAllowNanSvobs(allowNonNumericStatVarObservation);
     argsBuilder.setCheckMeasurementResult(checkMeasurementResult);
     argsBuilder.setIncludeRuntimeMetadata(includeRuntimeMetadata);
+
+    // Add file information if available
+    if (fileGroup != null) {
+      List<String> allFiles = new ArrayList<>();
+
+      if (fileGroup.getMcfs() != null) {
+        for (File f : fileGroup.getMcfs()) {
+          allFiles.add(f.getPath());
+        }
+      }
+      if (fileGroup.getTmcfs() != null) {
+        for (File f : fileGroup.getTmcfs()) {
+          allFiles.add(f.getPath());
+        }
+      }
+      if (fileGroup.getCsvs() != null) {
+        for (File f : fileGroup.getCsvs()) {
+          allFiles.add(f.getPath());
+        }
+      }
+
+      argsBuilder.addAllInputFiles(allFiles);
+      argsBuilder.setDelimiter(String.valueOf(fileGroup.delimiter()));
+    }
+
     return argsBuilder.build();
   }
 
