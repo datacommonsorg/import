@@ -8,6 +8,7 @@ import java.util.Map;
 import org.apache.logging.log4j.util.Strings;
 import org.datacommons.proto.Debug;
 import org.datacommons.util.FileGroup;
+import org.datacommons.util.LogWrapper;
 
 // Class representing the command line arguments to dc-import tool. Largely used as a struct.
 class Args {
@@ -69,8 +70,8 @@ class Args {
     argsBuilder.setCheckMeasurementResult(checkMeasurementResult);
     argsBuilder.setIncludeRuntimeMetadata(includeRuntimeMetadata);
 
-    // Add file information if available
-    if (fileGroup != null) {
+    // Add file information if available (skip in test mode to avoid path-dependent tests)
+    if (!LogWrapper.TEST_MODE && fileGroup != null) {
       List<String> allFiles = new ArrayList<>();
 
       if (fileGroup.getMcfs() != null) {
