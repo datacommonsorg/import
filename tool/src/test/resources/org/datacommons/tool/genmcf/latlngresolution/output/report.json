@@ -128,8 +128,6 @@
     "allowNanSvobs": false,
     "checkMeasurementResult": false,
     "coordinatesResolution": true,
-    "includeRuntimeMetadata": true,
-    "inputFiles": ["/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/genmcf/latlngresolution/input/LatLng.tmcf", "/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/genmcf/latlngresolution/input/LatLng.csv"],
-    "delimiter": ","
+    "includeRuntimeMetadata": true
   }
 }

@@ -77,8 +77,6 @@
     "allowNanSvobs": false,
     "checkMeasurementResult": false,
     "coordinatesResolution": false,
-    "includeRuntimeMetadata": true,
-    "inputFiles": ["/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/genmcf/localidresolution/input/localresolutiongraph.mcf", "/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/genmcf/localidresolution/input/covid.tmcf", "/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/genmcf/localidresolution/input/covid.csv"],
-    "delimiter": ","
+    "includeRuntimeMetadata": true
   }
 }

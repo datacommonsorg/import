@@ -1035,8 +1035,6 @@
     "allowNanSvobs": false,
     "checkMeasurementResult": false,
     "coordinatesResolution": false,
-    "includeRuntimeMetadata": true,
-    "inputFiles": ["/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/lint/allfiletypes/input/AllFileTypes.mcf", "/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/lint/allfiletypes/input/AllFileTypes.tmcf", "/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/lint/allfiletypes/input/AllFileTypes.csv"],
-    "delimiter": ","
+    "includeRuntimeMetadata": true
   }
 }

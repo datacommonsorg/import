@@ -707,8 +707,6 @@
     "allowNanSvobs": false,
     "checkMeasurementResult": false,
     "coordinatesResolution": false,
-    "includeRuntimeMetadata": true,
-    "inputFiles": ["/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/lint/nocsv/input/NoCsv.mcf", "/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/lint/nocsv/input/NoCsv.tmcf"],
-    "delimiter": ","
+    "includeRuntimeMetadata": true
   }
 }

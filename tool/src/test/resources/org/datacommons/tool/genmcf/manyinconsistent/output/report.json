@@ -109,8 +109,6 @@
     "allowNanSvobs": false,
     "checkMeasurementResult": false,
     "coordinatesResolution": false,
-    "includeRuntimeMetadata": true,
-    "inputFiles": ["/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/genmcf/manyinconsistent/input/acre.mcf", "/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/genmcf/manyinconsistent/input/acre.tmcf", "/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/genmcf/manyinconsistent/input/acre.csv"],
-    "delimiter": ","
+    "includeRuntimeMetadata": true
   }
 }

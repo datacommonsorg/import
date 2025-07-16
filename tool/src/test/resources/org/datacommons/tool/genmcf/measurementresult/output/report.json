@@ -135,8 +135,6 @@
     "allowNanSvobs": true,
     "checkMeasurementResult": true,
     "coordinatesResolution": false,
-    "includeRuntimeMetadata": true,
-    "inputFiles": ["/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/genmcf/measurementresult/input/acre.mcf", "/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/genmcf/measurementresult/input/acre.tmcf", "/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/genmcf/measurementresult/input/acre.csv"],
-    "delimiter": ","
+    "includeRuntimeMetadata": true
   }
 }
