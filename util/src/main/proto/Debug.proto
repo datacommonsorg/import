@@ -20,6 +20,25 @@ import "LogLocation.proto";
 import "Mcf.proto";
 
 //
+// Runtime metadata capturing when and how the report was generated.
+// This information is used to track report generation context including
+// timestamp, input files, and tool version - essential for reviewing
+// old imports where reports may be obsolete or need validation.
+//
+message RuntimeMetadata {
+    optional int64 start_time_millis = 1;  // Epoch time in milliseconds when generation started
+    optional int64 end_time_millis = 2;  // Epoch time in milliseconds when generation ended
+    optional string username = 3;
+    optional string hostname = 4;
+    optional string os_name = 5;
+    optional string os_version = 6;
+    optional string java_version = 7;
+    optional string tool_version = 8;  // From pom.xml or Main.java
+    optional string tool_build_timestamp = 9;  // Build time if available
+    optional string tool_git_commit_hash = 10;  // Git commit if available
+}
+
+//
 // A log of import processing with details on any warnings, errors, etc.
 //
 message Log {
@@ -59,6 +78,7 @@ message Log {
     repeated Entry entries = 3;
     repeated StatValidationResult stats_check_summary = 4;
     optional CommandArgs command_args = 5;
+    optional RuntimeMetadata runtime_metadata = 6;
     reserved 2;
 }
 
@@ -83,6 +103,9 @@ message CommandArgs {
     // check the existence of SVObs value references if the SV they are measuring has statType: measurementResult
     optional bool check_measurement_result = 8;
     optional bool coordinates_resolution = 9;
+    optional bool include_runtime_metadata = 10;
+    repeated string input_files = 11;  // List of input file paths
+    optional string delimiter = 12;    // CSV delimiter character
 }
 
 message DataPoint {

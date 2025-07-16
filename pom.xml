@@ -33,6 +33,28 @@
                 <version>3.8.0</version>
             </plugin>
             <plugin>
+                <!-- For git commit hash in manifest -->
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <version>4.9.10</version>
+                <executions>
+                    <execution>
+                        <id>get-the-git-infos</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                    <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
+                    <!-- By default uses JGit. For git worktree support, use -Pgit-worktree profile -->
+                </configuration>
+            </plugin>
+            <plugin>
                 <!-- For protobuf generation -->
                 <groupId>com.github.os72</groupId>
                 <artifactId>protoc-jar-maven-plugin</artifactId>
@@ -130,4 +152,22 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>git-worktree</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>pl.project13.maven</groupId>
+                        <artifactId>git-commit-id-plugin</artifactId>
+                        <configuration>
+                            <!-- Use native git for git worktree compatibility -->
+                            <useNativeGit>true</useNativeGit>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
