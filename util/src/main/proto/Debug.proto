@@ -21,6 +21,9 @@ import "Mcf.proto";
 
 //
 // Runtime metadata capturing when and how the report was generated.
+// This information is used to track report generation context including
+// timestamp, input files, and tool version - essential for reviewing
+// old imports where reports may be obsolete or need validation.
 //
 message RuntimeMetadata {
     optional int64 start_time_millis = 1;  // Epoch time in milliseconds when generation started

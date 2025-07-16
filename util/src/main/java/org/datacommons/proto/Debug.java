@@ -297,6 +297,9 @@ public final class Debug {
    *
    * <pre>
    * Runtime metadata capturing when and how the report was generated.
+   * This information is used to track report generation context including
+   * timestamp, input files, and tool version - essential for reviewing
+   * old imports where reports may be obsolete or need validation.
    * </pre>
    *
    * Protobuf type {@code org.datacommons.proto.RuntimeMetadata}
@@ -1285,6 +1288,9 @@ public final class Debug {
      *
      * <pre>
      * Runtime metadata capturing when and how the report was generated.
+     * This information is used to track report generation context including
+     * timestamp, input files, and tool version - essential for reviewing
+     * old imports where reports may be obsolete or need validation.
      * </pre>
      *
      * Protobuf type {@code org.datacommons.proto.RuntimeMetadata}
