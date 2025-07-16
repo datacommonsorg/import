@@ -431,6 +431,10 @@
     "statChecks": true,
     "observationAbout": true,
     "allowNanSvobs": false,
-    "coordinatesResolution": false
+    "checkMeasurementResult": false,
+    "coordinatesResolution": false,
+    "includeRuntimeMetadata": true,
+    "inputFiles": ["/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/genmcf/statchecks/input/covid.tmcf", "/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/tool/target/test-classes/org/datacommons/tool/genmcf/statchecks/input/covid.csv"],
+    "delimiter": ","
   }
 }
