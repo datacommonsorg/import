@@ -7512,6 +7512,20 @@ public final class Debug {
      * @return The coordinatesResolution.
      */
     boolean getCoordinatesResolution();
+
+    /**
+     * <code>optional bool include_runtime_metadata = 10;</code>
+     *
+     * @return Whether the includeRuntimeMetadata field is set.
+     */
+    boolean hasIncludeRuntimeMetadata();
+
+    /**
+     * <code>optional bool include_runtime_metadata = 10;</code>
+     *
+     * @return The includeRuntimeMetadata.
+     */
+    boolean getIncludeRuntimeMetadata();
   }
 
   /** Protobuf type {@code org.datacommons.proto.CommandArgs} */
@@ -7625,6 +7639,12 @@ public final class Debug {
               {
                 bitField0_ |= 0x00000080;
                 coordinatesResolution_ = input.readBool();
+                break;
+              }
+            case 80:
+              {
+                bitField0_ |= 0x00000100;
+                includeRuntimeMetadata_ = input.readBool();
                 break;
               }
             default:
@@ -8069,6 +8089,29 @@ public final class Debug {
       return coordinatesResolution_;
     }
 
+    public static final int INCLUDE_RUNTIME_METADATA_FIELD_NUMBER = 10;
+    private boolean includeRuntimeMetadata_;
+
+    /**
+     * <code>optional bool include_runtime_metadata = 10;</code>
+     *
+     * @return Whether the includeRuntimeMetadata field is set.
+     */
+    @java.lang.Override
+    public boolean hasIncludeRuntimeMetadata() {
+      return ((bitField0_ & 0x00000100) != 0);
+    }
+
+    /**
+     * <code>optional bool include_runtime_metadata = 10;</code>
+     *
+     * @return The includeRuntimeMetadata.
+     */
+    @java.lang.Override
+    public boolean getIncludeRuntimeMetadata() {
+      return includeRuntimeMetadata_;
+    }
+
     private byte memoizedIsInitialized = -1;
 
     @java.lang.Override
@@ -8110,6 +8153,9 @@ public final class Debug {
       if (((bitField0_ & 0x00000080) != 0)) {
         output.writeBool(9, coordinatesResolution_);
       }
+      if (((bitField0_ & 0x00000100) != 0)) {
+        output.writeBool(10, includeRuntimeMetadata_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -8150,6 +8196,9 @@ public final class Debug {
       }
       if (((bitField0_ & 0x00000080) != 0)) {
         size += com.google.protobuf.CodedOutputStream.computeBoolSize(9, coordinatesResolution_);
+      }
+      if (((bitField0_ & 0x00000100) != 0)) {
+        size += com.google.protobuf.CodedOutputStream.computeBoolSize(10, includeRuntimeMetadata_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -8199,6 +8248,10 @@ public final class Debug {
       if (hasCoordinatesResolution()) {
         if (getCoordinatesResolution() != other.getCoordinatesResolution()) return false;
       }
+      if (hasIncludeRuntimeMetadata() != other.hasIncludeRuntimeMetadata()) return false;
+      if (hasIncludeRuntimeMetadata()) {
+        if (getIncludeRuntimeMetadata() != other.getIncludeRuntimeMetadata()) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -8245,6 +8298,10 @@ public final class Debug {
       if (hasCoordinatesResolution()) {
         hash = (37 * hash) + COORDINATES_RESOLUTION_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getCoordinatesResolution());
+      }
+      if (hasIncludeRuntimeMetadata()) {
+        hash = (37 * hash) + INCLUDE_RUNTIME_METADATA_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getIncludeRuntimeMetadata());
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -8404,6 +8461,8 @@ public final class Debug {
         bitField0_ = (bitField0_ & ~0x00000080);
         coordinatesResolution_ = false;
         bitField0_ = (bitField0_ & ~0x00000100);
+        includeRuntimeMetadata_ = false;
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -8469,6 +8528,10 @@ public final class Debug {
         if (((from_bitField0_ & 0x00000100) != 0)) {
           result.coordinatesResolution_ = coordinatesResolution_;
           to_bitField0_ |= 0x00000080;
+        }
+        if (((from_bitField0_ & 0x00000200) != 0)) {
+          result.includeRuntimeMetadata_ = includeRuntimeMetadata_;
+          to_bitField0_ |= 0x00000100;
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -8555,6 +8618,9 @@ public final class Debug {
         }
         if (other.hasCoordinatesResolution()) {
           setCoordinatesResolution(other.getCoordinatesResolution());
+        }
+        if (other.hasIncludeRuntimeMetadata()) {
+          setIncludeRuntimeMetadata(other.getIncludeRuntimeMetadata());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -9137,6 +9203,53 @@ public final class Debug {
       public Builder clearCoordinatesResolution() {
         bitField0_ = (bitField0_ & ~0x00000100);
         coordinatesResolution_ = false;
+        onChanged();
+        return this;
+      }
+
+      private boolean includeRuntimeMetadata_;
+
+      /**
+       * <code>optional bool include_runtime_metadata = 10;</code>
+       *
+       * @return Whether the includeRuntimeMetadata field is set.
+       */
+      @java.lang.Override
+      public boolean hasIncludeRuntimeMetadata() {
+        return ((bitField0_ & 0x00000200) != 0);
+      }
+
+      /**
+       * <code>optional bool include_runtime_metadata = 10;</code>
+       *
+       * @return The includeRuntimeMetadata.
+       */
+      @java.lang.Override
+      public boolean getIncludeRuntimeMetadata() {
+        return includeRuntimeMetadata_;
+      }
+
+      /**
+       * <code>optional bool include_runtime_metadata = 10;</code>
+       *
+       * @param value The includeRuntimeMetadata to set.
+       * @return This builder for chaining.
+       */
+      public Builder setIncludeRuntimeMetadata(boolean value) {
+        bitField0_ |= 0x00000200;
+        includeRuntimeMetadata_ = value;
+        onChanged();
+        return this;
+      }
+
+      /**
+       * <code>optional bool include_runtime_metadata = 10;</code>
+       *
+       * @return This builder for chaining.
+       */
+      public Builder clearIncludeRuntimeMetadata() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        includeRuntimeMetadata_ = false;
         onChanged();
         return this;
       }
@@ -15821,7 +15934,7 @@ public final class Debug {
           + "%.org.datacommons.proto.Log.CounterSet:\002"
           + "8\001\"c\n\005Level\022\025\n\021LEVEL_UNSPECIFIED\020\000\022\016\n\nLE"
           + "VEL_INFO\020\001\022\021\n\rLEVEL_WARNING\020\002\022\017\n\013LEVEL_E"
-          + "RROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010\002\020\003\"\250\003\n\013Comman"
+          + "RROR\020\003\022\017\n\013LEVEL_FATAL\020\004J\004\010\002\020\003\"\312\003\n\013Comman"
           + "dArgs\022\030\n\020existence_checks\030\001 \001(\010\022E\n\nresol"
           + "ution\030\002 \001(\01621.org.datacommons.proto.Comm"
           + "andArgs.ResolutionMode\022\023\n\013num_threads\030\003 "
@@ -15829,26 +15942,26 @@ public final class Debug {
           + "s\030\005 \003(\t\022\031\n\021observation_about\030\006 \001(\010\022\027\n\017al"
           + "low_nan_svobs\030\007 \001(\010\022 \n\030check_measurement"
           + "_result\030\010 \001(\010\022\036\n\026coordinates_resolution\030"
-          + "\t \001(\010\"\200\001\n\016ResolutionMode\022\037\n\033RESOLUTION_M"
-          + "ODE_UNSPECIFIED\020\000\022\030\n\024RESOLUTION_MODE_NON"
-          + "E\020\001\022\031\n\025RESOLUTION_MODE_LOCAL\020\002\022\030\n\024RESOLU"
-          + "TION_MODE_FULL\020\003\"\321\001\n\tDataPoint\022\014\n\004date\030\001"
-          + " \001(\t\022:\n\006values\030\002 \003(\0132*.org.datacommons.p"
-          + "roto.DataPoint.DataValue\032z\n\tDataValue\0229\n"
-          + "\005value\030\001 \001(\0132*.org.datacommons.proto.Mcf"
-          + "Graph.TypedValue\0222\n\tlocations\030\002 \003(\0132\037.or"
-          + "g.datacommons.proto.Location\"\234\003\n\024StatVal"
-          + "idationResult\022\022\n\nplace_dcid\030\001 \001(\t\022\025\n\rsta"
-          + "t_var_dcid\030\002 \001(\t\022\032\n\022measurement_method\030\003"
-          + " \001(\t\022\032\n\022observation_period\030\004 \001(\t\022\026\n\016scal"
-          + "ing_factor\030\005 \001(\t\022\014\n\004unit\030\006 \001(\t\022\\\n\023valida"
-          + "tion_counters\030\007 \003(\0132?.org.datacommons.pr"
-          + "oto.StatValidationResult.StatValidationE"
-          + "ntry\032\234\001\n\023StatValidationEntry\022\023\n\013counter_"
-          + "key\030\001 \001(\t\0228\n\016problem_points\030\002 \003(\0132 .org."
-          + "datacommons.proto.DataPoint\022\032\n\022additiona"
-          + "l_details\030\003 \001(\t\022\032\n\022percent_difference\030\004 "
-          + "\001(\001"
+          + "\t \001(\010\022 \n\030include_runtime_metadata\030\n \001(\010\""
+          + "\200\001\n\016ResolutionMode\022\037\n\033RESOLUTION_MODE_UN"
+          + "SPECIFIED\020\000\022\030\n\024RESOLUTION_MODE_NONE\020\001\022\031\n"
+          + "\025RESOLUTION_MODE_LOCAL\020\002\022\030\n\024RESOLUTION_M"
+          + "ODE_FULL\020\003\"\321\001\n\tDataPoint\022\014\n\004date\030\001 \001(\t\022:"
+          + "\n\006values\030\002 \003(\0132*.org.datacommons.proto.D"
+          + "ataPoint.DataValue\032z\n\tDataValue\0229\n\005value"
+          + "\030\001 \001(\0132*.org.datacommons.proto.McfGraph."
+          + "TypedValue\0222\n\tlocations\030\002 \003(\0132\037.org.data"
+          + "commons.proto.Location\"\234\003\n\024StatValidatio"
+          + "nResult\022\022\n\nplace_dcid\030\001 \001(\t\022\025\n\rstat_var_"
+          + "dcid\030\002 \001(\t\022\032\n\022measurement_method\030\003 \001(\t\022\032"
+          + "\n\022observation_period\030\004 \001(\t\022\026\n\016scaling_fa"
+          + "ctor\030\005 \001(\t\022\014\n\004unit\030\006 \001(\t\022\\\n\023validation_c"
+          + "ounters\030\007 \003(\0132?.org.datacommons.proto.St"
+          + "atValidationResult.StatValidationEntry\032\234"
+          + "\001\n\023StatValidationEntry\022\023\n\013counter_key\030\001 "
+          + "\001(\t\0228\n\016problem_points\030\002 \003(\0132 .org.dataco"
+          + "mmons.proto.DataPoint\022\032\n\022additional_deta"
+          + "ils\030\003 \001(\t\022\032\n\022percent_difference\030\004 \001(\001"
     };
     descriptor =
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -15928,6 +16041,7 @@ public final class Debug {
               "AllowNanSvobs",
               "CheckMeasurementResult",
               "CoordinatesResolution",
+              "IncludeRuntimeMetadata",
             });
     internal_static_org_datacommons_proto_DataPoint_descriptor =
         getDescriptor().getMessageTypes().get(3);

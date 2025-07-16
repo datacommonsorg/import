@@ -64,6 +64,8 @@ class Args {
     if (samplePlaces != null) argsBuilder.addAllSamplePlaces(samplePlaces);
     argsBuilder.setObservationAbout(checkObservationAbout);
     argsBuilder.setAllowNanSvobs(allowNonNumericStatVarObservation);
+    argsBuilder.setCheckMeasurementResult(checkMeasurementResult);
+    argsBuilder.setIncludeRuntimeMetadata(includeRuntimeMetadata);
     return argsBuilder.build();
   }
 

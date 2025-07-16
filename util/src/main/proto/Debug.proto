@@ -100,6 +100,7 @@ message CommandArgs {
     // check the existence of SVObs value references if the SV they are measuring has statType: measurementResult
     optional bool check_measurement_result = 8;
     optional bool coordinates_resolution = 9;
+    optional bool include_runtime_metadata = 10;
 }
 
 message DataPoint {
