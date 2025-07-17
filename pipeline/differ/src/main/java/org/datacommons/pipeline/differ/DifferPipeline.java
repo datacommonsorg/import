@@ -25,7 +25,7 @@ public class DifferPipeline {
 
     // Read input graph files and convert into PCollections.
     PCollection<McfGraph> previous_nodes, current_nodes;
-    if (options.getUseOptimizedGraphFormat().isAccessible()) {
+    if (options.getUseOptimizedGraphFormat()) {
       LOGGER.info("Using tfrecord file format");
       current_nodes = GraphUtils.readMcfGraph(options.getCurrentData(), p);
       previous_nodes = GraphUtils.readMcfGraph(options.getPreviousData(), p);

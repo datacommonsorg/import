@@ -42,6 +42,17 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setImportGroupVersion(String importGroupVersion);
 
+  @Description(
+      "The import group version to be ingested into Spanner. e.g. auto1d_2025_03_26_02_16_23")
+  String getImportGroup();
+
+  void setImportGroup(String importGroup);
+
+  @Description("List of imports for ingestion (CSV)")
+  String getImportList();
+
+  void setImportList(String importList);
+
   @Description("The number of shards to generate for writing mutations.")
   @Default.Integer(1)
   int getNumShards();
