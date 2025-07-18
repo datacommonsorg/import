@@ -12,7 +12,6 @@ import java.util.Set;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TFRecordIO;
 import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.options.ValueProvider;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
@@ -56,7 +55,7 @@ public class GraphUtils {
    * @param p dataflow pipeline
    * @return PCollection of MCF graph proto
    */
-  public static PCollection<McfGraph> readMcfGraph(ValueProvider<String> files, Pipeline p) {
+  public static PCollection<McfGraph> readMcfGraph(String files, Pipeline p) {
     PCollection<McfOptimizedGraph> graph = readOptimizedMcfGraph(files, p);
     return graph.apply(
         ParDo.of(
@@ -79,8 +78,7 @@ public class GraphUtils {
    * @param p Dataflow pipeline.
    * @return PCollection of McfOptimizedGraph proto.
    */
-  public static PCollection<McfOptimizedGraph> readOptimizedMcfGraph(
-      ValueProvider<String> files, Pipeline p) {
+  public static PCollection<McfOptimizedGraph> readOptimizedMcfGraph(String files, Pipeline p) {
     PCollection<byte[]> nodes =
         p.apply(
             "ReadMcfGraph",
@@ -108,7 +106,7 @@ public class GraphUtils {
    * @param p Dataflow pipeline.
    * @return PCollection of McfGraph proto.
    */
-  public static PCollection<McfGraph> readMcfFile(ValueProvider<String> file, Pipeline p) {
+  public static PCollection<McfGraph> readMcfFile(String file, Pipeline p) {
     String delimiter = "\n\n";
     PCollection<String> nodes =
         p.apply("ReadMcfFile", TextIO.read().withDelimiter(delimiter.getBytes()).from(file));

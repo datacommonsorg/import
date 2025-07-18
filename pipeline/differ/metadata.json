@@ -1,0 +1,31 @@
+{
+    "name": "Differ pipeline",
+    "description": "Differ pipeline.",
+    "parameters": [
+        {
+            "name": "currentData",
+            "label": "Path of the current data.",
+            "helpText": "Path of the current data.",
+            "paramType": "TEXT"
+        },
+        {
+            "name": "previousData",
+            "label": "Path of the previous data.",
+            "helpText": "Path of the previous data.",
+            "paramType": "TEXT"
+        },
+        {
+            "name": "outputLocation",
+            "label": "Path of the diff output.",
+            "helpText": "Path of the diff output.",
+            "paramType": "TEXT"
+        },
+        {
+            "name": "useOptimizedGraphFormat",
+            "label": "Whether to use optimized tfrecord file format.",
+            "helpText": "Whether to use optimized tfrecord file format.",
+            "paramType": "BOOLEAN",
+            "isOptional": true
+        }
+    ]
+}
