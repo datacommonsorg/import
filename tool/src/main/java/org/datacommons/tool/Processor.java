@@ -21,8 +21,10 @@ import java.io.IOException;
 import java.net.http.HttpClient;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -268,7 +270,8 @@ public class Processor {
             csvFile);
     Mcf.McfGraph g;
     int numNodeSuccesses = 0, numPVSuccesses = 0, numRowSuccesses = 0, numRowsProcessed = 0;
-    List<Mcf.McfStatVarObsSeries> svoList = new ArrayList<>();
+    Map<Mcf.McfStatVarObsSeries.Key, Mcf.McfStatVarObsSeries.Builder> groupedObservations =
+        new HashMap<>();
     while ((g = parser.parseNextRow()) != null) {
       g = McfMutator.mutate(g.toBuilder(), logCtx);
 
@@ -303,16 +306,24 @@ public class Processor {
 
       // Extract observations immediately to free memory
       List<McfStatVarObsSeries> extractedObservations = extractObservationsFromGraph(g);
-      svoList.addAll(extractedObservations);
+      // Group observations incrementally by key to reduce memory usage
+      for (McfStatVarObsSeries obs : extractedObservations) {
+        McfStatVarObsSeries.Key key = obs.getKey();
+        groupedObservations
+            .computeIfAbsent(key, k -> McfStatVarObsSeries.newBuilder().setKey(k))
+            .addAllSvObsList(obs.getSvObsListList());
+      }
       if (!logCtx.trackStatus(1, "rows processed")) {
         throw new DCTooManyFailuresException("encountered too many failures");
       }
     }
     String filePath = Paths.get(args.outputDir.toString(), "optimized_graph.pb").toString();
     logger.info("Writing optimized graph file to {}", filePath);
-    List<McfOptimizedGraph> og = GraphUtils.buildOptimizedMcfGraphFromSeries(svoList);
+    // Build and write optimized graphs directly from grouped observations
     try (FileOutputStream output = new FileOutputStream(filePath)) {
-      for (McfOptimizedGraph graph : og) {
+      for (Mcf.McfStatVarObsSeries.Builder builder : groupedObservations.values()) {
+        McfOptimizedGraph graph =
+            McfOptimizedGraph.newBuilder().setSvObsSeries(builder.build()).build();
         graph.writeDelimitedTo(output);
       }
     } catch (IOException e) {
