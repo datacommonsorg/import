@@ -33,6 +33,7 @@ import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
+import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.util.*;
 
 public class Processor {
@@ -267,7 +268,7 @@ public class Processor {
             csvFile);
     Mcf.McfGraph g;
     int numNodeSuccesses = 0, numPVSuccesses = 0, numRowSuccesses = 0, numRowsProcessed = 0;
-    List<Mcf.McfGraph> graphList = new ArrayList<>();
+    List<Mcf.McfStatVarObsSeries> svoList = new ArrayList<>();
     while ((g = parser.parseNextRow()) != null) {
       g = McfMutator.mutate(g.toBuilder(), logCtx);
 
@@ -299,14 +300,17 @@ public class Processor {
         }
       }
       numRowsProcessed++;
-      graphList.add(g);
+
+      // Extract observations immediately to free memory
+      List<McfStatVarObsSeries> extractedObservations = extractObservationsFromGraph(g);
+      svoList.addAll(extractedObservations);
       if (!logCtx.trackStatus(1, "rows processed")) {
         throw new DCTooManyFailuresException("encountered too many failures");
       }
     }
     String filePath = Paths.get(args.outputDir.toString(), "optimized_graph.pb").toString();
     logger.info("Writing optimized graph file to {}", filePath);
-    List<McfOptimizedGraph> og = GraphUtils.buildOptimizedMcfGraph(graphList);
+    List<McfOptimizedGraph> og = GraphUtils.buildOptimizedMcfGraphFromSeries(svoList);
     try (FileOutputStream output = new FileOutputStream(filePath)) {
       for (McfOptimizedGraph graph : og) {
         graph.writeDelimitedTo(output);
@@ -455,6 +459,32 @@ public class Processor {
     logger.info("Performing stats checks");
     statChecker.check();
     statChecker.fetchSamplePlaceNames(httpClient);
+  }
+
+  /**
+   * Extracts StatVarObservation series from a graph for memory-efficient processing. This method
+   * immediately converts observations to their optimized representation, allowing the original
+   * graph to be garbage collected.
+   *
+   * @param graph The McfGraph to extract observations from
+   * @return List of McfStatVarObsSeries extracted from the graph, empty if no observations found
+   */
+  private List<McfStatVarObsSeries> extractObservationsFromGraph(Mcf.McfGraph graph) {
+    List<McfStatVarObsSeries> observations = new ArrayList<>();
+
+    for (Mcf.McfGraph.PropertyValues pv : graph.getNodesMap().values()) {
+      if (GraphUtils.isObservation(pv)) {
+        try {
+          McfStatVarObsSeries svo = GraphUtils.convertMcfGraphToMcfStatVarObsSeries(pv);
+          observations.add(svo);
+        } catch (IllegalArgumentException e) {
+          // Log and skip invalid observations
+          logger.warn("Skipping invalid observation: " + e.getMessage());
+        }
+      }
+    }
+
+    return observations;
   }
 
   private static class DCTooManyFailuresException extends Exception {

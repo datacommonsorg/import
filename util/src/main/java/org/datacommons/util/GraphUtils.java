@@ -391,6 +391,19 @@ public class GraphUtils {
       }
     }
 
+    return buildOptimizedMcfGraphFromSeries(svoList);
+  }
+
+  /**
+   * Builds an OptimizedMcfGraph proto from a list of McfStatVarObsSeries. This function groups
+   * StatVarObservations by their key. This is a memory-efficient version that works with
+   * pre-extracted observation series instead of full graphs.
+   *
+   * @param svoList A list of McfStatVarObsSeries protos.
+   * @return A list of McfOptimizedGraph protos containing the grouped StatVarObservations.
+   */
+  public static List<McfOptimizedGraph> buildOptimizedMcfGraphFromSeries(
+      List<McfStatVarObsSeries> svoList) {
     Map<McfStatVarObsSeries.Key, List<McfStatVarObsSeries>> svoByKey =
         svoList.stream().collect(Collectors.groupingBy(McfStatVarObsSeries::getKey));
     List<McfOptimizedGraph> res = new ArrayList<>();
