@@ -68,6 +68,7 @@ class Lint implements Callable<Integer> {
     args.fileGroup = FileGroup.build(files, spec, delimiter, logger);
     args.outputDir = parent.outputDir.toPath();
     args.generateSummaryReport = parent.generateSummaryReport;
+    args.generateOptimizedGraph = parent.generateOptimizedGraph;
     args.checkObservationAbout = parent.checkObservationAbout;
     args.allowNonNumericStatVarObservation = parent.allowNonNumericStatVarObservation;
     args.checkMeasurementResult = parent.checkMeasurementResult;
