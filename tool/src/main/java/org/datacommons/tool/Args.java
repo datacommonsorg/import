@@ -23,6 +23,7 @@ class Args {
   public int numThreads = 1;
   public Path outputDir = null;
   public boolean generateSummaryReport = true;
+  public boolean generateOptimizedGraph = false;
   public boolean checkObservationAbout = true;
   public boolean allowNonNumericStatVarObservation = false;
   public boolean checkMeasurementResult = false;

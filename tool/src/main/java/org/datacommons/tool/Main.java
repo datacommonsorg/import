@@ -141,6 +141,13 @@ public class Main {
   public boolean generateSummaryReport;
 
   @CommandLine.Option(
+      names = {"-og", "--optimized-graph"},
+      defaultValue = "false",
+      scope = CommandLine.ScopeType.INHERIT,
+      description = "Generates optimized graph by grouping observations. Defaults to false.")
+  public boolean generateOptimizedGraph;
+
+  @CommandLine.Option(
       names = {"-ep", "--existence-checks-place"},
       defaultValue = "true",
       scope = CommandLine.ScopeType.INHERIT,

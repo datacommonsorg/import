@@ -304,30 +304,34 @@ public class Processor {
       }
       numRowsProcessed++;
 
-      // Extract observations immediately to free memory
-      List<McfStatVarObsSeries> extractedObservations = extractObservationsFromGraph(g);
-      // Group observations incrementally by key to reduce memory usage
-      for (McfStatVarObsSeries obs : extractedObservations) {
-        McfStatVarObsSeries.Key key = obs.getKey();
-        groupedObservations
-            .computeIfAbsent(key, k -> McfStatVarObsSeries.newBuilder().setKey(k))
-            .addAllSvObsList(obs.getSvObsListList());
-      }
-      if (!logCtx.trackStatus(1, "rows processed")) {
-        throw new DCTooManyFailuresException("encountered too many failures");
+      if (args.generateOptimizedGraph) {
+        // Extract observations immediately to free memory
+        List<McfStatVarObsSeries> extractedObservations = extractObservationsFromGraph(g);
+        // Group observations incrementally by key to reduce memory usage
+        for (McfStatVarObsSeries obs : extractedObservations) {
+          McfStatVarObsSeries.Key key = obs.getKey();
+          groupedObservations
+              .computeIfAbsent(key, k -> McfStatVarObsSeries.newBuilder().setKey(k))
+              .addAllSvObsList(obs.getSvObsListList());
+        }
+        if (!logCtx.trackStatus(1, "rows processed")) {
+          throw new DCTooManyFailuresException("encountered too many failures");
+        }
       }
     }
-    String filePath = Paths.get(args.outputDir.toString(), "optimized_graph.pb").toString();
-    logger.info("Writing optimized graph file to {}", filePath);
-    // Build and write optimized graphs directly from grouped observations
-    try (FileOutputStream output = new FileOutputStream(filePath)) {
-      for (Mcf.McfStatVarObsSeries.Builder builder : groupedObservations.values()) {
-        McfOptimizedGraph graph =
-            McfOptimizedGraph.newBuilder().setSvObsSeries(builder.build()).build();
-        graph.writeDelimitedTo(output);
+    if (args.generateOptimizedGraph) {
+      String filePath = Paths.get(args.outputDir.toString(), "optimized_graph.pb").toString();
+      logger.info("Writing optimized graph file to {}", filePath);
+      // Build and write optimized graphs directly from grouped observations
+      try (FileOutputStream output = new FileOutputStream(filePath)) {
+        for (Mcf.McfStatVarObsSeries.Builder builder : groupedObservations.values()) {
+          McfOptimizedGraph graph =
+              McfOptimizedGraph.newBuilder().setSvObsSeries(builder.build()).build();
+          graph.writeDelimitedTo(output);
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
       }
-    } catch (IOException e) {
-      e.printStackTrace();
     }
     logCtx.incrementInfoCounterBy("NumRowSuccesses", numRowSuccesses);
     logCtx.incrementInfoCounterBy("NumNodeSuccesses", numNodeSuccesses);
