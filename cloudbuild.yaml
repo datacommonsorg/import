@@ -3,7 +3,8 @@ steps:
     args: ['package']
     entrypoint: mvn
 
-artifacts:
-  objects:
-    location: 'gs://datacommons_public/import_tools'
-    paths: ['tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar', 'pipeline/differ/target/differ-bundled-0.1-SNAPSHOT.jar']
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: ['cp', 'tool/target/datacommons-import-tool-0.1-alpha.1-jar-with-dependencies.jar', 'gs://datacommons_public/import_tools/import-tool.jar']
+
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['builds', 'triggers', 'run', 'dc-import-executor', '--branch=master', '--substitutions', '_DOCKER_IMAGE=us-docker.pkg.dev/datcom-ci/gcr.io/dc-import-executor']
