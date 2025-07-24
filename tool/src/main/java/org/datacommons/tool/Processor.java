@@ -15,6 +15,7 @@
 package org.datacommons.tool;
 
 import freemarker.template.TemplateException;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,6 +31,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
@@ -250,7 +252,7 @@ public class Processor {
   // This is a thread-safe function invoked in parallel per CSV file.
   private void processTable(File csvFile)
       throws IOException, DCTooManyFailuresException, InterruptedException {
-    if (args.verbose) logger.info("Checking CSV " + csvFile.getPath());
+    logger.info("Checking CSV " + csvFile.getPath());
     TmcfCsvParser parser =
         TmcfCsvParser.init(
             args.fileGroup.getTmcf().getPath(),
@@ -314,16 +316,22 @@ public class Processor {
               .computeIfAbsent(key, k -> McfStatVarObsSeries.newBuilder().setKey(k))
               .addAllSvObsList(obs.getSvObsListList());
         }
-        if (!logCtx.trackStatus(1, "rows processed")) {
-          throw new DCTooManyFailuresException("encountered too many failures");
-        }
+      }
+      if (!logCtx.trackStatus(1, "rows processed")) {
+        throw new DCTooManyFailuresException("encountered too many failures");
       }
     }
     if (args.generateOptimizedGraph) {
-      String filePath = Paths.get(args.outputDir.toString(), "optimized_graph.pb").toString();
+      String filePath =
+          Paths.get(
+                  args.outputDir.toString(),
+                  FilenameUtils.removeExtension(csvFile.getName()) + "_optimized_graph.pb")
+              .toString();
       logger.info("Writing optimized graph file to {}", filePath);
       // Build and write optimized graphs directly from grouped observations
-      try (FileOutputStream output = new FileOutputStream(filePath)) {
+      try (FileOutputStream output = new FileOutputStream(filePath);
+          BufferedOutputStream outStream = new BufferedOutputStream(output)) {
+
         for (Mcf.McfStatVarObsSeries.Builder builder : groupedObservations.values()) {
           McfOptimizedGraph graph =
               McfOptimizedGraph.newBuilder().setSvObsSeries(builder.build()).build();
