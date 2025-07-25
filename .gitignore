@@ -13,6 +13,8 @@ target/
 .factorypath
 .project
 
+util/src/main/java/org/datacommons/proto/
+
 # static files
 **/node_modules/**
 /wizard/build/**
