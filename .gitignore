@@ -19,3 +19,5 @@ util/src/main/java/org/datacommons/proto/
 **/node_modules/**
 /wizard/build/**
 !wizard/build/.empty
+.gemini/logs.json
+.tool-versions
