@@ -66,7 +66,7 @@
                             <goal>run</goal>
                         </goals>
                         <configuration>
-                            <protocArtifact>com.google.protobuf:protoc:3.17.3</protocArtifact>
+                            <protocArtifact>com.google.protobuf:protoc:3.21.12</protocArtifact>
                             <inputDirectories>
                                 <include>src/main/proto</include>
                             </inputDirectories>
