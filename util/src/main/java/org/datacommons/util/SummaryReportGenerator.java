@@ -207,6 +207,11 @@ public class SummaryReportGenerator {
     data.put("svSummaryMap", svSummaryMap);
     data.put("placeSeriesSummaryMap", placeSeriesSummaryMap);
     data.put("runtimeMetadata", runtimeMetadata);
+    if (TEST_mode) {
+      data.put("runtimeDate", "2025-07-28");
+    } else {
+      data.put("runtimeDate", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+    }
     Writer file = new FileWriter(Paths.get(outputDir.toString(), SUMMARY_REPORT_HTML).toString());
     template.process(data, file);
     Writer csvFile = new FileWriter(Paths.get(outputDir.toString(), SUMMARY_REPORT_CSV).toString());

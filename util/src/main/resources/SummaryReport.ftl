@@ -126,7 +126,7 @@
       <table>
         <tr>
           <td>Report Generated At</td>
-          <td><#if runtimeMetadata.getEndTimeMillis()??>${runtimeMetadata.getEndTimeMillis()?number_to_date}<#else>Not Found</#if></td>
+          <td><#if runtimeDate??>${runtimeDate}<#else>Not Found</#if></td>
         </tr>
         <tr>
           <td>Generation Duration</td>
