@@ -75,9 +75,11 @@ class GenMcf implements Callable<Integer> {
       args.outputFiles.put(type, Paths.get(parent.outputDir.getPath(), fName));
     }
     args.generateSummaryReport = parent.generateSummaryReport;
+    args.generateOptimizedGraph = parent.generateOptimizedGraph;
     args.checkObservationAbout = parent.checkObservationAbout;
     args.allowNonNumericStatVarObservation = parent.allowNonNumericStatVarObservation;
     args.checkMeasurementResult = parent.checkMeasurementResult;
+    args.includeRuntimeMetadata = parent.includeRuntimeMetadata;
     // Process all the things.
     return Processor.process(args);
   }

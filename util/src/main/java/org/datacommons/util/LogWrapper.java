@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.io.FileUtils;
@@ -151,9 +152,35 @@ public class LogWrapper {
     return log.build();
   }
 
+  /**
+   * Sets the runtime metadata for this log.
+   *
+   * <p>This method should ideally be called before {@link #persistLog()} to ensure the runtime
+   * metadata is included in the persisted log output.
+   *
+   * @param metadata The runtime metadata to set
+   */
+  public synchronized void setRuntimeMetadata(Debug.RuntimeMetadata metadata) {
+    if (log != null && metadata != null) {
+      log.setRuntimeMetadata(metadata);
+    }
+  }
+
+  /**
+   * Gets the runtime metadata from the log if it exists.
+   *
+   * @return Optional containing the runtime metadata if set, empty otherwise
+   */
+  public Optional<Debug.RuntimeMetadata> getRuntimeMetadata() {
+    if (log != null && log.hasRuntimeMetadata()) {
+      return Optional.of(log.getRuntimeMetadata());
+    }
+    return Optional.empty();
+  }
+
   private void persistLog(boolean silent) throws IOException {
     refreshCounters();
-
+    // Skip sorting in test mode to maintain deterministic output
     if (LogWrapper.TEST_MODE) {
       sortLogEntries();
     }

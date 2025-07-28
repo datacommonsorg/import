@@ -94,3 +94,44 @@ enum ValueType {
   // Represents a table entity for TEMPLATE_MCF.
   TABLE_ENTITY = 7;
 }
+
+// Space-efficient representation of MCF data for one time-series of StatVarObs.
+// This is effectively similar to SourceSeries, but with free PVs per SVObs.
+message McfStatVarObsSeries {
+  message StatVarObs {
+    required string date = 1;
+
+    oneof val {
+      // Vast majority of values are numbers, storing them as double will be
+      // more space efficient.
+      double number = 2;
+      string text = 3;
+    }
+
+    // Any additional PVs associated with the StatVarObs.
+    optional McfGraph.PropertyValues pvs = 4;
+    required string dcid = 5;
+
+    // If empty, it means that local_node_id is the same as dcid.
+    optional string local_node_id = 6;
+  }
+
+  message Key {
+    required string observation_about = 1;
+    required string variable_measured = 2;
+    optional string measurement_method = 3;
+    optional string observation_period = 4;
+    optional string scaling_factor = 5;
+    optional string unit = 6;
+  }
+
+  required Key key = 1;
+  repeated StatVarObs sv_obs_list = 2;
+}
+
+// A wrapper over space-efficient representations of MCF data.
+message McfOptimizedGraph {
+  oneof record {
+    McfStatVarObsSeries sv_obs_series = 1;
+  }
+}

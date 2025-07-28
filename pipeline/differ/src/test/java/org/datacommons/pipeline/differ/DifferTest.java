@@ -1,12 +1,12 @@
-package org.datacommons;
+package org.datacommons.pipeline.differ;
 
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.options.ValueProvider.StaticValueProvider;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.datacommons.pipeline.util.GraphUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.junit.Rule;
 import org.junit.Test;
@@ -25,11 +25,9 @@ public class DifferTest {
     String previousFile = getClass().getClassLoader().getResource("previous.mcf").getPath();
 
     // Process the input.
-    PCollection<McfGraph> currentGraph =
-        GraphUtils.readMcfFile(StaticValueProvider.of(currentFile), p);
+    PCollection<McfGraph> currentGraph = GraphUtils.readMcfFile(currentFile, p);
     PCollection<KV<String, String>> currentNodes = DifferUtils.processGraph(currentGraph);
-    PCollection<McfGraph> previousGraph =
-        GraphUtils.readMcfFile(StaticValueProvider.of(previousFile), p);
+    PCollection<McfGraph> previousGraph = GraphUtils.readMcfFile(previousFile, p);
     PCollection<KV<String, String>> previousNodes = DifferUtils.processGraph(previousGraph);
     PCollection<String> result = DifferUtils.performDiff(currentNodes, previousNodes);
 

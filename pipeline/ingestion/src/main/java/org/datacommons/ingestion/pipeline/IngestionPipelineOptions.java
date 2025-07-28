@@ -42,6 +42,11 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setImportGroupVersion(String importGroupVersion);
 
+  @Description("List of imports for ingestion (CSV)")
+  String getImportList();
+
+  void setImportList(String importList);
+
   @Description("The number of shards to generate for writing mutations.")
   @Default.Integer(1)
   int getNumShards();

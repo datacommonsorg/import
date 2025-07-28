@@ -133,6 +133,8 @@
     "statChecks": true,
     "observationAbout": true,
     "allowNanSvobs": true,
-    "coordinatesResolution": false
+    "checkMeasurementResult": true,
+    "coordinatesResolution": false,
+    "includeRuntimeMetadata": true
   }
 }

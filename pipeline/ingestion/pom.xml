@@ -13,10 +13,16 @@
     <groupId>org.datacommons</groupId>
     <artifactId>ingestion</artifactId>
     <version>${revision}</version>
+    <name>Data Commons - Ingestion Pipeline</name>
 
     <dependencies>
         <dependency>
             <artifactId>model</artifactId>
+            <groupId>org.datacommons</groupId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <artifactId>util</artifactId>
             <groupId>org.datacommons</groupId>
             <version>${revision}</version>
         </dependency>

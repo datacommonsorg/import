@@ -19,7 +19,6 @@ import tempfile
 import unittest
 
 from kg_util import mcf_parser
-import pandas as pd
 from parameterized import parameterized
 from stats.data import Triple
 from stats.stat_var_hierarchy_generator import *
@@ -232,3 +231,34 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
   def test_gen_specialized_name(self, parent: SVPropVals, child: SVPropVals,
                                 dcid2name: dict[str, str], expected: str):
     self.assertEqual(child.gen_specialized_name(parent, dcid2name), expected)
+
+  def test_gen_svg_id(self):
+    sv_prop_vals = SVPropVals(
+        sv_id="sv1",
+        population_type="Person",
+        pvs=[PropVal("gender", "Female"),
+             PropVal("race", "Asian")],
+        measured_property="count")
+    svg_id = sv_prop_vals.gen_svg_id()
+    self.assertEqual(svg_id, "c/g/Person_Gender-Female_Race-Asian")
+
+  def test_gen_svg_id_with_long_property_values(self):
+    sv_prop_vals = SVPropVals(
+        sv_id="sv1",
+        population_type="Person",
+        pvs=[
+            PropVal(
+                "propertyWithAReallyLongValue",
+                "HereIsAPropertyWithAReallyLongValueToTestCausingASubjectIDOverflowOfMoreThan255CharactersWhenLoadingIntoTheDatabase"
+            ),
+            PropVal(
+                "anotherPropertyWithAReallyLongValue",
+                "HereIsAotherPropertyWithAReallyLongValueToTestCausingASubjectIDOverflowOfMoreThan255CharactersWhenLoadingIntoTheDatabase1"
+            )
+        ],
+        measured_property="count")
+    svg_id = sv_prop_vals.gen_svg_id()
+    self.assertEqual(
+        svg_id,
+        "c/g/Person_PropertyWithAReallyLongValue-HereIsAPropertyWithAReallyLongValueToTestCausingASubjectIDOverflowOfMoreThan255CharactersWhenLoadingIntoTheDatabase_AnotherPropertyWithAReallyLongValue-HereIsAotherPropertyWithAReallyLongValueToTestCausingA-fafb3dea"
+    )

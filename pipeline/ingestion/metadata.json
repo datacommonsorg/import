@@ -1,0 +1,18 @@
+{
+    "name": "Spannger graph ingestion pipeline",
+    "description": "Spanner graph ingestion pipeline.",
+    "parameters": [
+        {
+            "name": "importList",
+            "label": "List of imports for ingestion (CSV).",
+            "helpText": "List of imports for ingestion (CSV).",
+            "paramType": "TEXT"
+        },
+        {
+            "name": "spannerDatabaseId",
+            "label": "Spanner database Id",
+            "helpText": "Spanner database Id",
+            "paramType": "TEXT"
+        }
+    ]
+}

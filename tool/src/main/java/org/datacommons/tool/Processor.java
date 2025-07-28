@@ -15,21 +15,29 @@
 package org.datacommons.tool;
 
 import freemarker.template.TemplateException;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
+import org.datacommons.proto.Mcf.McfOptimizedGraph;
+import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.util.*;
 
 public class Processor {
@@ -46,6 +54,7 @@ public class Processor {
 
   public static Integer process(Args args) throws IOException, TemplateException {
     Integer retVal = 0;
+    long startTimeMillis = System.currentTimeMillis();
     Processor processor = new Processor(args);
     try {
       // Load all the instance MCFs into memory, so we can do existence checks, resolution, etc.
@@ -106,13 +115,24 @@ public class Processor {
       logger.error("Aborting prematurely, see report.json.");
       retVal = -1;
     }
+
+    // Create and set runtime metadata before persisting log
+    if (!LogWrapper.TEST_MODE && args.includeRuntimeMetadata) {
+      long endTimeMillis = System.currentTimeMillis();
+      Debug.RuntimeMetadata runtimeMetadata =
+          RuntimeMetadataUtil.createRuntimeMetadata(
+              startTimeMillis, endTimeMillis, Processor.class);
+      processor.logCtx.setRuntimeMetadata(runtimeMetadata);
+    }
+
     processor.logCtx.persistLog();
     if (args.generateSummaryReport) {
       SummaryReportGenerator.generateReportSummary(
           args.outputDir,
           processor.logCtx.getLog(),
           processor.statChecker.getSVSummaryMap(),
-          processor.statChecker.getPlaceSeriesSummaryMap());
+          processor.statChecker.getPlaceSeriesSummaryMap(),
+          processor.logCtx.getRuntimeMetadata().orElse(null));
     }
     return retVal;
   }
@@ -232,7 +252,7 @@ public class Processor {
   // This is a thread-safe function invoked in parallel per CSV file.
   private void processTable(File csvFile)
       throws IOException, DCTooManyFailuresException, InterruptedException {
-    if (args.verbose) logger.info("Checking CSV " + csvFile.getPath());
+    logger.info("Checking CSV " + csvFile.getPath());
     TmcfCsvParser parser =
         TmcfCsvParser.init(
             args.fileGroup.getTmcf().getPath(),
@@ -252,6 +272,8 @@ public class Processor {
             csvFile);
     Mcf.McfGraph g;
     int numNodeSuccesses = 0, numPVSuccesses = 0, numRowSuccesses = 0, numRowsProcessed = 0;
+    Map<Mcf.McfStatVarObsSeries.Key, Mcf.McfStatVarObsSeries.Builder> groupedObservations =
+        new HashMap<>();
     while ((g = parser.parseNextRow()) != null) {
       g = McfMutator.mutate(g.toBuilder(), logCtx);
 
@@ -283,8 +305,40 @@ public class Processor {
         }
       }
       numRowsProcessed++;
+
+      if (args.generateOptimizedGraph) {
+        // Extract observations immediately to free memory
+        List<McfStatVarObsSeries> extractedObservations = extractObservationsFromGraph(g);
+        // Group observations incrementally by key to reduce memory usage
+        for (McfStatVarObsSeries obs : extractedObservations) {
+          McfStatVarObsSeries.Key key = obs.getKey();
+          groupedObservations
+              .computeIfAbsent(key, k -> McfStatVarObsSeries.newBuilder().setKey(k))
+              .addAllSvObsList(obs.getSvObsListList());
+        }
+      }
       if (!logCtx.trackStatus(1, "rows processed")) {
         throw new DCTooManyFailuresException("encountered too many failures");
+      }
+    }
+    if (args.generateOptimizedGraph) {
+      String filePath =
+          Paths.get(
+                  args.outputDir.toString(),
+                  FilenameUtils.removeExtension(csvFile.getName()) + "_optimized_graph.pb")
+              .toString();
+      logger.info("Writing optimized graph file to {}", filePath);
+      // Build and write optimized graphs directly from grouped observations
+      try (FileOutputStream output = new FileOutputStream(filePath);
+          BufferedOutputStream outStream = new BufferedOutputStream(output)) {
+
+        for (Mcf.McfStatVarObsSeries.Builder builder : groupedObservations.values()) {
+          McfOptimizedGraph graph =
+              McfOptimizedGraph.newBuilder().setSvObsSeries(builder.build()).build();
+          graph.writeDelimitedTo(output);
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
       }
     }
     logCtx.incrementInfoCounterBy("NumRowSuccesses", numRowSuccesses);
@@ -428,6 +482,32 @@ public class Processor {
     logger.info("Performing stats checks");
     statChecker.check();
     statChecker.fetchSamplePlaceNames(httpClient);
+  }
+
+  /**
+   * Extracts StatVarObservation series from a graph for memory-efficient processing. This method
+   * immediately converts observations to their optimized representation, allowing the original
+   * graph to be garbage collected.
+   *
+   * @param graph The McfGraph to extract observations from
+   * @return List of McfStatVarObsSeries extracted from the graph, empty if no observations found
+   */
+  private List<McfStatVarObsSeries> extractObservationsFromGraph(Mcf.McfGraph graph) {
+    List<McfStatVarObsSeries> observations = new ArrayList<>();
+
+    for (Mcf.McfGraph.PropertyValues pv : graph.getNodesMap().values()) {
+      if (GraphUtils.isObservation(pv)) {
+        try {
+          McfStatVarObsSeries svo = GraphUtils.convertMcfGraphToMcfStatVarObsSeries(pv);
+          observations.add(svo);
+        } catch (IllegalArgumentException e) {
+          // Log and skip invalid observations
+          logger.warn("Skipping invalid observation: " + e.getMessage());
+        }
+      }
+    }
+
+    return observations;
   }
 
   private static class DCTooManyFailuresException extends Exception {
