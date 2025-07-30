@@ -53,4 +53,25 @@ public class PlaceSeriesSummaryTest {
       assertEquals(expectedEntry.getValue().seriesValues, actualEntry.seriesValues);
     }
   }
+
+  @Test
+  public void testGetTimeSeriesSVGChart_pre1900() throws IOException {
+    String mcfPath = this.getClass().getResource("Pre1900PlaceSeriesSummaryTest.mcf").getPath();
+    Mcf.McfGraph graph = McfParser.parseInstanceMcfFile(mcfPath, false, TestUtil.newLogCtx());
+    PlaceSeriesSummary placeSeriesSummary = new PlaceSeriesSummary();
+    for (Map.Entry<String, McfGraph.PropertyValues> node : graph.getNodesMap().entrySet()) {
+      placeSeriesSummary.extractSeriesFromNode(node.getValue());
+    }
+    Map<String, Map<Long, PlaceSeriesSummary.SeriesSummary>> svSeriesSummaryMap =
+        placeSeriesSummary.getSvSeriesSummaryMap();
+    assertFalse(svSeriesSummaryMap.isEmpty());
+    for (Map<Long, PlaceSeriesSummary.SeriesSummary> seriesSummaryMap :
+        svSeriesSummaryMap.values()) {
+      for (PlaceSeriesSummary.SeriesSummary summary : seriesSummaryMap.values()) {
+        assertEquals(
+            "<b>Charts for years before 1900 are not supported yet</b>",
+            summary.getTimeSeriesSVGChart());
+      }
+    }
+  }
 }

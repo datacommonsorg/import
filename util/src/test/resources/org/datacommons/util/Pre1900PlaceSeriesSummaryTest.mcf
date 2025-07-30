@@ -1,0 +1,7 @@
+Node: SVTest/E0/1
+typeOf: dcid:StatVarObservation
+observationDate: 1871
+observationAbout: dcid:geoId/06
+variableMeasured: dcid:Count_Person
+measurementMethod: dcid:CensusACS5YrSurvey
+value: 1000100

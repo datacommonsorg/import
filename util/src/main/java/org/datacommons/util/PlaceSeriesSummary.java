@@ -79,6 +79,11 @@ public class PlaceSeriesSummary {
         LocalDateTime localDateTime = StringUtil.getValidISO8601Date(timeSeriesDataPoint.getKey());
         if (localDateTime == null) continue;
 
+        // The JFreeChart library we are using does not support years before 1900.
+        if (localDateTime.getYear() < 1900) {
+          return "<b>Charts for years before 1900 are not supported yet</b>";
+        }
+
         DataPoint dp = timeSeriesDataPoint.getValue();
         if (SeriesSummary.getTypeOfDataPoint(dp) != ValueType.NUMBER) continue;
 
