@@ -55,7 +55,7 @@ public class PlaceSeriesSummaryTest {
   }
 
   @Test
-  public void testGetTimeSeriesSVGChart_pre1900() throws IOException {
+  public void testGetTimeSeriesSVGChartPre1900() throws IOException {
     String mcfPath = this.getClass().getResource("Pre1900PlaceSeriesSummaryTest.mcf").getPath();
     Mcf.McfGraph graph = McfParser.parseInstanceMcfFile(mcfPath, false, TestUtil.newLogCtx());
     PlaceSeriesSummary placeSeriesSummary = new PlaceSeriesSummary();
