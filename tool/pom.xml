@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.datacommons</groupId>
         <artifactId>datacommons-import</artifactId>
-        <version>0.1-alpha.1</version>
+        <version>${import.version}</version>
         <relativePath>..</relativePath>
     </parent>
 
@@ -30,7 +30,6 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>[3.2.0, 3.10)</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -55,7 +54,6 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java-util</artifactId>
-            <version>3.7.1</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

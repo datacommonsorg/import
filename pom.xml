@@ -3,7 +3,7 @@
 
     <groupId>org.datacommons</groupId>
     <artifactId>datacommons-import</artifactId>
-    <version>0.1-alpha.1</version>
+    <version>${import.version}</version>
     <packaging>pom</packaging>
     <name>Data Commons - Import</name>
     <url>https://datacommons.org</url>
@@ -12,6 +12,22 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        <!-- Dependency versions -->
+        <import.version>0.1-alpha.1</import.version>
+        <revision>0.1-SNAPSHOT</revision>
+        <beam.version>2.66.0</beam.version>
+        <gson.version>2.10.1</gson.version> 
+        <os.maven.plugin.version>1.7.1</os.maven.plugin.version>
+        <protobuf.maven.plugin.version>0.6.1</protobuf.maven.plugin.version>
+        <protoc.version>3.25.1</protoc.version>
+        <protobuf.java.version>3.25.1</protobuf.java.version>
+        <junit.version>4.13.1</junit.version>
+        <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
+        <maven-exec-plugin.version>1.6.0</maven-exec-plugin.version>
+        <maven-jar-plugin.version>3.0.2</maven-jar-plugin.version>
+        <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
+        <mockito.version>3.7.7</mockito.version>
+        <slf4j.version>1.7.30</slf4j.version>
     </properties>
 
     <!-- List the sub-dirs so that they all get included in an IntelliJ project -->
@@ -22,7 +38,40 @@
         <module>pipeline</module>
     </modules>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java-util</artifactId>
+                <version>${protobuf.java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protoc</artifactId>
+                <version>${protoc.version}</version>
+                <type>pom</type> 
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>${gson.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <build>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.7.1</version>
+            </extension>
+        </extensions>
         <plugins>
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
@@ -54,32 +103,34 @@
                     <!-- By default uses JGit. For git worktree support, use -Pgit-worktree profile -->
                 </configuration>
             </plugin>
-            <plugin>
-                <!-- For protobuf generation -->
-                <groupId>com.github.os72</groupId>
-                <artifactId>protoc-jar-maven-plugin</artifactId>
-                <version>3.11.4</version>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <protocArtifact>com.google.protobuf:protoc:3.17.3</protocArtifact>
-                            <inputDirectories>
-                                <include>src/main/proto</include>
-                            </inputDirectories>
-                            <outputTargets>
-                                <outputTarget>
-                                    <type>java</type>
-                                    <outputDirectory>src/main/java</outputDirectory>
-                                </outputTarget>
-                            </outputTargets>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+        <plugin>
+            <groupId>org.xolstice.maven.plugins</groupId>
+            <artifactId>protobuf-maven-plugin</artifactId>
+            <version>0.6.1</version> 
+            <configuration>
+                <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
+                <clearOutputDirectory>false</clearOutputDirectory>
+                <outputTargets>
+                    <outputTarget>
+                        <generator>java</generator>
+                        <outputDirectory>${project.build.directory}/generated-sources/protobuf/java</outputDirectory>
+                        <addSources>true</addSources> 
+                        <filter>false</filter> 
+                    </outputTarget>
+                </outputTargets>
+                <protoSourceRoot>${project.basedir}/src/main/proto</protoSourceRoot>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>compile-protobuf</id>
+                    <goals>
+                        <goal>compile</goal>
+                        <goal>test-compile</goal>
+                    </goals>
+                    <phase>generate-sources</phase>
+                </execution>
+            </executions>
+        </plugin>
             <plugin>
                 <!-- For google-java-format check. Order this after generate-sources since they are in the same phase. -->
                 <groupId>com.spotify.fmt</groupId>

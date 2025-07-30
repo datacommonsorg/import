@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.datacommons</groupId>
 		<artifactId>datacommons-import</artifactId>
-		<version>0.1-alpha.1</version>
+		<version>${import.version}</version>
 		<relativePath>..</relativePath>
 	</parent>
 
 	<groupId>org.datacommons</groupId>
 	<artifactId>datacommons-server</artifactId>
-	<version>0.1-alpha.1</version>
+	<version>${import.version}</version>
 	<name>Data Commons - Server</name>
 	<description>API server for private Data Commons</description>
 	<packaging>jar</packaging>
