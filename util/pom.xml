@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.datacommons</groupId>
         <artifactId>datacommons-import</artifactId>
-        <version>0.1-alpha.1</version>
+        <version>${import.version}</version>
         <relativePath>..</relativePath>
     </parent>
 
