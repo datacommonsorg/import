@@ -1,11 +1,13 @@
 package org.datacommons.pipeline.differ;
 
+import java.nio.file.Paths;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionTuple;
 import org.datacommons.pipeline.util.GraphUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.junit.Rule;
@@ -21,26 +23,53 @@ public class DifferTest {
     options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
 
     // Create an input PCollection.
-    String currentFile = getClass().getClassLoader().getResource("current.mcf").getPath();
-    String previousFile = getClass().getClassLoader().getResource("previous.mcf").getPath();
+    String currentFile = getClass().getClassLoader().getResource("current").getPath();
+    String previousFile = getClass().getClassLoader().getResource("previous").getPath();
 
     // Process the input.
-    PCollection<McfGraph> currentGraph = GraphUtils.readMcfFile(currentFile, p);
-    PCollection<KV<String, String>> currentNodes = DifferUtils.processGraph(currentGraph);
-    PCollection<McfGraph> previousGraph = GraphUtils.readMcfFile(previousFile, p);
-    PCollection<KV<String, String>> previousNodes = DifferUtils.processGraph(previousGraph);
-    PCollection<String> result = DifferUtils.performDiff(currentNodes, previousNodes);
+    PCollection<McfGraph> currentGraph =
+        GraphUtils.readMcfFile(Paths.get(currentFile, "*.mcf").toString(), p);
+    PCollection<McfGraph> previousGraph =
+        GraphUtils.readMcfFile(Paths.get(previousFile, "*.mcf").toString(), p);
+    PCollectionTuple currentNodesTuple = DifferUtils.processGraph(currentGraph);
+    PCollectionTuple previousNodesTuple = DifferUtils.processGraph(previousGraph);
 
-    // Assert on the results.
-    PAssert.that(result)
+    PCollection<KV<String, String>> currentNodes =
+        currentNodesTuple.get(DifferUtils.OBSERVATION_NODES_TAG);
+    PCollection<KV<String, String>> previousNodes =
+        previousNodesTuple.get(DifferUtils.OBSERVATION_NODES_TAG);
+    PCollection<String> obsDiff = DifferUtils.performDiff(currentNodes, previousNodes);
+
+    currentNodes = currentNodesTuple.get(DifferUtils.SCHEMA_NODES_TAG);
+    previousNodes = previousNodesTuple.get(DifferUtils.SCHEMA_NODES_TAG);
+    PCollection<String> schemaDiff = DifferUtils.performDiff(currentNodes, previousNodes);
+
+    // // Assert on the results.
+    PAssert.that(obsDiff)
         .containsInAnyOrder(
-            "dcid:Mean_Concentration_AirPollutant_CO,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,,41.0,DELETED",
-            "dcid:Min_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___IMD,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,,18.0,DELETED",
-            "dcid:Mean_Concentration_AirPollutant_CO,dcid:cpcpAq/Secretariat_Amaravati___IMD,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,42.0,41.0,MODIFIED",
-            "dcid:Min_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,,18.0,DELETED",
-            "dcid:Max_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,53.0,,ADDED",
-            "dcid:Mean_Concentration_AirPollutant_CO,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-25T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,,40.0,DELETED",
-            "dcid:Mean_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,28.0,29.0,MODIFIED");
+            "dcid:InterestRate_TreasuryBond_20Year,dcid:country/USA,\"2025-01-30\",,dcid:ConstantMaturityRate,dcid:Percent,,4.85,4.81,MODIFIED",
+            "dcid:InterestRate_TreasuryNote_10Year,dcid:country/USA,\"2025-01-31\",,dcid:ConstantMaturityRate,dcid:Percent,,4.58,,ADDED",
+            "dcid:InterestRate_TreasuryBill_3Month,dcid:country/USA,\"2025-01-30\",,dcid:ConstantMaturityRate,dcid:Percent,,,4.30,DELETED",
+            "dcid:InterestRate_TreasuryBill_3Month,dcid:country/USA,\"2025-01-31\",,dcid:ConstantMaturityRate,dcid:Percent,,,4.31,DELETED");
+
+    PAssert.that(schemaDiff)
+        .containsInAnyOrder(
+            "dcid:InterestRate_TreasuryNote_2Year,dcid:InterestRate_TreasuryNote_2Year,[2"
+                + " Year],dcs:interestRate,\"InterestRate_TreasuryNote_2Year\",dcs:TreasuryNote,dcs:measuredValue,dcs:StatisticalVariable,dcid:InterestRate_TreasuryNote_2Year,[2"
+                + " Year],dcs:interestRate,\"InterestRate_TreasuryNote_02Year\",dcs:TreasuryNote,dcs:measuredValue,dcs:StatisticalVariable,MODIFIED",
+            "dcid:InterestRate_TreasuryBill_1Year,dcid:InterestRate_TreasuryBill_1Year,[1"
+                + " Year],dcs:interestRate,\"InterestRate_TreasuryBill_1Year\",dcs:TreasuryBill,dcs:measuredValue,dcs:StatisticalVariable,dcid:InterestRate_TreasuryBill_1Year,[1"
+                + " Year],dcs:interestRate,\"InterestRate_TreasuryBill_01Year\",dcs:TreasuryBill,dcs:measuredValue,dcs:StatisticalVariable,MODIFIED",
+            "dcid:InterestRate_TreasuryBill_3Month,,dcid:InterestRate_TreasuryBill_3Month,[3"
+                + " Month],dcs:interestRate,\"InterestRate_TreasuryBill_3Month\",dcs:TreasuryBill,dcs:measuredValue,dcs:StatisticalVariable,DELETED",
+            "dcid:InterestRate_TreasuryBill_1Month,,dcid:InterestRate_TreasuryBill_1Month,[1"
+                + " Month],dcs:interestRate,\"InterestRate_TreasuryBill_1Month\",dcs:TreasuryBill,dcs:measuredValue,dcs:StatisticalVariable,DELETED",
+            "dcid:InterestRate_TreasuryNote_7Year,dcid:InterestRate_TreasuryNote_7Year,[7"
+                + " Year],dcs:interestRate,\"InterestRate_TreasuryNote_7Year\",dcs:TreasuryNote,dcs:measuredValue,dcs:StatisticalVariable,,ADDED",
+            "dcid:InterestRate_TreasuryNote_5Year,dcid:InterestRate_TreasuryNote_5Year,[5"
+                + " Year],dcs:interestRate,\"InterestRate_TreasuryNote_5Year\",dcs:TreasuryNote,dcs:measuredValue,dcs:StatisticalVariable,,ADDED",
+            "dcid:InterestRate_TreasuryNote_3Year,dcid:InterestRate_TreasuryNote_3Year,[3"
+                + " Year],dcs:interestRate,\"InterestRate_TreasuryNote_3Year\",dcs:TreasuryNote,dcs:measuredValue,dcs:StatisticalVariable,,ADDED");
 
     // Run the pipeline.
     p.run();

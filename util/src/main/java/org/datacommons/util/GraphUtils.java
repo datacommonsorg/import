@@ -149,35 +149,6 @@ public class GraphUtils {
   }
 
   /**
-   * Returns a key-val pair from PVs of a graph node (SVObs only) Key: PVs excluding value Val:
-   * Value
-   *
-   * @param graph input graph
-   * @return list of series-value pairs
-   */
-  public static List<String[]> getSeriesValues(McfGraph graph) {
-    List<String[]> res = new ArrayList<>();
-    for (PropertyValues pvs : graph.getNodesMap().values()) {
-      if (isObservation(pvs)) {
-        Map<String, McfGraph.Values> pv = pvs.getPvsMap();
-        String key =
-            String.format(
-                "%s,%s,%s,%s,%s,%s,%s",
-                getPropertyValue(pv, Property.variableMeasured.name()),
-                getPropertyValue(pv, Property.observationAbout.name()),
-                getPropertyValue(pv, Property.observationDate.name()),
-                getPropertyValue(pv, Property.observationPeriod.name()),
-                getPropertyValue(pv, Property.measurementMethod.name()),
-                getPropertyValue(pv, Property.unit.name()),
-                getPropertyValue(pv, Property.scalingFactor.name()));
-        String value = getPropertyValue(pv, Property.value.name());
-        res.add(new String[] {key, value});
-      }
-    }
-    return res;
-  }
-
-  /**
    * Gets the double value of a specific property from a graph node.
    *
    * @param node The graph node (PropertyValues) to read from.

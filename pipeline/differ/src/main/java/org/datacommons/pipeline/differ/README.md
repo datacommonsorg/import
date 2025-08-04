@@ -16,6 +16,6 @@ The pipeline can be run locally (DirectRunner) or in the cloud (DataflowRunner).
 
 
 ```
-mvn compile exec:java  -pl differ -am -Dexec.mainClass=org.datacommons.DifferPipeline -Dexec.args="--currentData=current*.gz --previousData=previous*.gz --useOptimizedGraphFormat --outputLocation=gs://bucket/differ/output"
+mvn compile exec:java  -pl differ -am -Dexec.mainClass=org.datacommons.pipeline.differ.DifferPipeline -Dexec.args="--currentData=current/*.mcf --previousData=previous/*.mcf --outputLocation=gs://bucket/differ/output"
 ```
 
