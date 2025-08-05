@@ -11,7 +11,7 @@
 
 	<groupId>org.datacommons</groupId>
 	<artifactId>datacommons-server</artifactId>
-	<version>${import.version}</version>
+	<version>${revision}</version>
 	<name>Data Commons - Server</name>
 	<description>API server for private Data Commons</description>
 	<packaging>jar</packaging>

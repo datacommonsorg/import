@@ -24,7 +24,7 @@
     <dependency>
       <groupId>org.datacommons</groupId>
       <artifactId>datacommons-import-util</artifactId>
-      <version>${import.version}</version>
+      <version>${revision}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
