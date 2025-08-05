@@ -15,9 +15,8 @@ import org.slf4j.LoggerFactory;
 public class DifferPipeline {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DifferPipeline.class);
-  private static final String OBSERVATION_DIFF_HEADER =
-      "variableMeasured,observationAbout,observationDate,observationPeriod,measurementMethod,unit,scalingFactor,valueCurrent,valuePrevious,diff";
-  private static final String SCHEMA_DIFF_HEADER = "dcid,valueCurrent,valuePrevious,diff";
+  private static final String DIFF_HEADER =
+      "key_combined,value_combined_current,value_combined_previous,diff_type";
 
   public static void main(String[] args) throws Exception {
 
@@ -27,7 +26,8 @@ public class DifferPipeline {
     Pipeline p = Pipeline.create(options);
 
     // Read input graph files and convert into PCollections.
-    PCollection<McfGraph> previousNodes, currentNodes;
+    PCollection<McfGraph> previousNodes;
+    PCollection<McfGraph> currentNodes;
     if (options.getUseOptimizedGraphFormat()) {
       LOGGER.info("Using tfrecord file format");
       currentNodes = GraphUtils.readMcfGraph(options.getCurrentData(), p);
@@ -54,15 +54,17 @@ public class DifferPipeline {
     obsDiff.apply(
         "Write observation diff output",
         TextIO.write()
-            .to(Paths.get(options.getOutputLocation(), "observation-diff").toString())
+            .to(Paths.get(options.getOutputLocation(), "obs-diff").toString())
             .withSuffix(".csv")
-            .withHeader(OBSERVATION_DIFF_HEADER));
+            .withNumShards(1)
+            .withHeader(DIFF_HEADER));
     schemaDiff.apply(
         "Write schema diff output",
         TextIO.write()
             .to(Paths.get(options.getOutputLocation(), "schema-diff").toString())
             .withSuffix(".csv")
-            .withHeader(SCHEMA_DIFF_HEADER));
+            .withNumShards(1)
+            .withHeader(DIFF_HEADER));
     p.run().waitUntilFinish();
   }
 }

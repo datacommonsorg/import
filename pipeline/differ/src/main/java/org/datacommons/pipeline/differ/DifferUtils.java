@@ -35,7 +35,7 @@ public class DifferUtils {
   public static final TupleTag<KV<String, String>> SCHEMA_NODES_TAG =
       new TupleTag<KV<String, String>>() {};
 
-  public static final String[] GRUOPBY_PROPERTIES = {
+  public static final String[] GROUPBY_PROPERTIES = {
     "variableMeasured",
     "observationAbout",
     "observationDate",
@@ -62,11 +62,11 @@ public class DifferUtils {
                     for (Map.Entry<String, PropertyValues> entry : g.getNodesMap().entrySet()) {
                       PropertyValues pvs = entry.getValue();
                       Map<String, McfGraph.Values> pv = pvs.getPvsMap();
-                      if (org.datacommons.util.GraphUtils.isObservation(pvs)) {
+                      if (GraphUtils.isObservation(pvs)) {
                         String key =
-                            Arrays.asList(GRUOPBY_PROPERTIES).stream()
+                            Arrays.asList(GROUPBY_PROPERTIES).stream()
                                 .map(prop -> GraphUtils.getPropertyValue(pv, prop))
-                                .collect(Collectors.joining(","));
+                                .collect(Collectors.joining(";"));
                         String value = GraphUtils.getPropertyValue(pv, Property.value.name());
                         c.output(KV.of(key, value));
                       } else {
@@ -74,8 +74,9 @@ public class DifferUtils {
                         Collections.sort(keys);
                         String value =
                             keys.stream()
-                                .map(key -> GraphUtils.getPropertyValue(pv, key))
-                                .collect(Collectors.joining(","));
+                                .filter(key -> !key.equals("Node"))
+                                .map(key -> key + ":" + GraphUtils.getPropertyValue(pv, key))
+                                .collect(Collectors.joining(";"));
 
                         c.output(SCHEMA_NODES_TAG, KV.of(entry.getKey(), value));
                       }

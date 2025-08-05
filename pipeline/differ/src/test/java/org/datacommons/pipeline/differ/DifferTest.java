@@ -1,5 +1,10 @@
 package org.datacommons.pipeline.differ;
 
+import static org.junit.Assert.fail;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -8,6 +13,7 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.commons.io.FileUtils;
 import org.datacommons.pipeline.util.GraphUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.junit.Rule;
@@ -44,33 +50,22 @@ public class DifferTest {
     previousNodes = previousNodesTuple.get(DifferUtils.SCHEMA_NODES_TAG);
     PCollection<String> schemaDiff = DifferUtils.performDiff(currentNodes, previousNodes);
 
-    // // Assert on the results.
-    PAssert.that(obsDiff)
-        .containsInAnyOrder(
-            "dcid:InterestRate_TreasuryBond_20Year,dcid:country/USA,\"2025-01-30\",,dcid:ConstantMaturityRate,dcid:Percent,,4.85,4.81,MODIFIED",
-            "dcid:InterestRate_TreasuryNote_10Year,dcid:country/USA,\"2025-01-31\",,dcid:ConstantMaturityRate,dcid:Percent,,4.58,,ADDED",
-            "dcid:InterestRate_TreasuryBill_3Month,dcid:country/USA,\"2025-01-30\",,dcid:ConstantMaturityRate,dcid:Percent,,,4.30,DELETED",
-            "dcid:InterestRate_TreasuryBill_3Month,dcid:country/USA,\"2025-01-31\",,dcid:ConstantMaturityRate,dcid:Percent,,,4.31,DELETED");
+    // Assert on the results.
+    String expectedObsDiffFile = getClass().getClassLoader().getResource("obs-diff.csv").getPath();
+    String expectedSchemaDiffFile =
+        getClass().getClassLoader().getResource("schema-diff.csv").getPath();
 
-    PAssert.that(schemaDiff)
-        .containsInAnyOrder(
-            "dcid:InterestRate_TreasuryNote_2Year,dcid:InterestRate_TreasuryNote_2Year,[2"
-                + " Year],dcs:interestRate,\"InterestRate_TreasuryNote_2Year\",dcs:TreasuryNote,dcs:measuredValue,dcs:StatisticalVariable,dcid:InterestRate_TreasuryNote_2Year,[2"
-                + " Year],dcs:interestRate,\"InterestRate_TreasuryNote_02Year\",dcs:TreasuryNote,dcs:measuredValue,dcs:StatisticalVariable,MODIFIED",
-            "dcid:InterestRate_TreasuryBill_1Year,dcid:InterestRate_TreasuryBill_1Year,[1"
-                + " Year],dcs:interestRate,\"InterestRate_TreasuryBill_1Year\",dcs:TreasuryBill,dcs:measuredValue,dcs:StatisticalVariable,dcid:InterestRate_TreasuryBill_1Year,[1"
-                + " Year],dcs:interestRate,\"InterestRate_TreasuryBill_01Year\",dcs:TreasuryBill,dcs:measuredValue,dcs:StatisticalVariable,MODIFIED",
-            "dcid:InterestRate_TreasuryBill_3Month,,dcid:InterestRate_TreasuryBill_3Month,[3"
-                + " Month],dcs:interestRate,\"InterestRate_TreasuryBill_3Month\",dcs:TreasuryBill,dcs:measuredValue,dcs:StatisticalVariable,DELETED",
-            "dcid:InterestRate_TreasuryBill_1Month,,dcid:InterestRate_TreasuryBill_1Month,[1"
-                + " Month],dcs:interestRate,\"InterestRate_TreasuryBill_1Month\",dcs:TreasuryBill,dcs:measuredValue,dcs:StatisticalVariable,DELETED",
-            "dcid:InterestRate_TreasuryNote_7Year,dcid:InterestRate_TreasuryNote_7Year,[7"
-                + " Year],dcs:interestRate,\"InterestRate_TreasuryNote_7Year\",dcs:TreasuryNote,dcs:measuredValue,dcs:StatisticalVariable,,ADDED",
-            "dcid:InterestRate_TreasuryNote_5Year,dcid:InterestRate_TreasuryNote_5Year,[5"
-                + " Year],dcs:interestRate,\"InterestRate_TreasuryNote_5Year\",dcs:TreasuryNote,dcs:measuredValue,dcs:StatisticalVariable,,ADDED",
-            "dcid:InterestRate_TreasuryNote_3Year,dcid:InterestRate_TreasuryNote_3Year,[3"
-                + " Year],dcs:interestRate,\"InterestRate_TreasuryNote_3Year\",dcs:TreasuryNote,dcs:measuredValue,dcs:StatisticalVariable,,ADDED");
+    try {
+      PAssert.that(obsDiff)
+          .containsInAnyOrder(
+              FileUtils.readLines(new File(expectedObsDiffFile), StandardCharsets.UTF_8));
+      PAssert.that(schemaDiff)
+          .containsInAnyOrder(
+              FileUtils.readLines(new File(expectedSchemaDiffFile), StandardCharsets.UTF_8));
 
+    } catch (IOException e) {
+      fail("Unable to read expected output files.");
+    }
     // Run the pipeline.
     p.run();
   }
