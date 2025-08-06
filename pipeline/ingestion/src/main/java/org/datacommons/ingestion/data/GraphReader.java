@@ -11,7 +11,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.spanner.SpannerClient;
-import org.datacommons.pipeline.util.GraphUtils;
+import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
@@ -19,6 +19,7 @@ import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.proto.Storage.Observations;
+import org.datacommons.util.GraphUtils;
 
 public class GraphReader implements Serializable {
   private static final String DC_AGGREGATE = "dcAggregate/";
@@ -28,7 +29,7 @@ public class GraphReader implements Serializable {
     List<Node> nodes = new ArrayList<>();
     for (Map.Entry<String, PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
       PropertyValues pvs = nodeEntry.getValue();
-      if (!org.datacommons.util.GraphUtils.isObservation(pvs)) {
+      if (!GraphUtils.isObservation(pvs)) {
 
         // Generate corresponding node
         Map<String, McfGraph.Values> pv = pvs.getPvsMap();
@@ -36,8 +37,8 @@ public class GraphReader implements Serializable {
         node.subjectId(nodeEntry.getKey());
         node.value(nodeEntry.getKey());
         node.reference(true);
-        node.name(org.datacommons.util.GraphUtils.getPropertyValue(pv, "name"));
-        node.types(org.datacommons.util.GraphUtils.getPropertyValues(pv, "typeOf"));
+        node.name(GraphUtils.getPropertyValue(pv, "name"));
+        node.types(GraphUtils.getPropertyValues(pv, "typeOf"));
         nodes.add(node.build());
 
         // Generate any leaf nodes
@@ -45,9 +46,9 @@ public class GraphReader implements Serializable {
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
             if (val.getType() != ValueType.RESOLVED_REF) {
               node = Node.builder();
-              node.subjectId(GraphUtils.generateSha256(val.getValue()));
-              if (GraphUtils.storeValueAsBytes(entry.getKey())) {
-                node.bytes(ByteArray.copyFrom(GraphUtils.compressString(val.getValue())));
+              node.subjectId(PipelineUtils.generateSha256(val.getValue()));
+              if (PipelineUtils.storeValueAsBytes(entry.getKey())) {
+                node.bytes(ByteArray.copyFrom(PipelineUtils.compressString(val.getValue())));
               } else {
                 node.value(val.getValue());
               }
@@ -64,9 +65,9 @@ public class GraphReader implements Serializable {
     List<Edge> edges = new ArrayList<>();
     for (Map.Entry<String, PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
       PropertyValues pvs = nodeEntry.getValue();
-      if (!org.datacommons.util.GraphUtils.isObservation(pvs)) {
+      if (!GraphUtils.isObservation(pvs)) {
         Map<String, McfGraph.Values> pv = pvs.getPvsMap();
-        String provenance = org.datacommons.util.GraphUtils.getPropertyValue(pv, "provenance");
+        String provenance = GraphUtils.getPropertyValue(pv, "provenance");
         String subjectId = nodeEntry.getKey(); // Use the map key as the subjectId
         for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) { // Iterate over properties
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
@@ -77,7 +78,7 @@ public class GraphReader implements Serializable {
             if (val.getType() == ValueType.RESOLVED_REF) {
               edge.objectId(val.getValue());
             } else {
-              edge.objectId(GraphUtils.generateSha256(val.getValue()));
+              edge.objectId(PipelineUtils.generateSha256(val.getValue()));
             }
             edges.add(edge.build());
           }

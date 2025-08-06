@@ -32,12 +32,13 @@ import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.Values;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
+import org.datacommons.util.GraphUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Util functions for processing MCF graphs. */
-public class GraphUtils {
-  private static final Logger LOGGER = LoggerFactory.getLogger(GraphUtils.class);
+public class PipelineUtils {
+  private static final Logger LOGGER = LoggerFactory.getLogger(PipelineUtils.class);
 
   // Predicates for which the object value should be stored as bytes.
   private static final Set<String> STORE_VALUE_AS_BYTES_PREDICATES =
@@ -79,8 +80,7 @@ public class GraphUtils {
               @ProcessElement
               public void processElement(
                   @Element McfOptimizedGraph graph, OutputReceiver<McfGraph> receiver) {
-                for (McfGraph g :
-                    org.datacommons.util.GraphUtils.convertMcfStatVarObsSeriesToMcfGraph(graph)) {
+                for (McfGraph g : GraphUtils.convertMcfStatVarObsSeriesToMcfGraph(graph)) {
                   receiver.output(g);
                 }
               }
@@ -133,7 +133,7 @@ public class GraphUtils {
                 new SimpleFunction<String, McfGraph>() {
                   @Override
                   public McfGraph apply(String input) {
-                    return org.datacommons.util.GraphUtils.convertToGraph(input);
+                    return GraphUtils.convertToGraph(input);
                   }
                 }));
     return mcf;
@@ -159,10 +159,9 @@ public class GraphUtils {
                                   KV<McfStatVarObsSeries.Key, McfStatVarObsSeries.StatVarObs>>
                               receiver) {
                         for (PropertyValues pv : graph.getNodesMap().values()) {
-                          if (org.datacommons.util.GraphUtils.isObservation(pv)) {
+                          if (GraphUtils.isObservation(pv)) {
                             McfStatVarObsSeries svoSeries =
-                                org.datacommons.util.GraphUtils
-                                    .convertMcfGraphToMcfStatVarObsSeries(pv);
+                                GraphUtils.convertMcfGraphToMcfStatVarObsSeries(pv);
                             receiver.output(KV.of(svoSeries.getKey(), svoSeries.getSvObsList(0)));
                           }
                         }

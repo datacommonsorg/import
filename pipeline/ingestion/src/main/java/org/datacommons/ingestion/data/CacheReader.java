@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.datacommons.pipeline.util.GraphUtils;
+import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.CacheData.EntityInfo;
 import org.datacommons.proto.CacheData.PagedEntities;
 import org.datacommons.proto.ChartStoreOuterClass.ChartStore;
@@ -102,10 +102,10 @@ public class CacheReader implements Serializable {
                 objectId = entity.getDcid();
                 reference = true;
               } else { // Value
-                String hash = GraphUtils.generateSha256(entity.getValue());
+                String hash = PipelineUtils.generateSha256(entity.getValue());
                 nodeId = hash;
-                if (GraphUtils.storeValueAsBytes(predicate)) {
-                  bytes = ByteArray.copyFrom(GraphUtils.compressString(entity.getValue()));
+                if (PipelineUtils.storeValueAsBytes(predicate)) {
+                  bytes = ByteArray.copyFrom(PipelineUtils.compressString(entity.getValue()));
                 } else {
                   nodeValue = entity.getValue();
                 }

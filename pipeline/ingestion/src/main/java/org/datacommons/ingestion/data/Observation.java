@@ -3,7 +3,7 @@ package org.datacommons.ingestion.data;
 import com.google.common.base.Joiner;
 import java.util.List;
 import java.util.Objects;
-import org.datacommons.pipeline.util.GraphUtils;
+import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Storage.Observations;
 
 /**
@@ -125,7 +125,10 @@ public class Observation {
 
     // Add leaf node
     graph.addNode(
-        Node.builder().subjectId(GraphUtils.generateSha256(seriesName)).value(seriesName).build());
+        Node.builder()
+            .subjectId(PipelineUtils.generateSha256(seriesName))
+            .value(seriesName)
+            .build());
 
     // Add variableMeasured edge
     graph.addEdge(
@@ -148,7 +151,7 @@ public class Observation {
         Edge.builder()
             .subjectId(seriesDcid)
             .predicate(NAME_PREDICATE)
-            .objectId(GraphUtils.generateSha256(seriesName))
+            .objectId(PipelineUtils.generateSha256(seriesName))
             .provenance(provenanceDcid)
             .build());
     // Add typeOf edge

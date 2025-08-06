@@ -19,7 +19,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class GraphUtilsTest {
+public class PipelineUtilsTest {
 
   PipelineOptions options = PipelineOptionsFactory.create();
 
@@ -141,8 +141,7 @@ public class GraphUtilsTest {
             .build();
 
     PCollection<McfGraph> input = p.apply("CreateInput", Create.of(graph1, graph2));
-    PCollection<McfGraph> output =
-        org.datacommons.pipeline.util.GraphUtils.combineGraphNodes(input);
+    PCollection<McfGraph> output = PipelineUtils.combineGraphNodes(input);
 
     // The combineGraphNodes method returns a PCollection where each element is an McfGraph
     // containing a single combined node. To compare against a single expected graph,
