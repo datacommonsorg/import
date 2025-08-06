@@ -26,7 +26,7 @@
         <maven-jar-plugin.version>3.0.2</maven-jar-plugin.version>
         <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
         <mockito.version>3.7.7</mockito.version>
-        <slf4j.version>1.7.30</slf4j.version>
+        <slf4j.version>2.0.13</slf4j.version>
     </properties>
 
     <!-- List the sub-dirs so that they all get included in an IntelliJ project -->
@@ -109,14 +109,6 @@
             <configuration>
                 <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
                 <clearOutputDirectory>false</clearOutputDirectory>
-                <outputTargets>
-                    <outputTarget>
-                        <generator>java</generator>
-                        <outputDirectory>${project.build.directory}/generated-sources/protobuf/java</outputDirectory>
-                        <addSources>true</addSources> 
-                        <filter>false</filter> 
-                    </outputTarget>
-                </outputTargets>
                 <protoSourceRoot>${project.basedir}/src/main/proto</protoSourceRoot>
             </configuration>
             <executions>
