@@ -2,197 +2,115 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  
-  <parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.datacommons</groupId>
+        <artifactId>pipeline</artifactId>
+        <version>${revision}</version>
+    </parent>
+
     <groupId>org.datacommons</groupId>
-    <artifactId>pipeline</artifactId>
+    <artifactId>differ</artifactId>
     <version>${revision}</version>
-  </parent>
+    <name>Data Commons - Differ Pipeline</name>
 
-  <groupId>org.example</groupId>
-  <artifactId>differ</artifactId>
-  <version>${revision}</version>
-  <name>Data Commons - Differ Pipeline</name>
-
-  <packaging>jar</packaging>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven-compiler-plugin.version}</version>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.6.0</version>
-        <executions>
-          <execution>
-          <phase>package</phase> 
-          <goals>
-            <goal>single</goal>
-          </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>org.datacommons.Differ</mainClass>
-            </manifest>
-          </archive>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>${maven-jar-plugin.version}</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>${maven-shade-plugin.version}</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <finalName>${project.artifactId}-bundled-${project.version}</finalName>
-              <filters>
-                <filter>
-                  <artifact>*:*</artifact>
-                  <excludes>
-                    <exclude>META-INF/LICENSE</exclude>
-                    <exclude>META-INF/*.SF</exclude>
-                    <exclude>META-INF/*.DSA</exclude>
-                    <exclude>META-INF/*.RSA</exclude>
-                  </excludes>
-                </filter>
-              </filters>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                  <resource>reference.conf</resource>
-                </transformer>
-                   <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                    <manifestEntries>
-                        <Main-Class> org.datacommons.DifferPipeline</Main-Class>
-                    </manifestEntries>
-                </transformer>
-              </transformers>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>exec-maven-plugin</artifactId>
-          <version>${maven-exec-plugin.version}</version>
-          <configuration>
-            <cleanupDaemonThreads>false</cleanupDaemonThreads>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-
-  <dependencies>
-      <dependency>
-          <artifactId>model</artifactId>
-          <groupId>org.datacommons</groupId>
-          <version>${revision}</version>
-      </dependency>
-      <dependency>
-          <artifactId>util</artifactId>
-          <groupId>org.datacommons</groupId>
-          <version>${revision}</version>
-      </dependency>
-    <!-- Adds a dependency on the Beam SDK. -->
-    <dependency>
-      <groupId>org.apache.beam</groupId>
-      <artifactId>beam-sdks-java-core</artifactId>
-      <version>${beam.version}</version>
-    </dependency>
-
-    <!-- Adds a dependency on the Beam Google Cloud Platform IO module. -->
-    <dependency>
-      <groupId>org.apache.beam</groupId>
-      <artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>
-      <version>${beam.version}</version>
-    </dependency>
-    <dependency>
-    <groupId>org.apache.beam</groupId>
-    <artifactId>beam-sdks-java-io-csv</artifactId>
-      <version>${beam.version}</version>
-</dependency>
-
-    <!-- Add slf4j API frontend binding with JUL backend -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>${slf4j.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-jdk14</artifactId>
-      <version>${slf4j.version}</version>
-      <!-- When loaded at runtime this will wire up slf4j to the JUL backend -->
-      <scope>runtime</scope>
-    </dependency>
-
-  </dependencies>
-
-  <profiles>
-    <profile>
-      <id>direct-runner</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <!-- Makes the DirectRunner available when running a pipeline. -->
-      <dependencies>
+    <dependencies>
         <dependency>
-          <groupId>org.apache.beam</groupId>
-          <artifactId>beam-runners-direct-java</artifactId>
-          <version>${beam.version}</version>
-          <scope>runtime</scope>
+            <artifactId>model</artifactId>
+            <groupId>org.datacommons</groupId>
+            <version>${revision}</version>
         </dependency>
-      </dependencies>
-    </profile>
-
-    <profile>
-      <id>dataflow-runner</id>
-      <!-- Makes the DataflowRunner available when running a pipeline. -->
-      <dependencies>
         <dependency>
-          <groupId>org.apache.beam</groupId>
-          <artifactId>beam-runners-google-cloud-dataflow-java</artifactId>
-          <version>${beam.version}</version>
-          <scope>runtime</scope>
+            <artifactId>util</artifactId>
+            <groupId>org.datacommons</groupId>
+            <version>${revision}</version>
         </dependency>
-      </dependencies>
-    </profile>
+        <dependency>
+            <groupId>org.apache.beam</groupId>
+            <artifactId>beam-sdks-java-core</artifactId>
+            <version>${beam.version}</version>
+        </dependency>
 
+        <dependency>
+            <groupId>org.apache.beam</groupId>
+            <artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>
+            <version>${beam.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
-  </profiles>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <configuration>
+                    <skip>false</skip>
+                    <cleanupDaemonThreads>false</cleanupDaemonThreads>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.datacommons.pipeline.differ.DifferPipeline</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <profiles>
+        <profile>
+            <id>direct-runner</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.beam</groupId>
+                    <artifactId>beam-runners-direct-java</artifactId>
+                    <version>${beam.version}</version>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>dataflow-runner</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.beam</groupId>
+                    <artifactId>beam-runners-google-cloud-dataflow-java</artifactId>
+                    <version>${beam.version}</version>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
 </project>
