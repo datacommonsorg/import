@@ -1,5 +1,11 @@
 package org.datacommons.pipeline.differ;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
@@ -7,9 +13,13 @@ import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
+import org.apache.beam.sdk.values.TupleTagList;
 import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.util.GraphUtils;
+import org.datacommons.util.GraphUtils.Property;
 
 /** Util functions for the differ pipeline. */
 public class DifferUtils {
@@ -20,28 +30,60 @@ public class DifferUtils {
     UNMODIFIED;
   }
 
+  public static final TupleTag<KV<String, String>> OBSERVATION_NODES_TAG =
+      new TupleTag<KV<String, String>>() {};
+  public static final TupleTag<KV<String, String>> SCHEMA_NODES_TAG =
+      new TupleTag<KV<String, String>>() {};
+
+  public static final String[] GROUPBY_PROPERTIES = {
+    "variableMeasured",
+    "observationAbout",
+    "observationDate",
+    "observationPeriod",
+    "measurementMethod",
+    "unit",
+    "scalingFactor"
+  };
+
   /**
-   * Converts an MCF graph (SVObs only) to a PCollection of Key-Val pairs where key contains PVs
-   * excluding value.
+   * Converts an MCF graph to a PCollectionTuple of observation and schema nodes.
    *
    * @param graph input graph to process
-   * @return PCollection of Key-Val pairs
+   * @return PCollectionTuple of observation and schema nodes
    */
-  static PCollection<KV<String, String>> processGraph(PCollection<McfGraph> graph) {
-    PCollection<KV<String, String>> nodes =
-        graph.apply(
-            "ProcessGraph",
-            ParDo.of(
+  static PCollectionTuple processGraph(PCollection<McfGraph> graph) {
+    return graph.apply(
+        "ProcessGraph",
+        ParDo.of(
                 new DoFn<McfGraph, KV<String, String>>() {
                   @ProcessElement
                   public void process(ProcessContext c) {
                     McfGraph g = c.element();
-                    for (String[] pv : GraphUtils.getSeriesValues(g)) {
-                      c.output(KV.of(pv[0], pv[1]));
+                    for (Map.Entry<String, PropertyValues> entry : g.getNodesMap().entrySet()) {
+                      PropertyValues pvs = entry.getValue();
+                      Map<String, McfGraph.Values> pv = pvs.getPvsMap();
+                      if (GraphUtils.isObservation(pvs)) {
+                        String key =
+                            Arrays.asList(GROUPBY_PROPERTIES).stream()
+                                .map(prop -> GraphUtils.getPropertyValue(pv, prop))
+                                .collect(Collectors.joining(";"));
+                        String value = GraphUtils.getPropertyValue(pv, Property.value.name());
+                        c.output(KV.of(key, value));
+                      } else {
+                        List<String> keys = new ArrayList<>(pv.keySet());
+                        Collections.sort(keys);
+                        String value =
+                            keys.stream()
+                                .filter(key -> !key.equals("Node"))
+                                .map(key -> key + ":" + GraphUtils.getPropertyValue(pv, key))
+                                .collect(Collectors.joining(";"));
+
+                        c.output(SCHEMA_NODES_TAG, KV.of(entry.getKey(), value));
+                      }
                     }
                   }
-                }));
-    return nodes;
+                })
+            .withOutputTags(OBSERVATION_NODES_TAG, TupleTagList.of(SCHEMA_NODES_TAG)));
   }
 
   /**

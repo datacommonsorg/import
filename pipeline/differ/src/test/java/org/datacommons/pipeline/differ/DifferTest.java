@@ -1,11 +1,19 @@
 package org.datacommons.pipeline.differ;
 
+import static org.junit.Assert.fail;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.commons.io.FileUtils;
 import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.junit.Rule;
@@ -21,27 +29,43 @@ public class DifferTest {
     options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
 
     // Create an input PCollection.
-    String currentFile = getClass().getClassLoader().getResource("current.mcf").getPath();
-    String previousFile = getClass().getClassLoader().getResource("previous.mcf").getPath();
+    String currentFile = getClass().getClassLoader().getResource("current").getPath();
+    String previousFile = getClass().getClassLoader().getResource("previous").getPath();
 
     // Process the input.
-    PCollection<McfGraph> currentGraph = PipelineUtils.readMcfFile(currentFile, p);
-    PCollection<KV<String, String>> currentNodes = DifferUtils.processGraph(currentGraph);
-    PCollection<McfGraph> previousGraph = PipelineUtils.readMcfFile(previousFile, p);
-    PCollection<KV<String, String>> previousNodes = DifferUtils.processGraph(previousGraph);
-    PCollection<String> result = DifferUtils.performDiff(currentNodes, previousNodes);
+    PCollection<McfGraph> currentGraph =
+        PipelineUtils.readMcfFile(Paths.get(currentFile, "*.mcf").toString(), p);
+    PCollection<McfGraph> previousGraph =
+        PipelineUtils.readMcfFile(Paths.get(previousFile, "*.mcf").toString(), p);
+    PCollectionTuple currentNodesTuple = DifferUtils.processGraph(currentGraph);
+    PCollectionTuple previousNodesTuple = DifferUtils.processGraph(previousGraph);
+
+    PCollection<KV<String, String>> currentNodes =
+        currentNodesTuple.get(DifferUtils.OBSERVATION_NODES_TAG);
+    PCollection<KV<String, String>> previousNodes =
+        previousNodesTuple.get(DifferUtils.OBSERVATION_NODES_TAG);
+    PCollection<String> obsDiff = DifferUtils.performDiff(currentNodes, previousNodes);
+
+    currentNodes = currentNodesTuple.get(DifferUtils.SCHEMA_NODES_TAG);
+    previousNodes = previousNodesTuple.get(DifferUtils.SCHEMA_NODES_TAG);
+    PCollection<String> schemaDiff = DifferUtils.performDiff(currentNodes, previousNodes);
 
     // Assert on the results.
-    PAssert.that(result)
-        .containsInAnyOrder(
-            "dcid:Mean_Concentration_AirPollutant_CO,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,,41.0,DELETED",
-            "dcid:Min_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___IMD,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,,18.0,DELETED",
-            "dcid:Mean_Concentration_AirPollutant_CO,dcid:cpcpAq/Secretariat_Amaravati___IMD,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,42.0,41.0,MODIFIED",
-            "dcid:Min_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,,18.0,DELETED",
-            "dcid:Max_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,53.0,,ADDED",
-            "dcid:Mean_Concentration_AirPollutant_CO,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-25T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,,40.0,DELETED",
-            "dcid:Mean_Concentration_AirPollutant_Ozone,dcid:cpcpAq/Secretariat_Amaravati___APPCB,\"2024-09-24T12:00:00\",,,dcid:MicrogramsPerCubicMeter,,28.0,29.0,MODIFIED");
+    String expectedObsDiffFile = getClass().getClassLoader().getResource("obs-diff.csv").getPath();
+    String expectedSchemaDiffFile =
+        getClass().getClassLoader().getResource("schema-diff.csv").getPath();
 
+    try {
+      PAssert.that(obsDiff)
+          .containsInAnyOrder(
+              FileUtils.readLines(new File(expectedObsDiffFile), StandardCharsets.UTF_8));
+      PAssert.that(schemaDiff)
+          .containsInAnyOrder(
+              FileUtils.readLines(new File(expectedSchemaDiffFile), StandardCharsets.UTF_8));
+
+    } catch (IOException e) {
+      fail("Unable to read expected output files.");
+    }
     // Run the pipeline.
     p.run();
   }
