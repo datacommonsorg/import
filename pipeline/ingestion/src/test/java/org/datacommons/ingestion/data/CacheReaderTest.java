@@ -8,7 +8,7 @@ import org.junit.Test;
 
 public class CacheReaderTest {
   @Test
-  public void testParseArcRow_outArcwithNode() {
+  public void testParseArcRow_outArcWithReferenceNode() {
     CacheReader reader = newCacheReader();
     String row =
         "d/m/Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person^measuredProperty^Property^0,H4sIAAAAAAAAAOPS5WJNzi/NK5GCUEqyKcn6SYnFqfoepbmJeUGpiSmJSTmpwSWJJWGJRcWCDGDwwR4AejAnwDgAAAA=";
@@ -16,14 +16,19 @@ public class CacheReaderTest {
     NodesEdges expected =
         new NodesEdges()
             .addNode(
-                Node.builder().subjectId("count").name("count").types(List.of("Property")).build())
+                Node.builder()
+                    .subjectId("count")
+                    .value("count")
+                    .reference(true)
+                    .name("count")
+                    .types(List.of("Property"))
+                    .build())
             .addEdge(
                 Edge.builder()
                     .subjectId(
                         "Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person")
                     .predicate("measuredProperty")
                     .objectId("count")
-                    .objectValue("")
                     .provenance("dc/base/HumanReadableStatVars")
                     .build());
 
@@ -33,22 +38,25 @@ public class CacheReaderTest {
   }
 
   @Test
-  public void testParseArcRow_outArcwithoutNode() {
+  public void testParseArcRow_outArcWithValueNode() {
     CacheReader reader = newCacheReader();
     String row =
         "d/m/Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person^name^^0,H4sIAAAAAAAAAONqYFSSTUnWT0osTtX3KM1NzAtKTUxJTMpJDS5JLAlLLCrWig9ILUpOzStJTE9VCM8vylYISs1JLElNUQjIqCzOTE7MUXBMLsksyyyp1FHwzU9JLQJKwoUU/IsUPFITyyoRIo65+XnpCgH5BaVAYzLz8wQZwOCDPQA1JajOjAAAAA==";
 
     NodesEdges expected =
         new NodesEdges()
+            .addNode(
+                Node.builder()
+                    .subjectId("c6CV18sK/njghkqgkS/mMaTkKP+oWup0pgYkS6iFpvY=")
+                    .value(
+                        "Percentage Work Related Physical Activity, Moderate Activity Or Heavy Activity Among Population")
+                    .build())
             .addEdge(
                 Edge.builder()
                     .subjectId(
                         "Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person")
                     .predicate("name")
-                    .objectId(
-                        "Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person")
-                    .objectValue(
-                        "Percentage Work Related Physical Activity, Moderate Activity Or Heavy Activity Among Population")
+                    .objectId("c6CV18sK/njghkqgkS/mMaTkKP+oWup0pgYkS6iFpvY=")
                     .provenance("dc/base/HumanReadableStatVars")
                     .build());
 
@@ -68,6 +76,8 @@ public class CacheReaderTest {
             .addNode(
                 Node.builder()
                     .subjectId("dc/base/UN_SDG")
+                    .value("dc/base/UN_SDG")
+                    .reference(true)
                     .name("UN_SDG")
                     .types(List.of("Provenance"))
                     .build())
@@ -76,7 +86,6 @@ public class CacheReaderTest {
                     .subjectId("dc/base/UN_SDG")
                     .predicate("isPartOf")
                     .objectId("dc/d/UnitedNationsUn_SdgIndicatorsDatabase")
-                    .objectValue("")
                     .provenance("dc/base/UN_SDG")
                     .build());
 
@@ -121,6 +130,7 @@ public class CacheReaderTest {
                 .measurementMethod("NOAA_GFS")
                 .scalingFactor("")
                 .unit("Millimeter")
+                .isDcAggregate(true)
                 .provenanceUrl(
                     "https://www.ncei.noaa.gov/products/weather-climate-models/global-forecast")
                 .importName("NOAA_GFS_WeatherForecast")
@@ -130,40 +140,43 @@ public class CacheReaderTest {
         new NodesEdges()
             .addNode(
                 Node.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755143")
-                    .name("Mean Precipitable Water Atmosphere | geoId/sch2915390 | 870755143")
+                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
+                    .value("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
+                    .reference(true)
+                    .name("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 870755137")
                     .types(List.of("StatVarObsSeries"))
                     .build())
+            .addNode(
+                Node.builder()
+                    .subjectId("jVWNIHt73yOspqKD0fnvTCH8GCW7m38F3gW+JB+aWms=")
+                    .value("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 870755137")
+                    .build())
             .addEdge(
                 Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755143")
+                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
                     .predicate("variableMeasured")
                     .objectId("Mean_PrecipitableWater_Atmosphere")
-                    .objectValue("")
                     .provenance("dc/base/NOAA_GFS_WeatherForecast")
                     .build())
             .addEdge(
                 Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755143")
+                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
                     .predicate("observationAbout")
                     .objectId("geoId/sch2915390")
-                    .objectValue("")
                     .provenance("dc/base/NOAA_GFS_WeatherForecast")
                     .build())
             .addEdge(
                 Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755143")
+                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
                     .predicate("name")
-                    .objectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755143")
-                    .objectValue("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 870755143")
+                    .objectId("jVWNIHt73yOspqKD0fnvTCH8GCW7m38F3gW+JB+aWms=")
                     .provenance("dc/base/NOAA_GFS_WeatherForecast")
                     .build())
             .addEdge(
                 Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755143")
+                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
                     .predicate("typeOf")
                     .objectId("StatVarObsSeries")
-                    .objectValue("")
                     .provenance("dc/base/NOAA_GFS_WeatherForecast")
                     .build());
 

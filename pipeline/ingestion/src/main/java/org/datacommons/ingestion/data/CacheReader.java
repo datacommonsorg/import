@@ -1,6 +1,7 @@
 package org.datacommons.ingestion.data;
 
 import com.google.api.gax.paging.Page;
+import com.google.cloud.ByteArray;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.datacommons.pipeline.util.GraphUtils;
 import org.datacommons.proto.CacheData.EntityInfo;
 import org.datacommons.proto.CacheData.PagedEntities;
 import org.datacommons.proto.ChartStoreOuterClass.ChartStore;
@@ -86,22 +88,35 @@ public class CacheReader implements Serializable {
 
           PagedEntities elist = ProtoUtil.parseCacheProto(value, PagedEntities.parser());
           for (EntityInfo entity : elist.getEntitiesList()) {
-            String subjectId, objectId, nodeId = "";
-            // Add a self edge if value is populated.
-            if (!entity.getValue().isEmpty()) {
+            String nodeId = "";
+            String nodeValue = "";
+            String subjectId = "";
+            String objectId = "";
+            boolean reference = false;
+            ByteArray bytes = null;
+            if (isOutArcCacheRow(row)) { // Out arc row
               subjectId = dcid;
-              objectId = dcid;
-              // Terminal edges won't produce any object nodes.
-            } else {
-              if (isOutArcCacheRow(row)) {
-                subjectId = dcid;
+              if (!entity.getDcid().isEmpty()) { // Reference
+                nodeId = entity.getDcid();
+                nodeValue = entity.getDcid();
                 objectId = entity.getDcid();
-                nodeId = entity.getDcid();
-              } else { // in arc row
-                subjectId = entity.getDcid();
-                objectId = dcid;
-                nodeId = entity.getDcid();
+                reference = true;
+              } else { // Value
+                String hash = GraphUtils.generateSha256(entity.getValue());
+                nodeId = hash;
+                if (GraphUtils.storeValueAsBytes(predicate)) {
+                  bytes = ByteArray.copyFrom(GraphUtils.compressString(entity.getValue()));
+                } else {
+                  nodeValue = entity.getValue();
+                }
+                objectId = hash;
               }
+            } else { // In arc row
+              nodeId = entity.getDcid();
+              nodeValue = entity.getDcid();
+              subjectId = entity.getDcid();
+              objectId = dcid;
+              reference = true;
             }
 
             List<String> types = entity.getTypesList();
@@ -110,9 +125,15 @@ public class CacheReader implements Serializable {
             }
 
             // Add node.
-            if (!nodeId.isEmpty() && !types.isEmpty()) {
+            if (!nodeId.isEmpty()) {
               result.addNode(
-                  Node.builder().subjectId(nodeId).name(entity.getName()).types(types).build());
+                  Node.builder()
+                      .subjectId(nodeId)
+                      .value(nodeValue)
+                      .reference(reference)
+                      .name(entity.getName())
+                      .types(types)
+                      .build());
             }
 
             // Add edge.
@@ -122,7 +143,6 @@ public class CacheReader implements Serializable {
                       .subjectId(subjectId)
                       .predicate(predicate)
                       .objectId(objectId)
-                      .objectValue(entity.getValue())
                       .provenance(entity.getProvenanceId())
                       .build());
             }
@@ -159,6 +179,7 @@ public class CacheReader implements Serializable {
                     .measurementMethod(source.getMeasurementMethod())
                     .scalingFactor(source.getScalingFactor())
                     .unit(source.getUnit())
+                    .isDcAggregate(source.getIsDcAggregate())
                     .provenanceUrl(source.getProvenanceUrl())
                     .importName(source.getImportName());
             for (Map.Entry<String, Double> e : source.getValMap().entrySet()) {
