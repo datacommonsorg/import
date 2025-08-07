@@ -93,12 +93,21 @@ public class CacheReader implements Serializable {
             String subjectId = "";
             String objectId = "";
             ByteArray bytes = null;
+            List<String> types = entity.getTypesList();
+            if (types.isEmpty() && !typeOf.isEmpty()) {
+              types = Arrays.asList(typeOf);
+            }
+
             if (isOutArcCacheRow(row)) { // Out arc row
               subjectId = dcid;
               if (!entity.getDcid().isEmpty()) { // Reference
                 nodeId = entity.getDcid();
                 nodeValue = entity.getDcid();
                 objectId = entity.getDcid();
+                if (types.isEmpty()) {
+                  types = Arrays.asList(PipelineUtils.TYPE_THING);
+                  LOGGER.info("Found MCF node with no type: {}", nodeId);
+                }
               } else { // Value
                 String hash = PipelineUtils.generateSha256(entity.getValue());
                 nodeId = hash;
@@ -114,19 +123,14 @@ public class CacheReader implements Serializable {
               nodeValue = entity.getDcid();
               subjectId = entity.getDcid();
               objectId = dcid;
-            }
-
-            List<String> types = entity.getTypesList();
-            if (types.isEmpty() && !typeOf.isEmpty()) {
-              types = Arrays.asList(typeOf);
-            }
-
-            // Add node.
-            if (!nodeId.isEmpty()) {
               if (types.isEmpty()) {
                 types = Arrays.asList(PipelineUtils.TYPE_THING);
                 LOGGER.info("Found MCF node with no type: {}", nodeId);
               }
+            }
+
+            // Add node.
+            if (!nodeId.isEmpty()) {
               result.addNode(
                   Node.builder()
                       .subjectId(nodeId)
