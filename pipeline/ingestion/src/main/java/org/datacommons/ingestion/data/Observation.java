@@ -3,6 +3,7 @@ package org.datacommons.ingestion.data;
 import com.google.common.base.Joiner;
 import java.util.List;
 import java.util.Objects;
+import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Storage.Observations;
 
 /**
@@ -92,7 +93,7 @@ public class Observation {
     return facetId;
   }
 
-  public boolean isDcAggregate() {
+  public boolean getIsDcAggregate() {
     return isDcAggregate;
   }
 
@@ -116,8 +117,16 @@ public class Observation {
     graph.addNode(
         Node.builder()
             .subjectId(seriesDcid)
+            .value(seriesDcid)
             .name(seriesName)
             .types(List.of(OBS_SERIES_TYPE))
+            .build());
+
+    // Add leaf node
+    graph.addNode(
+        Node.builder()
+            .subjectId(PipelineUtils.generateSha256(seriesName))
+            .value(seriesName)
             .build());
 
     // Add variableMeasured edge
@@ -141,8 +150,7 @@ public class Observation {
         Edge.builder()
             .subjectId(seriesDcid)
             .predicate(NAME_PREDICATE)
-            .objectId(seriesDcid)
-            .objectValue(seriesName)
+            .objectId(PipelineUtils.generateSha256(seriesName))
             .provenance(provenanceDcid)
             .build());
     // Add typeOf edge

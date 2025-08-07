@@ -3,10 +3,11 @@ package org.datacommons.ingestion.data;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import com.google.cloud.ByteArray;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
@@ -47,6 +48,15 @@ public class GraphReaderTest {
                                 TypedValue.newBuilder()
                                     .setType(ValueType.RESOLVED_REF)
                                     .setValue("Thing"))
+                            .build())
+                    .putPvs(
+                        "geoJsonCoordinates",
+                        McfGraph.Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setType(ValueType.TEXT)
+                                    .setValue(
+                                        "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],       [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]     ]   ] } "))
                             .build())
                     .build())
             .putNodes(
@@ -90,11 +100,32 @@ public class GraphReaderTest {
         Arrays.asList(
             Node.builder()
                 .subjectId("dcid0")
+                .value("dcid0")
                 .name("Node Zero")
                 .types(List.of("Class", "Thing"))
                 .build(),
-            Node.builder().subjectId("dcid1").name("Node One").types(List.of("Property")).build(),
-            Node.builder().subjectId("dcid2").name("").types(Collections.emptyList()).build());
+            Node.builder()
+                .subjectId("dcid1")
+                .value("dcid1")
+                .name("Node One")
+                .types(List.of("Property"))
+                .build(),
+            Node.builder().subjectId("dcid2").value("dcid2").types(List.of("Thing")).build(),
+            Node.builder()
+                .subjectId("kUyRupzrJkxe/HIOIctxlJX4woEGeOTtlVwqyXYnfDE=")
+                .value("Node Zero")
+                .build(),
+            Node.builder()
+                .subjectId("G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
+                .bytes(
+                    ByteArray.copyFrom(
+                        PipelineUtils.compressString(
+                            "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],       [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]     ]   ] } ")))
+                .build(),
+            Node.builder()
+                .subjectId("J7we8EV8ssChRxBgWot6zDSbHl4xGY7I6mQosc89hFk=")
+                .value("Node One")
+                .build());
 
     List<Node> actualNodes = GraphReader.graphToNodes(graph);
 
@@ -108,6 +139,8 @@ public class GraphReaderTest {
       Node expected = expectedNodes.get(i);
       Node actual = actualNodes.get(i);
       assertEquals(expected.getSubjectId(), actual.getSubjectId());
+      assertEquals(expected.getValue(), actual.getValue());
+      assertEquals(expected.getBytes(), actual.getBytes());
       assertEquals(expected.getName(), actual.getName());
       assertArrayEquals(expected.getTypes().toArray(), actual.getTypes().toArray());
     }
@@ -153,6 +186,23 @@ public class GraphReaderTest {
                                     .setType(ValueType.TEXT)
                                     .setValue("A test description"))
                             .build())
+                    .putPvs(
+                        "geoJsonCoordinates",
+                        McfGraph.Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setType(ValueType.TEXT)
+                                    .setValue(
+                                        "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],       [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]     ]   ] } "))
+                            .build())
+                    .putPvs(
+                        "provenance",
+                        McfGraph.Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setType(ValueType.RESOLVED_REF)
+                                    .setValue("dc/base/Test"))
+                            .build())
                     .build())
             .putNodes(
                 "dcid_obs", // This should be skipped as it's an observation
@@ -173,20 +223,38 @@ public class GraphReaderTest {
             Edge.builder()
                 .subjectId("dcid_subject")
                 .predicate("name")
-                .objectId("dcid_subject")
-                .objectValue("Subject Node")
+                .objectId("mccrOBZqQNkHnRh1HpDlRRCFk+0dKKdYJFwWqrIw71s=")
+                .provenance("dc/base/Test")
                 .build(),
-            Edge.builder().subjectId("dcid_subject").predicate("typeOf").objectId("Class").build(),
+            Edge.builder()
+                .subjectId("dcid_subject")
+                .predicate("typeOf")
+                .objectId("Class")
+                .provenance("dc/base/Test")
+                .build(),
             Edge.builder()
                 .subjectId("dcid_subject")
                 .predicate("containedInPlace")
                 .objectId("geoId/06")
+                .provenance("dc/base/Test")
                 .build(),
             Edge.builder()
                 .subjectId("dcid_subject")
                 .predicate("description")
-                .objectId("dcid_subject")
-                .objectValue("A test description")
+                .objectId("Qa4HqNXvAF/E5uwL1wf1QtUS1qKwulUzF/F1HtAY6fk=")
+                .provenance("dc/base/Test")
+                .build(),
+            Edge.builder()
+                .subjectId("dcid_subject")
+                .predicate("geoJsonCoordinates")
+                .objectId("G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
+                .provenance("dc/base/Test")
+                .build(),
+            Edge.builder()
+                .subjectId("dcid_subject")
+                .predicate("provenance")
+                .objectId("dc/base/Test")
+                .provenance("dc/base/Test")
                 .build());
 
     List<Edge> actualEdges = GraphReader.graphToEdges(graph);
@@ -195,8 +263,7 @@ public class GraphReaderTest {
     Comparator<Edge> edgeComparator =
         Comparator.comparing(Edge::getSubjectId)
             .thenComparing(Edge::getPredicate)
-            .thenComparing(Edge::getObjectId)
-            .thenComparing(Edge::getObjectValue);
+            .thenComparing(Edge::getObjectId);
     actualEdges.sort(edgeComparator);
     expectedEdges.sort(edgeComparator);
 

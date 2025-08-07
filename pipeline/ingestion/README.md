@@ -64,7 +64,7 @@ mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.d
 
 ```shell
 mvn -Pdataflow-runner compile exec:java -pl ingestion -am -Dexec.mainClass=org.datacommons.ingestion.pipeline.IngestionPipeline \
--Dexec.args="--skipProcessing=SKIP_OBS --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=30 --maxNumWorkers=40 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=e2-highmem-16"
+-Dexec.args="--skipProcessing=SKIP_OBS --project=datcom-store --gcpTempLocation=gs://keyurs-dataflow/temp --runner=DataflowRunner --region=us-central1  --numWorkers=30 --maxNumWorkers=100 --dataflowServiceOptions=enable_google_cloud_profiler --workerMachineType=e2-highmem-16"
 ```
 
 ### Import specific import group

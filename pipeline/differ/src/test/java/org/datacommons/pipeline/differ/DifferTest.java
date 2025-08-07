@@ -14,7 +14,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.commons.io.FileUtils;
-import org.datacommons.pipeline.util.GraphUtils;
+import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,9 +34,9 @@ public class DifferTest {
 
     // Process the input.
     PCollection<McfGraph> currentGraph =
-        GraphUtils.readMcfFile(Paths.get(currentFile, "*.mcf").toString(), p);
+        PipelineUtils.readMcfFile(Paths.get(currentFile, "*.mcf").toString(), p);
     PCollection<McfGraph> previousGraph =
-        GraphUtils.readMcfFile(Paths.get(previousFile, "*.mcf").toString(), p);
+        PipelineUtils.readMcfFile(Paths.get(previousFile, "*.mcf").toString(), p);
     PCollectionTuple currentNodesTuple = DifferUtils.processGraph(currentGraph);
     PCollectionTuple previousNodesTuple = DifferUtils.processGraph(previousGraph);
 

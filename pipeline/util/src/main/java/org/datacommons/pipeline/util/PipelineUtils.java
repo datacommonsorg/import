@@ -2,13 +2,20 @@ package org.datacommons.pipeline.util;
 
 import static org.apache.beam.sdk.io.Compression.GZIP;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.GZIPOutputStream;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TFRecordIO;
 import org.apache.beam.sdk.io.TextIO;
@@ -25,12 +32,25 @@ import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.Values;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
+import org.datacommons.util.GraphUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Util functions for processing MCF graphs. */
-public class GraphUtils {
-  private static final Logger LOGGER = LoggerFactory.getLogger(GraphUtils.class);
+public class PipelineUtils {
+  // Default type for MCF nodes.
+  public static final String TYPE_THING = "Thing";
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(PipelineUtils.class);
+
+  // Predicates for which the object value should be stored as bytes.
+  private static final Set<String> STORE_VALUE_AS_BYTES_PREDICATES =
+      ImmutableSet.of(
+          "geoJsonCoordinates",
+          "geoJsonCoordinatesDP1",
+          "geoJsonCoordinatesDP2",
+          "geoJsonCoordinatesDP3",
+          "kmlCoordinates");
 
   /**
    * Parses a byte array into an McfOptimizedGraph protocol buffer.
@@ -63,8 +83,7 @@ public class GraphUtils {
               @ProcessElement
               public void processElement(
                   @Element McfOptimizedGraph graph, OutputReceiver<McfGraph> receiver) {
-                for (McfGraph g :
-                    org.datacommons.util.GraphUtils.convertMcfStatVarObsSeriesToMcfGraph(graph)) {
+                for (McfGraph g : GraphUtils.convertMcfStatVarObsSeriesToMcfGraph(graph)) {
                   receiver.output(g);
                 }
               }
@@ -117,7 +136,7 @@ public class GraphUtils {
                 new SimpleFunction<String, McfGraph>() {
                   @Override
                   public McfGraph apply(String input) {
-                    return org.datacommons.util.GraphUtils.convertToGraph(input);
+                    return GraphUtils.convertToGraph(input);
                   }
                 }));
     return mcf;
@@ -143,10 +162,9 @@ public class GraphUtils {
                                   KV<McfStatVarObsSeries.Key, McfStatVarObsSeries.StatVarObs>>
                               receiver) {
                         for (PropertyValues pv : graph.getNodesMap().values()) {
-                          if (org.datacommons.util.GraphUtils.isObservation(pv)) {
+                          if (GraphUtils.isObservation(pv)) {
                             McfStatVarObsSeries svoSeries =
-                                org.datacommons.util.GraphUtils
-                                    .convertMcfGraphToMcfStatVarObsSeries(pv);
+                                GraphUtils.convertMcfGraphToMcfStatVarObsSeries(pv);
                             receiver.output(KV.of(svoSeries.getKey(), svoSeries.getSvObsList(0)));
                           }
                         }
@@ -281,5 +299,48 @@ public class GraphUtils {
                   }
                 }));
     return combinedGraph;
+  }
+
+  /**
+   * Returns whether the value for the given predicate should be stored as bytes, false otherwise.
+   *
+   * @param predicate The predicate.
+   * @return True if the value should be stored as bytes, false otherwise.
+   */
+  public static boolean storeValueAsBytes(String predicate) {
+    return STORE_VALUE_AS_BYTES_PREDICATES.contains(predicate);
+  }
+
+  /**
+   * Generates Base64-encoded SHA256 of input.
+   *
+   * @param input The input string to encode.
+   * @return The encoded string.
+   */
+  public static String generateSha256(String input) {
+    if (input == null || input.isEmpty()) {
+      return "";
+    }
+    return Base64.getEncoder()
+        .encodeToString(Hashing.sha256().hashString(input, StandardCharsets.UTF_8).asBytes());
+  }
+
+  /**
+   * Compresses input with GZIP.
+   *
+   * @param data The input to compress.
+   * @return The compressed string.
+   */
+  public static byte[] compressString(String data) {
+    try {
+      var out = new ByteArrayOutputStream();
+      try (GZIPOutputStream gout = new GZIPOutputStream(out)) {
+        // Default charset can differ across platforms. Using UTF-8 here.
+        gout.write(data.getBytes(StandardCharsets.UTF_8));
+      }
+      return out.toByteArray();
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Error serializing string: " + data, e);
+    }
   }
 }

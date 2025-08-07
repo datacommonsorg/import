@@ -1,22 +1,14 @@
 package org.datacommons.ingestion.spanner;
 
-import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
-import com.google.cloud.spanner.Mutation.WriteBuilder;
 import com.google.cloud.spanner.Value;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Stream;
-import java.util.zip.GZIPOutputStream;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.Write;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.WriteGrouped;
@@ -39,15 +31,6 @@ public class SpannerClient implements Serializable {
   private static final int SPANNER_GROUPING_FACTOR = 3000;
   // Commit deadline for spanner writes. Use large value for bigger batches.
   private static final int SPANNER_COMMIT_DEADLINE_SECONDS = 120;
-
-  // Predicates for which the object value should be stored as bytes in Spanner.
-  private static final Set<String> STORE_VALUE_AS_BYTES_PREDICATES =
-      ImmutableSet.of(
-          "geoJsonCoordinates",
-          "geoJsonCoordinatesDP1",
-          "geoJsonCoordinatesDP2",
-          "geoJsonCoordinatesDP3",
-          "kmlCoordinates");
 
   private final String gcpProjectId;
   private final String spannerInstanceId;
@@ -87,6 +70,10 @@ public class SpannerClient implements Serializable {
     return Mutation.newInsertOrUpdateBuilder(nodeTableName)
         .set("subject_id")
         .to(node.getSubjectId())
+        .set("value")
+        .to(node.getValue())
+        .set("bytes")
+        .to(node.getBytes())
         .set("name")
         .to(node.getName())
         .set("types")
@@ -95,45 +82,16 @@ public class SpannerClient implements Serializable {
   }
 
   public Mutation toEdgeMutation(Edge edge) {
-    WriteBuilder builder =
-        Mutation.newInsertOrUpdateBuilder(edgeTableName)
-            .set("subject_id")
-            .to(edge.getSubjectId())
-            .set("predicate")
-            .to(edge.getPredicate())
-            .set("object_id")
-            .to(edge.getObjectId())
-            .set("provenance")
-            .to(edge.getProvenance())
-            .set("object_hash")
-            .to(edge.getObjectHash());
-    if (storeValueAsBytes(edge.getPredicate())) {
-      builder.set("object_bytes").to(ByteArray.copyFrom(compressString(edge.getObjectValue())));
-    } else {
-      builder.set("object_value").to(edge.getObjectValue());
-    }
-    return builder.build();
-  }
-
-  /**
-   * Returns true if the object value for the given predicate should be stored as bytes in Spanner,
-   * false otherwise.
-   */
-  private boolean storeValueAsBytes(String predicate) {
-    return STORE_VALUE_AS_BYTES_PREDICATES.contains(predicate);
-  }
-
-  public static byte[] compressString(String data) {
-    try {
-      var out = new ByteArrayOutputStream();
-      try (GZIPOutputStream gout = new GZIPOutputStream(out)) {
-        // Default charset can differ across platforms. Using UTF-8 here.
-        gout.write(data.getBytes(StandardCharsets.UTF_8));
-      }
-      return out.toByteArray();
-    } catch (IOException e) {
-      throw new RuntimeException("Error serializing string: " + data, e);
-    }
+    return Mutation.newInsertOrUpdateBuilder(edgeTableName)
+        .set("subject_id")
+        .to(edge.getSubjectId())
+        .set("predicate")
+        .to(edge.getPredicate())
+        .set("object_id")
+        .to(edge.getObjectId())
+        .set("provenance")
+        .to(edge.getProvenance())
+        .build();
   }
 
   public Mutation toObservationMutation(Observation observation) {
@@ -159,7 +117,7 @@ public class SpannerClient implements Serializable {
         .set("provenance_url")
         .to(observation.getProvenanceUrl())
         .set("is_dc_aggregate")
-        .to(observation.isDcAggregate())
+        .to(observation.getIsDcAggregate())
         .build();
   }
 
@@ -259,7 +217,6 @@ public class SpannerClient implements Serializable {
             getMutationValue(mutationMap, "subject_id"),
             getMutationValue(mutationMap, "predicate"),
             getMutationValue(mutationMap, "object_id"),
-            getMutationValue(mutationMap, "object_hash"),
             getMutationValue(mutationMap, "provenance"));
   }
 
@@ -277,8 +234,7 @@ public class SpannerClient implements Serializable {
     }
 
     String objectId = getMutationValue(mutationMap, "object_id");
-    String objectHash = getMutationValue(mutationMap, "object_hash");
-    int shard = Math.abs(Objects.hash(objectId, objectHash)) % numShards;
+    int shard = Math.abs(Objects.hash(objectId)) % numShards;
 
     return Joiner.on("::").join(subjectId, shard);
   }
@@ -306,11 +262,7 @@ public class SpannerClient implements Serializable {
         new String[] {
           getMutationValue(mutationMap, "variable_measured"),
           getMutationValue(mutationMap, "observation_about"),
-          getMutationValue(mutationMap, "import_name"),
-          getMutationValue(mutationMap, "observation_period"),
-          getMutationValue(mutationMap, "measurement_method"),
-          getMutationValue(mutationMap, "unit"),
-          getMutationValue(mutationMap, "scaling_factor")
+          getMutationValue(mutationMap, "facet_id")
         };
 
     return Joiner.on("::").join(parts);

@@ -7,7 +7,7 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.datacommons.pipeline.util.GraphUtils;
+import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,12 +30,12 @@ public class DifferPipeline {
     PCollection<McfGraph> currentNodes;
     if (options.getUseOptimizedGraphFormat()) {
       LOGGER.info("Using tfrecord file format");
-      currentNodes = GraphUtils.readMcfGraph(options.getCurrentData(), p);
-      previousNodes = GraphUtils.readMcfGraph(options.getPreviousData(), p);
+      currentNodes = PipelineUtils.readMcfGraph(options.getCurrentData(), p);
+      previousNodes = PipelineUtils.readMcfGraph(options.getPreviousData(), p);
     } else {
       LOGGER.info("Using mcf file format");
-      previousNodes = GraphUtils.readMcfFile(options.getPreviousData(), p);
-      currentNodes = GraphUtils.readMcfFile(options.getCurrentData(), p);
+      previousNodes = PipelineUtils.readMcfFile(options.getPreviousData(), p);
+      currentNodes = PipelineUtils.readMcfFile(options.getCurrentData(), p);
     }
 
     // Process the input and perform diff operation.

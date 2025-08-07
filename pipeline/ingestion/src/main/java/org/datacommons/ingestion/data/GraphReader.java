@@ -1,5 +1,6 @@
 package org.datacommons.ingestion.data;
 
+import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.spanner.SpannerClient;
+import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
@@ -18,22 +20,49 @@ import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.proto.Storage.Observations;
 import org.datacommons.util.GraphUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GraphReader implements Serializable {
+  private static final Logger LOGGER = LoggerFactory.getLogger(CacheReader.class);
   private static final String DC_AGGREGATE = "dcAggregate/";
   private static final String DATCOM_AGGREGATE = "DataCommonsAggregate";
 
   public static List<Node> graphToNodes(McfGraph graph) {
     List<Node> nodes = new ArrayList<>();
-    for (Map.Entry<String, PropertyValues> entry : graph.getNodesMap().entrySet()) {
-      PropertyValues pvs = entry.getValue();
+    for (Map.Entry<String, PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
+      PropertyValues pvs = nodeEntry.getValue();
       if (!GraphUtils.isObservation(pvs)) {
+
+        // Generate corresponding node
         Map<String, McfGraph.Values> pv = pvs.getPvsMap();
         Node.Builder node = Node.builder();
-        node.subjectId(entry.getKey());
+        node.subjectId(nodeEntry.getKey());
+        node.value(nodeEntry.getKey());
         node.name(GraphUtils.getPropertyValue(pv, "name"));
-        node.types(GraphUtils.getPropertyValues(pv, "typeOf"));
+        List<String> types = GraphUtils.getPropertyValues(pv, "typeOf");
+        if (types.isEmpty()) {
+          types = List.of(PipelineUtils.TYPE_THING);
+          LOGGER.info("Found MCF node with no type: {}", nodeEntry.getKey());
+        }
+        node.types(types);
         nodes.add(node.build());
+
+        // Generate any leaf nodes
+        for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) { // Iterate over properties
+          for (TypedValue val : entry.getValue().getTypedValuesList()) {
+            if (val.getType() != ValueType.RESOLVED_REF) {
+              node = Node.builder();
+              node.subjectId(PipelineUtils.generateSha256(val.getValue()));
+              if (PipelineUtils.storeValueAsBytes(entry.getKey())) {
+                node.bytes(ByteArray.copyFrom(PipelineUtils.compressString(val.getValue())));
+              } else {
+                node.value(val.getValue());
+              }
+              nodes.add(node.build());
+            }
+          }
+        }
       }
     }
     return nodes;
@@ -56,10 +85,8 @@ public class GraphReader implements Serializable {
             if (val.getType() == ValueType.RESOLVED_REF) {
               edge.objectId(val.getValue());
             } else {
-              edge.objectId(subjectId);
-              edge.objectValue(val.getValue());
+              edge.objectId(PipelineUtils.generateSha256(val.getValue()));
             }
-            // TODO: popuplate object hash.
             edges.add(edge.build());
           }
         }
