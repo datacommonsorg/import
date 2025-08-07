@@ -3,9 +3,11 @@ package org.datacommons.ingestion.data;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import com.google.cloud.ByteArray;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
@@ -46,6 +48,15 @@ public class GraphReaderTest {
                                 TypedValue.newBuilder()
                                     .setType(ValueType.RESOLVED_REF)
                                     .setValue("Thing"))
+                            .build())
+                    .putPvs(
+                        "geoJsonCoordinates",
+                        McfGraph.Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setType(ValueType.TEXT)
+                                    .setValue(
+                                        "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],       [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]     ]   ] } "))
                             .build())
                     .build())
             .putNodes(
@@ -103,6 +114,13 @@ public class GraphReaderTest {
             Node.builder()
                 .subjectId("kUyRupzrJkxe/HIOIctxlJX4woEGeOTtlVwqyXYnfDE=")
                 .value("Node Zero")
+                .build(),
+            Node.builder()
+                .subjectId("G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
+                .bytes(
+                    ByteArray.copyFrom(
+                        PipelineUtils.compressString(
+                            "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],       [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]     ]   ] } ")))
                 .build(),
             Node.builder()
                 .subjectId("J7we8EV8ssChRxBgWot6zDSbHl4xGY7I6mQosc89hFk=")
@@ -169,6 +187,15 @@ public class GraphReaderTest {
                                     .setValue("A test description"))
                             .build())
                     .putPvs(
+                        "geoJsonCoordinates",
+                        McfGraph.Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setType(ValueType.TEXT)
+                                    .setValue(
+                                        "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],       [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]     ]   ] } "))
+                            .build())
+                    .putPvs(
                         "provenance",
                         McfGraph.Values.newBuilder()
                             .addTypedValues(
@@ -215,6 +242,12 @@ public class GraphReaderTest {
                 .subjectId("dcid_subject")
                 .predicate("description")
                 .objectId("Qa4HqNXvAF/E5uwL1wf1QtUS1qKwulUzF/F1HtAY6fk=")
+                .provenance("dc/base/Test")
+                .build(),
+            Edge.builder()
+                .subjectId("dcid_subject")
+                .predicate("geoJsonCoordinates")
+                .objectId("G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
                 .provenance("dc/base/Test")
                 .build(),
             Edge.builder()

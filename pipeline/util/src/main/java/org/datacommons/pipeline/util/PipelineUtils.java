@@ -340,7 +340,7 @@ public class PipelineUtils {
       }
       return out.toByteArray();
     } catch (IOException e) {
-      throw new RuntimeException("Error serializing string: " + data, e);
+      throw new IllegalArgumentException("Error serializing string: " + data, e);
     }
   }
 }
