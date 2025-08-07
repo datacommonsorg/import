@@ -2,11 +2,13 @@ package org.datacommons.ingestion.data;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
 
 import com.google.cloud.ByteArray;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import org.apache.beam.sdk.metrics.Counter;
 import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
@@ -18,11 +20,13 @@ import org.datacommons.proto.Mcf.McfType;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.proto.Storage.Observations;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class GraphReaderTest {
 
   @Test
   public void testGraphToNodes() {
+    Counter mockMcfNodesWithoutTypeCounter = Mockito.mock(Counter.class);
     McfGraph graph =
         McfGraph.newBuilder()
             .setType(McfType.INSTANCE_MCF)
@@ -127,7 +131,7 @@ public class GraphReaderTest {
                 .value("Node One")
                 .build());
 
-    List<Node> actualNodes = GraphReader.graphToNodes(graph);
+    List<Node> actualNodes = GraphReader.graphToNodes(graph, mockMcfNodesWithoutTypeCounter);
 
     // Sort both lists for consistent comparison, as map iteration order is not guaranteed.
     Comparator<Node> nodeComparator = Comparator.comparing(Node::getSubjectId);
@@ -144,6 +148,8 @@ public class GraphReaderTest {
       assertEquals(expected.getName(), actual.getName());
       assertArrayEquals(expected.getTypes().toArray(), actual.getTypes().toArray());
     }
+
+    Mockito.verify(mockMcfNodesWithoutTypeCounter, Mockito.times(1)).inc();
   }
 
   @Test

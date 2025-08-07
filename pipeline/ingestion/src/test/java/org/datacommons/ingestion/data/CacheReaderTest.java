@@ -1,17 +1,21 @@
 package org.datacommons.ingestion.data;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
 
 import com.google.cloud.ByteArray;
 import java.util.List;
+import org.apache.beam.sdk.metrics.Counter;
 import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Storage.Observations;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class CacheReaderTest {
   @Test
   public void testParseArcRowForOutArcWithReferenceNode() {
     CacheReader reader = newCacheReader();
+    Counter mockMcfNodesWithoutTypeCounter = Mockito.mock(Counter.class);
     String row =
         "d/m/Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person^measuredProperty^Property^0,H4sIAAAAAAAAAOPS5WJNzi/NK5GCUEqyKcn6SYnFqfoepbmJeUGpiSmJSTmpwSWJJWGJRcWCDGDwwR4AejAnwDgAAAA=";
 
@@ -33,14 +37,16 @@ public class CacheReaderTest {
                     .provenance("dc/base/HumanReadableStatVars")
                     .build());
 
-    NodesEdges actual = reader.parseArcRow(row);
+    NodesEdges actual = reader.parseArcRow(row, mockMcfNodesWithoutTypeCounter);
 
     assertEquals(expected, actual);
+    Mockito.verify(mockMcfNodesWithoutTypeCounter, Mockito.times(0)).inc();
   }
 
   @Test
   public void testParseArcRowForOutArcWithValueNode() {
     CacheReader reader = newCacheReader();
+    Counter mockMcfNodesWithoutTypeCounter = Mockito.mock(Counter.class);
     String row =
         "d/m/Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person^name^^0,H4sIAAAAAAAAAONqYFSSTUnWT0osTtX3KM1NzAtKTUxJTMpJDS5JLAlLLCrWig9ILUpOzStJTE9VCM8vylYISs1JLElNUQjIqCzOTE7MUXBMLsksyyyp1FHwzU9JLQJKwoUU/IsUPFITyyoRIo65+XnpCgH5BaVAYzLz8wQZwOCDPQA1JajOjAAAAA==";
 
@@ -61,14 +67,16 @@ public class CacheReaderTest {
                     .provenance("dc/base/HumanReadableStatVars")
                     .build());
 
-    NodesEdges actual = reader.parseArcRow(row);
+    NodesEdges actual = reader.parseArcRow(row, mockMcfNodesWithoutTypeCounter);
 
     assertEquals(expected, actual);
+    Mockito.verify(mockMcfNodesWithoutTypeCounter, Mockito.times(0)).inc();
   }
 
   @Test
   public void testParseArcRowForOutArcWithBytesNode() {
     CacheReader reader = newCacheReader();
+    Counter mockMcfNodesWithoutTypeCounter = Mockito.mock(Counter.class);
     String row =
         "d/m/ipcc_50/6.75_9.25_NGA^geoJsonCoordinates^^0,H4sIAAAAAAAAAONawKgklJKsn5RYnKrvGeDsHJCTmJxarNXJWK2goKBUUlmQqmSloBSQn1OZnp+npAMSTM7PL0rJzEssSS0GykUrgACEBNKWOgrmsTpIPDM9UyS+nik2EVQd5rFgZiwY1yoIMoDBB3sAUJT1uKwAAAA=";
 
@@ -90,14 +98,16 @@ public class CacheReaderTest {
                     .provenance("dc/base/IPCCPlaces")
                     .build());
 
-    NodesEdges actual = reader.parseArcRow(row);
+    NodesEdges actual = reader.parseArcRow(row, mockMcfNodesWithoutTypeCounter);
 
     assertEquals(expected, actual);
+    Mockito.verify(mockMcfNodesWithoutTypeCounter, Mockito.times(0)).inc();
   }
 
   @Test
   public void testParseArcRowForInArc() {
     CacheReader reader = newCacheReader();
+    Counter mockMcfNodesWithoutTypeCounter = Mockito.mock(Counter.class);
     String row =
         "d/l/dc/d/UnitedNationsUn_SdgIndicatorsDatabase^isPartOf^Provenance^0,H4sIAAAAAAAAAOPS4GIL9YsPdnGX4ktJ1k9KLE7Vh/CV0PiCDGDwwR4AhMbiaDMAAAA=";
 
@@ -118,9 +128,10 @@ public class CacheReaderTest {
                     .provenance("dc/base/UN_SDG")
                     .build());
 
-    NodesEdges actual = reader.parseArcRow(row);
+    NodesEdges actual = reader.parseArcRow(row, mockMcfNodesWithoutTypeCounter);
 
     assertEquals(expected, actual);
+    Mockito.verify(mockMcfNodesWithoutTypeCounter, Mockito.times(0)).inc();
   }
 
   @Test

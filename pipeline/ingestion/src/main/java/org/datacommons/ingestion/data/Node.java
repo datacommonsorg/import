@@ -58,10 +58,10 @@ public class Node implements Serializable {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Node node = (Node) o;
-    return subjectId.equals(node.subjectId)
-        && value.equals(node.value)
+    return Objects.equals(subjectId, node.subjectId)
+        && Objects.equals(value, node.value)
         && Objects.equals(bytes, node.bytes)
-        && name.equals(node.name)
+        && Objects.equals(name, node.name)
         && Objects.equals(types, node.types);
   }
 
