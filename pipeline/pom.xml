@@ -13,7 +13,7 @@
   <parent>
       <groupId>org.datacommons</groupId>
       <artifactId>datacommons-import</artifactId>
-      <version>0.1-alpha.1</version>
+      <version>${revision}</version>
       <relativePath>..</relativePath>
   </parent>
 
