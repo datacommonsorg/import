@@ -2,7 +2,6 @@ package org.datacommons.ingestion.data;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
 
 import com.google.cloud.ByteArray;
 import java.util.Arrays;
