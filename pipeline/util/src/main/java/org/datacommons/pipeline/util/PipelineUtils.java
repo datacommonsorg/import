@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 /** Util functions for processing MCF graphs. */
 public class PipelineUtils {
+  // Default type for MCF nodes.
   public static final String TYPE_THING = "Thing";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineUtils.class);
