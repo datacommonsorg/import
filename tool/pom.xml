@@ -6,12 +6,13 @@
     <parent>
         <groupId>org.datacommons</groupId>
         <artifactId>datacommons-import</artifactId>
-        <version>0.1-alpha.1</version>
+        <version>${revision}</version>
         <relativePath>..</relativePath>
     </parent>
 
     <groupId>org.datacommons</groupId>
     <artifactId>datacommons-import-tool</artifactId>
+    <version>${revision}</version>
     <name>Data Commons - Import Tool</name>
     <url>https://datacommons.org</url>
     <packaging>jar</packaging>
