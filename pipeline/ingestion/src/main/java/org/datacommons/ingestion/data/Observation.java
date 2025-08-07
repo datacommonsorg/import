@@ -118,7 +118,6 @@ public class Observation {
         Node.builder()
             .subjectId(seriesDcid)
             .value(seriesDcid)
-            .reference(true)
             .name(seriesName)
             .types(List.of(OBS_SERIES_TYPE))
             .build());

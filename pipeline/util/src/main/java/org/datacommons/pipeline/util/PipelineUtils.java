@@ -38,6 +38,8 @@ import org.slf4j.LoggerFactory;
 
 /** Util functions for processing MCF graphs. */
 public class PipelineUtils {
+  public static final String TYPE_THING = "Thing";
+
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineUtils.class);
 
   // Predicates for which the object value should be stored as bytes.

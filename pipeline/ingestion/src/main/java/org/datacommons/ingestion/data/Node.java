@@ -17,7 +17,6 @@ public class Node implements Serializable {
   private String subjectId;
   private String value;
   private ByteArray bytes;
-  private boolean reference;
   private String name;
   private List<String> types;
 
@@ -26,7 +25,6 @@ public class Node implements Serializable {
     this.subjectId = builder.subjectId;
     this.value = builder.value;
     this.bytes = builder.bytes;
-    this.reference = builder.reference;
     this.name = builder.name;
     this.types = builder.types;
   }
@@ -45,10 +43,6 @@ public class Node implements Serializable {
 
   public ByteArray getBytes() {
     return bytes;
-  }
-
-  public boolean getReference() {
-    return reference;
   }
 
   public String getName() {
@@ -75,15 +69,14 @@ public class Node implements Serializable {
   @Override
   public String toString() {
     return String.format(
-        "Node{subjectId='%s', value='%s', bytes='%s', reference='%s', name='%s', types=%s}",
-        subjectId, value, bytes, reference, name, types);
+        "Node{subjectId='%s', value='%s', bytes='%s', name='%s', types=%s}",
+        subjectId, value, bytes, name, types);
   }
 
   public static class Builder {
     private String subjectId = "";
     private String value = "";
     private ByteArray bytes = null;
-    private boolean reference = false;
     private String name = "";
     private List<String> types = List.of();
 
@@ -101,11 +94,6 @@ public class Node implements Serializable {
 
     public Builder bytes(ByteArray bytes) {
       this.bytes = bytes;
-      return this;
-    }
-
-    public Builder reference(boolean reference) {
-      this.reference = reference;
       return this;
     }
 

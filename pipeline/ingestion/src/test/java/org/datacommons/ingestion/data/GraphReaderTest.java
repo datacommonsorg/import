@@ -90,18 +90,16 @@ public class GraphReaderTest {
             Node.builder()
                 .subjectId("dcid0")
                 .value("dcid0")
-                .reference(true)
                 .name("Node Zero")
                 .types(List.of("Class", "Thing"))
                 .build(),
             Node.builder()
                 .subjectId("dcid1")
                 .value("dcid1")
-                .reference(true)
                 .name("Node One")
                 .types(List.of("Property"))
                 .build(),
-            Node.builder().subjectId("dcid2").value("dcid2").reference(true).build(),
+            Node.builder().subjectId("dcid2").value("dcid2").types(List.of("Thing")).build(),
             Node.builder()
                 .subjectId("kUyRupzrJkxe/HIOIctxlJX4woEGeOTtlVwqyXYnfDE=")
                 .value("Node Zero")
@@ -125,7 +123,6 @@ public class GraphReaderTest {
       assertEquals(expected.getSubjectId(), actual.getSubjectId());
       assertEquals(expected.getValue(), actual.getValue());
       assertEquals(expected.getBytes(), actual.getBytes());
-      assertEquals(expected.getReference(), actual.getReference());
       assertEquals(expected.getName(), actual.getName());
       assertArrayEquals(expected.getTypes().toArray(), actual.getTypes().toArray());
     }

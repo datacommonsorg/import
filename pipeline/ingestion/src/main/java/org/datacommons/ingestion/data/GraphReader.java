@@ -20,8 +20,11 @@ import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.proto.Storage.Observations;
 import org.datacommons.util.GraphUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GraphReader implements Serializable {
+  private static final Logger LOGGER = LoggerFactory.getLogger(CacheReader.class);
   private static final String DC_AGGREGATE = "dcAggregate/";
   private static final String DATCOM_AGGREGATE = "DataCommonsAggregate";
 
@@ -36,9 +39,13 @@ public class GraphReader implements Serializable {
         Node.Builder node = Node.builder();
         node.subjectId(nodeEntry.getKey());
         node.value(nodeEntry.getKey());
-        node.reference(true);
         node.name(GraphUtils.getPropertyValue(pv, "name"));
-        node.types(GraphUtils.getPropertyValues(pv, "typeOf"));
+        List<String> types = GraphUtils.getPropertyValues(pv, "typeOf");
+        if (types.isEmpty()) {
+          types = List.of(PipelineUtils.TYPE_THING);
+          LOGGER.info("Found MCF node with no type: {}", nodeEntry.getKey());
+        }
+        node.types(types);
         nodes.add(node.build());
 
         // Generate any leaf nodes

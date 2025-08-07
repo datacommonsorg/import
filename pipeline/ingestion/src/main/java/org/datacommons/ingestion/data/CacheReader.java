@@ -92,7 +92,6 @@ public class CacheReader implements Serializable {
             String nodeValue = "";
             String subjectId = "";
             String objectId = "";
-            boolean reference = false;
             ByteArray bytes = null;
             if (isOutArcCacheRow(row)) { // Out arc row
               subjectId = dcid;
@@ -100,7 +99,6 @@ public class CacheReader implements Serializable {
                 nodeId = entity.getDcid();
                 nodeValue = entity.getDcid();
                 objectId = entity.getDcid();
-                reference = true;
               } else { // Value
                 String hash = PipelineUtils.generateSha256(entity.getValue());
                 nodeId = hash;
@@ -116,7 +114,6 @@ public class CacheReader implements Serializable {
               nodeValue = entity.getDcid();
               subjectId = entity.getDcid();
               objectId = dcid;
-              reference = true;
             }
 
             List<String> types = entity.getTypesList();
@@ -126,11 +123,14 @@ public class CacheReader implements Serializable {
 
             // Add node.
             if (!nodeId.isEmpty()) {
+              if (types.isEmpty()) {
+                types = Arrays.asList(PipelineUtils.TYPE_THING);
+                LOGGER.info("Found MCF node with no type: {}", nodeId);
+              }
               result.addNode(
                   Node.builder()
                       .subjectId(nodeId)
                       .value(nodeValue)
-                      .reference(reference)
                       .name(entity.getName())
                       .types(types)
                       .build());
