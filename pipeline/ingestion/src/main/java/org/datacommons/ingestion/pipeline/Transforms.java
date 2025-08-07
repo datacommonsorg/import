@@ -34,6 +34,8 @@ public class Transforms {
         Metrics.counter(CacheRowKVMutationsDoFn.class, "dc_duplicate_nodes_creation");
     private static final Counter DUPLICATE_EDGES_COUNTER =
         Metrics.counter(CacheRowKVMutationsDoFn.class, "dc_duplicate_edges_creation");
+    private static final Counter MCF_NODES_WITHOUT_TYPE_COUNTER =
+        Metrics.counter(CacheRowKVMutationsDoFn.class, "dc_mcf_nodes_without_type");
 
     private final CacheReader cacheReader;
     private final SpannerClient spannerClient;
@@ -83,7 +85,7 @@ public class Transforms {
     @ProcessElement
     public void processElement(@Element String row, MultiOutputReceiver out) {
       if (CacheReader.isArcCacheRow(row) && skipProcessing != SKIP_GRAPH) {
-        NodesEdges nodesEdges = cacheReader.parseArcRow(row);
+        NodesEdges nodesEdges = cacheReader.parseArcRow(row, MCF_NODES_WITHOUT_TYPE_COUNTER);
         outputGraphMutations(nodesEdges, out);
       } else if (CacheReader.isObsTimeSeriesCacheRow(row) && skipProcessing != SKIP_OBS) {
         var obs = cacheReader.parseTimeSeriesRow(row);

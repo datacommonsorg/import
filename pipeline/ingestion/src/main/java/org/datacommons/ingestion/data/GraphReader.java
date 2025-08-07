@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
@@ -28,7 +29,7 @@ public class GraphReader implements Serializable {
   private static final String DC_AGGREGATE = "dcAggregate/";
   private static final String DATCOM_AGGREGATE = "DataCommonsAggregate";
 
-  public static List<Node> graphToNodes(McfGraph graph) {
+  public static List<Node> graphToNodes(McfGraph graph, Counter mcfNodesWithoutTypeCounter) {
     List<Node> nodes = new ArrayList<>();
     for (Map.Entry<String, PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
       PropertyValues pvs = nodeEntry.getValue();
@@ -44,6 +45,7 @@ public class GraphReader implements Serializable {
         if (types.isEmpty()) {
           types = List.of(PipelineUtils.TYPE_THING);
           LOGGER.info("Found MCF node with no type: {}", nodeEntry.getKey());
+          mcfNodesWithoutTypeCounter.inc();
         }
         node.types(types);
         nodes.add(node.build());
@@ -147,7 +149,9 @@ public class GraphReader implements Serializable {
   }
 
   public static PCollection<KV<String, Mutation>> graphToNodeEdges(
-      PCollection<McfGraph> graph, SpannerClient spannerClient) {
+      PCollection<McfGraph> graph,
+      SpannerClient spannerClient,
+      Counter mcfNodesWithoutTypeCounter) {
     return graph.apply(
         "GrapphToNodeEdge",
         ParDo.of(
@@ -156,7 +160,7 @@ public class GraphReader implements Serializable {
               public void processElement(
                   @Element McfGraph element, OutputReceiver<KV<String, Mutation>> receiver) {
                 List<Edge> edges = graphToEdges(element);
-                List<Node> nodes = graphToNodes(element);
+                List<Node> nodes = graphToNodes(element, mcfNodesWithoutTypeCounter);
                 List<KV<String, Mutation>> obs = spannerClient.toGraphKVMutations(nodes, edges);
                 obs.stream()
                     .forEach(

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.apache.beam.sdk.metrics.Counter;
 import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.CacheData.EntityInfo;
 import org.datacommons.proto.CacheData.PagedEntities;
@@ -70,7 +71,7 @@ public class CacheReader implements Serializable {
   }
 
   /** Parses an arc cache row to extract nodes and edges. */
-  public NodesEdges parseArcRow(String row) {
+  public NodesEdges parseArcRow(String row, Counter mcfNodesWithoutTypeCounter) {
     NodesEdges result = new NodesEdges();
 
     // Cache format: <dcid^predicate^type^page>, PagedEntities
@@ -93,12 +94,22 @@ public class CacheReader implements Serializable {
             String subjectId = "";
             String objectId = "";
             ByteArray bytes = null;
+            List<String> types = entity.getTypesList();
+            if (types.isEmpty() && !typeOf.isEmpty()) {
+              types = Arrays.asList(typeOf);
+            }
+
             if (isOutArcCacheRow(row)) { // Out arc row
               subjectId = dcid;
               if (!entity.getDcid().isEmpty()) { // Reference
                 nodeId = entity.getDcid();
                 nodeValue = entity.getDcid();
                 objectId = entity.getDcid();
+                if (types.isEmpty()) {
+                  types = Arrays.asList(PipelineUtils.TYPE_THING);
+                  LOGGER.info("Found MCF node with no type: {}", nodeId);
+                  mcfNodesWithoutTypeCounter.inc();
+                }
               } else { // Value
                 String hash = PipelineUtils.generateSha256(entity.getValue());
                 nodeId = hash;
@@ -114,19 +125,15 @@ public class CacheReader implements Serializable {
               nodeValue = entity.getDcid();
               subjectId = entity.getDcid();
               objectId = dcid;
-            }
-
-            List<String> types = entity.getTypesList();
-            if (types.isEmpty() && !typeOf.isEmpty()) {
-              types = Arrays.asList(typeOf);
+              if (types.isEmpty()) {
+                types = Arrays.asList(PipelineUtils.TYPE_THING);
+                LOGGER.info("Found MCF node with no type: {}", nodeId);
+                mcfNodesWithoutTypeCounter.inc();
+              }
             }
 
             // Add node.
             if (!nodeId.isEmpty()) {
-              if (types.isEmpty()) {
-                types = Arrays.asList(PipelineUtils.TYPE_THING);
-                LOGGER.info("Found MCF node with no type: {}", nodeId);
-              }
               result.addNode(
                   Node.builder()
                       .subjectId(nodeId)
