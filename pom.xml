@@ -3,7 +3,7 @@
 
     <groupId>org.datacommons</groupId>
     <artifactId>datacommons-import</artifactId>
-    <version>0.1-alpha.1</version>
+    <version>${revision}</version>
     <packaging>pom</packaging>
     <name>Data Commons - Import</name>
     <url>https://datacommons.org</url>
@@ -13,7 +13,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <!-- Dependency versions -->
-        <revision>0.1-alpha.1</revision>
+        <revision>0.1-SNAPSHOT</revision>
         <beam.version>2.66.0</beam.version>
         <gson.version>2.10.1</gson.version> 
         <os.maven.plugin.version>1.7.1</os.maven.plugin.version>
