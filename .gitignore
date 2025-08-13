@@ -12,6 +12,7 @@ target/
 .classpath
 .factorypath
 .project
+.flattened-pom.xml
 
 util/src/main/java/org/datacommons/proto/
 

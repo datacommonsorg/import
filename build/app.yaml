@@ -17,7 +17,7 @@
 runtime: java11
 
 entrypoint: >
-  java -Xmx1G -jar datacommons-server-0.1-alpha.1.jar
+  java -Xmx1G -jar datacommons-server-0.1.jar
   -b=datcom-mixer-autopush-resources
   OurWorldInData_Covid19.csv
   OurWorldInData_Covid19.tmcf
