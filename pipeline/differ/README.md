@@ -1,4 +1,4 @@
-# Data Differ Pipeline
+# Import Differ Pipeline
 
 This module implements a Dataflow pipeline that generates a summary of changes between two versions (current and previous) of the same dataset. It does that by performing an outer join on the datasets. It supports both MCF and TFRecord file formats as input. The generated output (CSV) includes a summary of the changes in the dataset.
 
