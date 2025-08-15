@@ -15,7 +15,7 @@ public class ImportGroupPipeline {
   public static void main(String[] args) {
     IngestionPipelineOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(IngestionPipelineOptions.class);
-    
+
     SpannerClient spannerClient =
         SpannerClient.builder()
             .gcpProjectId(options.getProjectId())
@@ -30,7 +30,7 @@ public class ImportGroupPipeline {
     LOGGER.info("Starting Spanner DDL creation...");
     spannerClient.createDatabase();
     LOGGER.info("Spanner DDL creation complete.");
-    
+
     Pipeline pipeline = Pipeline.create(options);
     LOGGER.info(
         "Running import group pipeline for import group: {}", options.getImportGroupVersion());
