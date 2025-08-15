@@ -107,11 +107,11 @@
             <artifactId>protobuf-maven-plugin</artifactId>
             <version>0.6.1</version> 
             <configuration>
-          <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
-          <clearOutputDirectory>false</clearOutputDirectory>
-          <protoSourceRoot>${project.basedir}/src/main/proto</protoSourceRoot>
-          <outputDirectory>${project.build.directory}/generated-sources/protobuf</outputDirectory>
-        </configuration>
+                <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
+                <clearOutputDirectory>false</clearOutputDirectory>
+                <protoSourceRoot>${project.basedir}/src/main/proto</protoSourceRoot>
+                <outputDirectory>${project.build.directory}/generated-sources/protobuf</outputDirectory>
+            </configuration>
             <executions>
                 <execution>
                     <id>compile-protobuf</id>

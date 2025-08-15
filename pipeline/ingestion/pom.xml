@@ -82,11 +82,11 @@
         <dependency>
             <groupId>com.google.api.grpc</groupId>
             <artifactId>proto-google-cloud-spanner-admin-database-v1</artifactId>
-            </dependency>
+        </dependency>
         <dependency>
             <groupId>com.google.api.grpc</groupId>
             <artifactId>grpc-google-cloud-spanner-admin-database-v1</artifactId>
-            </dependency>
+        </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
