@@ -5,7 +5,7 @@ OPERATION=$1
 if [ "$OPERATION" == "deploy" ]; then
     echo "Deploying Dataflow Flex Template..."
     gcloud dataflow flex-template build \
-        "gs://vishg-dataflow/templates/flex/differ.json" \
+        "gs://datcom-dataflow/templates/flex/differ.json" \
         --image-gcr-path "gcr.io/datcom-ci/dataflow-templates/differ:latest" \
         --sdk-language "JAVA" \
         --flex-template-base-image JAVA17 \
