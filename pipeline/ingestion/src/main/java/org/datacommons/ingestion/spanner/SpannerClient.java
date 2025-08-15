@@ -1,9 +1,19 @@
 package org.datacommons.ingestion.spanner;
 
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.SpannerExceptionFactory;
 import com.google.cloud.spanner.Value;
+import com.google.cloud.spanner.admin.database.v1.DatabaseAdminClient;
 import com.google.common.base.Joiner;
+import com.google.protobuf.ByteString;
+import com.google.spanner.admin.database.v1.CreateDatabaseRequest;
+import com.google.spanner.admin.database.v1.Database;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,8 +29,12 @@ import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
 import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SpannerClient implements Serializable {
+  private static final Logger LOGGER = LoggerFactory.getLogger(SpannerClient.class);
+
   // Decrease batch size for observations (bigger rows)
   private static final int SPANNER_BATCH_SIZE_BYTES = 500 * 1024;
   // Increase batch size for Nodes/Edges (smaller rows)
@@ -48,6 +62,102 @@ public class SpannerClient implements Serializable {
     this.edgeTableName = builder.edgeTableName;
     this.observationTableName = builder.observationTableName;
     this.numShards = builder.numShards;
+  }
+
+  /**
+   * Parses DDL statements from a BufferedReader. DDL statements can span multiple lines and are
+   * terminated by closing parenthesis.
+   */
+  private List<String> parseDdlStatements(BufferedReader reader) throws IOException {
+    List<String> statements = new ArrayList<>();
+    StringBuilder currentStatement = new StringBuilder();
+    String line;
+    while ((line = reader.readLine()) != null) {
+      line = line.trim();
+      if (line.isEmpty() || line.startsWith("--")) {
+        continue; // Skip empty lines and comments
+      }
+
+      currentStatement.append(line).append(" ");
+
+      // Check for statement termination
+      if (line.endsWith(")")) {
+        statements.add(currentStatement.toString().trim());
+        currentStatement = new StringBuilder();
+      }
+    }
+
+    // Add any remaining statement if the file doesn't end with a terminator
+    String remaining = currentStatement.toString().trim();
+    if (!remaining.isEmpty()) {
+      statements.add(remaining);
+    }
+
+    return statements;
+  }
+
+  public void createDatabase() {
+    try {
+      DatabaseAdminClient dbAdminClient = DatabaseAdminClient.create();
+
+      try {
+        dbAdminClient.getDatabase(
+            String.format(
+                "projects/%s/instances/%s/databases/%s",
+                gcpProjectId, spannerInstanceId, spannerDatabaseId));
+        LOGGER.info("Spanner database {} already exists.", spannerDatabaseId);
+      } catch (com.google.api.gax.rpc.NotFoundException notFoundE) {
+        LOGGER.info("Spanner database {} not found. Creating it now.", spannerDatabaseId);
+
+        List<String> ddlStatements;
+        try (InputStream inputStream =
+            getClass().getClassLoader().getResourceAsStream("spanner_schema.sql")) {
+          if (inputStream == null) {
+            throw new RuntimeException("Could not find spanner_schema.sql in resources.");
+          }
+          try (BufferedReader reader =
+              new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            ddlStatements = parseDdlStatements(reader);
+          }
+        } catch (IOException ioE) {
+          throw new RuntimeException("Failed to read DDL file", ioE);
+        }
+
+        ByteString protoDescriptors;
+        try (InputStream inputStream =
+            getClass().getClassLoader().getResourceAsStream("descriptor.proto.bin")) {
+          if (inputStream == null) {
+            throw new RuntimeException(
+                "Could not find proto descriptor file (descriptor.proto.bin) in resources.");
+          }
+          protoDescriptors = ByteString.copyFrom(inputStream.readAllBytes());
+        } catch (IOException ioE) {
+          throw new RuntimeException("Failed to read proto descriptor file", ioE);
+        }
+
+        CreateDatabaseRequest request =
+            CreateDatabaseRequest.newBuilder()
+                .setParent(
+                    String.format("projects/%s/instances/%s", gcpProjectId, spannerInstanceId))
+                .setCreateStatement(String.format("CREATE DATABASE `%s`", spannerDatabaseId))
+                .addAllExtraStatements(ddlStatements)
+                .setProtoDescriptors(protoDescriptors)
+                .build();
+
+        try {
+          Database db = dbAdminClient.createDatabaseAsync(request).get();
+        } catch (java.util.concurrent.ExecutionException executionE) {
+          throw new RuntimeException("An error occurred during database creation.", executionE);
+        } catch (InterruptedException interruptedE) {
+          LOGGER.error(
+              "Operation was interrupted while waiting for database creation.", interruptedE);
+          throw SpannerExceptionFactory.propagateInterrupt(interruptedE);
+        }
+        LOGGER.info("Successfully created Spanner database {}.", spannerDatabaseId);
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to create DatabaseAdminClient.", e);
+    }
   }
 
   public Write getWriteTransform() {

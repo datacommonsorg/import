@@ -37,25 +37,58 @@
               <goal>detect</goal>
             </goals>
           </execution>
-        </executions>
+        </executions> 
       </plugin>
       <plugin>
         <groupId>org.xolstice.maven.plugins</groupId>
         <artifactId>protobuf-maven-plugin</artifactId>
-        <version>${protobuf.maven.plugin.version}</version>
+        <version>${protobuf.maven.plugin.version}</version> 
         <configuration>
-          <protocArtifact>
-            com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}
-          </protocArtifact>
+          <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
+          <clearOutputDirectory>false</clearOutputDirectory>
+          <protoSourceRoot>${project.basedir}/src/main/proto</protoSourceRoot>
+          <outputDirectory>${project.build.directory}/generated-sources/protobuf</outputDirectory>
+          <includeSourceInfoInDescriptorSet>true</includeSourceInfoInDescriptorSet>
+          <writeDescriptorSet>true</writeDescriptorSet>
+          <descriptorSetFileName>descriptor.proto.bin</descriptorSetFileName>
+          <descriptorSetOutputDirectory>${project.build.directory}/generated-resources/protobuf</descriptorSetOutputDirectory>
+          <attachDescriptorSet>true</attachDescriptorSet>
         </configuration>
         <executions>
           <execution>
-            <goals>
-              <goal>compile</goal>
-              <goal>test-compile</goal>
-            </goals>
+              <id>compile-protobuf</id>
+              <goals>
+                  <goal>compile</goal>
+                  <goal>test-compile</goal>
+              </goals>
+              <phase>generate-sources</phase>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.2.0</version>
+          <executions>
+              <execution>
+                  <id>copy-proto-descriptor</id>
+                  <phase>process-resources</phase>
+                  <goals>
+                      <goal>copy-resources</goal>
+                  </goals>
+                  <configuration>
+                      <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                      <resources>
+                          <resource>
+                              <directory>${project.build.directory}/generated-resources/protobuf</directory>
+                              <includes>
+                                  <include>descriptor.proto.bin</include>
+                              </includes>
+                          </resource>
+                      </resources>
+                  </configuration>
+              </execution>
+          </executions>
       </plugin>
     </plugins>
   </build>

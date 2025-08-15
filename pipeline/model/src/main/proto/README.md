@@ -42,7 +42,7 @@ Reference: https://cloud.google.com/spanner/docs/reference/standard-sql/protocol
 ---
 
 Ensure that the package name and message name used in the DDL
-(e.g. `org.datacommons.proto.Observations`) 
+(e.g. `org.datacommons.Observations`) 
 exactly match what's in `storage.proto` and the generated bundle.
 
 ---
