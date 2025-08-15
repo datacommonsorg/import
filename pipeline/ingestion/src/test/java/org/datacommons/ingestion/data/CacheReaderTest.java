@@ -5,8 +5,8 @@ import static org.junit.Assert.assertEquals;
 import com.google.cloud.ByteArray;
 import java.util.List;
 import org.apache.beam.sdk.metrics.Counter;
+import org.datacommons.Storage.Observations;
 import org.datacommons.pipeline.util.PipelineUtils;
-import org.datacommons.proto.Storage.Observations;
 import org.junit.Test;
 import org.mockito.Mockito;
 

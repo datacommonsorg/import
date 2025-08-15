@@ -1,5 +1,6 @@
 package org.datacommons.ingestion.spanner;
 
+import com.google.cloud.spanner.ErrorCode;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.SpannerExceptionFactory;
 import com.google.cloud.spanner.Value;
@@ -7,7 +8,6 @@ import com.google.cloud.spanner.admin.database.v1.DatabaseAdminClient;
 import com.google.common.base.Joiner;
 import com.google.protobuf.ByteString;
 import com.google.spanner.admin.database.v1.CreateDatabaseRequest;
-import com.google.spanner.admin.database.v1.Database;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -113,26 +113,27 @@ public class SpannerClient implements Serializable {
         try (InputStream inputStream =
             getClass().getClassLoader().getResourceAsStream("spanner_schema.sql")) {
           if (inputStream == null) {
-            throw new RuntimeException("Could not find spanner_schema.sql in resources.");
+            throw new java.io.FileNotFoundException(
+                "Could not find spanner_schema.sql in resources.");
           }
           try (BufferedReader reader =
               new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
             ddlStatements = parseDdlStatements(reader);
           }
         } catch (IOException ioE) {
-          throw new RuntimeException("Failed to read DDL file", ioE);
+          throw new IOException("Failed to read DDL file", ioE);
         }
 
         ByteString protoDescriptors;
         try (InputStream inputStream =
             getClass().getClassLoader().getResourceAsStream("descriptor.proto.bin")) {
           if (inputStream == null) {
-            throw new RuntimeException(
+            throw new java.io.FileNotFoundException(
                 "Could not find proto descriptor file (descriptor.proto.bin) in resources.");
           }
           protoDescriptors = ByteString.copyFrom(inputStream.readAllBytes());
         } catch (IOException ioE) {
-          throw new RuntimeException("Failed to read proto descriptor file", ioE);
+          throw new IOException("Failed to read proto descriptor file", ioE);
         }
 
         CreateDatabaseRequest request =
@@ -145,9 +146,10 @@ public class SpannerClient implements Serializable {
                 .build();
 
         try {
-          Database db = dbAdminClient.createDatabaseAsync(request).get();
+          dbAdminClient.createDatabaseAsync(request).get();
         } catch (java.util.concurrent.ExecutionException executionE) {
-          throw new RuntimeException("An error occurred during database creation.", executionE);
+          throw SpannerExceptionFactory.newSpannerException(
+              ErrorCode.UNKNOWN, "An error occurred during database creation.", executionE);
         } catch (InterruptedException interruptedE) {
           LOGGER.error(
               "Operation was interrupted while waiting for database creation.", interruptedE);
@@ -156,7 +158,7 @@ public class SpannerClient implements Serializable {
         LOGGER.info("Successfully created Spanner database {}.", spannerDatabaseId);
       }
     } catch (IOException e) {
-      throw new RuntimeException("Failed to create DatabaseAdminClient.", e);
+      throw new IllegalStateException("Failed to create DatabaseAdminClient.", e);
     }
   }
 
