@@ -3,8 +3,8 @@ package org.datacommons.ingestion.data;
 import com.google.common.base.Joiner;
 import java.util.List;
 import java.util.Objects;
+import org.datacommons.Storage.Observations;
 import org.datacommons.pipeline.util.PipelineUtils;
-import org.datacommons.proto.Storage.Observations;
 
 /**
  * Models a statvar observation time series.

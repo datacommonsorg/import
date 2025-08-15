@@ -110,6 +110,7 @@
                 <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
                 <clearOutputDirectory>false</clearOutputDirectory>
                 <protoSourceRoot>${project.basedir}/src/main/proto</protoSourceRoot>
+                <outputDirectory>${project.build.directory}/generated-sources/protobuf</outputDirectory>
             </configuration>
             <executions>
                 <execution>

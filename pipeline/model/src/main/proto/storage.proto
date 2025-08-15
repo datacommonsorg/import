@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package org.datacommons.proto;
+package org.datacommons;
 
 // Includes protos that are used in spanner storage.
 // The protos are typically gzipped and stored in a bytes column.

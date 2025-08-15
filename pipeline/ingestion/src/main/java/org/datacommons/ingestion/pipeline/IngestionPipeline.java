@@ -18,20 +18,7 @@ public class IngestionPipeline {
   public static void main(String[] args) {
     IngestionPipelineOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(IngestionPipelineOptions.class);
-    Pipeline pipeline = Pipeline.create(options);
 
-    List<String> importGroupVersions = List.of();
-
-    String specificImportGroupVersion = options.getImportGroupVersion();
-    if (!Strings.isNullOrEmpty(specificImportGroupVersion)) {
-      LOGGER.info("Ingesting import group version: {}", specificImportGroupVersion);
-      importGroupVersions = List.of(specificImportGroupVersion);
-    } else {
-      LOGGER.info("Fetching versions from: {}", options.getVersionEndpoint());
-      importGroupVersions = getImportGroupVersions(options.getVersionEndpoint());
-    }
-
-    CacheReader cacheReader = new CacheReader(options.getStorageBucketId());
     SpannerClient spannerClient =
         SpannerClient.builder()
             .gcpProjectId(options.getProjectId())
@@ -42,6 +29,24 @@ public class IngestionPipeline {
             .observationTableName(options.getSpannerObservationTableName())
             .numShards(options.getNumShards())
             .build();
+
+    LOGGER.info("Starting Spanner DDL creation...");
+    spannerClient.createDatabase();
+    LOGGER.info("Spanner DDL creation complete.");
+
+    Pipeline pipeline = Pipeline.create(options);
+
+    List<String> importGroupVersions = List.of();
+    String specificImportGroupVersion = options.getImportGroupVersion();
+    if (!Strings.isNullOrEmpty(specificImportGroupVersion)) {
+      LOGGER.info("Ingesting import group version: {}", specificImportGroupVersion);
+      importGroupVersions = List.of(specificImportGroupVersion);
+    } else {
+      LOGGER.info("Fetching versions from: {}", options.getVersionEndpoint());
+      importGroupVersions = getImportGroupVersions(options.getVersionEndpoint());
+    }
+
+    CacheReader cacheReader = new CacheReader(options.getStorageBucketId());
 
     buildIngestionPipeline(pipeline, importGroupVersions, cacheReader, spannerClient);
 

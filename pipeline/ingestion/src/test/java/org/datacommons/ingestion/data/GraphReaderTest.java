@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import org.apache.beam.sdk.metrics.Counter;
+import org.datacommons.Storage.Observations;
 import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
@@ -17,7 +18,6 @@ import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.McfType;
 import org.datacommons.proto.Mcf.ValueType;
-import org.datacommons.proto.Storage.Observations;
 import org.junit.Test;
 import org.mockito.Mockito;
 
