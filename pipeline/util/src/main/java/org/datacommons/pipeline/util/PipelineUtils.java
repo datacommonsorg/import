@@ -10,11 +10,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import java.util.zip.GZIPOutputStream;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TFRecordIO;
@@ -183,18 +186,21 @@ public class PipelineUtils {
                                   element,
                           OutputReceiver<McfOptimizedGraph> receiver) {
                         McfStatVarObsSeries.Builder svObsSeries = McfStatVarObsSeries.newBuilder();
-
                         svObsSeries.setKey(element.getKey());
-                        for (McfStatVarObsSeries.StatVarObs svo : element.getValue()) {
+
+                        Iterable<McfStatVarObsSeries.StatVarObs> observations =
+                            StreamSupport.stream(element.getValue().spliterator(), false)
+                                .sorted(
+                                    Comparator.comparing(McfStatVarObsSeries.StatVarObs::getDate))
+                                .collect(Collectors.toList());
+                        for (McfStatVarObsSeries.StatVarObs svo : observations) {
                           svObsSeries.addSvObsList(svo);
                         }
                         McfOptimizedGraph.Builder res =
                             McfOptimizedGraph.newBuilder().setSvObsSeries(svObsSeries);
                         receiver.output(res.build());
-                        LOGGER.info(res.build().toString());
                       }
                     }));
-
     return svObs;
   }
 
@@ -295,7 +301,6 @@ public class PipelineUtils {
                     McfGraph.Builder graphBuilder = McfGraph.newBuilder();
                     graphBuilder.putNodes(element.getKey(), element.getValue());
                     receiver.output(graphBuilder.build());
-                    System.out.println(graphBuilder.build().toString());
                   }
                 }));
     return combinedGraph;
