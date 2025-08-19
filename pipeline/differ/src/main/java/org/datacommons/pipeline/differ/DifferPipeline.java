@@ -1,6 +1,5 @@
 package org.datacommons.pipeline.differ;
 
-import java.nio.file.Paths;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -18,7 +17,7 @@ public class DifferPipeline {
   private static final String DIFF_HEADER =
       "key_combined,value_combined_current,value_combined_previous,diff_type";
 
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) {
 
     // Create the pipeline.
     DifferOptions options =
@@ -34,8 +33,8 @@ public class DifferPipeline {
       previousNodes = PipelineUtils.readMcfGraph(options.getPreviousData(), p);
     } else {
       LOGGER.info("Using mcf file format");
-      previousNodes = PipelineUtils.readMcfFile(options.getPreviousData(), p);
-      currentNodes = PipelineUtils.readMcfFile(options.getCurrentData(), p);
+      previousNodes = PipelineUtils.readMcfFiles(options.getPreviousData(), p);
+      currentNodes = PipelineUtils.readMcfFiles(options.getCurrentData(), p);
     }
 
     // Process the input and perform diff operation.
@@ -54,17 +53,17 @@ public class DifferPipeline {
     obsDiff.apply(
         "Write observation diff output",
         TextIO.write()
-            .to(Paths.get(options.getOutputLocation(), "obs-diff").toString())
+            .to(options.getOutputLocation() + "/" + "obs-diff")
             .withSuffix(".csv")
             .withNumShards(1)
             .withHeader(DIFF_HEADER));
     schemaDiff.apply(
         "Write schema diff output",
         TextIO.write()
-            .to(Paths.get(options.getOutputLocation(), "schema-diff").toString())
+            .to(options.getOutputLocation() + "/" + "schema-diff")
             .withSuffix(".csv")
             .withNumShards(1)
             .withHeader(DIFF_HEADER));
-    p.run().waitUntilFinish();
+    p.run();
   }
 }

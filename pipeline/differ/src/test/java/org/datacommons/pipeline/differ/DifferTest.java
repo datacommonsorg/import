@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
@@ -27,6 +28,7 @@ public class DifferTest {
   @Test
   public void testDiffer() {
     options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
+    options.setRunner(DirectRunner.class);
 
     // Create an input PCollection.
     String currentFile = getClass().getClassLoader().getResource("current").getPath();
@@ -34,9 +36,9 @@ public class DifferTest {
 
     // Process the input.
     PCollection<McfGraph> currentGraph =
-        PipelineUtils.readMcfFile(Paths.get(currentFile, "*.mcf").toString(), p);
+        PipelineUtils.readMcfFiles(Paths.get(currentFile, "*.mcf").toString(), p);
     PCollection<McfGraph> previousGraph =
-        PipelineUtils.readMcfFile(Paths.get(previousFile, "*.mcf").toString(), p);
+        PipelineUtils.readMcfFiles(Paths.get(previousFile, "*.mcf").toString(), p);
     PCollectionTuple currentNodesTuple = DifferUtils.processGraph(currentGraph);
     PCollectionTuple previousNodesTuple = DifferUtils.processGraph(previousGraph);
 

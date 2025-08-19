@@ -22,6 +22,7 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TFRecordIO;
 import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.io.fs.EmptyMatchTreatment;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
@@ -122,16 +123,22 @@ public class PipelineUtils {
   }
 
   /**
-   * Reads an MCF graph from a text file.
+   * Reads MCF graphs from text files.
    *
-   * @param file Input file.
+   * @param files Input files.
    * @param p Dataflow pipeline.
    * @return PCollection of McfGraph proto.
    */
-  public static PCollection<McfGraph> readMcfFile(String file, Pipeline p) {
+  public static PCollection<McfGraph> readMcfFiles(String files, Pipeline p) {
     String delimiter = "\n\n";
     PCollection<String> nodes =
-        p.apply("ReadMcfFile", TextIO.read().withDelimiter(delimiter.getBytes()).from(file));
+        p.apply(
+            "ReadMcfFile",
+            TextIO.read()
+                .withDelimiter(delimiter.getBytes())
+                .from(files)
+                .withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW));
+
     PCollection<McfGraph> mcf =
         nodes.apply(
             "ProcesGraph",

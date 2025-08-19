@@ -4,6 +4,7 @@ import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.apache.beam.sdk.metrics.Counter;
@@ -148,21 +149,44 @@ public class GraphReader implements Serializable {
             }));
   }
 
-  public static PCollection<KV<String, Mutation>> graphToNodeEdges(
+  public static PCollection<KV<String, Mutation>> graphToNodes(
       PCollection<McfGraph> graph,
       SpannerClient spannerClient,
       Counter mcfNodesWithoutTypeCounter) {
     return graph.apply(
-        "GrapphToNodeEdge",
+        "GraphToNodes",
+        ParDo.of(
+            new DoFn<McfGraph, KV<String, Mutation>>() {
+              @ProcessElement
+              public void processElement(
+                  @Element McfGraph element, OutputReceiver<KV<String, Mutation>> receiver) {
+                List<Node> nodes = graphToNodes(element, mcfNodesWithoutTypeCounter);
+                List<KV<String, Mutation>> mutations =
+                    spannerClient.toGraphKVMutations(nodes, Collections.emptyList());
+                mutations.stream()
+                    .forEach(
+                        e -> {
+                          receiver.output(e);
+                        });
+              }
+            }));
+  }
+
+  public static PCollection<KV<String, Mutation>> graphToEdges(
+      PCollection<McfGraph> graph,
+      SpannerClient spannerClient,
+      Counter mcfNodesWithoutTypeCounter) {
+    return graph.apply(
+        "GraphToEdges",
         ParDo.of(
             new DoFn<McfGraph, KV<String, Mutation>>() {
               @ProcessElement
               public void processElement(
                   @Element McfGraph element, OutputReceiver<KV<String, Mutation>> receiver) {
                 List<Edge> edges = graphToEdges(element);
-                List<Node> nodes = graphToNodes(element, mcfNodesWithoutTypeCounter);
-                List<KV<String, Mutation>> obs = spannerClient.toGraphKVMutations(nodes, edges);
-                obs.stream()
+                List<KV<String, Mutation>> mutations =
+                    spannerClient.toGraphKVMutations(Collections.emptyList(), edges);
+                mutations.stream()
                     .forEach(
                         e -> {
                           receiver.output(e);

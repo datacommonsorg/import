@@ -31,10 +31,19 @@
             <artifactId>beam-sdks-java-core</artifactId>
             <version>${beam.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.beam</groupId>
             <artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>
+            <version>${beam.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.beam</groupId>
+            <artifactId>beam-runners-direct-java</artifactId>
+            <version>${beam.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.beam</groupId>
+            <artifactId>beam-runners-google-cloud-dataflow-java</artifactId>
             <version>${beam.version}</version>
         </dependency>
         <dependency>
@@ -62,55 +71,34 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.6.0</version>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.3</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <finalName>${project.artifactId}-bundled-${project.version}</finalName>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>org.datacommons.pipeline.differ.DifferPipeline</mainClass>
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
             </plugin>
         </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>direct-runner</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.beam</groupId>
-                    <artifactId>beam-runners-direct-java</artifactId>
-                    <version>${beam.version}</version>
-                    <scope>runtime</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>dataflow-runner</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.beam</groupId>
-                    <artifactId>beam-runners-google-cloud-dataflow-java</artifactId>
-                    <version>${beam.version}</version>
-                    <scope>runtime</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
-
 </project>
