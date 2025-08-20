@@ -5,19 +5,20 @@ OPERATION=$1
 if [ "$OPERATION" == "deploy" ]; then
     echo "Deploying Dataflow Flex Template..."
     gcloud dataflow flex-template build \
-        "gs://datcom-dataflow/templates/flex/differ.json" \
+        "gs://datcom-templates/templates/flex/differ.json" \
         --image-gcr-path "gcr.io/datcom-ci/dataflow-templates/differ:latest" \
         --sdk-language "JAVA" \
         --flex-template-base-image JAVA17 \
         --metadata-file "metadata.json" \
-        --jar "target/differ-0.1-SNAPSHOT-jar-with-dependencies.jar" \
+        --jar "target/differ-bundled-0.1-SNAPSHOT.jar" \
         --env FLEX_TEMPLATE_JAVA_MAIN_CLASS="org.datacommons.pipeline.differ.DifferPipeline"
 elif [ "$OPERATION" == "run" ]; then
     echo "Running Dataflow Flex Template..."
     gcloud dataflow flex-template run "differ-job" \
-        --template-file-gcs-location "gs://datcom-dataflow/templates/flex/differ.json" \
-        --parameters importList="import_a,import_b" \
-        --parameters spannerDatabaseId="dc_graph_db" \
+        --template-file-gcs-location "gs://datcom-templates/templates/flex/differ.json" \
+        --parameters currentData="gs://datcom-prod-imports/scripts/import-path/*.mcf" \
+        --parameters previousData="gs://datcom-prod-imports/scripts/import-path/*.mcf" \
+        --parameters outputLocation="gs://datcom-dataflow/differ/output" \
         --project=datcom-store \
         --region "us-central1"
 else
