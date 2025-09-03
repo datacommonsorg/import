@@ -135,7 +135,7 @@ def _parse_value(prop, value, pc):
 
 def _parse_values(prop, values_str, pc):
   value_pairs = []
-  for values in reader([values_str]):
+  for values in reader([values_str], skipinitialspace=True):
     for value in values:
       value_pairs.append(_parse_value(prop, value.strip(), pc))
     break
