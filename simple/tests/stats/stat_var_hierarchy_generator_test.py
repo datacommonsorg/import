@@ -262,3 +262,31 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
         svg_id,
         "c/g/Person_PropertyWithAReallyLongValue-HereIsAPropertyWithAReallyLongValueToTestCausingASubjectIDOverflowOfMoreThan255CharactersWhenLoadingIntoTheDatabase_AnotherPropertyWithAReallyLongValue-HereIsAotherPropertyWithAReallyLongValueToTestCausingA-fafb3dea"
     )
+
+  def test_gen_svg_id_with_custom_prefix(self):
+    sv_prop_vals = SVPropVals(
+        sv_id="sv1",
+        population_type="Person",
+        pvs=[PropVal("gender", "Female"),
+             PropVal("race", "Asian")],
+        measured_property="count")
+    svg_id = sv_prop_vals.gen_svg_id(custom_svg_prefix="acme/g/")
+    self.assertEqual(svg_id, "acme/g/Person_Gender-Female_Race-Asian")
+
+  def test_extract_svs_with_custom_blocklist(self):
+    # gender should be excluded when added to the custom blocklist
+    input_triples: list[Triple] = [
+        Triple("sv1", "typeOf", "StatisticalVariable", ""),
+        Triple("sv1", "populationType", "Person", ""),
+        Triple("sv1", "race", "Asian", ""),
+        Triple("sv1", "gender", "Female", ""),
+    ]
+    custom_blocklist = set(["gender"
+                           ])  # pass custom blocklist to exclude 'gender'
+    svs = _extract_svs(input_triples, custom_blocklist)
+    self.assertListEqual(svs, [
+        SVPropVals(sv_id="sv1",
+                   population_type="Person",
+                   pvs=[PropVal("race", "Asian")],
+                   measured_property="")
+    ])

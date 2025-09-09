@@ -197,7 +197,7 @@ These optional top-level fields customize how the StatVarGroup hierarchy is gene
 
 - `svHierarchyPropsBlocklist`: Array of additional property dcids to exclude from hierarchy generation. These are added to the internal blocklist used by Data Commons.
   - Example: `["DevelopmentFinanceRecipient", "DACCode", "CustomProperty"]`
-- `customSvgPrefix`: String prefix for generated custom StatVarGroup ids. Must always include `/g/`
+- `customSvgPrefix`: String prefix for generated custom StatVarGroup ids.
   - If not set, and `customIdNamespace` is provided, it defaults to `<customIdNamespace>/g/`.
   - Otherwise defaults to `"c/g/"`.
   - Affects ids like `c/g/Person_Gender-Female`.
