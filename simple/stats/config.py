@@ -55,6 +55,10 @@ _ENTITIES_FIELD = "entities"
 _GROUP_STAT_VARS_BY_PROPERTY = "groupStatVarsByProperty"
 _OBSERVATION_PROPERTIES = "observationProperties"
 _INCLUDE_INPUT_SUBDIRS_PROPERTY = "includeInputSubdirs"
+_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD = "svHierarchyPropsBlocklist"
+_CUSTOM_SVG_PREFIX_FIELD = "customSvgPrefix"
+_DEFAULT_CUSTOM_ROOT_SVG_NAME_FIELD = "defaultCustomRootStatVarGroupName"
+_CUSTOM_ID_NAMESPACE_FIELD = "customIdNamespace"
 
 
 class Config:
@@ -186,6 +190,52 @@ class Config:
       if special_file_name:
         special_files[special_file_type] = special_file_name
     return special_files
+
+  def sv_hierarchy_props_blocklist(self) -> set[str]:
+    """Returns the set of SV properties to exclude from hierarchy generation.
+    Behavior: Adds any provided properties to the built-in blocklist.
+    Defaults to sc.SV_HIERARCHY_PROPS_BLOCKLIST if not specified in config.
+    """
+    from stats import schema_constants as sc
+    cfg = self.data.get(_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD)
+    if cfg is None:
+      return sc.SV_HIERARCHY_PROPS_BLOCKLIST
+    if isinstance(cfg, list):
+      return sc.SV_HIERARCHY_PROPS_BLOCKLIST | set(cfg)
+    raise ValueError(
+        f"{_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD} must be a list of strings if provided."
+    )
+
+  def custom_id_namespace(self) -> str:
+    """Returns the namespace token used in generated ids for SVs and manual groups.
+    Affects:
+    - Generated SV ids: '<namespace>/statvar_<n>'
+    - Generated manual group ids: '<namespace>/g/group_<n>'
+    Defaults to 'custom'.
+    """
+    return self.data.get(_CUSTOM_ID_NAMESPACE_FIELD, "custom")
+
+  def custom_svg_prefix(self) -> str:
+    """Returns the prefix to use for generated custom SVG ids (e.g., 'c/g/').
+    Resolution order:
+    - If explicitly set via 'customSvgPrefix', return it.
+    - Else if a non-default 'customIdNamespace' is set, derive as f"{namespace}/g/".
+    - Else fall back to the built-in default (e.g., 'c/g/').
+    """
+    from stats import schema_constants as sc
+    cfg = self.data.get(_CUSTOM_SVG_PREFIX_FIELD)
+    if cfg:
+      return cfg
+    ns = self.custom_id_namespace()
+    if ns and ns != "custom":
+      return f"{ns}/g/"
+    return sc.CUSTOM_SVG_PREFIX
+
+  def default_custom_root_svg_name(self) -> str:
+    """Returns the display name of the default custom root StatVarGroup."""
+    from stats import schema_constants as sc
+    return self.data.get(_DEFAULT_CUSTOM_ROOT_SVG_NAME_FIELD,
+                         sc.DEFAULT_CUSTOM_ROOT_SVG_NAME)
 
   def _per_file_config(self, input_file: File) -> dict:
     """ Looks up the config for a given file.

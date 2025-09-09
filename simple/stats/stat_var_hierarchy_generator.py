@@ -18,7 +18,7 @@ import hashlib
 import json
 import logging
 import re
-from typing import Self
+from typing import Optional, Self
 
 from stats import schema_constants as sc
 from stats.data import ParentSVG2ChildSpecializedNames
@@ -32,12 +32,25 @@ MAX_SVG_ID_LENGTH = 255
 SVG_ID_HASH_LENGTH = 8
 
 
-def generate(triples: list[Triple], vertical_specs: list[VerticalSpec],
-             dcid2name: dict[str, str]) -> StatVarHierarchyResult:
+def generate(
+    triples: list[Triple],
+    vertical_specs: list[VerticalSpec],
+    dcid2name: dict[str, str],
+    *,
+    custom_svg_prefix: Optional[str] = None,
+    default_custom_root_svg_id: Optional[str] = None,
+    sv_hierarchy_props_blocklist: Optional[set[str]] = None
+) -> StatVarHierarchyResult:
   """Given a list of input triples (including stat vars), 
 generates a SV hierarchy and returns a StatVarHierarchyResult object.
 """
-  return _generate_internal(triples, vertical_specs, dcid2name).to_result()
+  # Apply defaults for optional overrides.
+  svg_prefix = custom_svg_prefix or sc.CUSTOM_SVG_PREFIX
+  root_svg_id = default_custom_root_svg_id or sc.DEFAULT_CUSTOM_ROOT_SVG_ID
+  blocklist = sv_hierarchy_props_blocklist or sc.SV_HIERARCHY_PROPS_BLOCKLIST
+
+  return _generate_internal(triples, vertical_specs, dcid2name, svg_prefix,
+                            root_svg_id, blocklist).to_result()
 
 
 def load_vertical_specs(data: str) -> list[VerticalSpec]:
@@ -53,25 +66,32 @@ def load_vertical_specs(data: str) -> list[VerticalSpec]:
 
 
 # TODO: Pruning (e.g. ignore Thing).
-def _generate_internal(triples: list[Triple],
-                       vertical_specs: list[VerticalSpec],
-                       dcid2name: dict[str, str]) -> "StatVarHierarchy":
+def _generate_internal(
+    triples: list[Triple],
+    vertical_specs: list[VerticalSpec],
+    dcid2name: dict[str, str],
+    custom_svg_prefix: str = sc.CUSTOM_SVG_PREFIX,
+    default_custom_root_svg_id: str = sc.DEFAULT_CUSTOM_ROOT_SVG_ID,
+    sv_hierarchy_props_blocklist: set[str] = sc.SV_HIERARCHY_PROPS_BLOCKLIST
+) -> "StatVarHierarchy":
   """Given a list of input triples (including stat vars), 
 generates a SV hierarchy and returns a list of output triples
 representing the hierarchy.
 """
 
   # Extract SVs.
-  svs = _extract_svs(triples)
+  svs = _extract_svs(triples, sv_hierarchy_props_blocklist)
   # Create SVGs.
-  svgs = _create_all_svgs(svs, dcid2name)
+  svgs = _create_all_svgs(svs, dcid2name, custom_svg_prefix)
   # Sort by SVG ID so it's easier to follow the hierarchy.
   svgs = dict(sorted(svgs.items()))
 
   # Get pop type svgs (they don't have a parent set at this stage).
   pop_type_svgs = _get_pop_type_svgs(svgs)
   # Attach verticals to pop type svgs.
-  vertical_svgs = _attach_verticals(pop_type_svgs, vertical_specs, dcid2name)
+  vertical_svgs = _attach_verticals(pop_type_svgs, vertical_specs, dcid2name,
+                                    custom_svg_prefix,
+                                    default_custom_root_svg_id)
   # Sort by SVG ID so it's easier to follow the verticals.
   vertical_svgs = dict(sorted(vertical_svgs.items()))
 
@@ -114,8 +134,8 @@ class SVPropVals:
   pvs: list[PropVal]
   measured_property: str
 
-  def gen_svg_id(self):
-    svg_id = f"{sc.CUSTOM_SVG_PREFIX}{_to_dcid_token(self.population_type)}"
+  def gen_svg_id(self, custom_svg_prefix: str = sc.CUSTOM_SVG_PREFIX):
+    svg_id = f"{custom_svg_prefix}{_to_dcid_token(self.population_type)}"
     for pv in self.pvs:
       svg_id = f"{svg_id}_{pv.gen_pv_id()}"
     # SVG IDs cannot exceed the maximum length of the subject_id column.
@@ -247,7 +267,8 @@ class StatVarHierarchy:
 # Attaches matching pop type svgs to vertical svgs, creates those vertical svgs and returns them.
 def _attach_verticals(poptype2svg: dict[str, SVG],
                       vertical_specs: list[VerticalSpec],
-                      dcid2name: dict[str, str]) -> dict[str, SVG]:
+                      dcid2name: dict[str, str], custom_svg_prefix: str,
+                      default_custom_root_svg_id: str) -> dict[str, SVG]:
   vertical_svgs: dict[str, SVG] = {}
   for vertical_spec in vertical_specs:
     pop_type_svg = poptype2svg.get(vertical_spec.population_type)
@@ -261,7 +282,8 @@ def _attach_verticals(poptype2svg: dict[str, SVG],
     # Put pop type svg under all verticals in the spec.
     for vertical in vertical_spec.verticals:
       vertical_svg = _get_or_create_vertical_svg(vertical, vertical_svgs,
-                                                 dcid2name)
+                                                 dcid2name, custom_svg_prefix,
+                                                 default_custom_root_svg_id)
       vertical_svgs[vertical_svg.svg_id] = vertical_svg
       vertical_svg.child_svg_id_2_specialized_name[pop_type_svg.svg_id] = ""
       pop_type_svg.parent_svg_ids[vertical_svg.svg_id] = True
@@ -272,17 +294,19 @@ def _attach_verticals(poptype2svg: dict[str, SVG],
   # should be put under custom dc root.
   for svg in poptype2svg.values():
     if not svg.parent_svg_ids:
-      svg.parent_svg_ids[sc.DEFAULT_CUSTOM_ROOT_SVG_ID] = True
+      svg.parent_svg_ids[default_custom_root_svg_id] = True
   return vertical_svgs
 
 
 def _get_or_create_vertical_svg(vertical: str, vertical_svgs: dict[str, SVG],
-                                dcid2name: dict[str, str]) -> SVG:
-  vertical_svg_id = f"{sc.CUSTOM_SVG_PREFIX}{vertical}"
+                                dcid2name: dict[str,
+                                                str], custom_svg_prefix: str,
+                                default_custom_root_svg_id: str) -> SVG:
+  vertical_svg_id = f"{custom_svg_prefix}{vertical}"
   vertical_svg = vertical_svgs.get(vertical_svg_id)
   if not vertical_svg:
     vertical_svg = SVG(vertical_svg_id, _gen_name(vertical, dcid2name))
-    vertical_svg.parent_svg_ids[sc.DEFAULT_CUSTOM_ROOT_SVG_ID] = True
+    vertical_svg.parent_svg_ids[default_custom_root_svg_id] = True
   return vertical_svg
 
 
@@ -297,8 +321,9 @@ def _get_pop_type_svgs(svgs: dict[str, SVG]) -> dict[str, SVG]:
 
 
 def _get_or_create_svg(svgs: dict[str, SVG], sv: SVPropVals,
-                       dcid2name: dict[str, str]) -> SVG:
-  svg_id = sv.gen_svg_id()
+                       dcid2name: dict[str,
+                                       str], custom_svg_prefix: str) -> SVG:
+  svg_id = sv.gen_svg_id(custom_svg_prefix)
   svg = svgs.get(svg_id)
   if not svg:
     svg = SVG(svg_id=svg_id, svg_name=sv.gen_svg_name(dcid2name))
@@ -317,20 +342,20 @@ def _create_all_svg_triples(svgs: dict[str, SVG]):
   return triples
 
 
-def _create_all_svgs(svs: list[SVPropVals],
-                     dcid2name: dict[str, str]) -> dict[str, SVG]:
-  svgs = _create_leaf_svgs(svs, dcid2name)
+def _create_all_svgs(svs: list[SVPropVals], dcid2name: dict[str, str],
+                     custom_svg_prefix: str) -> dict[str, SVG]:
+  svgs = _create_leaf_svgs(svs, dcid2name, custom_svg_prefix)
   for svg_id in list(svgs.keys()):
-    _create_parent_svgs(svg_id, svgs, dcid2name)
+    _create_parent_svgs(svg_id, svgs, dcid2name, custom_svg_prefix)
   return svgs
 
 
 # Create SVGs that the SVs are directly attached to.
-def _create_leaf_svgs(svs: list[SVPropVals],
-                      dcid2name: dict[str, str]) -> dict[str, SVG]:
+def _create_leaf_svgs(svs: list[SVPropVals], dcid2name: dict[str, str],
+                      custom_svg_prefix: str) -> dict[str, SVG]:
   svgs: dict[str, SVG] = {}
   for sv in svs:
-    svg = _get_or_create_svg(svgs, sv, dcid2name)
+    svg = _get_or_create_svg(svgs, sv, dcid2name, custom_svg_prefix)
     # Insert SV into SVG.
     svg.sv_ids[sv.sv_id] = True
   return svgs
@@ -349,9 +374,9 @@ def _add_measured_properties_to_parent_svgs(mprops: dict[str, bool],
 
 
 def _create_parent_svg(parent_sv: SVPropVals, svg: SVG, svgs: dict[str, SVG],
-                       svg_has_prop_without_val: bool, dcid2name: dict[str,
-                                                                       str]):
-  parent_svg = _get_or_create_svg(svgs, parent_sv, dcid2name)
+                       svg_has_prop_without_val: bool,
+                       dcid2name: dict[str, str], custom_svg_prefix: str):
+  parent_svg = _get_or_create_svg(svgs, parent_sv, dcid2name, custom_svg_prefix)
 
   # Add parent child relationships.
   svg.parent_svg_ids[parent_svg.svg_id] = True
@@ -364,11 +389,11 @@ def _create_parent_svg(parent_sv: SVPropVals, svg: SVG, svgs: dict[str, SVG],
 
   if not parent_svg.parent_svgs_processed:
     parent_svg.has_prop_without_val = svg_has_prop_without_val
-    _create_parent_svgs(parent_svg.svg_id, svgs, dcid2name)
+    _create_parent_svgs(parent_svg.svg_id, svgs, dcid2name, custom_svg_prefix)
 
 
 def _create_parent_svgs(svg_id: str, svgs: dict[str, SVG],
-                        dcid2name: dict[str, str]):
+                        dcid2name: dict[str, str], custom_svg_prefix: str):
   svg = svgs[svg_id]
   sv = svg.sample_sv
 
@@ -393,7 +418,8 @@ def _create_parent_svgs(svg_id: str, svgs: dict[str, SVG],
                        svg=svg,
                        svgs=svgs,
                        svg_has_prop_without_val=False,
-                       dcid2name=dcid2name)
+                       dcid2name=dcid2name,
+                       custom_svg_prefix=custom_svg_prefix)
   # Process SVGs with vals.
   else:
     for pv1 in sv.pvs:
@@ -409,7 +435,8 @@ def _create_parent_svgs(svg_id: str, svgs: dict[str, SVG],
                          svg=svg,
                          svgs=svgs,
                          svg_has_prop_without_val=True,
-                         dcid2name=dcid2name)
+                         dcid2name=dcid2name,
+                         custom_svg_prefix=custom_svg_prefix)
 
   svg.parent_svgs_processed = True
 
@@ -446,12 +473,15 @@ def _to_dcid_token(token: str) -> str:
   return _capitalize(result)
 
 
-def _extract_svs(triples: list[Triple]) -> list[SVPropVals]:
+def _extract_svs(
+    triples: list[Triple],
+    sv_hierarchy_props_blocklist: set[str] = sc.SV_HIERARCHY_PROPS_BLOCKLIST
+) -> list[SVPropVals]:
   """Extracts SVs from the input triples.
   The following SV properties used for generating the SV hierarchy are extracted:
   - dcid
   - population type
-  - PVs not in SV_HIERARCHY_PROPS_BLOCKLIST
+  - PVs not in `sv_hierarchy_props_blocklist` (SV_HIERARCHY_PROPS_BLOCKLIST plus any custom blocklist)
   - measured property
   """
 
@@ -476,7 +506,7 @@ def _extract_svs(triples: list[Triple]) -> list[SVPropVals]:
       dcid2poptype[triple.subject_id] = value
     elif triple.predicate == sc.PREDICATE_MEASURED_PROPERTY:
       dcid2mprop[triple.subject_id] = value
-    elif triple.predicate not in sc.SV_HIERARCHY_PROPS_BLOCKLIST:
+    elif triple.predicate not in sv_hierarchy_props_blocklist:
       pvs = dcid2pvs.setdefault(triple.subject_id, {})
       pvs[triple.predicate] = value
 
