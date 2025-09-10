@@ -4,7 +4,7 @@
       "counters": {
         "NumRowSuccesses": "11",
         "NumPVSuccesses": "107",
-        "Existence_NumChecks": "260",
+        "Existence_NumChecks": "261",
         "NumNodeSuccesses": "15",
         "CSV_MalformedDCIDPVFailures": "4",
         "Existence_NumDcCalls": "2"
@@ -67,6 +67,7 @@
         "Resolution_OrphanLocalReference_containedInPlace": "1",
         "Sanity_MultipleDcidValues": "2",
         "MCF_MalformedNodeName": "1",
+        "Sanity_TypeThing": "1",
         "Resolution_DcidAssignmentFailure_City": "1",
         "Sanity_MissingOrEmpty_observationAbout": "2",
         "Sanity_NonDoubleObsValue": "1"
@@ -117,7 +118,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "123"
+      "lineNumber": "124"
     },
     "userMessage": "Failed reference existence check :: property-ref: 'inCounty', node: 'dcid:Pop'",
     "counterKey": "Existence_MissingReference_Property"
@@ -133,7 +134,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "116"
+      "lineNumber": "117"
     },
     "userMessage": "Failed reference existence check :: property-ref: 'label', node: 'dcid:beverageType'",
     "counterKey": "Existence_MissingReference_Property"
@@ -165,7 +166,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "123"
+      "lineNumber": "124"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'PopEnums', property: 'domainIncludes', node: 'dcid:Pop'",
     "counterKey": "Existence_MissingReference_domainIncludes"
@@ -365,7 +366,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "81"
+      "lineNumber": "82"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_10YearsPlus'",
     "counterKey": "Existence_MissingReference_statType"
@@ -373,7 +374,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "109"
+      "lineNumber": "110"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_15YearsPlus'",
     "counterKey": "Existence_MissingReference_statType"
@@ -381,7 +382,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "88"
+      "lineNumber": "89"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_5To10'",
     "counterKey": "Existence_MissingReference_statType"
@@ -389,7 +390,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "102"
+      "lineNumber": "103"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_5YearsPlus'",
     "counterKey": "Existence_MissingReference_statType"
@@ -397,7 +398,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "95"
+      "lineNumber": "96"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'MeasuredValue', property: 'statType', node: 'dcid:Count_Death_YearsLessThan5'",
     "counterKey": "Existence_MissingReference_statType"
@@ -405,7 +406,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "116"
+      "lineNumber": "117"
     },
     "userMessage": "Failed reference existence check :: value-ref: 'substanceType', property: 'subClassOf', node: 'dcid:beverageType'",
     "counterKey": "Existence_MissingReference_subClassOf"
@@ -541,7 +542,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "79"
+      "lineNumber": "80"
     },
     "userMessage": "Found malformed Complex value without a closing ] bracket :: value: '[10 12', property: 'age', node: 'dcid:Count_Death_10To12'",
     "counterKey": "MCF_MalformedComplexValue"
@@ -549,7 +550,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "81"
+      "lineNumber": "82"
     },
     "userMessage": "Complex value must have 2 (e.g., [Years 10]) or 3 (e.g., [Years 10 20]) components :: value: '[10]', components: 1, property: 'age', node: 'dcid:Count_Death_10YearsPlus'",
     "counterKey": "MCF_MalformedComplexValueParts"
@@ -573,7 +574,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "88"
+      "lineNumber": "89"
     },
     "userMessage": "Quantity value must be a number :: value: '[5Years 10Years]', property: 'age', node: 'dcid:Count_Death_5To10'",
     "counterKey": "MCF_QuantityMalformedValue"
@@ -589,7 +590,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "102"
+      "lineNumber": "103"
     },
     "userMessage": "Malformed end component in QuantityRange value; must be a number or '-' :: value: 'years', property: 'age', node: 'dcid:Count_Death_5YearsPlus'",
     "counterKey": "MCF_QuantityRangeMalformedValues"
@@ -597,7 +598,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "95"
+      "lineNumber": "96"
     },
     "userMessage": "Malformed start component in QuantityRange value; must be a number or '-' :: value: 'less', property: 'age', node: 'dcid:Count_Death_YearsLessThan5'",
     "counterKey": "MCF_QuantityRangeMalformedValues"
@@ -605,7 +606,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "109"
+      "lineNumber": "110"
     },
     "userMessage": "Malformed start+end components in QuantityRange value; one of them must be a number  :: startValue: '-', endValue: '-', property: 'age', node: 'dcid:Count_Death_15YearsPlus'",
     "counterKey": "MCF_QuantityRangeMalformedValues"
@@ -709,7 +710,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "116"
+      "lineNumber": "117"
     },
     "userMessage": "Schema node with dcid/name mismatch :: name: 'Beverage–type', dcid: 'beverageType', node: 'dcid:beverageType'",
     "counterKey": "Sanity_DcidNameMismatchInSchema"
@@ -717,7 +718,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "123"
+      "lineNumber": "124"
     },
     "userMessage": "Schema node with dcid/name mismatch :: name: 'pop', dcid: 'Pop', node: 'dcid:Pop'",
     "counterKey": "Sanity_DcidNameMismatchInSchema"
@@ -725,7 +726,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "116"
+      "lineNumber": "117"
     },
     "userMessage": "Found empty property value :: property: 'domainIncludes', node 'dcid:beverageType'",
     "counterKey": "Sanity_EmptySchemaValue"
@@ -749,7 +750,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "116"
+      "lineNumber": "117"
     },
     "userMessage": "Found invalid chars in dcid value :: value: '', invalid-chars: '', property: 'domainIncludes', node: 'dcid:beverageType'",
     "counterKey": "Sanity_InvalidChars_domainIncludes"
@@ -821,7 +822,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "77"
+      "lineNumber": "78"
     },
     "userMessage": "Found a missing or empty property value :: property: 'measuredProperty', node: 'dcid:Count_Death_10To12', type: 'StatisticalVariable'",
     "counterKey": "Sanity_MissingOrEmpty_measuredProperty"
@@ -845,7 +846,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "77"
+      "lineNumber": "78"
     },
     "userMessage": "Found a missing or empty property value :: property: 'populationType', node: 'dcid:Count_Death_10To12', type: 'StatisticalVariable'",
     "counterKey": "Sanity_MissingOrEmpty_populationType"
@@ -853,7 +854,7 @@
     "level": "LEVEL_WARNING",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "109"
+      "lineNumber": "110"
     },
     "userMessage": "Found a missing or empty property value :: property: 'populationType', node: 'dcid:Count_Death_15YearsPlus', type: 'StatisticalVariable'",
     "counterKey": "Sanity_MissingOrEmpty_populationType"
@@ -861,7 +862,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "77"
+      "lineNumber": "78"
     },
     "userMessage": "Found a missing or empty property value :: property: 'statType', node: 'dcid:Count_Death_10To12', type: 'StatisticalVariable'",
     "counterKey": "Sanity_MissingOrEmpty_statType"
@@ -869,7 +870,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "123"
+      "lineNumber": "124"
     },
     "userMessage": "Found a missing or empty property value :: property: 'subClassOf', node: 'dcid:Pop', type: 'Class'",
     "counterKey": "Sanity_MissingOrEmpty_subClassOf"
@@ -941,7 +942,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "116"
+      "lineNumber": "117"
     },
     "userMessage": "Schema node has property values with non-ascii characters :: value: 'Beverage–type', property: 'name', node: 'dcid:beverageType'",
     "counterKey": "Sanity_NonAsciiValueInSchema"
@@ -957,7 +958,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "109"
+      "lineNumber": "110"
     },
     "userMessage": "Found property name that does not start with a lower-case :: property: 'PopulationType', node: 'dcid:Count_Death_15YearsPlus'",
     "counterKey": "Sanity_NotInitLowerPropName"
@@ -965,7 +966,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "116"
+      "lineNumber": "117"
     },
     "userMessage": "Found a property reference that does not start with a lower-case :: reference: 'BeverageType', property: 'label', node: 'dcid:beverageType'",
     "counterKey": "Sanity_NotInitLower_labelInProperty"
@@ -973,7 +974,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "123"
+      "lineNumber": "124"
     },
     "userMessage": "Found a class reference that does not start with an upper-case :: reference: 'pop', property: 'name', node: 'dcid:Pop'",
     "counterKey": "Sanity_NotInitUpper_nameInClass"
@@ -989,7 +990,15 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "123"
+      "lineNumber": "73"
+    },
+    "userMessage": "Found a node with type Thing :: node: 'dcid:geoId/sf'",
+    "counterKey": "Sanity_TypeThing"
+  }, {
+    "level": "LEVEL_ERROR",
+    "location": {
+      "file": "AllFileTypes.mcf",
+      "lineNumber": "124"
     },
     "userMessage": "Unexpected property in Class node :: property: 'domainIncludes', node: 'dcid:Pop'",
     "counterKey": "Sanity_UnexpectedPropInClass"
@@ -997,7 +1006,7 @@
     "level": "LEVEL_ERROR",
     "location": {
       "file": "AllFileTypes.mcf",
-      "lineNumber": "116"
+      "lineNumber": "117"
     },
     "userMessage": "Unexpected property in Property node :: property: 'subClassOf', node: 'dcid:beverageType'",
     "counterKey": "Sanity_UnexpectedPropInProperty"
