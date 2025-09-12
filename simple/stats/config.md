@@ -195,24 +195,24 @@ If `true`, auto generates a hierarchy of groups based on properties of variables
 
 These optional top-level fields customize how the StatVarGroup hierarchy is generated and labeled. All are optional; defaults match the built-in values.
 
-- `svHierarchyPropsBlocklist`: Array of additional property dcids to exclude from hierarchy generation. These are added to the internal blocklist used by Data Commons.
-  - Example: `["DevelopmentFinanceRecipient", "DACCode", "CustomProperty"]`
-- `customSvgPrefix`: String prefix for generated custom StatVarGroup ids.
-  - If not set, and `customIdNamespace` is provided, it defaults to `<customIdNamespace>/g/`.
-  - Otherwise defaults to `"c/g/"`.
-  - Affects ids like `c/g/Person_Gender-Female`.
 - `defaultCustomRootStatVarGroupName`: Display name for the custom root StatVarGroup. Default: `"Custom Variables"`.
 - `customIdNamespace`: Namespace token for generated ids for SVs and manual groups. Default: `"custom"`.
   - Generated SV ids: `<namespace>/statvar_<n>` (e.g., `custom/statvar_1`).
   - Manual group ids: `<namespace>/g/group_<n>` (e.g., `custom/g/group_1`).
+- `customSvgPrefix`: String prefix for generated custom StatVarGroup ids.
+  - If not set, and `customIdNamespace` is provided, it defaults to `<customIdNamespace>/g/`.
+  - Otherwise defaults to `"c/g/"`.
+  - Affects ids like `c/g/Person_Gender-Female`.
+- `svHierarchyPropsBlocklist`: Array of additional property dcids to exclude from hierarchy generation. These are added to the internal blocklist used by Data Commons.
+  - Example: `["DevelopmentFinanceRecipient", "DACCode", "CustomProperty"]`
 
 Example fragment:
 
 ```json
 {
   "groupStatVarsByProperty": true,
-  "svHierarchyPropsBlocklist": ["DevelopmentFinanceRecipients", "DACCode"],
-  "customSvgPrefix": "ONE/g/",
   "defaultCustomRootStatVarGroupName": "ONE Data",
   "customIdNamespace": "ONE"
+  "customSvgPrefix": "OD/g/",
+  "svHierarchyPropsBlocklist": ["DevelopmentFinanceRecipients", "DACCode"],
 }
