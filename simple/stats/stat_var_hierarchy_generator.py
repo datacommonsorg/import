@@ -480,8 +480,7 @@ def _to_dcid_token(token: str) -> str:
 
 def _extract_svs(
     triples: list[Triple],
-    sv_hierarchy_props_blocklist: set[str] = sc.SV_HIERARCHY_PROPS_BLOCKLIST
-) -> list[SVPropVals]:
+    sv_hierarchy_props_blocklist: set[str] | None = None) -> list[SVPropVals]:
   """Extracts SVs from the input triples.
   The following SV properties used for generating the SV hierarchy are extracted:
   - dcid
@@ -489,6 +488,9 @@ def _extract_svs(
   - PVs not in `sv_hierarchy_props_blocklist` (SV_HIERARCHY_PROPS_BLOCKLIST plus any custom blocklist)
   - measured property
   """
+
+  if not sv_hierarchy_props_blocklist:
+    sv_hierarchy_props_blocklist = sc.SV_HIERARCHY_PROPS_BLOCKLIST
 
   # Using dict instead of set to maintain order.
   # Maintaining order maintains results consistency and helps with tests.
