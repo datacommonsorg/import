@@ -70,14 +70,19 @@ def _generate_internal(
     triples: list[Triple],
     vertical_specs: list[VerticalSpec],
     dcid2name: dict[str, str],
-    custom_svg_prefix: str = sc.CUSTOM_SVG_PREFIX,
-    default_custom_root_svg_id: str = sc.DEFAULT_CUSTOM_ROOT_SVG_ID,
-    sv_hierarchy_props_blocklist: set[str] = sc.SV_HIERARCHY_PROPS_BLOCKLIST
-) -> "StatVarHierarchy":
+    custom_svg_prefix: str | None = None,
+    default_custom_root_svg_id: str | None = None,
+    sv_hierarchy_props_blocklist: set[str] | None = None) -> "StatVarHierarchy":
   """Given a list of input triples (including stat vars), 
 generates a SV hierarchy and returns a list of output triples
 representing the hierarchy.
 """
+  if not custom_svg_prefix:
+    custom_svg_prefix = sc.CUSTOM_SVG_PREFIX
+  if not default_custom_root_svg_id:
+    default_custom_root_svg_id = sc.DEFAULT_CUSTOM_ROOT_SVG_ID
+  if not sv_hierarchy_props_blocklist:
+    sv_hierarchy_props_blocklist = sc.SV_HIERARCHY_PROPS_BLOCKLIST
 
   # Extract SVs.
   svs = _extract_svs(triples, sv_hierarchy_props_blocklist)
