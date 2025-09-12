@@ -454,8 +454,6 @@ class TestConfig(unittest.TestCase):
       Config({"customIdNamespace": ""}).custom_id_namespace()
 
   def test_custom_svg_prefix_validation(self):
-    from stats import schema_constants as sc
-
     # Valid explicit
     self.assertEqual(
         Config({
