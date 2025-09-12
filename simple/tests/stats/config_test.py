@@ -384,10 +384,8 @@ class TestConfig(unittest.TestCase):
         }).custom_id_namespace(), "ONE")
 
   def test_custom_svg_prefix_resolution(self):
-    from stats import schema_constants as sc
-
     # Default prefix falls back to schema constant
-    self.assertEqual(Config({}).custom_svg_prefix(), sc.CUSTOM_SVG_PREFIX)
+    self.assertEqual(Config({}).custom_svg_prefix(), "c/g/")
     # Explicit override takes precedence
     self.assertEqual(
         Config({
@@ -430,4 +428,52 @@ class TestConfig(unittest.TestCase):
     with self.assertRaisesRegex(ValueError, "must be a list of strings"):
       Config({
           "svHierarchyPropsBlocklist": "gender"
+      }).sv_hierarchy_props_blocklist()
+
+  def test_custom_id_namespace_validation(self):
+    # Valid overrides
+    self.assertEqual(
+        Config({
+            "customIdNamespace": "ONE"
+        }).custom_id_namespace(), "ONE")
+    self.assertEqual(
+        Config({
+            "customIdNamespace": "ACME_123"
+        }).custom_id_namespace(), "ACME_123")
+    # Invalid: contains slash
+    with self.assertRaises(ValueError):
+      Config({"customIdNamespace": "acme/ns"}).custom_id_namespace()
+    # Invalid: starts with slash
+    with self.assertRaises(ValueError):
+      Config({"customIdNamespace": "/acme"}).custom_id_namespace()
+    # Invalid: contains dash
+    with self.assertRaises(ValueError):
+      Config({"customIdNamespace": "ACME-123"}).custom_id_namespace()
+    # Invalid: empty string
+    with self.assertRaises(ValueError):
+      Config({"customIdNamespace": ""}).custom_id_namespace()
+
+  def test_custom_svg_prefix_validation(self):
+    from stats import schema_constants as sc
+
+    # Valid explicit
+    self.assertEqual(
+        Config({
+            "customSvgPrefix": "ONE/g/"
+        }).custom_svg_prefix(), "ONE/g/")
+    # Invalid: starts with '/'
+    with self.assertRaises(ValueError):
+      Config({"customSvgPrefix": "/ONE/g/"}).custom_svg_prefix()
+    # Invalid: missing trailing '/'
+    with self.assertRaises(ValueError):
+      Config({"customSvgPrefix": "ONE/g"}).custom_svg_prefix()
+    # Invalid: contains space
+    with self.assertRaises(ValueError):
+      Config({"customSvgPrefix": "ONE g/"}).custom_svg_prefix()
+
+  def test_sv_hierarchy_props_blocklist_string_items(self):
+    # Mixed type should raise
+    with self.assertRaisesRegex(ValueError, "must be a list of strings"):
+      Config({
+          "svHierarchyPropsBlocklist": ["gender", 123]
       }).sv_hierarchy_props_blocklist()

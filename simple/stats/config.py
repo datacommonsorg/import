@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+
 from stats import constants
 from stats.data import AggregationConfig
 from stats.data import EntityType
@@ -201,6 +203,11 @@ class Config:
     if cfg is None:
       return sc.SV_HIERARCHY_PROPS_BLOCKLIST
     if isinstance(cfg, list):
+      # Ensure all provided entries are strings.
+      if not all(isinstance(p, str) for p in cfg):
+        raise ValueError(
+            f"{_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD} must be a list of strings if provided."
+        )
       return sc.SV_HIERARCHY_PROPS_BLOCKLIST | set(cfg)
     raise ValueError(
         f"{_SV_HIERARCHY_PROPS_BLOCKLIST_FIELD} must be a list of strings if provided."
@@ -211,24 +218,52 @@ class Config:
     Affects:
     - Generated SV ids: '<namespace>/statvar_<n>'
     - Generated manual group ids: '<namespace>/g/group_<n>'
-    Defaults to 'custom'.
     """
-    return self.data.get(_CUSTOM_ID_NAMESPACE_FIELD, "custom")
+    from stats import nodes
+
+    default_ns = nodes._CUSTOM_GROUP_ID_PREFIX.rsplit("/")[0]
+    ns = self.data.get(_CUSTOM_ID_NAMESPACE_FIELD, default_ns)
+
+    if not ns:
+      raise ValueError(
+          f"If provided, {_CUSTOM_ID_NAMESPACE_FIELD} must be non-empty.")
+
+    # Validate token of alphanumerics and underscores only (no slashes), non-empty.
+    if not isinstance(ns, str) or not re.fullmatch(r"^[A-Za-z0-9_]+$", ns):
+      raise ValueError(
+          f"{_CUSTOM_ID_NAMESPACE_FIELD} must be made up entirely of letters, digits,"
+          f" or underscores, with no spaces, punctuation, or other symbols, and it must not be empty."
+      )
+    return ns
 
   def custom_svg_prefix(self) -> str:
     """Returns the prefix to use for generated custom SVG ids (e.g., 'c/g/').
     Resolution order:
     - If explicitly set via 'customSvgPrefix', return it.
-    - Else if a non-default 'customIdNamespace' is set, derive as f"{namespace}/g/".
+    - Else if 'customIdNamespace' is explicitly provided in config, derive as
+      f"{namespace}/g/" where namespace is the validated value of
+      customIdNamespace.
     - Else fall back to the built-in default (e.g., 'c/g/').
     """
     from stats import schema_constants as sc
     cfg = self.data.get(_CUSTOM_SVG_PREFIX_FIELD)
     if cfg:
+      # Validate allowed chars [A-Za-z0-9_/], cannot start with '/', must end with '/'.
+      if not isinstance(cfg, str):
+        raise ValueError(
+            f"{_CUSTOM_SVG_PREFIX_FIELD} must be a string if provided.")
+      if cfg.startswith("/") or not cfg.endswith("/") or not re.fullmatch(
+          r"^[A-Za-z0-9_/]+$", cfg):
+        raise ValueError(
+            f"{_CUSTOM_SVG_PREFIX_FIELD} must be made up entirely of letters, digits, or "
+            f"underscores, with no spaces, punctuation, or other symbols. It cannot start "
+            f"with '/', must end with '/', and it must not be empty")
       return cfg
-    ns = self.custom_id_namespace()
-    if ns and ns != "custom":
+    # Only derive from customIdNamespace if the user explicitly provided it.
+    if _CUSTOM_ID_NAMESPACE_FIELD in self.data:
+      ns = self.custom_id_namespace()
       return f"{ns}/g/"
+    # Otherwise use the built-in default.
     return sc.CUSTOM_SVG_PREFIX
 
   def default_custom_root_svg_name(self) -> str:
