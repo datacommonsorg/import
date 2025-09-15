@@ -132,8 +132,11 @@ public class CacheReader implements Serializable {
               }
             }
 
-            // Add node.
-            if (!nodeId.isEmpty()) {
+            // Maybe add node.
+            // Triples with type Thing are from two different import groups.
+            // The corresponding Node is a placeholder and shouldn't be added.
+            // Instead it will be added as part of the import group where its defined.
+            if (!nodeId.isEmpty() && !typeOf.equals(PipelineUtils.TYPE_THING)) {
               result.addNode(
                   Node.builder()
                       .subjectId(nodeId)
