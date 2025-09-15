@@ -56,6 +56,8 @@ class Nodes:
 
   def __init__(self, config: Config) -> None:
     self.config = config
+    # Custom namespace
+    self._custom_id_namespace = self.config.custom_id_namespace()
     # Dictionary of SVs from column name to SV
     self.variables: dict[str, StatVar] = {}
     # Dictionary of SVGs from SVG path to SVG
@@ -187,7 +189,7 @@ class Nodes:
     if re.fullmatch(_DCID_PATTERN, dcid):
       return dcid
     self._sv_generated_id_count += 1
-    return f"{_CUSTOM_SV_ID_PREFIX}{self._sv_generated_id_count}"
+    return f"{self._custom_id_namespace}/statvar_{self._sv_generated_id_count}"
 
   def _property_id(self, property_column_name: str) -> str:
     dcid = property_column_name
@@ -238,8 +240,9 @@ class Nodes:
         parent_path = "" if "/" not in path else path[:path.rindex("/")]
         parent_id = (self.groups[parent_path].id
                      if parent_path in self.groups else sc.ROOT_SVG_ID)
-        svg = StatVarGroup(f"{_CUSTOM_GROUP_ID_PREFIX}{len(self.groups) + 1}",
-                           tokens[index], parent_id)
+        svg = StatVarGroup(
+            f"{self._custom_id_namespace}/g/group_{len(self.groups) + 1}",
+            tokens[index], parent_id)
         self.groups[path] = svg
         self.ids_to_groups[svg.id] = svg
 
@@ -247,7 +250,11 @@ class Nodes:
 
   def _default_custom_group(self) -> StatVarGroup:
     if _DEFAULT_CUSTOM_GROUP_PATH not in self.groups:
-      self.groups[_DEFAULT_CUSTOM_GROUP_PATH] = _DEFAULT_CUSTOM_GROUP
+      # Compute id and name using config (falls back to schema constants).
+      root_id = sc.DEFAULT_CUSTOM_ROOT_SVG_ID
+      root_name = self.config.default_custom_root_svg_name()
+      svg = StatVarGroup(root_id, root_name, sc.ROOT_SVG_ID)
+      self.groups[_DEFAULT_CUSTOM_GROUP_PATH] = svg
     return self.groups[_DEFAULT_CUSTOM_GROUP_PATH]
 
   def entity_with_type(self, entity_dcid: str, entity_type: str):

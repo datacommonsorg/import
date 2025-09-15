@@ -269,7 +269,11 @@ class Runner:
     dcid2name = schema.get_schema_names(schema_dcids, self.db)
 
     sv_hierarchy_result = stat_var_hierarchy_generator.generate(
-        triples=sv_triples, vertical_specs=vertical_specs, dcid2name=dcid2name)
+        triples=sv_triples,
+        vertical_specs=vertical_specs,
+        dcid2name=dcid2name,
+        custom_svg_prefix=self.config.custom_svg_prefix(),
+        sv_hierarchy_props_blocklist=self.config.sv_hierarchy_props_blocklist())
     self.svg_specialized_names = sv_hierarchy_result.svg_specialized_names
     logging.info("Inserting %s SVG triples into DB.",
                  len(sv_hierarchy_result.svg_triples))

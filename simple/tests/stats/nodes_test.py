@@ -349,3 +349,44 @@ class TestNodes(unittest.TestCase):
             "barहिंदीfoo",
         ),
     )
+
+  def test_custom_namespace_affects_generated_ids(self):
+    # Use a variable name that cannot be converted to a valid DCID to force ID generation.
+    cfg = Config({"customIdNamespace": "ONE"})
+    nodes = Nodes(cfg)
+    sv = nodes.variable("Var?1", self.a)
+    # Generated stat var id should use the custom namespace
+    self.assertEqual(sv.id, "ONE/statvar_1")
+
+    # Group ids should use the custom namespace as well
+    nodes = Nodes(cfg)
+    nodes.group("Parent/Child")
+    self.assertListEqual(
+        list(nodes.groups.values()),
+        [
+            StatVarGroup(
+                "ONE/g/group_1",
+                "Parent",
+                "dc/g/Root",
+            ),
+            StatVarGroup(
+                "ONE/g/group_2",
+                "Child",
+                "ONE/g/group_1",
+            ),
+        ],
+    )
+
+  def test_default_custom_root_group_name_override(self):
+    cfg = Config({"defaultCustomRootStatVarGroupName": "ONE Data"})
+    nodes = Nodes(cfg)
+    # Inserting a var with no group should create the default custom group
+    nodes.variable("Any Var", self.a)
+    # Find the default custom root svg among groups and verify its name
+    from stats import schema_constants as sc
+    default_groups = [
+        g for g in nodes.groups.values()
+        if g.id == sc.DEFAULT_CUSTOM_ROOT_SVG_ID
+    ]
+    self.assertTrue(default_groups, "Default custom root SVG should exist")
+    self.assertEqual(default_groups[0].name, "ONE Data")
