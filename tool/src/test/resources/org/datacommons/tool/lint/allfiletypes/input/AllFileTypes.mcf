@@ -72,6 +72,7 @@ location: [LatLong -100 10]
 
 Node: dcid:geoId/sf
 typeOf: City
+typeOf: dcs:Thing
 location: [LatLong -20 181]
 
 Node: dcid:Count_Death_10To12
