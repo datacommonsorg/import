@@ -14,6 +14,7 @@
 
 package org.datacommons.util;
 
+import com.google.protobuf.Timestamp;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -90,6 +91,16 @@ public class RuntimeMetadataUtil {
   }
 
   /**
+   * Converts epoch milliseconds to protobuf Timestamp.
+   *
+   * @param epochMillis The timestamp in epoch milliseconds
+   * @return Protobuf Timestamp object
+   */
+  private static Timestamp millisToTimestamp(long epochMillis) {
+    return Timestamp.newBuilder().setSeconds(epochMillis / 1000).build();
+  }
+
+  /**
    * Creates a RuntimeMetadata proto with system information.
    *
    * @param startTimeMillis The start time of the process in epoch milliseconds
@@ -101,9 +112,9 @@ public class RuntimeMetadataUtil {
       long startTimeMillis, long endTimeMillis, Class<?> callerClass) {
     Debug.RuntimeMetadata.Builder builder = Debug.RuntimeMetadata.newBuilder();
 
-    // Set start and end times in epoch milliseconds
-    builder.setStartTimeMillis(startTimeMillis);
-    builder.setEndTimeMillis(endTimeMillis);
+    // Set protobuf Timestamp fields (auto-format to ISO-8601 in JSON)
+    builder.setStartTime(millisToTimestamp(startTimeMillis));
+    builder.setEndTime(millisToTimestamp(endTimeMillis));
 
     // Set username
     getUsername().ifPresent(builder::setUsername);

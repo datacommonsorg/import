@@ -104,6 +104,30 @@ public class CacheReaderTest {
   }
 
   @Test
+  public void testParseArcRowForOutArcWithPlaceholderType() {
+    CacheReader reader = newCacheReader();
+    Counter mockMcfNodesWithoutTypeCounter = Mockito.mock(Counter.class);
+    String row =
+        "d/m/incentive/US_chronicleelectric.com_46d7ab0483fbe0aa^areaServed^Thing^0,H4sIAAAAAAAAAOOyl+JOzi/NKymq1A8NdlQySEnWT0osTtV3z89Pz0mNDy4tLknMzEtMyszJLKl0A7LykjMTczzzklPzSjLLUosFGcDggz0AKTVclkoAAAA=";
+
+    // No Nodes should be added, since they'll be defined in another import group.
+    NodesEdges expected =
+        new NodesEdges()
+            .addEdge(
+                Edge.builder()
+                    .subjectId("incentive/US_chronicleelectric.com_46d7ab0483fbe0aa")
+                    .predicate("areaServed")
+                    .objectId("country/USA")
+                    .provenance("dc/base/Google_SustainabilityFinancialIncentives")
+                    .build());
+
+    NodesEdges actual = reader.parseArcRow(row, mockMcfNodesWithoutTypeCounter);
+
+    assertEquals(expected, actual);
+    Mockito.verify(mockMcfNodesWithoutTypeCounter, Mockito.times(0)).inc();
+  }
+
+  @Test
   public void testParseArcRowForInArc() {
     CacheReader reader = newCacheReader();
     Counter mockMcfNodesWithoutTypeCounter = Mockito.mock(Counter.class);

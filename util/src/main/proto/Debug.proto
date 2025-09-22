@@ -16,6 +16,7 @@ syntax = "proto2";
 
 package org.datacommons.proto;
 
+import "google/protobuf/timestamp.proto";
 import "LogLocation.proto";
 import "Mcf.proto";
 
@@ -36,6 +37,8 @@ message RuntimeMetadata {
     optional string tool_version = 8;  // From pom.xml or Main.java
     optional string tool_build_timestamp = 9;  // Build time if available
     optional string tool_git_commit_hash = 10;  // Git commit if available
+    optional google.protobuf.Timestamp start_time = 11;  // Start time as protobuf Timestamp
+    optional google.protobuf.Timestamp end_time = 12;  // End time as protobuf Timestamp
 }
 
 //

@@ -392,6 +392,10 @@ where this is expected (for example, `statType` is `measurementResult` and
 therefore the SVObs values are references), set `--allow-non-numeric-obs-values=true`
 in the command line invocation.
 
+### Sanity_TypeThing
+
+Found a node with typeOf = Thing. Thing is used as a default placeholder type and should not be set explicitly. Please use a more specific type for the node.
+
 ## Existence Checks
 
 Existence counters are logged for issues relating to the existence check of references
