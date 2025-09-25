@@ -8,6 +8,7 @@ CREATE TABLE Node (
   bytes BYTES(MAX),
   name STRING(MAX),
   types ARRAY<STRING(1024)>,
+  name_tokenlist TOKENLIST AS (TOKENIZE_FULLTEXT(name)) HIDDEN,
 ) PRIMARY KEY(subject_id)
 
 CREATE TABLE Edge (
@@ -15,7 +16,8 @@ CREATE TABLE Edge (
   predicate STRING(1024) NOT NULL,
   object_id STRING(1024) NOT NULL,
   provenance STRING(1024) NOT NULL,
-) PRIMARY KEY(subject_id, predicate, object_id, provenance)
+) PRIMARY KEY(subject_id, predicate, object_id, provenance),
+INTERLEAVE IN Node
 
 CREATE TABLE Observation (
   variable_measured STRING(1024) NOT NULL,

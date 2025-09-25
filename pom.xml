@@ -14,7 +14,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <!-- Dependency versions -->
         <revision>0.1-SNAPSHOT</revision>
-        <beam.version>2.66.0</beam.version>
+        <beam.version>2.67.0</beam.version>
         <gson.version>2.10.1</gson.version> 
         <os.maven.plugin.version>1.7.1</os.maven.plugin.version>
         <protobuf.maven.plugin.version>0.6.1</protobuf.maven.plugin.version>

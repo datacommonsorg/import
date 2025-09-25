@@ -15,9 +15,11 @@ import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.Write;
@@ -65,35 +67,13 @@ public class SpannerClient implements Serializable {
   }
 
   /**
-   * Parses DDL statements from a BufferedReader. DDL statements can span multiple lines and are
-   * terminated by closing parenthesis.
+   * Parses DDL statements from a BufferedReader. DDL statements can span multiple lines and are are
+   * delimited with a newline.
    */
   private List<String> parseDdlStatements(BufferedReader reader) throws IOException {
-    List<String> statements = new ArrayList<>();
-    StringBuilder currentStatement = new StringBuilder();
-    String line;
-    while ((line = reader.readLine()) != null) {
-      line = line.trim();
-      if (line.isEmpty() || line.startsWith("--")) {
-        continue; // Skip empty lines and comments
-      }
-
-      currentStatement.append(line).append(" ");
-
-      // Check for statement termination
-      if (line.endsWith(")")) {
-        statements.add(currentStatement.toString().trim());
-        currentStatement = new StringBuilder();
-      }
-    }
-
-    // Add any remaining statement if the file doesn't end with a terminator
-    String remaining = currentStatement.toString().trim();
-    if (!remaining.isEmpty()) {
-      statements.add(remaining);
-    }
-
-    return statements;
+    String fullText = reader.lines().collect(Collectors.joining("\n"));
+    String[] blocksArray = fullText.split("\\n\\s*\\n+", 0);
+    return Arrays.asList(blocksArray);
   }
 
   public void createDatabase() {
