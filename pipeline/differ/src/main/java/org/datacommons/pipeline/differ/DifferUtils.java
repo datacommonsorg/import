@@ -74,7 +74,8 @@ public class DifferUtils {
                         Collections.sort(keys);
                         String value =
                             keys.stream()
-                                .filter(key -> !key.equals(Property.dcid.name()))
+                                .filter(
+                                    key -> !key.equals(Property.dcid.name()) && !key.equals("Node"))
                                 .map(key -> key + ":" + GraphUtils.getPropertyValue(pv, key))
                                 .collect(Collectors.joining(";"));
 
