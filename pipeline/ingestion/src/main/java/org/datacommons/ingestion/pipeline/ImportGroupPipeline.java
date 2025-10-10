@@ -1,10 +1,9 @@
 package org.datacommons.ingestion.pipeline;
 
 import com.google.cloud.spanner.Mutation;
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
-import java.nio.file.Paths;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.beam.sdk.Pipeline;
@@ -17,6 +16,7 @@ import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
+import org.apache.beam.sdk.values.PCollectionTuple;
 import org.datacommons.ingestion.data.GraphReader;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.pipeline.util.PipelineUtils;
@@ -27,22 +27,10 @@ import org.slf4j.LoggerFactory;
 
 public class ImportGroupPipeline {
   private static final Logger LOGGER = LoggerFactory.getLogger(ImportGroupPipeline.class);
-  private static final String TABLE_MCF_NODES = "table_mcf_nodes";
-  private static final String INSTANCE_MCF_NODES = "instance_mcf_nodes";
   private static final String GCS_PREFIX = "gs://";
-  private static final String MCF_SUFFIX = "*.mcf";
+  private static final String MCF_SUFFIX = "/*.mcf";
   private static final Counter counter =
       Metrics.counter(ImportGroupPipeline.class, "mcf_nodes_without_type");
-
-  private static String getGraphPath(String projectId, String bucketId, String importName) {
-    Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
-    String importPath = importName.replace(":", "/");
-    String versionPath = Paths.get(importPath, "latest_version.txt").toString();
-    Blob blob = storage.get(bucketId, versionPath);
-    String version = new String(blob.getContent());
-    String graphPath = Paths.get(bucketId, importPath, version, "*", "validation").toString();
-    return GCS_PREFIX + graphPath;
-  }
 
   public static void main(String[] args) {
     IngestionPipelineOptions options =
@@ -66,16 +54,34 @@ public class ImportGroupPipeline {
     Pipeline pipeline = Pipeline.create(options);
     LOGGER.info("Running import pipeline for imports: {}", options.getImportList());
 
-    String[] imports = options.getImportList().split(",");
     List<PCollection<Mutation>> obsMutationList = new ArrayList<>();
     List<PCollection<Mutation>> edgeMutationList = new ArrayList<>();
     List<PCollection<Mutation>> nodeMutationList = new ArrayList<>();
-    for (String importName : imports) {
-      String path = getGraphPath(options.getProjectId(), options.getStorageBucketId(), importName);
-      LOGGER.info("Import {} graph path {}", importName, path);
+
+    JsonElement jsonElement = JsonParser.parseString(options.getImportList());
+    JsonArray jsonArray = jsonElement.getAsJsonArray();
+    if (jsonArray.isEmpty()) {
+      LOGGER.error("Empty import input json: {}", jsonArray.getAsString());
+      return;
+    }
+
+    for (JsonElement element : jsonArray) {
+      JsonElement importName = element.getAsJsonObject().get("importName");
+      JsonElement path = element.getAsJsonObject().get("latestVersion");
+      if (importName == null
+          || path == null
+          || importName.getAsString().isEmpty()
+          || path.getAsString().isEmpty()) {
+        LOGGER.error("Invalid import input json: {}", element.getAsString());
+        continue;
+      }
+      LOGGER.info("Import {} graph path {}", importName.getAsString(), path.getAsString());
       // Read schema mcf files and combine MCF nodes, and convert to spanner mutations (Node/Edge).
-      PCollection<McfGraph> schemaNodes =
-          PipelineUtils.readMcfFiles(path + "/" + INSTANCE_MCF_NODES + MCF_SUFFIX, pipeline);
+      PCollection<McfGraph> nodes =
+          PipelineUtils.readMcfFiles(GCS_PREFIX + path.getAsString() + MCF_SUFFIX, pipeline);
+      PCollectionTuple graphNodes = PipelineUtils.splitGraph(nodes);
+      PCollection<McfGraph> observationNodes = graphNodes.get(PipelineUtils.OBSERVATION_NODES_TAG);
+      PCollection<McfGraph> schemaNodes = graphNodes.get(PipelineUtils.SCHEMA_NODES_TAG);
       PCollection<McfGraph> combinedGraph = PipelineUtils.combineGraphNodes(schemaNodes);
       PCollection<Mutation> nodeMutations =
           GraphReader.graphToNodes(combinedGraph, spannerClient, counter)
@@ -88,12 +94,8 @@ public class ImportGroupPipeline {
 
       // Read observation mcf files, build optimized graph, and convert to spanner mutations
       // (Observation).
-      PCollection<McfGraph> observationNodes =
-          PipelineUtils.readMcfFiles(path + "/" + TABLE_MCF_NODES + MCF_SUFFIX, pipeline);
       PCollection<McfOptimizedGraph> optimizedGraph =
           PipelineUtils.buildOptimizedMcfGraph(observationNodes);
-      // PCollection<McfOptimizedGraph> optimizedGraph =
-      //     PipelineUtils.readOptimizedMcfGraph(path, pipeline);
       PCollection<Mutation> observationMutations =
           GraphReader.graphToObservations(optimizedGraph, spannerClient)
               .apply("ExtractObsMutations", Values.create());

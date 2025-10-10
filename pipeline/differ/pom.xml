@@ -82,6 +82,9 @@
                         <configuration>
                             <finalName>${project.artifactId}-bundled-${project.version}</finalName>
                             <transformers>
+                             <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <mainClass>org.datacommons.pipeline.differ.DifferPipeline</mainClass>
+                            </transformer>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>

@@ -3,6 +3,7 @@ package org.datacommons.pipeline.differ;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
@@ -46,8 +47,8 @@ public class DifferPipeline {
         previousNodesTuple.get(DifferUtils.OBSERVATION_NODES_TAG);
     PCollection<String> obsDiff = DifferUtils.performDiff(nCollection, pCollection);
 
-    nCollection = currentNodesTuple.get(DifferUtils.SCHEMA_NODES_TAG);
-    pCollection = previousNodesTuple.get(DifferUtils.SCHEMA_NODES_TAG);
+    nCollection = currentNodesTuple.get(DifferUtils.SCHEMA_NODES_TAG).apply(Distinct.create());
+    pCollection = previousNodesTuple.get(DifferUtils.SCHEMA_NODES_TAG).apply(Distinct.create());
     PCollection<String> schemaDiff = DifferUtils.performDiff(nCollection, pCollection);
 
     obsDiff.apply(

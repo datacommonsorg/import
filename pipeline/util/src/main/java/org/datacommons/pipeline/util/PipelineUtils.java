@@ -31,6 +31,9 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.TupleTag;
+import org.apache.beam.sdk.values.TupleTagList;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.Values;
@@ -55,6 +58,9 @@ public class PipelineUtils {
           "geoJsonCoordinatesDP2",
           "geoJsonCoordinatesDP3",
           "kmlCoordinates");
+
+  public static final TupleTag<McfGraph> OBSERVATION_NODES_TAG = new TupleTag<McfGraph>() {};
+  public static final TupleTag<McfGraph> SCHEMA_NODES_TAG = new TupleTag<McfGraph>() {};
 
   /**
    * Parses a byte array into an McfOptimizedGraph protocol buffer.
@@ -133,7 +139,7 @@ public class PipelineUtils {
     String delimiter = "\n\n";
     PCollection<String> nodes =
         p.apply(
-            "ReadMcfFile",
+            "ReadMcfFiles",
             TextIO.read()
                 .withDelimiter(delimiter.getBytes())
                 .from(files)
@@ -141,7 +147,7 @@ public class PipelineUtils {
 
     PCollection<McfGraph> mcf =
         nodes.apply(
-            "ProcesGraph",
+            "MapToGraph",
             MapElements.via(
                 new SimpleFunction<String, McfGraph>() {
                   @Override
@@ -150,6 +156,28 @@ public class PipelineUtils {
                   }
                 }));
     return mcf;
+  }
+
+  public static PCollectionTuple splitGraph(PCollection<McfGraph> graph) {
+    return graph.apply(
+        "SplitGraph",
+        ParDo.of(
+                new DoFn<McfGraph, McfGraph>() {
+                  @ProcessElement
+                  public void process(ProcessContext c) {
+                    McfGraph g = c.element();
+                    if (!g.getNodesMap().isEmpty()) {
+                      // Access the single element in the map.
+                      PropertyValues pvs = g.getNodesMap().entrySet().iterator().next().getValue();
+                      if (GraphUtils.isObservation(pvs)) {
+                        c.output(OBSERVATION_NODES_TAG, g);
+                      } else {
+                        c.output(SCHEMA_NODES_TAG, g);
+                      }
+                    }
+                  }
+                })
+            .withOutputTags(OBSERVATION_NODES_TAG, TupleTagList.of(SCHEMA_NODES_TAG)));
   }
 
   /**
@@ -162,6 +190,7 @@ public class PipelineUtils {
     PCollection<McfOptimizedGraph> svObs =
         graph
             .apply(
+                "ExtractObs",
                 ParDo.of(
                     new DoFn<
                         McfGraph, KV<McfStatVarObsSeries.Key, McfStatVarObsSeries.StatVarObs>>() {
@@ -182,6 +211,7 @@ public class PipelineUtils {
                     }))
             .apply(GroupByKey.create())
             .apply(
+                "BuildOptimizedGraph",
                 ParDo.of(
                     new DoFn<
                         KV<McfStatVarObsSeries.Key, Iterable<McfStatVarObsSeries.StatVarObs>>,
