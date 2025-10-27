@@ -77,6 +77,7 @@ public class ImportGroupPipeline {
       }
       LOGGER.info("Import {} graph path {}", importName.getAsString(), path.getAsString());
       // Read schema mcf files and combine MCF nodes, and convert to spanner mutations (Node/Edge).
+      spannerClient.deleteImport(importName.getAsString());
       PCollection<McfGraph> nodes =
           PipelineUtils.readMcfFiles(GCS_PREFIX + path.getAsString() + MCF_SUFFIX, pipeline);
       PCollectionTuple graphNodes = PipelineUtils.splitGraph(nodes);
@@ -87,7 +88,7 @@ public class ImportGroupPipeline {
           GraphReader.graphToNodes(combinedGraph, spannerClient, counter)
               .apply("ExtractNodeMutations", Values.create());
       PCollection<Mutation> edgeMutations =
-          GraphReader.graphToEdges(combinedGraph, spannerClient, counter)
+          GraphReader.graphToEdges(combinedGraph, importName.getAsString(), spannerClient, counter)
               .apply("ExtractEdgeMutations", Values.create());
       nodeMutationList.add(nodeMutations);
       edgeMutationList.add(edgeMutations);
@@ -97,7 +98,7 @@ public class ImportGroupPipeline {
       PCollection<McfOptimizedGraph> optimizedGraph =
           PipelineUtils.buildOptimizedMcfGraph(observationNodes);
       PCollection<Mutation> observationMutations =
-          GraphReader.graphToObservations(optimizedGraph, spannerClient)
+          GraphReader.graphToObservations(optimizedGraph, importName.getAsString(), spannerClient)
               .apply("ExtractObsMutations", Values.create());
       obsMutationList.add(observationMutations);
     }

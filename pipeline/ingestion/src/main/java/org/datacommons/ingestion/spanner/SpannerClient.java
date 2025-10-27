@@ -1,8 +1,13 @@
 package org.datacommons.ingestion.spanner;
 
+import com.google.cloud.spanner.DatabaseClient;
+import com.google.cloud.spanner.DatabaseId;
 import com.google.cloud.spanner.ErrorCode;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerExceptionFactory;
+import com.google.cloud.spanner.SpannerOptions;
+import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Value;
 import com.google.cloud.spanner.admin.database.v1.DatabaseAdminClient;
 import com.google.common.base.Joiner;
@@ -139,6 +144,43 @@ public class SpannerClient implements Serializable {
       }
     } catch (IOException e) {
       throw new IllegalStateException("Failed to create DatabaseAdminClient.", e);
+    }
+  }
+
+  public void deleteImport(String importName) {
+    SpannerOptions options = SpannerOptions.newBuilder().build();
+    Spanner spanner = options.getService();
+    try {
+      DatabaseId db = DatabaseId.of(gcpProjectId, spannerInstanceId, spannerDatabaseId);
+      DatabaseClient dbClient = spanner.getDatabaseClient(db);
+      dbClient
+          .readWriteTransaction()
+          .run(
+              transaction -> {
+                String obsDeleteStmt =
+                    String.format(
+                        "DELETE FROM %s WHERE import_name = @importName", observationTableName);
+                long obsRowsDeleted =
+                    transaction.executeUpdate(
+                        Statement.newBuilder(obsDeleteStmt)
+                            .bind("importName")
+                            .to(importName)
+                            .build());
+                LOGGER.info("Deleted {} rows from {}.", obsRowsDeleted, observationTableName);
+
+                String edgeDeleteStmt =
+                    String.format("DELETE FROM %s WHERE provenance = @provenance", edgeTableName);
+                long edgeRowsDeleted =
+                    transaction.executeUpdate(
+                        Statement.newBuilder(edgeDeleteStmt)
+                            .bind("provenance")
+                            .to(importName)
+                            .build());
+                LOGGER.info("Deleted {} rows from {}.", edgeRowsDeleted, edgeTableName);
+                return null;
+              });
+    } finally {
+      spanner.close();
     }
   }
 

@@ -71,7 +71,7 @@ public class GraphReader implements Serializable {
     return nodes;
   }
 
-  public static List<Edge> graphToEdges(McfGraph graph) {
+  public static List<Edge> graphToEdges(McfGraph graph, String importName) {
     List<Edge> edges = new ArrayList<>();
     for (Map.Entry<String, PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
       PropertyValues pvs = nodeEntry.getValue();
@@ -84,7 +84,7 @@ public class GraphReader implements Serializable {
             Edge.Builder edge = Edge.builder();
             edge.subjectId(subjectId);
             edge.predicate(entry.getKey());
-            edge.provenance(provenance);
+            edge.provenance(importName);
             if (val.getType() == ValueType.RESOLVED_REF) {
               edge.objectId(val.getValue());
             } else {
@@ -98,11 +98,12 @@ public class GraphReader implements Serializable {
     return edges;
   }
 
-  public static Observation graphToObservations(McfOptimizedGraph graph) {
+  public static Observation graphToObservations(McfOptimizedGraph graph, String importName) {
     Observation.Builder obs = Observation.builder();
     String measurementMethod = graph.getSvObsSeries().getKey().getMeasurementMethod();
     obs.observationAbout(graph.getSvObsSeries().getKey().getObservationAbout());
     obs.observationPeriod(graph.getSvObsSeries().getKey().getObservationPeriod());
+    obs.importName(importName);
     if (measurementMethod.startsWith(DC_AGGREGATE)) {
       obs.isDcAggregate(true);
       measurementMethod = measurementMethod.replace(DC_AGGREGATE, "");
@@ -128,7 +129,7 @@ public class GraphReader implements Serializable {
   }
 
   public static PCollection<KV<String, Mutation>> graphToObservations(
-      PCollection<McfOptimizedGraph> graph, SpannerClient spannerClient) {
+      PCollection<McfOptimizedGraph> graph, String importName, SpannerClient spannerClient) {
     return graph.apply(
         "GraphToObs",
         ParDo.of(
@@ -137,7 +138,7 @@ public class GraphReader implements Serializable {
               public void processElement(
                   @Element McfOptimizedGraph element,
                   OutputReceiver<KV<String, Mutation>> receiver) {
-                Observation observations = graphToObservations(element);
+                Observation observations = graphToObservations(element, importName);
                 List<KV<String, Mutation>> obs =
                     spannerClient.toObservationKVMutations(List.of(observations));
                 obs.stream()
@@ -174,6 +175,7 @@ public class GraphReader implements Serializable {
 
   public static PCollection<KV<String, Mutation>> graphToEdges(
       PCollection<McfGraph> graph,
+      String importName,
       SpannerClient spannerClient,
       Counter mcfNodesWithoutTypeCounter) {
     return graph.apply(
@@ -183,7 +185,7 @@ public class GraphReader implements Serializable {
               @ProcessElement
               public void processElement(
                   @Element McfGraph element, OutputReceiver<KV<String, Mutation>> receiver) {
-                List<Edge> edges = graphToEdges(element);
+                List<Edge> edges = graphToEdges(element, importName);
                 List<KV<String, Mutation>> mutations =
                     spannerClient.toGraphKVMutations(Collections.emptyList(), edges);
                 mutations.stream()

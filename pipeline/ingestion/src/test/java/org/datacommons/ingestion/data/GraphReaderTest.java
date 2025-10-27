@@ -262,7 +262,7 @@ public class GraphReaderTest {
                 .provenance("dc/base/Test")
                 .build());
 
-    List<Edge> actualEdges = GraphReader.graphToEdges(graph);
+    List<Edge> actualEdges = GraphReader.graphToEdges(graph, "dc/base/Test");
 
     // Sort both lists for consistent comparison
     Comparator<Edge> edgeComparator =
@@ -310,13 +310,15 @@ public class GraphReaderTest {
             .variableMeasured("testStatVar")
             .measurementMethod("testMethod")
             .isDcAggregate(true)
+            .importName("dc/import:test")
             .observationPeriod("P1Y")
             .unit("testUnit")
             .scalingFactor("100")
             .observations(expectedObsValues)
             .build();
 
-    Observation actualObservation = GraphReader.graphToObservations(optimizedGraph);
+    Observation actualObservation =
+        GraphReader.graphToObservations(optimizedGraph, "dc/import:test");
 
     assertEquals(expectedObservation, actualObservation);
   }
