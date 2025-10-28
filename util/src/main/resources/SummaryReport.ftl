@@ -129,7 +129,7 @@
           <td>
             <#if runtimeMetadata.hasEndTime()>
               <#assign endMs = runtimeMetadata.getEndTime().getSeconds()?long * 1000>
-              ${endMs?number_to_date}
+              ${endMs?number_to_datetime?string["yyyy-MM-dd HH:mm:ss XXX"]}
             <#else>
               Not Found
             </#if>
