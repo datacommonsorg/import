@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
@@ -71,20 +73,20 @@ public class GraphReader implements Serializable {
     return nodes;
   }
 
-  public static List<Edge> graphToEdges(McfGraph graph, String importName) {
+  public static List<Edge> graphToEdges(McfGraph graph, String provenance) {
     List<Edge> edges = new ArrayList<>();
     for (Map.Entry<String, PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
       PropertyValues pvs = nodeEntry.getValue();
       if (!GraphUtils.isObservation(pvs)) {
         Map<String, McfGraph.Values> pv = pvs.getPvsMap();
-        String provenance = GraphUtils.getPropertyValue(pv, "provenance");
+        // String provenance = GraphUtils.getPropertyValue(pv, "provenance");
         String subjectId = nodeEntry.getKey(); // Use the map key as the subjectId
         for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) { // Iterate over properties
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
             Edge.Builder edge = Edge.builder();
             edge.subjectId(subjectId);
             edge.predicate(entry.getKey());
-            edge.provenance(importName);
+            edge.provenance(provenance);
             if (val.getType() == ValueType.RESOLVED_REF) {
               edge.objectId(val.getValue());
             } else {
@@ -126,6 +128,25 @@ public class GraphReader implements Serializable {
     }
     obs.observations(ob.build());
     return obs.build();
+  }
+
+  public static PCollection<Mutation> deleteImport(
+      String importName, String provenance, Pipeline pipeline, SpannerClient spannerClient) {
+    return pipeline
+        .apply("CreateTrigger", Create.of("dummy"))
+        .apply(
+            "DeleteSpannerRecords",
+            ParDo.of(
+                new DoFn<String, Mutation>() {
+                  @ProcessElement
+                  public void processElement(ProcessContext c) {
+                    List<Mutation> mutations =
+                        spannerClient.getDeleteMutations(importName, provenance);
+                    for (Mutation m : mutations) {
+                      c.output(m);
+                    }
+                  }
+                }));
   }
 
   public static PCollection<KV<String, Mutation>> graphToObservations(
@@ -175,7 +196,7 @@ public class GraphReader implements Serializable {
 
   public static PCollection<KV<String, Mutation>> graphToEdges(
       PCollection<McfGraph> graph,
-      String importName,
+      String provenance,
       SpannerClient spannerClient,
       Counter mcfNodesWithoutTypeCounter) {
     return graph.apply(
@@ -185,7 +206,7 @@ public class GraphReader implements Serializable {
               @ProcessElement
               public void processElement(
                   @Element McfGraph element, OutputReceiver<KV<String, Mutation>> receiver) {
-                List<Edge> edges = graphToEdges(element, importName);
+                List<Edge> edges = graphToEdges(element, provenance);
                 List<KV<String, Mutation>> mutations =
                     spannerClient.toGraphKVMutations(Collections.emptyList(), edges);
                 mutations.stream()

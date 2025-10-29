@@ -3,7 +3,9 @@ package org.datacommons.ingestion.spanner;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
 import com.google.cloud.spanner.ErrorCode;
+import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerExceptionFactory;
 import com.google.cloud.spanner.SpannerOptions;
@@ -147,41 +149,51 @@ public class SpannerClient implements Serializable {
     }
   }
 
-  public void deleteImport(String importName) {
+  public List<Mutation> getDeleteMutations(String importName, String provenance) {
+    List<Mutation> mutations = new ArrayList<>();
     SpannerOptions options = SpannerOptions.newBuilder().build();
-    Spanner spanner = options.getService();
-    try {
+    try (Spanner spanner = options.getService()) {
       DatabaseId db = DatabaseId.of(gcpProjectId, spannerInstanceId, spannerDatabaseId);
       DatabaseClient dbClient = spanner.getDatabaseClient(db);
-      dbClient
-          .readWriteTransaction()
-          .run(
-              transaction -> {
-                String obsDeleteStmt =
-                    String.format(
-                        "DELETE FROM %s WHERE import_name = @importName", observationTableName);
-                long obsRowsDeleted =
-                    transaction.executeUpdate(
-                        Statement.newBuilder(obsDeleteStmt)
-                            .bind("importName")
-                            .to(importName)
-                            .build());
-                LOGGER.info("Deleted {} rows from {}.", obsRowsDeleted, observationTableName);
 
-                String edgeDeleteStmt =
-                    String.format("DELETE FROM %s WHERE provenance = @provenance", edgeTableName);
-                long edgeRowsDeleted =
-                    transaction.executeUpdate(
-                        Statement.newBuilder(edgeDeleteStmt)
-                            .bind("provenance")
-                            .to(importName)
-                            .build());
-                LOGGER.info("Deleted {} rows from {}.", edgeRowsDeleted, edgeTableName);
-                return null;
-              });
-    } finally {
-      spanner.close();
+      // Delete from Observation table
+      String obsQuery =
+          String.format(
+              "SELECT variable_measured, observation_about, facet_id FROM %s WHERE import_name ="
+                  + " @importName",
+              observationTableName);
+      try (ResultSet rs =
+          dbClient
+              .singleUse()
+              .executeQuery(
+                  Statement.newBuilder(obsQuery).bind("importName").to(importName).build())) {
+        while (rs.next()) {
+          mutations.add(
+              Mutation.delete(
+                  observationTableName, Key.of(rs.getString(0), rs.getString(1), rs.getString(2))));
+        }
+      }
+
+      // Delete from Edge table
+      String edgeQuery =
+          String.format(
+              "SELECT subject_id, predicate, object_id, provenance FROM %s WHERE provenance ="
+                  + " @provenance",
+              edgeTableName);
+      try (ResultSet rs =
+          dbClient
+              .singleUse()
+              .executeQuery(
+                  Statement.newBuilder(edgeQuery).bind("provenance").to(provenance).build())) {
+        while (rs.next()) {
+          mutations.add(
+              Mutation.delete(
+                  edgeTableName,
+                  Key.of(rs.getString(0), rs.getString(1), rs.getString(2), rs.getString(3))));
+        }
+      }
     }
+    return mutations;
   }
 
   public Write getWriteTransform() {

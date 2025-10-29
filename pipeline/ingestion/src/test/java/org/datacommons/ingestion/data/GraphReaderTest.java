@@ -59,7 +59,9 @@ public class GraphReaderTest {
                                 TypedValue.newBuilder()
                                     .setType(ValueType.TEXT)
                                     .setValue(
-                                        "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],       [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]     ]   ] } "))
+                                        "{   \"type\": \"Polygon\",   \"coordinates\": [     [     "
+                                            + "  [9, 7],       [9, 6.5],       [9.5, 6.5],      "
+                                            + " [9.5, 7],       [9, 7]     ]   ] } "))
                             .build())
                     .build())
             .putNodes(
@@ -123,7 +125,9 @@ public class GraphReaderTest {
                 .bytes(
                     ByteArray.copyFrom(
                         PipelineUtils.compressString(
-                            "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],       [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]     ]   ] } ")))
+                            "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],   "
+                                + "    [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]    "
+                                + " ]   ] } ")))
                 .build(),
             Node.builder()
                 .subjectId("J7we8EV8ssChRxBgWot6zDSbHl4xGY7I6mQosc89hFk=")
@@ -198,7 +202,9 @@ public class GraphReaderTest {
                                 TypedValue.newBuilder()
                                     .setType(ValueType.TEXT)
                                     .setValue(
-                                        "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],       [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]     ]   ] } "))
+                                        "{   \"type\": \"Polygon\",   \"coordinates\": [     [     "
+                                            + "  [9, 7],       [9, 6.5],       [9.5, 6.5],      "
+                                            + " [9.5, 7],       [9, 7]     ]   ] } "))
                             .build())
                     .putPvs(
                         "provenance",
@@ -310,15 +316,14 @@ public class GraphReaderTest {
             .variableMeasured("testStatVar")
             .measurementMethod("testMethod")
             .isDcAggregate(true)
-            .importName("dc/import:test")
+            .importName("test_import")
             .observationPeriod("P1Y")
             .unit("testUnit")
             .scalingFactor("100")
             .observations(expectedObsValues)
             .build();
 
-    Observation actualObservation =
-        GraphReader.graphToObservations(optimizedGraph, "dc/import:test");
+    Observation actualObservation = GraphReader.graphToObservations(optimizedGraph, "test_import");
 
     assertEquals(expectedObservation, actualObservation);
   }
