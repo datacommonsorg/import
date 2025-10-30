@@ -81,7 +81,7 @@ public class ImportGroupPipeline {
       LOGGER.info("Import {} graph path {}", importName, path.getAsString());
 
       PCollection<Mutation> deleteMutations =
-          GraphReader.deleteImport(importName, provenance, pipeline, spannerClient);
+          GraphReader.getDeleteMutations(importName, provenance, pipeline, spannerClient);
       deleteMutationList.add(deleteMutations);
       // Read schema mcf files and combine MCF nodes, and convert to spanner mutations (Node/Edge).
       PCollection<McfGraph> nodes =

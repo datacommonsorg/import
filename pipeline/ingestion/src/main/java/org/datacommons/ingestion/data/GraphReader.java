@@ -9,11 +9,12 @@ import java.util.List;
 import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
 import org.datacommons.Storage.Observations;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.pipeline.util.PipelineUtils;
@@ -130,23 +131,11 @@ public class GraphReader implements Serializable {
     return obs.build();
   }
 
-  public static PCollection<Mutation> deleteImport(
+  public static PCollection<Mutation> getDeleteMutations(
       String importName, String provenance, Pipeline pipeline, SpannerClient spannerClient) {
-    return pipeline
-        .apply("CreateTrigger", Create.of("dummy"))
-        .apply(
-            "DeleteSpannerRecords",
-            ParDo.of(
-                new DoFn<String, Mutation>() {
-                  @ProcessElement
-                  public void processElement(ProcessContext c) {
-                    List<Mutation> mutations =
-                        spannerClient.getDeleteMutations(importName, provenance);
-                    for (Mutation m : mutations) {
-                      c.output(m);
-                    }
-                  }
-                }));
+    return PCollectionList.of(spannerClient.getObservationDeleteMutations(importName, pipeline))
+        .and(spannerClient.getEdgeDeleteMutations(provenance, pipeline))
+        .apply("FlattenDeleteMutations", Flatten.pCollections());
   }
 
   public static PCollection<KV<String, Mutation>> graphToObservations(
