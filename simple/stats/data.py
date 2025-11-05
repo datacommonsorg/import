@@ -70,9 +70,9 @@ class Triple:
   object_id: str = ""
   object_value: str = ""
 
-def db_tuple(self):
-  return (strip_namespace(self.subject_id), self.predicate,
-          strip_namespace(self.object_id), self.object_value)
+  def db_tuple(self):
+    return (strip_namespace(self.subject_id), self.predicate,
+            strip_namespace(self.object_id), self.object_value)
 
 
 @dataclass
