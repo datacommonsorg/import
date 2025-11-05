@@ -27,8 +27,7 @@ import "Mcf.proto";
 // old imports where reports may be obsolete or need validation.
 //
 message RuntimeMetadata {
-    optional int64 start_time_millis = 1;  // Epoch time in milliseconds when generation started
-    optional int64 end_time_millis = 2;  // Epoch time in milliseconds when generation ended
+    reserved 1, 2;  // start_time_millis and end_time_millis removed in favor of Timestamp fields
     optional string username = 3;
     optional string hostname = 4;
     optional string os_name = 5;
