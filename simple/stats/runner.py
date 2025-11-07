@@ -130,7 +130,9 @@ class Runner:
       logging.info("Blue-green import enabled (local SQLite build)")
 
     try:
-      if self.db is None:
+      # For blue-green, defer Cloud SQL connection until transfer phase
+      # For normal imports, create connection now
+      if self.db is None and not blue_green_config["enabled"]:
         self.db = create_and_update_db(self._get_db_config())
         self.db_cache = get_db_cache_from_env()
 
@@ -252,7 +254,10 @@ class Runner:
         logging.info("Removed previous local build database")
 
       # Create local SQLite database
-      local_db_file = File(local_db_path)
+      local_db_store = create_store(local_db_path,
+                                     create_if_missing=True,
+                                     treat_as_file=True)
+      local_db_file = local_db_store.as_file()
       local_db_config = create_sqlite_config(local_db_file)
       local_db = create_and_update_db(local_db_config)
 
@@ -272,9 +277,9 @@ class Runner:
       self.db.insert_import_info(status=ImportStatus.SUCCESS)
 
       # Get row counts for validation
-      obs_count = len(self.db.engine.fetch_all("SELECT * FROM observations"))
-      triple_count = len(self.db.engine.fetch_all("SELECT * FROM triples"))
-      kv_count = len(self.db.engine.fetch_all("SELECT * FROM key_value_store"))
+      obs_count = self.db.engine.fetch_all("SELECT COUNT(*) FROM observations")[0][0]
+      triple_count = self.db.engine.fetch_all("SELECT COUNT(*) FROM triples")[0][0]
+      kv_count = self.db.engine.fetch_all("SELECT COUNT(*) FROM key_value_store")[0][0]
 
       logging.info(f"Local build complete:")
       logging.info(f"  Observations: {obs_count:,}")
@@ -543,7 +548,9 @@ class Runner:
 def _check_not_overlapping(input_store: Store, output_store: Store):
   input_path = input_store.full_path()
   output_path = output_store.full_path()
-  if (fspath.issamedir(input_path, output_path) or
+
+  # Check if paths are the same or if one is a parent of the other.
+  if (fspath.normpath(input_path) == fspath.normpath(output_path) or
       fspath.isparent(input_path, output_path) or
       fspath.isparent(output_path, input_path)):
     raise ValueError(
