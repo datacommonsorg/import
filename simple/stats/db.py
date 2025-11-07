@@ -735,3 +735,27 @@ def get_cloud_sql_config_from_env() -> dict | None:
           CLOUD_MY_SQL_PASSWORD: db_pass
       }
   }
+
+
+def get_blue_green_config_from_env() -> dict:
+  """Get blue-green configuration from environment variables.
+
+  Returns:
+    dict with keys:
+      - enabled: bool
+      - local_sqlite_path: str (path for local build database)
+  """
+  enabled = os.getenv("ENABLE_BLUE_GREEN_IMPORT", "false").lower() == "true"
+
+  if not enabled:
+    return {"enabled": False}
+
+  config = {
+      "enabled": True,
+      "local_sqlite_path": os.getenv(
+          "LOCAL_BUILD_SQLITE_PATH",
+          "/tmp/datacommons_build.db"
+      )
+  }
+
+  return config
