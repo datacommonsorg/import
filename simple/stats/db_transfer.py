@@ -15,6 +15,7 @@
 import logging
 import os
 import sqlite3
+import time
 from typing import Optional, TYPE_CHECKING
 
 from pymysql.connections import Connection
@@ -68,8 +69,9 @@ def transfer_sqlite_to_cloud_sql(
     connection = cloud_sql_engine.connection
 
     # Start transaction
+    transaction_start = time.time()
     cursor.execute("START TRANSACTION")
-    logging.info("Transaction started")
+    logging.info("Transaction started (DB LOCKED - writes blocked)")
 
     try:
       # Drop indexes for faster bulk insert
@@ -83,18 +85,25 @@ def transfer_sqlite_to_cloud_sql(
       cursor.execute("DELETE FROM key_value_store")
 
       # Bulk transfer data
-      # Transfer observations
+      # Transfer observations in batches
       logging.info("Transferring observations...")
-      sqlite_cursor.execute("SELECT * FROM observations")
-      observations = sqlite_cursor.fetchall()
-      obs_count = len(observations)
+      BATCH_SIZE = 1000000  # 1M rows per batch
+      obs_count = 0
 
-      if obs_count > 0:
+      sqlite_cursor.execute("SELECT * FROM observations")
+      while True:
+        batch = sqlite_cursor.fetchmany(BATCH_SIZE)
+        if not batch:
+          break
+
         cursor.executemany(
             "INSERT INTO observations VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            observations
+            batch
         )
-      logging.info(f"Transferred {obs_count:,} observations")
+        obs_count += len(batch)
+        logging.info(f"Transferred {obs_count:,} observations so far...")
+
+      logging.info(f"Transferred {obs_count:,} observations total")
 
       # Transfer triples
       logging.info("Transferring triples...")
@@ -129,7 +138,8 @@ def transfer_sqlite_to_cloud_sql(
 
       # Commit transaction (releases locks). Note: indexes are not yet recreated.
       connection.commit()
-      logging.info("Transfer committed - Database is now live")
+      lock_duration = time.time() - transaction_start
+      logging.info(f"Transfer committed - DB unlocked after {lock_duration:.1f}s ({lock_duration/60:.2f} min)")
 
     except Exception as e:
       # Rollback on any error
