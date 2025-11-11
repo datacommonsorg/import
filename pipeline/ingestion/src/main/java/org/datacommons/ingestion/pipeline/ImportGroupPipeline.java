@@ -27,8 +27,6 @@ import org.slf4j.LoggerFactory;
 
 public class ImportGroupPipeline {
   private static final Logger LOGGER = LoggerFactory.getLogger(ImportGroupPipeline.class);
-  private static final String GCS_PREFIX = "gs://";
-  private static final String MCF_SUFFIX = "/*.mcf";
   private static final Counter counter =
       Metrics.counter(ImportGroupPipeline.class, "mcf_nodes_without_type");
 
@@ -62,7 +60,7 @@ public class ImportGroupPipeline {
     JsonElement jsonElement = JsonParser.parseString(options.getImportList());
     JsonArray jsonArray = jsonElement.getAsJsonArray();
     if (jsonArray.isEmpty()) {
-      LOGGER.error("Empty import input json: {}", jsonArray.getAsString());
+      LOGGER.error("Empty import input json: {}", jsonArray.toString());
       return;
     }
 
@@ -73,10 +71,10 @@ public class ImportGroupPipeline {
           || path == null
           || importElement.getAsString().isEmpty()
           || path.getAsString().isEmpty()) {
-        LOGGER.error("Invalid import input json: {}", element.getAsString());
+        LOGGER.error("Invalid import input json: {}", element.toString());
         continue;
       }
-      String importName = importElement.getAsString().split(":")[1];
+      String importName = importElement.getAsString();
       String provenance = "dc/base/" + importName;
       LOGGER.info("Import {} graph path {}", importName, path.getAsString());
 
@@ -84,8 +82,7 @@ public class ImportGroupPipeline {
           GraphReader.getDeleteMutations(importName, provenance, pipeline, spannerClient);
       deleteMutationList.add(deleteMutations);
       // Read schema mcf files and combine MCF nodes, and convert to spanner mutations (Node/Edge).
-      PCollection<McfGraph> nodes =
-          PipelineUtils.readMcfFiles(GCS_PREFIX + path.getAsString() + MCF_SUFFIX, pipeline);
+      PCollection<McfGraph> nodes = PipelineUtils.readMcfFiles(path.getAsString(), pipeline);
       PCollectionTuple graphNodes = PipelineUtils.splitGraph(nodes);
       PCollection<McfGraph> observationNodes = graphNodes.get(PipelineUtils.OBSERVATION_NODES_TAG);
       PCollection<McfGraph> schemaNodes = graphNodes.get(PipelineUtils.SCHEMA_NODES_TAG);
@@ -109,27 +106,25 @@ public class ImportGroupPipeline {
       obsMutationList.add(observationMutations);
     }
     PCollection<Mutation> deleteMutations =
-        PCollectionList.of(deleteMutationList).apply(Flatten.pCollections());
+        PCollectionList.of(deleteMutationList)
+            .apply("FlattenDeleteMutations", Flatten.pCollections());
     SpannerWriteResult deleted =
         deleteMutations.apply("DeleteImportsFromSpanner", spannerClient.getWriteTransform());
     // Write the mutations to spanner.
     PCollection<Mutation> obsMutations =
-        PCollectionList.of(obsMutationList).apply(Flatten.pCollections());
-    obsMutations
-        .apply(Wait.on(deleted.getOutput()))
-        .apply("WriteObsToSpanner", spannerClient.getWriteTransform());
+        PCollectionList.of(obsMutationList).apply("FlattenObsMutations", Flatten.pCollections());
+    PCollection<Mutation> obs = obsMutations.apply("WaitOnDelete", Wait.on(deleted.getOutput()));
+    obs.apply("WriteObsToSpanner", spannerClient.getWriteTransform());
     PCollection<Mutation> nodeMutations =
-        PCollectionList.of(nodeMutationList).apply(Flatten.pCollections());
+        PCollectionList.of(nodeMutationList).apply("FlattenNodeMutations", Flatten.pCollections());
+    PCollection<Mutation> nodes = nodeMutations.apply("WaitOnDelete", Wait.on(deleted.getOutput()));
     SpannerWriteResult result =
-        nodeMutations
-            .apply(Wait.on(deleted.getOutput()))
-            .apply("WriteNodesToSpanner", spannerClient.getWriteTransform());
+        nodes.apply("WriteNodesToSpanner", spannerClient.getWriteTransform());
     PCollection<Mutation> edgeMutations =
-        PCollectionList.of(edgeMutationList).apply(Flatten.pCollections());
+        PCollectionList.of(edgeMutationList).apply("FlattenEdgeMutations", Flatten.pCollections());
     // Wait for node mutations to complete before writing edge mutations.
-    edgeMutations
-        .apply(Wait.on(result.getOutput()))
-        .apply("WriteEdgesToSpanner", spannerClient.getWriteTransform());
+    PCollection<Mutation> edges = edgeMutations.apply("WaitOnNodes", Wait.on(result.getOutput()));
+    edges.apply("WriteEdgesToSpanner", spannerClient.getWriteTransform());
 
     pipeline.run();
   }

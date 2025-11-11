@@ -159,6 +159,7 @@ public class SpannerClient implements Serializable {
         .apply(
             "GetObsDeletionRecords",
             SpannerIO.read()
+                .withProjectId(gcpProjectId)
                 .withInstanceId(spannerInstanceId)
                 .withDatabaseId(spannerDatabaseId)
                 .withQuery(
@@ -191,6 +192,7 @@ public class SpannerClient implements Serializable {
         .apply(
             "GetEdgeDeletionRecords",
             SpannerIO.read()
+                .withProjectId(gcpProjectId)
                 .withInstanceId(spannerInstanceId)
                 .withDatabaseId(spannerDatabaseId)
                 .withQuery(

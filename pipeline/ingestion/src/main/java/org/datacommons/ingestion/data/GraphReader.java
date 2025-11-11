@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GraphReader implements Serializable {
-  private static final Logger LOGGER = LoggerFactory.getLogger(CacheReader.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(GraphReader.class);
   private static final String DC_AGGREGATE = "dcAggregate/";
   private static final String DATCOM_AGGREGATE = "DataCommonsAggregate";
 
