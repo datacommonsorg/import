@@ -141,7 +141,7 @@
             <#if runtimeMetadata.hasStartTime() && runtimeMetadata.hasEndTime()>
               <#assign startSeconds = runtimeMetadata.getStartTime().getSeconds()?long>
               <#assign endSeconds = runtimeMetadata.getEndTime().getSeconds()?long>
-              ${(endSeconds - startSeconds)?number} seconds
+              ${(endSeconds - startSeconds)} seconds
             <#else>
               Not Found
             </#if>
