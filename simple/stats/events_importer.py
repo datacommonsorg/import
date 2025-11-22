@@ -19,7 +19,8 @@ import pandas as pd
 from stats import constants
 from stats.data import AggregationConfig
 from stats.data import Event
-from stats.data import Observation
+from stats.data import filter_invalid_observation_values
+from stats.data import strip_namespace_series
 from stats.data import TimePeriod
 from stats.data import Triple
 from stats.db import Db
@@ -134,7 +135,7 @@ class EventsImporter(Importer):
 
   def _compute_sv_observations(
       self, sv_dcid: str, aggr_cfg: AggregationConfig = AggregationConfig()
-  ) -> list[Observation]:
+  ) -> pd.DataFrame:
     # Create df with only dcid and date columns.
     obs_df = self.df.loc[:, [constants.COLUMN_DCID, constants.COLUMN_DATE]]
 
@@ -155,14 +156,27 @@ class EventsImporter(Importer):
     obs_df[constants.COLUMN_VARIABLE] = sv_dcid
     obs_df[constants.COLUMN_PROVENANCE] = self.provenance
 
-    # Reorder columns so they are in the same order as observations
-    obs_df = obs_df.reindex(columns=[
-        constants.COLUMN_DCID, constants.COLUMN_VARIABLE, constants.COLUMN_DATE,
-        constants.COLUMN_VALUE, constants.COLUMN_PROVENANCE
-    ])
+    # Rename dcid column to entity
+    obs_df = obs_df.rename(columns={constants.COLUMN_DCID: constants.COLUMN_ENTITY})
 
-    # Map each row to an Observation object and return the list of observations.
-    return [Observation(*row) for row in obs_df.itertuples(index=False)]
+    # Convert value to string
+    obs_df[constants.COLUMN_VALUE] = obs_df[constants.COLUMN_VALUE].astype(str)
+
+    # Filter out invalid values
+    obs_df = filter_invalid_observation_values(obs_df)
+
+    # Add property columns with default values
+    for col in constants.OBSERVATION_PROPERTY_COLUMNS:
+      obs_df[col] = ""
+
+    # Strip namespaces from string columns
+    for col in constants.COLUMNS_TO_STRIP_NAMESPACES:
+      obs_df[col] = strip_namespace_series(obs_df[col])
+
+    # Reorder columns to match database schema
+    obs_df = obs_df[constants.OBSERVATION_COLUMNS]
+
+    return obs_df
 
   def _write_event_triples(self) -> None:
     # Add event type node - it will be written to DB later.
@@ -242,9 +256,9 @@ class EventsImporter(Importer):
       df.drop(df[df.iloc[:, 0].isin(values=unresolved_list)].index,
               inplace=True)
     self._create_debug_resolve_dataframe(
-        resolved=dcids,
-        pre_resolved=pre_resolved_entities,
-        unresolved=unresolved_list,
+      resolved=dcids,
+      pre_resolved=pre_resolved_entities,
+      unresolved=unresolved_list,
     )
 
   def _resolve(self, entities: list[str]) -> dict[str, str]:
