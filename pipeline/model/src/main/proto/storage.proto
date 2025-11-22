@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package org.datacommons;
 
+option go_package = "github.com/datacommonsorg/import/pipeline/model/src/main/proto/storage"; 
+
 // Includes protos that are used in spanner storage.
 // The protos are typically gzipped and stored in a bytes column.
 
