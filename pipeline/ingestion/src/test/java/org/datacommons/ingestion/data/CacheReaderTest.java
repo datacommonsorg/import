@@ -53,7 +53,7 @@ public class CacheReaderTest {
         new NodesEdges()
             .addNode(
                 Node.builder()
-                    .subjectId("c6CV18sK/njghkqgkS/mMaTkKP+oWup0pgYkS6iFpvY=")
+                    .subjectId("Percentage Work :c6CV18sK/njghkqgkS/mMaTkKP+oWup0pgYkS6iFpvY=")
                     .value(
                         "Percentage Work Related Physical Activity, Moderate Activity Or Heavy Activity Among Population")
                     .build())
@@ -62,7 +62,7 @@ public class CacheReaderTest {
                     .subjectId(
                         "Percent_WorkRelatedPhysicalActivity_ModerateActivityOrHeavyActivity_In_Count_Person")
                     .predicate("name")
-                    .objectId("c6CV18sK/njghkqgkS/mMaTkKP+oWup0pgYkS6iFpvY=")
+                    .objectId("Percentage Work :c6CV18sK/njghkqgkS/mMaTkKP+oWup0pgYkS6iFpvY=")
                     .provenance("dc/base/HumanReadableStatVars")
                     .build());
 
@@ -83,7 +83,7 @@ public class CacheReaderTest {
         new NodesEdges()
             .addNode(
                 Node.builder()
-                    .subjectId("G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
+                    .subjectId("{   \"type\": \"Pol:G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
                     .bytes(
                         ByteArray.copyFrom(
                             PipelineUtils.compressString(
@@ -93,7 +93,7 @@ public class CacheReaderTest {
                 Edge.builder()
                     .subjectId("ipcc_50/6.75_9.25_NGA")
                     .predicate("geoJsonCoordinates")
-                    .objectId("G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
+                    .objectId("{   \"type\": \"Pol:G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
                     .provenance("dc/base/IPCCPlaces")
                     .build());
 

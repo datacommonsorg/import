@@ -188,10 +188,10 @@ public class SpannerClient implements Serializable {
 
   public Mutation toObservationMutation(Observation observation) {
     return Mutation.newInsertOrUpdateBuilder(observationTableName)
-        .set("variable_measured")
-        .to(observation.getVariableMeasured())
         .set("observation_about")
         .to(observation.getObservationAbout())
+        .set("variable_measured")
+        .to(observation.getVariableMeasured())
         .set("facet_id")
         .to(observation.getFacetId())
         .set("observation_period")
@@ -352,8 +352,8 @@ public class SpannerClient implements Serializable {
     var mutationMap = mutation.asMap();
     var parts =
         new String[] {
-          getMutationValue(mutationMap, "variable_measured"),
           getMutationValue(mutationMap, "observation_about"),
+          getMutationValue(mutationMap, "variable_measured"),
           getMutationValue(mutationMap, "facet_id")
         };
 

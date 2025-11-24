@@ -48,6 +48,9 @@ public class PipelineUtils {
   // Default type for MCF nodes.
   public static final String TYPE_THING = "Thing";
 
+  // Length of prefix of object value to use for key.
+  public static final int OBJECT_VALUE_PREFIX = 16;
+
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineUtils.class);
 
   // Predicates for which the object value should be stored as bytes.
@@ -354,6 +357,17 @@ public class PipelineUtils {
   }
 
   /**
+   * Returns whether the value for the given predicate should be stored in blob storage, false
+   * otherwise.
+   *
+   * @param predicate The predicate.
+   * @return True if the value should be stored in blob storage, false otherwise.
+   */
+  public static boolean storeValueAsBlob(String predicate) {
+    return STORE_VALUE_AS_BYTES_PREDICATES.contains(predicate);
+  }
+
+  /**
    * Generates Base64-encoded SHA256 of input.
    *
    * @param input The input string to encode.
@@ -365,6 +379,20 @@ public class PipelineUtils {
     }
     return Base64.getEncoder()
         .encodeToString(Hashing.sha256().hashString(input, StandardCharsets.UTF_8).asBytes());
+  }
+
+  /**
+   * Generates a key for an object value.
+   *
+   * @param input The input object value.
+   * @return The corresponding key.
+   */
+  public static String generateObjectValueKey(String input) {
+    String hash = generateSha256(input);
+    if (input.length() <= OBJECT_VALUE_PREFIX) {
+      return input + ":" + hash;
+    }
+    return input.substring(0, OBJECT_VALUE_PREFIX) + ":" + hash;
   }
 
   /**

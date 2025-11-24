@@ -19,7 +19,7 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   void setSpannerInstanceId(String instanceId);
 
   @Description("Spanner Database Id for output")
-  @Default.String("dc_graph_5")
+  @Default.String("dc_graph")
   String getSpannerDatabaseId();
 
   void setSpannerDatabaseId(String databaseId);
@@ -29,6 +29,12 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   String getStorageBucketId();
 
   void setStorageBucketId(String bucketId);
+
+  @Description("GCS bucket Id for storing data")
+  @Default.String("datcom-store-resources")
+  String getBlobStorageBucketId();
+
+  void setBlobStorageBucketId(String bucketId);
 
   @Description("The DC version endpoint to fetch import group versions to ingest.")
   @Default.String("https://autopush.api.datacommons.org/version")

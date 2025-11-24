@@ -15,14 +15,14 @@ import org.datacommons.pipeline.util.PipelineUtils;
 public class Observation {
   private static final String OBS_SERIES_DCID_PREFIX = "dc/os/";
   private static final String OBS_SERIES_TYPE = "StatVarObsSeries";
-  private static final String VARIABLE_MEASURED_PREDICATE = "variableMeasured";
   private static final String OBSERVATION_ABOUT_PREDICATE = "observationAbout";
+  private static final String VARIABLE_MEASURED_PREDICATE = "variableMeasured";
   private static final String NAME_PREDICATE = "name";
   private static final String TYPE_OF_PREDICATE = "typeOf";
   private static final String PROVENANCE_DCID_PREFIX = "dc/base/";
 
-  private String variableMeasured;
   private String observationAbout;
+  private String variableMeasured;
   private Observations observations;
   private String observationPeriod;
   private String measurementMethod;
@@ -35,8 +35,8 @@ public class Observation {
   private NodesEdges obsGraph;
 
   private Observation(Builder builder) {
-    this.variableMeasured = builder.variableMeasured;
     this.observationAbout = builder.observationAbout;
+    this.variableMeasured = builder.variableMeasured;
     this.observations = builder.observations.build();
     this.observationPeriod = builder.observationPeriod;
     this.measurementMethod = builder.measurementMethod;
@@ -53,12 +53,12 @@ public class Observation {
     return new Builder();
   }
 
-  public String getVariableMeasured() {
-    return variableMeasured;
-  }
-
   public String getObservationAbout() {
     return observationAbout;
+  }
+
+  public String getVariableMeasured() {
+    return variableMeasured;
   }
 
   public Observations getObservations() {
@@ -174,8 +174,9 @@ public class Observation {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Observation that = (Observation) o;
-    return Objects.equals(variableMeasured, that.variableMeasured)
-        && Objects.equals(observationAbout, that.observationAbout)
+
+    return Objects.equals(observationAbout, that.observationAbout)
+        && Objects.equals(variableMeasured, that.variableMeasured)
         && Objects.equals(observations, that.observations)
         && Objects.equals(observationPeriod, that.observationPeriod)
         && Objects.equals(measurementMethod, that.measurementMethod)
@@ -190,8 +191,8 @@ public class Observation {
   @Override
   public int hashCode() {
     return Objects.hash(
-        variableMeasured,
         observationAbout,
+        variableMeasured,
         observations,
         observationPeriod,
         measurementMethod,
@@ -205,8 +206,8 @@ public class Observation {
 
   // Builder for Observation
   public static class Builder {
-    private String variableMeasured = "";
     private String observationAbout = "";
+    private String variableMeasured = "";
     private Observations.Builder observations = Observations.newBuilder();
     private String observationPeriod = "";
     private String measurementMethod = "";
@@ -217,13 +218,13 @@ public class Observation {
     private String facetId = "";
     private boolean isDcAggregate = false;
 
-    public Builder variableMeasured(String variableMeasured) {
-      this.variableMeasured = variableMeasured;
+    public Builder observationAbout(String observationAbout) {
+      this.observationAbout = observationAbout;
       return this;
     }
 
-    public Builder observationAbout(String observationAbout) {
-      this.observationAbout = observationAbout;
+    public Builder variableMeasured(String variableMeasured) {
+      this.variableMeasured = variableMeasured;
       return this;
     }
 
