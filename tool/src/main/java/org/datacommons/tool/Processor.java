@@ -140,9 +140,12 @@ public class Processor {
   private Processor(Args args) {
     logger.info("Command options: " + args.toString());
     logger.info("Tool Version: " + RuntimeMetadataUtil.getToolVersion(Processor.class));
-    RuntimeMetadataUtil.getToolGitCommitHash().ifPresent(hash -> logger.info("Tool Git Commit Hash: " + hash));
-    RuntimeMetadataUtil.getToolBuildTimestamp().ifPresent(timestamp -> logger.info("Tool Build Timestamp: " + timestamp));
-    RuntimeMetadataUtil.getJavaVersion().ifPresent(version -> logger.info("Java Version: " + version));
+    RuntimeMetadataUtil.getToolGitCommitHash()
+        .ifPresent(hash -> logger.info("Tool Git Commit Hash: " + hash));
+    RuntimeMetadataUtil.getToolBuildTimestamp()
+        .ifPresent(timestamp -> logger.info("Tool Build Timestamp: " + timestamp));
+    RuntimeMetadataUtil.getJavaVersion()
+        .ifPresent(version -> logger.info("Java Version: " + version));
 
     this.args = args;
     this.logCtx =
