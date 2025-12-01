@@ -130,5 +130,4 @@ public class ApiHelper {
     }
     return legacyFormat;
   }
-  }
 }
