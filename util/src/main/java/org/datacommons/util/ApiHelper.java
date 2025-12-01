@@ -105,33 +105,33 @@ public class ApiHelper {
 
     JsonObject legacyFormat = new JsonObject();
     JsonObject data = payloadJson.getAsJsonObject("data");
-    for (String dcid : data.keySet()) {
-      JsonObject nodeData = data.getAsJsonObject(dcid);
-      if (nodeData.has("arcs")) {
-        JsonObject arcs = nodeData.getAsJsonObject("arcs");
-        if (arcs.has(property)) {
-          JsonObject propData = arcs.getAsJsonObject(property);
-          if (propData.has("nodes")) {
-            JsonArray nodesArray = propData.getAsJsonArray("nodes");
-            JsonArray outArray = new JsonArray();
-            for (int i = 0; i < nodesArray.size(); i++) {
-              JsonObject node = nodesArray.get(i).getAsJsonObject();
-              JsonObject outObj = new JsonObject();
-              if (node.has("dcid")) {
-                outObj.addProperty("dcid", node.get("dcid").getAsString());
-              } else if (node.has("value")) {
-                // For property values, V1 used "value" or "dcid" depending on type.
-                // V2 also uses "value" or "dcid".
-                outObj.addProperty("value", node.get("value").getAsString());
-                // Also add as dcid for compatibility if needed, but usually it's one or the other.
-                // ExistenceChecker looks for "dcid" in checkOneResult for triples.
-                // Let's check ExistenceChecker again.
+    // Iterate over requested nodes to ensure each has an entry in the response,
+    // even if empty. This is required by callers like ExistenceChecker.
+    for (String dcid : nodes) {
+      JsonObject outWrapper = new JsonObject();
+      JsonArray outArray = new JsonArray();
+      outWrapper.add("out", outArray);
+      legacyFormat.add(dcid, outWrapper);
+
+      if (data != null && data.has(dcid)) {
+        JsonObject nodeData = data.getAsJsonObject(dcid);
+        if (nodeData.has("arcs")) {
+          JsonObject arcs = nodeData.getAsJsonObject("arcs");
+          if (arcs.has(property)) {
+            JsonObject propData = arcs.getAsJsonObject(property);
+            if (propData.has("nodes")) {
+              JsonArray nodesArray = propData.getAsJsonArray("nodes");
+              for (int i = 0; i < nodesArray.size(); i++) {
+                JsonObject node = nodesArray.get(i).getAsJsonObject();
+                JsonObject outObj = new JsonObject();
+                if (node.has("dcid")) {
+                  outObj.addProperty("dcid", node.get("dcid").getAsString());
+                } else if (node.has("value")) {
+                  outObj.addProperty("value", node.get("value").getAsString());
+                }
+                outArray.add(outObj);
               }
-              outArray.add(outObj);
             }
-            JsonObject outWrapper = new JsonObject();
-            outWrapper.add("out", outArray);
-            legacyFormat.add(dcid, outWrapper);
           }
         }
       }
