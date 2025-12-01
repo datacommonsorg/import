@@ -23,7 +23,8 @@ public class ApiHelper {
   // Use the autopush end-point so we get more recent schema additions that
   // haven't rolled out.
   private static final String API_ROOT =
-      "https://autopush.api.datacommons.org/node/property-values";
+      "https://autopush.api.datacommons.org/v2/node";
+  private static final String API_KEY = System.getenv("DC_API_KEY");
 
   // Retry configuration
   private static boolean ENABLE_RETRIES = true;
@@ -45,16 +46,19 @@ public class ApiHelper {
     }
 
     JsonObject arg = new JsonObject();
-    arg.add("dcids", dcids);
-    arg.addProperty("property", property);
-    arg.addProperty("direction", "out");
+    arg.add("nodes", dcids);
+    // V2 uses -> for out-edges, which is equivalent to direction: "out" in V1
+    arg.addProperty("property", "->" + property);
 
-    var request =
+    var requestBuilder =
         HttpRequest.newBuilder(URI.create(API_ROOT))
             .version(HttpClient.Version.HTTP_1_1)
             .header("accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(arg.toString()))
-            .build();
+            .POST(HttpRequest.BodyPublishers.ofString(arg.toString()));
+    if (API_KEY != null && !API_KEY.isEmpty()) {
+      requestBuilder.header("x-api-key", API_KEY);
+    }
+    var request = requestBuilder.build();
 
     // maxRetries = 0 means no retries (only initial attempt)
     // maxRetries = 3 means 4 total attempts (1 initial + 3 retries)
@@ -89,9 +93,49 @@ public class ApiHelper {
                 });
 
     var payloadJson = new JsonParser().parse(response.body().trim()).getAsJsonObject();
-    if (payloadJson == null || !payloadJson.has("payload")) return null;
-    // The API returns the actual response in a JSON-serialized string.
-    // This string is in the "payload" field of the raw response.
-    return new JsonParser().parse(payloadJson.get("payload").getAsString()).getAsJsonObject();
+    if (payloadJson == null || !payloadJson.has("data")) return null;
+    // V2 Node API returns data directly in the "data" field, no need to parse a nested string.
+    // We need to transform it back to the expected format for existing callers,
+    // or update callers. Given the current structure, it's easier to transform it here
+    // to match what the callers expect, or update the callers.
+    // Old format expected by callers (from parseApiStatTypeResponse and ExistenceChecker):
+    // { "dcid1": { "out": [ { "dcid": "val1" }, { "dcid": "val2" } ] } }
+    // V2 format:
+    // { "data": { "dcid1": { "arcs": { "prop": { "nodes": [ { "dcid": "val1" }, { "value": "val2" } ] } } } } }
+
+    JsonObject legacyFormat = new JsonObject();
+    JsonObject data = payloadJson.getAsJsonObject("data");
+    for (String dcid : data.keySet()) {
+      JsonObject nodeData = data.getAsJsonObject(dcid);
+      if (nodeData.has("arcs")) {
+        JsonObject arcs = nodeData.getAsJsonObject("arcs");
+        if (arcs.has(property)) {
+          JsonObject propData = arcs.getAsJsonObject(property);
+          if (propData.has("nodes")) {
+            JsonArray nodesArray = propData.getAsJsonArray("nodes");
+            JsonArray outArray = new JsonArray();
+            for (int i = 0; i < nodesArray.size(); i++) {
+              JsonObject node = nodesArray.get(i).getAsJsonObject();
+              JsonObject outObj = new JsonObject();
+              if (node.has("dcid")) {
+                outObj.addProperty("dcid", node.get("dcid").getAsString());
+              } else if (node.has("value")) {
+                // For property values, V1 used "value" or "dcid" depending on type.
+                // V2 also uses "value" or "dcid".
+                outObj.addProperty("value", node.get("value").getAsString());
+                // Also add as dcid for compatibility if needed, but usually it's one or the other.
+                // ExistenceChecker looks for "dcid" in checkOneResult for triples.
+                // Let's check ExistenceChecker again.
+              }
+              outArray.add(outObj);
+            }
+            JsonObject outWrapper = new JsonObject();
+            outWrapper.add("out", outArray);
+            legacyFormat.add(dcid, outWrapper);
+          }
+        }
+      }
+    }
+    return legacyFormat;
   }
 }
