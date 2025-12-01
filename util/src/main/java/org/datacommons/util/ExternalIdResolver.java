@@ -2,9 +2,8 @@ package org.datacommons.util;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -21,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
+import org.datacommons.proto.Recon;
 
 // Resolves nodes with external IDs by calling DC Resolution API.
 //
@@ -34,8 +34,7 @@ import org.datacommons.proto.Mcf;
 public class ExternalIdResolver {
   private static final Logger logger = LogManager.getLogger(ExternalIdResolver.class);
 
-  private static final String API_ROOT = "https://autopush.api.datacommons.org/v2/resolve";
-  private static final String API_KEY = System.getenv("DC_API_KEY");
+  private static final String API_ROOT = "https://api.datacommons.org/v1/recon/entity/resolve";
   // Let tests modify it.
   static int MAX_RESOLUTION_BATCH_IDS = 500;
 
@@ -250,73 +249,60 @@ public class ExternalIdResolver {
   }
 
   private void drainRemoteCallsInternal() throws IOException, InterruptedException {
-    // For V2, we need to group by property because the property is part of the request.
-    for (Map.Entry<String, Set<String>> entry : batchedIds.entrySet()) {
-      String prop = entry.getKey();
-      Set<String> ids = entry.getValue();
-      if (ids.isEmpty()) continue;
-
-      // Construct V2 Resolve Request
-      // Format: { "nodes": ["id1", "id2"], "property": "<-prop->dcid" }
-      JsonObject requestJson = new JsonObject();
-      JsonArray nodesArray = new JsonArray();
-      for (String id : ids) {
-        nodesArray.add(id);
+    // Package a request with all the batched IDs.
+    Recon.ResolveEntitiesRequest.Builder request = Recon.ResolveEntitiesRequest.newBuilder();
+    request.addWantedIdProperties(Vocabulary.DCID);
+    for (var propIds : batchedIds.entrySet()) {
+      var prop = propIds.getKey();
+      for (var id : propIds.getValue()) {
+        var reqEntity = request.addEntitiesBuilder();
+        var reqIds = reqEntity.getEntityIdsBuilder();
+        var reqId = reqIds.addIdsBuilder();
+        reqId.setProp(prop);
+        reqId.setVal(id);
+        reqEntity.setSourceId(prop + ":" + id);
       }
-      requestJson.add("nodes", nodesArray);
-      // Property string for V2 Resolve. Assuming "<-prop->dcid" for external IDs.
-      // We might need to handle different property types if needed, but for now this matches V1
-      // logic.
-      requestJson.addProperty("property", "<-" + prop + "->dcid");
+    }
+    if (request.getEntitiesCount() == 0) {
+      return;
+    }
 
-      if (verbose) {
-        logger.info(
-            "Issuing V2 Resolve call for property " + prop + " with " + ids.size() + " IDs");
+    // Issue the RPC.
+    if (verbose) {
+      logger.info("Issuing ResolveEntities call with " + request.getEntitiesCount() + " IDs");
+    }
+    var response = callDc(request.build());
+
+    // Process response.
+    for (var entity : response.getResolvedEntitiesList()) {
+      if (entity.getResolvedIdsCount() == 0) {
+        // Unable to resolve ID.
+        if (verbose) logger.info("Unable to resolve " + entity.getSourceId());
+        continue;
       }
-
-      var requestBuilder =
-          HttpRequest.newBuilder(URI.create(API_ROOT))
-              .version(HttpClient.Version.HTTP_1_1)
-              .header("accept", "application/json")
-              .header("Content-Type", "application/json")
-              .POST(HttpRequest.BodyPublishers.ofString(requestJson.toString()));
-      if (API_KEY != null && !API_KEY.isEmpty()) {
-        requestBuilder.header("x-api-key", API_KEY);
+      var parts = entity.getSourceId().split(":", 2);
+      // TODO: Add back the (entity.getResolvedIdsCount() == 1) assertion after
+      // https://github.com/datacommonsorg/reconciliation/issues/15 is fixed.
+      if (parts.length != 2) {
+        throw new InvalidProtocolBufferException(
+            "Malformed ResolveEntitiesResponse.ResolvedEntity " + entity);
       }
-      HttpRequest request = requestBuilder.build();
-
-      try {
-        HttpResponse<String> response =
-            httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() != 200) {
-          logger.error("V2 Resolve API failed with status " + response.statusCode());
-          continue;
+      var extProp = parts[0];
+      var extId = parts[1];
+      var dcid = new String();
+      // TODO: Assert only DCID is returned after
+      //  https://github.com/datacommonsorg/reconciliation/issues/13 is fixed.
+      for (var idProp : entity.getResolvedIds(0).getIdsList()) {
+        if (idProp.getProp().equals(Vocabulary.DCID)) {
+          dcid = idProp.getVal();
+          break;
         }
-
-        JsonObject responseJson = new JsonParser().parse(response.body()).getAsJsonObject();
-        if (responseJson.has("entities")) {
-          JsonArray entities = responseJson.getAsJsonArray("entities");
-          for (int i = 0; i < entities.size(); i++) {
-            JsonObject entity = entities.get(i).getAsJsonObject();
-            if (entity.has("node") && entity.has("candidates")) {
-              String extId = entity.get("node").getAsString();
-              JsonArray candidates = entity.getAsJsonArray("candidates");
-              if (candidates.size() > 0) {
-                // Take the first candidate's DCID
-                JsonObject candidate = candidates.get(0).getAsJsonObject();
-                if (candidate.has("dcid")) {
-                  String dcid = candidate.get("dcid").getAsString();
-                  addToMappedIds(prop, extId, dcid);
-                  if (verbose) logger.info("Resolved " + prop + ":" + extId + " -> " + dcid);
-                }
-              } else {
-                if (verbose) logger.info("No candidates for " + prop + ":" + extId);
-              }
-            }
-          }
-        }
-      } catch (Exception e) {
-        logger.error("Error calling V2 Resolve API", e);
+      }
+      if (!dcid.isEmpty()) {
+        addToMappedIds(extProp, extId, dcid);
+        if (verbose) logger.info("Resolved " + entity.getSourceId() + " -> " + dcid);
+      } else {
+        if (verbose) logger.info("Resolved to empty dcid for " + entity.getSourceId());
       }
     }
 
@@ -327,6 +313,23 @@ public class ExternalIdResolver {
 
   private void addToMappedIds(String extProp, String extId, String dcid) {
     mappedIds.computeIfAbsent(extProp, k -> new HashMap<>()).put(extId, dcid);
+  }
+
+  // TODO: Use the generic ReconClient to call the API instead of this method.
+  private Recon.ResolveEntitiesResponse callDc(Recon.ResolveEntitiesRequest reconReq)
+      throws IOException, InterruptedException {
+    logCtx.incrementInfoCounterBy("Resolution_NumDcCalls", 1);
+    var request =
+        HttpRequest.newBuilder(URI.create(API_ROOT))
+            .version(HttpClient.Version.HTTP_1_1)
+            .header("accept", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(StringUtil.msgToJson(reconReq)))
+            .build();
+    var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    var reconResp = Recon.ResolveEntitiesResponse.newBuilder();
+    var jsonBody = response.body().trim();
+    JsonFormat.parser().merge(jsonBody, reconResp);
+    return reconResp.build();
   }
 
   private static Map<String, Set<String>> getExternalIds(Mcf.McfGraph.PropertyValues node) {
