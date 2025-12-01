@@ -97,7 +97,7 @@ public class ApiHelper {
     return convertToLegacyFormat(v2Response, nodes, property);
   }
 
-  private static JsonObject convertToLegacyFormat(
+  static JsonObject convertToLegacyFormat(
       V2NodeResponse v2Response, List<String> nodes, String property) {
     JsonObject legacyFormat = new JsonObject();
     // Iterate over requested nodes to ensure each has an entry in the response,
