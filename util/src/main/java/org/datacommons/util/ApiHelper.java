@@ -1,5 +1,6 @@
 package org.datacommons.util;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -92,19 +93,15 @@ public class ApiHelper {
                   return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
                 });
 
-    var payloadJson = new JsonParser().parse(response.body().trim()).getAsJsonObject();
-    if (payloadJson == null || !payloadJson.has("data")) return null;
-    // V2 Node API returns data directly in the "data" field, no need to parse a nested string.
-    // We need to transform it back to the expected format for existing callers,
-    // or update callers. Given the current structure, it's easier to transform it here
-    // to match what the callers expect, or update the callers.
-    // Old format expected by callers (from parseApiStatTypeResponse and ExistenceChecker):
-    // { "dcid1": { "out": [ { "dcid": "val1" }, { "dcid": "val2" } ] } }
-    // V2 format:
-    // { "data": { "dcid1": { "arcs": { "prop": { "nodes": [ { "dcid": "val1" }, { "value": "val2" } ] } } } } }
+    V2NodeResponse v2Response = new Gson().fromJson(response.body().trim(), V2NodeResponse.class);
+    if (v2Response == null || v2Response.data == null) return null;
 
+    return convertToLegacyFormat(v2Response, nodes, property);
+  }
+
+  private static JsonObject convertToLegacyFormat(
+      V2NodeResponse v2Response, List<String> nodes, String property) {
     JsonObject legacyFormat = new JsonObject();
-    JsonObject data = payloadJson.getAsJsonObject("data");
     // Iterate over requested nodes to ensure each has an entry in the response,
     // even if empty. This is required by callers like ExistenceChecker.
     for (String dcid : nodes) {
@@ -113,29 +110,25 @@ public class ApiHelper {
       outWrapper.add("out", outArray);
       legacyFormat.add(dcid, outWrapper);
 
-      if (data != null && data.has(dcid)) {
-        JsonObject nodeData = data.getAsJsonObject(dcid);
-        if (nodeData.has("arcs")) {
-          JsonObject arcs = nodeData.getAsJsonObject("arcs");
-          if (arcs.has(property)) {
-            JsonObject propData = arcs.getAsJsonObject(property);
-            if (propData.has("nodes")) {
-              JsonArray nodesArray = propData.getAsJsonArray("nodes");
-              for (int i = 0; i < nodesArray.size(); i++) {
-                JsonObject node = nodesArray.get(i).getAsJsonObject();
-                JsonObject outObj = new JsonObject();
-                if (node.has("dcid")) {
-                  outObj.addProperty("dcid", node.get("dcid").getAsString());
-                } else if (node.has("value")) {
-                  outObj.addProperty("value", node.get("value").getAsString());
-                }
-                outArray.add(outObj);
+      if (v2Response.data.containsKey(dcid)) {
+        V2NodeResponse.NodeData nodeData = v2Response.data.get(dcid);
+        if (nodeData != null && nodeData.arcs != null && nodeData.arcs.containsKey(property)) {
+          V2NodeResponse.ArcData arcData = nodeData.arcs.get(property);
+          if (arcData != null && arcData.nodes != null) {
+            for (V2NodeResponse.NodeInfo node : arcData.nodes) {
+              JsonObject outObj = new JsonObject();
+              if (node.dcid != null) {
+                outObj.addProperty("dcid", node.dcid);
+              } else if (node.value != null) {
+                outObj.addProperty("value", node.value);
               }
+              outArray.add(outObj);
             }
           }
         }
       }
     }
     return legacyFormat;
+  }
   }
 }
