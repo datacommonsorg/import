@@ -2,8 +2,9 @@ package org.datacommons.util;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.util.JsonFormat;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -20,7 +21,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
-import org.datacommons.proto.Recon;
 
 // Resolves nodes with external IDs by calling DC Resolution API.
 //
@@ -265,11 +265,13 @@ public class ExternalIdResolver {
       }
       requestJson.add("nodes", nodesArray);
       // Property string for V2 Resolve. Assuming "<-prop->dcid" for external IDs.
-      // We might need to handle different property types if needed, but for now this matches V1 logic.
+      // We might need to handle different property types if needed, but for now this matches V1
+      // logic.
       requestJson.addProperty("property", "<-" + prop + "->dcid");
 
       if (verbose) {
-        logger.info("Issuing V2 Resolve call for property " + prop + " with " + ids.size() + " IDs");
+        logger.info(
+            "Issuing V2 Resolve call for property " + prop + " with " + ids.size() + " IDs");
       }
 
       var requestBuilder =
@@ -282,14 +284,15 @@ public class ExternalIdResolver {
         requestBuilder.header("x-api-key", API_KEY);
       }
       HttpRequest request = requestBuilder.build();
-      
+
       try {
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response =
+            httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 200) {
           logger.error("V2 Resolve API failed with status " + response.statusCode());
           continue;
         }
-        
+
         JsonObject responseJson = new JsonParser().parse(response.body()).getAsJsonObject();
         if (responseJson.has("entities")) {
           JsonArray entities = responseJson.getAsJsonArray("entities");
@@ -325,8 +328,6 @@ public class ExternalIdResolver {
   private void addToMappedIds(String extProp, String extId, String dcid) {
     mappedIds.computeIfAbsent(extProp, k -> new HashMap<>()).put(extId, dcid);
   }
-
-
 
   private static Map<String, Set<String>> getExternalIds(Mcf.McfGraph.PropertyValues node) {
     Map<String, Set<String>> idMap = new HashMap<>();

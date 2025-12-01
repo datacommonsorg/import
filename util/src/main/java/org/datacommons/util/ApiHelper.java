@@ -3,7 +3,6 @@ package org.datacommons.util;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 import java.io.IOException;
@@ -23,8 +22,7 @@ public class ApiHelper {
 
   // Use the autopush end-point so we get more recent schema additions that
   // haven't rolled out.
-  private static final String API_ROOT =
-      "https://autopush.api.datacommons.org/v2/node";
+  private static final String API_ROOT = "https://autopush.api.datacommons.org/v2/node";
   private static final String API_KEY = System.getenv("DC_API_KEY");
 
   // Retry configuration
