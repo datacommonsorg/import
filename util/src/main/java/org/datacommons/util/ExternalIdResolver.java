@@ -16,11 +16,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Recon;
+import org.datacommons.proto.Resolve;
 
 // Resolves nodes with external IDs by calling DC Resolution API.
 //
@@ -32,6 +34,11 @@ import org.datacommons.proto.Recon;
 // If this order is not followed, errors will be thrown.
 // This class is thread-safe.
 public class ExternalIdResolver {
+  public enum ApiVersion {
+    V1,
+    V2
+  }
+
   private static final Logger logger = LogManager.getLogger(ExternalIdResolver.class);
 
   private static final String API_ROOT = "https://api.datacommons.org/v1/recon/entity/resolve";
@@ -42,7 +49,9 @@ public class ExternalIdResolver {
   private final boolean verbose;
   private final LogWrapper logCtx;
   private final HttpClient httpClient;
+  private final ReconClient reconClient;
   private final CoordinatesResolver coordinatesResolver;
+  private final ApiVersion apiVersion;
 
   // IDs waiting to be mapped.
   // Key: ID property, Value: set of external IDs
@@ -59,12 +68,22 @@ public class ExternalIdResolver {
 
   public ExternalIdResolver(
       HttpClient httpClient, boolean doCoordinatesResolution, boolean verbose, LogWrapper logCtx) {
+    this(httpClient, doCoordinatesResolution, verbose, logCtx, null);
+  }
+
+  public ExternalIdResolver(
+      HttpClient httpClient,
+      boolean doCoordinatesResolution,
+      boolean verbose,
+      LogWrapper logCtx,
+      ApiVersion apiVersion) {
     this.httpClient = httpClient;
     this.verbose = verbose;
     this.logCtx = logCtx;
+    this.apiVersion = apiVersion == null ? apiVersionFromEnv() : apiVersion;
+    this.reconClient = new ReconClient(httpClient, logCtx, MAX_RESOLUTION_BATCH_IDS);
     if (doCoordinatesResolution) {
-      this.coordinatesResolver =
-          new CoordinatesResolver(new ReconClient(httpClient, logCtx, MAX_RESOLUTION_BATCH_IDS));
+      this.coordinatesResolver = new CoordinatesResolver(this.reconClient);
     } else {
       this.coordinatesResolver = null;
     }
@@ -249,6 +268,14 @@ public class ExternalIdResolver {
   }
 
   private void drainRemoteCallsInternal() throws IOException, InterruptedException {
+    if (apiVersion == ApiVersion.V2) {
+      drainRemoteCallsInternalV2();
+      return;
+    }
+    drainRemoteCallsInternalV1();
+  }
+
+  private void drainRemoteCallsInternalV1() throws IOException, InterruptedException {
     // Package a request with all the batched IDs.
     Recon.ResolveEntitiesRequest.Builder request = Recon.ResolveEntitiesRequest.newBuilder();
     request.addWantedIdProperties(Vocabulary.DCID);
@@ -311,6 +338,61 @@ public class ExternalIdResolver {
     numBatchedIds = 0;
   }
 
+  private void drainRemoteCallsInternalV2() {
+    if (batchedIds.isEmpty()) {
+      return;
+    }
+
+    if (verbose) {
+      logger.info("Issuing Resolve (v2) with " + numBatchedIds + " IDs");
+    }
+
+    for (var propIds : batchedIds.entrySet()) {
+      var prop = propIds.getKey();
+      var ids = propIds.getValue();
+      if (ids.isEmpty()) {
+        continue;
+      }
+
+      var request =
+          Resolve.ResolveRequest.newBuilder()
+              .addAllNodes(ids.stream().map(id -> prop + "/" + id).collect(Collectors.toList()))
+              .setProperty("<-" + prop + "->dcid")
+              .build();
+
+      logCtx.incrementInfoCounterBy("Resolution_NumResolveV2Calls", 1);
+
+      var response = reconClient.resolve(request);
+
+      for (var entity : response.getEntitiesList()) {
+        var parts = entity.getNode().split("/", 2);
+        if (parts.length != 2) {
+          throw new RuntimeException(
+              new InvalidProtocolBufferException(
+                  "Malformed ResolveResponse entity.node " + entity.getNode()));
+        }
+        var extProp = parts[0];
+        var extId = parts[1];
+
+        if (entity.getCandidatesCount() == 0) {
+          if (verbose) logger.info("Unable to resolve " + entity.getNode());
+          continue;
+        }
+
+        var dcid = entity.getCandidates(0).getDcid();
+        if (!dcid.isEmpty()) {
+          addToMappedIds(extProp, extId, dcid);
+          if (verbose) logger.info("Resolved " + entity.getNode() + " -> " + dcid);
+        } else if (verbose) {
+          logger.info("Resolved to empty dcid for " + entity.getNode());
+        }
+      }
+    }
+
+    batchedIds.clear();
+    numBatchedIds = 0;
+  }
+
   private void addToMappedIds(String extProp, String extId, String dcid) {
     mappedIds.computeIfAbsent(extProp, k -> new HashMap<>()).put(extId, dcid);
   }
@@ -330,6 +412,14 @@ public class ExternalIdResolver {
     var jsonBody = response.body().trim();
     JsonFormat.parser().merge(jsonBody, reconResp);
     return reconResp.build();
+  }
+
+  private static ApiVersion apiVersionFromEnv() {
+    var envVal = System.getenv("DC_EXTERNAL_ID_RESOLVE_API");
+    if (envVal != null && envVal.equalsIgnoreCase("v2")) {
+      return ApiVersion.V2;
+    }
+    return ApiVersion.V1;
   }
 
   private static Map<String, Set<String>> getExternalIds(Mcf.McfGraph.PropertyValues node) {
