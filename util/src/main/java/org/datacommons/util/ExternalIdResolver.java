@@ -322,36 +322,52 @@ public class ExternalIdResolver {
   private void processResolveEntitiesResponseV1(Recon.ResolveEntitiesResponse response)
       throws InvalidProtocolBufferException {
     for (var entity : response.getResolvedEntitiesList()) {
-      if (entity.getResolvedIdsCount() == 0) {
-        // Unable to resolve ID.
-        if (verbose) logger.info("Unable to resolve " + entity.getSourceId());
-        continue;
-      }
-      var parts = entity.getSourceId().split(":", 2);
-      // TODO: Add back the (entity.getResolvedIdsCount() == 1) assertion after
-      // https://github.com/datacommonsorg/reconciliation/issues/15 is fixed.
-      if (parts.length != 2) {
-        throw new InvalidProtocolBufferException(
-            "Malformed ResolveEntitiesResponse.ResolvedEntity " + entity);
-      }
-      var extProp = parts[0];
-      var extId = parts[1];
-      var dcid = new String();
-      // TODO: Assert only DCID is returned after
-      //  https://github.com/datacommonsorg/reconciliation/issues/13 is fixed.
-      for (var idProp : entity.getResolvedIds(0).getIdsList()) {
-        if (idProp.getProp().equals(Vocabulary.DCID)) {
-          dcid = idProp.getVal();
-          break;
-        }
-      }
-      if (!dcid.isEmpty()) {
-        addToMappedIds(extProp, extId, dcid);
-        if (verbose) logger.info("Resolved " + entity.getSourceId() + " -> " + dcid);
-      } else {
-        if (verbose) logger.info("Resolved to empty dcid for " + entity.getSourceId());
+      processResolvedEntity(entity);
+    }
+  }
+
+  private void processResolvedEntity(Recon.ResolveEntitiesResponse.ResolvedEntity entity)
+      throws InvalidProtocolBufferException {
+    if (entity.getResolvedIdsCount() == 0) {
+      // Unable to resolve ID.
+      if (verbose) logger.info("Unable to resolve " + entity.getSourceId());
+      return;
+    }
+
+    var parts = splitSourceId(entity);
+    var extProp = parts[0];
+    var extId = parts[1];
+    var dcid = findDcid(entity);
+    if (!dcid.isEmpty()) {
+      addToMappedIds(extProp, extId, dcid);
+      if (verbose) logger.info("Resolved " + entity.getSourceId() + " -> " + dcid);
+      return;
+    }
+
+    if (verbose) logger.info("Resolved to empty dcid for " + entity.getSourceId());
+  }
+
+  private String[] splitSourceId(Recon.ResolveEntitiesResponse.ResolvedEntity entity)
+      throws InvalidProtocolBufferException {
+    var parts = entity.getSourceId().split(":", 2);
+    // TODO: Add back the (entity.getResolvedIdsCount() == 1) assertion after
+    // https://github.com/datacommonsorg/reconciliation/issues/15 is fixed.
+    if (parts.length != 2) {
+      throw new InvalidProtocolBufferException(
+          "Malformed ResolveEntitiesResponse.ResolvedEntity " + entity);
+    }
+    return parts;
+  }
+
+  private String findDcid(Recon.ResolveEntitiesResponse.ResolvedEntity entity) {
+    // TODO: Assert only DCID is returned after
+    //  https://github.com/datacommonsorg/reconciliation/issues/13 is fixed.
+    for (var idProp : entity.getResolvedIds(0).getIdsList()) {
+      if (idProp.getProp().equals(Vocabulary.DCID)) {
+        return idProp.getVal();
       }
     }
+    return "";
   }
 
   private void drainRemoteCallsInternalV2() {
