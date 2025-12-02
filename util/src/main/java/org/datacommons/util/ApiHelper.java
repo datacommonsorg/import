@@ -23,7 +23,7 @@ public class ApiHelper {
   // Use the autopush end-point so we get more recent schema additions that
   // haven't rolled out.
   private static final String API_ROOT = "https://autopush.api.datacommons.org/v2/node";
-  private static final String API_KEY = System.getenv("DC_API_KEY");
+  private static final String API_KEY = System.getenv("AUTOPUSH_DC_API_KEY");
 
   // Retry configuration
   private static boolean ENABLE_RETRIES = true;
