@@ -1,8 +1,5 @@
 package org.datacommons.util;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import java.io.IOException;
 import java.net.URI;
@@ -13,12 +10,12 @@ import java.rmi.UnexpectedException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Recon;
 
@@ -178,71 +175,8 @@ public class ExternalIdResolver {
     return false;
   }
 
-  private void drainRemoteCallsInternal() throws IOException, InterruptedException {
-    // Package a request with all the batched IDs.
-    Recon.ResolveEntitiesRequest.Builder request = Recon.ResolveEntitiesRequest.newBuilder();
-    request.addWantedIdProperties(Vocabulary.DCID);
-    for (var propIds : batchedIds.entrySet()) {
-      var prop = propIds.getKey();
-      for (var id : propIds.getValue()) {
-        var reqEntity = request.addEntitiesBuilder();
-        var reqIds = reqEntity.getEntityIdsBuilder();
-        var reqId = reqIds.addIdsBuilder();
-        reqId.setProp(prop);
-        reqId.setVal(id);
-        reqEntity.setSourceId(prop + ":" + id);
-      }
-    }
-    if (request.getEntitiesCount() == 0) {
-      return;
-    }
-
-    // Issue the RPC.
-    if (verbose) {
-      logger.info("Issuing ResolveEntities call with " + request.getEntitiesCount() + " IDs");
-    }
-    var response = callDc(request.build());
-
-    // Process response.
-    for (var entity : response.getResolvedEntitiesList()) {
-      if (entity.getResolvedIdsCount() == 0) {
-        // Unable to resolve ID.
-        if (verbose) logger.info("Unable to resolve " + entity.getSourceId());
-        continue;
-      }
-      var parts = entity.getSourceId().split(":", 2);
-      // TODO: Add back the (entity.getResolvedIdsCount() == 1) assertion after
-      // https://github.com/datacommonsorg/reconciliation/issues/15 is fixed.
-      if (parts.length != 2) {
-        throw new InvalidProtocolBufferException(
-            "Malformed ResolveEntitiesResponse.ResolvedEntity " + entity);
-      }
-      var extProp = parts[0];
-      var extId = parts[1];
-      var dcid = new String();
-      // TODO: Assert only DCID is returned after
-      //  https://github.com/datacommonsorg/reconciliation/issues/13 is fixed.
-      for (var idProp : entity.getResolvedIds(0).getIdsList()) {
-        if (idProp.getProp().equals(Vocabulary.DCID)) {
-          dcid = idProp.getVal();
-          break;
-        }
-      }
-      if (!dcid.isEmpty()) {
-        addToMappedIds(extProp, extId, dcid);
-        if (verbose) logger.info("Resolved " + entity.getSourceId() + " -> " + dcid);
-      } else {
-        if (verbose) logger.info("Resolved to empty dcid for " + entity.getSourceId());
-      }
-    }
-
-    // Clear the batch.
-    batchedIds.clear();
-    numBatchedIds = 0;
-  }
-
-  private void addToMappedIds(String extProp, String extId, String dcid) {
-    mappedIds.computeIfAbsent(extProp, k -> new HashMap<>()).put(extId, dcid);
+  private void addToMappedIds(String prop, String extId, String dcid) {
+    propertyResolver.addResolvedId(prop, extId, dcid);
   }
 
   // TODO: Use the generic ReconClient to call the API instead of this method.

@@ -127,6 +127,13 @@ final class PropertyResolver {
     return Optional.ofNullable(foundDcid);
   }
 
+  void addResolvedId(String prop, String externalId, String dcid) {
+    resolvedProperties
+        .computeIfAbsent(prop, k -> new ConcurrentHashMap<>())
+        .computeIfAbsent(externalId, k -> ConcurrentHashMap.newKeySet())
+        .add(dcid);
+  }
+
   private boolean checkAndLogUnresolved(
       String nodeId,
       PropertyValues node,
