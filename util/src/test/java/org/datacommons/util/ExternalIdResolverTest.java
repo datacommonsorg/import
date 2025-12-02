@@ -118,7 +118,7 @@ public class ExternalIdResolverTest {
   }
 
   @Test
-  public void endToEndWithApiCalls_withLatLngNodes_withCoordinatesResolutionDisabled()
+  public void endToEndWithApiCallsWithLatLngNodesWithCoordinatesResolutionDisabled()
       throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
@@ -150,7 +150,7 @@ public class ExternalIdResolverTest {
   }
 
   @Test
-  public void endToEndWithApiCalls_withLatLngNodes_withCoordinatesResolutionEnabled()
+  public void endToEndWithApiCallsWithLatLngNodesWithCoordinatesResolutionEnabled()
       throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
@@ -181,7 +181,7 @@ public class ExternalIdResolverTest {
   }
 
   @Test
-  public void endToEndWithApiCalls_v2() throws IOException, InterruptedException {
+  public void endToEndWithApiCallsV2() throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
     ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 4;
@@ -203,7 +203,7 @@ public class ExternalIdResolverTest {
   }
 
   @Test
-  public void endToEndWithLocalSideMcf_v2() throws IOException, InterruptedException {
+  public void endToEndWithLocalSideMcfV2() throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
     ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 1;
@@ -241,7 +241,7 @@ public class ExternalIdResolverTest {
   }
 
   @Test
-  public void endToEndWithApiCalls_withLatLngNodes_withCoordinatesResolutionDisabled_v2()
+  public void endToEndWithApiCallsWithLatLngNodesWithCoordinatesResolutionDisabledV2()
       throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
@@ -269,7 +269,7 @@ public class ExternalIdResolverTest {
   }
 
   @Test
-  public void endToEndWithApiCalls_withLatLngNodes_withCoordinatesResolutionEnabled_v2()
+  public void endToEndWithApiCallsWithLatLngNodesWithCoordinatesResolutionEnabledV2()
       throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
