@@ -13,10 +13,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import org.datacommons.proto.Debug;
-import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
-import org.datacommons.proto.Mcf.McfGraph.Values;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.proto.Resolve.ResolveRequest;
 import org.datacommons.proto.Resolve.ResolveResponse;
@@ -28,7 +26,7 @@ final class PropertyResolver {
 
   // Property in the resolve request.
   // We will support multiple properties, so this will be dynamic.
-  
+
   // Properties and their values to be resolved.
   // Map from property to set of values.
   // Example: {"isoCode" -> ["IN", "US"], "wikidataId" -> ["Q62"]}
@@ -38,7 +36,8 @@ final class PropertyResolver {
   // Map from property to Map from value to Set of candidate DCIDs.
   // Example: {"isoCode" -> {"IN" -> ["country/IND"], "US" -> ["country/USA"]},
   //           "wikidataId" -> {"Q62" -> ["geoId/0667000"]}}
-  private final Map<String, Map<String, Set<String>>> resolvedProperties = new ConcurrentHashMap<>();
+  private final Map<String, Map<String, Set<String>>> resolvedProperties =
+      new ConcurrentHashMap<>();
 
   private final ReconClient client;
   private final LogWrapper logCtx;
@@ -116,14 +115,7 @@ final class PropertyResolver {
         if (newDcid != null) {
           if (foundDcid != null && !foundDcid.equals(newDcid)) {
             logDivergingDcids(
-                nodeId,
-                node,
-                foundExternalProp,
-                foundExternalId,
-                foundDcid,
-                prop,
-                val,
-                newDcid);
+                nodeId, node, foundExternalProp, foundExternalId, foundDcid, prop, val, newDcid);
             return Optional.empty();
           }
           foundDcid = newDcid;
@@ -131,7 +123,7 @@ final class PropertyResolver {
           foundExternalId = val;
         }
       }
-      }
+    }
     return Optional.ofNullable(foundDcid);
   }
 
