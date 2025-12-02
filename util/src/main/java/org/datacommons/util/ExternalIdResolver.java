@@ -57,14 +57,17 @@ public class ExternalIdResolver {
   // phase), so we use RW locks.
   private final ReadWriteLock rwlock = new ReentrantReadWriteLock();
 
+  private final PropertyResolver propertyResolver;
+
   public ExternalIdResolver(
       HttpClient httpClient, boolean doCoordinatesResolution, boolean verbose, LogWrapper logCtx) {
     this.httpClient = httpClient;
     this.verbose = verbose;
     this.logCtx = logCtx;
+    ReconClient reconClient = new ReconClient(httpClient, logCtx, MAX_RESOLUTION_BATCH_IDS);
+    this.propertyResolver = new PropertyResolver(reconClient, logCtx);
     if (doCoordinatesResolution) {
-      this.coordinatesResolver =
-          new CoordinatesResolver(new ReconClient(httpClient, logCtx, MAX_RESOLUTION_BATCH_IDS));
+      this.coordinatesResolver = new CoordinatesResolver(reconClient);
     } else {
       this.coordinatesResolver = null;
     }
