@@ -365,7 +365,11 @@ public class ExternalIdResolver {
     if (ids.isEmpty()) {
       return;
     }
+    Resolve.ResolveResponse response = fetchResolveResponseV2(ids, prop);
+    processResolveResponseV2(prop, response);
+  }
 
+  private Resolve.ResolveResponse fetchResolveResponseV2(Set<String> ids, String prop) {
     var request =
         Resolve.ResolveRequest.newBuilder()
             .addAllNodes(ids)
@@ -377,9 +381,10 @@ public class ExternalIdResolver {
     }
 
     logCtx.incrementInfoCounterBy("Resolution_NumResolveV2Calls", 1);
+    return reconClient.resolve(request);
+  }
 
-    var response = reconClient.resolve(request);
-
+  private void processResolveResponseV2(String prop, Resolve.ResolveResponse response) {
     for (var entity : response.getEntitiesList()) {
       var extId = entity.getNode();
 
