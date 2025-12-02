@@ -98,15 +98,13 @@ public class ExternalIdResolver {
     rwlock.writeLock().lock();
     try {
       if (drained) {
-        throw new UnexpectedException("drainRemoteCalls() can only be called once!");
+        return;
       }
-      drainRemoteCallsInternal();
-
+      drained = true;
+      propertyResolver.drain();
       if (coordinatesResolver != null) {
         coordinatesResolver.drain();
       }
-
-      drained = true;
     } finally {
       rwlock.writeLock().unlock();
     }
