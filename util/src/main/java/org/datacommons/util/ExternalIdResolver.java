@@ -41,7 +41,6 @@ public class ExternalIdResolver {
   private final HttpClient httpClient;
   private final CoordinatesResolver coordinatesResolver;
 
-
   // First all the id maps are populated ("write" phase), and then used for resolution ("read"
   // phase), so we use RW locks.
   private final ReadWriteLock rwlock = new ReentrantReadWriteLock();

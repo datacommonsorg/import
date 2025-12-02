@@ -30,12 +30,11 @@ final class PropertyResolver {
   // Properties and their values to be resolved.
   // Map from property to set of values.
   // Example: {"isoCode" -> ["IN", "US"], "wikidataId" -> ["Q62"]}
-  private final Map<String, Set<String>> resolveProperties = new ConcurrentHashMap<>();
-
   // Resolved values.
   // Map from property to Map from value to Set of candidate DCIDs.
   // Example: {"isoCode" -> {"IN" -> ["country/IND"], "US" -> ["country/USA"]},
   //           "wikidataId" -> {"Q62" -> ["geoId/0667000"]}}
+  private final Map<String, Set<String>> unresolvedProperties = new ConcurrentHashMap<>();
   private final Map<String, Map<String, Set<String>>> resolvedProperties =
       new ConcurrentHashMap<>();
 
@@ -48,21 +47,25 @@ final class PropertyResolver {
   }
 
   boolean submit(PropertyValues node) {
-    Map<String, Set<String>> externalIds = getExternalIds(node);
-    if (!externalIds.isEmpty()) {
-      for (Map.Entry<String, Set<String>> entry : externalIds.entrySet()) {
-        String prop = entry.getKey();
-        Set<String> values = entry.getValue();
-        resolveProperties.computeIfAbsent(prop, k -> ConcurrentHashMap.newKeySet()).addAll(values);
+    if (!isResolvableType(node)) return false;
+    boolean submitted = false;
+    for (Map.Entry<String, Set<String>> propVals : getExternalIds(node).entrySet()) {
+      String prop = propVals.getKey();
+      Set<String> vals = propVals.getValue();
+      Map<String, Set<String>> resolvedProp = resolvedProperties.get(prop);
+      for (String val : vals) {
+        if (resolvedProp == null || !resolvedProp.containsKey(val)) {
+          unresolvedProperties.computeIfAbsent(prop, k -> ConcurrentHashMap.newKeySet()).add(val);
+          submitted = true;
+        }
       }
-      return true;
     }
-    return false;
+    return submitted;
   }
 
   void drain() {
     List<CompletableFuture<Void>> futures = new ArrayList<>();
-    for (Map.Entry<String, Set<String>> entry : resolveProperties.entrySet()) {
+    for (Map.Entry<String, Set<String>> entry : unresolvedProperties.entrySet()) {
       String prop = entry.getKey();
       Set<String> values = entry.getValue();
       if (!values.isEmpty()) {
@@ -211,5 +214,12 @@ final class PropertyResolver {
       }
     }
     return idMap;
+  }
+
+  private static boolean isResolvableType(PropertyValues node) {
+    for (var typeOf : McfUtil.getPropVals(node, Vocabulary.TYPE_OF)) {
+      if (Vocabulary.PLACE_TYPES.contains(typeOf)) return true;
+    }
+    return false;
   }
 }
