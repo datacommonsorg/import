@@ -82,6 +82,7 @@ public class ExternalIdResolver {
     this.verbose = verbose;
     this.logCtx = logCtx;
     this.apiVersion = apiVersion == null ? apiVersionFromEnv() : apiVersion;
+    logger.info("Using API Version: " + this.apiVersion);
     this.reconClient = new ReconClient(httpClient, logCtx, MAX_RESOLUTION_BATCH_IDS);
     if (doCoordinatesResolution) {
       this.coordinatesResolver = new CoordinatesResolver(this.reconClient);
@@ -435,11 +436,13 @@ public class ExternalIdResolver {
   }
 
   private static ApiVersion apiVersionFromEnv() {
-    var envVal = System.getenv("DC_EXTERNAL_ID_RESOLVE_API");
-    if (envVal != null && envVal.equalsIgnoreCase("v2")) {
-      return ApiVersion.V2;
+    final String API_VERSION_ENV_VAR = "DC_EXTERNAL_ID_RESOLVE_API";
+    String envVal = System.getProperty(API_VERSION_ENV_VAR);
+    if (envVal == null || envVal.isEmpty()) {
+      envVal = System.getenv(API_VERSION_ENV_VAR);
     }
-    return ApiVersion.V1;
+    logger.info("DC_EXTERNAL_ID_RESOLVE_API environment variable value: {}", envVal);
+    return "v2".equalsIgnoreCase(envVal) ? ApiVersion.V2 : ApiVersion.V1;
   }
 
   private static Map<String, Set<String>> getExternalIds(Mcf.McfGraph.PropertyValues node) {
