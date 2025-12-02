@@ -15,6 +15,7 @@ import java.util.Map;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
+import org.datacommons.util.ExternalIdResolver.ApiVersion;
 import org.junit.Test;
 
 public class ExternalIdResolverTest {
@@ -55,7 +56,8 @@ public class ExternalIdResolverTest {
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
     ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 4;
 
-    var resolver = new ExternalIdResolver(HttpClient.newHttpClient(), false, true, lw);
+    var resolver =
+        new ExternalIdResolver(HttpClient.newHttpClient(), false, true, lw, ApiVersion.V1);
     for (var node : testPlaceNodes) {
       resolver.submitNode(node);
     }
@@ -77,7 +79,8 @@ public class ExternalIdResolverTest {
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
     ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS =
         1; // This allows us to count the number of DC calls exactly
-    var resolver = new ExternalIdResolver(HttpClient.newHttpClient(), false, true, lw);
+    var resolver =
+        new ExternalIdResolver(HttpClient.newHttpClient(), false, true, lw, ApiVersion.V1);
 
     // Construct input side MCF where we also provide the DCIDs of the nodes
     var inWithDcid = addDcidToNode(in, inDcid);
@@ -121,7 +124,8 @@ public class ExternalIdResolverTest {
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
     ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 4;
 
-    var resolver = new ExternalIdResolver(HttpClient.newHttpClient(), false, true, lw);
+    var resolver =
+        new ExternalIdResolver(HttpClient.newHttpClient(), false, true, lw, ApiVersion.V1);
     for (var node : testPlaceNodesPlusLatLngNodes) {
       resolver.submitNode(node);
     }
@@ -152,7 +156,8 @@ public class ExternalIdResolverTest {
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
     ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 4;
 
-    var resolver = new ExternalIdResolver(HttpClient.newHttpClient(), true, true, lw);
+    var resolver =
+        new ExternalIdResolver(HttpClient.newHttpClient(), true, true, lw, ApiVersion.V1);
     for (var node : testPlaceNodesPlusLatLngNodes) {
       resolver.submitNode(node);
     }
@@ -172,6 +177,122 @@ public class ExternalIdResolverTest {
     // There is 1 lat-lng node so there should be 1 DC call.
     assertThat(TestUtil.getCounter(lw.getLog(), ReconClient.NUM_API_CALLS_COUNTER)).isEqualTo(1);
     // big ben with lat lng should be resolved.
+    assertEquals(bigBenDcid, resolver.resolveNode("bigben", bigBenWithLatLng));
+  }
+
+  @Test
+  public void endToEndWithApiCalls_v2() throws IOException, InterruptedException {
+    Debug.Log.Builder lb = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
+    ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 4;
+
+    var resolver =
+        new ExternalIdResolver(HttpClient.newHttpClient(), false, true, lw, ApiVersion.V2);
+    for (var node : testPlaceNodes) {
+      resolver.submitNode(node);
+    }
+    for (int i = 0; i < 20; i++) {
+      resolver.submitNode(sf);
+    }
+    resolver.drainRemoteCalls();
+
+    testAssertionSuiteOnResolverInstance(resolver, lw);
+
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumResolveV2Calls", 5));
+    assertThat(TestUtil.getCounter(lw.getLog(), "Resolution_NumDcCalls")).isEqualTo(-1);
+  }
+
+  @Test
+  public void endToEndWithLocalSideMcf_v2() throws IOException, InterruptedException {
+    Debug.Log.Builder lb = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
+    ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 1;
+    var resolver =
+        new ExternalIdResolver(HttpClient.newHttpClient(), false, true, lw, ApiVersion.V2);
+
+    var inWithDcid = addDcidToNode(in, inDcid);
+    var sfWithDcid = addDcidToNode(sf, sfDcid);
+    var vzWithDcid = addDcidToNode(vz, vzDcid);
+
+    var tamilNaduWithDcid =
+        addDcidToNode(buildNode("Place", Map.of("isoCode", "IN-KA")), "wikidataId/Q1445");
+    var karnatakaWithDcid =
+        addDcidToNode(buildNode("Place", Map.of("wikidataId", "Q1445")), "wikidataId/Q1185");
+
+    resolver.addLocalGraph(inWithDcid);
+    resolver.addLocalGraph(sfWithDcid);
+    resolver.addLocalGraph(vzWithDcid);
+    resolver.addLocalGraph(tamilNaduWithDcid);
+    resolver.addLocalGraph(karnatakaWithDcid);
+
+    for (var node : testPlaceNodes) {
+      resolver.submitNode(node);
+    }
+    for (int i = 0; i < 20; i++) {
+      resolver.submitNode(sf);
+    }
+
+    resolver.drainRemoteCalls();
+
+    testAssertionSuiteOnResolverInstance(resolver, lw);
+
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumResolveV2Calls", 1));
+    assertThat(TestUtil.getCounter(lw.getLog(), "Resolution_NumDcCalls")).isEqualTo(-1);
+  }
+
+  @Test
+  public void endToEndWithApiCalls_withLatLngNodes_withCoordinatesResolutionDisabled_v2()
+      throws IOException, InterruptedException {
+    Debug.Log.Builder lb = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
+    ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 4;
+
+    var resolver =
+        new ExternalIdResolver(HttpClient.newHttpClient(), false, true, lw, ApiVersion.V2);
+    for (var node : testPlaceNodesPlusLatLngNodes) {
+      resolver.submitNode(node);
+    }
+    for (int i = 0; i < 20; i++) {
+      resolver.submitNode(sf);
+    }
+    resolver.drainRemoteCalls();
+
+    testAssertionSuiteOnResolverInstance(resolver, lw);
+
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumResolveV2Calls", 5));
+    assertThat(TestUtil.getCounter(lw.getLog(), "Resolution_NumDcCalls")).isEqualTo(-1);
+
+    // In v2, ReconClient counter includes all external-ID resolve calls; with coords disabled we
+    // expect 5 external-ID calls and 0 coordinate calls.
+    assertThat(TestUtil.getCounter(lw.getLog(), ReconClient.NUM_API_CALLS_COUNTER)).isEqualTo(5);
+    assertEquals("", resolver.resolveNode("bigben", bigBenWithLatLng));
+  }
+
+  @Test
+  public void endToEndWithApiCalls_withLatLngNodes_withCoordinatesResolutionEnabled_v2()
+      throws IOException, InterruptedException {
+    Debug.Log.Builder lb = Debug.Log.newBuilder();
+    LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));
+    ExternalIdResolver.MAX_RESOLUTION_BATCH_IDS = 4;
+
+    var resolver =
+        new ExternalIdResolver(HttpClient.newHttpClient(), true, true, lw, ApiVersion.V2);
+    for (var node : testPlaceNodesPlusLatLngNodes) {
+      resolver.submitNode(node);
+    }
+    for (int i = 0; i < 20; i++) {
+      resolver.submitNode(sf);
+    }
+    resolver.drainRemoteCalls();
+
+    testAssertionSuiteOnResolverInstance(resolver, lw);
+
+    assertTrue(TestUtil.checkCounter(lw.getLog(), "Resolution_NumResolveV2Calls", 5));
+    assertThat(TestUtil.getCounter(lw.getLog(), "Resolution_NumDcCalls")).isEqualTo(-1);
+
+    // In v2, ReconClient counter includes both external-ID and coordinate resolve calls; here we
+    // expect 5 external-ID calls plus 1 coordinate call.
+    assertThat(TestUtil.getCounter(lw.getLog(), ReconClient.NUM_API_CALLS_COUNTER)).isEqualTo(6);
     assertEquals(bigBenDcid, resolver.resolveNode("bigben", bigBenWithLatLng));
   }
 

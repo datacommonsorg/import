@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
@@ -296,7 +295,10 @@ public class ExternalIdResolver {
 
     // Issue the RPC.
     if (verbose) {
-      logger.info("Issuing ResolveEntities call with " + request.getEntitiesCount() + " IDs");
+      logger.info(
+          "Issuing ResolveEntities call with {} IDs, payload: {}",
+          request.getEntitiesCount(),
+          request);
     }
     var response = callDc(request.build());
 
@@ -356,23 +358,20 @@ public class ExternalIdResolver {
 
       var request =
           Resolve.ResolveRequest.newBuilder()
-              .addAllNodes(ids.stream().map(id -> prop + "/" + id).collect(Collectors.toList()))
+              .addAllNodes(ids)
               .setProperty("<-" + prop + "->dcid")
               .build();
+
+      if (verbose) {
+        logger.info("Resolve v2 request payload: {}", request);
+      }
 
       logCtx.incrementInfoCounterBy("Resolution_NumResolveV2Calls", 1);
 
       var response = reconClient.resolve(request);
 
       for (var entity : response.getEntitiesList()) {
-        var parts = entity.getNode().split("/", 2);
-        if (parts.length != 2) {
-          throw new RuntimeException(
-              new InvalidProtocolBufferException(
-                  "Malformed ResolveResponse entity.node " + entity.getNode()));
-        }
-        var extProp = parts[0];
-        var extId = parts[1];
+        var extId = entity.getNode();
 
         if (entity.getCandidatesCount() == 0) {
           if (verbose) logger.info("Unable to resolve " + entity.getNode());
@@ -381,7 +380,7 @@ public class ExternalIdResolver {
 
         var dcid = entity.getCandidates(0).getDcid();
         if (!dcid.isEmpty()) {
-          addToMappedIds(extProp, extId, dcid);
+          addToMappedIds(prop, extId, dcid);
           if (verbose) logger.info("Resolved " + entity.getNode() + " -> " + dcid);
         } else if (verbose) {
           logger.info("Resolved to empty dcid for " + entity.getNode());
