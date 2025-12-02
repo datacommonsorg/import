@@ -126,65 +126,17 @@ public class ExternalIdResolver {
       // Nothing to do if not resolvable.
       if (!isResolvableType(node)) return foundDcid;
 
-      // If there are multiple external IDs, then they all must map to the same DCID!
-      String foundExternalProp = null;
-      String foundExternalId = null;
-      for (var propIds : getExternalIds(node).entrySet()) {
-        var prop = propIds.getKey();
-        for (var id : propIds.getValue()) {
-          if (mappedIds == null
-              || !mappedIds.containsKey(prop)
-              || !mappedIds.get(prop).containsKey(id)) {
-            logCtx.addEntry(
-                Debug.Log.Level.LEVEL_ERROR,
-                "Resolution_UnresolvedExternalId_" + prop,
-                "Unresolved external ID :: id: '"
-                    + id
-                    + "', property: '"
-                    + prop
-                    + "', node: '"
-                    + nodeId,
-                node.getLocationsList());
-            return "";
-          }
-          var newDcid = mappedIds.get(prop).get(id);
-          if (!foundDcid.isEmpty() && !foundDcid.equals(newDcid)) {
-            boolean foundFirst = foundExternalProp.compareTo(prop) < 0; // for deterministic order
-            logCtx.addEntry(
-                Debug.Log.Level.LEVEL_ERROR,
-                "Resolution_DivergingDcidsForExternalIds_"
-                    + (foundFirst ? foundExternalProp : prop)
-                    + "_"
-                    + (foundFirst ? prop : foundExternalProp),
-                "Found diverging DCIDs for external IDs :: extId1: '"
-                    + (foundFirst ? foundExternalId : id)
-                    + "', "
-                    + "dcid1: '"
-                    + (foundFirst ? foundDcid : newDcid)
-                    + "', property1: '"
-                    + (foundFirst ? foundExternalProp : prop)
-                    + ", "
-                    + "extId2: '"
-                    + (foundFirst ? id : foundExternalId)
-                    + "', dcid2: '"
-                    + (foundFirst ? newDcid : foundDcid)
-                    + "', property2: '"
-                    + (foundFirst ? prop : foundExternalProp)
-                    + "', node: '"
-                    + nodeId
-                    + "'",
-                node.getLocationsList());
-            return "";
-          }
-          foundDcid = newDcid;
-          foundExternalProp = prop;
-          foundExternalId = id;
-        }
+      // 1. Try resolving using properties.
+      Optional<String> dcid = propertyResolver.resolve(nodeId, node);
+      if (dcid.isPresent()) {
+        return dcid.get();
       }
-      if (!isEmpty(foundDcid)) {
-        return foundDcid;
+
+      // 2. Try resolving using coordinates.
+      if (coordinatesResolver != null) {
+        return coordinatesResolver.resolve(node).orElse("");
       }
-      return coordinatesResolver != null ? coordinatesResolver.resolve(node).orElse("") : foundDcid;
+      return "";
     } finally {
       rwlock.readLock().unlock();
     }
