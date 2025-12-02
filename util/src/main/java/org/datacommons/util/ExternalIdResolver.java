@@ -33,6 +33,8 @@ import org.datacommons.proto.Resolve;
 // If this order is not followed, errors will be thrown.
 // This class is thread-safe.
 public class ExternalIdResolver {
+  // TODO: Remove ApiVersion.V1 and related logic once the v1 resolve API
+  // is fully deprecated and all callers use v2.
   public enum ApiVersion {
     V1,
     V2
@@ -274,6 +276,8 @@ public class ExternalIdResolver {
     drainRemoteCallsInternalV1();
   }
 
+  // TODO: Remove this v1-specific path when all resolution traffic is
+  // served via the v2 resolve API.
   private void drainRemoteCallsInternalV1() throws IOException, InterruptedException {
     // Package a request with all the batched IDs.
     Recon.ResolveEntitiesRequest.Builder request = Recon.ResolveEntitiesRequest.newBuilder();
@@ -396,7 +400,8 @@ public class ExternalIdResolver {
     mappedIds.computeIfAbsent(extProp, k -> new HashMap<>()).put(extId, dcid);
   }
 
-  // TODO: Use the generic ReconClient to call the API instead of this method.
+  // TODO: Delete this helper once all external ID resolution uses the
+  // ReconClient-based v2 resolve API.
   private Recon.ResolveEntitiesResponse callDc(Recon.ResolveEntitiesRequest reconReq)
       throws IOException, InterruptedException {
     logCtx.incrementInfoCounterBy("Resolution_NumDcCalls", 1);
