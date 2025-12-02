@@ -1,11 +1,7 @@
 package org.datacommons.util;
 
-import com.google.protobuf.util.JsonFormat;
 import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.rmi.UnexpectedException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,7 +13,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Mcf;
-import org.datacommons.proto.Recon;
 
 // Resolves nodes with external IDs by calling DC Resolution API.
 //
@@ -168,23 +163,6 @@ public class ExternalIdResolver {
 
   private void addToMappedIds(String prop, String extId, String dcid) {
     propertyResolver.addResolvedId(prop, extId, dcid);
-  }
-
-  // TODO: Use the generic ReconClient to call the API instead of this method.
-  private Recon.ResolveEntitiesResponse callDc(Recon.ResolveEntitiesRequest reconReq)
-      throws IOException, InterruptedException {
-    logCtx.incrementInfoCounterBy("Resolution_NumDcCalls", 1);
-    var request =
-        HttpRequest.newBuilder(URI.create(API_ROOT))
-            .version(HttpClient.Version.HTTP_1_1)
-            .header("accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(StringUtil.msgToJson(reconReq)))
-            .build();
-    var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-    var reconResp = Recon.ResolveEntitiesResponse.newBuilder();
-    var jsonBody = response.body().trim();
-    JsonFormat.parser().merge(jsonBody, reconResp);
-    return reconResp.build();
   }
 
   private static Map<String, Set<String>> getExternalIds(Mcf.McfGraph.PropertyValues node) {
