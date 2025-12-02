@@ -354,46 +354,48 @@ public class ExternalIdResolver {
     }
 
     for (var propIds : batchedIds.entrySet()) {
-      var prop = propIds.getKey();
-      var ids = propIds.getValue();
-      if (ids.isEmpty()) {
-        continue;
-      }
-
-      var request =
-          Resolve.ResolveRequest.newBuilder()
-              .addAllNodes(ids)
-              .setProperty("<-" + prop + "->dcid")
-              .build();
-
-      if (verbose) {
-        logger.info("Resolve v2 request payload: {}", request);
-      }
-
-      logCtx.incrementInfoCounterBy("Resolution_NumResolveV2Calls", 1);
-
-      var response = reconClient.resolve(request);
-
-      for (var entity : response.getEntitiesList()) {
-        var extId = entity.getNode();
-
-        if (entity.getCandidatesCount() == 0) {
-          if (verbose) logger.info("Unable to resolve " + entity.getNode());
-          continue;
-        }
-
-        var dcid = entity.getCandidates(0).getDcid();
-        if (!dcid.isEmpty()) {
-          addToMappedIds(prop, extId, dcid);
-          if (verbose) logger.info("Resolved " + entity.getNode() + " -> " + dcid);
-        } else if (verbose) {
-          logger.info("Resolved to empty dcid for " + entity.getNode());
-        }
-      }
+      resolvePropertyV2(propIds.getKey(), propIds.getValue());
     }
 
     batchedIds.clear();
     numBatchedIds = 0;
+  }
+
+  private void resolvePropertyV2(String prop, Set<String> ids) {
+    if (ids.isEmpty()) {
+      return;
+    }
+
+    var request =
+        Resolve.ResolveRequest.newBuilder()
+            .addAllNodes(ids)
+            .setProperty("<-" + prop + "->dcid")
+            .build();
+
+    if (verbose) {
+      logger.info("Resolve v2 request payload: {}", request);
+    }
+
+    logCtx.incrementInfoCounterBy("Resolution_NumResolveV2Calls", 1);
+
+    var response = reconClient.resolve(request);
+
+    for (var entity : response.getEntitiesList()) {
+      var extId = entity.getNode();
+
+      if (entity.getCandidatesCount() == 0) {
+        if (verbose) logger.info("Unable to resolve " + entity.getNode());
+        continue;
+      }
+
+      var dcid = entity.getCandidates(0).getDcid();
+      if (!dcid.isEmpty()) {
+        addToMappedIds(prop, extId, dcid);
+        if (verbose) logger.info("Resolved " + entity.getNode() + " -> " + dcid);
+      } else if (verbose) {
+        logger.info("Resolved to empty dcid for " + entity.getNode());
+      }
+    }
   }
 
   private void addToMappedIds(String extProp, String extId, String dcid) {
