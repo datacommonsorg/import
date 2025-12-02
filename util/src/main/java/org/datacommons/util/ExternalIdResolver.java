@@ -81,11 +81,11 @@ public class ExternalIdResolver {
       if (drained) {
         return;
       }
-      drained = true;
       propertyResolver.drain();
       if (coordinatesResolver != null) {
         coordinatesResolver.drain();
       }
+      drained = true;
     } finally {
       rwlock.writeLock().unlock();
     }
