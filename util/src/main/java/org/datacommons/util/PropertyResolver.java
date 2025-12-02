@@ -155,27 +155,38 @@ final class PropertyResolver {
       String prop2,
       String id2,
       String dcid2) {
-    boolean foundFirst = prop1.compareTo(prop2) < 0;
+    String firstProp, firstVal, firstDcid, secondProp, secondVal, secondDcid;
+    if (prop1.compareTo(prop2) < 0) {
+      firstProp = prop1;
+      firstVal = id1;
+      firstDcid = dcid1;
+      secondProp = prop2;
+      secondVal = id2;
+      secondDcid = dcid2;
+    } else {
+      firstProp = prop2;
+      firstVal = id2;
+      firstDcid = dcid2;
+      secondProp = prop1;
+      secondVal = id1;
+      secondDcid = dcid1;
+    }
+
     logCtx.addEntry(
         Debug.Log.Level.LEVEL_ERROR,
-        "Resolution_DivergingDcidsForExternalIds_"
-            + (foundFirst ? prop1 : prop2)
-            + "_"
-            + (foundFirst ? prop2 : prop1),
+        "Resolution_DivergingDcidsForExternalIds_" + firstProp + "_" + secondProp,
         "Found diverging DCIDs for external IDs :: extId1: '"
-            + (foundFirst ? id1 : id2)
-            + "', "
-            + "dcid1: '"
-            + (foundFirst ? dcid1 : dcid2)
+            + firstVal
+            + "', dcid1: '"
+            + firstDcid
             + "', property1: '"
-            + (foundFirst ? prop1 : prop2)
-            + ", "
-            + "extId2: '"
-            + (foundFirst ? id2 : id1)
+            + firstProp
+            + ", extId2: '"
+            + secondVal
             + "', dcid2: '"
-            + (foundFirst ? dcid2 : dcid1)
+            + secondDcid
             + "', property2: '"
-            + (foundFirst ? prop2 : prop1)
+            + secondProp
             + "', node: '"
             + nodeId
             + "'",
