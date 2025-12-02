@@ -12,6 +12,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import org.datacommons.proto.Debug;
+import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
 import org.datacommons.proto.Mcf.McfGraph.Values;
@@ -39,9 +41,11 @@ final class PropertyResolver {
   private final Map<String, Map<String, Set<String>>> resolvedProperties = new ConcurrentHashMap<>();
 
   private final ReconClient client;
+  private final LogWrapper logCtx;
 
-  PropertyResolver(ReconClient client) {
+  PropertyResolver(ReconClient client, LogWrapper logCtx) {
     this.client = client;
+    this.logCtx = logCtx;
   }
 
   boolean submit(PropertyValues node) {
@@ -95,9 +99,97 @@ final class PropertyResolver {
             });
   }
 
-  Optional<String> resolve(PropertyValues node) {
-    // To be implemented in Step 3
-    return Optional.empty();
+  Optional<String> resolve(String nodeId, PropertyValues node) {
+    String foundDcid = null;
+    String foundExternalProp = null;
+    String foundExternalId = null;
+    Map<String, Set<String>> externalIds = getExternalIds(node);
+    for (Map.Entry<String, Set<String>> entry : externalIds.entrySet()) {
+      String prop = entry.getKey();
+      Set<String> values = entry.getValue();
+      Map<String, Set<String>> propResolved = resolvedProperties.get(prop);
+      for (String val : values) {
+        if (checkAndLogUnresolved(nodeId, node, prop, val, propResolved)) {
+          return Optional.empty();
+        }
+        String newDcid = propResolved.get(val).stream().findFirst().orElse(null);
+        if (newDcid != null) {
+          if (foundDcid != null && !foundDcid.equals(newDcid)) {
+            logDivergingDcids(
+                nodeId,
+                node,
+                foundExternalProp,
+                foundExternalId,
+                foundDcid,
+                prop,
+                val,
+                newDcid);
+            return Optional.empty();
+          }
+          foundDcid = newDcid;
+          foundExternalProp = prop;
+          foundExternalId = val;
+        }
+      }
+      }
+    return Optional.ofNullable(foundDcid);
+  }
+
+  private boolean checkAndLogUnresolved(
+      String nodeId,
+      PropertyValues node,
+      String prop,
+      String id,
+      Map<String, Set<String>> propResolved) {
+    if (propResolved == null || !propResolved.containsKey(id)) {
+      logUnresolvedId(nodeId, node, prop, id);
+      return true;
+    }
+    return false;
+  }
+
+  private void logDivergingDcids(
+      String nodeId,
+      PropertyValues node,
+      String prop1,
+      String id1,
+      String dcid1,
+      String prop2,
+      String id2,
+      String dcid2) {
+    boolean foundFirst = prop1.compareTo(prop2) < 0;
+    logCtx.addEntry(
+        Debug.Log.Level.LEVEL_ERROR,
+        "Resolution_DivergingDcidsForExternalIds_"
+            + (foundFirst ? prop1 : prop2)
+            + "_"
+            + (foundFirst ? prop2 : prop1),
+        "Found diverging DCIDs for external IDs :: extId1: '"
+            + (foundFirst ? id1 : id2)
+            + "', "
+            + "dcid1: '"
+            + (foundFirst ? dcid1 : dcid2)
+            + "', property1: '"
+            + (foundFirst ? prop1 : prop2)
+            + ", "
+            + "extId2: '"
+            + (foundFirst ? id2 : id1)
+            + "', dcid2: '"
+            + (foundFirst ? dcid2 : dcid1)
+            + "', property2: '"
+            + (foundFirst ? prop2 : prop1)
+            + "', node: '"
+            + nodeId
+            + "'",
+        node.getLocationsList());
+  }
+
+  private void logUnresolvedId(String nodeId, PropertyValues node, String prop, String id) {
+    logCtx.addEntry(
+        Debug.Log.Level.LEVEL_ERROR,
+        "Resolution_UnresolvedExternalId_" + prop,
+        "Unresolved external ID :: id: '" + id + "', property: '" + prop + "', node: '" + nodeId,
+        node.getLocationsList());
   }
 
   private static String getPropertyExpression(String prop) {
