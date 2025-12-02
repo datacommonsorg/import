@@ -109,23 +109,31 @@ public class ApiHelper {
       legacyFormat.add(dcid, outWrapper);
 
       if (v2Response.data.containsKey(dcid)) {
-        V2NodeResponse.NodeData nodeData = v2Response.data.get(dcid);
-        if (nodeData != null && nodeData.arcs != null && nodeData.arcs.containsKey(property)) {
-          V2NodeResponse.ArcData arcData = nodeData.arcs.get(property);
-          if (arcData != null && arcData.nodes != null) {
-            for (V2NodeResponse.NodeInfo node : arcData.nodes) {
-              JsonObject outObj = new JsonObject();
-              if (node.dcid != null) {
-                outObj.addProperty("dcid", node.dcid);
-              } else if (node.value != null) {
-                outObj.addProperty("value", node.value);
-              }
-              outArray.add(outObj);
-            }
-          }
-        }
+        populateOutArray(v2Response.data.get(dcid), property, outArray);
       }
     }
     return legacyFormat;
+  }
+
+  private static void populateOutArray(
+      V2NodeResponse.NodeData nodeData, String property, JsonArray outArray) {
+    if (nodeData != null && nodeData.arcs != null && nodeData.arcs.containsKey(property)) {
+      V2NodeResponse.ArcData arcData = nodeData.arcs.get(property);
+      if (arcData != null && arcData.nodes != null) {
+        for (V2NodeResponse.NodeInfo node : arcData.nodes) {
+          outArray.add(createOutObject(node));
+        }
+      }
+    }
+  }
+
+  private static JsonObject createOutObject(V2NodeResponse.NodeInfo node) {
+    JsonObject outObj = new JsonObject();
+    if (node.dcid != null) {
+      outObj.addProperty("dcid", node.dcid);
+    } else if (node.value != null) {
+      outObj.addProperty("value", node.value);
+    }
+    return outObj;
   }
 }
