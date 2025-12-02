@@ -6,7 +6,7 @@
         "NumPVSuccesses": "100",
         "Existence_NumChecks": "155",
         "NumNodeSuccesses": "20",
-        "Resolution_NumDcCalls": "1",
+        "ReconClient_NumApiCalls": "2",
         "Existence_NumDcCalls": "2"
       }
     },
