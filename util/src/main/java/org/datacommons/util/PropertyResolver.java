@@ -155,7 +155,12 @@ final class PropertyResolver {
       String prop2,
       String id2,
       String dcid2) {
-    String firstProp, firstVal, firstDcid, secondProp, secondVal, secondDcid;
+    String firstProp;
+    String firstVal;
+    String firstDcid;
+    String secondProp;
+    String secondVal;
+    String secondDcid;
     if (prop1.compareTo(prop2) < 0) {
       firstProp = prop1;
       firstVal = id1;
