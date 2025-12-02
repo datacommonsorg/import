@@ -2,12 +2,15 @@ package org.datacommons.util;
 
 import static java.util.stream.Collectors.toList;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
@@ -19,6 +22,8 @@ import org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate;
 
 /** Resolves nodes with properties by calling the DC resolution API. */
 final class PropertyResolver {
+  private static final String DCID_PROPERTY = "dcid";
+
   // Property in the resolve request.
   // We will support multiple properties, so this will be dynamic.
   
@@ -53,12 +58,50 @@ final class PropertyResolver {
   }
 
   void drain() {
-    // To be implemented in Step 2
+    List<CompletableFuture<Void>> futures = new ArrayList<>();
+    for (Map.Entry<String, Set<String>> entry : resolveProperties.entrySet()) {
+      String prop = entry.getKey();
+      Set<String> values = entry.getValue();
+      if (!values.isEmpty()) {
+        ResolveRequest request =
+            ResolveRequest.newBuilder()
+                .addAllNodes(values)
+                .setProperty(getPropertyExpression(prop))
+                .build();
+        futures.add(
+            client
+                .resolveAsync(request)
+                .thenAccept(response -> populateResolvedCandidates(prop, response)));
+      }
+    }
+    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+  }
+
+  private void populateResolvedCandidates(String prop, ResolveResponse response) {
+    Map<String, Set<String>> propResolved =
+        resolvedProperties.computeIfAbsent(prop, k -> new ConcurrentHashMap<>());
+    response
+        .getEntitiesList()
+        .forEach(
+            entity -> {
+              if (entity.getCandidatesCount() > 0) {
+                propResolved.put(
+                    entity.getNode(),
+                    new LinkedHashSet<>(
+                        entity.getCandidatesList().stream()
+                            .map(Candidate::getDcid)
+                            .collect(toList())));
+              }
+            });
   }
 
   Optional<String> resolve(PropertyValues node) {
     // To be implemented in Step 3
     return Optional.empty();
+  }
+
+  private static String getPropertyExpression(String prop) {
+    return "<-" + prop + "->" + DCID_PROPERTY;
   }
 
   private static Map<String, Set<String>> getExternalIds(PropertyValues node) {
