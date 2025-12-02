@@ -279,6 +279,28 @@ public class ExternalIdResolver {
   // TODO: Remove this v1-specific path when all resolution traffic is
   // served via the v2 resolve API.
   private void drainRemoteCallsInternalV1() throws IOException, InterruptedException {
+    Recon.ResolveEntitiesRequest request = buildResolveEntitiesRequestV1();
+    if (request.getEntitiesCount() == 0) {
+      return;
+    }
+
+    if (verbose) {
+      logger.info(
+          "Issuing ResolveEntities call with {} IDs, payload: {}",
+          request.getEntitiesCount(),
+          request);
+    }
+    // Issue the RPC.
+    var response = callDc(request);
+    // Process response.
+    processResolveEntitiesResponseV1(response);
+
+    // Clear the batch.
+    batchedIds.clear();
+    numBatchedIds = 0;
+  }
+
+  private Recon.ResolveEntitiesRequest buildResolveEntitiesRequestV1() {
     // Package a request with all the batched IDs.
     Recon.ResolveEntitiesRequest.Builder request = Recon.ResolveEntitiesRequest.newBuilder();
     request.addWantedIdProperties(Vocabulary.DCID);
@@ -293,20 +315,11 @@ public class ExternalIdResolver {
         reqEntity.setSourceId(prop + ":" + id);
       }
     }
-    if (request.getEntitiesCount() == 0) {
-      return;
-    }
+    return request.build();
+  }
 
-    // Issue the RPC.
-    if (verbose) {
-      logger.info(
-          "Issuing ResolveEntities call with {} IDs, payload: {}",
-          request.getEntitiesCount(),
-          request);
-    }
-    var response = callDc(request.build());
-
-    // Process response.
+  private void processResolveEntitiesResponseV1(Recon.ResolveEntitiesResponse response)
+      throws InvalidProtocolBufferException {
     for (var entity : response.getResolvedEntitiesList()) {
       if (entity.getResolvedIdsCount() == 0) {
         // Unable to resolve ID.
@@ -338,10 +351,6 @@ public class ExternalIdResolver {
         if (verbose) logger.info("Resolved to empty dcid for " + entity.getSourceId());
       }
     }
-
-    // Clear the batch.
-    batchedIds.clear();
-    numBatchedIds = 0;
   }
 
   private void drainRemoteCallsInternalV2() {
