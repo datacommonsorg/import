@@ -108,23 +108,20 @@ public class ApiHelper {
       outWrapper.add("out", outArray);
       legacyFormat.add(dcid, outWrapper);
 
-      if (v2Response.data.containsKey(dcid)) {
-        populateOutArray(v2Response.data.get(dcid), property, outArray);
+      V2NodeResponse.NodeData nodeData = v2Response.data.get(dcid);
+      if (nodeData == null) continue;
+
+      Map<String, V2NodeResponse.ArcData> arcs = nodeData.arcs;
+      if (arcs == null) continue;
+
+      V2NodeResponse.ArcData arcData = arcs.get(property);
+      if (arcData == null || arcData.nodes == null) continue;
+
+      for (V2NodeResponse.NodeInfo node : arcData.nodes) {
+        outArray.add(createOutObject(node));
       }
     }
     return legacyFormat;
-  }
-
-  private static void populateOutArray(
-      V2NodeResponse.NodeData nodeData, String property, JsonArray outArray) {
-    if (nodeData != null && nodeData.arcs != null && nodeData.arcs.containsKey(property)) {
-      V2NodeResponse.ArcData arcData = nodeData.arcs.get(property);
-      if (arcData != null && arcData.nodes != null) {
-        for (V2NodeResponse.NodeInfo node : arcData.nodes) {
-          outArray.add(createOutObject(node));
-        }
-      }
-    }
   }
 
   private static JsonObject createOutObject(V2NodeResponse.NodeInfo node) {
