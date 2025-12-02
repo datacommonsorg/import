@@ -83,35 +83,12 @@ public class ExternalIdResolver {
       // Nothing to do if this is not a resolvable type.
       if (!isResolvableType(node)) return;
 
-      for (var propIds : getExternalIds(node).entrySet()) {
-        var prop = propIds.getKey();
-        Set<String> batched = batchedIds.getOrDefault(prop, null);
-        Map<String, String> mapped = mappedIds.getOrDefault(prop, null);
-        int numOrig = batched != null ? batched.size() : 0;
-        for (var id : propIds.getValue()) {
-          if (mapped != null && mapped.containsKey(id)) {
-            // This ID is already mapped.
-            continue;
-          }
-          if (batched == null) batched = new HashSet<>();
-          batched.add(id);
-        }
-        if (batched != null) {
-          numBatchedIds += (batched.size() - numOrig);
-          batchedIds.put(prop, batched);
-        }
-      }
+      propertyResolver.submit(node);
 
       if (coordinatesResolver != null) {
         coordinatesResolver.submit(node);
       }
 
-      if (numBatchedIds >= MAX_RESOLUTION_BATCH_IDS) {
-        if (verbose) {
-          logger.info("Processing batched external-IDs due to MAX_RESOLUTION_BATCH_IDS threshold");
-        }
-        drainRemoteCallsInternal();
-      }
     } finally {
       rwlock.writeLock().unlock();
     }
