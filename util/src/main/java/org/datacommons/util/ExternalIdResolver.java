@@ -3,8 +3,6 @@ package org.datacommons.util;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.rmi.UnexpectedException;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -64,7 +62,7 @@ public class ExternalIdResolver {
         throw new UnexpectedException("Cannot call submitMcf after drainRemoteCalls!");
       }
       // Nothing to do if this is not a resolvable type.
-      if (!isResolvableType(node)) return;
+      if (!McfUtil.isResolvableType(node)) return;
 
       propertyResolver.submit(node);
 
@@ -107,7 +105,7 @@ public class ExternalIdResolver {
       String foundDcid = new String();
 
       // Nothing to do if not resolvable.
-      if (!isResolvableType(node)) return foundDcid;
+      if (!McfUtil.isResolvableType(node)) return foundDcid;
 
       // 1. Try resolving using properties.
       Optional<String> dcid = propertyResolver.resolve(nodeId, node);
@@ -127,7 +125,7 @@ public class ExternalIdResolver {
 
   public synchronized void addLocalGraph(Mcf.McfGraph.PropertyValues node) {
     // Skip doing anything with unresolvable types.
-    if (!isResolvableType(node)) {
+    if (!McfUtil.isResolvableType(node)) {
       return;
     }
 
@@ -136,7 +134,7 @@ public class ExternalIdResolver {
       return;
     }
 
-    Map<String, Set<String>> externalIds = getExternalIds(node);
+    Map<String, Set<String>> externalIds = McfUtil.getExternalIds(node);
     for (Map.Entry<String, Set<String>> externalId : externalIds.entrySet()) {
       String externalIdProp = externalId.getKey();
       Set<String> externalIdValues = externalId.getValue();
@@ -154,32 +152,8 @@ public class ExternalIdResolver {
   }
 
   // Returns true if this node is of a type that is resolvable by the ID mapper.
-  private static boolean isResolvableType(Mcf.McfGraph.PropertyValues node) {
-    for (var typeOf : McfUtil.getPropVals(node, Vocabulary.TYPE_OF)) {
-      if (Vocabulary.PLACE_TYPES.contains(typeOf)) return true;
-    }
-    return false;
-  }
 
   private void addToMappedIds(String prop, String extId, String dcid) {
     propertyResolver.addResolvedId(prop, extId, dcid);
-  }
-
-  private static Map<String, Set<String>> getExternalIds(Mcf.McfGraph.PropertyValues node) {
-    Map<String, Set<String>> idMap = new HashMap<>();
-    for (var id : Vocabulary.PLACE_RESOLVABLE_AND_ASSIGNABLE_IDS) {
-      if (node.getPvsMap().containsKey(id)) {
-        Set<String> idVals = new HashSet<>();
-        for (var val : node.getPvsOrThrow(id).getTypedValuesList()) {
-          if (val.getType() == Mcf.ValueType.TEXT || val.getType() == Mcf.ValueType.NUMBER) {
-            idVals.add(val.getValue());
-          }
-        }
-        if (!idVals.isEmpty()) {
-          idMap.put(id, idVals);
-        }
-      }
-    }
-    return idMap;
   }
 }

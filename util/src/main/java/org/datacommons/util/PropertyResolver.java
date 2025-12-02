@@ -3,8 +3,6 @@ package org.datacommons.util;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +12,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
-import org.datacommons.proto.Mcf.McfGraph.TypedValue;
-import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.proto.Resolve.ResolveRequest;
 import org.datacommons.proto.Resolve.ResolveResponse;
 import org.datacommons.proto.Resolve.ResolveResponse.Entity.Candidate;
@@ -47,9 +43,9 @@ final class PropertyResolver {
   }
 
   boolean submit(PropertyValues node) {
-    if (!isResolvableType(node)) return false;
+    if (!McfUtil.isResolvableType(node)) return false;
     boolean submitted = false;
-    for (Map.Entry<String, Set<String>> propVals : getExternalIds(node).entrySet()) {
+    for (Map.Entry<String, Set<String>> propVals : McfUtil.getExternalIds(node).entrySet()) {
       String prop = propVals.getKey();
       Set<String> vals = propVals.getValue();
       Map<String, Set<String>> resolvedProp = resolvedProperties.get(prop);
@@ -105,7 +101,7 @@ final class PropertyResolver {
     String foundDcid = null;
     String foundExternalProp = null;
     String foundExternalId = null;
-    Map<String, Set<String>> externalIds = getExternalIds(node);
+    Map<String, Set<String>> externalIds = McfUtil.getExternalIds(node);
     for (Map.Entry<String, Set<String>> entry : externalIds.entrySet()) {
       String prop = entry.getKey();
       Set<String> values = entry.getValue();
@@ -196,30 +192,5 @@ final class PropertyResolver {
 
   private static String getPropertyExpression(String prop) {
     return "<-" + prop + "->" + DCID_PROPERTY;
-  }
-
-  private static Map<String, Set<String>> getExternalIds(PropertyValues node) {
-    Map<String, Set<String>> idMap = new HashMap<>();
-    for (String id : Vocabulary.PLACE_RESOLVABLE_AND_ASSIGNABLE_IDS) {
-      if (node.containsPvs(id)) {
-        Set<String> idVals = new HashSet<>();
-        for (TypedValue val : node.getPvsOrThrow(id).getTypedValuesList()) {
-          if (val.getType() == ValueType.TEXT || val.getType() == ValueType.NUMBER) {
-            idVals.add(val.getValue());
-          }
-        }
-        if (!idVals.isEmpty()) {
-          idMap.put(id, idVals);
-        }
-      }
-    }
-    return idMap;
-  }
-
-  private static boolean isResolvableType(PropertyValues node) {
-    for (var typeOf : McfUtil.getPropVals(node, Vocabulary.TYPE_OF)) {
-      if (Vocabulary.PLACE_TYPES.contains(typeOf)) return true;
-    }
-    return false;
   }
 }
