@@ -20,6 +20,10 @@ from typing import Optional, TYPE_CHECKING
 
 from pymysql.connections import Connection
 from pymysql.cursors import Cursor
+from stats.db import _INSERT_KEY_VALUE_STORE_STATEMENT
+from stats.db import _INSERT_OBSERVATIONS_STATEMENT
+from stats.db import _INSERT_TRIPLES_STATEMENT
+from stats.db import _pymysql
 
 if TYPE_CHECKING:
   from stats.db import CloudSqlDbEngine
@@ -96,10 +100,7 @@ def transfer_sqlite_to_cloud_sql(
         if not batch:
           break
 
-        cursor.executemany(
-            "INSERT INTO observations VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            batch
-        )
+        cursor.executemany(_pymysql(_INSERT_OBSERVATIONS_STATEMENT), batch)
         obs_count += len(batch)
         logging.info(f"Transferred {obs_count:,} observations so far...")
 
@@ -112,10 +113,7 @@ def transfer_sqlite_to_cloud_sql(
       triple_count = len(triples)
 
       if triple_count > 0:
-        cursor.executemany(
-            "INSERT INTO triples VALUES (%s, %s, %s, %s)",
-            triples
-        )
+        cursor.executemany(_pymysql(_INSERT_TRIPLES_STATEMENT), triples)
       logging.info(f"Transferred {triple_count:,} triples")
 
       # Transfer key_value_store
@@ -125,10 +123,8 @@ def transfer_sqlite_to_cloud_sql(
       kv_count = len(kv_pairs)
 
       if kv_count > 0:
-        cursor.executemany(
-            "INSERT INTO key_value_store VALUES (%s, %s)",
-            kv_pairs
-        )
+        cursor.executemany(_pymysql(_INSERT_KEY_VALUE_STORE_STATEMENT),
+                           kv_pairs)
       logging.info(f"Transferred {kv_count:,} key-value pairs")
 
       # Validate transfer (before commit)
