@@ -282,8 +282,7 @@ class Observation:
             self.properties.scaling_factor,
             strip_namespace(self.properties.measurement_method),
             strip_namespace(self.properties.observation_period),
-            json.dumps(self.properties.properties)
-            if self.properties.properties else "")
+            json.dumps(self.properties.properties or {}))
 
 
 def _get_flattened_dataclass_field_names(cls) -> list[str]:
@@ -607,11 +606,8 @@ def prepare_observations_df(
   for col in constants.COLUMNS_TO_STRIP_NAMESPACES:
     df[col] = strip_namespace_series(df[col])
 
-  # Serialize custom properties dict to JSON
-  if obs_props.properties:
-    df[constants.COLUMN_PROPERTIES] = json.dumps(obs_props.properties)
-  else:
-    df[constants.COLUMN_PROPERTIES] = ""
+  # Serialize custom properties dict to JSON (even when empty)
+  df[constants.COLUMN_PROPERTIES] = json.dumps(obs_props.properties or {})
 
   # Reorder columns to match database schema
   return df[constants.OBSERVATION_COLUMNS]
