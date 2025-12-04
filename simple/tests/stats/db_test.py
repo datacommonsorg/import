@@ -20,6 +20,7 @@ import unittest
 from unittest import mock
 
 from freezegun import freeze_time
+import pandas as pd
 from stats.data import Observation
 from stats.data import ObservationProperties
 from stats.data import Triple
@@ -87,6 +88,19 @@ _INDEXES = [('observations_entity_variable', 'observations'),
             ('observations_variable', 'observations')]
 
 
+def _observations_to_df(observations: list[Observation]) -> pd.DataFrame:
+  """Helper to convert list of Observation objects to DataFrame."""
+  from stats import constants
+  return pd.DataFrame(
+      [obs.db_tuple() for obs in observations],
+      columns=[
+          constants.COLUMN_ENTITY, constants.COLUMN_VARIABLE, constants.COLUMN_DATE,
+          constants.COLUMN_VALUE, constants.COLUMN_PROVENANCE, 'unit',
+          'scaling_factor', 'measurement_method', 'observation_period',
+          'properties'
+      ])
+
+
 class TestDb(unittest.TestCase):
 
   def _seed_db_from_input(self, db_file_path: str, input_db_file_name: str):
@@ -131,7 +145,7 @@ class TestDb(unittest.TestCase):
       db = create_and_update_db(create_sqlite_config(db_file))
       db.insert_triples(_TRIPLES)
       foo_file = temp_store.as_dir().open_file("foo.csv")
-      db.insert_observations(_OBSERVATIONS, foo_file)
+      db.insert_observations(_observations_to_df(_OBSERVATIONS), foo_file)
       db.insert_key_value(_KEY_VALUE[0], _KEY_VALUE[1])
       db.insert_import_info(status=ImportStatus.SUCCESS)
 
@@ -195,7 +209,7 @@ class TestDb(unittest.TestCase):
 
       db.insert_triples(_TRIPLES)
       foo_file = temp_store.as_dir().open_file("foo.csv")
-      db.insert_observations(_OBSERVATIONS, foo_file)
+      db.insert_observations(_observations_to_df(_OBSERVATIONS), foo_file)
       db.insert_key_value(_KEY_VALUE[0], _KEY_VALUE[1])
       db.insert_import_info(status=ImportStatus.SUCCESS)
 
@@ -228,7 +242,7 @@ class TestDb(unittest.TestCase):
 
       db.insert_triples(_TRIPLES)
       foo_file = temp_store.as_dir().open_file("foo.csv")
-      db.insert_observations(_OBSERVATIONS, foo_file)
+      db.insert_observations(_observations_to_df(_OBSERVATIONS), foo_file)
       db.insert_key_value(_KEY_VALUE[0], _KEY_VALUE[1])
       db.insert_import_info(status=ImportStatus.SUCCESS)
 
@@ -263,7 +277,7 @@ class TestDb(unittest.TestCase):
       db = create_and_update_db(create_main_dc_config(temp_store.as_dir()))
       db.insert_triples(_TRIPLES)
       observations_file = temp_store.as_dir().open_file(observations_file_name)
-      db.insert_observations(_OBSERVATIONS, observations_file)
+      db.insert_observations(_observations_to_df(_OBSERVATIONS), observations_file)
       db.insert_import_info(status=ImportStatus.SUCCESS)
       db.commit_and_close()
 

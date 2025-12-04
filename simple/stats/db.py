@@ -26,8 +26,8 @@ from google.cloud.sql.connector.connector import Connector
 import pandas as pd
 from pymysql.connections import Connection
 from pymysql.cursors import Cursor
+from stats import constants
 from stats.data import McfNode
-from stats.data import Observation
 from stats.data import STAT_VAR_GROUP
 from stats.data import STATISTICAL_VARIABLE
 from stats.data import Triple
@@ -58,11 +58,6 @@ ENV_DB_NAME = "DB_NAME"
 ENV_SQLITE_PATH = "SQLITE_PATH"
 
 MAIN_DC_OUTPUT_DIR = "mainDcOutputDir"
-
-_OBSERVATION_PROPERTY_COLUMNS = [
-    "unit", "scaling_factor", "measurement_method", "observation_period",
-    "properties"
-]
 
 _CREATE_TRIPLES_TABLE = """
 create table if not exists triples (
@@ -212,14 +207,25 @@ class Db:
   def insert_triples(self, triples: list[Triple]):
     pass
 
-  def insert_observations(self, observations: list[Observation],
-                          input_file: File):
+  def insert_observations(self, observations_df: pd.DataFrame, input_file: File):
+    """Insert observations from DataFrame.
+
+    Args:
+      observations_df: DataFrame with columns [entity, variable, date, value,
+                       provenance, unit, scaling_factor, measurement_method,
+                       observation_period, properties] - all transformations applied
+      input_file: Source file for context
+    """
     pass
 
   def insert_key_value(self, key: str, value: str):
     pass
 
   def insert_import_info(self, status: ImportStatus):
+    pass
+
+  def commit(self):
+    """Commit transaction without closing connection."""
     pass
 
   def commit_and_close(self):
@@ -252,20 +258,25 @@ class MainDcDb(Db):
     for triple in triples:
       self._add_triple(triple)
 
-  def insert_observations(self, observations: list[Observation],
-                          input_file: File):
-    df = pd.DataFrame(observations)
-    # Drop the provenance and properties columns.
+  def insert_observations(self, observations_df: pd.DataFrame, input_file: File):
+    # Only keep basic observation columns.
     # Provenance is specified differently for main dc.
     # TODO: Include obs properties in main DC output.
-    df = df.drop(columns=["provenance", "properties"])
+    output_df = observations_df[
+      [
+        constants.COLUMN_ENTITY,
+        constants.COLUMN_VARIABLE,
+        constants.COLUMN_DATE,
+        constants.COLUMN_VALUE,
+      ]
+    ]
     # Right now, this overwrites any file with the same name,
     # so if different input sources have files with the same relative path,
     # they will clobber each others output. Treating this as an edge case
     # for now since it only affects the main DC case, but we could resolve
     # it in the future by allowing input sources to be mapped to output
     # locations.
-    self.output_dir.open_file(input_file.path).write(df.to_csv(index=False))
+    self.output_dir.open_file(input_file.path).write(output_df.to_csv(index=False))
 
   def insert_import_info(self, status: ImportStatus):
     # No-op for now.
@@ -273,14 +284,14 @@ class MainDcDb(Db):
 
   def commit_and_close(self):
     # MCF
-    filtered = filter(lambda node: node.node_type in MCF_NODE_TYPES_ALLOWLIST,
-                      self.nodes.values())
+    filtered = filter(
+      lambda node: node.node_type in MCF_NODE_TYPES_ALLOWLIST, self.nodes.values()
+    )
     mcf = "\n\n".join(map(lambda node: node.to_mcf(), filtered))
     self.output_dir.open_file(SCHEMA_MCF_FILE_NAME).write(mcf)
 
     # TMCF
-    self.output_dir.open_file(OBSERVATIONS_TMCF_FILE_NAME).write(
-        OBSERVATIONS_TMCF)
+    self.output_dir.open_file(OBSERVATIONS_TMCF_FILE_NAME).write(OBSERVATIONS_TMCF)
 
     # Not supported for main DC at this time.
     def select_triples_by_subject_type(self, type_of: str) -> list[Triple]:
@@ -314,19 +325,21 @@ class SqlDb(Db):
   def insert_triples(self, triples: list[Triple]):
     logging.info("Writing %s triples to [%s]", len(triples), self.engine)
     if triples:
-      self.engine.executemany(_INSERT_TRIPLES_STATEMENT,
-                              [triple.db_tuple() for triple in triples])
+      self.engine.executemany(
+        _INSERT_TRIPLES_STATEMENT, [triple.db_tuple() for triple in triples]
+      )
 
-  def insert_observations(self, observations: list[Observation],
-                          input_file: File):
-    logging.info("Writing %s observations to [%s]", len(observations),
-                 self.engine)
-    self.num_observations += len(observations)
-    tuples = []
-    for observation in observations:
-      tuples.append(observation.db_tuple())
-      self.variables.add(observation.variable)
+  def insert_observations(self, observations_df: pd.DataFrame, input_file: File):
+    logging.info(
+      "Writing %s observations to [%s]", len(observations_df), self.engine
+    )
+    self.num_observations += len(observations_df)
 
+    # Track variables
+    self.variables.update(observations_df["variable"].unique())
+
+    # Convert DataFrame to tuples for bulk insert (single operation)
+    tuples = observations_df.to_records(index=False).tolist()
     self.engine.executemany(_INSERT_OBSERVATIONS_STATEMENT, tuples)
 
   def insert_key_value(self, key: str, value: str):
@@ -334,18 +347,23 @@ class SqlDb(Db):
 
   def insert_import_info(self, status: ImportStatus):
     metadata = self._import_metadata()
-    logging.info("Writing import: status = %s, metadata = %s", status.name,
-                 metadata)
+    logging.info(
+      "Writing import: status = %s, metadata = %s", status.name, metadata
+    )
     self.engine.execute(
-        _INSERT_IMPORTS_STATEMENT,
-        (str(datetime.now()), status.name, json.dumps(metadata)))
+      _INSERT_IMPORTS_STATEMENT,
+      (str(datetime.now()), status.name, json.dumps(metadata)),
+    )
+
+  def commit(self):
+    """Commit transaction without closing connection."""
+    self.engine.commit()
 
   def commit_and_close(self):
     self.engine.commit_and_close()
 
   def select_triples_by_subject_type(self, subject_type: str) -> list[Triple]:
-    tuples = self.engine.fetch_all(_SELECT_TRIPLES_BY_SUBJECT_TYPE,
-                                   (subject_type,))
+    tuples = self.engine.fetch_all(_SELECT_TRIPLES_BY_SUBJECT_TYPE, (subject_type,))
     return list(map(lambda tuple: from_triple_tuple(tuple), tuples))
 
   def select_entity_names(self, dcids: list[str]) -> dict[str, str]:
@@ -367,7 +385,6 @@ def from_triple_tuple(tuple: tuple) -> Triple:
 
 
 class DbEngine:
-
   def init_or_update_tables(self):
     pass
 
@@ -383,6 +400,10 @@ class DbEngine:
   def fetch_all(self, sql: str, parameters=None) -> list[Any]:
     pass
 
+  def commit(self):
+    """Commit transaction without closing connection."""
+    pass
+
   def commit_and_close(self):
     pass
 
@@ -391,7 +412,6 @@ _SQLITE_OBSERVATIONS_TABLE_INFO_STATEMENT = "pragma table_info(observations);"
 
 
 class SqliteDbEngine(DbEngine):
-
   def __init__(self, db_params: dict) -> None:
     assert db_params
     assert SQLITE_DB_FILE in db_params
@@ -415,6 +435,7 @@ class SqliteDbEngine(DbEngine):
     logging.info("Connected to SQLite: %s", self.db_file.full_path())
 
     self.cursor = self.connection.cursor()
+    self.indexes_created = False
 
   def _maybe_update_schema(self) -> None:
     """
@@ -426,7 +447,7 @@ class SqliteDbEngine(DbEngine):
     existing_columns = set([columns[1] for columns in rows])
     if "properties" not in existing_columns:
       logging.info(
-          f"properties column does not exist in the observations table. Altering table to the following property columns: {', '.join(_OBSERVATION_PROPERTY_COLUMNS)}"
+        f"properties column does not exist in the observations table. Altering table to the following property columns: {', '.join(constants.OBSERVATION_PROPERTY_COLUMNS)}"
       )
       for statement in _ALTER_OBSERVATIONS_TABLE_STATEMENTS:
         self.cursor.execute(statement)
@@ -437,10 +458,14 @@ class SqliteDbEngine(DbEngine):
       self.cursor.execute(index.sqlite_drop_index_statement())
 
   def _create_indexes(self) -> None:
+    if self.indexes_created:
+      logging.info("Indexes already created, skipping")
+      return
     for index in _DB_INDEXES:
       logging.info("Creating index: %s", index.index_name)
       self.cursor.execute(index.sqlite_create_index_statement())
       logging.info("Index created: %s", index.index_name)
+    self.indexes_created = True
 
   def __str__(self) -> str:
     return f"{TYPE_SQLITE}: {self.db_file.full_path()}"
@@ -472,6 +497,12 @@ class SqliteDbEngine(DbEngine):
     else:
       return self.cursor.execute(sql, parameters).fetchall()
 
+  def commit(self):
+    """Commit transaction without closing connection."""
+    # Create indexes before committing for better query performance during post-processing
+    self._create_indexes()
+    self.connection.commit()
+
   def commit_and_close(self):
     # Create indexes before closing.
     self._create_indexes()
@@ -485,13 +516,11 @@ class SqliteDbEngine(DbEngine):
 
 
 # Parameters needed to connect to a Cloud SQL instance.
-_CLOUD_MY_SQL_INSTANCE_CONNECT_PARAMS = [
-    CLOUD_MY_SQL_USER, CLOUD_MY_SQL_PASSWORD
-]
+_CLOUD_MY_SQL_INSTANCE_CONNECT_PARAMS = [CLOUD_MY_SQL_USER, CLOUD_MY_SQL_PASSWORD]
 
 # Parameters needed to connect to a specific DB in a Cloud SQL instance.
 _CLOUD_MY_SQL_DB_CONNECT_PARAMS = _CLOUD_MY_SQL_INSTANCE_CONNECT_PARAMS + [
-    CLOUD_MY_SQL_DB
+  CLOUD_MY_SQL_DB
 ]
 
 # All parameters that must be specified for connecting to Cloud SQL.
@@ -505,7 +534,6 @@ _CLOUD_MYSQL_PROPERTIES_COLUMN_EXISTS_STATEMENT = """
 
 
 class CloudSqlDbEngine(DbEngine):
-
   def __init__(self, db_params: dict[str, str]) -> None:
     for param in _CLOUD_MY_SQL_PARAMS:
       assert param in db_params, f"{param} param not specified"
@@ -523,6 +551,7 @@ class CloudSqlDbEngine(DbEngine):
                  db_params[CLOUD_MY_SQL_INSTANCE], db_params[CLOUD_MY_SQL_DB])
     self.description = f"{TYPE_CLOUD_SQL}: {db_params[CLOUD_MY_SQL_INSTANCE]} ({db_params[CLOUD_MY_SQL_DB]})"
     self.cursor: Cursor = self.connection.cursor()
+    self.indexes_created = False
 
   def _maybe_update_schema(self) -> None:
     """
@@ -534,7 +563,7 @@ class CloudSqlDbEngine(DbEngine):
     properties_column_exists = rows is not None and len(rows) > 0
     if not properties_column_exists:
       logging.info(
-          f"properties column does not exist in the observations table. Altering table to the following property columns: {', '.join(_OBSERVATION_PROPERTY_COLUMNS)}"
+        f"properties column does not exist in the observations table. Altering table to the following property columns: {', '.join(constants.OBSERVATION_PROPERTY_COLUMNS)}"
       )
       for statement in _ALTER_OBSERVATIONS_TABLE_STATEMENTS:
         self.cursor.execute(statement)
@@ -548,10 +577,14 @@ class CloudSqlDbEngine(DbEngine):
         logging.info("Index does not exist: %s", index.index_name)
 
   def _create_indexes(self) -> None:
+    if self.indexes_created:
+      logging.info("Indexes already created, skipping")
+      return
     for index in _DB_INDEXES:
       logging.info("Creating index: %s", index.index_name)
       self.cursor.execute(index.mysql_create_index_statement())
       logging.info("Index created: %s", index.index_name)
+    self.indexes_created = True
 
   def _maybe_create_database(connector: Connector,
                              db_params: dict[str, str]) -> None:
@@ -559,7 +592,7 @@ class CloudSqlDbEngine(DbEngine):
     def _db_exists(cursor) -> bool:
       # Check if the database already exists.
       cursor.execute(
-          f"SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{db_name}'"
+        f"SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{db_name}'"
       )
       return cursor.fetchone()[0] > 0
 
@@ -580,7 +613,7 @@ class CloudSqlDbEngine(DbEngine):
           logging.info(f"Database '{db_name}' created successfully.")
         else:
           logging.info(
-              f"Database '{db_name}' already exists and will be used for this import."
+            f"Database '{db_name}' already exists and will be used for this import."
           )
 
   def __str__(self) -> str:
@@ -605,6 +638,12 @@ class CloudSqlDbEngine(DbEngine):
   def fetch_all(self, sql: str, parameters=None):
     self.cursor.execute(_pymysql(sql), parameters)
     return self.cursor.fetchall()
+
+  def commit(self):
+    """Commit transaction without closing connection."""
+    # Create indexes before committing for better query performance during post-processing
+    self._create_indexes()
+    self.connection.commit()
 
   def commit_and_close(self):
     # Create indexes before closing.
@@ -641,7 +680,7 @@ def create_db_engine(config: dict) -> DbEngine:
 
 
 def create_and_update_db(config: dict) -> Db:
-  """ Creates and initializes a Db, performing any setup and updates
+  """Creates and initializes a Db, performing any setup and updates
   (e.g. table creation, table schema changes) that are needed.
   """
   db_type = config[FIELD_DB_TYPE]
