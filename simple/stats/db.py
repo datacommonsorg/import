@@ -408,6 +408,14 @@ class DbEngine:
   def commit_and_close(self):
     pass
 
+  def get_row_counts(self) -> dict:
+    """Return row counts for all data tables."""
+    return {
+        'observations': self.fetch_all("SELECT COUNT(*) FROM observations")[0][0],
+        'triples': self.fetch_all("SELECT COUNT(*) FROM triples")[0][0],
+        'key_value_store': self.fetch_all("SELECT COUNT(*) FROM key_value_store")[0][0]
+    }
+
 
 _SQLITE_OBSERVATIONS_TABLE_INFO_STATEMENT = "pragma table_info(observations);"
 
@@ -539,6 +547,90 @@ _CLOUD_MYSQL_PROPERTIES_COLUMN_EXISTS_STATEMENT = """
 """
 
 
+class BulkImportContext:
+  """Context manager for bulk import operations with transaction safety.
+
+  Handles transaction lifecycle, index management, and provides methods
+  for inserting data. All SQL execution goes through DbEngine methods.
+
+  """
+
+  def __init__(self, engine):
+    self._engine = engine
+    self._obs_count = 0
+    self._triple_count = 0
+    self._kv_count = 0
+
+  def __enter__(self):
+    logging.info("Starting bulk import transaction (DB LOCKED - writes blocked)")
+    self._engine.cursor.execute("START TRANSACTION")
+    self._engine._drop_indexes()
+    # Clear existing data
+    for statement in _CLEAR_TABLE_FOR_IMPORT_STATEMENTS:
+      self._engine.cursor.execute(statement)
+    return self
+
+  def __exit__(self, exc_type, exc_val, exc_tb):
+    if exc_type is None:
+      self._engine.connection.commit()
+      logging.info("Bulk import committed - DB unlocked")
+      self._engine._create_indexes()
+    else:
+      logging.error(f"Bulk import failed, rolling back: {exc_val}")
+      self._engine.connection.rollback()
+    return False
+
+  def insert_observations(self, observations: list[tuple]) -> int:
+    """Insert observations"""
+    if observations:
+      self._engine.executemany(_INSERT_OBSERVATIONS_STATEMENT, observations)
+      self._obs_count += len(observations)
+    return len(observations)
+
+  def insert_triples(self, triples: list[tuple]) -> int:
+    """Insert triples"""
+    if triples:
+      self._engine.executemany(_INSERT_TRIPLES_STATEMENT, triples)
+      self._triple_count += len(triples)
+    return len(triples)
+
+  def insert_kv(self, kv_pairs: list[tuple]) -> int:
+    """Insert key-value pairs"""
+    if kv_pairs:
+      self._engine.executemany(_INSERT_KEY_VALUE_STORE_STATEMENT, kv_pairs)
+      self._kv_count += len(kv_pairs)
+    return len(kv_pairs)
+
+  def get_counts(self) -> dict:
+    """Return counts of inserted rows."""
+    return {
+        'observations': self._obs_count,
+        'triples': self._triple_count,
+        'key_value_store': self._kv_count
+    }
+
+  def validate(
+      self,
+      expected_obs: int | None = None,
+      expected_triples: int | None = None,
+      expected_kv: int | None = None
+  ) -> bool:
+    """Validate inserted counts match expected. Call before exiting context."""
+    if expected_obs is not None and self._obs_count != expected_obs:
+      raise RuntimeError(
+          f"Observation count mismatch: expected {expected_obs:,}, got {self._obs_count:,}"
+      )
+    if expected_triples is not None and self._triple_count != expected_triples:
+      raise RuntimeError(
+          f"Triple count mismatch: expected {expected_triples:,}, got {self._triple_count:,}"
+      )
+    if expected_kv is not None and self._kv_count != expected_kv:
+      raise RuntimeError(
+          f"Key-value count mismatch: expected {expected_kv:,}, got {self._kv_count:,}"
+      )
+    return True
+
+
 class CloudSqlDbEngine(DbEngine):
 
   def __init__(self, db_params: dict[str, str]) -> None:
@@ -657,6 +749,10 @@ class CloudSqlDbEngine(DbEngine):
     self._create_indexes()
     self.cursor.close()
     self.connection.commit()
+
+  def bulk_import_context(self) -> BulkImportContext:
+    """Return a context manager for bulk import operations."""
+    return BulkImportContext(self)
 
 
 # PyMySQL uses "%s" as placeholders.

@@ -277,14 +277,12 @@ class Runner:
       self.db.insert_import_info(status=ImportStatus.SUCCESS)
 
       # Get row counts for validation
-      obs_count = self.db.engine.fetch_all("SELECT COUNT(*) FROM observations")[0][0]
-      triple_count = self.db.engine.fetch_all("SELECT COUNT(*) FROM triples")[0][0]
-      kv_count = self.db.engine.fetch_all("SELECT COUNT(*) FROM key_value_store")[0][0]
+      counts = self.db.engine.get_row_counts()
 
       logging.info(f"Local build complete:")
-      logging.info(f"  Observations: {obs_count:,}")
-      logging.info(f"  Triples: {triple_count:,}")
-      logging.info(f"  Key-value pairs: {kv_count:,}")
+      logging.info(f"  Observations: {counts['observations']:,}")
+      logging.info(f"  Triples: {counts['triples']:,}")
+      logging.info(f"  Key-value pairs: {counts['key_value_store']:,}")
 
       # Commit and close local database
       self.db.commit_and_close()
