@@ -22,10 +22,10 @@ CREATE TABLE observations (
     observation_period varchar(255),
     properties TEXT
 );
-INSERT INTO "observations" VALUES('country/FAKE1','var1','2024','1','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE2','var1','2024','3','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE1','var2','2024','2','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE2','var2','2024','4','c/p/1','','','','','');
+INSERT INTO "observations" VALUES('country/FAKE1','var1','2024','1','c/p/1','','','','','{}');
+INSERT INTO "observations" VALUES('country/FAKE2','var1','2024','3','c/p/1','','','','','{}');
+INSERT INTO "observations" VALUES('country/FAKE1','var2','2024','2','c/p/1','','','','','{}');
+INSERT INTO "observations" VALUES('country/FAKE2','var2','2024','4','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/FAKE3','var1','2024','5','c/p/default','','','','','');
 INSERT INTO "observations" VALUES('country/FAKE3','var2','2024','6','c/p/default','','','','','');
 INSERT INTO "observations" VALUES('country/FAKE4','var1','2024','7','c/p/default','','','','','');

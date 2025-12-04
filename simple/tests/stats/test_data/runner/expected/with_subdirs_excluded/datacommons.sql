@@ -26,10 +26,10 @@ INSERT INTO "observations" VALUES('country/IND','var1','2020','0.16','c/p/1','',
 INSERT INTO "observations" VALUES('country/IND','var2','2020','53','c/p/1','','','','','');
 INSERT INTO "observations" VALUES('country/CHN','var1','2020','0.23','c/p/1','','','','','');
 INSERT INTO "observations" VALUES('country/CHN','var2','2020','67','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/USA','var1','2021','555','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/IND','var1','2022','321','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/USA','var2','2021','666','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/IND','var2','2022','123','c/p/1','','','','','');
+INSERT INTO "observations" VALUES('country/USA','var1','2021','555','c/p/1','','','','','{}');
+INSERT INTO "observations" VALUES('country/IND','var1','2022','321','c/p/1','','','','','{}');
+INSERT INTO "observations" VALUES('country/USA','var2','2021','666','c/p/1','','','','','{}');
+INSERT INTO "observations" VALUES('country/IND','var2','2022','123','c/p/1','','','','','{}');
 CREATE TABLE triples (
     subject_id varchar(255),
     predicate varchar(255),
