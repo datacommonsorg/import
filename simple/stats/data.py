@@ -587,10 +587,10 @@ def prepare_observations_df(df: pd.DataFrame, provenance: str,
      measurement_method, observation_period, properties]
   """
 
-  # Filter out invalid values (vectorized)
+    # Filter out invalid values (vectorized)
   df = filter_invalid_observation_values(df)
 
-  # Add provenance and properties
+    # Add provenance and properties
   df[constants.COLUMN_PROVENANCE] = provenance
   df[constants.COLUMN_UNIT] = obs_props.unit if obs_props.unit else ""
   df[constants.COLUMN_SCALING_FACTOR] = obs_props.scaling_factor
@@ -599,12 +599,12 @@ def prepare_observations_df(df: pd.DataFrame, provenance: str,
   df[constants.COLUMN_OBSERVATION_PERIOD] = (
       obs_props.observation_period if obs_props.observation_period else "")
 
-  # Strip namespaces from all DCID columns (vectorized)
+    # Strip namespaces from all DCID columns (vectorized)
   for col in constants.COLUMNS_TO_STRIP_NAMESPACES:
     df[col] = strip_namespace_series(df[col])
 
-  # Serialize custom properties dict to JSON (even when empty)
+    # Serialize custom properties dict to JSON (even when empty)
   df[constants.COLUMN_PROPERTIES] = json.dumps(obs_props.properties or {})
 
-  # Reorder columns to match database schema
+    # Reorder columns to match database schema
   return df[constants.OBSERVATION_COLUMNS]
