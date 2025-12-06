@@ -448,9 +448,11 @@ class SqliteDbEngine(DbEngine):
     rows = self.fetch_all(_SQLITE_OBSERVATIONS_TABLE_INFO_STATEMENT)
     existing_columns = set([columns[1] for columns in rows])
     if "properties" not in existing_columns:
+      property_cols = ', '.join(constants.OBSERVATION_PROPERTY_COLUMNS)
       logging.info(
-          f"properties column does not exist in the observations table. Altering table to the following property columns: {', '.join(constants.OBSERVATION_PROPERTY_COLUMNS)}"
-      )
+          f"properties column does not exist in the observations table. "
+          f"Altering table to the following property columns: {property_cols}")
+
       for statement in _ALTER_OBSERVATIONS_TABLE_STATEMENTS:
         self.cursor.execute(statement)
 

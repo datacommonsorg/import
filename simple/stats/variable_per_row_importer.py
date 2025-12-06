@@ -59,11 +59,11 @@ def _convert_numeric_to_string(col: pd.Series,
       Series with all values converted to strings
   """
 
-  # If not numeric, just convert to string
+    # If not numeric, just convert to string
   if not pd.api.types.is_numeric_dtype(col):
     return col.astype(str)
 
-  # For numeric columns, preserve integer format
+    # For numeric columns, preserve integer format
   is_int_value = col.notna() & (col == col.round())
   is_na = col.isna()
 
@@ -87,10 +87,10 @@ def _apply_property_defaults(df: pd.DataFrame,
   for prop, col_name in property_mapping.items():
     default_value = getattr(obs_props, col_name, "")
     if prop in df.columns:
-      # Replace empty strings with NaN for consistent handling
+        # Replace empty strings with NaN for consistent handling
       source_col = df[prop].replace("", pd.NA)
 
-      # Check if source is numeric before filling (to preserve int format for numeric columns)
+        # Check if source is numeric before filling (to preserve int format for numeric columns)
       is_source_numeric = pd.api.types.is_numeric_dtype(source_col)
 
       if is_source_numeric:
@@ -99,14 +99,14 @@ def _apply_property_defaults(df: pd.DataFrame,
       else:
         df[col_name] = source_col.fillna(default_value).astype(str)
 
-      # Drop the original property column (if different from target)
+        # Drop the original property column (if different from target)
       if prop != col_name:
         df = df.drop(columns=[prop])
     else:
-      # If the column doesn't exist, use default for all rows
+        # If the column doesn't exist, use default for all rows
       df[col_name] = default_value
 
-  # Custom properties column (always empty for variable_per_row_importer)
+    # Custom properties column (always empty for variable_per_row_importer)
   df[constants.COLUMN_PROPERTIES] = ""
   return df
 
@@ -121,10 +121,10 @@ def _format_numeric_values(df: pd.DataFrame) -> pd.DataFrame:
 def _strip_namespaces(df: pd.DataFrame, provenance: str) -> pd.DataFrame:
   """Strip namespace prefixes from DCID columns."""
 
-  # Strip namespaces from columns that exist
+    # Strip namespaces from columns that exist
   for col in constants.COLUMNS_TO_STRIP_NAMESPACES:
     if col == constants.COLUMN_PROVENANCE:
-      # Provenance comes from parameter, not from dataframe
+        # Provenance comes from parameter, not from dataframe
       df[constants.COLUMN_PROVENANCE] = strip_namespace(provenance)
     elif col in df.columns:
       df[col] = strip_namespace_series(df[col])

@@ -74,17 +74,17 @@ def compare_csv_files(test: unittest.TestCase,
   if (expected_file_exists == False):
     return
 
-  # Read both CSVs
+    # Read both CSVs
   actual_df = pd.read_csv(actual_path)
   expected_df = pd.read_csv(expected_path)
 
-  # Sort both dataframes by all columns for deterministic comparison
+    # Sort both dataframes by all columns for deterministic comparison
   actual_sorted = actual_df.sort_values(by=list(actual_df.columns)).reset_index(
       drop=True)
   expected_sorted = expected_df.sort_values(
       by=list(expected_df.columns)).reset_index(drop=True)
 
-  # Convert to CSV strings for comparison
+    # Convert to CSV strings for comparison
   actual_csv = actual_sorted.to_csv(index=False)
   expected_csv = expected_sorted.to_csv(index=False)
 
