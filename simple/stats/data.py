@@ -20,14 +20,14 @@ from dataclasses import fields
 from dataclasses import is_dataclass
 from enum import StrEnum
 import json
-import pandas as pd
 from typing import Self
 from urllib.parse import urlparse
 
+import pandas as pd
+from stats import constants
 from stats import schema_constants as sc
 from stats.util import base64_decode_and_gunzip_json
 from stats.util import gzip_and_base64_encode_json
-from stats import constants
 
 _PREDICATE_TYPE_OF = "typeOf"
 _PREDICATE_NAME = "name"
@@ -95,9 +95,9 @@ class StatVarGroup:
 
   def triples(self) -> list[Triple]:
     triples: list[Triple] = [
-      Triple(self.id, _PREDICATE_TYPE_OF, object_id=STAT_VAR_GROUP),
-      Triple(self.id, _PREDICATE_NAME, object_value=self.name),
-      Triple(self.id, _PREDICATE_SPECIALIZATION_OF, object_id=self.parent_id),
+        Triple(self.id, _PREDICATE_TYPE_OF, object_id=STAT_VAR_GROUP),
+        Triple(self.id, _PREDICATE_NAME, object_value=self.name),
+        Triple(self.id, _PREDICATE_SPECIALIZATION_OF, object_id=self.parent_id),
     ]
     for provenance_id in self.provenance_ids:
       triples.append(
@@ -147,8 +147,8 @@ class StatVar:
 
   def triples(self) -> list[Triple]:
     triples: list[Triple] = [
-      Triple(self.id, _PREDICATE_TYPE_OF, object_id=STATISTICAL_VARIABLE),
-      Triple(self.id, _PREDICATE_NAME, object_value=self.name),
+        Triple(self.id, _PREDICATE_TYPE_OF, object_id=STATISTICAL_VARIABLE),
+        Triple(self.id, _PREDICATE_NAME, object_value=self.name),
     ]
     if self.description:
       triples.append(
@@ -184,7 +184,7 @@ class Entity:
   def triples(self) -> list[Triple]:
     # Currently only 1 triple is generated but could be more in the future (e.g. name)
     return [
-      Triple(self.entity_dcid, _PREDICATE_TYPE_OF, object_id=self.entity_type)
+        Triple(self.entity_dcid, _PREDICATE_TYPE_OF, object_id=self.entity_type)
     ]
 
 
@@ -360,7 +360,9 @@ class Event:
   properties: dict[str, str] = field(default_factory=lambda: defaultdict(dict))
 
   def triples(self) -> list[Triple]:
-    triples: list[Triple] = [Triple(self.id, _PREDICATE_TYPE_OF, object_id=self.event_type)]
+    triples: list[Triple] = [
+        Triple(self.id, _PREDICATE_TYPE_OF, object_id=self.event_type)
+    ]
     if self.entity:
       triples.append(Triple(self.id, _PREDICATE_LOCATION,
                             object_id=self.entity))
@@ -530,7 +532,7 @@ def strip_namespace(v: str) -> str:
   Strips namespaces from dcids.
   e.g. 'dcid:country/USA' -> 'country/USA'
   """
-  return v[v.find(_NAMESPACE_DELIMITER) + 1 :]
+  return v[v.find(_NAMESPACE_DELIMITER) + 1:]
 
 
 def strip_namespace_series(series: pd.Series) -> pd.Series:
@@ -559,16 +561,13 @@ def filter_invalid_observation_values(df: pd.DataFrame) -> pd.DataFrame:
   Returns:
       Filtered DataFrame with only valid observation values
   """
-  return df[
-    (df[constants.COLUMN_VALUE].notna())
-    & (df[constants.COLUMN_VALUE] != "<NA>")
-    & (df[constants.COLUMN_VALUE] != "")
-    ].copy()
+  return df[(df[constants.COLUMN_VALUE].notna()) &
+            (df[constants.COLUMN_VALUE] != "<NA>") &
+            (df[constants.COLUMN_VALUE] != "")].copy()
 
 
-def prepare_observations_df(
-    df: pd.DataFrame, provenance: str, obs_props: "ObservationProperties"
-) -> pd.DataFrame:
+def prepare_observations_df(df: pd.DataFrame, provenance: str,
+                            obs_props: "ObservationProperties") -> pd.DataFrame:
   """
   Transform observations DataFrame into database-ready format.
   Applies all transformations that Observation.db_tuple() used to do, but vectorially.
@@ -596,11 +595,9 @@ def prepare_observations_df(
   df[constants.COLUMN_UNIT] = obs_props.unit if obs_props.unit else ""
   df[constants.COLUMN_SCALING_FACTOR] = obs_props.scaling_factor
   df[constants.COLUMN_MEASUREMENT_METHOD] = (
-    obs_props.measurement_method if obs_props.measurement_method else ""
-  )
+      obs_props.measurement_method if obs_props.measurement_method else "")
   df[constants.COLUMN_OBSERVATION_PERIOD] = (
-    obs_props.observation_period if obs_props.observation_period else ""
-  )
+      obs_props.observation_period if obs_props.observation_period else "")
 
   # Strip namespaces from all DCID columns (vectorized)
   for col in constants.COLUMNS_TO_STRIP_NAMESPACES:

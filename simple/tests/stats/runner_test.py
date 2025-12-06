@@ -107,7 +107,8 @@ def _test_runner(test: unittest.TestCase,
                   f"{test_name}: database")
     if os.path.exists(expected_nl_sentences_path):
       compare_csv_files(test, output_nl_sentences_path,
-                        expected_nl_sentences_path, f"{test_name}: nl sentences")
+                        expected_nl_sentences_path,
+                        f"{test_name}: nl sentences")
     if os.path.exists(expected_topic_cache_json_path):
       compare_files(test, output_topic_cache_json_path,
                     expected_topic_cache_json_path, f"{test_name}: topic cache")

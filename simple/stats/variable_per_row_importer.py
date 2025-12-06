@@ -14,8 +14,8 @@
 
 import logging
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from stats import constants
 from stats import schema_constants as sc
 from stats.data import filter_invalid_observation_values
@@ -47,7 +47,8 @@ _REQUIRED_COLUMNS = [
 _DEFAULT_COLUMN_MAPPINGS = {x: x for x in _REQUIRED_COLUMNS}
 
 
-def _convert_numeric_to_string(col: pd.Series, default_for_na: str = "") -> pd.Series:
+def _convert_numeric_to_string(col: pd.Series,
+                               default_for_na: str = "") -> pd.Series:
   """Convert numeric column to string, preserving integer format.
 
   Args:
@@ -67,21 +68,20 @@ def _convert_numeric_to_string(col: pd.Series, default_for_na: str = "") -> pd.S
   is_na = col.isna()
 
   return np.where(
-    is_int_value,
-    col.round().astype("Int64").astype(str),
-    np.where(is_na, default_for_na, col.astype(str)),
+      is_int_value,
+      col.round().astype("Int64").astype(str),
+      np.where(is_na, default_for_na, col.astype(str)),
   )
 
 
-def _apply_property_defaults(
-    df: pd.DataFrame, obs_props: ObservationProperties
-) -> pd.DataFrame:
+def _apply_property_defaults(df: pd.DataFrame,
+                             obs_props: ObservationProperties) -> pd.DataFrame:
   """Apply property defaults, using per-row values where available."""
   property_mapping = {
-    sc.PREDICATE_UNIT: constants.COLUMN_UNIT,
-    sc.PREDICATE_SCALING_FACTOR: constants.COLUMN_SCALING_FACTOR,
-    sc.PREDICATE_MEASUREMENT_METHOD: constants.COLUMN_MEASUREMENT_METHOD,
-    sc.PREDICATE_OBSERVATION_PERIOD: constants.COLUMN_OBSERVATION_PERIOD,
+      sc.PREDICATE_UNIT: constants.COLUMN_UNIT,
+      sc.PREDICATE_SCALING_FACTOR: constants.COLUMN_SCALING_FACTOR,
+      sc.PREDICATE_MEASUREMENT_METHOD: constants.COLUMN_MEASUREMENT_METHOD,
+      sc.PREDICATE_OBSERVATION_PERIOD: constants.COLUMN_OBSERVATION_PERIOD,
   }
 
   for prop, col_name in property_mapping.items():
@@ -94,9 +94,8 @@ def _apply_property_defaults(
       is_source_numeric = pd.api.types.is_numeric_dtype(source_col)
 
       if is_source_numeric:
-        df[col_name] = _convert_numeric_to_string(
-          source_col, default_for_na=default_value
-        )
+        df[col_name] = _convert_numeric_to_string(source_col,
+                                                  default_for_na=default_value)
       else:
         df[col_name] = source_col.fillna(default_value).astype(str)
 
@@ -114,7 +113,8 @@ def _apply_property_defaults(
 
 def _format_numeric_values(df: pd.DataFrame) -> pd.DataFrame:
   """Convert value column to string, preserving integer format."""
-  df[constants.COLUMN_VALUE] = _convert_numeric_to_string(df[constants.COLUMN_VALUE])
+  df[constants.COLUMN_VALUE] = _convert_numeric_to_string(
+      df[constants.COLUMN_VALUE])
   return df
 
 
@@ -190,24 +190,21 @@ class VariablePerRowImporter(Importer):
       logging.info("Expected column names: %s", expected_column_names)
       logging.info("Actual column names: %s", actual_column_names)
       raise ValueError(
-        f"The following expected columns were not found: {difference}. You can specify column mappings using the columnMappings field."
+          f"The following expected columns were not found: {difference}. You can specify column mappings using the columnMappings field."
       )
 
   def _write_observations(self) -> None:
     provenance = self.nodes.provenance(self.input_file).id
     obs_props = ObservationProperties.new(
-      self.config.observation_properties(self.input_file)
-    )
+        self.config.observation_properties(self.input_file))
 
     # Prepare observations dataframe
-    observations_df = (
-      self._apply_column_mappings(self.df)
-      .pipe(self._track_entity_dcids)
-      .pipe(_apply_property_defaults, obs_props)
-      .pipe(_format_numeric_values)
-      .pipe(filter_invalid_observation_values)
-      .pipe(_strip_namespaces, provenance)
-    )
+    observations_df = (self._apply_column_mappings(self.df).pipe(
+        self._track_entity_dcids).pipe(
+            _apply_property_defaults,
+            obs_props).pipe(_format_numeric_values).pipe(
+                filter_invalid_observation_values).pipe(_strip_namespaces,
+                                                        provenance))
 
     # Reorder columns to match database schema
     observations_df = observations_df[constants.OBSERVATION_COLUMNS]
@@ -222,7 +219,7 @@ class VariablePerRowImporter(Importer):
   def _track_entity_dcids(self, df: pd.DataFrame) -> pd.DataFrame:
     """Track unique entity DCIDs seen in this CSV."""
     self.entity_dcids = {
-      dcid: True for dcid in df[constants.COLUMN_ENTITY].unique()
+        dcid: True for dcid in df[constants.COLUMN_ENTITY].unique()
     }
     return df
 
@@ -242,12 +239,11 @@ class VariablePerRowImporter(Importer):
       return
 
     # Get entity types
-    logging.info(
-      "Getting entity types from DC for %s entities.", len(new_entity_dcids)
-    )
-    dcid2type: dict[str, str] = dc.get_property_of_entities(
-      new_entity_dcids, sc.PREDICATE_TYPE_OF
-    )
+    logging.info("Getting entity types from DC for %s entities.",
+                 len(new_entity_dcids))
+    dcid2type: dict[str,
+                    str] = dc.get_property_of_entities(new_entity_dcids,
+                                                       sc.PREDICATE_TYPE_OF)
 
     if dcid2type:
       logging.info("Importing %s of %s entities.", len(dcid2type),

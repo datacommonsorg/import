@@ -18,8 +18,8 @@ import pandas as pd
 from stats import constants
 from stats import schema_constants as sc
 from stats.data import ObservationProperties
-from stats.data import strip_namespace
 from stats.data import prepare_observations_df
+from stats.data import strip_namespace
 from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
@@ -115,16 +115,16 @@ class ObservationsImporter(Importer):
     )
 
     # Rename columns to standard names expected by prepare_observations_df
-    observations_df = observations_df.rename(columns={
-        constants.COLUMN_DCID: constants.COLUMN_ENTITY
-    })
+    observations_df = observations_df.rename(
+        columns={constants.COLUMN_DCID: constants.COLUMN_ENTITY})
 
     provenance = self.nodes.provenance(self.input_file).id
     obs_props = ObservationProperties.new(
         self.config.observation_properties(self.input_file))
 
     # Apply all transformations in pandas (this means Observation objects are not needed)
-    observations_df = prepare_observations_df(observations_df, provenance, obs_props)
+    observations_df = prepare_observations_df(observations_df, provenance,
+                                              obs_props)
 
     # Pass DataFrame directly to database
     self.db.insert_observations(observations_df, self.input_file)

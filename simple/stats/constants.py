@@ -46,9 +46,9 @@ the keys in the dictionary are lower-case as well.
 Also, keep the keys sorted so it's easier to spot check should the list get large.
 """
 PRE_RESOLVED_INPUT_COLUMNS_TO_PREFIXES = dict([
-  ("dcid", ""),
-  ("countryAlpha3Code".lower(), "country/"),
-  ("geoId".lower(), "geoId/"),
+    ("dcid", ""),
+    ("countryAlpha3Code".lower(), "country/"),
+    ("geoId".lower(), "geoId/"),
 ])
 """
 Dictionary of columns names that need to be externally resolved 
@@ -60,8 +60,8 @@ the keys in the dictionary are lower-case as well.
 Also, keep the keys sorted so it's easier to spot check should the list get large.
 """
 EXTERNALLY_RESOLVED_INPUT_COLUMNS_TO_PREFIXES = dict([
-  ("lat#lng", "geoCoordinate"), ("name", PROPERTY_DESCRIPTION),
-  ("wikidataId".lower(), "wikidataId")
+    ("lat#lng", "geoCoordinate"), ("name", PROPERTY_DESCRIPTION),
+    ("wikidataId".lower(), "wikidataId")
 ])
 
 DCID_OVERRIDE_PREFIX = "dcid:"
@@ -83,35 +83,35 @@ COLUMN_PROPERTIES = "properties"
 
 # List of all observation property columns
 OBSERVATION_PROPERTY_COLUMNS = [
-  COLUMN_UNIT,
-  COLUMN_SCALING_FACTOR,
-  COLUMN_MEASUREMENT_METHOD,
-  COLUMN_OBSERVATION_PERIOD,
-  COLUMN_PROPERTIES,
+    COLUMN_UNIT,
+    COLUMN_SCALING_FACTOR,
+    COLUMN_MEASUREMENT_METHOD,
+    COLUMN_OBSERVATION_PERIOD,
+    COLUMN_PROPERTIES,
 ]
 
 # Standard observation column ordering for database schema
 OBSERVATION_COLUMNS = [
-  COLUMN_ENTITY,
-  COLUMN_VARIABLE,
-  COLUMN_DATE,
-  COLUMN_VALUE,
-  COLUMN_PROVENANCE,
-  COLUMN_UNIT,
-  COLUMN_SCALING_FACTOR,
-  COLUMN_MEASUREMENT_METHOD,
-  COLUMN_OBSERVATION_PERIOD,
-  COLUMN_PROPERTIES,
+    COLUMN_ENTITY,
+    COLUMN_VARIABLE,
+    COLUMN_DATE,
+    COLUMN_VALUE,
+    COLUMN_PROVENANCE,
+    COLUMN_UNIT,
+    COLUMN_SCALING_FACTOR,
+    COLUMN_MEASUREMENT_METHOD,
+    COLUMN_OBSERVATION_PERIOD,
+    COLUMN_PROPERTIES,
 ]
 
 # Columns that need namespace stripping in observation DataFrames
 COLUMNS_TO_STRIP_NAMESPACES = [
-  COLUMN_ENTITY,
-  COLUMN_VARIABLE,
-  COLUMN_PROVENANCE,
-  COLUMN_UNIT,
-  COLUMN_MEASUREMENT_METHOD,
-  COLUMN_OBSERVATION_PERIOD,
+    COLUMN_ENTITY,
+    COLUMN_VARIABLE,
+    COLUMN_PROVENANCE,
+    COLUMN_UNIT,
+    COLUMN_MEASUREMENT_METHOD,
+    COLUMN_OBSERVATION_PERIOD,
 ]
 
 # Debug CSV columns and values

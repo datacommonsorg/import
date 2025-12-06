@@ -91,14 +91,14 @@ _INDEXES = [('observations_entity_variable', 'observations'),
 def _observations_to_df(observations: list[Observation]) -> pd.DataFrame:
   """Helper to convert list of Observation objects to DataFrame."""
   from stats import constants
-  return pd.DataFrame(
-      [obs.db_tuple() for obs in observations],
-      columns=[
-          constants.COLUMN_ENTITY, constants.COLUMN_VARIABLE, constants.COLUMN_DATE,
-          constants.COLUMN_VALUE, constants.COLUMN_PROVENANCE, 'unit',
-          'scaling_factor', 'measurement_method', 'observation_period',
-          'properties'
-      ])
+  return pd.DataFrame([obs.db_tuple() for obs in observations],
+                      columns=[
+                          constants.COLUMN_ENTITY, constants.COLUMN_VARIABLE,
+                          constants.COLUMN_DATE, constants.COLUMN_VALUE,
+                          constants.COLUMN_PROVENANCE, 'unit', 'scaling_factor',
+                          'measurement_method', 'observation_period',
+                          'properties'
+                      ])
 
 
 class TestDb(unittest.TestCase):
@@ -277,7 +277,8 @@ class TestDb(unittest.TestCase):
       db = create_and_update_db(create_main_dc_config(temp_store.as_dir()))
       db.insert_triples(_TRIPLES)
       observations_file = temp_store.as_dir().open_file(observations_file_name)
-      db.insert_observations(_observations_to_df(_OBSERVATIONS), observations_file)
+      db.insert_observations(_observations_to_df(_OBSERVATIONS),
+                             observations_file)
       db.insert_import_info(status=ImportStatus.SUCCESS)
       db.commit_and_close()
 

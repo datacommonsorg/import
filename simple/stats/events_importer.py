@@ -157,7 +157,8 @@ class EventsImporter(Importer):
     obs_df[constants.COLUMN_PROVENANCE] = self.provenance
 
     # Rename dcid column to entity
-    obs_df = obs_df.rename(columns={constants.COLUMN_DCID: constants.COLUMN_ENTITY})
+    obs_df = obs_df.rename(
+        columns={constants.COLUMN_DCID: constants.COLUMN_ENTITY})
 
     # Convert value to string
     obs_df[constants.COLUMN_VALUE] = obs_df[constants.COLUMN_VALUE].astype(str)
@@ -256,9 +257,9 @@ class EventsImporter(Importer):
       df.drop(df[df.iloc[:, 0].isin(values=unresolved_list)].index,
               inplace=True)
     self._create_debug_resolve_dataframe(
-      resolved=dcids,
-      pre_resolved=pre_resolved_entities,
-      unresolved=unresolved_list,
+        resolved=dcids,
+        pre_resolved=pre_resolved_entities,
+        unresolved=unresolved_list,
     )
 
   def _resolve(self, entities: list[str]) -> dict[str, str]:
