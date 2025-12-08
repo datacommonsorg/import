@@ -23,6 +23,8 @@ import json
 from typing import Self
 from urllib.parse import urlparse
 
+import pandas as pd
+from stats import constants
 from stats import schema_constants as sc
 from stats.util import base64_decode_and_gunzip_json
 from stats.util import gzip_and_base64_encode_json
@@ -84,20 +86,19 @@ class StatVarGroup:
   def add_provenance(self, provenance: "Provenance") -> "StatVarGroup":
     provenance_id = provenance.id
     source_id = provenance.source_id
-    if not provenance_id in self.provenance_ids:
+    if provenance_id not in self.provenance_ids:
       self.provenance_ids.append(provenance_id)
-    if not source_id in self.source_ids:
+    if source_id not in self.source_ids:
       self.source_ids.append(source_id)
 
     return self
 
   def triples(self) -> list[Triple]:
-    triples: list[Triple] = []
-    triples.append(Triple(self.id, _PREDICATE_TYPE_OF,
-                          object_id=STAT_VAR_GROUP))
-    triples.append(Triple(self.id, _PREDICATE_NAME, object_value=self.name))
-    triples.append(
-        Triple(self.id, _PREDICATE_SPECIALIZATION_OF, object_id=self.parent_id))
+    triples: list[Triple] = [
+        Triple(self.id, _PREDICATE_TYPE_OF, object_id=STAT_VAR_GROUP),
+        Triple(self.id, _PREDICATE_NAME, object_value=self.name),
+        Triple(self.id, _PREDICATE_SPECIALIZATION_OF, object_id=self.parent_id),
+    ]
     for provenance_id in self.provenance_ids:
       triples.append(
           Triple(self.id, _PREDICATE_INCLUDED_IN, object_id=provenance_id))
@@ -131,24 +132,24 @@ class StatVar:
 
     # Add dcs: prefix to prop values if not specified.
     for p, v in self.properties.items():
-      if not ":" in v:
+      if ":" not in v:
         self.properties[p] = f"{_DCS_PREFIX}{v}"
 
   def add_provenance(self, provenance: "Provenance") -> "StatVar":
     provenance_id = provenance.id
     source_id = provenance.source_id
-    if not provenance_id in self.provenance_ids:
+    if provenance_id not in self.provenance_ids:
       self.provenance_ids.append(provenance_id)
-    if not source_id in self.source_ids:
+    if source_id not in self.source_ids:
       self.source_ids.append(source_id)
 
     return self
 
   def triples(self) -> list[Triple]:
-    triples: list[Triple] = []
-    triples.append(
-        Triple(self.id, _PREDICATE_TYPE_OF, object_id=STATISTICAL_VARIABLE))
-    triples.append(Triple(self.id, _PREDICATE_NAME, object_value=self.name))
+    triples: list[Triple] = [
+        Triple(self.id, _PREDICATE_TYPE_OF, object_id=STATISTICAL_VARIABLE),
+        Triple(self.id, _PREDICATE_NAME, object_value=self.name),
+    ]
     if self.description:
       triples.append(
           Triple(self.id, _PREDICATE_DESCRIPTION,
@@ -281,8 +282,7 @@ class Observation:
             self.properties.scaling_factor,
             strip_namespace(self.properties.measurement_method),
             strip_namespace(self.properties.observation_period),
-            json.dumps(self.properties.properties)
-            if self.properties.properties else "")
+            json.dumps(self.properties.properties or {}))
 
 
 def _get_flattened_dataclass_field_names(cls) -> list[str]:
@@ -325,9 +325,9 @@ class EventType:
   def add_provenance(self, provenance: Provenance) -> Self:
     provenance_id = provenance.id
     source_id = provenance.source_id
-    if not provenance_id in self.provenance_ids:
+    if provenance_id not in self.provenance_ids:
       self.provenance_ids.append(provenance_id)
-    if not source_id in self.source_ids:
+    if source_id not in self.source_ids:
       self.source_ids.append(source_id)
 
     return self
@@ -360,9 +360,9 @@ class Event:
   properties: dict[str, str] = field(default_factory=lambda: defaultdict(dict))
 
   def triples(self) -> list[Triple]:
-    triples: list[Triple] = []
-    triples.append(
-        Triple(self.id, _PREDICATE_TYPE_OF, object_id=self.event_type))
+    triples: list[Triple] = [
+        Triple(self.id, _PREDICATE_TYPE_OF, object_id=self.event_type)
+    ]
     if self.entity:
       triples.append(Triple(self.id, _PREDICATE_LOCATION,
                             object_id=self.entity))
@@ -416,9 +416,9 @@ class EntityType:
   def add_provenance(self, provenance: Provenance) -> Self:
     provenance_id = provenance.id
     source_id = provenance.source_id
-    if not provenance_id in self.provenance_ids:
+    if provenance_id not in self.provenance_ids:
       self.provenance_ids.append(provenance_id)
-    if not source_id in self.source_ids:
+    if source_id not in self.source_ids:
       self.source_ids.append(source_id)
 
     return self
@@ -529,7 +529,82 @@ class StatVarHierarchyResult:
 
 def strip_namespace(v: str) -> str:
   """
-    Strips namespaces from dcids.
-    e.g. 'dcid:country/USA' -> 'country/USA'
+  Strips namespaces from dcids.
+  e.g. 'dcid:country/USA' -> 'country/USA'
   """
   return v[v.find(_NAMESPACE_DELIMITER) + 1:]
+
+
+def strip_namespace_series(series: pd.Series) -> pd.Series:
+  """Vectorized strip_namespace for pandas Series.
+
+  Args:
+    series: pandas Series containing DCIDs potentially with namespaces
+
+  Returns:
+    Series with namespaces stripped
+  """
+  return series.str.split(_NAMESPACE_DELIMITER, n=1).str[-1]
+
+
+def filter_invalid_observation_values(df: pd.DataFrame) -> pd.DataFrame:
+  """Filter out rows with invalid observation values.
+
+  Removes rows where the value is:
+  - NaN/None
+  - The string "<NA>"
+  - Empty string
+
+  Args:
+      df: DataFrame with a 'value' column
+
+  Returns:
+      Filtered DataFrame with only valid observation values
+  """
+  return df[(df[constants.COLUMN_VALUE].notna()) &
+            (df[constants.COLUMN_VALUE] != "<NA>") &
+            (df[constants.COLUMN_VALUE] != "")].copy()
+
+
+def prepare_observations_df(df: pd.DataFrame, provenance: str,
+                            obs_props: "ObservationProperties") -> pd.DataFrame:
+  """
+  Transform observations DataFrame into database-ready format.
+  Applies all transformations that Observation.db_tuple() used to do, but vectorially.
+
+  This function eliminates the need to create Observation objects, applying
+  all transformations (filtering, namespace stripping, JSON serialization)
+  using vectorized pandas operations.
+
+  Args:
+    df: DataFrame with columns [entity, variable, date, value]
+    provenance: Provenance ID (may include namespace prefix)
+    obs_props: Observation properties
+
+  Returns:
+    DataFrame with columns ready for database insertion:
+    [entity, variable, date, value, provenance, unit, scaling_factor,
+     measurement_method, observation_period, properties]
+  """
+
+  # Filter out invalid values (vectorized)
+  df = filter_invalid_observation_values(df)
+
+  # Add provenance and properties
+  df[constants.COLUMN_PROVENANCE] = provenance
+  df[constants.COLUMN_UNIT] = obs_props.unit if obs_props.unit else ""
+  df[constants.COLUMN_SCALING_FACTOR] = obs_props.scaling_factor
+  df[constants.COLUMN_MEASUREMENT_METHOD] = (
+      obs_props.measurement_method if obs_props.measurement_method else "")
+  df[constants.COLUMN_OBSERVATION_PERIOD] = (
+      obs_props.observation_period if obs_props.observation_period else "")
+
+  # Strip namespaces from all DCID columns (vectorized)
+  for col in constants.COLUMNS_TO_STRIP_NAMESPACES:
+    df[col] = strip_namespace_series(df[col])
+
+    # Serialize custom properties dict to JSON (even when empty)
+  df[constants.COLUMN_PROPERTIES] = json.dumps(obs_props.properties or {})
+
+  # Reorder columns to match database schema
+  return df[constants.OBSERVATION_COLUMNS]
