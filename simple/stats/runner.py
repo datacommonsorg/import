@@ -1,6 +1,7 @@
 from enum import StrEnum
 import json
 import logging
+import os
 from typing import Optional
 
 import fs.path as fspath
@@ -16,10 +17,15 @@ from stats.data import VerticalSpec
 from stats.db import create_and_update_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
+from stats.db import FIELD_DB_PARAMS
+from stats.db import FIELD_DB_TYPE
+from stats.db import get_blue_green_config_from_env
 from stats.db import get_cloud_sql_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
+from stats.db import TYPE_CLOUD_SQL
 from stats.db_cache import get_db_cache_from_env
+from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
 from stats.importer import Importer
@@ -119,8 +125,16 @@ class Runner:
     self.db_cache = None
 
   def run(self):
+    # Check if blue-green is enabled
+    blue_green_config = get_blue_green_config_from_env()
+
+    if blue_green_config["enabled"]:
+      logging.info("Blue-green import enabled (local SQLite build)")
+
     try:
-      if self.db is None:
+      # For blue-green, defer Cloud SQL connection until transfer phase
+      # For normal imports, create connection now
+      if self.db is None and not blue_green_config["enabled"]:
         self.db = create_and_update_db(self._get_db_config())
         self.db_cache = get_db_cache_from_env()
 
@@ -128,13 +142,18 @@ class Runner:
         logging.info("Skipping imports because run mode is schema update.")
 
       elif self.mode == RunMode.CUSTOM_DC or self.mode == RunMode.MAIN_DC:
-        self._run_imports_and_do_post_import_work()
+        # Select import strategy
+        if blue_green_config["enabled"]:
+          self._run_local_sqlite_build_import()
+        else:
+          self._run_imports_and_do_post_import_work()
 
       else:
         raise ValueError(f"Unsupported mode: {self.mode}")
 
-      # Commit and close DB.
-      self.db.commit_and_close()
+      # Commit and close DB (skipped for blue-green as it handles its own commits)
+      if not blue_green_config["enabled"]:
+        self.db.commit_and_close()
 
       # Report done.
       self.reporter.report_done()
@@ -220,6 +239,114 @@ class Runner:
     if self.db_cache:
       logging.info("Database cache is configured. Clearing cache.")
       self.db_cache.clear()
+
+  def _run_local_sqlite_build_import(self):
+    """Run import using local SQLite build blue-green strategy."""
+
+    blue_green_config = get_blue_green_config_from_env()
+    local_db_path = blue_green_config["local_sqlite_path"]
+
+    logging.info("Building local SQLite (blue-green strategy)...")
+    logging.info(f"Local database: {local_db_path}")
+
+    try:
+      # Remove old local build if exists
+      if os.path.exists(local_db_path):
+        os.remove(local_db_path)
+        logging.info("Removed previous local build database")
+
+      # Create local SQLite database
+      local_db_store = create_store(local_db_path,
+                                    create_if_missing=True,
+                                    treat_as_file=True)
+      local_db_file = local_db_store.as_file()
+      local_db_config = create_sqlite_config(local_db_file)
+      local_db = create_and_update_db(local_db_config)
+
+      # Temporarily switch to local database
+      original_db = self.db
+      self.db = local_db
+
+      # Clear and import data
+      self.db.maybe_clear_before_import()
+      self._run_all_data_imports()
+
+      # Generate triples
+      triples = self.nodes.triples()
+      self.db.insert_triples(triples)
+
+      # Write import info
+      self.db.insert_import_info(status=ImportStatus.SUCCESS)
+
+      # Get row counts for validation
+      counts = self.db.engine.get_row_counts()
+
+      logging.info(f"Local build complete:")
+      logging.info(f"  Observations: {counts['observations']:,}")
+      logging.info(f"  Triples: {counts['triples']:,}")
+      logging.info(f"  Key-value pairs: {counts['key_value_store']:,}")
+
+      # Commit and close local database
+      self.db.commit_and_close()
+
+      # Transfer to Cloud SQL (this blocks db temporarily)
+      logging.info("Transferring to Cloud SQL...")
+
+      # Get Cloud SQL config
+      cloud_config = get_cloud_sql_config_from_env()
+      if not cloud_config:
+        raise RuntimeError("Cloud SQL not configured for blue-green import")
+
+      # Create Cloud SQL connection
+      cloud_db_config = {
+          FIELD_DB_TYPE: TYPE_CLOUD_SQL,
+          FIELD_DB_PARAMS: cloud_config[FIELD_DB_PARAMS]
+      }
+      cloud_db = create_and_update_db(cloud_db_config)
+
+      # Transfer data
+      transfer_result = transfer_sqlite_to_cloud_sql(
+          sqlite_path=local_db_path,
+          cloud_sql_engine=cloud_db.engine,
+          expected_obs=obs_count,
+          expected_triples=triple_count,
+          expected_kv=kv_count)
+
+      logging.info("Transfer complete:")
+      logging.info(f"  Observations: {transfer_result['observations']:,}")
+      logging.info(f"  Triples: {transfer_result['triples']:,}")
+      logging.info(f"  Key-value pairs: {transfer_result['key_value_store']:,}")
+
+      # Post-processing
+      logging.info("Post-processing...")
+
+      # Switch to Cloud SQL for post-processing
+      self.db = cloud_db
+
+      # Generate SVG hierarchy, cache, and NL artifacts
+      self._generate_svg_hierarchy()
+      self._generate_svg_cache()
+      self._generate_nl_artifacts()
+
+      # Flush the DB cache if it exists
+      if self.db_cache:
+        logging.info("Database cache is configured. Clearing cache.")
+        self.db_cache.clear()
+
+      logging.info("Local SQLite build import and transfer successful.")
+
+    except Exception as e:
+      logging.error(f"Local SQLite build import failed: {e}")
+      raise
+
+    finally:
+      # Remove local build database
+      if os.path.exists(local_db_path):
+        try:
+          os.remove(local_db_path)
+          logging.info(f"Cleaned up local build database: {local_db_path}")
+        except Exception as e:
+          logging.warning(f"Failed to cleanup local database: {e}")
 
   def _generate_nl_artifacts(self):
     triples: list[Triple] = []
@@ -420,7 +547,9 @@ class Runner:
 def _check_not_overlapping(input_store: Store, output_store: Store):
   input_path = input_store.full_path()
   output_path = output_store.full_path()
-  if (fspath.issamedir(input_path, output_path) or
+
+  # Check if paths are the same or if one is a parent of the other.
+  if (fspath.normpath(input_path) == fspath.normpath(output_path) or
       fspath.isparent(input_path, output_path) or
       fspath.isparent(output_path, input_path)):
     raise ValueError(

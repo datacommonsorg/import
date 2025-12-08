@@ -87,3 +87,16 @@ export DB_PASS=fake
 
 
 > Browse or create your Google SQL instances [here](https://console.cloud.google.com/sql/instances).
+
+### Reducing database downtime
+
+When using Cloud SQL, you can enable blue-green import to significantly reduce database blocking:
+
+```bash
+export ENABLE_BLUE_GREEN_IMPORT=true
+```
+
+**How it works:**
+1. Build complete database in local SQLite (Cloud SQL remains available)
+2. Bulk transfer to Cloud SQL (Cloud SQL blocked during transfer time, duration depends on size)
+3. Create indexes using MySQL Online DDL (Cloud SQL readable, though unindexed queries will be slow)
