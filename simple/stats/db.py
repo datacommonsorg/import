@@ -411,9 +411,12 @@ class DbEngine:
   def get_row_counts(self) -> dict:
     """Return row counts for all data tables."""
     return {
-        'observations': self.fetch_all("SELECT COUNT(*) FROM observations")[0][0],
-        'triples': self.fetch_all("SELECT COUNT(*) FROM triples")[0][0],
-        'key_value_store': self.fetch_all("SELECT COUNT(*) FROM key_value_store")[0][0]
+        'observations':
+            self.fetch_all("SELECT COUNT(*) FROM observations")[0][0],
+        'triples':
+            self.fetch_all("SELECT COUNT(*) FROM triples")[0][0],
+        'key_value_store':
+            self.fetch_all("SELECT COUNT(*) FROM key_value_store")[0][0]
     }
 
 
@@ -562,7 +565,8 @@ class BulkImportContext:
     self._kv_count = 0
 
   def __enter__(self):
-    logging.info("Starting bulk import transaction (DB LOCKED - writes blocked)")
+    logging.info(
+        "Starting bulk import transaction (DB LOCKED - writes blocked)")
     self._engine.cursor.execute("START TRANSACTION")
     self._engine._drop_indexes()
     # Clear existing data
@@ -609,12 +613,10 @@ class BulkImportContext:
         'key_value_store': self._kv_count
     }
 
-  def validate(
-      self,
-      expected_obs: int | None = None,
-      expected_triples: int | None = None,
-      expected_kv: int | None = None
-  ) -> bool:
+  def validate(self,
+               expected_obs: int | None = None,
+               expected_triples: int | None = None,
+               expected_kv: int | None = None) -> bool:
     """Validate inserted counts match expected. Call before exiting context."""
     if expected_obs is not None and self._obs_count != expected_obs:
       raise RuntimeError(
@@ -847,11 +849,10 @@ def get_blue_green_config_from_env() -> dict:
     return {"enabled": False}
 
   config = {
-      "enabled": True,
-      "local_sqlite_path": os.getenv(
-          "LOCAL_BUILD_SQLITE_PATH",
-          "/tmp/datacommons_build.db"
-      )
+      "enabled":
+          True,
+      "local_sqlite_path":
+          os.getenv("LOCAL_BUILD_SQLITE_PATH", "/tmp/datacommons_build.db")
   }
 
   return config

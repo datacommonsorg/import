@@ -15,8 +15,10 @@
 import os
 import sqlite3
 import tempfile
+from unittest.mock import MagicMock
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, MagicMock
 from stats.db_transfer import transfer_sqlite_to_cloud_sql
 
 
@@ -24,10 +26,8 @@ def test_transfer_validates_sqlite_exists():
   """Test that transfer fails if SQLite file doesn't exist."""
   mock_engine = Mock()
   with pytest.raises(FileNotFoundError):
-    transfer_sqlite_to_cloud_sql(
-        sqlite_path="/nonexistent/db.sqlite",
-        cloud_sql_engine=mock_engine
-    )
+    transfer_sqlite_to_cloud_sql(sqlite_path="/nonexistent/db.sqlite",
+                                 cloud_sql_engine=mock_engine)
 
 
 def test_transfer_reads_all_tables():
@@ -85,10 +85,8 @@ def test_transfer_reads_all_tables():
     mock_engine.bulk_import_context.return_value = mock_ctx
 
     # Transfer
-    result = transfer_sqlite_to_cloud_sql(
-        sqlite_path=db_path,
-        cloud_sql_engine=mock_engine
-    )
+    result = transfer_sqlite_to_cloud_sql(sqlite_path=db_path,
+                                          cloud_sql_engine=mock_engine)
 
     # Verify context manager was used
     assert mock_engine.bulk_import_context.called
@@ -128,8 +126,12 @@ def test_transfer_rolls_back_on_error():
         measurement_method TEXT, observation_period TEXT, properties TEXT
       )
     """)
-    cursor.execute("INSERT INTO observations VALUES ('test', '', '', '', '', '', '', '', '', '')")
-    cursor.execute("CREATE TABLE triples (subject_id TEXT, predicate TEXT, object_id TEXT, object_value TEXT)")
+    cursor.execute(
+        "INSERT INTO observations VALUES ('test', '', '', '', '', '', '', '', '', '')"
+    )
+    cursor.execute(
+        "CREATE TABLE triples (subject_id TEXT, predicate TEXT, object_id TEXT, object_value TEXT)"
+    )
     cursor.execute("CREATE TABLE key_value_store (lookup_key TEXT, value TEXT)")
     conn.commit()
     conn.close()
@@ -144,10 +146,8 @@ def test_transfer_rolls_back_on_error():
 
     # Transfer should fail
     with pytest.raises(Exception, match="Insert failed"):
-      transfer_sqlite_to_cloud_sql(
-          sqlite_path=db_path,
-          cloud_sql_engine=mock_engine
-      )
+      transfer_sqlite_to_cloud_sql(sqlite_path=db_path,
+                                   cloud_sql_engine=mock_engine)
 
     # Verify __exit__ was called (which handles rollback)
     assert mock_ctx.__exit__.called
@@ -175,7 +175,9 @@ def test_transfer_with_validation():
         measurement_method TEXT, observation_period TEXT, properties TEXT
       )
     """)
-    cursor.execute("CREATE TABLE triples (subject_id TEXT, predicate TEXT, object_id TEXT, object_value TEXT)")
+    cursor.execute(
+        "CREATE TABLE triples (subject_id TEXT, predicate TEXT, object_id TEXT, object_value TEXT)"
+    )
     cursor.execute("CREATE TABLE key_value_store (lookup_key TEXT, value TEXT)")
     conn.commit()
     conn.close()
@@ -193,13 +195,11 @@ def test_transfer_with_validation():
     mock_engine.bulk_import_context.return_value = mock_ctx
 
     # Transfer with expected counts
-    transfer_sqlite_to_cloud_sql(
-        sqlite_path=db_path,
-        cloud_sql_engine=mock_engine,
-        expected_obs=0,
-        expected_triples=0,
-        expected_kv=0
-    )
+    transfer_sqlite_to_cloud_sql(sqlite_path=db_path,
+                                 cloud_sql_engine=mock_engine,
+                                 expected_obs=0,
+                                 expected_triples=0,
+                                 expected_kv=0)
 
     # Verify validate was called with expected counts
     mock_ctx.validate.assert_called_once_with(0, 0, 0)
@@ -224,7 +224,9 @@ def test_transfer_validation_failure():
         measurement_method TEXT, observation_period TEXT, properties TEXT
       )
     """)
-    cursor.execute("CREATE TABLE triples (subject_id TEXT, predicate TEXT, object_id TEXT, object_value TEXT)")
+    cursor.execute(
+        "CREATE TABLE triples (subject_id TEXT, predicate TEXT, object_id TEXT, object_value TEXT)"
+    )
     cursor.execute("CREATE TABLE key_value_store (lookup_key TEXT, value TEXT)")
     conn.commit()
     conn.close()
@@ -244,11 +246,9 @@ def test_transfer_validation_failure():
 
     # Transfer should fail on validation
     with pytest.raises(RuntimeError, match="Count mismatch"):
-      transfer_sqlite_to_cloud_sql(
-          sqlite_path=db_path,
-          cloud_sql_engine=mock_engine,
-          expected_obs=100
-      )
+      transfer_sqlite_to_cloud_sql(sqlite_path=db_path,
+                                   cloud_sql_engine=mock_engine,
+                                   expected_obs=100)
 
   finally:
     os.unlink(db_path)

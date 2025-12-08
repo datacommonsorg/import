@@ -17,11 +17,13 @@ from stats.data import VerticalSpec
 from stats.db import create_and_update_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
+from stats.db import FIELD_DB_PARAMS
+from stats.db import FIELD_DB_TYPE
 from stats.db import get_blue_green_config_from_env
 from stats.db import get_cloud_sql_config_from_env
 from stats.db import get_sqlite_path_from_env
-from stats.db import FIELD_DB_TYPE, FIELD_DB_PARAMS, TYPE_CLOUD_SQL
 from stats.db import ImportStatus
+from stats.db import TYPE_CLOUD_SQL
 from stats.db_cache import get_db_cache_from_env
 from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
@@ -255,8 +257,8 @@ class Runner:
 
       # Create local SQLite database
       local_db_store = create_store(local_db_path,
-                                     create_if_missing=True,
-                                     treat_as_file=True)
+                                    create_if_missing=True,
+                                    treat_as_file=True)
       local_db_file = local_db_store.as_file()
       local_db_config = create_sqlite_config(local_db_file)
       local_db = create_and_update_db(local_db_config)
@@ -308,8 +310,7 @@ class Runner:
           cloud_sql_engine=cloud_db.engine,
           expected_obs=obs_count,
           expected_triples=triple_count,
-          expected_kv=kv_count
-      )
+          expected_kv=kv_count)
 
       logging.info("Transfer complete:")
       logging.info(f"  Observations: {transfer_result['observations']:,}")

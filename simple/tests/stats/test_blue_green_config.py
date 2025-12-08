@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+
 import pytest
 from stats.db import get_blue_green_config_from_env
 

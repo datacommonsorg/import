@@ -22,13 +22,12 @@ if TYPE_CHECKING:
 
 BATCH_SIZE = 1_000_000
 
-def transfer_sqlite_to_cloud_sql(
-    sqlite_path: str,
-    cloud_sql_engine: "CloudSqlDbEngine",
-    expected_obs: Optional[int] = None,
-    expected_triples: Optional[int] = None,
-    expected_kv: Optional[int] = None
-) -> dict:
+
+def transfer_sqlite_to_cloud_sql(sqlite_path: str,
+                                 cloud_sql_engine: "CloudSqlDbEngine",
+                                 expected_obs: Optional[int] = None,
+                                 expected_triples: Optional[int] = None,
+                                 expected_kv: Optional[int] = None) -> dict:
   """Transfer data from SQLite to Cloud SQL.
 
   Reads data from SQLite and uses CloudSqlDbEngine.bulk_import_context()
@@ -52,7 +51,8 @@ def transfer_sqlite_to_cloud_sql(
     raise FileNotFoundError(f"SQLite database not found: {sqlite_path}")
 
   sqlite_size_mb = os.path.getsize(sqlite_path) / 1024 / 1024
-  logging.info(f"Starting Cloud SQL transfer from SQLite ({sqlite_size_mb:.1f} MB)")
+  logging.info(
+      f"Starting Cloud SQL transfer from SQLite ({sqlite_size_mb:.1f} MB)")
 
   sqlite_conn = sqlite3.connect(sqlite_path)
   sqlite_cursor = sqlite_conn.cursor()
@@ -65,8 +65,12 @@ def transfer_sqlite_to_cloud_sql(
 
       while batch := sqlite_cursor.fetchmany(BATCH_SIZE):
         ctx.insert_observations(batch)
-        logging.info(f"Transferred {ctx.get_counts()['observations']:,} observations so far...")
-      logging.info(f"Transferred {ctx.get_counts()['observations']:,} observations total")
+        logging.info(
+            f"Transferred {ctx.get_counts()['observations']:,} observations so far..."
+        )
+      logging.info(
+          f"Transferred {ctx.get_counts()['observations']:,} observations total"
+      )
 
       # Transfer triples in batches
       logging.info("Transferring triples...")
@@ -82,7 +86,9 @@ def transfer_sqlite_to_cloud_sql(
 
       while batch := sqlite_cursor.fetchmany(BATCH_SIZE):
         ctx.insert_kv(batch)
-      logging.info(f"Transferred {ctx.get_counts()['key_value_store']:,} key-value pairs")
+      logging.info(
+          f"Transferred {ctx.get_counts()['key_value_store']:,} key-value pairs"
+      )
 
       # Validate before commit
       ctx.validate(expected_obs, expected_triples, expected_kv)

@@ -24,6 +24,7 @@ import pandas as pd
 from stats.data import Observation
 from stats.data import ObservationProperties
 from stats.data import Triple
+from stats.db import _CLEAR_TABLE_FOR_IMPORT_STATEMENTS
 from stats.db import BulkImportContext
 from stats.db import create_and_update_db
 from stats.db import create_main_dc_config
@@ -31,7 +32,6 @@ from stats.db import create_sqlite_config
 from stats.db import get_cloud_sql_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
-from stats.db import _CLEAR_TABLE_FOR_IMPORT_STATEMENTS
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import read_full_db_from_file
