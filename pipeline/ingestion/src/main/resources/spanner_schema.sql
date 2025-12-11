@@ -32,3 +32,27 @@ CREATE TABLE Observation (
   provenance_url STRING(1024),
   is_dc_aggregate BOOL,
 ) PRIMARY KEY(observation_about, variable_measured, facet_id)
+
+CREATE TABLE ImportStatus ( 
+  ImportName STRING(MAX) NOT NULL,
+  LatestVersion STRING(MAX),
+  State STRING(1024) NOT NULL,
+  JobId STRING(1024),
+  WorkflowId STRING(1024),
+  ExecutionTime INT64,
+  DataImportTimestamp TIMESTAMP OPTIONS ( allow_commit_timestamp = TRUE ),
+  StatusUpdateTimestamp TIMESTAMP OPTIONS ( allow_commit_timestamp = TRUE ),
+  NextRefreshDate DATE,
+) PRIMARY KEY(ImportName)
+
+CREATE TABLE IngestionHistory ( 
+  CompletionTimestamp TIMESTAMP NOT NULL OPTIONS ( allow_commit_timestamp = TRUE ),
+  WorkflowExecutionID STRING(1024) NOT NULL,
+  IngestedImports ARRAY<STRING(MAX)>,
+) PRIMARY KEY(CompletionTimestamp DESC)
+
+CREATE TABLE IngestionLock ( 
+  LockID STRING(1024) NOT NULL,
+  LockOwner STRING(1024),
+  AcquiredTimestamp TIMESTAMP OPTIONS ( allow_commit_timestamp = TRUE ),
+) PRIMARY KEY(LockID)

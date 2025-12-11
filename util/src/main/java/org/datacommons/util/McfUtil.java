@@ -189,4 +189,29 @@ public class McfUtil {
       return typedValue.getValue();
     }
   }
+
+  public static Map<String, Set<String>> getExternalIds(Mcf.McfGraph.PropertyValues node) {
+    Map<String, Set<String>> idMap = new HashMap<>();
+    for (String id : Vocabulary.PLACE_RESOLVABLE_AND_ASSIGNABLE_IDS) {
+      if (node.containsPvs(id)) {
+        Set<String> idVals = new HashSet<>();
+        for (Mcf.McfGraph.TypedValue val : node.getPvsOrThrow(id).getTypedValuesList()) {
+          if (val.getType() == ValueType.TEXT || val.getType() == ValueType.NUMBER) {
+            idVals.add(val.getValue());
+          }
+        }
+        if (!idVals.isEmpty()) {
+          idMap.put(id, idVals);
+        }
+      }
+    }
+    return idMap;
+  }
+
+  public static boolean isResolvableType(Mcf.McfGraph.PropertyValues node) {
+    for (var typeOf : McfUtil.getPropVals(node, Vocabulary.TYPE_OF)) {
+      if (Vocabulary.PLACE_TYPES.contains(typeOf)) return true;
+    }
+    return false;
+  }
 }

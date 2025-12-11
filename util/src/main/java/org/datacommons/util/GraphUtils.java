@@ -319,7 +319,9 @@ public class GraphUtils {
       }
       setPropVal(lhs, ValueType.TEXT, rhs, base_node);
     }
-    g.putNodes(node_id, base_node.build());
+    if (!node_id.isEmpty()) {
+      g.putNodes(node_id, base_node.build());
+    }
     return g.build();
   }
 

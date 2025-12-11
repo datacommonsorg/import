@@ -56,6 +56,41 @@ def compare_files(test: unittest.TestCase,
       test.assertEqual(got, want, message)
 
 
+def compare_csv_files(test: unittest.TestCase,
+                      actual_path: str,
+                      expected_path: str,
+                      message: str = None):
+  """
+  Compares CSV files in an order-independent way by sorting both before comparison.
+  """
+  # Pass if neither actual nor existing file exists.
+  # Fail if only one exists.
+  actual_file_exists = os.path.exists(actual_path)
+  expected_file_exists = os.path.exists(expected_path)
+  test.assertEqual(
+      actual_file_exists, expected_file_exists,
+      f"Actual file existence does not match expected file existence: {message}"
+  )
+  if (expected_file_exists == False):
+    return
+
+    # Read both CSVs
+  actual_df = pd.read_csv(actual_path)
+  expected_df = pd.read_csv(expected_path)
+
+  # Sort both dataframes by all columns for deterministic comparison
+  actual_sorted = actual_df.sort_values(by=list(actual_df.columns)).reset_index(
+      drop=True)
+  expected_sorted = expected_df.sort_values(
+      by=list(expected_df.columns)).reset_index(drop=True)
+
+  # Convert to CSV strings for comparison
+  actual_csv = actual_sorted.to_csv(index=False)
+  expected_csv = expected_sorted.to_csv(index=False)
+
+  test.assertEqual(actual_csv, expected_csv, message)
+
+
 def read_triples_csv(path: str) -> list[Triple]:
   """
   Reads a triples CSV into a list of Triple objects.

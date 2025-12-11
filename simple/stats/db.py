@@ -26,8 +26,8 @@ from google.cloud.sql.connector.connector import Connector
 import pandas as pd
 from pymysql.connections import Connection
 from pymysql.cursors import Cursor
+from stats import constants
 from stats.data import McfNode
-from stats.data import Observation
 from stats.data import STAT_VAR_GROUP
 from stats.data import STATISTICAL_VARIABLE
 from stats.data import Triple
@@ -58,11 +58,6 @@ ENV_DB_NAME = "DB_NAME"
 ENV_SQLITE_PATH = "SQLITE_PATH"
 
 MAIN_DC_OUTPUT_DIR = "mainDcOutputDir"
-
-_OBSERVATION_PROPERTY_COLUMNS = [
-    "unit", "scaling_factor", "measurement_method", "observation_period",
-    "properties"
-]
 
 _CREATE_TRIPLES_TABLE = """
 create table if not exists triples (
@@ -212,14 +207,26 @@ class Db:
   def insert_triples(self, triples: list[Triple]):
     pass
 
-  def insert_observations(self, observations: list[Observation],
+  def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
+    """Insert observations from DataFrame.
+
+    Args:
+      observations_df: DataFrame with columns [entity, variable, date, value,
+                       provenance, unit, scaling_factor, measurement_method,
+                       observation_period, properties] - all transformations applied
+      input_file: Source file for context
+    """
     pass
 
   def insert_key_value(self, key: str, value: str):
     pass
 
   def insert_import_info(self, status: ImportStatus):
+    pass
+
+  def commit(self):
+    """Commit transaction without closing connection."""
     pass
 
   def commit_and_close(self):
@@ -252,20 +259,25 @@ class MainDcDb(Db):
     for triple in triples:
       self._add_triple(triple)
 
-  def insert_observations(self, observations: list[Observation],
+  def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
-    df = pd.DataFrame(observations)
-    # Drop the provenance and properties columns.
+    # Only keep basic observation columns.
     # Provenance is specified differently for main dc.
     # TODO: Include obs properties in main DC output.
-    df = df.drop(columns=["provenance", "properties"])
+    output_df = observations_df[[
+        constants.COLUMN_ENTITY,
+        constants.COLUMN_VARIABLE,
+        constants.COLUMN_DATE,
+        constants.COLUMN_VALUE,
+    ]]
     # Right now, this overwrites any file with the same name,
     # so if different input sources have files with the same relative path,
     # they will clobber each others output. Treating this as an edge case
     # for now since it only affects the main DC case, but we could resolve
     # it in the future by allowing input sources to be mapped to output
     # locations.
-    self.output_dir.open_file(input_file.path).write(df.to_csv(index=False))
+    self.output_dir.open_file(input_file.path).write(
+        output_df.to_csv(index=False))
 
   def insert_import_info(self, status: ImportStatus):
     # No-op for now.
@@ -317,16 +329,17 @@ class SqlDb(Db):
       self.engine.executemany(_INSERT_TRIPLES_STATEMENT,
                               [triple.db_tuple() for triple in triples])
 
-  def insert_observations(self, observations: list[Observation],
+  def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
-    logging.info("Writing %s observations to [%s]", len(observations),
+    logging.info("Writing %s observations to [%s]", len(observations_df),
                  self.engine)
-    self.num_observations += len(observations)
-    tuples = []
-    for observation in observations:
-      tuples.append(observation.db_tuple())
-      self.variables.add(observation.variable)
+    self.num_observations += len(observations_df)
 
+    # Track variables
+    self.variables.update(observations_df["variable"].unique())
+
+    # Convert DataFrame to tuples for bulk insert (single operation)
+    tuples = observations_df.to_records(index=False).tolist()
     self.engine.executemany(_INSERT_OBSERVATIONS_STATEMENT, tuples)
 
   def insert_key_value(self, key: str, value: str):
@@ -338,7 +351,12 @@ class SqlDb(Db):
                  metadata)
     self.engine.execute(
         _INSERT_IMPORTS_STATEMENT,
-        (str(datetime.now()), status.name, json.dumps(metadata)))
+        (str(datetime.now()), status.name, json.dumps(metadata)),
+    )
+
+  def commit(self):
+    """Commit transaction without closing connection."""
+    self.engine.commit()
 
   def commit_and_close(self):
     self.engine.commit_and_close()
@@ -383,8 +401,23 @@ class DbEngine:
   def fetch_all(self, sql: str, parameters=None) -> list[Any]:
     pass
 
+  def commit(self):
+    """Commit transaction without closing connection."""
+    pass
+
   def commit_and_close(self):
     pass
+
+  def get_row_counts(self) -> dict:
+    """Return row counts for all data tables."""
+    return {
+        'observations':
+            self.fetch_all("SELECT COUNT(*) FROM observations")[0][0],
+        'triples':
+            self.fetch_all("SELECT COUNT(*) FROM triples")[0][0],
+        'key_value_store':
+            self.fetch_all("SELECT COUNT(*) FROM key_value_store")[0][0]
+    }
 
 
 _SQLITE_OBSERVATIONS_TABLE_INFO_STATEMENT = "pragma table_info(observations);"
@@ -415,6 +448,7 @@ class SqliteDbEngine(DbEngine):
     logging.info("Connected to SQLite: %s", self.db_file.full_path())
 
     self.cursor = self.connection.cursor()
+    self.indexes_created = False
 
   def _maybe_update_schema(self) -> None:
     """
@@ -425,9 +459,11 @@ class SqliteDbEngine(DbEngine):
     rows = self.fetch_all(_SQLITE_OBSERVATIONS_TABLE_INFO_STATEMENT)
     existing_columns = set([columns[1] for columns in rows])
     if "properties" not in existing_columns:
+      property_cols = ', '.join(constants.OBSERVATION_PROPERTY_COLUMNS)
       logging.info(
-          f"properties column does not exist in the observations table. Altering table to the following property columns: {', '.join(_OBSERVATION_PROPERTY_COLUMNS)}"
-      )
+          f"properties column does not exist in the observations table. "
+          f"Altering table to the following property columns: {property_cols}")
+
       for statement in _ALTER_OBSERVATIONS_TABLE_STATEMENTS:
         self.cursor.execute(statement)
 
@@ -437,10 +473,14 @@ class SqliteDbEngine(DbEngine):
       self.cursor.execute(index.sqlite_drop_index_statement())
 
   def _create_indexes(self) -> None:
+    if self.indexes_created:
+      logging.info("Indexes already created, skipping")
+      return
     for index in _DB_INDEXES:
       logging.info("Creating index: %s", index.index_name)
       self.cursor.execute(index.sqlite_create_index_statement())
       logging.info("Index created: %s", index.index_name)
+    self.indexes_created = True
 
   def __str__(self) -> str:
     return f"{TYPE_SQLITE}: {self.db_file.full_path()}"
@@ -471,6 +511,12 @@ class SqliteDbEngine(DbEngine):
       return self.cursor.execute(sql).fetchall()
     else:
       return self.cursor.execute(sql, parameters).fetchall()
+
+  def commit(self):
+    """Commit transaction without closing connection."""
+    # Create indexes before committing for better query performance during post-processing
+    self._create_indexes()
+    self.connection.commit()
 
   def commit_and_close(self):
     # Create indexes before closing.
@@ -504,6 +550,89 @@ _CLOUD_MYSQL_PROPERTIES_COLUMN_EXISTS_STATEMENT = """
 """
 
 
+class BulkImportContext:
+  """Context manager for bulk import operations with transaction safety.
+
+  Handles transaction lifecycle, index management, and provides methods
+  for inserting data. All SQL execution goes through DbEngine methods.
+
+  """
+
+  def __init__(self, engine):
+    self._engine = engine
+    self._obs_count = 0
+    self._triple_count = 0
+    self._kv_count = 0
+
+  def __enter__(self):
+    logging.info(
+        "Starting bulk import transaction (DB LOCKED - writes blocked)")
+    self._engine.cursor.execute("START TRANSACTION")
+    self._engine._drop_indexes()
+    # Clear existing data
+    for statement in _CLEAR_TABLE_FOR_IMPORT_STATEMENTS:
+      self._engine.cursor.execute(statement)
+    return self
+
+  def __exit__(self, exc_type, exc_val, exc_tb):
+    if exc_type is None:
+      self._engine.connection.commit()
+      logging.info("Bulk import committed - DB unlocked")
+      self._engine._create_indexes()
+    else:
+      logging.error(f"Bulk import failed, rolling back: {exc_val}")
+      self._engine.connection.rollback()
+    return False
+
+  def insert_observations(self, observations: list[tuple]) -> int:
+    """Insert observations"""
+    if observations:
+      self._engine.executemany(_INSERT_OBSERVATIONS_STATEMENT, observations)
+      self._obs_count += len(observations)
+    return len(observations)
+
+  def insert_triples(self, triples: list[tuple]) -> int:
+    """Insert triples"""
+    if triples:
+      self._engine.executemany(_INSERT_TRIPLES_STATEMENT, triples)
+      self._triple_count += len(triples)
+    return len(triples)
+
+  def insert_kv(self, kv_pairs: list[tuple]) -> int:
+    """Insert key-value pairs"""
+    if kv_pairs:
+      self._engine.executemany(_INSERT_KEY_VALUE_STORE_STATEMENT, kv_pairs)
+      self._kv_count += len(kv_pairs)
+    return len(kv_pairs)
+
+  def get_counts(self) -> dict:
+    """Return counts of inserted rows."""
+    return {
+        'observations': self._obs_count,
+        'triples': self._triple_count,
+        'key_value_store': self._kv_count
+    }
+
+  def validate(self,
+               expected_obs: int | None = None,
+               expected_triples: int | None = None,
+               expected_kv: int | None = None) -> bool:
+    """Validate inserted counts match expected. Call before exiting context."""
+    if expected_obs is not None and self._obs_count != expected_obs:
+      raise RuntimeError(
+          f"Observation count mismatch: expected {expected_obs:,}, got {self._obs_count:,}"
+      )
+    if expected_triples is not None and self._triple_count != expected_triples:
+      raise RuntimeError(
+          f"Triple count mismatch: expected {expected_triples:,}, got {self._triple_count:,}"
+      )
+    if expected_kv is not None and self._kv_count != expected_kv:
+      raise RuntimeError(
+          f"Key-value count mismatch: expected {expected_kv:,}, got {self._kv_count:,}"
+      )
+    return True
+
+
 class CloudSqlDbEngine(DbEngine):
 
   def __init__(self, db_params: dict[str, str]) -> None:
@@ -523,6 +652,7 @@ class CloudSqlDbEngine(DbEngine):
                  db_params[CLOUD_MY_SQL_INSTANCE], db_params[CLOUD_MY_SQL_DB])
     self.description = f"{TYPE_CLOUD_SQL}: {db_params[CLOUD_MY_SQL_INSTANCE]} ({db_params[CLOUD_MY_SQL_DB]})"
     self.cursor: Cursor = self.connection.cursor()
+    self.indexes_created = False
 
   def _maybe_update_schema(self) -> None:
     """
@@ -534,7 +664,7 @@ class CloudSqlDbEngine(DbEngine):
     properties_column_exists = rows is not None and len(rows) > 0
     if not properties_column_exists:
       logging.info(
-          f"properties column does not exist in the observations table. Altering table to the following property columns: {', '.join(_OBSERVATION_PROPERTY_COLUMNS)}"
+          f"properties column does not exist in the observations table. Altering table to the following property columns: {', '.join(constants.OBSERVATION_PROPERTY_COLUMNS)}"
       )
       for statement in _ALTER_OBSERVATIONS_TABLE_STATEMENTS:
         self.cursor.execute(statement)
@@ -548,10 +678,14 @@ class CloudSqlDbEngine(DbEngine):
         logging.info("Index does not exist: %s", index.index_name)
 
   def _create_indexes(self) -> None:
+    if self.indexes_created:
+      logging.info("Indexes already created, skipping")
+      return
     for index in _DB_INDEXES:
       logging.info("Creating index: %s", index.index_name)
       self.cursor.execute(index.mysql_create_index_statement())
       logging.info("Index created: %s", index.index_name)
+    self.indexes_created = True
 
   def _maybe_create_database(connector: Connector,
                              db_params: dict[str, str]) -> None:
@@ -606,11 +740,21 @@ class CloudSqlDbEngine(DbEngine):
     self.cursor.execute(_pymysql(sql), parameters)
     return self.cursor.fetchall()
 
+  def commit(self):
+    """Commit transaction without closing connection."""
+    # Create indexes before committing for better query performance during post-processing
+    self._create_indexes()
+    self.connection.commit()
+
   def commit_and_close(self):
     # Create indexes before closing.
     self._create_indexes()
     self.cursor.close()
     self.connection.commit()
+
+  def bulk_import_context(self) -> BulkImportContext:
+    """Return a context manager for bulk import operations."""
+    return BulkImportContext(self)
 
 
 # PyMySQL uses "%s" as placeholders.
@@ -641,7 +785,7 @@ def create_db_engine(config: dict) -> DbEngine:
 
 
 def create_and_update_db(config: dict) -> Db:
-  """ Creates and initializes a Db, performing any setup and updates
+  """Creates and initializes a Db, performing any setup and updates
   (e.g. table creation, table schema changes) that are needed.
   """
   db_type = config[FIELD_DB_TYPE]
@@ -689,3 +833,26 @@ def get_cloud_sql_config_from_env() -> dict | None:
           CLOUD_MY_SQL_PASSWORD: db_pass
       }
   }
+
+
+def get_blue_green_config_from_env() -> dict:
+  """Get blue-green configuration from environment variables.
+
+  Returns:
+    dict with keys:
+      - enabled: bool
+      - local_sqlite_path: str (path for local build database)
+  """
+  enabled = os.getenv("ENABLE_BLUE_GREEN_IMPORT", "false").lower() == "true"
+
+  if not enabled:
+    return {"enabled": False}
+
+  config = {
+      "enabled":
+          True,
+      "local_sqlite_path":
+          os.getenv("LOCAL_BUILD_SQLITE_PATH", "/tmp/datacommons_build.db")
+  }
+
+  return config

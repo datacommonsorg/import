@@ -1,8 +1,8 @@
 package org.datacommons.util;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
 import java.io.IOException;
@@ -22,8 +22,8 @@ public class ApiHelper {
 
   // Use the autopush end-point so we get more recent schema additions that
   // haven't rolled out.
-  private static final String API_ROOT =
-      "https://autopush.api.datacommons.org/node/property-values";
+  private static final String API_ROOT = "https://autopush.api.datacommons.org/v2/node";
+  private static final String API_KEY = System.getenv("AUTOPUSH_DC_API_KEY");
 
   // Retry configuration
   private static boolean ENABLE_RETRIES = true;
@@ -45,16 +45,19 @@ public class ApiHelper {
     }
 
     JsonObject arg = new JsonObject();
-    arg.add("dcids", dcids);
-    arg.addProperty("property", property);
-    arg.addProperty("direction", "out");
+    arg.add("nodes", dcids);
+    // V2 uses -> for out-edges, which is equivalent to direction: "out" in V1
+    arg.addProperty("property", "->" + property);
 
-    var request =
+    var requestBuilder =
         HttpRequest.newBuilder(URI.create(API_ROOT))
             .version(HttpClient.Version.HTTP_1_1)
             .header("accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(arg.toString()))
-            .build();
+            .POST(HttpRequest.BodyPublishers.ofString(arg.toString()));
+    if (API_KEY != null && !API_KEY.isEmpty()) {
+      requestBuilder.header("x-api-key", API_KEY);
+    }
+    var request = requestBuilder.build();
 
     // maxRetries = 0 means no retries (only initial attempt)
     // maxRetries = 3 means 4 total attempts (1 initial + 3 retries)
@@ -88,10 +91,46 @@ public class ApiHelper {
                   return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
                 });
 
-    var payloadJson = new JsonParser().parse(response.body().trim()).getAsJsonObject();
-    if (payloadJson == null || !payloadJson.has("payload")) return null;
-    // The API returns the actual response in a JSON-serialized string.
-    // This string is in the "payload" field of the raw response.
-    return new JsonParser().parse(payloadJson.get("payload").getAsString()).getAsJsonObject();
+    V2NodeResponse v2Response = new Gson().fromJson(response.body().trim(), V2NodeResponse.class);
+    if (v2Response == null || v2Response.data == null) return null;
+
+    return convertToLegacyFormat(v2Response, nodes, property);
+  }
+
+  static JsonObject convertToLegacyFormat(
+      V2NodeResponse v2Response, List<String> nodes, String property) {
+    JsonObject legacyFormat = new JsonObject();
+    // Iterate over requested nodes to ensure each has an entry in the response,
+    // even if empty. This is required by callers like ExistenceChecker.
+    for (String dcid : nodes) {
+      JsonObject outWrapper = new JsonObject();
+      JsonArray outArray = new JsonArray();
+      outWrapper.add("out", outArray);
+      legacyFormat.add(dcid, outWrapper);
+
+      V2NodeResponse.NodeData nodeData = v2Response.data.get(dcid);
+      if (nodeData == null) continue;
+
+      Map<String, V2NodeResponse.ArcData> arcs = nodeData.arcs;
+      if (arcs == null) continue;
+
+      V2NodeResponse.ArcData arcData = arcs.get(property);
+      if (arcData == null || arcData.nodes == null) continue;
+
+      for (V2NodeResponse.NodeInfo node : arcData.nodes) {
+        outArray.add(createOutObject(node));
+      }
+    }
+    return legacyFormat;
+  }
+
+  private static JsonObject createOutObject(V2NodeResponse.NodeInfo node) {
+    JsonObject outObj = new JsonObject();
+    if (node.dcid != null) {
+      outObj.addProperty("dcid", node.dcid);
+    } else if (node.value != null) {
+      outObj.addProperty("value", node.value);
+    }
+    return outObj;
   }
 }

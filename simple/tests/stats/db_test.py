@@ -20,9 +20,12 @@ import unittest
 from unittest import mock
 
 from freezegun import freeze_time
+import pandas as pd
 from stats.data import Observation
 from stats.data import ObservationProperties
 from stats.data import Triple
+from stats.db import _CLEAR_TABLE_FOR_IMPORT_STATEMENTS
+from stats.db import BulkImportContext
 from stats.db import create_and_update_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
@@ -87,6 +90,19 @@ _INDEXES = [('observations_entity_variable', 'observations'),
             ('observations_variable', 'observations')]
 
 
+def _observations_to_df(observations: list[Observation]) -> pd.DataFrame:
+  """Helper to convert list of Observation objects to DataFrame."""
+  from stats import constants
+  return pd.DataFrame([obs.db_tuple() for obs in observations],
+                      columns=[
+                          constants.COLUMN_ENTITY, constants.COLUMN_VARIABLE,
+                          constants.COLUMN_DATE, constants.COLUMN_VALUE,
+                          constants.COLUMN_PROVENANCE, 'unit', 'scaling_factor',
+                          'measurement_method', 'observation_period',
+                          'properties'
+                      ])
+
+
 class TestDb(unittest.TestCase):
 
   def _seed_db_from_input(self, db_file_path: str, input_db_file_name: str):
@@ -131,7 +147,7 @@ class TestDb(unittest.TestCase):
       db = create_and_update_db(create_sqlite_config(db_file))
       db.insert_triples(_TRIPLES)
       foo_file = temp_store.as_dir().open_file("foo.csv")
-      db.insert_observations(_OBSERVATIONS, foo_file)
+      db.insert_observations(_observations_to_df(_OBSERVATIONS), foo_file)
       db.insert_key_value(_KEY_VALUE[0], _KEY_VALUE[1])
       db.insert_import_info(status=ImportStatus.SUCCESS)
 
@@ -195,7 +211,7 @@ class TestDb(unittest.TestCase):
 
       db.insert_triples(_TRIPLES)
       foo_file = temp_store.as_dir().open_file("foo.csv")
-      db.insert_observations(_OBSERVATIONS, foo_file)
+      db.insert_observations(_observations_to_df(_OBSERVATIONS), foo_file)
       db.insert_key_value(_KEY_VALUE[0], _KEY_VALUE[1])
       db.insert_import_info(status=ImportStatus.SUCCESS)
 
@@ -228,7 +244,7 @@ class TestDb(unittest.TestCase):
 
       db.insert_triples(_TRIPLES)
       foo_file = temp_store.as_dir().open_file("foo.csv")
-      db.insert_observations(_OBSERVATIONS, foo_file)
+      db.insert_observations(_observations_to_df(_OBSERVATIONS), foo_file)
       db.insert_key_value(_KEY_VALUE[0], _KEY_VALUE[1])
       db.insert_import_info(status=ImportStatus.SUCCESS)
 
@@ -263,7 +279,8 @@ class TestDb(unittest.TestCase):
       db = create_and_update_db(create_main_dc_config(temp_store.as_dir()))
       db.insert_triples(_TRIPLES)
       observations_file = temp_store.as_dir().open_file(observations_file_name)
-      db.insert_observations(_OBSERVATIONS, observations_file)
+      db.insert_observations(_observations_to_df(_OBSERVATIONS),
+                             observations_file)
       db.insert_import_info(status=ImportStatus.SUCCESS)
       db.commit_and_close()
 
@@ -317,3 +334,180 @@ class TestDb(unittest.TestCase):
   @mock.patch.dict(os.environ, {"SQLITE_PATH": "/path/datacommons.db"})
   def test_get_sqlite_path_from_env(self):
     self.assertEqual(get_sqlite_path_from_env(), "/path/datacommons.db")
+
+
+class TestBulkImportContext(unittest.TestCase):
+  """Tests for BulkImportContext used by CloudSqlDbEngine."""
+
+  def test_enter_starts_transaction_and_clears_tables(self):
+    """Test that __enter__ starts transaction, drops indexes, and clears tables."""
+    mock_engine = mock.Mock()
+    mock_cursor = mock.Mock()
+    mock_engine.cursor = mock_cursor
+
+    ctx = BulkImportContext(mock_engine)
+    result = ctx.__enter__()
+
+    # Returns self
+    self.assertEqual(result, ctx)
+
+    # Verify transaction started
+    mock_cursor.execute.assert_any_call("START TRANSACTION")
+
+    # Verify indexes dropped
+    mock_engine._drop_indexes.assert_called_once()
+
+    # Verify tables cleared
+    for stmt in _CLEAR_TABLE_FOR_IMPORT_STATEMENTS:
+      mock_cursor.execute.assert_any_call(stmt)
+
+  def test_exit_commits_on_success(self):
+    """Test that __exit__ commits and recreates indexes on success."""
+    mock_engine = mock.Mock()
+    mock_engine.cursor = mock.Mock()
+
+    ctx = BulkImportContext(mock_engine)
+    ctx.__enter__()
+    ctx.__exit__(None, None, None)  # No exception
+
+    mock_engine.connection.commit.assert_called_once()
+    mock_engine._create_indexes.assert_called_once()
+    mock_engine.connection.rollback.assert_not_called()
+
+  def test_exit_rolls_back_on_exception(self):
+    """Test that __exit__ rolls back on exception."""
+    mock_engine = mock.Mock()
+    mock_engine.cursor = mock.Mock()
+
+    ctx = BulkImportContext(mock_engine)
+    ctx.__enter__()
+    ctx.__exit__(RuntimeError, RuntimeError("test error"), None)
+
+    mock_engine.connection.rollback.assert_called_once()
+    mock_engine.connection.commit.assert_not_called()
+    mock_engine._create_indexes.assert_not_called()
+
+  def test_insert_observations_calls_executemany(self):
+    """Test that insert_observations calls engine.executemany."""
+    mock_engine = mock.Mock()
+    mock_engine.cursor = mock.Mock()
+
+    ctx = BulkImportContext(mock_engine)
+    batch = [("e1", "v1", "2023", "100", "p1", "", "", "", "", "")]
+
+    count = ctx.insert_observations(batch)
+
+    self.assertEqual(count, 1)
+    mock_engine.executemany.assert_called_once()
+    # Verify the batch was passed
+    call_args = mock_engine.executemany.call_args[0]
+    self.assertEqual(call_args[1], batch)
+
+  def test_insert_triples_calls_executemany(self):
+    """Test that insert_triples calls engine.executemany."""
+    mock_engine = mock.Mock()
+    mock_engine.cursor = mock.Mock()
+
+    ctx = BulkImportContext(mock_engine)
+    triples = [("sub1", "pred1", "obj1", "")]
+
+    count = ctx.insert_triples(triples)
+
+    self.assertEqual(count, 1)
+    mock_engine.executemany.assert_called_once()
+
+  def test_insert_kv_calls_executemany(self):
+    """Test that insert_kv calls engine.executemany."""
+    mock_engine = mock.Mock()
+    mock_engine.cursor = mock.Mock()
+
+    ctx = BulkImportContext(mock_engine)
+    kv_pairs = [("key1", "value1")]
+
+    count = ctx.insert_kv(kv_pairs)
+
+    self.assertEqual(count, 1)
+    mock_engine.executemany.assert_called_once()
+
+  def test_get_counts_tracks_inserts(self):
+    """Test that get_counts returns accurate counts after inserts."""
+    mock_engine = mock.Mock()
+    mock_engine.cursor = mock.Mock()
+
+    ctx = BulkImportContext(mock_engine)
+
+    # Insert some data
+    ctx.insert_observations([("e1",), ("e2",)])
+    ctx.insert_triples([("t1",)])
+    ctx.insert_kv([("k1",), ("k2",), ("k3",)])
+
+    counts = ctx.get_counts()
+
+    self.assertEqual(counts['observations'], 2)
+    self.assertEqual(counts['triples'], 1)
+    self.assertEqual(counts['key_value_store'], 3)
+
+  def test_validate_passes_when_counts_match(self):
+    """Test that validate passes when counts match expected."""
+    mock_engine = mock.Mock()
+    mock_engine.cursor = mock.Mock()
+
+    ctx = BulkImportContext(mock_engine)
+    ctx.insert_observations([("e1",), ("e2",)])
+    ctx.insert_triples([("t1",)])
+    ctx.insert_kv([])
+
+    result = ctx.validate(expected_obs=2, expected_triples=1, expected_kv=0)
+
+    self.assertTrue(result)
+
+  def test_validate_raises_on_observation_mismatch(self):
+    """Test that validate raises RuntimeError on observation count mismatch."""
+    mock_engine = mock.Mock()
+    mock_engine.cursor = mock.Mock()
+
+    ctx = BulkImportContext(mock_engine)
+    ctx.insert_observations([("e1",)])
+
+    with self.assertRaises(RuntimeError) as cm:
+      ctx.validate(expected_obs=100)
+
+    self.assertIn("Observation count mismatch", str(cm.exception))
+
+  def test_validate_raises_on_triple_mismatch(self):
+    """Test that validate raises RuntimeError on triple count mismatch."""
+    mock_engine = mock.Mock()
+    mock_engine.cursor = mock.Mock()
+
+    ctx = BulkImportContext(mock_engine)
+
+    with self.assertRaises(RuntimeError) as cm:
+      ctx.validate(expected_triples=50)
+
+    self.assertIn("Triple count mismatch", str(cm.exception))
+
+  def test_validate_raises_on_kv_mismatch(self):
+    """Test that validate raises RuntimeError on key-value count mismatch."""
+    mock_engine = mock.Mock()
+    mock_engine.cursor = mock.Mock()
+
+    ctx = BulkImportContext(mock_engine)
+
+    with self.assertRaises(RuntimeError) as cm:
+      ctx.validate(expected_kv=10)
+
+    self.assertIn("Key-value count mismatch", str(cm.exception))
+
+  def test_empty_batch_not_inserted(self):
+    """Test that empty batches don't call executemany."""
+    mock_engine = mock.Mock()
+    mock_engine.cursor = mock.Mock()
+
+    ctx = BulkImportContext(mock_engine)
+
+    ctx.insert_observations([])
+    ctx.insert_triples([])
+    ctx.insert_kv([])
+
+    mock_engine.executemany.assert_not_called()
+    self.assertEqual(ctx.get_counts()['observations'], 0)

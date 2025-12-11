@@ -3,6 +3,8 @@ package org.datacommons.ingestion.spanner;
 import com.google.cloud.spanner.ErrorCode;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.SpannerExceptionFactory;
+import com.google.cloud.spanner.Statement;
+import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Value;
 import com.google.cloud.spanner.admin.database.v1.DatabaseAdminClient;
 import com.google.common.base.Joiner;
@@ -21,12 +23,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.Write;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.WriteGrouped;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.options.ValueProvider;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
@@ -140,6 +146,74 @@ public class SpannerClient implements Serializable {
     } catch (IOException e) {
       throw new IllegalStateException("Failed to create DatabaseAdminClient.", e);
     }
+  }
+
+  public PCollection<Mutation> getObservationDeleteMutations(String importName, Pipeline pipeline) {
+    String obsQuery =
+        String.format(
+            "SELECT variable_measured, observation_about, facet_id FROM %s WHERE import_name ="
+                + " @importName",
+            observationTableName);
+
+    return pipeline
+        .apply(
+            "GetObsDeletionRecords",
+            SpannerIO.read()
+                .withProjectId(gcpProjectId)
+                .withInstanceId(spannerInstanceId)
+                .withDatabaseId(spannerDatabaseId)
+                .withQuery(
+                    Statement.newBuilder(obsQuery).bind("importName").to(importName).build()))
+        .apply(
+            "GetObsMutations",
+            ParDo.of(
+                new DoFn<Struct, Mutation>() {
+                  @ProcessElement
+                  public void processElement(ProcessContext c) {
+                    Mutation m =
+                        Mutation.delete(
+                            observationTableName,
+                            com.google.cloud.spanner.Key.of(
+                                c.element().getString(0),
+                                c.element().getString(1),
+                                c.element().getString(2)));
+                    c.output(m);
+                  }
+                }));
+  }
+
+  public PCollection<Mutation> getEdgeDeleteMutations(String provenance, Pipeline pipeline) {
+    String edgeQuery =
+        String.format(
+            "SELECT subject_id, predicate, object_id, provenance FROM %s WHERE provenance ="
+                + " @provenance",
+            edgeTableName);
+    return pipeline
+        .apply(
+            "GetEdgeDeletionRecords",
+            SpannerIO.read()
+                .withProjectId(gcpProjectId)
+                .withInstanceId(spannerInstanceId)
+                .withDatabaseId(spannerDatabaseId)
+                .withQuery(
+                    Statement.newBuilder(edgeQuery).bind("provenance").to(provenance).build()))
+        .apply(
+            "GetEdgeMutations",
+            ParDo.of(
+                new DoFn<Struct, Mutation>() {
+                  @ProcessElement
+                  public void processElement(ProcessContext c) {
+                    Mutation m =
+                        Mutation.delete(
+                            edgeTableName,
+                            com.google.cloud.spanner.Key.of(
+                                c.element().getString(0),
+                                c.element().getString(1),
+                                c.element().getString(2),
+                                c.element().getString(3)));
+                    c.output(m);
+                  }
+                }));
   }
 
   public Write getWriteTransform() {
