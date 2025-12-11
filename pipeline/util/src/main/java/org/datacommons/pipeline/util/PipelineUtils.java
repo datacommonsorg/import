@@ -378,10 +378,8 @@ public class PipelineUtils {
    */
   public static String generateObjectValueKey(String input) {
     String hash = generateSha256(input);
-    if (input.length() <= OBJECT_VALUE_PREFIX) {
-      return input + ":" + hash;
-    }
-    return input.substring(0, OBJECT_VALUE_PREFIX) + ":" + hash;
+    String prefix = input.substring(0, Math.min(input.length(), OBJECT_VALUE_PREFIX));
+    return prefix + ":" + hash;
   }
 
   /**
