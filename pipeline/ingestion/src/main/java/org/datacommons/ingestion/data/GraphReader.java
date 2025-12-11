@@ -59,7 +59,7 @@ public class GraphReader implements Serializable {
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
             if (val.getType() != ValueType.RESOLVED_REF) {
               node = Node.builder();
-              node.subjectId(PipelineUtils.generateSha256(val.getValue()));
+              node.subjectId(PipelineUtils.generateObjectValueKey(val.getValue()));
               if (PipelineUtils.storeValueAsBytes(entry.getKey())) {
                 node.bytes(ByteArray.copyFrom(PipelineUtils.compressString(val.getValue())));
               } else {
@@ -91,7 +91,7 @@ public class GraphReader implements Serializable {
             if (val.getType() == ValueType.RESOLVED_REF) {
               edge.objectId(val.getValue());
             } else {
-              edge.objectId(PipelineUtils.generateSha256(val.getValue()));
+              edge.objectId(PipelineUtils.generateObjectValueKey(val.getValue()));
             }
             edges.add(edge.build());
           }

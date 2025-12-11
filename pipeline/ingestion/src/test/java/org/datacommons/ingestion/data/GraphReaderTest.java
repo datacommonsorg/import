@@ -117,11 +117,11 @@ public class GraphReaderTest {
                 .build(),
             Node.builder().subjectId("dcid2").value("dcid2").types(List.of("Thing")).build(),
             Node.builder()
-                .subjectId("kUyRupzrJkxe/HIOIctxlJX4woEGeOTtlVwqyXYnfDE=")
+                .subjectId("Node Zero:kUyRupzrJkxe/HIOIctxlJX4woEGeOTtlVwqyXYnfDE=")
                 .value("Node Zero")
                 .build(),
             Node.builder()
-                .subjectId("G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
+                .subjectId("{   \"type\": \"Pol:G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
                 .bytes(
                     ByteArray.copyFrom(
                         PipelineUtils.compressString(
@@ -130,7 +130,7 @@ public class GraphReaderTest {
                                 + " ]   ] } ")))
                 .build(),
             Node.builder()
-                .subjectId("J7we8EV8ssChRxBgWot6zDSbHl4xGY7I6mQosc89hFk=")
+                .subjectId("Node One:J7we8EV8ssChRxBgWot6zDSbHl4xGY7I6mQosc89hFk=")
                 .value("Node One")
                 .build());
 
@@ -234,7 +234,7 @@ public class GraphReaderTest {
             Edge.builder()
                 .subjectId("dcid_subject")
                 .predicate("name")
-                .objectId("mccrOBZqQNkHnRh1HpDlRRCFk+0dKKdYJFwWqrIw71s=")
+                .objectId("Subject Node:mccrOBZqQNkHnRh1HpDlRRCFk+0dKKdYJFwWqrIw71s=")
                 .provenance("dc/base/Test")
                 .build(),
             Edge.builder()
@@ -252,13 +252,13 @@ public class GraphReaderTest {
             Edge.builder()
                 .subjectId("dcid_subject")
                 .predicate("description")
-                .objectId("Qa4HqNXvAF/E5uwL1wf1QtUS1qKwulUzF/F1HtAY6fk=")
+                .objectId("A test descripti:Qa4HqNXvAF/E5uwL1wf1QtUS1qKwulUzF/F1HtAY6fk=")
                 .provenance("dc/base/Test")
                 .build(),
             Edge.builder()
                 .subjectId("dcid_subject")
                 .predicate("geoJsonCoordinates")
-                .objectId("G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
+                .objectId("{   \"type\": \"Pol:G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
                 .provenance("dc/base/Test")
                 .build(),
             Edge.builder()
