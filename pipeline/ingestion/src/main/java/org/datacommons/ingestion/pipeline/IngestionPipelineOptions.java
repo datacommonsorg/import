@@ -30,12 +30,6 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setStorageBucketId(String bucketId);
 
-  @Description("GCS bucket Id for storing data")
-  @Default.String("datcom-store-resources")
-  String getBlobStorageBucketId();
-
-  void setBlobStorageBucketId(String bucketId);
-
   @Description("The DC version endpoint to fetch import group versions to ingest.")
   @Default.String("https://autopush.api.datacommons.org/version")
   String getVersionEndpoint();
