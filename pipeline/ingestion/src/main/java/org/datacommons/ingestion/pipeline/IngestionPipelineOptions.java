@@ -19,7 +19,7 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   void setSpannerInstanceId(String instanceId);
 
   @Description("Spanner Database Id for output")
-  @Default.String("dc_graph")
+  @Default.String("dc_graph_5")
   String getSpannerDatabaseId();
 
   void setSpannerDatabaseId(String databaseId);

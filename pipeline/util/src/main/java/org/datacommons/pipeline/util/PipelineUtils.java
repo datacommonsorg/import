@@ -357,17 +357,6 @@ public class PipelineUtils {
   }
 
   /**
-   * Returns whether the value for the given predicate should be stored in blob storage, false
-   * otherwise.
-   *
-   * @param predicate The predicate.
-   * @return True if the value should be stored in blob storage, false otherwise.
-   */
-  public static boolean storeValueAsBlob(String predicate) {
-    return STORE_VALUE_AS_BYTES_PREDICATES.contains(predicate);
-  }
-
-  /**
    * Generates Base64-encoded SHA256 of input.
    *
    * @param input The input string to encode.
