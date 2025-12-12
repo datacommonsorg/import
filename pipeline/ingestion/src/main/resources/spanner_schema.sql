@@ -40,15 +40,19 @@ CREATE TABLE ImportStatus (
   JobId STRING(1024),
   WorkflowId STRING(1024),
   ExecutionTime INT64,
+  DataVolume INT64,
   DataImportTimestamp TIMESTAMP OPTIONS ( allow_commit_timestamp = TRUE ),
   StatusUpdateTimestamp TIMESTAMP OPTIONS ( allow_commit_timestamp = TRUE ),
-  NextRefreshDate DATE,
+  NextRefreshTimestamp TIMESTAMP,
 ) PRIMARY KEY(ImportName)
 
 CREATE TABLE IngestionHistory ( 
   CompletionTimestamp TIMESTAMP NOT NULL OPTIONS ( allow_commit_timestamp = TRUE ),
   WorkflowExecutionID STRING(1024) NOT NULL,
   IngestedImports ARRAY<STRING(MAX)>,
+  NodeCount INT64,
+  EdgeCount INT64,
+  ObservationCount INT64,
 ) PRIMARY KEY(CompletionTimestamp DESC)
 
 CREATE TABLE IngestionLock ( 

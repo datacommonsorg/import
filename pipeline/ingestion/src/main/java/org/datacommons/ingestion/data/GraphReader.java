@@ -139,7 +139,10 @@ public class GraphReader implements Serializable {
   }
 
   public static PCollection<KV<String, Mutation>> graphToObservations(
-      PCollection<McfOptimizedGraph> graph, String importName, SpannerClient spannerClient) {
+      PCollection<McfOptimizedGraph> graph,
+      String importName,
+      SpannerClient spannerClient,
+      Counter obsCounter) {
     return graph.apply(
         "GraphToObs",
         ParDo.of(
@@ -156,6 +159,7 @@ public class GraphReader implements Serializable {
                         e -> {
                           receiver.output(e);
                         });
+                obsCounter.inc(obs.size());
               }
             }));
   }
@@ -163,6 +167,7 @@ public class GraphReader implements Serializable {
   public static PCollection<KV<String, Mutation>> graphToNodes(
       PCollection<McfGraph> graph,
       SpannerClient spannerClient,
+      Counter nodeCounter,
       Counter mcfNodesWithoutTypeCounter) {
     return graph.apply(
         "GraphToNodes",
@@ -179,6 +184,7 @@ public class GraphReader implements Serializable {
                         e -> {
                           receiver.output(e);
                         });
+                nodeCounter.inc(mutations.size());
               }
             }));
   }
@@ -187,7 +193,7 @@ public class GraphReader implements Serializable {
       PCollection<McfGraph> graph,
       String provenance,
       SpannerClient spannerClient,
-      Counter mcfNodesWithoutTypeCounter) {
+      Counter edgeCounter) {
     return graph.apply(
         "GraphToEdges",
         ParDo.of(
@@ -203,6 +209,7 @@ public class GraphReader implements Serializable {
                         e -> {
                           receiver.output(e);
                         });
+                edgeCounter.inc(mutations.size());
               }
             }));
   }
