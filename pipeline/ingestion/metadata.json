@@ -4,8 +4,8 @@
     "parameters": [
         {
             "name": "importList",
-            "label": "List of imports for ingestion (CSV).",
-            "helpText": "List of imports for ingestion (CSV).",
+            "label": "List of imports for ingestion (JSON).",
+            "helpText": "List of imports for ingestion (JSON).",
             "paramType": "TEXT"
         },
         {
