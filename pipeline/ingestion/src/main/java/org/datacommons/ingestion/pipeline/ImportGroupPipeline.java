@@ -27,8 +27,14 @@ import org.slf4j.LoggerFactory;
 
 public class ImportGroupPipeline {
   private static final Logger LOGGER = LoggerFactory.getLogger(ImportGroupPipeline.class);
-  private static final Counter counter =
+  private static final Counter nodeInvalidTypeCounter =
       Metrics.counter(ImportGroupPipeline.class, "mcf_nodes_without_type");
+  private static final Counter nodeCounter =
+      Metrics.counter(ImportGroupPipeline.class, "graph_node_count");
+  private static final Counter edgeCounter =
+      Metrics.counter(ImportGroupPipeline.class, "graph_edge_count");
+  private static final Counter obsCounter =
+      Metrics.counter(ImportGroupPipeline.class, "graph_observation_count");
 
   public static void main(String[] args) {
     IngestionPipelineOptions options =
@@ -88,10 +94,11 @@ public class ImportGroupPipeline {
       PCollection<McfGraph> schemaNodes = graphNodes.get(PipelineUtils.SCHEMA_NODES_TAG);
       PCollection<McfGraph> combinedGraph = PipelineUtils.combineGraphNodes(schemaNodes);
       PCollection<Mutation> nodeMutations =
-          GraphReader.graphToNodes(combinedGraph, spannerClient, counter)
+          GraphReader.graphToNodes(
+                  combinedGraph, spannerClient, nodeCounter, nodeInvalidTypeCounter)
               .apply("ExtractNodeMutations", Values.create());
       PCollection<Mutation> edgeMutations =
-          GraphReader.graphToEdges(combinedGraph, provenance, spannerClient, counter)
+          GraphReader.graphToEdges(combinedGraph, provenance, spannerClient, edgeCounter)
               .apply("ExtractEdgeMutations", Values.create());
       nodeMutationList.add(nodeMutations);
       edgeMutationList.add(edgeMutations);
@@ -101,7 +108,7 @@ public class ImportGroupPipeline {
       PCollection<McfOptimizedGraph> optimizedGraph =
           PipelineUtils.buildOptimizedMcfGraph(observationNodes);
       PCollection<Mutation> observationMutations =
-          GraphReader.graphToObservations(optimizedGraph, importName, spannerClient)
+          GraphReader.graphToObservations(optimizedGraph, importName, spannerClient, obsCounter)
               .apply("ExtractObsMutations", Values.create());
       obsMutationList.add(observationMutations);
     }
