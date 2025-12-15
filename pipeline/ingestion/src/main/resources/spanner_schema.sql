@@ -33,12 +33,12 @@ CREATE TABLE Observation (
   is_dc_aggregate BOOL,
 ) PRIMARY KEY(observation_about, variable_measured, facet_id)
 
-CREATE TABLE ImportStatus (
+CREATE TABLE ImportStatus ( 
   ImportName STRING(MAX) NOT NULL,
   LatestVersion STRING(MAX),
-  State STRING(50) NOT NULL,
-  JobId STRING(MAX),
-  WorkflowId STRING(MAX),
+  State STRING(1024) NOT NULL,
+  JobId STRING(1024),
+  WorkflowId STRING(1024),
   ExecutionTime INT64,
   DataVolume INT64,
   DataImportTimestamp TIMESTAMP OPTIONS ( allow_commit_timestamp = TRUE ),
