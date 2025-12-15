@@ -1,0 +1,43 @@
+#  gcloud builds submit --config pipeline/ingestion/cloudbuild.yaml .
+
+steps:
+  # 1. Build the bundled JAR using Maven
+  # We run from the root to ensure all modules (model, util, ingestion) are built correctly.
+  - name: 'maven:3.9-eclipse-temurin-17'
+    entrypoint: 'mvn'
+    args:
+      - 'clean'
+      - 'package'
+      - '-Pdataflow-runner'
+      - '-pl'
+      - 'pipeline/ingestion'
+      - '-am'
+    id: 'build-jar'
+
+  # 2. Build the Dataflow Flex Template
+  # This step uses the built JAR to create the Flex Template image and spec file.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'dataflow'
+      - 'flex-template'
+      - 'build'
+      - 'gs://$_TEMPLATE_BUCKET/templates/flex/ingestion.json'
+      - '--image-gcr-path'
+      - '$_IMAGE_GCR_PATH'
+      - '--sdk-language'
+      - 'JAVA'
+      - '--flex-template-base-image'
+      - 'JAVA17'
+      - '--metadata-file'
+      - 'pipeline/ingestion/metadata.json'
+      - '--jar'
+      - 'pipeline/ingestion/target/ingestion-bundled-${_VERSION}.jar'
+      - '--env'
+      - 'FLEX_TEMPLATE_JAVA_MAIN_CLASS=org.datacommons.ingestion.pipeline.ImportGroupPipeline'
+    id: 'build-flex-template'
+
+substitutions:
+  _VERSION: "0.1-SNAPSHOT"
+  _TEMPLATE_BUCKET: "datcom-templates"
+  _IMAGE_GCR_PATH: "gcr.io/datcom-ci/dataflow-templates/ingestion:$SHORT_SHA"
