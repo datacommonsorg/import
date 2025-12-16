@@ -111,14 +111,14 @@ public class CacheReader implements Serializable {
                   mcfNodesWithoutTypeCounter.inc();
                 }
               } else { // Value
-                String hash = PipelineUtils.generateSha256(entity.getValue());
-                nodeId = hash;
+                String objectValueKey = PipelineUtils.generateObjectValueKey(entity.getValue());
+                nodeId = objectValueKey;
                 if (PipelineUtils.storeValueAsBytes(predicate)) {
                   bytes = ByteArray.copyFrom(PipelineUtils.compressString(entity.getValue()));
                 } else {
                   nodeValue = entity.getValue();
                 }
-                objectId = hash;
+                objectId = objectValueKey;
               }
             } else { // In arc row
               nodeId = entity.getDcid();

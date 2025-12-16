@@ -48,6 +48,9 @@ public class PipelineUtils {
   // Default type for MCF nodes.
   public static final String TYPE_THING = "Thing";
 
+  // Length of prefix of object value to use for key.
+  public static final int OBJECT_VALUE_PREFIX = 16;
+
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineUtils.class);
 
   // Predicates for which the object value should be stored as bytes.
@@ -365,6 +368,18 @@ public class PipelineUtils {
     }
     return Base64.getEncoder()
         .encodeToString(Hashing.sha256().hashString(input, StandardCharsets.UTF_8).asBytes());
+  }
+
+  /**
+   * Generates a key for an object value.
+   *
+   * @param input The input object value.
+   * @return The corresponding key.
+   */
+  public static String generateObjectValueKey(String input) {
+    String hash = generateSha256(input);
+    String prefix = input.substring(0, Math.min(input.length(), OBJECT_VALUE_PREFIX));
+    return prefix + ":" + hash;
   }
 
   /**

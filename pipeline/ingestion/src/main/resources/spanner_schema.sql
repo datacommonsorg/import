@@ -20,8 +20,8 @@ CREATE TABLE Edge (
 INTERLEAVE IN Node
 
 CREATE TABLE Observation (
-  variable_measured STRING(1024) NOT NULL,
   observation_about STRING(1024) NOT NULL,
+  variable_measured STRING(1024) NOT NULL,
   facet_id STRING(1024) NOT NULL,
   observation_period STRING(1024),
   measurement_method STRING(1024),
@@ -31,7 +31,7 @@ CREATE TABLE Observation (
   import_name STRING(1024),
   provenance_url STRING(1024),
   is_dc_aggregate BOOL,
-) PRIMARY KEY(variable_measured, observation_about, facet_id)
+) PRIMARY KEY(observation_about, variable_measured, facet_id)
 
 CREATE TABLE ImportStatus ( 
   ImportName STRING(MAX) NOT NULL,
