@@ -24,7 +24,7 @@ steps:
       - 'build'
       - 'gs://$_TEMPLATE_BUCKET/templates/flex/ingestion.json'
       - '--image-gcr-path'
-      - '$_IMAGE_GCR_PATH'
+      - '${_IMAGE_GCR_PATH}:$SHORT_SHA'
       - '--sdk-language'
       - 'JAVA'
       - '--flex-template-base-image'
@@ -40,4 +40,4 @@ steps:
 substitutions:
   _VERSION: "0.1-SNAPSHOT"
   _TEMPLATE_BUCKET: "datcom-templates"
-  _IMAGE_GCR_PATH: "gcr.io/datcom-ci/dataflow-templates/ingestion:$SHORT_SHA"
+  _IMAGE_GCR_PATH: "gcr.io/datcom-ci/dataflow-templates/ingestion"
