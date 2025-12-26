@@ -51,6 +51,7 @@ CREATE TABLE IngestionHistory (
   WorkflowExecutionID STRING(1024) NOT NULL,
   DataflowJobID STRING(1024),
   IngestedImports ARRAY<STRING(MAX)>,
+  ExecutionTime INT64,
   NodeCount INT64,
   EdgeCount INT64,
   ObservationCount INT64,

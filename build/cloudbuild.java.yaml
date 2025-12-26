@@ -21,3 +21,5 @@ steps:
     name: "maven:3-openjdk-17"
     entrypoint: "mvn"
     args: ["com.spotify.fmt:fmt-maven-plugin:check", "test"]
+    env:
+      - 'AUTOPUSH_DC_API_KEY=${_AUTOPUSH_DC_API_KEY}'
