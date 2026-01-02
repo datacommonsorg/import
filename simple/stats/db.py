@@ -22,7 +22,7 @@ import os
 import sqlite3
 from typing import Any
 
-from google.cloud.sql.connector.connector import Connector
+from google.cloud.sql.connector.connector import Connector, IPTypes
 import pandas as pd
 from pymysql.connections import Connection
 from pymysql.cursors import Cursor
@@ -51,11 +51,19 @@ CLOUD_MY_SQL_DEFAULT_DB_NAME = "datacommons"
 
 ENV_USE_CLOUDSQL = "USE_CLOUDSQL"
 ENV_CLOUDSQL_INSTANCE = "CLOUDSQL_INSTANCE"
+ENV_CLOUDSQL_USE_PRIVATE_IP = "CLOUDSQL_USE_PRIVATE_IP"
 ENV_DB_USER = "DB_USER"
 ENV_DB_PASS = "DB_PASS"
 ENV_DB_NAME = "DB_NAME"
 
 ENV_SQLITE_PATH = "SQLITE_PATH"
+
+# Mapping of environment variables to Cloud SQL connector parameters.
+# Add new optional parameters here to extend functionality.
+_CLOUDSQL_ENV_TO_PARAM = {
+    ENV_CLOUDSQL_USE_PRIVATE_IP:
+        lambda v: ("ip_type", IPTypes.PRIVATE) if v.lower() == "true" else None,
+}
 
 MAIN_DC_OUTPUT_DIR = "mainDcOutputDir"
 
@@ -633,6 +641,23 @@ class BulkImportContext:
     return True
 
 
+def _get_optional_cloudsql_params() -> dict:
+  """Get optional Cloud SQL parameters from environment variables.
+
+  Returns:
+    dict: Optional connection parameters based on environment variables
+  """
+  params = {}
+  for env_var, param_func in _CLOUDSQL_ENV_TO_PARAM.items():
+    env_value = os.getenv(env_var, "")
+    if env_value:
+      result = param_func(env_value)
+      if result:
+        param_name, param_value = result
+        params[param_name] = param_value
+  return params
+
+
 class CloudSqlDbEngine(DbEngine):
 
   def __init__(self, db_params: dict[str, str]) -> None:
@@ -642,7 +667,7 @@ class CloudSqlDbEngine(DbEngine):
     CloudSqlDbEngine._maybe_create_database(connector, db_params)
     kwargs = {
         param: db_params[param] for param in _CLOUD_MY_SQL_DB_CONNECT_PARAMS
-    }
+    } | _get_optional_cloudsql_params()
     logging.info("Connecting to Cloud MySQL: %s (%s)",
                  db_params[CLOUD_MY_SQL_INSTANCE], db_params[CLOUD_MY_SQL_DB])
     # Uses the pymysql driver to connect to the DB.
@@ -700,7 +725,7 @@ class CloudSqlDbEngine(DbEngine):
     kwargs = {
         param: db_params[param]
         for param in _CLOUD_MY_SQL_INSTANCE_CONNECT_PARAMS
-    }
+    } | _get_optional_cloudsql_params()
     db_instance = db_params[CLOUD_MY_SQL_INSTANCE]
     db_name = db_params[CLOUD_MY_SQL_DB]
     logging.info(
