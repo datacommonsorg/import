@@ -21,5 +21,10 @@ steps:
     name: "maven:3-openjdk-17"
     entrypoint: "mvn"
     args: ["com.spotify.fmt:fmt-maven-plugin:check", "test"]
-    env:
-      - 'AUTOPUSH_DC_API_KEY=${_AUTOPUSH_DC_API_KEY}'
+    secretEnv:
+      - AUTOPUSH_DC_API_KEY
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/datcom-ci/secrets/autopush-dc-api-key/versions/latest
+      env: AUTOPUSH_DC_API_KEY
