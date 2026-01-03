@@ -12,6 +12,8 @@ steps:
       - '-pl'
       - 'pipeline/ingestion'
       - '-am'
+    secretEnv:
+      - AUTOPUSH_DC_API_KEY
     id: 'build-jar'
 
   # 2. Build the Dataflow Flex Template
@@ -36,6 +38,11 @@ steps:
       - '--env'
       - 'FLEX_TEMPLATE_JAVA_MAIN_CLASS=org.datacommons.ingestion.pipeline.ImportGroupPipeline'
     id: 'build-flex-template'
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/datcom-ci/secrets/autopush-dc-api-key/versions/latest
+      env: AUTOPUSH_DC_API_KEY
 
 substitutions:
   _VERSION: "0.1-SNAPSHOT"
