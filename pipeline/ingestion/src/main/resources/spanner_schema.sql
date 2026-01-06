@@ -57,6 +57,13 @@ CREATE TABLE IngestionHistory (
   ObservationCount INT64,
 ) PRIMARY KEY(CompletionTimestamp DESC)
 
+CREATE TABLE ImportVersionHistory (
+  ImportName STRING(MAX) NOT NULL,
+  Version STRING(MAX) NOT NULL,
+  UpdateTimestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
+  Comment STRING(MAX),
+) PRIMARY KEY (ImportName, UpdateTimestamp DESC);
+
 CREATE TABLE IngestionLock ( 
   LockID STRING(1024) NOT NULL,
   LockOwner STRING(1024),
