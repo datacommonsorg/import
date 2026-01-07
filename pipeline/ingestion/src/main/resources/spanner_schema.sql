@@ -36,6 +36,7 @@ CREATE TABLE Observation (
 CREATE TABLE ImportStatus ( 
   ImportName STRING(MAX) NOT NULL,
   LatestVersion STRING(MAX),
+  GraphPath STRING(MAX),
   State STRING(1024) NOT NULL,
   JobId STRING(1024),
   WorkflowId STRING(1024),

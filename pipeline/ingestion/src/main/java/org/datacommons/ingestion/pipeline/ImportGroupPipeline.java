@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 public class ImportGroupPipeline {
   private static final Logger LOGGER = LoggerFactory.getLogger(ImportGroupPipeline.class);
+  private static final String IMPORT_METADATA_FILE = "import_metadata_mcf.mcf";
   private static final Counter nodeInvalidTypeCounter =
       Metrics.counter(ImportGroupPipeline.class, "mcf_nodes_without_type");
   private static final Counter nodeCounter =
@@ -35,6 +36,10 @@ public class ImportGroupPipeline {
       Metrics.counter(ImportGroupPipeline.class, "graph_edge_count");
   private static final Counter obsCounter =
       Metrics.counter(ImportGroupPipeline.class, "graph_observation_count");
+
+  private static boolean isJsonNullOrEmpty(JsonElement element) {
+    return element == null || element.getAsString().isEmpty();
+  }
 
   public static void main(String[] args) {
     IngestionPipelineOptions options =
@@ -72,27 +77,49 @@ public class ImportGroupPipeline {
 
     for (JsonElement element : jsonArray) {
       JsonElement importElement = element.getAsJsonObject().get("importName");
-      JsonElement path = element.getAsJsonObject().get("latestVersion");
-      if (importElement == null
-          || path == null
-          || importElement.getAsString().isEmpty()
-          || path.getAsString().isEmpty()) {
+      JsonElement versionElement = element.getAsJsonObject().get("latestVersion");
+      JsonElement pathElement = element.getAsJsonObject().get("graphPath");
+
+      if (isJsonNullOrEmpty(importElement)
+          || isJsonNullOrEmpty(pathElement)
+          || isJsonNullOrEmpty(versionElement)) {
         LOGGER.error("Invalid import input json: {}", element.toString());
         continue;
       }
       String importName = importElement.getAsString();
+      String latestVersion = versionElement.getAsString();
+      LOGGER.info("Import: {} Latest version: {}", importName, latestVersion);
+
+      // Populate provenance node/edges.
       String provenance = "dc/base/" + importName;
-      LOGGER.info("Import {} graph path {}", importName, path.getAsString());
+      PCollection<McfGraph> provenanceMcf =
+          GraphReader.getProvenance(
+              options.getStorageBucketId(),
+              importName,
+              latestVersion.substring(latestVersion.indexOf("/", 5) + 1)
+                  + "/"
+                  + IMPORT_METADATA_FILE,
+              "provenance/" + importName + ".mcf",
+              pipeline);
 
       PCollection<Mutation> deleteMutations =
           GraphReader.getDeleteMutations(importName, provenance, pipeline, spannerClient);
       deleteMutationList.add(deleteMutations);
       // Read schema mcf files and combine MCF nodes, and convert to spanner mutations (Node/Edge).
-      PCollection<McfGraph> nodes = PipelineUtils.readMcfFiles(path.getAsString(), pipeline);
+      String graphPath = latestVersion + pathElement.getAsString();
+      PCollection<McfGraph> nodes =
+          pathElement.getAsString().contains("tfrecord")
+              ? PipelineUtils.readMcfGraph(graphPath, pipeline)
+              : PipelineUtils.readMcfFiles(graphPath, pipeline);
       PCollectionTuple graphNodes = PipelineUtils.splitGraph(nodes);
       PCollection<McfGraph> observationNodes = graphNodes.get(PipelineUtils.OBSERVATION_NODES_TAG);
       PCollection<McfGraph> schemaNodes = graphNodes.get(PipelineUtils.SCHEMA_NODES_TAG);
-      PCollection<McfGraph> combinedGraph = PipelineUtils.combineGraphNodes(schemaNodes);
+      PCollection<McfGraph> schemaMcf =
+          PCollectionList.of(schemaNodes)
+              .and(provenanceMcf)
+              .apply("FlattenSchema", Flatten.pCollections());
+
+      PCollection<McfGraph> combinedGraph = PipelineUtils.combineGraphNodes(schemaMcf);
       PCollection<Mutation> nodeMutations =
           GraphReader.graphToNodes(
                   combinedGraph, spannerClient, nodeCounter, nodeInvalidTypeCounter)
@@ -102,7 +129,6 @@ public class ImportGroupPipeline {
               .apply("ExtractEdgeMutations", Values.create());
       nodeMutationList.add(nodeMutations);
       edgeMutationList.add(edgeMutations);
-
       // Read observation mcf files, build optimized graph, and convert to spanner mutations
       // (Observation).
       PCollection<McfOptimizedGraph> optimizedGraph =
