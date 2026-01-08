@@ -22,7 +22,8 @@ import os
 import sqlite3
 from typing import Any
 
-from google.cloud.sql.connector.connector import Connector, IPTypes
+from google.cloud.sql.connector.connector import Connector
+from google.cloud.sql.connector.connector import IPTypes
 import pandas as pd
 from pymysql.connections import Connection
 from pymysql.cursors import Cursor
