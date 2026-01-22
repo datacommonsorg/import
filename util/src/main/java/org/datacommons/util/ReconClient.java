@@ -27,10 +27,7 @@ import org.datacommons.proto.Resolve.ResolveResponse;
  */
 public class ReconClient {
 
-  // TODO(keyurs): Switch to prod URL once this PR is in prod:
-  // https://github.com/datacommonsorg/mixer/pull/1239
-  private static final String V2_RESOLVE_API_URL =
-      "https://autopush.api.datacommons.org/v2/resolve";
+  private static final String V2_RESOLVE_API_URL = "https://api.datacommons.org/v2/resolve";
 
   static final String NUM_API_CALLS_COUNTER = "ReconClient_NumApiCalls";
 
