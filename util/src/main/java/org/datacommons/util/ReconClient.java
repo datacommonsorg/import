@@ -26,7 +26,7 @@ import org.datacommons.proto.Resolve.ResolveResponse;
  * than {@code chunkSize}, the API calls will be partitioned into max {@code chunkSize}d batches.
  */
 public class ReconClient {
-
+  // TODO: Supply an API key for prod /v2/resolve
   private static final String V2_RESOLVE_API_URL = "https://api.datacommons.org/v2/resolve";
 
   static final String NUM_API_CALLS_COUNTER = "ReconClient_NumApiCalls";
