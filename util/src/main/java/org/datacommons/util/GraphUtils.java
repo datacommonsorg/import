@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.datacommons.proto.Debug;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
@@ -35,6 +36,8 @@ public class GraphUtils {
   }
 
   public static final String STAT_VAR_OB = "StatVarObservation";
+  static Debug.Log.Builder log = Debug.Log.newBuilder();
+  static LogWrapper logCtx = new LogWrapper(log);
 
   private static final String REQ_SV_OBS_PROPS[] = {
     /** Required properties for a StatVarObservation. */
@@ -301,28 +304,7 @@ public class GraphUtils {
    * @return An McfGraph proto representing the input MCF string.
    */
   public static McfGraph convertToGraph(String input) {
-    McfGraph.Builder g = McfGraph.newBuilder();
-    g.setType(McfType.INSTANCE_MCF);
-    String node_id = "";
-    McfGraph.PropertyValues.Builder base_node = McfGraph.PropertyValues.newBuilder();
-    String[] lines = input.split("\n");
-    for (String line : lines) {
-      line = line.trim();
-      if (line.isEmpty() || line.startsWith("//") || line.startsWith("#")) {
-        continue;
-      }
-      int colon = line.indexOf(":");
-      String lhs = line.substring(0, colon).trim();
-      String rhs = line.substring(colon + 1).trim();
-      if (lhs.equals(Property.dcid.name()) || lhs.equals("Node")) {
-        node_id = rhs;
-      }
-      setPropVal(lhs, ValueType.TEXT, rhs, base_node);
-    }
-    if (!node_id.isEmpty()) {
-      g.putNodes(node_id, base_node.build());
-    }
-    return g.build();
+      return McfParser.parseInstanceMcfString(input, true, logCtx);
   }
 
   /**

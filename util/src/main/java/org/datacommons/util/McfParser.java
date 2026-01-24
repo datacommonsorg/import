@@ -58,7 +58,7 @@ public class McfParser {
 
   // Parse a string with instance nodes in MCF format into the McfGraph proto.
   public static McfGraph parseInstanceMcfString(
-      String mcfString, boolean isResolved, LogWrapper logCtx) throws IOException {
+      String mcfString, boolean isResolved, LogWrapper logCtx) {
     return parseMcfString(mcfString, Mcf.McfType.INSTANCE_MCF, isResolved, logCtx);
   }
 
@@ -69,8 +69,7 @@ public class McfParser {
   }
 
   // Parse a string with template nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseTemplateMcfString(String mcfString, LogWrapper logCtx)
-      throws IOException {
+  public static McfGraph parseTemplateMcfString(String mcfString, LogWrapper logCtx) {
     return parseMcfString(mcfString, Mcf.McfType.TEMPLATE_MCF, false, logCtx);
   }
 
@@ -80,7 +79,7 @@ public class McfParser {
     return parseMcfFile(fileName, Mcf.McfType.TEMPLATE_MCF, false, logCtx);
   }
 
-  public McfGraph parseNextNode() throws IOException {
+  public McfGraph parseNextNode() {
     if (finished) return null;
     while (lines.hasNext()) {
       String line = lines.next();
@@ -249,8 +248,7 @@ public class McfParser {
   }
 
   private static McfGraph parseMcfString(
-      String mcfString, Mcf.McfType type, boolean isResolved, LogWrapper logCtx)
-      throws IOException {
+      String mcfString, Mcf.McfType type, boolean isResolved, LogWrapper logCtx) {
     McfParser parser = McfParser.init(type, isResolved);
     parser.fileName = IN_MEMORY_FILE_NAME;
     parser.logCtx = logCtx;
@@ -264,7 +262,7 @@ public class McfParser {
     return parser.parseLines();
   }
 
-  private McfGraph parseLines() throws IOException {
+  private McfGraph parseLines() {
     McfGraph g;
     ArrayList<McfGraph> graphs = new ArrayList<>();
     while ((g = parseNextNode()) != null) {

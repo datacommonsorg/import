@@ -2,19 +2,26 @@ package org.datacommons.ingestion.data;
 
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.datacommons.Storage.Observations;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.pipeline.util.PipelineUtils;
@@ -25,6 +32,7 @@ import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.GraphUtils;
+import org.datacommons.util.McfUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +50,8 @@ public class GraphReader implements Serializable {
         // Generate corresponding node
         Map<String, McfGraph.Values> pv = pvs.getPvsMap();
         Node.Builder node = Node.builder();
-        node.subjectId(nodeEntry.getKey());
-        node.value(nodeEntry.getKey());
+        node.subjectId(McfUtil.stripNamespace(nodeEntry.getKey()));
+        node.value(McfUtil.stripNamespace(nodeEntry.getKey()));
         node.name(GraphUtils.getPropertyValue(pv, "name"));
         List<String> types = GraphUtils.getPropertyValues(pv, "typeOf");
         if (types.isEmpty()) {
@@ -74,6 +82,33 @@ public class GraphReader implements Serializable {
     return nodes;
   }
 
+  public static PCollection<McfGraph> getProvenance(
+      String bucketName,
+      String importName,
+      String provenanceFile,
+      String meatadataFile,
+      Pipeline p) {
+    LOGGER.info("Reading provenance mcf from {} {} {}", bucketName, provenanceFile, meatadataFile);
+    Storage storage = StorageOptions.getDefaultInstance().getService();
+    Blob blob = storage.get(BlobId.of(bucketName, meatadataFile));
+    List<McfGraph> mcfList = new ArrayList<>();
+    if (blob != null && blob.exists()) {
+      String s = new String(blob.getContent(), StandardCharsets.UTF_8);
+      mcfList.add(GraphUtils.convertToGraph(s));
+    }
+    blob = storage.get(BlobId.of(bucketName, provenanceFile));
+    if (blob != null && blob.exists()) {
+      String s = new String(blob.getContent(), StandardCharsets.UTF_8);
+      mcfList.add(GraphUtils.convertToGraph(s));
+    }
+    if (mcfList.isEmpty()) {
+      String defaultProvenance =
+          "Node: dcid:dc/base/" + importName + "\n" + "typeOf: dcid:Provenance\n";
+      mcfList.add(GraphUtils.convertToGraph(defaultProvenance));
+    }
+    return p.apply(Create.of(mcfList).withType(TypeDescriptor.of(McfGraph.class)));
+  }
+
   public static List<Edge> graphToEdges(McfGraph graph, String provenance) {
     List<Edge> edges = new ArrayList<>();
     for (Map.Entry<String, PropertyValues> nodeEntry : graph.getNodesMap().entrySet()) {
@@ -81,7 +116,8 @@ public class GraphReader implements Serializable {
       if (!GraphUtils.isObservation(pvs)) {
         Map<String, McfGraph.Values> pv = pvs.getPvsMap();
         // String provenance = GraphUtils.getPropertyValue(pv, "provenance");
-        String subjectId = nodeEntry.getKey(); // Use the map key as the subjectId
+        String subjectId =
+            McfUtil.stripNamespace(nodeEntry.getKey()); // Use the map key as the subjectId
         for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) { // Iterate over properties
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
             Edge.Builder edge = Edge.builder();
@@ -177,6 +213,9 @@ public class GraphReader implements Serializable {
               public void processElement(
                   @Element McfGraph element, OutputReceiver<KV<String, Mutation>> receiver) {
                 List<Node> nodes = graphToNodes(element, mcfNodesWithoutTypeCounter);
+                // for (Node node : nodes) {
+                //   LOGGER.info("Processing node: {}", node);
+                // }
                 List<KV<String, Mutation>> mutations =
                     spannerClient.toGraphKVMutations(nodes, Collections.emptyList());
                 mutations.stream()
@@ -202,6 +241,9 @@ public class GraphReader implements Serializable {
               public void processElement(
                   @Element McfGraph element, OutputReceiver<KV<String, Mutation>> receiver) {
                 List<Edge> edges = graphToEdges(element, provenance);
+                // for (Edge edge : edges) {
+                //   LOGGER.info("Processing Edge: {}", edge);
+                // }
                 List<KV<String, Mutation>> mutations =
                     spannerClient.toGraphKVMutations(Collections.emptyList(), edges);
                 mutations.stream()

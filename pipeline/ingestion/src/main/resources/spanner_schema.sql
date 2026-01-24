@@ -36,6 +36,7 @@ CREATE TABLE Observation (
 CREATE TABLE ImportStatus ( 
   ImportName STRING(MAX) NOT NULL,
   LatestVersion STRING(MAX),
+  GraphPath STRING(MAX),
   State STRING(1024) NOT NULL,
   JobId STRING(1024),
   WorkflowId STRING(1024),
@@ -56,6 +57,13 @@ CREATE TABLE IngestionHistory (
   EdgeCount INT64,
   ObservationCount INT64,
 ) PRIMARY KEY(CompletionTimestamp DESC)
+
+CREATE TABLE ImportVersionHistory (
+  ImportName STRING(MAX) NOT NULL,
+  Version STRING(MAX) NOT NULL,
+  UpdateTimestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
+  Comment STRING(MAX),
+) PRIMARY KEY (ImportName, UpdateTimestamp DESC);
 
 CREATE TABLE IngestionLock ( 
   LockID STRING(1024) NOT NULL,
