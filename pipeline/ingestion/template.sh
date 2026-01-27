@@ -4,13 +4,17 @@ OPERATION=$1
 
 if [ "$OPERATION" == "deploy" ]; then
     echo "Deploying Dataflow Flex Template..."
+    # Find the JAR file using wildcard
+    JAR_FILE=$(ls target/ingestion-bundled-*.jar | head -n 1)
+    echo "Found JAR: ${JAR_FILE}"
+
     gcloud dataflow flex-template build \
         "gs://datcom-templates/templates/flex/ingestion.json" \
         --image-gcr-path "gcr.io/datcom-ci/dataflow-templates/ingestion:latest" \
         --sdk-language "JAVA" \
         --flex-template-base-image JAVA17 \
         --metadata-file "metadata.json" \
-        --jar "target/ingestion-bundled-0.1-SNAPSHOT.jar" \
+        --jar "${JAR_FILE}" \
         --env FLEX_TEMPLATE_JAVA_MAIN_CLASS="org.datacommons.ingestion.pipeline.ImportGroupPipeline"
 elif [ "$OPERATION" == "run" ]; then
     echo "Running Dataflow Flex Template..."

@@ -6,7 +6,14 @@ steps:
       - AUTOPUSH_DC_API_KEY
 
   - name: 'gcr.io/cloud-builders/gsutil'
-    args: ['cp', 'tool/target/datacommons-import-tool-0.1-SNAPSHOT-jar-with-dependencies.jar', 'gs://datacommons_public/import_tools/import-tool.jar']
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        # Find the JAR file using wildcard
+        JAR_FILE=$(ls tool/target/datacommons-import-tool-*-jar-with-dependencies.jar | head -n 1)
+        echo "Found JAR: ${JAR_FILE}"
+        gsutil cp "${JAR_FILE}" "gs://datacommons_public/import_tools/import-tool.jar"
 
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['builds', 'triggers', 'run', 'dc-import-executor', '--branch=master', '--substitutions', '_DOCKER_IMAGE=us-docker.pkg.dev/datcom-ci/gcr.io/dc-import-executor']
