@@ -69,11 +69,11 @@ To run tests: `mvn test`
 
 To build binary: `mvn package`
 
-- which will produce `tool/target/datacommons-import-tool-0.1-jar-with-dependencies.jar`
+- which will produce `tool/target/datacommons-import-tool-<version>-jar-with-dependencies.jar`
 - and you can run it with
 
   ```bash
-  java -jar tool/target/datacommons-import-tool-0.1-jar-with-dependencies.jar
+  java -jar tool/target/datacommons-import-tool-<version>-jar-with-dependencies.jar
   ```
 
 > To run the above maven commands on M1 macs ([details][m1]), use the `-Dos.arch=x86_64` option.
@@ -92,11 +92,11 @@ To run tests: `mvn test`
 
 To build binary: `mvn package`
 
-- which will produce `server/target/datacommons-server-0.1.jar`
+- which will produce `server/target/datacommons-server-<version>.jar`
 - and you can run it with
 
   ```bash
-  java -jar server/target/datacommons-server-0.1.jar <file1.tmcf> <file2.csv>
+  java -jar server/target/datacommons-server-<version>.jar <file1.tmcf> <file2.csv>
   ```
 
 Send a request:
@@ -148,6 +148,14 @@ time contributing to a Google Open Source project, you may need to follow the
 steps in [contributing.md](contributing.md).
 
 Wait for approval of the Pull Request and merge the change.
+
+### Creating a Release
+
+1.  Update the version in `pom.xml` to the release version (remove `-SNAPSHOT`).
+2.  Build the project: `mvn clean package`.
+3.  Create a new Release on GitHub.
+4.  Upload the built artifacts (e.g., `tool/target/datacommons-import-tool-<version>-jar-with-dependencies.jar`) to the GitHub release.
+5.  Update the version in `pom.xml` to the next snapshot version (e.g., `0.3.2-SNAPSHOT`) and raise a Pull Request.
 
 ## License
 
