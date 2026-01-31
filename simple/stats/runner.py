@@ -21,6 +21,7 @@ from stats.db import FIELD_DB_PARAMS
 from stats.db import FIELD_DB_TYPE
 from stats.db import get_blue_green_config_from_env
 from stats.db import get_cloud_sql_config_from_env
+from stats.db import get_datacommons_platform_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
 from stats.db import TYPE_CLOUD_SQL
@@ -191,8 +192,12 @@ class Runner:
     if self.mode == RunMode.MAIN_DC:
       logging.info("Using Main DC config.")
       return create_main_dc_config(self.output_dir.path)
-    # Attempt to get from env (cloud sql, then sqlite),
+    # Attempt to get from env (data commons platform, cloud sql, then sqlite),
     # then config file, then default.
+    db_cfg = get_datacommons_platform_config_from_env()
+    if db_cfg:
+      logging.info("Using Data Commons Platform settings from env.")
+      return db_cfg
     db_cfg = get_cloud_sql_config_from_env()
     if db_cfg:
       logging.info("Using Cloud SQL settings from env.")
