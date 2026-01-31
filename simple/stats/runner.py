@@ -17,6 +17,7 @@ from stats.db import create_and_update_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
 from stats.db import get_cloud_sql_config_from_env
+from stats.db import get_datacommons_platform_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
 from stats.db_cache import get_db_cache_from_env
@@ -172,8 +173,12 @@ class Runner:
     if self.mode == RunMode.MAIN_DC:
       logging.info("Using Main DC config.")
       return create_main_dc_config(self.output_dir.path)
-    # Attempt to get from env (cloud sql, then sqlite),
+    # Attempt to get from env (data commons platform, cloud sql, then sqlite),
     # then config file, then default.
+    db_cfg = get_datacommons_platform_config_from_env()
+    if db_cfg:
+      logging.info("Using Data Commons Platform settings from env.")
+      return db_cfg
     db_cfg = get_cloud_sql_config_from_env()
     if db_cfg:
       logging.info("Using Cloud SQL settings from env.")

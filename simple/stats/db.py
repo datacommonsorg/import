@@ -40,6 +40,7 @@ FIELD_DB_PARAMS = "params"
 TYPE_CLOUD_SQL = "cloudsql"
 TYPE_SQLITE = "sqlite"
 TYPE_MAIN_DC = "maindc"
+TYPE_DATACOMMONS_PLATFORM = "datacommons_platform"
 
 SQLITE_DB_FILE = "dbFile"
 
@@ -54,6 +55,11 @@ ENV_CLOUDSQL_INSTANCE = "CLOUDSQL_INSTANCE"
 ENV_DB_USER = "DB_USER"
 ENV_DB_PASS = "DB_PASS"
 ENV_DB_NAME = "DB_NAME"
+
+DATACOMMONS_PLATFORM_URL = "datacommons_platform_url"
+
+ENV_USE_DATACOMMONS_PLATFORM = "USE_DATACOMMONS_PLATFORM"
+ENV_DATACOMMONS_PLATFORM_URL = "DATACOMMONS_PLATFORM_URL"
 
 ENV_SQLITE_PATH = "SQLITE_PATH"
 
@@ -362,6 +368,53 @@ class SqlDb(Db):
     }
 
 
+class DataCommonsPlatformDb(Db):
+  """Class to insert triples and observations into Data Commons Platform."""
+
+  def __init__(self, config: dict) -> None:
+    self.url = config[FIELD_DB_PARAMS][DATACOMMONS_PLATFORM_URL]
+
+  def maybe_clear_before_import(self):
+    # Not applicable for Data Commons Platform.
+    pass
+
+  def insert_triples(self, triples: list[Triple]):
+    # TODO: Implement triple insertion into Data Commons Platform.
+    logging.info("TODO: Writing %s triples to [%s]", len(triples), self.url)
+    pass
+
+  def insert_observations(self, observations_df: pd.DataFrame,
+                          input_file: File):
+    # TODO: Implement observation insertion into Data Commons Platform.
+    logging.info("TODO: Writing %s observations to [%s]", len(observations_df),
+                 self.url)
+    pass
+
+  def insert_key_value(self, key: str, value: str):
+    # Not applicable for Data Commons Platform.
+    pass
+
+  def insert_import_info(self, status: ImportStatus):
+    # Not applicable for Data Commons Platform.
+    pass
+
+  def commit(self):
+    # Not applicable for Data Commons Platform.
+    pass
+
+  def commit_and_close(self):
+    # Not applicable for Data Commons Platform.
+    pass
+
+  def select_triples_by_subject_type(self, subject_type: str) -> list[Triple]:
+    # TODO: Implement triple selection from Data Commons Platform.
+    return []
+
+  def select_entity_names(self, dcids: list[str]) -> dict[str, str]:
+    # TODO: Implement entity name selection from Data Commons Platform.
+    return {}
+
+
 def from_triple_tuple(tuple: tuple) -> Triple:
   return Triple(*tuple)
 
@@ -502,6 +555,105 @@ _CLOUD_MYSQL_PROPERTIES_COLUMN_EXISTS_STATEMENT = """
     FROM INFORMATION_SCHEMA.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'observations' AND COLUMN_NAME = 'properties';
 """
+
+
+class BulkImportContext:
+  """Context manager for bulk import operations with transaction safety.
+
+  Handles transaction lifecycle, index management, and provides methods
+  for inserting data. All SQL execution goes through DbEngine methods.
+
+  """
+
+  def __init__(self, engine):
+    self._engine = engine
+    self._obs_count = 0
+    self._triple_count = 0
+    self._kv_count = 0
+
+  def __enter__(self):
+    logging.info(
+        "Starting bulk import transaction (DB LOCKED - writes blocked)")
+    self._engine.cursor.execute("START TRANSACTION")
+    self._engine._drop_indexes()
+    # Clear existing data
+    for statement in _CLEAR_TABLE_FOR_IMPORT_STATEMENTS:
+      self._engine.cursor.execute(statement)
+    return self
+
+  def __exit__(self, exc_type, exc_val, exc_tb):
+    if exc_type is None:
+      self._engine.connection.commit()
+      logging.info("Bulk import committed - DB unlocked")
+      self._engine._create_indexes()
+    else:
+      logging.error(f"Bulk import failed, rolling back: {exc_val}")
+      self._engine.connection.rollback()
+    return False
+
+  def insert_observations(self, observations: list[tuple]) -> int:
+    if observations:
+      self._engine.executemany(_INSERT_OBSERVATIONS_STATEMENT, observations)
+      self._obs_count += len(observations)
+    return len(observations)
+
+  def insert_triples(self, triples: list[tuple]) -> int:
+    """Insert triples"""
+    if triples:
+      self._engine.executemany(_INSERT_TRIPLES_STATEMENT, triples)
+      self._triple_count += len(triples)
+    return len(triples)
+
+  def insert_kv(self, kv_pairs: list[tuple]) -> int:
+    """Insert key-value pairs"""
+    if kv_pairs:
+      self._engine.executemany(_INSERT_KEY_VALUE_STORE_STATEMENT, kv_pairs)
+      self._kv_count += len(kv_pairs)
+    return len(kv_pairs)
+
+  def get_counts(self) -> dict:
+    """Return counts of inserted rows."""
+    return {
+        'observations': self._obs_count,
+        'triples': self._triple_count,
+        'key_value_store': self._kv_count
+    }
+
+  def validate(self,
+               expected_obs: int | None = None,
+               expected_triples: int | None = None,
+               expected_kv: int | None = None) -> bool:
+    """Validate inserted counts match expected. Call before exiting context."""
+    if expected_obs is not None and self._obs_count != expected_obs:
+      raise RuntimeError(
+          f"Observation count mismatch: expected {expected_obs:,}, got {self._obs_count:,}"
+      )
+    if expected_triples is not None and self._triple_count != expected_triples:
+      raise RuntimeError(
+          f"Triple count mismatch: expected {expected_triples:,}, got {self._triple_count:,}"
+      )
+    if expected_kv is not None and self._kv_count != expected_kv:
+      raise RuntimeError(
+          f"Key-value count mismatch: expected {expected_kv:,}, got {self._kv_count:,}"
+      )
+    return True
+
+
+def _get_optional_cloudsql_params() -> dict:
+  """Get optional Cloud SQL parameters from environment variables.
+
+  Returns:
+    dict: Optional connection parameters based on environment variables
+  """
+  params = {}
+  for env_var, param_func in _CLOUDSQL_ENV_TO_PARAM.items():
+    env_value = os.getenv(env_var, "")
+    if env_value:
+      result = param_func(env_value)
+      if result:
+        param_name, param_value = result
+        params[param_name] = param_value
+  return params
 
 
 class CloudSqlDbEngine(DbEngine):
@@ -647,6 +799,8 @@ def create_and_update_db(config: dict) -> Db:
   db_type = config[FIELD_DB_TYPE]
   if db_type and db_type == TYPE_MAIN_DC:
     return MainDcDb(config)
+  if db_type and db_type == TYPE_DATACOMMONS_PLATFORM:
+    return DataCommonsPlatformDb(config)
   return SqlDb(config)
 
 
@@ -665,6 +819,18 @@ def create_main_dc_config(output_dir: Dir) -> dict:
 
 def get_sqlite_path_from_env() -> str | None:
   return os.getenv(ENV_SQLITE_PATH)
+
+def get_datacommons_platform_config_from_env() -> dict | None:
+  if os.getenv(ENV_USE_DATACOMMONS_PLATFORM, "").lower() != "true":
+    return None
+  dcp_url = os.getenv(ENV_DATACOMMONS_PLATFORM_URL)
+  assert dcp_url, f"Environment variable {ENV_DATACOMMONS_PLATFORM_URL} not specified."
+  return {
+      FIELD_DB_TYPE: TYPE_DATACOMMONS_PLATFORM,
+      FIELD_DB_PARAMS: {
+          DATACOMMONS_PLATFORM_URL: dcp_url,
+      }
+  }
 
 
 def get_cloud_sql_config_from_env() -> dict | None:
