@@ -1,4 +1,4 @@
-dcid:InterestRate_TreasuryBill_3Month;dcid:country/USA;"2025-01-31";;dcid:ConstantMaturityRate;dcid:Percent;,,4.31,DELETED
-dcid:InterestRate_TreasuryBond_20Year;dcid:country/USA;"2025-01-30";;dcid:ConstantMaturityRate;dcid:Percent;,4.85,4.81,MODIFIED
-dcid:InterestRate_TreasuryBill_3Month;dcid:country/USA;"2025-01-30";;dcid:ConstantMaturityRate;dcid:Percent;,,4.30,DELETED
-dcid:InterestRate_TreasuryNote_10Year;dcid:country/USA;"2025-01-31";;dcid:ConstantMaturityRate;dcid:Percent;,4.58,,ADDED
+InterestRate_TreasuryBill_3Month;country/USA;2025-01-31;;ConstantMaturityRate;Percent;,,4.31,DELETED
+InterestRate_TreasuryBond_20Year;country/USA;2025-01-30;;ConstantMaturityRate;Percent;,4.85,4.81,MODIFIED
+InterestRate_TreasuryBill_3Month;country/USA;2025-01-30;;ConstantMaturityRate;Percent;,,4.30,DELETED
+InterestRate_TreasuryNote_10Year;country/USA;2025-01-31;;ConstantMaturityRate;Percent;,4.58,,ADDED
