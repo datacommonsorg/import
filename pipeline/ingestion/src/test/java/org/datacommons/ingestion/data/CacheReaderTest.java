@@ -2,7 +2,6 @@ package org.datacommons.ingestion.data;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.cloud.ByteArray;
 import java.util.List;
 import org.apache.beam.sdk.metrics.Counter;
 import org.datacommons.Storage.Observations;
@@ -55,7 +54,8 @@ public class CacheReaderTest {
                 Node.builder()
                     .subjectId("Percentage Work :c6CV18sK/njghkqgkS/mMaTkKP+oWup0pgYkS6iFpvY=")
                     .value(
-                        "Percentage Work Related Physical Activity, Moderate Activity Or Heavy Activity Among Population")
+                        "Percentage Work Related Physical Activity, Moderate Activity Or Heavy"
+                            + " Activity Among Population")
                     .build())
             .addEdge(
                 Edge.builder()
@@ -85,9 +85,10 @@ public class CacheReaderTest {
                 Node.builder()
                     .subjectId("{   \"type\": \"Pol:G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
                     .bytes(
-                        ByteArray.copyFrom(
-                            PipelineUtils.compressString(
-                                "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],       [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]     ]   ] } ")))
+                        PipelineUtils.compressString(
+                            "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],   "
+                                + "    [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]    "
+                                + " ]   ] } "))
                     .build())
             .addEdge(
                 Edge.builder()

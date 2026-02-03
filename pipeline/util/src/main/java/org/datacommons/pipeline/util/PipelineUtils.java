@@ -71,7 +71,14 @@ public class PipelineUtils {
   public static final TupleTag<McfGraph> OBSERVATION_NODES_TAG = new TupleTag<McfGraph>() {};
   public static final TupleTag<McfGraph> SCHEMA_NODES_TAG = new TupleTag<McfGraph>() {};
 
-  public static String getGcsFileContent(String gcsPath) throws IOException {
+  /**
+   * Reads the content of a file from GCS.
+   *
+   * @param gcsPath The GCS path of the file (e.g., gs://bucket/path/to/file).
+   * @return The content of the file as a string.
+   * @throws IOException If the file is not found or cannot be read.
+   */
+  public static String getGCSFileContent(String gcsPath) throws IOException {
     String[] parts = gcsPath.substring(5).split("/", 2);
     String bucketName = parts[0];
     String objectName = parts[1];

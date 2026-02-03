@@ -1,7 +1,7 @@
 package org.datacommons.ingestion.data;
 
-import com.google.cloud.ByteArray;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.apache.beam.sdk.coders.DefaultCoder;
@@ -16,9 +16,12 @@ public class Node implements Serializable {
 
   private String subjectId;
   private String value;
-  private ByteArray bytes;
+  private byte[] bytes;
   private String name;
   private List<String> types;
+
+  @SuppressWarnings("unused")
+  private Node() {}
 
   // Private constructor to enforce use of Builder
   private Node(Builder builder) {
@@ -41,7 +44,7 @@ public class Node implements Serializable {
     return value;
   }
 
-  public ByteArray getBytes() {
+  public byte[] getBytes() {
     return bytes;
   }
 
@@ -60,7 +63,7 @@ public class Node implements Serializable {
     Node node = (Node) o;
     return Objects.equals(subjectId, node.subjectId)
         && Objects.equals(value, node.value)
-        && Objects.equals(bytes, node.bytes)
+        && Arrays.equals(bytes, node.bytes)
         && Objects.equals(name, node.name)
         && Objects.equals(types, node.types);
   }
@@ -74,13 +77,13 @@ public class Node implements Serializable {
   public String toString() {
     return String.format(
         "Node{subjectId='%s', value='%s', bytes='%s', name='%s', types=%s}",
-        subjectId, value, bytes, name, types);
+        subjectId, value, Arrays.toString(bytes), name, types);
   }
 
   public static class Builder {
     private String subjectId = "";
     private String value = "";
-    private ByteArray bytes = null;
+    private byte[] bytes = new byte[0];
     private String name = "";
     private List<String> types = List.of();
 
@@ -96,7 +99,7 @@ public class Node implements Serializable {
       return this;
     }
 
-    public Builder bytes(ByteArray bytes) {
+    public Builder bytes(byte[] bytes) {
       this.bytes = bytes;
       return this;
     }

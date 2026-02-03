@@ -141,7 +141,7 @@ public class CacheReader implements Serializable {
                   Node.builder()
                       .subjectId(nodeId)
                       .value(nodeValue)
-                      .bytes(bytes)
+                      .bytes(bytes != null ? bytes.toByteArray() : new byte[0])
                       .name(entity.getName())
                       .types(types)
                       .build());

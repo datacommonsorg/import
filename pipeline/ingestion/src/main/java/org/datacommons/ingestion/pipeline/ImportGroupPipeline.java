@@ -11,13 +11,16 @@ import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.GraphReader;
+import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
@@ -95,9 +98,10 @@ public class ImportGroupPipeline {
           GraphReader.getProvenanceMcf(
               options.getStorageBucketId(), importName, latestVersion, pipeline);
 
-      PCollection<Mutation> deleteMutations =
-          GraphReader.getDeleteMutations(importName, provenance, pipeline, spannerClient);
-      deleteMutationList.add(deleteMutations);
+      //   PCollection<Mutation> deleteMutations =
+      //       GraphReader.getDeleteMutations(importName, provenance, pipeline, spannerClient);
+      //   deleteMutationList.add(deleteMutations);
+
       // Read schema mcf files and combine MCF nodes, and convert to spanner mutations (Node/Edge).
       String graphPath =
           latestVersion.replaceAll("/+$", "")
@@ -115,13 +119,23 @@ public class ImportGroupPipeline {
               .and(provenanceMcf)
               .apply("FlattenSchema", Flatten.pCollections());
 
-      PCollection<Mutation> edgeMutations =
-          GraphReader.graphToEdges(schemaMcf, provenance, spannerClient, edgeCounter)
-              .apply("ExtractEdgeMutations", Values.create());
+      PCollection<Edge> edges = GraphReader.mcfToEdges(schemaMcf, provenance, edgeCounter);
 
-      PCollection<Mutation> nodeMutations =
-          GraphReader.graphToNodes(schemaMcf, spannerClient, nodeCounter, nodeInvalidTypeCounter)
-              .apply("ExtractEdgeMutations", Values.create());
+      PCollection<Mutation> edgeMutations = GraphReader.edgeToMutations(edges, spannerClient);
+
+      PCollection<Node> newNodes =
+          GraphReader.mcfToNodes(schemaMcf, nodeCounter, nodeInvalidTypeCounter);
+
+      PCollection<Node> existingNodes = spannerClient.readExistingNodes(newNodes);
+
+      PCollection<Node> mergedNodes =
+          PCollectionList.of(newNodes)
+              .and(existingNodes)
+              .apply("FlattenNodes", Flatten.pCollections());
+
+      PCollection<Node> finalNodes = GraphReader.combineNodes(mergedNodes);
+
+      PCollection<Mutation> nodeMutations = GraphReader.nodeToMutations(finalNodes, spannerClient);
 
       nodeMutationList.add(nodeMutations);
       edgeMutationList.add(edgeMutations);
@@ -135,8 +149,9 @@ public class ImportGroupPipeline {
       obsMutationList.add(observationMutations);
     }
     PCollection<Mutation> deleteMutations =
-        PCollectionList.of(deleteMutationList)
-            .apply("FlattenDeleteMutations", Flatten.pCollections());
+        pipeline.apply(Create.empty(org.apache.beam.sdk.values.TypeDescriptor.of(Mutation.class)));
+    // PCollectionList.of(deleteMutationList)
+    //     .apply("FlattenDeleteMutations", Flatten.pCollections());
     SpannerWriteResult deleted =
         deleteMutations.apply("DeleteImportsFromSpanner", spannerClient.getWriteTransform());
     // Write the mutations to spanner.
