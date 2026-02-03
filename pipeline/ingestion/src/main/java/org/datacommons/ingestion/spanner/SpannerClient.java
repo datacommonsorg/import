@@ -1,5 +1,6 @@
 package org.datacommons.ingestion.spanner;
 
+import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.ErrorCode;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.SpannerExceptionFactory;
@@ -24,15 +25,23 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.gcp.spanner.ReadOperation;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.Write;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.WriteGrouped;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.options.ValueProvider;
+import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.Filter;
+import org.apache.beam.sdk.transforms.GroupIntoBatches;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SimpleFunction;
+import org.apache.beam.sdk.transforms.WithKeys;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.TypeDescriptors;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
@@ -45,6 +54,8 @@ public class SpannerClient implements Serializable {
 
   // Decrease batch size for observations (bigger rows)
   private static final int SPANNER_BATCH_SIZE_BYTES = 500 * 1024;
+  // Maximum size for a single column value in Spanner (10MB)
+  public static final int MAX_SPANNER_COLUMN_SIZE = 10 * 1024 * 1024;
   // Increase batch size for Nodes/Edges (smaller rows)
   private static final int SPANNER_MAX_NUM_ROWS = 2000;
   // Higher value ensures this limit is not encountered before MaxNumRows
@@ -239,7 +250,7 @@ public class SpannerClient implements Serializable {
         .set("value")
         .to(node.getValue())
         .set("bytes")
-        .to(node.getBytes())
+        .to(ByteArray.copyFrom(node.getBytes()))
         .set("name")
         .to(node.getName())
         .set("types")
@@ -346,6 +357,78 @@ public class SpannerClient implements Serializable {
       filtered.add(kv);
     }
     return filtered;
+  }
+
+  public PCollection<Node> readExistingNodes(PCollection<Node> inputNodes) {
+    return inputNodes
+        .apply("FilterTextNodes", Filter.by((Node node) -> !node.getTypes().contains("TEXT")))
+        .apply(
+            "ExtractSubjectIds",
+            MapElements.into(TypeDescriptors.strings()).via(Node::getSubjectId))
+        .apply("DistinctIds", Distinct.create())
+        .apply(
+            "KeyWithRandomShard",
+            WithKeys.of(
+                new SimpleFunction<String, Integer>() {
+                  @Override
+                  public Integer apply(String input) {
+                    return Math.abs(input.hashCode()) % 100;
+                  }
+                }))
+        .apply("BatchIds", GroupIntoBatches.ofSize(1000))
+        .apply(
+            "CreateReadOperations",
+            MapElements.via(
+                new SimpleFunction<KV<Integer, Iterable<String>>, ReadOperation>() {
+                  @Override
+                  public ReadOperation apply(KV<Integer, Iterable<String>> input) {
+                    List<String> ids = new ArrayList<>();
+                    input.getValue().forEach(ids::add);
+                    return ReadOperation.create()
+                        .withQuery(
+                            Statement.newBuilder(
+                                    String.format(
+                                        "SELECT subject_id, types, name, value, bytes FROM %s WHERE"
+                                            + " subject_id IN UNNEST(@ids)",
+                                        nodeTableName))
+                                .bind("ids")
+                                .toStringArray(ids)
+                                .build());
+                  }
+                }))
+        .apply(
+            "ReadFromSpanner",
+            SpannerIO.readAll()
+                .withProjectId(gcpProjectId)
+                .withInstanceId(spannerInstanceId)
+                .withDatabaseId(spannerDatabaseId))
+        .apply(
+            "ParseStructToNode",
+            MapElements.via(
+                new SimpleFunction<Struct, Node>() {
+                  @Override
+                  public Node apply(Struct struct) {
+                    String subjectId = struct.getString("subject_id");
+                    List<String> types =
+                        struct.isNull("types") ? new ArrayList<>() : struct.getStringList("types");
+                    String name = struct.isNull("name") ? "" : struct.getString("name");
+                    String value = struct.isNull("value") ? "" : struct.getString("value");
+                    ByteArray bytes =
+                        struct.isNull("bytes") ? ByteArray.copyFrom("") : struct.getBytes("bytes");
+                    Node node =
+                        Node.builder()
+                            .subjectId(subjectId)
+                            .types(types)
+                            .name(name)
+                            .value(value)
+                            .bytes(bytes == null ? new byte[0] : bytes.toByteArray())
+                            .build();
+                    return node;
+                  }
+                }))
+        .apply(
+            "FilterProvisionalNodes",
+            Filter.by((Node node) -> !node.getTypes().contains("ProvisionalNode")));
   }
 
   public static String getSubjectId(Mutation mutation) {

@@ -3,11 +3,14 @@ package org.datacommons.ingestion.data;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-import com.google.cloud.ByteArray;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.testing.PAssert;
+import org.apache.beam.sdk.testing.TestPipeline;
+import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.Storage.Observations;
 import org.datacommons.pipeline.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
@@ -18,10 +21,39 @@ import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.McfType;
 import org.datacommons.proto.Mcf.ValueType;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 public class GraphReaderTest {
+  @Rule public final transient TestPipeline p = TestPipeline.create();
+
+  @Test
+  public void testCombineNodes() {
+    Node node1 =
+        Node.builder()
+            .subjectId("id1")
+            .types(List.of("Type1", "ProvisionalNode"))
+            .name("Name1")
+            .build();
+    Node node2 = Node.builder().subjectId("id1").types(List.of("Type2")).value("Value1").build();
+    Node node3 = Node.builder().subjectId("id2").types(List.of("ProvisionalNode")).build();
+
+    PCollection<Node> input = p.apply(Create.of(node1, node2, node3));
+    PCollection<Node> output = GraphReader.combineNodes(input);
+
+    Node expectedNode1 =
+        Node.builder()
+            .subjectId("id1")
+            .types(List.of("Type1", "Type2"))
+            .name("Name1")
+            .value("Value1")
+            .build();
+    Node expectedNode2 = Node.builder().subjectId("id2").types(List.of("ProvisionalNode")).build();
+
+    PAssert.that(output).containsInAnyOrder(expectedNode1, expectedNode2);
+    p.run();
+  }
 
   @Test
   public void testGraphToNodes() {
@@ -119,19 +151,21 @@ public class GraphReaderTest {
             Node.builder()
                 .subjectId("Node Zero:kUyRupzrJkxe/HIOIctxlJX4woEGeOTtlVwqyXYnfDE=")
                 .value("Node Zero")
+                .types(List.of("TEXT"))
                 .build(),
             Node.builder()
                 .subjectId("{   \"type\": \"Pol:G8RZr2tV3+cSSDVRj8Q4KnMpxDhZyZr438T3Fvq1Zkk=")
                 .bytes(
-                    ByteArray.copyFrom(
-                        PipelineUtils.compressString(
-                            "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],   "
-                                + "    [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]    "
-                                + " ]   ] } ")))
+                    PipelineUtils.compressString(
+                        "{   \"type\": \"Polygon\",   \"coordinates\": [     [       [9, 7],   "
+                            + "    [9, 6.5],       [9.5, 6.5],       [9.5, 7],       [9, 7]    "
+                            + " ]   ] } "))
+                .types(List.of("TEXT"))
                 .build(),
             Node.builder()
                 .subjectId("Node One:J7we8EV8ssChRxBgWot6zDSbHl4xGY7I6mQosc89hFk=")
                 .value("Node One")
+                .types(List.of("TEXT"))
                 .build());
 
     List<Node> actualNodes = GraphReader.graphToNodes(graph, mockMcfNodesWithoutTypeCounter);
@@ -147,7 +181,7 @@ public class GraphReaderTest {
       Node actual = actualNodes.get(i);
       assertEquals(expected.getSubjectId(), actual.getSubjectId());
       assertEquals(expected.getValue(), actual.getValue());
-      assertEquals(expected.getBytes(), actual.getBytes());
+      assertArrayEquals(expected.getBytes(), actual.getBytes());
       assertEquals(expected.getName(), actual.getName());
       assertArrayEquals(expected.getTypes().toArray(), actual.getTypes().toArray());
     }

@@ -2,6 +2,10 @@ package org.datacommons.pipeline.util;
 
 import static org.apache.beam.sdk.io.Compression.GZIP;
 
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -20,8 +24,9 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import java.util.zip.GZIPOutputStream;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.Compression;
+import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.io.TFRecordIO;
-import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.fs.EmptyMatchTreatment;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -47,6 +52,7 @@ import org.slf4j.LoggerFactory;
 public class PipelineUtils {
   // Default type for MCF nodes.
   public static final String TYPE_THING = "Thing";
+  public static final String Provisional = "ProvisionalNode";
 
   // Length of prefix of object value to use for key.
   public static final int OBJECT_VALUE_PREFIX = 16;
@@ -64,6 +70,25 @@ public class PipelineUtils {
 
   public static final TupleTag<McfGraph> OBSERVATION_NODES_TAG = new TupleTag<McfGraph>() {};
   public static final TupleTag<McfGraph> SCHEMA_NODES_TAG = new TupleTag<McfGraph>() {};
+
+  /**
+   * Reads the content of a file from GCS.
+   *
+   * @param gcsPath The GCS path of the file (e.g., gs://bucket/path/to/file).
+   * @return The content of the file as a string.
+   * @throws IOException If the file is not found or cannot be read.
+   */
+  public static String getGCSFileContent(String gcsPath) throws IOException {
+    String[] parts = gcsPath.substring(5).split("/", 2);
+    String bucketName = parts[0];
+    String objectName = parts[1];
+    Storage storage = StorageOptions.getDefaultInstance().getService();
+    Blob blob = storage.get(BlobId.of(bucketName, objectName));
+    if (blob == null) {
+      throw new IOException("File not found in GCS: " + gcsPath);
+    }
+    return new String(blob.getContent(), StandardCharsets.UTF_8);
+  }
 
   /**
    * Parses a byte array into an McfOptimizedGraph protocol buffer.
@@ -139,14 +164,24 @@ public class PipelineUtils {
    * @return PCollection of McfGraph proto.
    */
   public static PCollection<McfGraph> readMcfFiles(String files, Pipeline p) {
-    String delimiter = "\n\n";
     PCollection<String> nodes =
         p.apply(
-            "ReadMcfFiles",
-            TextIO.read()
-                .withDelimiter(delimiter.getBytes())
-                .from(files)
-                .withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW));
+                "MatchFiles",
+                FileIO.match()
+                    .filepattern(files)
+                    .withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW))
+            .apply("ReadMatches", FileIO.readMatches().withCompression(Compression.AUTO))
+            .apply(
+                "ReadContent",
+                ParDo.of(
+                    new DoFn<FileIO.ReadableFile, String>() {
+                      @ProcessElement
+                      public void processElement(
+                          @Element FileIO.ReadableFile file, OutputReceiver<String> receiver)
+                          throws IOException {
+                        receiver.output(file.readFullyAsUTF8String());
+                      }
+                    }));
 
     PCollection<McfGraph> mcf =
         nodes.apply(
@@ -158,7 +193,23 @@ public class PipelineUtils {
                     return GraphUtils.convertToGraph(input);
                   }
                 }));
-    return mcf;
+    PCollection<McfGraph> graph =
+        mcf.apply(
+            "ProcessGraph",
+            ParDo.of(
+                new DoFn<McfGraph, McfGraph>() {
+                  @ProcessElement
+                  public void processElement(
+                      @Element McfGraph element, OutputReceiver<McfGraph> receiver) {
+                    for (Map.Entry<String, PropertyValues> entry :
+                        element.getNodesMap().entrySet()) {
+                      McfGraph.Builder b = McfGraph.newBuilder();
+                      b.putNodes(entry.getKey(), entry.getValue());
+                      receiver.output(b.build());
+                    }
+                  }
+                }));
+    return graph;
   }
 
   public static PCollectionTuple splitGraph(PCollection<McfGraph> graph) {
