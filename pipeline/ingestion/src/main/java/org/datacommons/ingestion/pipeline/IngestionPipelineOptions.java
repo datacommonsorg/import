@@ -25,7 +25,7 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   void setSpannerDatabaseId(String databaseId);
 
   @Description("GCS bucket Id for input data")
-  @Default.String("datcom-store")
+  @Default.String("datcom-prod-imports")
   String getStorageBucketId();
 
   void setStorageBucketId(String bucketId);
