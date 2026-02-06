@@ -1,14 +1,14 @@
 package org.datacommons.ingestion.pipeline;
 
-import static org.datacommons.ingestion.data.ImportGroupVersions.getImportGroupVersions;
 import static org.datacommons.ingestion.pipeline.Transforms.buildIngestionPipeline;
+import static org.datacommons.ingestion.util.ImportGroupVersions.getImportGroupVersions;
 
 import com.google.common.base.Strings;
 import java.util.List;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.datacommons.ingestion.data.CacheReader;
 import org.datacommons.ingestion.spanner.SpannerClient;
+import org.datacommons.ingestion.util.CacheReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
