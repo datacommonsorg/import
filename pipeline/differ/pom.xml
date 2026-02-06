@@ -17,7 +17,7 @@
 
     <dependencies>
         <dependency>
-            <artifactId>model</artifactId>
+            <artifactId>data</artifactId>
             <groupId>org.datacommons</groupId>
             <version>${revision}</version>
         </dependency>
@@ -83,7 +83,7 @@
                             <finalName>${project.artifactId}-bundled-${project.version}</finalName>
                             <transformers>
                              <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                <mainClass>org.datacommons.pipeline.differ.DifferPipeline</mainClass>
+                                <mainClass>org.datacommons.ingestion.differ.DifferPipeline</mainClass>
                             </transformer>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>

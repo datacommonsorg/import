@@ -18,7 +18,12 @@
   <dependencies>
     <dependency>
       <groupId>org.datacommons</groupId>
-      <artifactId>model</artifactId>
+      <artifactId>data</artifactId>
+      <version>${revision}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.datacommons</groupId>
+      <artifactId>spanner</artifactId>
       <version>${revision}</version>
     </dependency>
     <dependency>
@@ -52,6 +57,12 @@
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-runners-direct-java</artifactId>
       <version>${beam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

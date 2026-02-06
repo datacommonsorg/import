@@ -18,8 +18,8 @@
         <gson.version>2.10.1</gson.version> 
         <os.maven.plugin.version>1.7.1</os.maven.plugin.version>
         <protobuf.maven.plugin.version>0.6.1</protobuf.maven.plugin.version>
-        <protoc.version>3.25.1</protoc.version>
-        <protobuf.java.version>3.25.1</protobuf.java.version>
+        <protoc.version>3.25.5</protoc.version>
+        <protobuf.java.version>3.25.5</protobuf.java.version>
         <junit.version>4.13.1</junit.version>
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
         <maven-exec-plugin.version>1.6.0</maven-exec-plugin.version>
@@ -178,7 +178,7 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>${basedir}/target/generated-sources</source>
+                                <source>${basedir}/target/generated-sources/protobuf</source>
                             </sources>
                         </configuration>
                     </execution>
