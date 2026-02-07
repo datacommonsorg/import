@@ -1,5 +1,7 @@
 package org.datacommons.ingestion.spanner;
 
+import com.google.api.gax.core.NoCredentialsProvider;
+import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider;
 import com.google.cloud.spanner.ErrorCode;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.SpannerExceptionFactory;
@@ -7,6 +9,7 @@ import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Value;
 import com.google.cloud.spanner.admin.database.v1.DatabaseAdminClient;
+import com.google.cloud.spanner.admin.database.v1.DatabaseAdminSettings;
 import com.google.common.base.Joiner;
 import com.google.protobuf.ByteString;
 import com.google.spanner.admin.database.v1.CreateDatabaseRequest;
@@ -25,14 +28,19 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
-import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.Write;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO.WriteGrouped;
+import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.options.ValueProvider;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
@@ -45,6 +53,8 @@ public class SpannerClient implements Serializable {
 
   // Decrease batch size for observations (bigger rows)
   private static final int SPANNER_BATCH_SIZE_BYTES = 500 * 1024;
+  // Maximum size for a single column value in Spanner (10MB)
+  public static final int MAX_SPANNER_COLUMN_SIZE = 10 * 1024 * 1024;
   // Increase batch size for Nodes/Edges (smaller rows)
   private static final int SPANNER_MAX_NUM_ROWS = 2000;
   // Higher value ensures this limit is not encountered before MaxNumRows
@@ -61,8 +71,9 @@ public class SpannerClient implements Serializable {
   private final String edgeTableName;
   private final String observationTableName;
   private final int numShards;
+  private final String emulatorHost;
 
-  private SpannerClient(Builder builder) {
+  protected SpannerClient(Builder builder) {
     this.gcpProjectId = builder.gcpProjectId;
     this.spannerInstanceId = builder.spannerInstanceId;
     this.spannerDatabaseId = builder.spannerDatabaseId;
@@ -70,6 +81,39 @@ public class SpannerClient implements Serializable {
     this.edgeTableName = builder.edgeTableName;
     this.observationTableName = builder.observationTableName;
     this.numShards = builder.numShards;
+    this.emulatorHost = builder.emulatorHost;
+  }
+
+  /**
+   * Helper method to flatten and write mutations to Spanner, optionally waiting on a signal.
+   *
+   * @param pipeline The Beam pipeline.
+   * @param name The name prefix for the transforms (e.g., "Node", "Edge").
+   * @param mutationList The list of mutation PCollections to flatten.
+   * @param waitSignal Optional PCollection to wait on before writing.
+   * @return The result of the Spanner write operation.
+   */
+  public SpannerWriteResult writeMutations(
+      Pipeline pipeline,
+      String name,
+      List<PCollection<Mutation>> mutationList,
+      PCollection<?> waitSignal) {
+    PCollection<Mutation> mutations;
+    if (mutationList.isEmpty()) {
+      mutations =
+          pipeline.apply(
+              "CreateEmpty" + name + "Mutations", Create.empty(TypeDescriptor.of(Mutation.class)));
+    } else {
+      mutations =
+          PCollectionList.of(mutationList)
+              .apply("Flatten" + name + "Mutations", Flatten.pCollections());
+    }
+
+    if (waitSignal != null) {
+      mutations = mutations.apply("WaitOn" + name, Wait.on(waitSignal));
+    }
+
+    return mutations.apply("Write" + name + "ToSpanner", getWriteTransform());
   }
 
   /**
@@ -84,7 +128,21 @@ public class SpannerClient implements Serializable {
 
   public void createDatabase() {
     try {
-      DatabaseAdminClient dbAdminClient = DatabaseAdminClient.create();
+      DatabaseAdminClient dbAdminClient;
+
+      if (emulatorHost != null) {
+        DatabaseAdminSettings.Builder settingsBuilder = DatabaseAdminSettings.newBuilder();
+        settingsBuilder.setCredentialsProvider(NoCredentialsProvider.create());
+        settingsBuilder.setEndpoint(emulatorHost);
+        settingsBuilder.setTransportChannelProvider(
+            InstantiatingGrpcChannelProvider.newBuilder()
+                .setEndpoint(emulatorHost)
+                .setChannelConfigurator(io.grpc.ManagedChannelBuilder::usePlaintext)
+                .build());
+        dbAdminClient = DatabaseAdminClient.create(settingsBuilder.build());
+      } else {
+        dbAdminClient = DatabaseAdminClient.create();
+      }
 
       try {
         dbAdminClient.getDatabase(
@@ -158,12 +216,8 @@ public class SpannerClient implements Serializable {
     return pipeline
         .apply(
             "GetObsDeletionRecords",
-            SpannerIO.read()
-                .withProjectId(gcpProjectId)
-                .withInstanceId(spannerInstanceId)
-                .withDatabaseId(spannerDatabaseId)
-                .withQuery(
-                    Statement.newBuilder(obsQuery).bind("importName").to(importName).build()))
+            getReadTransform(
+                Statement.newBuilder(obsQuery).bind("importName").to(importName).build()))
         .apply(
             "GetObsMutations",
             ParDo.of(
@@ -191,12 +245,8 @@ public class SpannerClient implements Serializable {
     return pipeline
         .apply(
             "GetEdgeDeletionRecords",
-            SpannerIO.read()
-                .withProjectId(gcpProjectId)
-                .withInstanceId(spannerInstanceId)
-                .withDatabaseId(spannerDatabaseId)
-                .withQuery(
-                    Statement.newBuilder(edgeQuery).bind("provenance").to(provenance).build()))
+            getReadTransform(
+                Statement.newBuilder(edgeQuery).bind("provenance").to(provenance).build()))
         .apply(
             "GetEdgeMutations",
             ParDo.of(
@@ -216,16 +266,36 @@ public class SpannerClient implements Serializable {
                 }));
   }
 
-  public Write getWriteTransform() {
-    return SpannerIO.write()
-        .withProjectId(gcpProjectId)
-        .withInstanceId(spannerInstanceId)
-        .withDatabaseId(ValueProvider.StaticValueProvider.of(spannerDatabaseId))
-        .withBatchSizeBytes(SPANNER_BATCH_SIZE_BYTES)
-        .withMaxNumRows(SPANNER_MAX_NUM_ROWS)
-        .withGroupingFactor(SPANNER_GROUPING_FACTOR)
-        .withMaxNumMutations(SPANNER_MAX_NUM_MUTATIONS)
-        .withCommitDeadline(Duration.standardSeconds(SPANNER_COMMIT_DEADLINE_SECONDS));
+  private SpannerIO.Read getReadTransform(Statement statement) {
+    SpannerIO.Read read =
+        SpannerIO.read()
+            .withProjectId(gcpProjectId)
+            .withInstanceId(spannerInstanceId)
+            .withDatabaseId(spannerDatabaseId)
+            .withQuery(statement);
+
+    if (emulatorHost != null) {
+      read = read.withEmulatorHost(emulatorHost);
+    }
+    return read;
+  }
+
+  public SpannerIO.Write getWriteTransform() {
+    SpannerIO.Write write =
+        SpannerIO.write()
+            .withProjectId(gcpProjectId)
+            .withInstanceId(spannerInstanceId)
+            .withDatabaseId(ValueProvider.StaticValueProvider.of(spannerDatabaseId))
+            .withBatchSizeBytes(SPANNER_BATCH_SIZE_BYTES)
+            .withMaxNumRows(SPANNER_MAX_NUM_ROWS)
+            .withGroupingFactor(SPANNER_GROUPING_FACTOR)
+            .withMaxNumMutations(SPANNER_MAX_NUM_MUTATIONS)
+            .withCommitDeadline(Duration.standardSeconds(SPANNER_COMMIT_DEADLINE_SECONDS));
+
+    if (emulatorHost != null) {
+      write = write.withEmulatorHost(emulatorHost);
+    }
+    return write;
   }
 
   public WriteGrouped getWriteGroupedTransform() {
@@ -233,6 +303,13 @@ public class SpannerClient implements Serializable {
   }
 
   public Mutation toNodeMutation(Node node) {
+    // Only update subject_id for provisional nodes.
+    if (node.getTypes().size() == 1 && node.getTypes().contains("ProvisionalNode")) {
+      return Mutation.newInsertOrUpdateBuilder(nodeTableName)
+          .set("subject_id")
+          .to(node.getSubjectId())
+          .build();
+    }
     return Mutation.newInsertOrUpdateBuilder(nodeTableName)
         .set("subject_id")
         .to(node.getSubjectId())
@@ -489,6 +566,7 @@ public class SpannerClient implements Serializable {
     private String edgeTableName = "Edge";
     private String observationTableName = "Observation";
     private int numShards = 0;
+    private String emulatorHost;
 
     private Builder() {}
 
@@ -524,6 +602,11 @@ public class SpannerClient implements Serializable {
 
     public Builder numShards(int numShards) {
       this.numShards = numShards;
+      return this;
+    }
+
+    public Builder emulatorHost(String emulatorHost) {
+      this.emulatorHost = emulatorHost;
       return this;
     }
 

@@ -3,6 +3,7 @@ package org.datacommons.ingestion.data;
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Mutation;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +26,7 @@ import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.GraphUtils;
+import org.datacommons.util.McfUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,22 +44,33 @@ public class GraphReader implements Serializable {
         // Generate corresponding node
         Map<String, McfGraph.Values> pv = pvs.getPvsMap();
         Node.Builder node = Node.builder();
-        node.subjectId(nodeEntry.getKey());
-        node.value(nodeEntry.getKey());
-        node.name(GraphUtils.getPropertyValue(pv, "name"));
+        String dcid = GraphUtils.getPropertyValue(pv, "dcid");
+        String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(nodeEntry.getKey());
+        node.subjectId(subjectId);
+
         List<String> types = GraphUtils.getPropertyValues(pv, "typeOf");
         if (types.isEmpty()) {
           types = List.of(PipelineUtils.TYPE_THING);
           LOGGER.info("Found MCF node with no type: {}", nodeEntry.getKey());
           mcfNodesWithoutTypeCounter.inc();
         }
+        node.value(subjectId);
+        node.name(GraphUtils.getPropertyValue(pv, "name"));
         node.types(types);
         nodes.add(node.build());
 
         // Generate any leaf nodes
-        for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) { // Iterate over properties
+        for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) {
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
             if (val.getType() != ValueType.RESOLVED_REF) {
+              int valSize = val.getValue().getBytes(StandardCharsets.UTF_8).length;
+              if (valSize > SpannerClient.MAX_SPANNER_COLUMN_SIZE) {
+                LOGGER.warn(
+                    "Dropping node from {} because value size {} exceeds max size.",
+                    subjectId,
+                    valSize);
+                continue;
+              }
               node = Node.builder();
               node.subjectId(PipelineUtils.generateObjectValueKey(val.getValue()));
               if (PipelineUtils.storeValueAsBytes(entry.getKey())) {
@@ -80,16 +93,26 @@ public class GraphReader implements Serializable {
       PropertyValues pvs = nodeEntry.getValue();
       if (!GraphUtils.isObservation(pvs)) {
         Map<String, McfGraph.Values> pv = pvs.getPvsMap();
-        // String provenance = GraphUtils.getPropertyValue(pv, "provenance");
-        String subjectId = nodeEntry.getKey(); // Use the map key as the subjectId
-        for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) { // Iterate over properties
+        String dcid = GraphUtils.getPropertyValue(pv, "dcid");
+        String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(nodeEntry.getKey());
+        for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) {
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
+            if (val.getType() != ValueType.RESOLVED_REF) {
+              int valSize = val.getValue().getBytes(StandardCharsets.UTF_8).length;
+              if (valSize > SpannerClient.MAX_SPANNER_COLUMN_SIZE) {
+                LOGGER.warn(
+                    "Dropping edge from {} because value size {} exceeds max size.",
+                    subjectId,
+                    valSize);
+                continue;
+              }
+            }
             Edge.Builder edge = Edge.builder();
             edge.subjectId(subjectId);
             edge.predicate(entry.getKey());
             edge.provenance(provenance);
             if (val.getType() == ValueType.RESOLVED_REF) {
-              edge.objectId(val.getValue());
+              edge.objectId(McfUtil.stripNamespace(val.getValue()));
             } else {
               edge.objectId(PipelineUtils.generateObjectValueKey(val.getValue()));
             }
