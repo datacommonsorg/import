@@ -14,9 +14,9 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.datacommons.ingestion.data.GraphReader;
 import org.datacommons.ingestion.spanner.SpannerClient;
-import org.datacommons.pipeline.util.PipelineUtils;
+import org.datacommons.ingestion.util.GraphReader;
+import org.datacommons.ingestion.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.slf4j.Logger;
@@ -138,10 +138,8 @@ public class ImportGroupPipeline {
    * Processes a single import configuration.
    *
    * @param pipeline The Beam pipeline.
-   * @param options The pipeline options.
    * @param spannerClient The Spanner client.
    * @param importName The name of the import.
-   * @param latestVersion The version string.
    * @param graphPath The full path to the graph data.
    * @param deleteMutationList List to collect delete mutations.
    * @param nodeMutationList List to collect node mutations.

@@ -36,7 +36,12 @@
 
     <dependencies>
         <dependency>
-            <artifactId>model</artifactId>
+            <artifactId>data</artifactId>
+            <groupId>org.datacommons</groupId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <artifactId>spanner</artifactId>
             <groupId>org.datacommons</groupId>
             <version>${revision}</version>
         </dependency>

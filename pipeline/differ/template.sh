@@ -11,7 +11,7 @@ if [ "$OPERATION" == "deploy" ]; then
         --flex-template-base-image JAVA17 \
         --metadata-file "metadata.json" \
         --jar "target/differ-bundled-0.1-SNAPSHOT.jar" \
-        --env FLEX_TEMPLATE_JAVA_MAIN_CLASS="org.datacommons.pipeline.differ.DifferPipeline"
+        --env FLEX_TEMPLATE_JAVA_MAIN_CLASS="org.datacommons.ingestion.differ.DifferPipeline"
 elif [ "$OPERATION" == "run" ]; then
     echo "Running Dataflow Flex Template..."
     gcloud dataflow flex-template run "differ-job" \

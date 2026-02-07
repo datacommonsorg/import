@@ -12,12 +12,12 @@ The pipeline can be run locally (DirectRunner) or in the cloud (DataflowRunner).
 Sample command to generate diff for MCF files:
 
 ```
-mvn compile exec:java  -pl differ -am -Dexec.mainClass=org.datacommons.pipeline.differ.DifferPipeline -Dexec.args="--currentData=gs://bucket/current/*.mcf --previousData=gs://bukcketprevious/*.mcf --outputLocation=gs://bucket/differ/output"
+mvn compile exec:java  -pl differ -am -Dexec.mainClass=org.datacommons.ingestion.differ.DifferPipeline -Dexec.args="--currentData=gs://bucket/current/*.mcf --previousData=gs://bukcketprevious/*.mcf --outputLocation=gs://bucket/differ/output"
 ```
 
 Sample command to generate diff for tfrecord graph files:
 ```
-mvn compile exec:java  -pl differ -am -Dexec.mainClass=org.datacommons.pipeline.differ.DifferPipeline -Dexec.args="--currentData=gs://bucket/current/*.gz --previousData=gs://bucket/previous/*.gz --outputLocation=gs://bucket/differ/output --useOptimizedGraphFormat=true" 
+mvn compile exec:java  -pl differ -am -Dexec.mainClass=org.datacommons.ingestion.differ.DifferPipeline -Dexec.args="--currentData=gs://bucket/current/*.gz --previousData=gs://bucket/previous/*.gz --outputLocation=gs://bucket/differ/output --useOptimizedGraphFormat=true" 
 ```
 
 The differ output includes the following information:
