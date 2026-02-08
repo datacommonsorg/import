@@ -19,24 +19,23 @@ steps:
   # 2. Build the Dataflow Flex Template
   # This step uses the built JAR to create the Flex Template image and spec file.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'gcloud'
+    entrypoint: 'bash'
     args:
-      - 'dataflow'
-      - 'flex-template'
-      - 'build'
-      - 'gs://$_TEMPLATE_BUCKET/templates/flex/ingestion.json'
-      - '--image-gcr-path'
-      - '${_IMAGE_GCR_PATH}:$SHORT_SHA'
-      - '--sdk-language'
-      - 'JAVA'
-      - '--flex-template-base-image'
-      - 'JAVA17'
-      - '--metadata-file'
-      - 'pipeline/ingestion/metadata.json'
-      - '--jar'
-      - 'pipeline/ingestion/target/ingestion-bundled-${_VERSION}.jar'
-      - '--env'
-      - 'FLEX_TEMPLATE_JAVA_MAIN_CLASS=org.datacommons.ingestion.pipeline.ImportGroupPipeline'
+      - '-c'
+      - |
+        # Find the JAR file using wildcard
+        # Note: We are in the root of the workspace context for the build.
+        JAR_FILE=$(ls pipeline/ingestion/target/ingestion-bundled-*.jar | head -n 1)
+        echo "Found JAR: ${JAR_FILE}"
+
+        gcloud dataflow flex-template build \
+          gs://$_TEMPLATE_BUCKET/templates/flex/ingestion.json \
+          --image-gcr-path "${_IMAGE_GCR_PATH}:$SHORT_SHA" \
+          --sdk-language JAVA \
+          --flex-template-base-image JAVA17 \
+          --metadata-file pipeline/ingestion/metadata.json \
+          --jar "${JAR_FILE}" \
+          --env FLEX_TEMPLATE_JAVA_MAIN_CLASS=org.datacommons.ingestion.pipeline.ImportGroupPipeline
     id: 'build-flex-template'
 
 availableSecrets:
@@ -45,6 +44,6 @@ availableSecrets:
       env: AUTOPUSH_DC_API_KEY
 
 substitutions:
-  _VERSION: "0.1-SNAPSHOT"
+
   _TEMPLATE_BUCKET: "datcom-templates"
   _IMAGE_GCR_PATH: "gcr.io/datcom-ci/dataflow-templates/ingestion"
