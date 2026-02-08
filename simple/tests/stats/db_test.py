@@ -29,6 +29,7 @@ from stats.db import BulkImportContext
 from stats.db import create_and_update_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
+from stats.db import get_datacommons_platform_config_from_env
 from stats.db import get_cloud_sql_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
@@ -41,6 +42,7 @@ _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "test_data", "db")
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
+
 
 _TRIPLES = [
     Triple("sub1", "typeOf", object_id="StatisticalVariable"),
@@ -316,6 +318,18 @@ class TestDb(unittest.TestCase):
                 "password": "test_pass"
             }
         })
+  
+  @mock.patch.dict(os.environ, {
+      "USE_DATACOMMONS_PLATFORM": "true",
+      "DATACOMMONS_PLATFORM_URL": "https://test_url"
+  })
+  def test_get_datacommons_platform_config_from_env(self):
+    self.assertEqual(get_datacommons_platform_config_from_env(), {
+        "type": "datacommons_platform",
+        "params": {
+            "datacommons_platform_url": "https://test_url"
+        }
+    })
 
   @mock.patch.dict(os.environ, {
       "USE_CLOUDSQL": "true",
