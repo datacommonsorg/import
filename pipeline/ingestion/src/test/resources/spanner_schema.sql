@@ -1,6 +1,3 @@
-CREATE PROTO BUNDLE (
-  `org.datacommons.Observations`
-)
 
 CREATE TABLE Node (
   subject_id STRING(1024) NOT NULL,
@@ -27,7 +24,7 @@ CREATE TABLE Observation (
   measurement_method STRING(1024),
   unit STRING(1024),
   scaling_factor STRING(1024),
-  observations org.datacommons.Observations,
+  observations BYTES(MAX), -- changed to bytes for emulator support
   import_name STRING(1024),
   provenance_url STRING(1024),
   is_dc_aggregate BOOL,
