@@ -18,11 +18,31 @@
   </parent>
 
   <modules>
+    <module>data</module>
     <module>differ</module>
     <module>ingestion</module>
-    <module>model</module>
+    <module>spanner</module>
     <module>util</module>
   </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.beam</groupId>
+                <artifactId>beam-sdks-java-google-cloud-platform-bom</artifactId>
+                <version>${beam.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>libraries-bom</artifactId>
+                <version>26.62.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
   <build>
     <pluginManagement>
