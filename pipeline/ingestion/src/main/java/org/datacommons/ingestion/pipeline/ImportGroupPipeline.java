@@ -1,10 +1,9 @@
 package org.datacommons.ingestion.pipeline;
 
 import com.google.cloud.spanner.Mutation;
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
-import java.nio.file.Paths;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.beam.sdk.Pipeline;
@@ -12,14 +11,12 @@ import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.Values;
-import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionList;
-import org.datacommons.ingestion.data.GraphReader;
+import org.apache.beam.sdk.values.PCollectionTuple;
 import org.datacommons.ingestion.spanner.SpannerClient;
-import org.datacommons.pipeline.util.PipelineUtils;
+import org.datacommons.ingestion.util.GraphReader;
+import org.datacommons.ingestion.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.slf4j.Logger;
@@ -27,21 +24,20 @@ import org.slf4j.LoggerFactory;
 
 public class ImportGroupPipeline {
   private static final Logger LOGGER = LoggerFactory.getLogger(ImportGroupPipeline.class);
-  private static final String TABLE_MCF_NODES = "table_mcf_nodes";
-  private static final String INSTANCE_MCF_NODES = "instance_mcf_nodes";
-  private static final String GCS_PREFIX = "gs://";
-  private static final String MCF_SUFFIX = "*.mcf";
-  private static final Counter counter =
+  private static final Counter nodeInvalidTypeCounter =
       Metrics.counter(ImportGroupPipeline.class, "mcf_nodes_without_type");
+  private static final Counter nodeCounter =
+      Metrics.counter(ImportGroupPipeline.class, "graph_node_count");
+  private static final Counter edgeCounter =
+      Metrics.counter(ImportGroupPipeline.class, "graph_edge_count");
+  private static final Counter obsCounter =
+      Metrics.counter(ImportGroupPipeline.class, "graph_observation_count");
 
-  private static String getGraphPath(String projectId, String bucketId, String importName) {
-    Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
-    String importPath = importName.replace(":", "/");
-    String versionPath = Paths.get(importPath, "latest_version.txt").toString();
-    Blob blob = storage.get(bucketId, versionPath);
-    String version = new String(blob.getContent());
-    String graphPath = Paths.get(bucketId, importPath, version, "*", "validation").toString();
-    return GCS_PREFIX + graphPath;
+  // List of imports that require node combination.
+  private static final List<String> IMPORTS_TO_COMBINE = List.of("Schema", "Place");
+
+  private static boolean isJsonNullOrEmpty(JsonElement element) {
+    return element == null || element.getAsString().isEmpty();
   }
 
   public static void main(String[] args) {
@@ -64,56 +60,144 @@ public class ImportGroupPipeline {
     LOGGER.info("Spanner DDL creation complete.");
 
     Pipeline pipeline = Pipeline.create(options);
+    buildPipeline(pipeline, options, spannerClient);
+    pipeline.run();
+  }
+
+  public static void buildPipeline(
+      Pipeline pipeline, IngestionPipelineOptions options, SpannerClient spannerClient) {
     LOGGER.info("Running import pipeline for imports: {}", options.getImportList());
 
-    String[] imports = options.getImportList().split(",");
+    // Initialize lists to hold mutations from all imports.
+    List<PCollection<Mutation>> deleteMutationList = new ArrayList<>();
     List<PCollection<Mutation>> obsMutationList = new ArrayList<>();
     List<PCollection<Mutation>> edgeMutationList = new ArrayList<>();
     List<PCollection<Mutation>> nodeMutationList = new ArrayList<>();
-    for (String importName : imports) {
-      String path = getGraphPath(options.getProjectId(), options.getStorageBucketId(), importName);
-      LOGGER.info("Import {} graph path {}", importName, path);
-      // Read schema mcf files and combine MCF nodes, and convert to spanner mutations (Node/Edge).
-      PCollection<McfGraph> schemaNodes =
-          PipelineUtils.readMcfFiles(path + "/" + INSTANCE_MCF_NODES + MCF_SUFFIX, pipeline);
-      PCollection<McfGraph> combinedGraph = PipelineUtils.combineGraphNodes(schemaNodes);
-      PCollection<Mutation> nodeMutations =
-          GraphReader.graphToNodes(combinedGraph, spannerClient, counter)
-              .apply("ExtractNodeMutations", Values.create());
-      PCollection<Mutation> edgeMutations =
-          GraphReader.graphToEdges(combinedGraph, spannerClient, counter)
-              .apply("ExtractEdgeMutations", Values.create());
-      nodeMutationList.add(nodeMutations);
-      edgeMutationList.add(edgeMutations);
 
-      // Read observation mcf files, build optimized graph, and convert to spanner mutations
-      // (Observation).
-      PCollection<McfGraph> observationNodes =
-          PipelineUtils.readMcfFiles(path + "/" + TABLE_MCF_NODES + MCF_SUFFIX, pipeline);
-      PCollection<McfOptimizedGraph> optimizedGraph =
-          PipelineUtils.buildOptimizedMcfGraph(observationNodes);
-      // PCollection<McfOptimizedGraph> optimizedGraph =
-      //     PipelineUtils.readOptimizedMcfGraph(path, pipeline);
-      PCollection<Mutation> observationMutations =
-          GraphReader.graphToObservations(optimizedGraph, spannerClient)
-              .apply("ExtractObsMutations", Values.create());
-      obsMutationList.add(observationMutations);
+    // Parse the input import list JSON.
+    JsonElement jsonElement = JsonParser.parseString(options.getImportList());
+    JsonArray jsonArray = jsonElement.getAsJsonArray();
+    if (jsonArray.isEmpty()) {
+      LOGGER.error("Empty import input json: {}", jsonArray.toString());
+      return;
     }
-    // Write the mutations to spanner.
-    PCollection<Mutation> obsMutations =
-        PCollectionList.of(obsMutationList).apply(Flatten.pCollections());
-    obsMutations.apply("WriteObsToSpanner", spannerClient.getWriteTransform());
-    PCollection<Mutation> nodeMutations =
-        PCollectionList.of(nodeMutationList).apply(Flatten.pCollections());
-    SpannerWriteResult result =
-        nodeMutations.apply("WriteNodesToSpanner", spannerClient.getWriteTransform());
-    PCollection<Mutation> edgeMutations =
-        PCollectionList.of(edgeMutationList).apply(Flatten.pCollections());
-    // Wait for node mutations to complete before writing edge mutations.
-    edgeMutations
-        .apply(Wait.on(result.getOutput()))
-        .apply("WriteEdgesToSpanner", spannerClient.getWriteTransform());
 
-    pipeline.run();
+    // Iterate through each import configuration and process it.
+    for (JsonElement element : jsonArray) {
+      JsonElement importElement = element.getAsJsonObject().get("importName");
+      JsonElement versionElement = element.getAsJsonObject().get("latestVersion");
+      JsonElement pathElement = element.getAsJsonObject().get("graphPath");
+
+      if (isJsonNullOrEmpty(importElement)
+          || isJsonNullOrEmpty(pathElement)
+          || isJsonNullOrEmpty(versionElement)) {
+        LOGGER.error("Invalid import input json: {}", element.toString());
+        continue;
+      }
+      String importName = importElement.getAsString();
+      String latestVersion = versionElement.getAsString();
+      String graphPath =
+          latestVersion.replaceAll("/+$", "")
+              + "/"
+              + pathElement.getAsString().replaceAll("^/+", "");
+
+      // Process the individual import.
+      processImport(
+          pipeline,
+          spannerClient,
+          importName,
+          graphPath,
+          deleteMutationList,
+          nodeMutationList,
+          edgeMutationList,
+          obsMutationList);
+    }
+    // Finally, aggregate all collected mutations and write them to Spanner.
+    // 1. Process Deletes:
+    // First, execute all delete mutations to clear old data for the imports.
+    SpannerWriteResult deleted =
+        spannerClient.writeMutations(pipeline, "Delete", deleteMutationList, null);
+
+    // 2. Process Observations:
+    // Write observation mutations after deletes are complete.
+    if (options.getWriteObsGraph()) {
+      spannerClient.writeMutations(pipeline, "Obs", obsMutationList, deleted.getOutput());
+    }
+
+    // 3. Process Nodes:
+    // Write node mutations after deletes are complete.
+    SpannerWriteResult writtenNodes =
+        spannerClient.writeMutations(pipeline, "Nodes", nodeMutationList, deleted.getOutput());
+
+    // 4. Process Edges:
+    // Write edge mutations only after node mutations are complete to ensure referential integrity.
+    spannerClient.writeMutations(pipeline, "Edges", edgeMutationList, writtenNodes.getOutput());
+  }
+
+  /**
+   * Processes a single import configuration.
+   *
+   * @param pipeline The Beam pipeline.
+   * @param spannerClient The Spanner client.
+   * @param importName The name of the import.
+   * @param graphPath The full path to the graph data.
+   * @param deleteMutationList List to collect delete mutations.
+   * @param nodeMutationList List to collect node mutations.
+   * @param edgeMutationList List to collect edge mutations.
+   * @param obsMutationList List to collect observation mutations.
+   */
+  private static void processImport(
+      Pipeline pipeline,
+      SpannerClient spannerClient,
+      String importName,
+      String graphPath,
+      List<PCollection<Mutation>> deleteMutationList,
+      List<PCollection<Mutation>> nodeMutationList,
+      List<PCollection<Mutation>> edgeMutationList,
+      List<PCollection<Mutation>> obsMutationList) {
+    LOGGER.info("Import: {} Graph path: {}", importName, graphPath);
+
+    String provenance = "dc/base/" + importName;
+
+    // 1. Prepare Deletes:
+    // Generate mutations to delete existing data for this import/provenance.
+    PCollection<Mutation> deleteMutations =
+        GraphReader.getDeleteMutations(importName, provenance, pipeline, spannerClient);
+    deleteMutationList.add(deleteMutations);
+
+    // 2. Read and Split Graph:
+    // Read the graph data (TFRecord or MCF files) and split into schema and observation nodes.
+    PCollection<McfGraph> graph =
+        graphPath.contains("tfrecord")
+            ? PipelineUtils.readMcfGraph(graphPath, pipeline)
+            : PipelineUtils.readMcfFiles(graphPath, pipeline);
+    PCollectionTuple graphNodes = PipelineUtils.splitGraph(graph);
+    PCollection<McfGraph> observationNodes = graphNodes.get(PipelineUtils.OBSERVATION_NODES_TAG);
+    PCollection<McfGraph> schemaNodes = graphNodes.get(PipelineUtils.SCHEMA_NODES_TAG);
+
+    // 3. Process Schema Nodes:
+    // Combine schema nodes if required, then convert to Node and Edge mutations.
+    PCollection<McfGraph> combinedGraph = schemaNodes;
+    if (IMPORTS_TO_COMBINE.contains(importName)) {
+      combinedGraph = PipelineUtils.combineGraphNodes(schemaNodes);
+    }
+    PCollection<Mutation> nodeMutations =
+        GraphReader.graphToNodes(combinedGraph, spannerClient, nodeCounter, nodeInvalidTypeCounter)
+            .apply("ExtractNodeMutations", Values.create());
+    PCollection<Mutation> edgeMutations =
+        GraphReader.graphToEdges(combinedGraph, provenance, spannerClient, edgeCounter)
+            .apply("ExtractEdgeMutations", Values.create());
+
+    nodeMutationList.add(nodeMutations);
+    edgeMutationList.add(edgeMutations);
+
+    // 4. Process Observation Nodes:
+    // Build an optimized graph from observation nodes and convert to Observation mutations.
+    PCollection<McfOptimizedGraph> optimizedGraph =
+        PipelineUtils.buildOptimizedMcfGraph(observationNodes);
+    PCollection<Mutation> observationMutations =
+        GraphReader.graphToObservations(optimizedGraph, importName, spannerClient, obsCounter)
+            .apply("ExtractObsMutations", Values.create());
+    obsMutationList.add(observationMutations);
   }
 }

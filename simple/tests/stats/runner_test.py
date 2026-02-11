@@ -26,6 +26,7 @@ from stats import constants
 from stats.db_cache import ENV_REDIS_HOST
 from stats.runner import RunMode
 from stats.runner import Runner
+from tests.stats.test_util import compare_csv_files
 from tests.stats.test_util import compare_files
 from tests.stats.test_util import is_write_mode
 from tests.stats.test_util import read_full_db_from_file
@@ -105,8 +106,9 @@ def _test_runner(test: unittest.TestCase,
     compare_files(test, output_db_path, expected_db_path,
                   f"{test_name}: database")
     if os.path.exists(expected_nl_sentences_path):
-      compare_files(test, output_nl_sentences_path, expected_nl_sentences_path,
-                    f"{test_name}: nl sentences")
+      compare_csv_files(test, output_nl_sentences_path,
+                        expected_nl_sentences_path,
+                        f"{test_name}: nl sentences")
     if os.path.exists(expected_topic_cache_json_path):
       compare_files(test, output_topic_cache_json_path,
                     expected_topic_cache_json_path, f"{test_name}: topic cache")

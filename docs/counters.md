@@ -281,7 +281,7 @@ Column referred to in TMCF is missing from CSV header.
 Found an unknown statType value.
 
 StatTypes values either:
-- end with one of {`value`, `estimate`, `stderror`, `samplesize`, `growthrate`}, or
+- end with one of {`value`, `estimate`, `stderror`, `samplesize`, `growthrate`, `ratio`}, or
 - start with `percentile`, or
 - equal any one of {`marginoferror`, `measurementResult`}.
 

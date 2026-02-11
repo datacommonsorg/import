@@ -3,6 +3,7 @@ package org.datacommons.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -301,26 +302,7 @@ public class GraphUtils {
    * @return An McfGraph proto representing the input MCF string.
    */
   public static McfGraph convertToGraph(String input) {
-    McfGraph.Builder g = McfGraph.newBuilder();
-    g.setType(McfType.INSTANCE_MCF);
-    String node_id = "";
-    McfGraph.PropertyValues.Builder base_node = McfGraph.PropertyValues.newBuilder();
-    String[] lines = input.split("\n");
-    for (String line : lines) {
-      line = line.trim();
-      if (line.isEmpty() || line.startsWith("//") || line.startsWith("#")) {
-        continue;
-      }
-      int colon = line.indexOf(":");
-      String lhs = line.substring(0, colon).trim();
-      String rhs = line.substring(colon + 1).trim();
-      if (lhs.equals(Property.dcid.name()) || lhs.equals("Node")) {
-        node_id = rhs;
-      }
-      setPropVal(lhs, ValueType.TEXT, rhs, base_node);
-    }
-    g.putNodes(node_id, base_node.build());
-    return g.build();
+    return McfParser.parseInstanceMcfString(input, true, null);
   }
 
   /**
@@ -332,8 +314,25 @@ public class GraphUtils {
    */
   public static List<McfGraph> readMcfFile(String fileName) throws IOException {
     List<McfGraph> graphList = new ArrayList<>();
-    File file = new File(fileName);
-    Scanner scanner = new Scanner(file);
+    try (Scanner scanner = new Scanner(new File(fileName), StandardCharsets.UTF_8)) {
+      scanner.useDelimiter("\n\n");
+      while (scanner.hasNext()) {
+        graphList.add(convertToGraph(scanner.next()));
+      }
+    }
+    return graphList;
+  }
+
+  /**
+   * Converts an MCF file text into a list of McfGraph protos.
+   *
+   * @param mcfString Contents of MCF file.
+   * @return A list of McfGraph protos, where each proto represents a node or block from the MCF
+   *     file.
+   */
+  public static List<McfGraph> readMcfString(String mcfString) {
+    List<McfGraph> graphList = new ArrayList<>();
+    Scanner scanner = new Scanner(mcfString);
     scanner.useDelimiter("\n\n");
     while (scanner.hasNext()) {
       String token = scanner.next();
