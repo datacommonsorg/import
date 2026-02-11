@@ -43,7 +43,6 @@ _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 _INPUT_DIR = os.path.join(_TEST_DATA_DIR, "input")
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
-
 _TRIPLES = [
     Triple("sub1", "typeOf", object_id="StatisticalVariable"),
     Triple("sub1", "pred1", object_value="objval1"),
@@ -318,18 +317,20 @@ class TestDb(unittest.TestCase):
                 "password": "test_pass"
             }
         })
-  
-  @mock.patch.dict(os.environ, {
-      "USE_DATACOMMONS_PLATFORM": "true",
-      "DATACOMMONS_PLATFORM_URL": "https://test_url"
-  })
+
+  @mock.patch.dict(
+      os.environ, {
+          "USE_DATACOMMONS_PLATFORM": "true",
+          "DATACOMMONS_PLATFORM_URL": "https://test_url"
+      })
   def test_get_datacommons_platform_config_from_env(self):
-    self.assertEqual(get_datacommons_platform_config_from_env(), {
-        "type": "datacommons_platform",
-        "params": {
-            "datacommons_platform_url": "https://test_url"
-        }
-    })
+    self.assertEqual(
+        get_datacommons_platform_config_from_env(), {
+            "type": "datacommons_platform",
+            "params": {
+                "datacommons_platform_url": "https://test_url"
+            }
+        })
 
   @mock.patch.dict(os.environ, {
       "USE_CLOUDSQL": "true",
