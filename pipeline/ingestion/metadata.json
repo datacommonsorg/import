@@ -4,15 +4,30 @@
     "parameters": [
         {
             "name": "importList",
-            "label": "List of imports for ingestion (CSV).",
-            "helpText": "List of imports for ingestion (CSV).",
+            "label": "List of imports for ingestion (JSON).",
+            "helpText": "List of imports for ingestion (JSON).",
             "paramType": "TEXT"
+        },
+        {
+            "name": "projectId",
+            "label": "GCP project Id",
+            "helpText": "GCP project Id",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
+            "name": "spannerInstanceId",
+            "label": "Spanner instance Id",
+            "helpText": "Spanner instance Id",
+            "paramType": "TEXT",
+            "isOptional": true
         },
         {
             "name": "spannerDatabaseId",
             "label": "Spanner database Id",
             "helpText": "Spanner database Id",
-            "paramType": "TEXT"
+            "paramType": "TEXT",
+            "isOptional": true
         }
     ]
 }

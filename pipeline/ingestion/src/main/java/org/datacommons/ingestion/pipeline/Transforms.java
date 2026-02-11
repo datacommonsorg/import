@@ -15,11 +15,11 @@ import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.*;
-import org.datacommons.ingestion.data.CacheReader;
-import org.datacommons.ingestion.data.ImportGroupVersions;
 import org.datacommons.ingestion.data.NodesEdges;
 import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.spanner.SpannerClient;
+import org.datacommons.ingestion.util.CacheReader;
+import org.datacommons.ingestion.util.ImportGroupVersions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

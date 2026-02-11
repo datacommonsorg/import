@@ -16,8 +16,7 @@ elif [ "$OPERATION" == "run" ]; then
     echo "Running Dataflow Flex Template..."
     gcloud dataflow flex-template run "ingestion-job" \
         --template-file-gcs-location "gs://datcom-templates/templates/flex/ingestion.json" \
-        --parameters importList="import_a,import_b" \
-        --parameters spannerDatabaseId="dc_graph_db" \
+        --parameters ^~^importList='[{"importName":"scripts/us_fed/treasury_constant_maturity_rates:USFed_ConstantMaturityRates","latestVersion":"datcom-prod-imports/scripts/us_fed/treasury_constant_maturity_rates/USFed_ConstantMaturityRates/2025_09_09T20_18_16_090752_07_00/*/validation"}]' \
         --project=datcom-store \
         --region "us-central1"
 else

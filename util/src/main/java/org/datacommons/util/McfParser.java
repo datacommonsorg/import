@@ -22,6 +22,8 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.datacommons.proto.Debug;
 import org.datacommons.proto.LogLocation;
 import org.datacommons.proto.Mcf;
@@ -31,6 +33,8 @@ import org.datacommons.proto.Mcf.McfGraph;
 //
 // NOTE: Expects caller to set location file in LogWrapper.
 public class McfParser {
+  private static final Logger logger = LogManager.getLogger(McfParser.class);
+
   static String IN_MEMORY_FILE_NAME = "InMemory";
 
   private McfGraph.Builder graph;
@@ -58,7 +62,7 @@ public class McfParser {
 
   // Parse a string with instance nodes in MCF format into the McfGraph proto.
   public static McfGraph parseInstanceMcfString(
-      String mcfString, boolean isResolved, LogWrapper logCtx) throws IOException {
+      String mcfString, boolean isResolved, LogWrapper logCtx) {
     return parseMcfString(mcfString, Mcf.McfType.INSTANCE_MCF, isResolved, logCtx);
   }
 
@@ -69,8 +73,7 @@ public class McfParser {
   }
 
   // Parse a string with template nodes in MCF format into the McfGraph proto.
-  public static McfGraph parseTemplateMcfString(String mcfString, LogWrapper logCtx)
-      throws IOException {
+  public static McfGraph parseTemplateMcfString(String mcfString, LogWrapper logCtx) {
     return parseMcfString(mcfString, Mcf.McfType.TEMPLATE_MCF, false, logCtx);
   }
 
@@ -80,7 +83,7 @@ public class McfParser {
     return parseMcfFile(fileName, Mcf.McfType.TEMPLATE_MCF, false, logCtx);
   }
 
-  public McfGraph parseNextNode() throws IOException {
+  public McfGraph parseNextNode() {
     if (finished) return null;
     while (lines.hasNext()) {
       String line = lines.next();
@@ -118,12 +121,9 @@ public class McfParser {
     }
     int colon = line.substring(prefixLen).indexOf(Vocabulary.REFERENCE_DELIMITER);
     if (colon < 1) {
-      logCtx.addEntry(
-          Debug.Log.Level.LEVEL_ERROR,
+      logError(
           "MCF_MalformedColonLessLine",
-          "Malformed line without a colon delimiter :: line: '" + line + "'",
-          fileName,
-          lineNum);
+          "Malformed line without a colon delimiter :: line: '" + line + "'");
       return;
     }
 
@@ -131,37 +131,30 @@ public class McfParser {
     String rhs = line.substring(colon + 1).trim();
     if (lhs.equals(Vocabulary.NODE)) {
       if (rhs.indexOf(',') != -1) {
-        logCtx.addEntry(
-            Debug.Log.Level.LEVEL_ERROR,
+        logError(
             "MCF_MalformedNodeName",
-            "Found malformed Node value with a comma; must be a unary value :: node: '" + rhs + "'",
-            fileName,
-            lineNum);
+            "Found malformed Node value with a comma; must be a unary value :: node: '"
+                + rhs
+                + "'");
         return;
       }
       if (rhs.startsWith("\"")) {
-        logCtx.addEntry(
-            Debug.Log.Level.LEVEL_ERROR,
+        logError(
             "MCF_MalformedNodeName",
             "Found malformed Node value with quotes; must be a non-quoted value :: node: '"
                 + rhs
-                + "'",
-            fileName,
-            lineNum);
+                + "'");
         return;
       }
       if (graph.getType() == Mcf.McfType.TEMPLATE_MCF) {
         LogCb logCb = getLogCb().setDetail(LogCb.VALUE_KEY, rhs);
         SchemaTerm term = parseSchemaTerm(rhs, logCb);
         if (term.type != SchemaTerm.Type.ENTITY) {
-          logCtx.addEntry(
-              Debug.Log.Level.LEVEL_ERROR,
+          logError(
               "TMCF_MalformedEntity",
               "Found malformed entity name that is not an entity prefix (E:) :: name: '"
                   + rhs
-                  + "'",
-              fileName,
-              lineNum);
+                  + "'");
           return;
         }
       } else {
@@ -174,12 +167,9 @@ public class McfParser {
       addNodeLocation();
     } else {
       if (curEntity.isEmpty()) {
-        logCtx.addEntry(
-            Debug.Log.Level.LEVEL_ERROR,
+        logError(
             "MCF_UnexpectedProperty",
-            "Property found without a preceding line with 'Node' :: line: '" + line + "'",
-            fileName,
-            lineNum);
+            "Property found without a preceding line with 'Node' :: line: '" + line + "'");
         return;
       }
       parseValues(lhs, rhs);
@@ -238,19 +228,14 @@ public class McfParser {
     }
     if (curEntityLineIdx == 0) {
       // TODO: This should happen on seeing a new node too.
-      logCtx.addEntry(
-          Debug.Log.Level.LEVEL_ERROR,
-          "MCF_MalformedNode",
-          "Found a 'Node' without properties :: node: '" + curEntity + "'",
-          fileName,
-          lineNum);
+      logError(
+          "MCF_MalformedNode", "Found a 'Node' without properties :: node: '" + curEntity + "'");
     }
     return graph.build();
   }
 
   private static McfGraph parseMcfString(
-      String mcfString, Mcf.McfType type, boolean isResolved, LogWrapper logCtx)
-      throws IOException {
+      String mcfString, Mcf.McfType type, boolean isResolved, LogWrapper logCtx) {
     McfParser parser = McfParser.init(type, isResolved);
     parser.fileName = IN_MEMORY_FILE_NAME;
     parser.logCtx = logCtx;
@@ -264,7 +249,7 @@ public class McfParser {
     return parser.parseLines();
   }
 
-  private McfGraph parseLines() throws IOException {
+  private McfGraph parseLines() {
     McfGraph g;
     ArrayList<McfGraph> graphs = new ArrayList<>();
     while ((g = parseNextNode()) != null) {
@@ -327,7 +312,23 @@ public class McfParser {
     graph.putNodes(curEntity, pvs.build());
   }
 
+  private void logError(String counter, String message) {
+    if (logCtx != null) {
+      logCtx.addEntry(Debug.Log.Level.LEVEL_ERROR, counter, message, fileName, lineNum);
+    } else {
+      logger.error(counter + " :: " + message);
+    }
+  }
+
   private LogCb getLogCb() {
+    if (logCtx == null) {
+      return new LogCb(null, Debug.Log.Level.LEVEL_ERROR, fileName, lineNum) {
+        @Override
+        public void logError(String counter, String problemMessage) {
+          logger.error(counter + " :: " + problemMessage);
+        }
+      };
+    }
     return new LogCb(logCtx, Debug.Log.Level.LEVEL_ERROR, fileName, lineNum);
   }
 

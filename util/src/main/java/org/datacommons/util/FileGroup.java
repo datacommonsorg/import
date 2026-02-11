@@ -66,7 +66,7 @@ public class FileGroup {
     int nTsv = 0;
     for (File file : files) {
       String lowerPath = file.getPath().toLowerCase();
-      if (lowerPath.endsWith(".mcf")) {
+      if (lowerPath.contains(".mcf")) {
         mcfFiles.add(file);
       } else if (lowerPath.endsWith(".tmcf")) {
         tmcfFiles.add(file);
