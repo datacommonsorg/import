@@ -25,8 +25,15 @@ from typing import Any
 from google.cloud.sql.connector.connector import Connector
 from google.cloud.sql.connector.connector import IPTypes
 import pandas as pd
+from pyld import jsonld
 from pymysql.connections import Connection
 from pymysql.cursors import Cursor
+from rdflib import Graph
+from rdflib import Literal
+from rdflib import Namespace
+from rdflib import RDF
+from rdflib import URIRef
+import requests
 from stats import constants
 from stats.data import McfNode
 from stats.data import STAT_VAR_GROUP
@@ -397,6 +404,11 @@ class SqlDb(Db):
 
 class DataCommonsPlatformDb(Db):
   """Class to insert triples and observations into Data Commons Platform."""
+  # Default namespace map for Data Commons Platform.
+  NS_MAP = {"dcid": "https://datacommons.org/browser/"}
+
+  # Path to the nodes endpoint in the Data Commons Platform.
+  NODES_PATH = "/nodes"
 
   def __init__(self, config: dict) -> None:
     self.url = config[FIELD_DB_PARAMS][DATACOMMONS_PLATFORM_URL]
@@ -407,8 +419,18 @@ class DataCommonsPlatformDb(Db):
 
   def insert_triples(self, triples: list[Triple]):
     # TODO: Implement triple insertion into Data Commons Platform.
-    logging.info("TODO: Writing %s triples to [%s]", len(triples), self.url)
-    pass
+    g = self._triples_to_graph(triples)
+    jsonld = self._graph_to_jsonld(g)
+    logging.info(
+        "Writing %s triples (%s nodes) to Data Commons Platform at [%s]",
+        len(triples), len(jsonld["@graph"]), self.url)
+    nodes_url = self.url + self.NODES_PATH
+    response = requests.post(nodes_url, json=jsonld)
+    if response.status_code != 200:
+      # TODO: For now, we just log a warning, but we should raise an exception.
+      logging.warning("Failed to write triples to Data Commons Platform: %s",
+                      response.text)
+    logging.info("Response: %s", response)
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
@@ -440,6 +462,68 @@ class DataCommonsPlatformDb(Db):
   def select_entity_names(self, dcids: list[str]) -> dict[str, str]:
     # TODO: Implement entity name selection from Data Commons Platform.
     return {}
+
+  def _expand_id(self, item: str, default_prefix: str) -> URIRef:
+    if not item:
+      return None
+
+    # If the user provided a CURIE (e.g., "schema:City")
+    if ":" in item:
+      prefix, value = item.split(":", 1)
+      if prefix in self.NS_MAP:
+        return URIRef(f"{self.NS_MAP[prefix]}{value}")
+
+    # If bare string, we must ensure we don't end up with /browser//country/...
+    base_url = self.NS_MAP[default_prefix].rstrip('/')
+    return URIRef(f"{base_url}/{item.lstrip('/')}")
+
+  def _triples_to_graph(self, triples: list[Triple]) -> Graph:
+    g = Graph()
+
+    for prefix, uri in self.NS_MAP.items():
+      g.bind(prefix, Namespace(uri))
+
+    for t in triples:
+      try:
+        s = self._expand_id(t.subject_id, "dcid")
+        p = self._expand_id(t.predicate, "dcid")
+
+        if t.object_id:
+          o = self._expand_id(t.object_id, "dcid")
+        else:
+          o = Literal(t.object_value)
+
+        # logging.info("Expanded %s into triple: %s", t, (s, p, o))
+        if p == URIRef("https://datacommons.org/browser/typeOf"):
+          g.add((s, RDF.type, o))
+        else:
+          g.add((s, p, o))
+      except Exception as e:
+        logging.info(f"Error inserting triple: ({s}, {p}. {o})")
+    return g
+
+  def _graph_to_jsonld(self, g: Graph) -> dict:
+    # To force @id to compact, we pass the context explicitly.
+    # If it still fails, it's because rdflib is being stubborn with the slash.
+    # We can 'help' it by providing the context as a list or a scoped dict.
+    jsonld_str = g.serialize(context=self.NS_MAP, format="json-ld", indent=4)
+
+    # 2. Export to "Expanded" JSON-LD.
+    expanded_jsonld = json.loads(jsonld_str)
+
+    # 3. Re-serialize JSON-LD using PyLD to correctly handle node values with slashes
+    # rdflib will always fully expand node values containing slashes rather than using
+    # namespace shortcuts
+    compacted_jsonld = jsonld.compact(expanded_jsonld, self.NS_MAP)
+
+    # 4. Force @graph structure if PyLD flattens it
+    if "@graph" not in compacted_jsonld:
+      data_only = {k: v for k, v in compacted_jsonld.items() if k != "@context"}
+      compacted_jsonld = {
+          "@context": compacted_jsonld.get("@context"),
+          "@graph": [data_only]
+      }
+    return compacted_jsonld
 
 
 def from_triple_tuple(tuple: tuple) -> Triple:

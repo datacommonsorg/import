@@ -16,6 +16,7 @@ pandas==2.1.0
 parameterized==0.9.0
 platformdirs==3.10.0
 protobuf==4.25.3
+PyLD==2.0.4
 PyMySQL==1.1.0
 python-dateutil==2.8.2
 pytest==7.4.2
@@ -23,6 +24,7 @@ PyYAML==6.0.1
 pytz==2023.3.post1
 redis==5.2.1
 requests==2.31.0
+rdflib==7.4.0
 s2sphere==0.2.5
 six==1.16.0
 tomli==2.0.1
