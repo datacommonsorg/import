@@ -41,6 +41,7 @@ FIELD_DB_PARAMS = "params"
 TYPE_CLOUD_SQL = "cloudsql"
 TYPE_SQLITE = "sqlite"
 TYPE_MAIN_DC = "maindc"
+TYPE_DATACOMMONS_PLATFORM = "datacommons_platform"
 
 SQLITE_DB_FILE = "dbFile"
 
@@ -56,6 +57,11 @@ ENV_CLOUDSQL_USE_PRIVATE_IP = "CLOUDSQL_USE_PRIVATE_IP"
 ENV_DB_USER = "DB_USER"
 ENV_DB_PASS = "DB_PASS"
 ENV_DB_NAME = "DB_NAME"
+
+DATACOMMONS_PLATFORM_URL = "datacommons_platform_url"
+
+ENV_USE_DATACOMMONS_PLATFORM = "USE_DATACOMMONS_PLATFORM"
+ENV_DATACOMMONS_PLATFORM_URL = "DATACOMMONS_PLATFORM_URL"
 
 ENV_SQLITE_PATH = "SQLITE_PATH"
 
@@ -387,6 +393,53 @@ class SqlDb(Db):
         "numVars": len(self.variables),
         "numObs": self.num_observations,
     }
+
+
+class DataCommonsPlatformDb(Db):
+  """Class to insert triples and observations into Data Commons Platform."""
+
+  def __init__(self, config: dict) -> None:
+    self.url = config[FIELD_DB_PARAMS][DATACOMMONS_PLATFORM_URL]
+
+  def maybe_clear_before_import(self):
+    # Not applicable for Data Commons Platform.
+    pass
+
+  def insert_triples(self, triples: list[Triple]):
+    # TODO: Implement triple insertion into Data Commons Platform.
+    logging.info("TODO: Writing %s triples to [%s]", len(triples), self.url)
+    pass
+
+  def insert_observations(self, observations_df: pd.DataFrame,
+                          input_file: File):
+    # TODO: Implement observation insertion into Data Commons Platform.
+    logging.info("TODO: Writing %s observations to [%s]", len(observations_df),
+                 self.url)
+    pass
+
+  def insert_key_value(self, key: str, value: str):
+    # Not applicable for Data Commons Platform.
+    pass
+
+  def insert_import_info(self, status: ImportStatus):
+    # Not applicable for Data Commons Platform.
+    pass
+
+  def commit(self):
+    # Not applicable for Data Commons Platform.
+    pass
+
+  def commit_and_close(self):
+    # Not applicable for Data Commons Platform.
+    pass
+
+  def select_triples_by_subject_type(self, subject_type: str) -> list[Triple]:
+    # TODO: Implement triple selection from Data Commons Platform.
+    return []
+
+  def select_entity_names(self, dcids: list[str]) -> dict[str, str]:
+    # TODO: Implement entity name selection from Data Commons Platform.
+    return {}
 
 
 def from_triple_tuple(tuple: tuple) -> Triple:
@@ -817,6 +870,8 @@ def create_and_update_db(config: dict) -> Db:
   db_type = config[FIELD_DB_TYPE]
   if db_type and db_type == TYPE_MAIN_DC:
     return MainDcDb(config)
+  if db_type and db_type == TYPE_DATACOMMONS_PLATFORM:
+    return DataCommonsPlatformDb(config)
   return SqlDb(config)
 
 
@@ -835,6 +890,19 @@ def create_main_dc_config(output_dir: Dir) -> dict:
 
 def get_sqlite_path_from_env() -> str | None:
   return os.getenv(ENV_SQLITE_PATH)
+
+
+def get_datacommons_platform_config_from_env() -> dict | None:
+  if os.getenv(ENV_USE_DATACOMMONS_PLATFORM, "").lower() != "true":
+    return None
+  dcp_url = os.getenv(ENV_DATACOMMONS_PLATFORM_URL)
+  assert dcp_url, f"Environment variable {ENV_DATACOMMONS_PLATFORM_URL} not specified."
+  return {
+      FIELD_DB_TYPE: TYPE_DATACOMMONS_PLATFORM,
+      FIELD_DB_PARAMS: {
+          DATACOMMONS_PLATFORM_URL: dcp_url,
+      }
+  }
 
 
 def get_cloud_sql_config_from_env() -> dict | None:

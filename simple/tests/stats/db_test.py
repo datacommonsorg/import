@@ -30,6 +30,7 @@ from stats.db import create_and_update_db
 from stats.db import create_main_dc_config
 from stats.db import create_sqlite_config
 from stats.db import get_cloud_sql_config_from_env
+from stats.db import get_datacommons_platform_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
 from tests.stats.test_util import compare_files
@@ -314,6 +315,20 @@ class TestDb(unittest.TestCase):
                 "db": "datacommons",
                 "user": "test_user",
                 "password": "test_pass"
+            }
+        })
+
+  @mock.patch.dict(
+      os.environ, {
+          "USE_DATACOMMONS_PLATFORM": "true",
+          "DATACOMMONS_PLATFORM_URL": "https://test_url"
+      })
+  def test_get_datacommons_platform_config_from_env(self):
+    self.assertEqual(
+        get_datacommons_platform_config_from_env(), {
+            "type": "datacommons_platform",
+            "params": {
+                "datacommons_platform_url": "https://test_url"
             }
         })
 
