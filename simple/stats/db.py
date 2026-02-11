@@ -891,6 +891,7 @@ def create_main_dc_config(output_dir: Dir) -> dict:
 def get_sqlite_path_from_env() -> str | None:
   return os.getenv(ENV_SQLITE_PATH)
 
+
 def get_datacommons_platform_config_from_env() -> dict | None:
   if os.getenv(ENV_USE_DATACOMMONS_PLATFORM, "").lower() != "true":
     return None
