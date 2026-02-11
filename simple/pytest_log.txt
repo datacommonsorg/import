@@ -1,0 +1,7 @@
+WARNING  root:nl.py:62 No NL sentences generated for DCID: sv_with_no_sentence_props
+WARNING  root:nl.py:62 No NL sentences generated for DCID: topic_with_no_sentence_props
+WARNING  root:nl.py:62 No NL sentences generated for DCID: sv_with_no_sentence_props
+WARNING  root:nl.py:62 No NL sentences generated for DCID: topic_with_no_sentence_props
+WARNING  root:runner.py:164 Config file not found. Defaulting to empty config.
+WARNING  root:runner.py:164 Config file not found. Defaulting to empty config.
+WARNING  root:runner.py:164 Config file not found. Defaulting to empty config.
