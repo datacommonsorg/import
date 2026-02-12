@@ -430,7 +430,6 @@ class DataCommonsPlatformDb(Db):
       # TODO: For now, we just log a warning, but we should raise an exception.
       logging.warning("Failed to write triples to Data Commons Platform: %s",
                       response.text)
-    logging.info("Response: %s", response)
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
