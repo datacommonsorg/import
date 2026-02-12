@@ -498,7 +498,7 @@ class DataCommonsPlatformDb(Db):
         else:
           g.add((s, p, o))
       except Exception as e:
-        logging.info(f"Error inserting triple: ({s}, {p}. {o})")
+        logging.warning(f"Error processing triple {t}: {e}", exc_info=True)
     return g
 
   def _graph_to_jsonld(self, g: Graph) -> dict:
