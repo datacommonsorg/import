@@ -35,6 +35,7 @@ from rdflib import RDF
 from rdflib import URIRef
 import requests
 from stats import constants
+from stats import schema_constants as sc
 from stats.data import McfNode
 from stats.data import STAT_VAR_GROUP
 from stats.data import STATISTICAL_VARIABLE
@@ -65,10 +66,12 @@ ENV_DB_USER = "DB_USER"
 ENV_DB_PASS = "DB_PASS"
 ENV_DB_NAME = "DB_NAME"
 
-DATACOMMONS_PLATFORM_URL = "datacommons_platform_url"
+DATA_COMMONS_NAMESPACE = "dcid"
+DATA_COMMONS_NAMESPACE_URL = "https://datacommons.org/browser/"
+DATA_COMMONS_PLATFORM_URL = "data_commons_platform_url"
 
-ENV_USE_DATACOMMONS_PLATFORM = "USE_DATACOMMONS_PLATFORM"
-ENV_DATACOMMONS_PLATFORM_URL = "DATACOMMONS_PLATFORM_URL"
+ENV_USE_DATA_COMMONS_PLATFORM = "USE_DATA_COMMONS_PLATFORM"
+ENV_DATA_COMMONS_PLATFORM_URL = "DATA_COMMONS_PLATFORM_URL"
 
 ENV_SQLITE_PATH = "SQLITE_PATH"
 
@@ -405,13 +408,13 @@ class SqlDb(Db):
 class DataCommonsPlatformDb(Db):
   """Class to insert triples and observations into Data Commons Platform."""
   # Default namespace map for Data Commons Platform.
-  NS_MAP = {"dcid": "https://datacommons.org/browser/"}
+  NS_MAP = {DATA_COMMONS_NAMESPACE: DATA_COMMONS_NAMESPACE_URL}
 
   # Path to the nodes endpoint in the Data Commons Platform.
   NODES_PATH = "/nodes"
 
   def __init__(self, config: dict) -> None:
-    self.url = config[FIELD_DB_PARAMS][DATACOMMONS_PLATFORM_URL]
+    self.url = config[FIELD_DB_PARAMS][DATA_COMMONS_PLATFORM_URL]
 
   def maybe_clear_before_import(self):
     # Not applicable for Data Commons Platform.
@@ -426,6 +429,7 @@ class DataCommonsPlatformDb(Db):
     logging.info(
         "Writing %s triples (%s nodes) to Data Commons Platform at [%s]",
         len(triples), len(jsonld["@graph"]), self.url)
+    logging.info("Writing jsonld: %s", json.dumps(jsonld, indent=2))
     nodes_url = self.url + self.NODES_PATH
     response = requests.post(nodes_url, json=jsonld)
     if response.status_code != 200:
@@ -464,19 +468,18 @@ class DataCommonsPlatformDb(Db):
     # TODO: Implement entity name selection from Data Commons Platform.
     return {}
 
-  def _expand_id(self, item: str, default_prefix: str) -> URIRef:
+  def _expand_id(self, item: str) -> URIRef:
+    """
+    Expand an id into a full Data Commons URI.
+
+    Example:
+      _expand_id("country/USA") -> "https://datacommons.org/browser/country/USA"
+    """
     if not item:
       return None
 
-    # If the user provided a CURIE (e.g., "schema:City")
-    if ":" in item:
-      prefix, value = item.split(":", 1)
-      if prefix in self.NS_MAP:
-        return URIRef(f"{self.NS_MAP[prefix]}{value}")
-
-    # If bare string, we must ensure we don't end up with /browser//country/...
-    base_url = self.NS_MAP[default_prefix].rstrip('/')
-    return URIRef(f"{base_url}/{item.lstrip('/')}")
+    base_url = DATA_COMMONS_NAMESPACE_URL
+    return URIRef(f"{base_url}{item.lstrip('/')}")
 
   def _triples_to_graph(self, triples: list[Triple]) -> Graph:
     g = Graph()
@@ -486,16 +489,18 @@ class DataCommonsPlatformDb(Db):
 
     for t in triples:
       try:
-        s = self._expand_id(t.subject_id, "dcid")
-        p = self._expand_id(t.predicate, "dcid")
+        # The Triple class doesn't include a namespace, so for now we 
+        # assume that all ids will be expanded using the default "dcid" prefix.
+        s = self._expand_id(t.subject_id)
+        p = self._expand_id(t.predicate)
 
         if t.object_id:
-          o = self._expand_id(t.object_id, "dcid")
+          o = self._expand_id(t.object_id)
         else:
           o = Literal(t.object_value)
 
         # logging.info("Expanded %s into triple: %s", t, (s, p, o))
-        if p == URIRef("https://datacommons.org/browser/typeOf"):
+        if p == URIRef(f"{DATA_COMMONS_NAMESPACE_URL}{sc.PREDICATE_TYPE_OF}"):
           g.add((s, RDF.type, o))
         else:
           g.add((s, p, o))
@@ -978,14 +983,14 @@ def get_sqlite_path_from_env() -> str | None:
 
 
 def get_datacommons_platform_config_from_env() -> dict | None:
-  if os.getenv(ENV_USE_DATACOMMONS_PLATFORM, "").lower() != "true":
+  if os.getenv(ENV_USE_DATA_COMMONS_PLATFORM, "").lower() != "true":
     return None
-  dcp_url = os.getenv(ENV_DATACOMMONS_PLATFORM_URL)
-  assert dcp_url, f"Environment variable {ENV_DATACOMMONS_PLATFORM_URL} not specified."
+  dcp_url = os.getenv(ENV_DATA_COMMONS_PLATFORM_URL)
+  assert dcp_url, f"Environment variable {ENV_DATA_COMMONS_PLATFORM_URL} not specified."
   return {
       FIELD_DB_TYPE: TYPE_DATACOMMONS_PLATFORM,
       FIELD_DB_PARAMS: {
-          DATACOMMONS_PLATFORM_URL: dcp_url,
+          DATA_COMMONS_PLATFORM_URL: dcp_url,
       }
   }
 

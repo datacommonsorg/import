@@ -338,23 +338,23 @@ class TestDb(unittest.TestCase):
 
   @mock.patch.dict(
       os.environ, {
-          "USE_DATACOMMONS_PLATFORM": "true",
-          "DATACOMMONS_PLATFORM_URL": "https://test_url"
+          "USE_DATA_COMMONS_PLATFORM": "true",
+          "DATA_COMMONS_PLATFORM_URL": "https://test_url"
       })
   def test_get_datacommons_platform_config_from_env(self):
     self.assertEqual(
         get_datacommons_platform_config_from_env(), {
             "type": "datacommons_platform",
             "params": {
-                "datacommons_platform_url": "https://test_url"
+                "data_commons_platform_url": "https://test_url"
             }
         })
 
   @mock.patch('requests.post')
   @mock.patch.dict(
       os.environ, {
-          "USE_DATACOMMONS_PLATFORM": "true",
-          "DATACOMMONS_PLATFORM_URL": "https://test_url"
+          "USE_DATA_COMMONS_PLATFORM": "true",
+          "DATA_COMMONS_PLATFORM_URL": "https://test_url"
       })
   def test_insert_triples_into_datacommons_platform(self, mock_post):
     config = get_datacommons_platform_config_from_env()
