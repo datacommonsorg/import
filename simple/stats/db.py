@@ -489,7 +489,7 @@ class DataCommonsPlatformDb(Db):
 
     for t in triples:
       try:
-        # The Triple class doesn't include a namespace, so for now we 
+        # The Triple class doesn't include a namespace, so for now we
         # assume that all ids will be expanded using the default "dcid" prefix.
         s = self._expand_id(t.subject_id)
         p = self._expand_id(t.predicate)
