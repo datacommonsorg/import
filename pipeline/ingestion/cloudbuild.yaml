@@ -16,7 +16,18 @@ steps:
       - AUTOPUSH_DC_API_KEY
     id: 'build-jar'
 
-  # 2. Build the Dataflow Flex Template
+  # 2. Run Dataflow Integration Tests
+  - name: 'maven:3.9-eclipse-temurin-17'
+    entrypoint: 'mvn'
+    args:
+      - 'test'
+      - '-Dtest=GraphIngestionPipelineIntegrationTest'
+      - '-pl'
+      - 'pipeline/ingestion'
+      - '-DtestMode=DATAFLOW'
+    id: 'run-dataflow-integration-test'
+
+  # 3. Build the Dataflow Flex Template
   # This step uses the built JAR to create the Flex Template image and spec file.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
@@ -36,7 +47,7 @@ steps:
       - '--jar'
       - 'pipeline/ingestion/target/ingestion-bundled-${_VERSION}.jar'
       - '--env'
-      - 'FLEX_TEMPLATE_JAVA_MAIN_CLASS=org.datacommons.ingestion.pipeline.ImportGroupPipeline'
+      - 'FLEX_TEMPLATE_JAVA_MAIN_CLASS=org.datacommons.ingestion.pipeline.GraphIngestionPipeline'
     id: 'build-flex-template'
 
 availableSecrets:

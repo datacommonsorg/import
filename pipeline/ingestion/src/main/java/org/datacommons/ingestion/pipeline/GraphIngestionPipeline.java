@@ -22,16 +22,16 @@ import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ImportGroupPipeline {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ImportGroupPipeline.class);
+public class GraphIngestionPipeline {
+  private static final Logger LOGGER = LoggerFactory.getLogger(GraphIngestionPipeline.class);
   private static final Counter nodeInvalidTypeCounter =
-      Metrics.counter(ImportGroupPipeline.class, "mcf_nodes_without_type");
+      Metrics.counter(GraphIngestionPipeline.class, "mcf_nodes_without_type");
   private static final Counter nodeCounter =
-      Metrics.counter(ImportGroupPipeline.class, "graph_node_count");
+      Metrics.counter(GraphIngestionPipeline.class, "graph_node_count");
   private static final Counter edgeCounter =
-      Metrics.counter(ImportGroupPipeline.class, "graph_edge_count");
+      Metrics.counter(GraphIngestionPipeline.class, "graph_edge_count");
   private static final Counter obsCounter =
-      Metrics.counter(ImportGroupPipeline.class, "graph_observation_count");
+      Metrics.counter(GraphIngestionPipeline.class, "graph_observation_count");
 
   // List of imports that require node combination.
   private static final List<String> IMPORTS_TO_COMBINE = List.of("Schema", "Place");
@@ -85,21 +85,14 @@ public class ImportGroupPipeline {
     // Iterate through each import configuration and process it.
     for (JsonElement element : jsonArray) {
       JsonElement importElement = element.getAsJsonObject().get("importName");
-      JsonElement versionElement = element.getAsJsonObject().get("latestVersion");
       JsonElement pathElement = element.getAsJsonObject().get("graphPath");
 
-      if (isJsonNullOrEmpty(importElement)
-          || isJsonNullOrEmpty(pathElement)
-          || isJsonNullOrEmpty(versionElement)) {
+      if (isJsonNullOrEmpty(importElement) || isJsonNullOrEmpty(pathElement)) {
         LOGGER.error("Invalid import input json: {}", element.toString());
         continue;
       }
       String importName = importElement.getAsString();
-      String latestVersion = versionElement.getAsString();
-      String graphPath =
-          latestVersion.replaceAll("/+$", "")
-              + "/"
-              + pathElement.getAsString().replaceAll("^/+", "");
+      String graphPath = pathElement.getAsString();
 
       // Process the individual import.
       processImport(
@@ -120,9 +113,7 @@ public class ImportGroupPipeline {
 
     // 2. Process Observations:
     // Write observation mutations after deletes are complete.
-    if (options.getWriteObsGraph()) {
-      spannerClient.writeMutations(pipeline, "Obs", obsMutationList, deleted.getOutput());
-    }
+    spannerClient.writeMutations(pipeline, "Obs", obsMutationList, deleted.getOutput());
 
     // 3. Process Nodes:
     // Write node mutations after deletes are complete.
