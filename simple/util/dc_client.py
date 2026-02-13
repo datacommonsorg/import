@@ -69,10 +69,14 @@ def get_api_key():
 def get_api_root():
   return os.environ.get(_API_ROOT_ENV, _DEFAULT_API_ROOT)
 
+def mask_key(key: str, show: int = 5) -> str:
+    if not key or len(key) <= show * 2:
+        return "*" * len(key) if key else ""
+    return f"{key[:show]}{'*' * (len(key) - show * 2)}{key[-show:]}"
 
 if _DEBUG:
   logging.info("DC API Root: %s", get_api_root())
-  logging.info("DC API Key: %s", get_api_key())
+  logging.info("DC API Key: %s", mask_key(get_api_key()))
   os.makedirs(_DEBUG_FOLDER, exist_ok=True)
 
 
