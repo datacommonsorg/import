@@ -318,20 +318,6 @@ class TestDb(unittest.TestCase):
             }
         })
 
-  @mock.patch.dict(
-      os.environ, {
-          "USE_DATACOMMONS_PLATFORM": "true",
-          "DATACOMMONS_PLATFORM_URL": "https://test_url"
-      })
-  def test_get_datacommons_platform_config_from_env(self):
-    self.assertEqual(
-        get_datacommons_platform_config_from_env(), {
-            "type": "datacommons_platform",
-            "params": {
-                "datacommons_platform_url": "https://test_url"
-            }
-        })
-
   @mock.patch.dict(os.environ, {
       "USE_CLOUDSQL": "true",
       "CLOUDSQL_INSTANCE": ""
@@ -349,6 +335,66 @@ class TestDb(unittest.TestCase):
   @mock.patch.dict(os.environ, {"SQLITE_PATH": "/path/datacommons.db"})
   def test_get_sqlite_path_from_env(self):
     self.assertEqual(get_sqlite_path_from_env(), "/path/datacommons.db")
+
+  @mock.patch.dict(
+      os.environ, {
+          "USE_DATA_COMMONS_PLATFORM": "true",
+          "DATA_COMMONS_PLATFORM_URL": "https://test_url"
+      })
+  def test_get_datacommons_platform_config_from_env(self):
+    self.assertEqual(
+        get_datacommons_platform_config_from_env(), {
+            "type": "datacommons_platform",
+            "params": {
+                "data_commons_platform_url": "https://test_url"
+            }
+        })
+
+  @mock.patch('requests.post')
+  @mock.patch.dict(
+      os.environ, {
+          "USE_DATA_COMMONS_PLATFORM": "true",
+          "DATA_COMMONS_PLATFORM_URL": "https://test_url"
+      })
+  def test_insert_triples_into_datacommons_platform(self, mock_post):
+    config = get_datacommons_platform_config_from_env()
+    db = create_and_update_db(config)
+
+    # Configure the mock response
+    mock_post.return_value.status_code = 200
+    mock_post.return_value.text = "Success"
+
+    # Execute
+    db.insert_triples(_TRIPLES)
+
+    # Assertions
+    # 1. Check that the POST request was made to the correct URL
+    expected_url = "https://test_url/nodes"
+    mock_post.assert_called_once()
+    args, kwargs = mock_post.call_args
+    self.assertEqual(args[0], expected_url)
+
+    # 2. Extract the JSON-LD payload
+    sent_json = kwargs.get('json')
+    self.assertIsNotNone(sent_json)
+    self.assertIn('@graph', sent_json)
+
+    # 3. Validate specific nodes in the graph
+    # We look for 'sub1' and 'sub2' within the @graph list
+    nodes = {node['@id']: node for node in sent_json['@graph']}
+
+    # Check sub1
+    sub1_id = "dcid:sub1"
+    self.assertIn(sub1_id, nodes)
+    self.assertEqual(nodes[sub1_id]['@type'], "dcid:StatisticalVariable")
+    self.assertEqual(nodes[sub1_id]['dcid:pred1'], "objval1")
+    self.assertEqual(nodes[sub1_id]['dcid:name'], "name1")
+
+    # Check sub2
+    sub2_id = "dcid:sub2"
+    self.assertIn(sub2_id, nodes)
+    self.assertEqual(nodes[sub2_id]['@type'], "dcid:StatisticalVariable")
+    self.assertEqual(nodes[sub2_id]['dcid:name'], "name2")
 
 
 class TestBulkImportContext(unittest.TestCase):
