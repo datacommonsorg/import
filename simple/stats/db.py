@@ -418,7 +418,9 @@ class DataCommonsPlatformDb(Db):
     pass
 
   def insert_triples(self, triples: list[Triple]):
-    # TODO: Implement triple insertion into Data Commons Platform.
+    """
+    Convert triples to a jsonld graph and writes the graph to the Data Commons Platform instance.
+    """
     g = self._triples_to_graph(triples)
     jsonld = self._graph_to_jsonld(g)
     logging.info(
