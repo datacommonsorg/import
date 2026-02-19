@@ -64,8 +64,8 @@ public class GraphIngestionPipelineTest implements Serializable {
     options.setSpannerDatabaseId("test-database");
 
     // 3. Setup Mock SpannerClient
-    PCollection<Mutation> emptyMutations =
-        pipeline.apply("CreateEmptyMutations", Create.empty(TypeDescriptor.of(Mutation.class)));
+    PCollection<Void> emptySignal =
+        pipeline.apply("CreateEmptySignal", Create.empty(TypeDescriptor.of(Void.class)));
 
     // Mock Write Result
     SpannerWriteResult mockWriteResult =
@@ -74,7 +74,7 @@ public class GraphIngestionPipelineTest implements Serializable {
         pipeline.apply("CreateWriteSignal", Create.empty(TypeDescriptor.of(Void.class)));
     when(mockWriteResult.getOutput()).thenReturn(mockWriteOutput);
 
-    SpannerClient mockSpannerClient = new MockSpannerClient(emptyMutations, mockWriteResult);
+    SpannerClient mockSpannerClient = new MockSpannerClient(emptySignal, mockWriteResult);
 
     // 4. Build Pipeline
     GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient);
@@ -107,29 +107,27 @@ public class GraphIngestionPipelineTest implements Serializable {
   }
 
   static class MockSpannerClient extends SpannerClient {
-    private final transient PCollection<Mutation> deleteMutations;
+    private final transient PCollection<Void> deleteSignal;
     private final transient SpannerWriteResult mockWriteResult;
 
-    public MockSpannerClient(
-        PCollection<Mutation> deleteMutations, SpannerWriteResult mockWriteResult) {
+    public MockSpannerClient(PCollection<Void> deleteSignal, SpannerWriteResult mockWriteResult) {
       super(
           SpannerClient.builder()
               .gcpProjectId("test")
               .spannerInstanceId("test")
               .spannerDatabaseId("test"));
-      this.deleteMutations = deleteMutations;
+      this.deleteSignal = deleteSignal;
       this.mockWriteResult = mockWriteResult;
     }
 
     @Override
-    public PCollection<Mutation> getObservationDeleteMutations(
-        String importName, Pipeline pipeline) {
-      return deleteMutations;
+    public PCollection<Void> deleteObservationsForImport(String importName, Pipeline pipeline) {
+      return deleteSignal;
     }
 
     @Override
-    public PCollection<Mutation> getEdgeDeleteMutations(String provenance, Pipeline pipeline) {
-      return deleteMutations;
+    public PCollection<Void> deleteEdgesForImport(String provenance, Pipeline pipeline) {
+      return deleteSignal;
     }
 
     @Override

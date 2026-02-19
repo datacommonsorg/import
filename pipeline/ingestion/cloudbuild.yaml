@@ -7,7 +7,8 @@ steps:
     entrypoint: 'mvn'
     args:
       - 'clean'
-      - 'package'
+      - 'install'
+      - '-Dmaven.repo.local=/workspace/.m2/repository'
       - '-Pdataflow-runner'
       - '-pl'
       - 'pipeline/ingestion'
@@ -21,6 +22,7 @@ steps:
     entrypoint: 'mvn'
     args:
       - 'test'
+      - '-Dmaven.repo.local=/workspace/.m2/repository'
       - '-Dtest=GraphIngestionPipelineIntegrationTest'
       - '-pl'
       - 'pipeline/ingestion'

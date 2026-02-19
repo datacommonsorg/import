@@ -5,17 +5,16 @@ import com.google.cloud.spanner.Mutation;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionList;
 import org.datacommons.Storage.Observations;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
@@ -156,11 +155,11 @@ public class GraphReader implements Serializable {
     return obs.build();
   }
 
-  public static PCollection<Mutation> getDeleteMutations(
+  public static List<PCollection<Void>> deleteExistingDataForImport(
       String importName, String provenance, Pipeline pipeline, SpannerClient spannerClient) {
-    return PCollectionList.of(spannerClient.getObservationDeleteMutations(importName, pipeline))
-        .and(spannerClient.getEdgeDeleteMutations(provenance, pipeline))
-        .apply("FlattenDeleteMutations-" + importName, Flatten.pCollections());
+    return Arrays.asList(
+        spannerClient.deleteObservationsForImport(importName, pipeline),
+        spannerClient.deleteEdgesForImport(provenance, pipeline));
   }
 
   public static PCollection<KV<String, Mutation>> graphToObservations(
@@ -190,12 +189,13 @@ public class GraphReader implements Serializable {
   }
 
   public static PCollection<KV<String, Mutation>> graphToNodes(
+      String importName,
       PCollection<McfGraph> graph,
       SpannerClient spannerClient,
       Counter nodeCounter,
       Counter mcfNodesWithoutTypeCounter) {
     return graph.apply(
-        "GraphToNodes",
+        "GenerateNodeMutations-" + importName,
         ParDo.of(
             new DoFn<McfGraph, KV<String, Mutation>>() {
               @ProcessElement
@@ -215,12 +215,13 @@ public class GraphReader implements Serializable {
   }
 
   public static PCollection<KV<String, Mutation>> graphToEdges(
+      String importName,
       PCollection<McfGraph> graph,
       String provenance,
       SpannerClient spannerClient,
       Counter edgeCounter) {
     return graph.apply(
-        "GraphToEdges",
+        "GenerateEdgeMutations-" + importName,
         ParDo.of(
             new DoFn<McfGraph, KV<String, Mutation>>() {
               @ProcessElement
