@@ -167,6 +167,7 @@ class Runner:
     except Exception as e:
       logging.exception("Error updating stats")
       self.reporter.report_failure(error=str(e))
+      raise
 
   def _read_config_from_file(self,
                              config_file_path: str,
@@ -313,9 +314,9 @@ class Runner:
       transfer_result = transfer_sqlite_to_cloud_sql(
           sqlite_path=local_db_path,
           cloud_sql_engine=cloud_db.engine,
-          expected_obs=obs_count,
-          expected_triples=triple_count,
-          expected_kv=kv_count)
+          expected_obs=counts['observations'],
+          expected_triples=counts['triples'],
+          expected_kv=counts['key_value_store'])
 
       logging.info("Transfer complete:")
       logging.info(f"  Observations: {transfer_result['observations']:,}")

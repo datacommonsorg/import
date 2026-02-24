@@ -59,6 +59,12 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setSkipProcessing(SkipProcessing skipProcessing);
 
+  @Description("Whether to skip delete operations.")
+  @Default.Boolean(false)
+  boolean getSkipDelete();
+
+  void setSkipDelete(boolean skipDelete);
+
   @Description("Whether to write observation graph to Spanner.")
   @Default.Boolean(false)
   boolean getWriteObsGraph();

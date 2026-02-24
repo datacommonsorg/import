@@ -2,11 +2,15 @@ package org.datacommons.ingestion.spanner;
 
 import com.google.api.gax.core.NoCredentialsProvider;
 import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider;
+import com.google.cloud.NoCredentials;
+import com.google.cloud.spanner.DatabaseClient;
+import com.google.cloud.spanner.DatabaseId;
 import com.google.cloud.spanner.ErrorCode;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerExceptionFactory;
+import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Statement;
-import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Value;
 import com.google.cloud.spanner.admin.database.v1.DatabaseAdminClient;
 import com.google.cloud.spanner.admin.database.v1.DatabaseAdminSettings;
@@ -206,78 +210,61 @@ public class SpannerClient implements Serializable {
     }
   }
 
-  public PCollection<Mutation> getObservationDeleteMutations(String importName, Pipeline pipeline) {
-    String obsQuery =
-        String.format(
-            "SELECT variable_measured, observation_about, facet_id FROM %s WHERE import_name ="
-                + " @importName",
-            observationTableName);
-
+  public PCollection<Void> deleteObservationsForImport(String importName, Pipeline pipeline) {
     return pipeline
+        .apply("StartDeleteObservations", Create.of(importName))
         .apply(
-            "GetObsDeletionRecords",
-            getReadTransform(
-                Statement.newBuilder(obsQuery).bind("importName").to(importName).build()))
-        .apply(
-            "GetObsMutations",
+            "ExecuteDeleteObservationsDML",
             ParDo.of(
-                new DoFn<Struct, Mutation>() {
-                  @ProcessElement
-                  public void processElement(ProcessContext c) {
-                    Mutation m =
-                        Mutation.delete(
-                            observationTableName,
-                            com.google.cloud.spanner.Key.of(
-                                c.element().getString(0),
-                                c.element().getString(1),
-                                c.element().getString(2)));
-                    c.output(m);
-                  }
-                }));
+                new DeleteByColumnFn(this, observationTableName, "import_name", "importName")));
   }
 
-  public PCollection<Mutation> getEdgeDeleteMutations(String provenance, Pipeline pipeline) {
-    String edgeQuery =
-        String.format(
-            "SELECT subject_id, predicate, object_id, provenance FROM %s WHERE provenance ="
-                + " @provenance",
-            edgeTableName);
+  public PCollection<Void> deleteEdgesForImport(String provenance, Pipeline pipeline) {
     return pipeline
+        .apply("StartDeleteEdges", Create.of(provenance))
         .apply(
-            "GetEdgeDeletionRecords",
-            getReadTransform(
-                Statement.newBuilder(edgeQuery).bind("provenance").to(provenance).build()))
-        .apply(
-            "GetEdgeMutations",
-            ParDo.of(
-                new DoFn<Struct, Mutation>() {
-                  @ProcessElement
-                  public void processElement(ProcessContext c) {
-                    Mutation m =
-                        Mutation.delete(
-                            edgeTableName,
-                            com.google.cloud.spanner.Key.of(
-                                c.element().getString(0),
-                                c.element().getString(1),
-                                c.element().getString(2),
-                                c.element().getString(3)));
-                    c.output(m);
-                  }
-                }));
+            "ExecuteDeleteEdgesDML",
+            ParDo.of(new DeleteByColumnFn(this, edgeTableName, "provenance", "provenance")));
   }
 
-  private SpannerIO.Read getReadTransform(Statement statement) {
-    SpannerIO.Read read =
-        SpannerIO.read()
-            .withProjectId(gcpProjectId)
-            .withInstanceId(spannerInstanceId)
-            .withDatabaseId(spannerDatabaseId)
-            .withQuery(statement);
+  static class DeleteByColumnFn extends DoFn<String, Void> {
+    private final SpannerClient spannerClient;
+    private final String tableName;
+    private final String columnName;
+    private final String paramName;
 
-    if (emulatorHost != null) {
-      read = read.withEmulatorHost(emulatorHost);
+    public DeleteByColumnFn(
+        SpannerClient spannerClient, String tableName, String columnName, String paramName) {
+      this.spannerClient = spannerClient;
+      this.tableName = tableName;
+      this.columnName = columnName;
+      this.paramName = paramName;
     }
-    return read;
+
+    @ProcessElement
+    public void processElement(ProcessContext c) {
+      String value = c.element();
+      SpannerOptions.Builder builder =
+          SpannerOptions.newBuilder().setProjectId(spannerClient.gcpProjectId);
+      if (spannerClient.emulatorHost != null) {
+        builder.setEmulatorHost(spannerClient.emulatorHost);
+        builder.setCredentials(NoCredentials.getInstance());
+      }
+      try (Spanner spanner = builder.build().getService()) {
+        DatabaseClient dbClient =
+            spanner.getDatabaseClient(
+                DatabaseId.of(
+                    spannerClient.gcpProjectId,
+                    spannerClient.spannerInstanceId,
+                    spannerClient.spannerDatabaseId));
+        String dml =
+            String.format("DELETE FROM %s WHERE %s = @%s", tableName, columnName, paramName);
+        Statement statement = Statement.newBuilder(dml).bind(paramName).to(value).build();
+        long rowCount = dbClient.executePartitionedUpdate(statement);
+        LOGGER.info("Deleted {} rows from {} for {} {}", rowCount, tableName, columnName, value);
+        c.output(null);
+      }
+    }
   }
 
   public SpannerIO.Write getWriteTransform() {

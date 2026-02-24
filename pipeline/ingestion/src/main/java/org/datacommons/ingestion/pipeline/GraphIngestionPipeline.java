@@ -11,8 +11,10 @@ import org.apache.beam.sdk.io.gcp.spanner.SpannerWriteResult;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.util.GraphReader;
@@ -22,16 +24,16 @@ import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ImportGroupPipeline {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ImportGroupPipeline.class);
+public class GraphIngestionPipeline {
+  private static final Logger LOGGER = LoggerFactory.getLogger(GraphIngestionPipeline.class);
   private static final Counter nodeInvalidTypeCounter =
-      Metrics.counter(ImportGroupPipeline.class, "mcf_nodes_without_type");
+      Metrics.counter(GraphIngestionPipeline.class, "mcf_nodes_without_type");
   private static final Counter nodeCounter =
-      Metrics.counter(ImportGroupPipeline.class, "graph_node_count");
+      Metrics.counter(GraphIngestionPipeline.class, "graph_node_count");
   private static final Counter edgeCounter =
-      Metrics.counter(ImportGroupPipeline.class, "graph_edge_count");
+      Metrics.counter(GraphIngestionPipeline.class, "graph_edge_count");
   private static final Counter obsCounter =
-      Metrics.counter(ImportGroupPipeline.class, "graph_observation_count");
+      Metrics.counter(GraphIngestionPipeline.class, "graph_observation_count");
 
   // List of imports that require node combination.
   private static final List<String> IMPORTS_TO_COMBINE = List.of("Schema", "Place");
@@ -69,7 +71,7 @@ public class ImportGroupPipeline {
     LOGGER.info("Running import pipeline for imports: {}", options.getImportList());
 
     // Initialize lists to hold mutations from all imports.
-    List<PCollection<Mutation>> deleteMutationList = new ArrayList<>();
+    List<PCollection<Void>> deleteOpsList = new ArrayList<>();
     List<PCollection<Mutation>> obsMutationList = new ArrayList<>();
     List<PCollection<Mutation>> edgeMutationList = new ArrayList<>();
     List<PCollection<Mutation>> nodeMutationList = new ArrayList<>();
@@ -85,21 +87,14 @@ public class ImportGroupPipeline {
     // Iterate through each import configuration and process it.
     for (JsonElement element : jsonArray) {
       JsonElement importElement = element.getAsJsonObject().get("importName");
-      JsonElement versionElement = element.getAsJsonObject().get("latestVersion");
       JsonElement pathElement = element.getAsJsonObject().get("graphPath");
 
-      if (isJsonNullOrEmpty(importElement)
-          || isJsonNullOrEmpty(pathElement)
-          || isJsonNullOrEmpty(versionElement)) {
+      if (isJsonNullOrEmpty(importElement) || isJsonNullOrEmpty(pathElement)) {
         LOGGER.error("Invalid import input json: {}", element.toString());
         continue;
       }
       String importName = importElement.getAsString();
-      String latestVersion = versionElement.getAsString();
-      String graphPath =
-          latestVersion.replaceAll("/+$", "")
-              + "/"
-              + pathElement.getAsString().replaceAll("^/+", "");
+      String graphPath = pathElement.getAsString();
 
       // Process the individual import.
       processImport(
@@ -107,7 +102,8 @@ public class ImportGroupPipeline {
           spannerClient,
           importName,
           graphPath,
-          deleteMutationList,
+          options.getSkipDelete(),
+          deleteOpsList,
           nodeMutationList,
           edgeMutationList,
           obsMutationList);
@@ -115,19 +111,19 @@ public class ImportGroupPipeline {
     // Finally, aggregate all collected mutations and write them to Spanner.
     // 1. Process Deletes:
     // First, execute all delete mutations to clear old data for the imports.
-    SpannerWriteResult deleted =
-        spannerClient.writeMutations(pipeline, "Delete", deleteMutationList, null);
+    PCollection<Void> deleted =
+        PCollectionList.of(deleteOpsList).apply("DeleteOps", Flatten.pCollections());
 
     // 2. Process Observations:
     // Write observation mutations after deletes are complete.
     if (options.getWriteObsGraph()) {
-      spannerClient.writeMutations(pipeline, "Obs", obsMutationList, deleted.getOutput());
+      spannerClient.writeMutations(pipeline, "Observations", obsMutationList, deleted);
     }
 
     // 3. Process Nodes:
     // Write node mutations after deletes are complete.
     SpannerWriteResult writtenNodes =
-        spannerClient.writeMutations(pipeline, "Nodes", nodeMutationList, deleted.getOutput());
+        spannerClient.writeMutations(pipeline, "Nodes", nodeMutationList, deleted);
 
     // 4. Process Edges:
     // Write edge mutations only after node mutations are complete to ensure referential integrity.
@@ -141,7 +137,8 @@ public class ImportGroupPipeline {
    * @param spannerClient The Spanner client.
    * @param importName The name of the import.
    * @param graphPath The full path to the graph data.
-   * @param deleteMutationList List to collect delete mutations.
+   * @param skipDelete Whether to skip delete operations.
+   * @param deleteOpsList List to collect delete Ops.
    * @param nodeMutationList List to collect node mutations.
    * @param edgeMutationList List to collect edge mutations.
    * @param obsMutationList List to collect observation mutations.
@@ -151,7 +148,8 @@ public class ImportGroupPipeline {
       SpannerClient spannerClient,
       String importName,
       String graphPath,
-      List<PCollection<Mutation>> deleteMutationList,
+      boolean skipDelete,
+      List<PCollection<Void>> deleteOpsList,
       List<PCollection<Mutation>> nodeMutationList,
       List<PCollection<Mutation>> edgeMutationList,
       List<PCollection<Mutation>> obsMutationList) {
@@ -161,9 +159,11 @@ public class ImportGroupPipeline {
 
     // 1. Prepare Deletes:
     // Generate mutations to delete existing data for this import/provenance.
-    PCollection<Mutation> deleteMutations =
-        GraphReader.getDeleteMutations(importName, provenance, pipeline, spannerClient);
-    deleteMutationList.add(deleteMutations);
+    if (!skipDelete) {
+      List<PCollection<Void>> deleteOps =
+          GraphReader.deleteExistingDataForImport(importName, provenance, pipeline, spannerClient);
+      deleteOpsList.addAll(deleteOps);
+    }
 
     // 2. Read and Split Graph:
     // Read the graph data (TFRecord or MCF files) and split into schema and observation nodes.
@@ -182,11 +182,12 @@ public class ImportGroupPipeline {
       combinedGraph = PipelineUtils.combineGraphNodes(schemaNodes);
     }
     PCollection<Mutation> nodeMutations =
-        GraphReader.graphToNodes(combinedGraph, spannerClient, nodeCounter, nodeInvalidTypeCounter)
-            .apply("ExtractNodeMutations", Values.create());
+        GraphReader.graphToNodes(
+                importName, combinedGraph, spannerClient, nodeCounter, nodeInvalidTypeCounter)
+            .apply("ExtractNodeMutations-" + importName, Values.create());
     PCollection<Mutation> edgeMutations =
-        GraphReader.graphToEdges(combinedGraph, provenance, spannerClient, edgeCounter)
-            .apply("ExtractEdgeMutations", Values.create());
+        GraphReader.graphToEdges(importName, combinedGraph, provenance, spannerClient, edgeCounter)
+            .apply("ExtractEdgeMutations-" + importName, Values.create());
 
     nodeMutationList.add(nodeMutations);
     edgeMutationList.add(edgeMutations);
