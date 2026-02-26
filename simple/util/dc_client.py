@@ -70,9 +70,24 @@ def get_api_root():
   return os.environ.get(_API_ROOT_ENV, _DEFAULT_API_ROOT)
 
 
+def mask_key(key: str, show: int = 5, max_visible_percent: float = 0.3) -> str:
+  if not key:
+    return ""
+
+  length = len(key)
+  max_visible = int(length * max_visible_percent)
+  visible_each_side = min(show, max_visible // 2)
+
+  if visible_each_side < 1 or length <= visible_each_side * 2:
+    return "*" * length
+
+  middle = "*" * (length - visible_each_side * 2)
+  return f"{key[:visible_each_side]}{middle}{key[-visible_each_side:]}"
+
+
 if _DEBUG:
   logging.info("DC API Root: %s", get_api_root())
-  logging.info("DC API Key: %s", get_api_key())
+  logging.info("DC API Key: %s", mask_key(get_api_key()))
   os.makedirs(_DEBUG_FOLDER, exist_ok=True)
 
 

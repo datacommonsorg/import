@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM python:3.11.4-slim as base
+FROM python:3.11.14-slim as base
 
 ARG ENV
 ARG PIP_DISABLE_PIP_VERSION_CHECK=1
