@@ -69,22 +69,24 @@ def get_api_key():
 def get_api_root():
   return os.environ.get(_API_ROOT_ENV, _DEFAULT_API_ROOT)
 
+
 def mask_key(key: str, show: int = 5, max_visible_percent: float = 0.3) -> str:
   if not key:
-      return ""
+    return ""
 
   length = len(key)
   if length <= 4:
-      return "*" * length
+    return "*" * length
 
   max_visible = int(length * max_visible_percent)
   visible_each_side = min(show, max_visible // 2)
 
   if visible_each_side < 1 or length <= visible_each_side * 2:
-      return "*" * length
+    return "*" * length
 
   middle = "*" * (length - visible_each_side * 2)
   return f"{key[:visible_each_side]}{middle}{key[-visible_each_side:]}"
+
 
 if _DEBUG:
   logging.info("DC API Root: %s", get_api_root())
