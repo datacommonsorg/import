@@ -69,7 +69,7 @@ def get_api_key():
 def get_api_root():
   return os.environ.get(_API_ROOT_ENV, _DEFAULT_API_ROOT)
 
-
+#Masking the API Key, show 3 percent of key ig greater than 7 characters 
 def mask_key(key: str, show: int = 5, max_visible_percent: float = 0.3) -> str:
   if not key:
     return ""
