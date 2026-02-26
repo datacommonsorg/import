@@ -74,9 +74,6 @@ def mask_key(key: str, show: int = 5, max_visible_percent: float = 0.3) -> str:
     return ""
 
   length = len(key)
-  if length <= 4:
-    return "*" * length
-
   max_visible = int(length * max_visible_percent)
   visible_each_side = min(show, max_visible // 2)
 
