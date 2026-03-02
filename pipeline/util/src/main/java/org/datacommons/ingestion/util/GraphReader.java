@@ -5,11 +5,9 @@ import com.google.cloud.spanner.Mutation;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -97,6 +95,9 @@ public class GraphReader implements Serializable {
         String dcid = GraphUtils.getPropertyValue(pv, "dcid");
         String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(nodeEntry.getKey());
         for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) {
+          if (entry.getKey().equals("dcid")) {
+            continue;
+          }
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
             if (val.getType() != ValueType.RESOLVED_REF) {
               int valSize = val.getValue().getBytes(StandardCharsets.UTF_8).length;
@@ -155,20 +156,13 @@ public class GraphReader implements Serializable {
     return obs.build();
   }
 
-  public static List<PCollection<Void>> deleteExistingDataForImport(
-      String importName, String provenance, Pipeline pipeline, SpannerClient spannerClient) {
-    return Arrays.asList(
-        spannerClient.deleteObservationsForImport(importName, pipeline),
-        spannerClient.deleteEdgesForImport(provenance, pipeline));
-  }
-
   public static PCollection<KV<String, Mutation>> graphToObservations(
       PCollection<McfOptimizedGraph> graph,
       String importName,
       SpannerClient spannerClient,
       Counter obsCounter) {
     return graph.apply(
-        "GraphToObs",
+        "GraphToObs-" + importName,
         ParDo.of(
             new DoFn<McfOptimizedGraph, KV<String, Mutation>>() {
               @ProcessElement

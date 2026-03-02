@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.UUID;
 import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
@@ -86,7 +85,7 @@ public class GraphIngestionPipelineIntegrationTest {
   private String region;
   private String emulatorHost;
   private boolean isLocal;
-  private String importName = "TestImport-" + UUID.randomUUID().toString();
+  private String importName = "TestImport";
   private String nodeNameValue = "Test Node Name";
   private SpannerClient spannerClient;
 

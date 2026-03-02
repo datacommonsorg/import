@@ -174,6 +174,14 @@ public class GraphReaderTest {
                                     .setValue("Subject Node"))
                             .build())
                     .putPvs(
+                        "dcid",
+                        McfGraph.Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder()
+                                    .setType(ValueType.TEXT)
+                                    .setValue("dcid_subject"))
+                            .build())
+                    .putPvs(
                         "typeOf",
                         McfGraph.Values.newBuilder()
                             .addTypedValues(

@@ -30,12 +30,12 @@ public class DifferPipeline {
     PCollection<McfGraph> currentNodes;
     if (options.getUseOptimizedGraphFormat()) {
       LOGGER.info("Using tfrecord file format");
-      currentNodes = PipelineUtils.readMcfGraph(options.getCurrentData(), p);
-      previousNodes = PipelineUtils.readMcfGraph(options.getPreviousData(), p);
+      currentNodes = PipelineUtils.readMcfGraph("differ", options.getCurrentData(), p);
+      previousNodes = PipelineUtils.readMcfGraph("differ", options.getPreviousData(), p);
     } else {
       LOGGER.info("Using mcf file format");
-      previousNodes = PipelineUtils.readMcfFiles(options.getPreviousData(), p);
-      currentNodes = PipelineUtils.readMcfFiles(options.getCurrentData(), p);
+      previousNodes = PipelineUtils.readMcfFiles("differ", options.getPreviousData(), p);
+      currentNodes = PipelineUtils.readMcfFiles("differ", options.getCurrentData(), p);
     }
 
     // Process the input and perform diff operation.

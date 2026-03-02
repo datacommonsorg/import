@@ -87,9 +87,10 @@ public class PipelineUtils {
    * @param p dataflow pipeline
    * @return PCollection of MCF graph proto
    */
-  public static PCollection<McfGraph> readMcfGraph(String files, Pipeline p) {
-    PCollection<McfOptimizedGraph> graph = readOptimizedMcfGraph(files, p);
+  public static PCollection<McfGraph> readMcfGraph(String name, String files, Pipeline p) {
+    PCollection<McfOptimizedGraph> graph = readOptimizedMcfGraph(name, files, p);
     return graph.apply(
+        "MapObsToSeries-" + name,
         ParDo.of(
             new DoFn<McfOptimizedGraph, McfGraph>() {
               @ProcessElement
@@ -109,15 +110,16 @@ public class PipelineUtils {
    * @param p Dataflow pipeline.
    * @return PCollection of McfOptimizedGraph proto.
    */
-  public static PCollection<McfOptimizedGraph> readOptimizedMcfGraph(String files, Pipeline p) {
+  public static PCollection<McfOptimizedGraph> readOptimizedMcfGraph(
+      String name, String files, Pipeline p) {
     PCollection<byte[]> nodes =
         p.apply(
-            "ReadMcfGraph",
+            "ReadTFRecordFiles-" + name,
             TFRecordIO.read().from(files).withCompression(GZIP).withoutValidation());
 
     PCollection<McfOptimizedGraph> graph =
         nodes.apply(
-            "ProcessGraph",
+            "ConvertToOptimizedGraph-" + name,
             ParDo.of(
                 new DoFn<byte[], McfOptimizedGraph>() {
                   @ProcessElement
@@ -137,11 +139,11 @@ public class PipelineUtils {
    * @param p Dataflow pipeline.
    * @return PCollection of McfGraph proto.
    */
-  public static PCollection<McfGraph> readMcfFiles(String files, Pipeline p) {
+  public static PCollection<McfGraph> readMcfFiles(String name, String files, Pipeline p) {
     String delimiter = "\n\n";
     PCollection<String> nodes =
         p.apply(
-            "ReadMcfFiles",
+            "ReadMcfFiles-" + name,
             TextIO.read()
                 .withDelimiter(delimiter.getBytes())
                 .from(files)
@@ -149,7 +151,7 @@ public class PipelineUtils {
 
     PCollection<McfGraph> mcf =
         nodes.apply(
-            "MapToGraph",
+            "MapMcfToGraph-" + name,
             MapElements.via(
                 new SimpleFunction<String, McfGraph>() {
                   @Override
@@ -160,9 +162,9 @@ public class PipelineUtils {
     return mcf;
   }
 
-  public static PCollectionTuple splitGraph(PCollection<McfGraph> graph) {
+  public static PCollectionTuple splitGraph(String name, PCollection<McfGraph> graph) {
     return graph.apply(
-        "SplitGraph",
+        "SplitGraph-" + name,
         ParDo.of(
                 new DoFn<McfGraph, McfGraph>() {
                   @ProcessElement
@@ -188,11 +190,12 @@ public class PipelineUtils {
    * @param graph PCollection of McfGraph protos.()
    * @return PCollection of McfOptimizedGraph protos.
    */
-  public static PCollection<McfOptimizedGraph> buildOptimizedMcfGraph(PCollection<McfGraph> graph) {
+  public static PCollection<McfOptimizedGraph> buildOptimizedMcfGraph(
+      String name, PCollection<McfGraph> graph) {
     PCollection<McfOptimizedGraph> svObs =
         graph
             .apply(
-                "ExtractObs",
+                "ExtractObs-" + name,
                 ParDo.of(
                     new DoFn<
                         McfGraph, KV<McfStatVarObsSeries.Key, McfStatVarObsSeries.StatVarObs>>() {
@@ -211,9 +214,9 @@ public class PipelineUtils {
                         }
                       }
                     }))
-            .apply(GroupByKey.create())
+            .apply("GroupByForObs-" + name, GroupByKey.create())
             .apply(
-                "BuildOptimizedGraph",
+                "BuildOptimizedGraph-" + name,
                 ParDo.of(
                     new DoFn<
                         KV<McfStatVarObsSeries.Key, Iterable<McfStatVarObsSeries.StatVarObs>>,
@@ -250,10 +253,10 @@ public class PipelineUtils {
    * @param graph A PCollection of McfGraph protos to combine.
    * @return A PCollection of McfGraph protos, each containing a single combined node.
    */
-  public static PCollection<McfGraph> combineGraphNodes(PCollection<McfGraph> graph) {
+  public static PCollection<McfGraph> combineGraphNodes(String name, PCollection<McfGraph> graph) {
     PCollection<KV<String, PropertyValues>> graphNodes =
         graph.apply(
-            "MapGraphToNodes",
+            "MapGraphToNodes-" + name,
             ParDo.of(
                 new DoFn<McfGraph, KV<String, PropertyValues>>() {
                   @ProcessElement
@@ -269,7 +272,7 @@ public class PipelineUtils {
 
     PCollection<KV<String, PropertyValues>> combined =
         graphNodes.apply(
-            "CombineGraphNodes",
+            "CombineGraphNodes-" + name,
             Combine.perKey(
                 new Combine.CombineFn<PropertyValues, List<PropertyValues>, PropertyValues>() {
                   @Override
@@ -330,7 +333,7 @@ public class PipelineUtils {
 
     PCollection<McfGraph> combinedGraph =
         combined.apply(
-            "MapCombinedNodesToGraph",
+            "MapCombinedNodesToGraph-" + name,
             ParDo.of(
                 new DoFn<KV<String, PropertyValues>, McfGraph>() {
                   @ProcessElement

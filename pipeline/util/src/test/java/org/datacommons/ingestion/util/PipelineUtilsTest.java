@@ -105,7 +105,7 @@ public class PipelineUtilsTest {
                 createStatVarObservationGraph(
                     "obs4", "count_person", "country/India", "2022", "36.0")));
 
-    PCollection<McfOptimizedGraph> result = PipelineUtils.buildOptimizedMcfGraph(input);
+    PCollection<McfOptimizedGraph> result = PipelineUtils.buildOptimizedMcfGraph("test", input);
 
     McfOptimizedGraph expected1 =
         McfOptimizedGraph.newBuilder()
@@ -170,7 +170,7 @@ public class PipelineUtilsTest {
                 Map.of("propE", List.of("valE1"))));
 
     PCollection<McfGraph> input = p.apply("CreateInput", Create.of(graph1, graph2));
-    PCollection<McfGraph> output = PipelineUtils.combineGraphNodes(input);
+    PCollection<McfGraph> output = PipelineUtils.combineGraphNodes("test", input);
 
     PCollection<McfGraph> mergedOutput =
         output.apply(
