@@ -38,13 +38,9 @@ import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.options.ValueProvider;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionList;
-import org.apache.beam.sdk.values.TypeDescriptor;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
@@ -89,35 +85,16 @@ public class SpannerClient implements Serializable {
   }
 
   /**
-   * Helper method to flatten and write mutations to Spanner, optionally waiting on a signal.
+   * Helper method to write mutations to Spanner.
    *
    * @param pipeline The Beam pipeline.
    * @param name The name prefix for the transforms (e.g., "Node", "Edge").
-   * @param mutationList The list of mutation PCollections to flatten.
-   * @param waitSignal Optional PCollection to wait on before writing.
+   * @param mutations The PCollection of mutations to write.
    * @return The result of the Spanner write operation.
    */
   public SpannerWriteResult writeMutations(
-      Pipeline pipeline,
-      String name,
-      List<PCollection<Mutation>> mutationList,
-      PCollection<?> waitSignal) {
-    PCollection<Mutation> mutations;
-    if (mutationList.isEmpty()) {
-      mutations =
-          pipeline.apply(
-              "CreateEmpty" + name + "Mutations", Create.empty(TypeDescriptor.of(Mutation.class)));
-    } else {
-      mutations =
-          PCollectionList.of(mutationList)
-              .apply("Flatten" + name + "Mutations", Flatten.pCollections());
-    }
-
-    if (waitSignal != null) {
-      mutations = mutations.apply("WaitOn" + name, Wait.on(waitSignal));
-    }
-
-    return mutations.apply("Write" + name + "ToSpanner", getWriteTransform());
+      Pipeline pipeline, String name, PCollection<Mutation> mutations) {
+    return mutations.apply(name, getWriteTransform());
   }
 
   /**
@@ -210,35 +187,25 @@ public class SpannerClient implements Serializable {
     }
   }
 
-  public PCollection<Void> deleteObservationsForImport(String importName, Pipeline pipeline) {
+  public PCollection<Void> deleteDataForImport(
+      Pipeline pipeline, String importName, String tableName, String columnName) {
+    String stageName = tableName + "-" + importName.replaceFirst("^dc/base/", "");
     return pipeline
-        .apply("StartDeleteObservations", Create.of(importName))
+        .apply("StartDelete" + stageName, Create.of(importName))
         .apply(
-            "ExecuteDeleteObservationsDML",
-            ParDo.of(
-                new DeleteByColumnFn(this, observationTableName, "import_name", "importName")));
-  }
-
-  public PCollection<Void> deleteEdgesForImport(String provenance, Pipeline pipeline) {
-    return pipeline
-        .apply("StartDeleteEdges", Create.of(provenance))
-        .apply(
-            "ExecuteDeleteEdgesDML",
-            ParDo.of(new DeleteByColumnFn(this, edgeTableName, "provenance", "provenance")));
+            "ExecuteDelete" + stageName,
+            ParDo.of(new DeleteByColumnFn(this, tableName, columnName)));
   }
 
   static class DeleteByColumnFn extends DoFn<String, Void> {
     private final SpannerClient spannerClient;
     private final String tableName;
     private final String columnName;
-    private final String paramName;
 
-    public DeleteByColumnFn(
-        SpannerClient spannerClient, String tableName, String columnName, String paramName) {
+    public DeleteByColumnFn(SpannerClient spannerClient, String tableName, String columnName) {
       this.spannerClient = spannerClient;
       this.tableName = tableName;
       this.columnName = columnName;
-      this.paramName = paramName;
     }
 
     @ProcessElement
@@ -258,8 +225,8 @@ public class SpannerClient implements Serializable {
                     spannerClient.spannerInstanceId,
                     spannerClient.spannerDatabaseId));
         String dml =
-            String.format("DELETE FROM %s WHERE %s = @%s", tableName, columnName, paramName);
-        Statement statement = Statement.newBuilder(dml).bind(paramName).to(value).build();
+            String.format("DELETE FROM %s WHERE %s = @%s", tableName, columnName, columnName);
+        Statement statement = Statement.newBuilder(dml).bind(columnName).to(value).build();
         long rowCount = dbClient.executePartitionedUpdate(statement);
         LOGGER.info("Deleted {} rows from {} for {} {}", rowCount, tableName, columnName, value);
         c.output(null);

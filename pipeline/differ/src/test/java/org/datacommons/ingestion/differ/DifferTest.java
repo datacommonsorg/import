@@ -36,9 +36,9 @@ public class DifferTest {
 
     // Process the input.
     PCollection<McfGraph> currentGraph =
-        PipelineUtils.readMcfFiles(Paths.get(currentFile, "*.mcf").toString(), p);
+        PipelineUtils.readMcfFiles("test", Paths.get(currentFile, "*.mcf").toString(), p);
     PCollection<McfGraph> previousGraph =
-        PipelineUtils.readMcfFiles(Paths.get(previousFile, "*.mcf").toString(), p);
+        PipelineUtils.readMcfFiles("test", Paths.get(previousFile, "*.mcf").toString(), p);
     PCollectionTuple currentNodesTuple = DifferUtils.processGraph(currentGraph);
     PCollectionTuple previousNodesTuple = DifferUtils.processGraph(previousGraph);
 

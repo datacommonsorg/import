@@ -19,10 +19,8 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.junit.Before;
@@ -121,33 +119,24 @@ public class GraphIngestionPipelineTest implements Serializable {
     }
 
     @Override
-    public PCollection<Void> deleteObservationsForImport(String importName, Pipeline pipeline) {
-      return deleteSignal;
-    }
-
-    @Override
-    public PCollection<Void> deleteEdgesForImport(String provenance, Pipeline pipeline) {
+    public PCollection<Void> deleteDataForImport(
+        Pipeline pipeline, String importName, String tableName, String columnName) {
       return deleteSignal;
     }
 
     @Override
     public SpannerWriteResult writeMutations(
-        Pipeline pipeline,
-        String name,
-        List<PCollection<Mutation>> mutationList,
-        PCollection<?> waitSignal) {
+        Pipeline pipeline, String name, PCollection<Mutation> mutations) {
 
-      PCollectionList.of(mutationList)
-          .apply("Flatten" + name + "Mutations-Test", Flatten.pCollections())
-          .apply(
-              "Capture" + name + "Mutations",
-              ParDo.of(
-                  new DoFn<Mutation, Void>() {
-                    @ProcessElement
-                    public void processElement(@Element Mutation m) {
-                      capturedMutations.add(m);
-                    }
-                  }));
+      mutations.apply(
+          "Capture" + name + "Mutations",
+          ParDo.of(
+              new DoFn<Mutation, Void>() {
+                @ProcessElement
+                public void processElement(@Element Mutation m) {
+                  capturedMutations.add(m);
+                }
+              }));
       return mockWriteResult;
     }
   }
