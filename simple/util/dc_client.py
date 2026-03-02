@@ -71,6 +71,17 @@ def get_api_root():
 
 
 def mask_key(key: str, show: int = 5, max_visible_percent: float = 0.3) -> str:
+  """Masks a key for logging purposes, showing only parts of it.
+
+  Args:
+    key: The string key to mask.
+    show: The number of characters to show from each end of the key.
+    max_visible_percent: The maximum percentage of the key's length that can be
+      visible from both ends combined.
+
+  Returns:
+    A masked string of the key.
+  """
   if not key:
     return ""
 
