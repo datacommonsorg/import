@@ -270,11 +270,9 @@ public class Observation {
     }
 
     public Observation build() {
-      int intHash =
-          Objects.hash(
+      this.facetId =
+          DataUtils.generateFacetId(
               importName, measurementMethod, observationPeriod, scalingFactor, unit, isDcAggregate);
-      // Convert to positive long and then to string
-      this.facetId = String.valueOf((long) intHash & 0x7fffffffL);
       return new Observation(this);
     }
   }

@@ -206,40 +206,45 @@ public class CacheReaderTest {
         new NodesEdges()
             .addNode(
                 Node.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .value("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .name("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 870755137")
+                    .subjectId(
+                        "dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_4134842815")
+                    .value("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_4134842815")
+                    .name("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 4134842815")
                     .types(List.of("StatVarObsSeries"))
                     .build())
             .addNode(
                 Node.builder()
-                    .subjectId("jVWNIHt73yOspqKD0fnvTCH8GCW7m38F3gW+JB+aWms=")
-                    .value("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 870755137")
+                    .subjectId("jKdXZgRFpeibUoXpgItXgC+oCoPMFsqP5UFyqNJ+Xss=")
+                    .value("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 4134842815")
                     .build())
             .addEdge(
                 Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
+                    .subjectId(
+                        "dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_4134842815")
                     .predicate("variableMeasured")
                     .objectId("Mean_PrecipitableWater_Atmosphere")
                     .provenance("dc/base/NOAA_GFS_WeatherForecast")
                     .build())
             .addEdge(
                 Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
+                    .subjectId(
+                        "dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_4134842815")
                     .predicate("observationAbout")
                     .objectId("geoId/sch2915390")
                     .provenance("dc/base/NOAA_GFS_WeatherForecast")
                     .build())
             .addEdge(
                 Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
+                    .subjectId(
+                        "dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_4134842815")
                     .predicate("name")
-                    .objectId("jVWNIHt73yOspqKD0fnvTCH8GCW7m38F3gW+JB+aWms=")
+                    .objectId("jKdXZgRFpeibUoXpgItXgC+oCoPMFsqP5UFyqNJ+Xss=")
                     .provenance("dc/base/NOAA_GFS_WeatherForecast")
                     .build())
             .addEdge(
                 Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
+                    .subjectId(
+                        "dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_4134842815")
                     .predicate("typeOf")
                     .objectId("StatVarObsSeries")
                     .provenance("dc/base/NOAA_GFS_WeatherForecast")
