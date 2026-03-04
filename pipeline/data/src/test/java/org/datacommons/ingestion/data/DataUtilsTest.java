@@ -38,7 +38,7 @@ public class DataUtilsTest {
   }
 
   // This method provides the data for the test below
-  @Parameters(name = "Test {index}: expected {0} for {index}")
+  @Parameters(name = "Test {index}: expected {0}")
   public static Collection<Object[]> data() {
     return Arrays.asList(
         new Object[][] {
