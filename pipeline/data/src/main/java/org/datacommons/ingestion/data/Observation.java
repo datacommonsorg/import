@@ -184,22 +184,6 @@ public class Observation {
         && Objects.equals(isDcAggregate, that.isDcAggregate);
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(
-        observationAbout,
-        variableMeasured,
-        observations,
-        observationPeriod,
-        measurementMethod,
-        unit,
-        scalingFactor,
-        importName,
-        provenanceUrl,
-        facetId,
-        isDcAggregate);
-  }
-
   // Builder for Observation
   public static class Builder {
     private String observationAbout = "";
@@ -269,10 +253,32 @@ public class Observation {
       return this;
     }
 
+    public String getImportName() {
+      return importName;
+    }
+
+    public String getMeasurementMethod() {
+      return measurementMethod;
+    }
+
+    public String getObservationPeriod() {
+      return observationPeriod;
+    }
+
+    public String getScalingFactor() {
+      return scalingFactor;
+    }
+
+    public String getUnit() {
+      return unit;
+    }
+
+    public boolean getIsDcAggregate() {
+      return isDcAggregate;
+    }
+
     public Observation build() {
-      this.facetId =
-          DataUtils.generateFacetId(
-              importName, measurementMethod, observationPeriod, scalingFactor, unit, isDcAggregate);
+      this.facetId = DataUtils.generateFacetId(this);
       return new Observation(this);
     }
   }

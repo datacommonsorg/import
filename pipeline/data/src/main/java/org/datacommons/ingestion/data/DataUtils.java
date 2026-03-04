@@ -17,26 +17,21 @@ public class DataUtils {
    * GetFacetID function. See
    * https://github.com/datacommonsorg/mixer/blob/0618c1f3ef80703c98fc97f6c6c6e5cd3d7c13d3/internal/util/util.go#L497-L515
    *
-   * @param importName The name of the import this observation belongs to.
-   * @param measurementMethod The measurement method of the observation.
-   * @param observationPeriod The observation period of the observation.
-   * @param scalingFactor The scaling factor of the observation.
-   * @param unit The unit of the observation.
-   * @param isDcAggregate Whether the observation is a DC aggregate.
+   * @param builder The Observation builder containing the fields to hash.
    * @return A consistent facet ID string.
    */
-  public static String generateFacetId(
-      String importName,
-      String measurementMethod,
-      String observationPeriod,
-      String scalingFactor,
-      String unit,
-      boolean isDcAggregate) {
+  public static String generateFacetId(Observation.Builder builder) {
     // Only include fields that are set in hash.
     // This is so the hashes stay consistent if more fields are added.
     String s =
-        Joiner.on("-").join(importName, measurementMethod, observationPeriod, scalingFactor, unit);
-    if (isDcAggregate) {
+        Joiner.on("-")
+            .join(
+                builder.getImportName(),
+                builder.getMeasurementMethod(),
+                builder.getObservationPeriod(),
+                builder.getScalingFactor(),
+                builder.getUnit());
+    if (builder.getIsDcAggregate()) {
       s += "-IsDcAggregate";
     }
 

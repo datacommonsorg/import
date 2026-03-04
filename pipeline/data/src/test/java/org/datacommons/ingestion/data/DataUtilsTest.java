@@ -38,7 +38,7 @@ public class DataUtilsTest {
   }
 
   // This method provides the data for the test below
-  @Parameters(name = "Test {index}: expected {0} for {1}")
+  @Parameters(name = "Test {index}: expected {0} for {index}")
   public static Collection<Object[]> data() {
     return Arrays.asList(
         new Object[][] {
@@ -91,9 +91,15 @@ public class DataUtilsTest {
 
   @Test
   public void testGenerateFacetId() {
-    String facetId =
-        DataUtils.generateFacetId(
-            importName, measurementMethod, observationPeriod, scalingFactor, unit, isDcAggregate);
+    Observation.Builder builder =
+        Observation.builder()
+            .importName(importName)
+            .measurementMethod(measurementMethod)
+            .observationPeriod(observationPeriod)
+            .scalingFactor(scalingFactor)
+            .unit(unit)
+            .isDcAggregate(isDcAggregate);
+    String facetId = DataUtils.generateFacetId(builder);
 
     assertEquals(expectedId, facetId);
   }
