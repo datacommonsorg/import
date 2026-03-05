@@ -184,6 +184,22 @@ public class Observation {
         && Objects.equals(isDcAggregate, that.isDcAggregate);
   }
 
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        observationAbout,
+        variableMeasured,
+        observations,
+        observationPeriod,
+        measurementMethod,
+        unit,
+        scalingFactor,
+        importName,
+        provenanceUrl,
+        facetId,
+        isDcAggregate);
+  }
+
   // Builder for Observation
   public static class Builder {
     private String observationAbout = "";
