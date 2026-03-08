@@ -421,18 +421,25 @@ class DataCommonsPlatformDb(Db):
     self.url = config[FIELD_DB_PARAMS][DATA_COMMONS_PLATFORM_URL]
     self.nodes_url = self.url + self.NODES_PATH
 
-    try:
+    def _get_id_token(url):
+      # 1. Try to get default credentials
+      creds, _ = google.auth.default()
       auth_req = google.auth.transport.requests.Request()
-      self.session = AuthorizedSession(
-          credentials=None,
-          refresh_handler=lambda: id_token.fetch_id_token(auth_req, self.url))
-      id_token.fetch_id_token(auth_req, self.url)
-      logging.info("Using AUTHENTICATED session for %s", self.url)
-    except (DefaultCredentialsError, Exception) as e:
-      logging.warning(
-          "Could not fetch ID token (%s). Falling back to UNAUTHENTICATED session.",
-          e)
-      self.session = requests.Session()
+      
+      # 2. Refresh to ensure the token is loaded
+      creds.refresh(auth_req)
+      
+      # 3. Check if the credentials already have an id_token (typical for local gcloud)
+      if hasattr(creds, 'id_token') and creds.id_token:
+          return creds.id_token
+          
+      # 4. Fallback to fetching it (typical for Service Accounts/Cloud environments)
+      return google.oauth2.id_token.fetch_id_token(auth_req, url)
+    id_token = _get_id_token(self.url)
+
+    # 2. Make the authenticated request
+    self.headers = {"Authorization": f"Bearer {id_token}"}
+
 
   def maybe_clear_before_import(self):
     # Not applicable for Data Commons Platform.
@@ -448,7 +455,7 @@ class DataCommonsPlatformDb(Db):
         "Writing %s triples (%s nodes) to Data Commons Platform at [%s]",
         len(triples), len(jsonld["@graph"]), self.url)
     logging.info("Writing jsonld: %s", json.dumps(jsonld, indent=2))
-    response = self.session.post(self.nodes_url, json=jsonld)
+    response = requests.post(self.nodes_url, json=jsonld, headers=self.headers)
     if response.status_code != 200:
       # TODO: For now, we just log a warning, but we should raise an exception.
       logging.warning("Failed to write triples to Data Commons Platform: %s",
