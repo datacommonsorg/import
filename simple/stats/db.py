@@ -22,8 +22,12 @@ import os
 import sqlite3
 from typing import Any
 
+from google.auth.exceptions import DefaultCredentialsError
+import google.auth.transport.requests
+from google.auth.transport.requests import AuthorizedSession
 from google.cloud.sql.connector.connector import Connector
 from google.cloud.sql.connector.connector import IPTypes
+from google.oauth2 import id_token
 import pandas as pd
 from pyld import jsonld
 from pymysql.connections import Connection
@@ -415,6 +419,20 @@ class DataCommonsPlatformDb(Db):
 
   def __init__(self, config: dict) -> None:
     self.url = config[FIELD_DB_PARAMS][DATA_COMMONS_PLATFORM_URL]
+    self.nodes_url = self.url + self.NODES_PATH
+
+    try:
+      auth_req = google.auth.transport.requests.Request()
+      self.session = AuthorizedSession(
+          credentials=None,
+          refresh_handler=lambda: id_token.fetch_id_token(auth_req, self.url))
+      id_token.fetch_id_token(auth_req, self.url)
+      logging.info("Using AUTHENTICATED session for %s", self.url)
+    except (DefaultCredentialsError, Exception) as e:
+      logging.warning(
+          "Could not fetch ID token (%s). Falling back to UNAUTHENTICATED session.",
+          e)
+      self.session = requests.Session()
 
   def maybe_clear_before_import(self):
     # Not applicable for Data Commons Platform.
@@ -430,8 +448,7 @@ class DataCommonsPlatformDb(Db):
         "Writing %s triples (%s nodes) to Data Commons Platform at [%s]",
         len(triples), len(jsonld["@graph"]), self.url)
     logging.info("Writing jsonld: %s", json.dumps(jsonld, indent=2))
-    nodes_url = self.url + self.NODES_PATH
-    response = requests.post(nodes_url, json=jsonld)
+    response = self.session.post(self.nodes_url, json=jsonld)
     if response.status_code != 200:
       # TODO: For now, we just log a warning, but we should raise an exception.
       logging.warning("Failed to write triples to Data Commons Platform: %s",
