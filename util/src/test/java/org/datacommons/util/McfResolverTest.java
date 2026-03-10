@@ -76,6 +76,50 @@ public class McfResolverTest {
         TestUtil.mcfFromFile(getFile("McfResolverTest_Resolved_TmcfCsvFailure.mcf")));
   }
 
+  @Test
+  public void multiRoundLocalRefChain() throws IOException {
+    Debug.Log.Builder log = Debug.Log.newBuilder();
+    LogWrapper logCtx = new LogWrapper(log, Paths.get("."));
+    McfResolver resolver =
+        new McfResolver(
+            TestUtil.graphFromMcf(
+                String.join(
+                    "\n",
+                    "Node: PlaceLocalId",
+                    "dcid: \"geoId/1234567\"",
+                    "typeOf: schema:City",
+                    "",
+                    "Node: PopLocalId",
+                    "typeOf: dcs:StatisticalPopulation",
+                    "location: l:PlaceLocalId",
+                    "populationType: schema:Person",
+                    "",
+                    "Node: ObsLocalId",
+                    "typeOf: dcs:Observation",
+                    "observationDate: \"2017-01\"",
+                    "observedNode: l:PopLocalId",
+                    "measuredProperty: dcs:count",
+                    "measuredValue: 10000",
+                    "")),
+            true,
+            null,
+            logCtx);
+
+    resolver.resolve();
+
+    assertEquals(0, resolver.failedGraph().getNodesCount());
+
+    var resolvedGraph = resolver.resolvedGraph();
+    var populationNode = resolvedGraph.getNodesOrThrow("PopLocalId");
+    var populationDcid = McfUtil.getPropVal(populationNode, Vocabulary.DCID);
+    assertEquals("geoId/1234567", McfUtil.getPropVal(populationNode, Vocabulary.LOCATION));
+    assertTrue(!populationDcid.isEmpty());
+
+    var observationNode = resolvedGraph.getNodesOrThrow("ObsLocalId");
+    assertEquals(populationDcid, McfUtil.getPropVal(observationNode, Vocabulary.OBSERVED_NODE));
+    assertTrue(!McfUtil.getPropVal(observationNode, Vocabulary.DCID).isEmpty());
+  }
+
   private String getFile(String name) throws IOException {
     return this.getClass().getResource(name).getPath();
   }
