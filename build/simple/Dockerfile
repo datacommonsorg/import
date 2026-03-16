@@ -26,4 +26,11 @@ COPY simple/ .
 COPY build/simple/run.sh .
 
 RUN pip3 install -r /workspace/requirements.txt
+RUN apt-get update \
+   && pip install --upgrade pip \
+   && pip install --upgrade "wheel==0.46.2" \
+   && pip install --upgrade setuptools \
+   && pip install --upgrade "urllib3==2.6.3" \
+   && apt-get clean \
+   && rm -rf /var/lib/apt/lists/*
 CMD ./run.sh
