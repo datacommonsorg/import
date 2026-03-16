@@ -13,58 +13,34 @@ import org.junit.Test;
 public class ApiHelperTest {
 
   @Test
-  public void buildPropertyValuesRequestDefaultsToAutopush() {
+  public void buildPropertyValuesRequestDefaultsToProd() {
     HttpRequest request =
         ApiHelper.buildPropertyValuesRequest(
             List.of("geoId/06"),
             "name",
-            Map.of("AUTOPUSH_DC_API_KEY", "autopush-key", "DC_API_KEY", "prod-key"));
-
-    assertEquals("https://autopush.api.datacommons.org/v2/node", request.uri().toString());
-    assertEquals("autopush-key", request.headers().firstValue("x-api-key").orElse(""));
-  }
-
-  @Test
-  public void buildPropertyValuesRequestUsesExplicitProdRoot() {
-    HttpRequest request =
-        ApiHelper.buildPropertyValuesRequest(
-            List.of("geoId/06"),
-            "name",
-            Map.of(
-                "DC_API_ROOT",
-                "https://api.datacommons.org/",
-                "AUTOPUSH_DC_API_KEY",
-                "autopush-key",
-                "DC_API_KEY",
-                "prod-key"));
+            new DcApiConfig("https://api.datacommons.org", "prod-key"));
 
     assertEquals("https://api.datacommons.org/v2/node", request.uri().toString());
     assertEquals("prod-key", request.headers().firstValue("x-api-key").orElse(""));
   }
 
   @Test
-  public void buildPropertyValuesRequestKeepsAutopushKeyForExplicitAutopushRoot() {
+  public void buildPropertyValuesRequestUsesExplicitRoot() {
     HttpRequest request =
         ApiHelper.buildPropertyValuesRequest(
             List.of("geoId/06"),
             "name",
-            Map.of(
-                "DC_API_ROOT",
-                "https://autopush.api.datacommons.org",
-                "AUTOPUSH_DC_API_KEY",
-                "autopush-key",
-                "DC_API_KEY",
-                "prod-key"));
+            new DcApiConfig("https://custom.api.datacommons.org/", "key"));
 
-    assertEquals("https://autopush.api.datacommons.org/v2/node", request.uri().toString());
-    assertEquals("autopush-key", request.headers().firstValue("x-api-key").orElse(""));
+    assertEquals("https://custom.api.datacommons.org/v2/node", request.uri().toString());
+    assertEquals("key", request.headers().firstValue("x-api-key").orElse(""));
   }
 
   @Test
-  public void buildPropertyValuesRequestOmitsMissingSelectedKey() {
+  public void buildPropertyValuesRequestOmitsMissingKey() {
     HttpRequest request =
         ApiHelper.buildPropertyValuesRequest(
-            List.of("geoId/06"), "name", Map.of("DC_API_ROOT", "https://api.datacommons.org"));
+            List.of("geoId/06"), "name", new DcApiConfig("https://api.datacommons.org", ""));
 
     assertEquals("https://api.datacommons.org/v2/node", request.uri().toString());
     assertTrue(request.headers().firstValue("x-api-key").isEmpty());

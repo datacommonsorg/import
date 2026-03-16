@@ -19,11 +19,6 @@ import org.apache.logging.log4j.Logger;
 // the Data Commons API.
 public class ApiHelper {
   private static final Logger logger = LogManager.getLogger(ApiHelper.class);
-
-  private static final String AUTOPUSH_API_ROOT = "https://autopush.api.datacommons.org";
-  private static final String API_ROOT_ENV = "DC_API_ROOT";
-  private static final String AUTOPUSH_API_KEY_ENV = "AUTOPUSH_DC_API_KEY";
-  private static final String API_KEY_ENV = "DC_API_KEY";
   private static final String NODE_API_PATH = "/v2/node";
 
   // Retry configuration
@@ -39,7 +34,7 @@ public class ApiHelper {
   public static JsonObject fetchPropertyValues(
       HttpClient httpClient, List<String> nodes, String property)
       throws IOException, InterruptedException {
-    var request = buildPropertyValuesRequest(nodes, property, System.getenv());
+    var request = buildPropertyValuesRequest(nodes, property, DcApiConfigs.getConfig());
 
     // maxRetries = 0 means no retries (only initial attempt)
     // maxRetries = 3 means 4 total attempts (1 initial + 3 retries)
@@ -80,7 +75,7 @@ public class ApiHelper {
   }
 
   static HttpRequest buildPropertyValuesRequest(
-      List<String> nodes, String property, Map<String, String> env) {
+      List<String> nodes, String property, DcApiConfig config) {
     JsonArray dcids = new JsonArray();
     for (var node : nodes) {
       dcids.add(node);
@@ -92,33 +87,15 @@ public class ApiHelper {
     arg.addProperty("property", "->" + property);
 
     var requestBuilder =
-        HttpRequest.newBuilder(URI.create(getNodeApiEndpoint(env)))
+        HttpRequest.newBuilder(URI.create(config.apiRoot() + NODE_API_PATH))
             .version(HttpClient.Version.HTTP_1_1)
             .header("accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(arg.toString()));
 
-    String apiKey = getApiKey(env);
-    if (apiKey != null && !apiKey.isEmpty()) {
-      requestBuilder.header("x-api-key", apiKey);
+    if (!config.apiKey().isEmpty()) {
+      requestBuilder.header("x-api-key", config.apiKey());
     }
     return requestBuilder.build();
-  }
-
-  static String getNodeApiEndpoint(Map<String, String> env) {
-    return normalizeApiRoot(env.getOrDefault(API_ROOT_ENV, AUTOPUSH_API_ROOT)) + NODE_API_PATH;
-  }
-
-  static String getApiKey(Map<String, String> env) {
-    String apiRoot = normalizeApiRoot(env.getOrDefault(API_ROOT_ENV, AUTOPUSH_API_ROOT));
-    String keyEnv = apiRoot.equals(AUTOPUSH_API_ROOT) ? AUTOPUSH_API_KEY_ENV : API_KEY_ENV;
-    return env.get(keyEnv);
-  }
-
-  private static String normalizeApiRoot(String apiRoot) {
-    if (apiRoot.endsWith("/")) {
-      return apiRoot.substring(0, apiRoot.length() - 1);
-    }
-    return apiRoot;
   }
 
   static JsonObject convertToLegacyFormat(
