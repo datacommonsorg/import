@@ -205,10 +205,12 @@ public class PipelineUtils {
                           OutputReceiver<
                                   KV<McfStatVarObsSeries.Key, McfStatVarObsSeries.StatVarObs>>
                               receiver) {
-                        for (PropertyValues pv : graph.getNodesMap().values()) {
+                        for (Map.Entry<String, PropertyValues> entry :
+                            graph.getNodesMap().entrySet()) {
+                          PropertyValues pv = entry.getValue();
                           if (GraphUtils.isObservation(pv)) {
                             McfStatVarObsSeries svoSeries =
-                                GraphUtils.convertMcfGraphToMcfStatVarObsSeries(pv);
+                                GraphUtils.convertMcfGraphToMcfStatVarObsSeries(entry.getKey(), pv);
                             receiver.output(KV.of(svoSeries.getKey(), svoSeries.getSvObsList(0)));
                           }
                         }
