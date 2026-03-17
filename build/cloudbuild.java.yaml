@@ -22,9 +22,9 @@ steps:
     entrypoint: "mvn"
     args: ["com.spotify.fmt:fmt-maven-plugin:check", "test"]
     secretEnv:
-      - AUTOPUSH_DC_API_KEY
+      - DC_API_KEY
 
 availableSecrets:
   secretManager:
-    - versionName: projects/datcom-ci/secrets/autopush-dc-api-key/versions/latest
-      env: AUTOPUSH_DC_API_KEY
+    - versionName: projects/datcom-ci/secrets/dc-api-key/versions/latest
+      env: DC_API_KEY

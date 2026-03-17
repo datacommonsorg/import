@@ -26,12 +26,10 @@ import org.datacommons.proto.Resolve.ResolveResponse;
  * than {@code chunkSize}, the API calls will be partitioned into max {@code chunkSize}d batches.
  */
 public class ReconClient {
-  // TODO: Supply an API key for prod /v2/resolve
-  private static final String V2_RESOLVE_API_URL = "https://api.datacommons.org/v2/resolve";
-
   static final String NUM_API_CALLS_COUNTER = "ReconClient_NumApiCalls";
 
   private static final int DEFAULT_CHUNK_SIZE = 500;
+  private static final String RESOLVE_API_PATH = "/v2/resolve";
 
   private final int chunkSize;
 
@@ -74,7 +72,7 @@ public class ReconClient {
     // Call API for each chunked request in parallel.
     List<CompletableFuture<ResolveResponse>> chunkedResponseFutures =
         chunkedRequests.stream()
-            .map(chunkedRequest -> callApi(V2_RESOLVE_API_URL, chunkedRequest, defaultResponse))
+            .map(chunkedRequest -> callApi(chunkedRequest, defaultResponse))
             .collect(toList());
 
     // Convert List of response futures to Future of list of responses
@@ -94,14 +92,9 @@ public class ReconClient {
   }
 
   private <T extends Message> CompletableFuture<T> callApi(
-      String apiUrl, Message requestMessage, T responseDefaultInstance) {
+      Message requestMessage, T responseDefaultInstance) {
     logWrapper.incrementInfoCounterBy(NUM_API_CALLS_COUNTER, 1);
-    HttpRequest request =
-        HttpRequest.newBuilder(URI.create(apiUrl))
-            .version(HTTP_1_1)
-            .header("accept", "application/json")
-            .POST(BodyPublishers.ofString(toJson(requestMessage)))
-            .build();
+    HttpRequest request = buildRequest(requestMessage, DcApiConfigs.getConfig());
     return httpClient
         .sendAsync(request, BodyHandlers.ofString())
         .thenApply(
@@ -110,6 +103,18 @@ public class ReconClient {
               fromJson(response.body().trim(), responseMessageBuilder);
               return (T) responseMessageBuilder.build();
             });
+  }
+
+  static HttpRequest buildRequest(Message requestMessage, DcApiConfig config) {
+    HttpRequest.Builder requestBuilder =
+        HttpRequest.newBuilder(URI.create(config.apiRoot() + RESOLVE_API_PATH))
+            .version(HTTP_1_1)
+            .header("accept", "application/json")
+            .POST(BodyPublishers.ofString(toJson(requestMessage)));
+    if (!config.apiKey().isEmpty()) {
+      requestBuilder.header("x-api-key", config.apiKey());
+    }
+    return requestBuilder.build();
   }
 
   private static <T> CompletableFuture<List<T>> toFutureOfList(List<CompletableFuture<T>> futures) {
