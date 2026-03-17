@@ -2,7 +2,7 @@
   "levelSummary": {
     "LEVEL_INFO": {
       "counters": {
-        "Existence_NumChecks": "148",
+        "Existence_NumChecks": "159",
         "Existence_NumDcCalls": "1"
       }
     },
@@ -17,6 +17,7 @@
         "Existence_MissingReference_Property": "4",
         "Sanity_MultipleVals_value": "1",
         "Existence_MissingReference_containedInPlace": "1",
+        "Existence_MissingReference_constraintProperties": "1",
         "Existence_MissingReference_subClassOf": "1"
       }
     },
@@ -97,6 +98,14 @@
     },
     "userMessage": "Failed reference existence check :: property-ref: 'population', node: 'dcid:dc/mx44'",
     "counterKey": "Existence_MissingReference_Property"
+  }, {
+    "level": "LEVEL_WARNING",
+    "location": {
+      "file": "NoCsv.mcf",
+      "lineNumber": "109"
+    },
+    "userMessage": "Failed reference existence check :: value-ref: 'PopulationType', property: 'constraintProperties', node: 'dcid:Count_Death_15YearsPlus'",
+    "counterKey": "Existence_MissingReference_constraintProperties"
   }, {
     "level": "LEVEL_WARNING",
     "location": {

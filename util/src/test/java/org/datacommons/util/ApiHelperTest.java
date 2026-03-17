@@ -5,11 +5,46 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.net.http.HttpRequest;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 
 public class ApiHelperTest {
+
+  @Test
+  public void buildPropertyValuesRequestDefaultsToProd() {
+    HttpRequest request =
+        ApiHelper.buildPropertyValuesRequest(
+            List.of("geoId/06"),
+            "name",
+            new DcApiConfig("https://api.datacommons.org", "prod-key"));
+
+    assertEquals("https://api.datacommons.org/v2/node", request.uri().toString());
+    assertEquals("prod-key", request.headers().firstValue("x-api-key").orElse(""));
+  }
+
+  @Test
+  public void buildPropertyValuesRequestUsesExplicitRoot() {
+    HttpRequest request =
+        ApiHelper.buildPropertyValuesRequest(
+            List.of("geoId/06"),
+            "name",
+            new DcApiConfig("https://custom.api.datacommons.org/", "key"));
+
+    assertEquals("https://custom.api.datacommons.org/v2/node", request.uri().toString());
+    assertEquals("key", request.headers().firstValue("x-api-key").orElse(""));
+  }
+
+  @Test
+  public void buildPropertyValuesRequestOmitsMissingKey() {
+    HttpRequest request =
+        ApiHelper.buildPropertyValuesRequest(
+            List.of("geoId/06"), "name", new DcApiConfig("https://api.datacommons.org", ""));
+
+    assertEquals("https://api.datacommons.org/v2/node", request.uri().toString());
+    assertTrue(request.headers().firstValue("x-api-key").isEmpty());
+  }
 
   @Test
   public void convertsNodesWithDcid() throws Exception {

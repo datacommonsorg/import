@@ -19,11 +19,7 @@ import org.apache.logging.log4j.Logger;
 // the Data Commons API.
 public class ApiHelper {
   private static final Logger logger = LogManager.getLogger(ApiHelper.class);
-
-  // Use the autopush end-point so we get more recent schema additions that
-  // haven't rolled out.
-  private static final String API_ROOT = "https://autopush.api.datacommons.org/v2/node";
-  private static final String API_KEY = System.getenv("AUTOPUSH_DC_API_KEY");
+  private static final String NODE_API_PATH = "/v2/node";
 
   // Retry configuration
   private static boolean ENABLE_RETRIES = true;
@@ -38,26 +34,7 @@ public class ApiHelper {
   public static JsonObject fetchPropertyValues(
       HttpClient httpClient, List<String> nodes, String property)
       throws IOException, InterruptedException {
-
-    JsonArray dcids = new JsonArray();
-    for (var node : nodes) {
-      dcids.add(node);
-    }
-
-    JsonObject arg = new JsonObject();
-    arg.add("nodes", dcids);
-    // V2 uses -> for out-edges, which is equivalent to direction: "out" in V1
-    arg.addProperty("property", "->" + property);
-
-    var requestBuilder =
-        HttpRequest.newBuilder(URI.create(API_ROOT))
-            .version(HttpClient.Version.HTTP_1_1)
-            .header("accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(arg.toString()));
-    if (API_KEY != null && !API_KEY.isEmpty()) {
-      requestBuilder.header("x-api-key", API_KEY);
-    }
-    var request = requestBuilder.build();
+    var request = buildPropertyValuesRequest(nodes, property, DcApiConfigs.getConfig());
 
     // maxRetries = 0 means no retries (only initial attempt)
     // maxRetries = 3 means 4 total attempts (1 initial + 3 retries)
@@ -95,6 +72,30 @@ public class ApiHelper {
     if (v2Response == null || v2Response.data == null) return null;
 
     return convertToLegacyFormat(v2Response, nodes, property);
+  }
+
+  static HttpRequest buildPropertyValuesRequest(
+      List<String> nodes, String property, DcApiConfig config) {
+    JsonArray dcids = new JsonArray();
+    for (var node : nodes) {
+      dcids.add(node);
+    }
+
+    JsonObject arg = new JsonObject();
+    arg.add("nodes", dcids);
+    // V2 uses -> for out-edges, which is equivalent to direction: "out" in V1
+    arg.addProperty("property", "->" + property);
+
+    var requestBuilder =
+        HttpRequest.newBuilder(URI.create(config.apiRoot() + NODE_API_PATH))
+            .version(HttpClient.Version.HTTP_1_1)
+            .header("accept", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(arg.toString()));
+
+    if (!config.apiKey().isEmpty()) {
+      requestBuilder.header("x-api-key", config.apiKey());
+    }
+    return requestBuilder.build();
   }
 
   static JsonObject convertToLegacyFormat(

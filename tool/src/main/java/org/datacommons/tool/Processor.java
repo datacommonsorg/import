@@ -502,10 +502,12 @@ public class Processor {
   private List<McfStatVarObsSeries> extractObservationsFromGraph(Mcf.McfGraph graph) {
     List<McfStatVarObsSeries> observations = new ArrayList<>();
 
-    for (Mcf.McfGraph.PropertyValues pv : graph.getNodesMap().values()) {
+    for (Map.Entry<String, Mcf.McfGraph.PropertyValues> entry : graph.getNodesMap().entrySet()) {
+      Mcf.McfGraph.PropertyValues pv = entry.getValue();
       if (GraphUtils.isObservation(pv)) {
         try {
-          McfStatVarObsSeries svo = GraphUtils.convertMcfGraphToMcfStatVarObsSeries(pv);
+          McfStatVarObsSeries svo =
+              GraphUtils.convertMcfGraphToMcfStatVarObsSeries(entry.getKey(), pv);
           observations.add(svo);
         } catch (IllegalArgumentException e) {
           // Log and skip invalid observations

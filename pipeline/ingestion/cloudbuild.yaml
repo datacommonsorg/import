@@ -14,7 +14,7 @@ steps:
       - 'pipeline/ingestion'
       - '-am'
     secretEnv:
-      - AUTOPUSH_DC_API_KEY
+      - DC_API_KEY
     id: 'build-jar'
 
   # 2. Run Dataflow Integration Tests
@@ -54,8 +54,8 @@ steps:
 
 availableSecrets:
   secretManager:
-    - versionName: projects/datcom-ci/secrets/autopush-dc-api-key/versions/latest
-      env: AUTOPUSH_DC_API_KEY
+    - versionName: projects/datcom-ci/secrets/dc-api-key/versions/latest
+      env: DC_API_KEY
 
 substitutions:
   _VERSION: "0.1-SNAPSHOT"
