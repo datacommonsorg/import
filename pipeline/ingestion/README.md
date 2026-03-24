@@ -30,7 +30,7 @@ The pipeline is configured using `IngestionPipelineOptions`. Key options include
 
 ## Example Usage
 
-First, ensure all dependencies are installed locally. After cloning the datacommons/import repository, run the following command from the root directory:
+First, ensure all dependencies are installed locally. After cloning the `datacommons/import` repository, run the following command from the project's root directory:
 
 ```bash
 mvn clean install
