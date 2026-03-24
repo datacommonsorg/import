@@ -26,5 +26,5 @@ steps:
 
 availableSecrets:
   secretManager:
-    - versionName: projects/datcom-ci/secrets/dc-api-key/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/dc-api-key/versions/latest
       env: DC_API_KEY
