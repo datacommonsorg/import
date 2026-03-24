@@ -30,13 +30,19 @@ The pipeline is configured using `IngestionPipelineOptions`. Key options include
 
 ## Example Usage
 
-To run the pipeline locally using the Direct runner:
+First, ensure all dependencies are installed locally. After cloning the datacommons/import repository, run the following command from the root directory:
+
+```bash
+mvn clean install
+```
+
+To run the pipeline locally using the Direct runner, cd to the `pipeline/ingestion` directory and run:
 
 ```bash
 mvn -Pdirect-runner compile exec:java \
   -pl ingestion -am \
   -Dexec.mainClass=org.datacommons.ingestion.pipeline.GraphIngestionPipeline \
-  -Dexec.args="--project=YOUR_PROJECT_ID \
+  -Dexec.args="--projectId=YOUR_PROJECT_ID \
     --spannerInstanceId=YOUR_INSTANCE_ID \
     --spannerDatabaseId=YOUR_DATABASE_ID \
     --importList='[{\"importName\": \"Schema\", \"graphPath\": \"gs://path/to/schema/mcf/\"}, {\"importName\": \"SampleImport\", \"graphPath\": \"gs://path/to/data.tfrecord\"}]' \
@@ -49,7 +55,7 @@ To run the pipeline using the Dataflow runner:
 mvn -Pdataflow-runner compile exec:java \
   -pl ingestion -am \
   -Dexec.mainClass=org.datacommons.ingestion.pipeline.GraphIngestionPipeline \
-  -Dexec.args="--project=YOUR_PROJECT_ID \
+  -Dexec.args="--projectId=YOUR_PROJECT_ID \
     --spannerInstanceId=YOUR_INSTANCE_ID \
     --spannerDatabaseId=YOUR_DATABASE_ID \
     --importList='[{\"importName\": \"Schema\", \"graphPath\": \"gs://path/to/schema/mcf/\"}, {\"importName\": \"SampleImport\", \"graphPath\": \"gs://path/to/data.tfrecord\"}]' \
