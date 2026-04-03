@@ -15,6 +15,9 @@ substitutions:
   _GCS_BUCKET: 'datacommons_public'
   _DOCKER_IMAGE: 'us-docker.pkg.dev/${PROJECT_ID}/gcr.io/dc-import-executor'
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/dc-api-key/versions/latest
