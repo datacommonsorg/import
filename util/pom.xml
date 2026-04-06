@@ -77,6 +77,11 @@
             <artifactId>failsafe</artifactId>
             <version>3.3.2</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.jsonld-java</groupId>
+            <artifactId>jsonld-java</artifactId>
+            <version>0.13.6</version>
+        </dependency>
 
 
         <!-- Test Dependencies -->

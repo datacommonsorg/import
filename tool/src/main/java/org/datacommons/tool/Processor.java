@@ -102,7 +102,8 @@ public class Processor {
           logger.info("Loading and Checking Table MCF files " + threadStr);
         }
         processor.processTables();
-      } else if (args.fileGroup.getTmcfs() != null) {
+      } else if (args.fileGroup instanceof org.datacommons.util.McfFileGroup
+          && ((org.datacommons.util.McfFileGroup) args.fileGroup).getTmcfs() != null) {
         // Sanity check the TMCF nodes.
         logger.info("Loading and Checking Template MCF files");
         processor.processNodes(Mcf.McfType.TEMPLATE_MCF);
@@ -176,13 +177,49 @@ public class Processor {
   private void processNodes(Mcf.McfType type)
       throws IOException, DCTooManyFailuresException, InterruptedException {
     if (type == Mcf.McfType.INSTANCE_MCF) {
-      for (var f : args.fileGroup.getMcfs()) {
-        processNodes(type, f);
+      if (args.fileGroup instanceof org.datacommons.util.McfFileGroup) {
+        org.datacommons.util.McfFileGroup mcfGroup =
+            (org.datacommons.util.McfFileGroup) args.fileGroup;
+        for (var f : mcfGroup.getMcfs()) {
+          processNodes(type, f);
+        }
+      } else if (args.fileGroup instanceof org.datacommons.util.JsonLdFileGroup) {
+        org.datacommons.util.JsonLdFileGroup jsonLdGroup =
+            (org.datacommons.util.JsonLdFileGroup) args.fileGroup;
+        for (var f : jsonLdGroup.getJsonLds()) {
+          processNodes(type, f);
+        }
       }
     } else {
-      for (var f : args.fileGroup.getTmcfs()) {
-        processNodes(type, f);
+      if (args.fileGroup instanceof org.datacommons.util.McfFileGroup) {
+        org.datacommons.util.McfFileGroup mcfGroup =
+            (org.datacommons.util.McfFileGroup) args.fileGroup;
+        for (var f : mcfGroup.getTmcfs()) {
+          processNodes(type, f);
+        }
       }
+    }
+  }
+
+  private void processLoadedGraph(Mcf.McfGraph n, Mcf.McfType type)
+      throws IOException, InterruptedException {
+    n = McfMutator.mutate(n.toBuilder(), logCtx);
+
+    if (idResolver != null && type == Mcf.McfType.INSTANCE_MCF) {
+      idResolver.addLocalGraph(n);
+    }
+    if (existenceChecker != null && type == Mcf.McfType.INSTANCE_MCF) {
+      existenceChecker.addLocalGraph(n);
+    } else {
+      McfChecker.check(n, existenceChecker, statVarState, logCtx);
+    }
+    if (args.checkMeasurementResult && type == Mcf.McfType.INSTANCE_MCF) {
+      statVarState.addLocalGraph(n);
+    }
+    if (existenceChecker != null
+        || args.resolutionMode != Args.ResolutionMode.NONE
+        || statChecker != null) {
+      nodesForVariousChecks.add(n);
     }
   }
 
@@ -190,37 +227,22 @@ public class Processor {
       throws IOException, DCTooManyFailuresException, InterruptedException {
     long numNodesProcessed = 0;
     if (args.verbose) logger.info("Checking {}", file.getName());
-    // TODO: isResolved is more allowing, be stricter.
-    McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
-    Mcf.McfGraph n;
-    while ((n = parser.parseNextNode()) != null) {
-      n = McfMutator.mutate(n.toBuilder(), logCtx);
 
-      if (idResolver != null && type == Mcf.McfType.INSTANCE_MCF) {
-        idResolver.addLocalGraph(n);
-      }
-      if (existenceChecker != null && type == Mcf.McfType.INSTANCE_MCF) {
-        // Add instance MCF nodes to ExistenceChecker.  We load all the nodes up first
-        // before we check them later in checkNodes().
-        existenceChecker.addLocalGraph(n);
-      } else {
-        McfChecker.check(n, existenceChecker, statVarState, logCtx);
-      }
-      if (args.checkMeasurementResult && type == Mcf.McfType.INSTANCE_MCF) {
-        // Add instance MCF nodes to StatVarState, which will remember the statType
-        // of SVs so that we don't need to make HTTP requests for it for
-        // measurementResult checks.
-        statVarState.addLocalGraph(n);
-      }
-      if (existenceChecker != null
-          || args.resolutionMode != Args.ResolutionMode.NONE
-          || statChecker != null) {
-        nodesForVariousChecks.add(n);
-      }
-
-      numNodesProcessed++;
-      if (!logCtx.trackStatus(1, "nodes processed")) {
-        throw new DCTooManyFailuresException("encountered too many failures");
+    if (file.getPath().endsWith(".jsonld")) {
+      Mcf.McfGraph n =
+          org.datacommons.util.jsonld.JsonLdParser.parse(new java.io.FileInputStream(file));
+      processLoadedGraph(n, type);
+      numNodesProcessed = n.getNodesCount();
+      logCtx.trackStatus(numNodesProcessed, "nodes processed");
+    } else {
+      McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
+      Mcf.McfGraph n;
+      while ((n = parser.parseNextNode()) != null) {
+        processLoadedGraph(n, type);
+        numNodesProcessed++;
+        if (!logCtx.trackStatus(1, "nodes processed")) {
+          throw new DCTooManyFailuresException("encountered too many failures");
+        }
       }
     }
     logger.info("Checked {} with {} nodes", file.getName(), numNodesProcessed);
@@ -229,7 +251,18 @@ public class Processor {
   private void processTables()
       throws IOException, DCTooManyFailuresException, InterruptedException {
     // Parallelize
-    if (args.verbose) logger.info("TMCF " + args.fileGroup.getTmcf().getName());
+    if (args.verbose) {
+      if (args.fileGroup instanceof org.datacommons.util.McfFileGroup) {
+        logger.info(
+            "TMCF " + ((org.datacommons.util.McfFileGroup) args.fileGroup).getTmcf().getName());
+      } else if (args.fileGroup instanceof org.datacommons.util.JsonLdFileGroup) {
+        logger.info(
+            "JSON-LD Template "
+                + ((org.datacommons.util.JsonLdFileGroup) args.fileGroup)
+                    .getTmplJsonLd()
+                    .getName());
+      }
+    }
 
     List<Callable<Void>> cbs = new ArrayList<Callable<Void>>(args.fileGroup.getCsvs().size());
     for (File csvFile : args.fileGroup.getCsvs()) {
@@ -260,28 +293,44 @@ public class Processor {
   private void processTable(File csvFile)
       throws IOException, DCTooManyFailuresException, InterruptedException {
     logger.info("Checking CSV " + csvFile.getPath());
-    TmcfCsvParser parser =
-        TmcfCsvParser.init(
-            args.fileGroup.getTmcf().getPath(),
-            csvFile.getPath(),
-            args.fileGroup.delimiter(),
-            logCtx);
-    // If there were too many failures when initializing the parser, parser will be null and we
-    // don't want to continue processing.
-    if (parser == null) {
-      throw new DCTooManyFailuresException("processTables encountered too many failures");
+    interface GraphSupplier {
+      Mcf.McfGraph get() throws java.io.IOException, InterruptedException;
     }
+
+    GraphSupplier parser;
+    if (args.fileGroup instanceof org.datacommons.util.JsonLdFileGroup) {
+      org.datacommons.util.JsonLdFileGroup jsonLdGroup =
+          (org.datacommons.util.JsonLdFileGroup) args.fileGroup;
+      File tmplFile = jsonLdGroup.getTmplJsonLd();
+      org.datacommons.util.jsonld.JsonLdTemplateParser jParser =
+          new org.datacommons.util.jsonld.JsonLdTemplateParser(
+              new java.io.FileInputStream(tmplFile));
+      jParser.initCsv(new java.io.FileReader(csvFile));
+      parser = () -> jParser.parseNextRow();
+    } else {
+      org.datacommons.util.McfFileGroup mcfGroup =
+          (org.datacommons.util.McfFileGroup) args.fileGroup;
+      TmcfCsvParser tParser =
+          TmcfCsvParser.init(
+              mcfGroup.getTmcf().getPath(), csvFile.getPath(), args.fileGroup.delimiter(), logCtx);
+      if (tParser == null) {
+        throw new DCTooManyFailuresException("processTables encountered too many failures");
+      }
+      parser = () -> tParser.parseNextRow();
+    }
+
     WriterPair writerPair =
         new WriterPair(
             args,
             Args.OutputFileType.TABLE_MCF_NODES,
             Args.OutputFileType.FAILED_TABLE_MCF_NODES,
             csvFile);
+
     Mcf.McfGraph g;
     int numNodeSuccesses = 0, numPVSuccesses = 0, numRowSuccesses = 0, numRowsProcessed = 0;
     Map<Mcf.McfStatVarObsSeries.Key, Mcf.McfStatVarObsSeries.Builder> groupedObservations =
         new HashMap<>();
-    while ((g = parser.parseNextRow()) != null) {
+    while ((g = parser.get()) != null) {
       g = McfMutator.mutate(g.toBuilder(), logCtx);
 
       // This will set counters/messages in logCtx.
@@ -406,6 +455,10 @@ public class Processor {
   // Process all the CSV tables to load all external IDs.
   private void lookupExternalIds()
       throws IOException, InterruptedException, DCTooManyFailuresException {
+    if (!(args.fileGroup instanceof org.datacommons.util.McfFileGroup)) {
+      logger.info("Skipping external ID lookup for non-MCF file group.");
+      return;
+    }
     LogWrapper dummyLog = new LogWrapper(Debug.Log.newBuilder());
     logger.info("Processing External IDs from Instance MCF nodes");
     for (var g : nodesForVariousChecks) {
@@ -454,7 +507,7 @@ public class Processor {
     if (args.verbose) logger.info("Reading external IDs from CSV " + csvFile.getPath());
     TmcfCsvParser parser =
         TmcfCsvParser.init(
-            args.fileGroup.getTmcf().getPath(),
+            ((org.datacommons.util.McfFileGroup) args.fileGroup).getTmcf().getPath(),
             csvFile.getPath(),
             args.fileGroup.delimiter(),
             dummyLog);

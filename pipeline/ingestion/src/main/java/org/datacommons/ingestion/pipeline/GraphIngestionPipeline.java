@@ -82,16 +82,35 @@ public class GraphIngestionPipeline {
     for (JsonElement element : jsonArray) {
       JsonElement importElement = element.getAsJsonObject().get("importName");
       JsonElement pathElement = element.getAsJsonObject().get("graphPath");
+      JsonElement templateElement = element.getAsJsonObject().get("templatePath");
+      JsonElement csvElement = element.getAsJsonObject().get("csvPath");
 
-      if (isJsonNullOrEmpty(importElement) || isJsonNullOrEmpty(pathElement)) {
-        LOGGER.error("Invalid import input json: {}", element.toString());
+      if (isJsonNullOrEmpty(importElement)) {
+        LOGGER.error("Invalid import input json, missing importName: {}", element.toString());
         continue;
       }
       String importName = importElement.getAsString();
-      String graphPath = pathElement.getAsString();
+      String graphPath = isJsonNullOrEmpty(pathElement) ? null : pathElement.getAsString();
+      String templatePath =
+          isJsonNullOrEmpty(templateElement) ? null : templateElement.getAsString();
+      String csvPath = isJsonNullOrEmpty(csvElement) ? null : csvElement.getAsString();
+
+      if (graphPath == null && (templatePath == null || csvPath == null)) {
+        LOGGER.error(
+            "Invalid import input json, missing graphPath or template/csv paths: {}",
+            element.toString());
+        continue;
+      }
 
       // Process the individual import.
-      processImport(pipeline, spannerClient, importName, graphPath, options.getSkipDelete());
+      processImport(
+          pipeline,
+          spannerClient,
+          importName,
+          graphPath,
+          templatePath,
+          csvPath,
+          options.getSkipDelete());
     }
   }
 
@@ -109,8 +128,15 @@ public class GraphIngestionPipeline {
       SpannerClient spannerClient,
       String importName,
       String graphPath,
+      String templatePath,
+      String csvPath,
       boolean skipDelete) {
-    LOGGER.info("Import: {} Graph path: {}", importName, graphPath);
+    LOGGER.info(
+        "Import: {} Graph path: {} Template: {} CSV: {}",
+        importName,
+        graphPath,
+        templatePath,
+        csvPath);
 
     String provenance = "dc/base/" + importName;
 
@@ -138,10 +164,20 @@ public class GraphIngestionPipeline {
 
     // 2. Read and Split Graph:
     // Read the graph data (TFRecord or MCF files) and split into schema and observation nodes.
-    PCollection<McfGraph> graph =
-        graphPath.contains("tfrecord")
-            ? PipelineUtils.readMcfGraph(importName, graphPath, pipeline)
-            : PipelineUtils.readMcfFiles(importName, graphPath, pipeline);
+    PCollection<McfGraph> graph;
+    if (graphPath != null && graphPath.contains("tfrecord")) {
+      graph = PipelineUtils.readMcfGraph(importName, graphPath, pipeline);
+    } else if (graphPath != null
+        && (graphPath.endsWith(".jsonld") || graphPath.contains(".jsonld"))) {
+      graph = PipelineUtils.readJsonLdFiles(importName, graphPath, pipeline);
+    } else if (templatePath != null && csvPath != null) {
+      graph = PipelineUtils.readJsonLdTemplateFiles(importName, templatePath, csvPath, pipeline);
+    } else if (graphPath != null) {
+      graph = PipelineUtils.readMcfFiles(importName, graphPath, pipeline);
+    } else {
+      throw new IllegalArgumentException(
+          "Invalid import config: missing graphPath or template/csv paths");
+    }
     PCollectionTuple graphNodes = PipelineUtils.splitGraph(importName, graph);
     PCollection<McfGraph> observationNodes = graphNodes.get(PipelineUtils.OBSERVATION_NODES_TAG);
     PCollection<McfGraph> schemaNodes = graphNodes.get(PipelineUtils.SCHEMA_NODES_TAG);
@@ -176,9 +212,11 @@ public class GraphIngestionPipeline {
         spannerClient.writeMutations(pipeline, "WriteNodesToSpanner-" + importName, nodeMutations);
 
     // Write Edges (wait for Nodes write and Edges delete)
-    edgeMutations.apply(
-        "EdgesWaitOn-" + importName, Wait.on(List.of(writtenNodes.getOutput(), deleteEdgesWait)));
-    spannerClient.writeMutations(pipeline, "WriteEdgesToSpanner-" + importName, edgeMutations);
+    PCollection<Mutation> waitingEdges =
+        edgeMutations.apply(
+            "EdgesWaitOn-" + importName,
+            Wait.on(List.of(writtenNodes.getOutput(), deleteEdgesWait)));
+    spannerClient.writeMutations(pipeline, "WriteEdgesToSpanner-" + importName, waitingEdges);
 
     // 4. Process Observation Nodes:
     // Build an optimized graph from observation nodes and convert to Observation mutations.
@@ -188,9 +226,9 @@ public class GraphIngestionPipeline {
         GraphReader.graphToObservations(optimizedGraph, importName, spannerClient, obsCounter)
             .apply("ExtractObsMutations-" + importName, Values.create());
     // Write Observations (wait for Obs delete)
-    observationMutations.apply("ObsWaitOn-" + importName, Wait.on(deleteObsWait));
+    PCollection<Mutation> waitingObs =
+        observationMutations.apply("ObsWaitOn-" + importName, Wait.on(deleteObsWait));
 
-    spannerClient.writeMutations(
-        pipeline, "WriteObservationsToSpanner-" + importName, observationMutations);
+    spannerClient.writeMutations(pipeline, "WriteObservationsToSpanner-" + importName, waitingObs);
   }
 }

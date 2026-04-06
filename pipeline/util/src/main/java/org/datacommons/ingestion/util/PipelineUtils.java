@@ -6,6 +6,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.channels.Channels;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,10 +22,14 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import java.util.zip.GZIPOutputStream;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.FileIO;
+import org.apache.beam.sdk.io.FileSystems;
 import org.apache.beam.sdk.io.TFRecordIO;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.fs.EmptyMatchTreatment;
+import org.apache.beam.sdk.io.fs.ResourceId;
 import org.apache.beam.sdk.transforms.Combine;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -39,6 +47,8 @@ import org.datacommons.proto.Mcf.McfGraph.Values;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.util.GraphUtils;
+import org.datacommons.util.jsonld.JsonLdParser;
+import org.datacommons.util.jsonld.JsonLdTemplateParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,6 +170,69 @@ public class PipelineUtils {
                   }
                 }));
     return mcf;
+  }
+
+  /** Reads JSON-LD files and converts them to McfGraph protos. */
+  public static PCollection<McfGraph> readJsonLdFiles(String name, String files, Pipeline p) {
+    return p.apply("MatchJsonLdFiles-" + name, FileIO.match().filepattern(files))
+        .apply("ReadJsonLdFiles-" + name, FileIO.readMatches())
+        .apply(
+            "ParseJsonLd-" + name,
+            ParDo.of(
+                new DoFn<FileIO.ReadableFile, McfGraph>() {
+                  @ProcessElement
+                  public void processElement(
+                      @Element FileIO.ReadableFile file, OutputReceiver<McfGraph> receiver) {
+                    try (InputStream is = Channels.newInputStream(file.open())) {
+                      McfGraph graph = JsonLdParser.parse(is);
+                      for (Map.Entry<String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
+                          entry : graph.getNodesMap().entrySet()) {
+                        McfGraph.Builder singleNodeGraph = McfGraph.newBuilder();
+                        singleNodeGraph.putNodes(entry.getKey(), entry.getValue());
+                        receiver.output(singleNodeGraph.build());
+                      }
+                    } catch (IOException e) {
+                      throw new RuntimeException(
+                          "Failed to parse JSON-LD file: " + file.toString(), e);
+                    }
+                  }
+                }));
+  }
+
+  public static PCollection<McfGraph> readJsonLdTemplateFiles(
+      String name, String templatePath, String csvPath, Pipeline p) {
+    return p.apply("CreateTemplateCsvKV-" + name, Create.of(KV.of(templatePath, csvPath)))
+        .apply(
+            "ProcessTemplateCsv-" + name,
+            ParDo.of(
+                new DoFn<KV<String, String>, McfGraph>() {
+                  @ProcessElement
+                  public void processElement(
+                      @Element KV<String, String> element, OutputReceiver<McfGraph> receiver) {
+                    String tPath = element.getKey();
+                    String cPath = element.getValue();
+                    try {
+                      // Open template
+                      ResourceId tRes = FileSystems.matchNewResource(tPath, false);
+                      InputStream tStream = Channels.newInputStream(FileSystems.open(tRes));
+                      JsonLdTemplateParser parser = new JsonLdTemplateParser(tStream);
+
+                      // Open CSV
+                      ResourceId cRes = FileSystems.matchNewResource(cPath, false);
+                      InputStream cStream = Channels.newInputStream(FileSystems.open(cRes));
+                      Reader cReader = new InputStreamReader(cStream, StandardCharsets.UTF_8);
+                      parser.initCsv(cReader);
+
+                      McfGraph graph;
+                      while ((graph = parser.parseNextRow()) != null) {
+                        receiver.output(graph);
+                      }
+                    } catch (IOException e) {
+                      throw new RuntimeException(
+                          "Failed to parse JSON-LD template/CSV: " + tPath + " / " + cPath, e);
+                    }
+                  }
+                }));
   }
 
   public static PCollectionTuple splitGraph(String name, PCollection<McfGraph> graph) {

@@ -20,35 +20,17 @@ import java.util.List;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
 
-public class FileGroup {
-  private List<File> csvFiles;
-  private List<File> mcfFiles;
-  // NOTE: When csvFiles is provided, then tmcfFiles must be <= 1.
-  private List<File> tmcfFiles;
-  char delimiter;
+public abstract class FileGroup {
+  protected List<File> csvFiles;
+  protected char delimiter;
 
-  public FileGroup(List<File> tmcfFiles, List<File> csvFiles, List<File> mcfFiles, char delimiter) {
-    this.tmcfFiles = tmcfFiles;
+  public FileGroup(List<File> csvFiles, char delimiter) {
     this.csvFiles = csvFiles;
-    this.mcfFiles = mcfFiles;
     this.delimiter = delimiter;
-  }
-
-  public File getTmcf() {
-    if (tmcfFiles != null && tmcfFiles.size() > 0) return tmcfFiles.get(0);
-    return null;
-  }
-
-  public List<File> getTmcfs() {
-    return tmcfFiles;
   }
 
   public List<File> getCsvs() {
     return csvFiles;
-  }
-
-  public List<File> getMcfs() {
-    return mcfFiles;
   }
 
   public char delimiter() {
@@ -63,10 +45,16 @@ public class FileGroup {
     List<File> tmcfFiles = new ArrayList<>();
     List<File> csvFiles = new ArrayList<>();
     List<File> mcfFiles = new ArrayList<>();
+    List<File> jsonLdFiles = new ArrayList<>();
+    List<File> tmplJsonLdFiles = new ArrayList<>();
     int nTsv = 0;
     for (File file : files) {
       String lowerPath = file.getPath().toLowerCase();
-      if (lowerPath.contains(".mcf")) {
+      if (lowerPath.endsWith(".tmpl.jsonld")) {
+        tmplJsonLdFiles.add(file);
+      } else if (lowerPath.endsWith(".jsonld")) {
+        jsonLdFiles.add(file);
+      } else if (lowerPath.contains(".mcf")) {
         mcfFiles.add(file);
       } else if (lowerPath.endsWith(".tmcf")) {
         tmcfFiles.add(file);
@@ -80,25 +68,46 @@ public class FileGroup {
             spec.commandLine(), "Found an unsupported file type: " + file.getPath());
       }
     }
+
+    boolean hasMcf = !mcfFiles.isEmpty() || !tmcfFiles.isEmpty();
+    boolean hasJsonLd = !jsonLdFiles.isEmpty() || !tmplJsonLdFiles.isEmpty();
+
+    if (hasMcf && hasJsonLd) {
+      throw new CommandLine.ParameterException(
+          spec.commandLine(), "Cannot mix MCF and JSON-LD files in the same run.");
+    }
+
     logger.info(
-        "Input includes {} MCF file(s), {} TMCF file(s), {} CSV file(s)",
+        "Input includes {} MCF file(s), {} TMCF file(s), {} CSV file(s), {} JSON-LD file(s), {} JSON-LD Template file(s)",
         mcfFiles.size(),
         tmcfFiles.size(),
-        csvFiles.size());
+        csvFiles.size(),
+        jsonLdFiles.size(),
+        tmplJsonLdFiles.size());
+
     // Various checks
     if (nTsv > 0 && nTsv != csvFiles.size()) {
       throw new CommandLine.ParameterException(
           spec.commandLine(), "Please do not mix .tsv and .csv files");
     }
-    if (!csvFiles.isEmpty() && tmcfFiles.size() != 1) {
-      throw new CommandLine.ParameterException(
-          spec.commandLine(), "Please provide one .tmcf file with CSV/TSV files");
+
+    if (!csvFiles.isEmpty()) {
+      if (hasMcf && tmcfFiles.size() != 1) {
+        throw new CommandLine.ParameterException(
+            spec.commandLine(), "Please provide exactly one .tmcf file with CSV/TSV files");
+      }
+      if (hasJsonLd && tmplJsonLdFiles.size() != 1) {
+        throw new CommandLine.ParameterException(
+            spec.commandLine(), "Please provide exactly one .tmpl.jsonld file with CSV/TSV files");
+      }
     }
+
     char delim = (overrideDelimiter == null ? (nTsv > 0 ? '\t' : ',') : overrideDelimiter);
-    if (tmcfFiles.isEmpty()) {
-      return new FileGroup(null, csvFiles, mcfFiles, delim);
+
+    if (hasJsonLd) {
+      return new JsonLdFileGroup(csvFiles, jsonLdFiles, tmplJsonLdFiles, delim);
     } else {
-      return new FileGroup(tmcfFiles, csvFiles, mcfFiles, delim);
+      return new McfFileGroup(csvFiles, mcfFiles, tmcfFiles, delim);
     }
   }
 }

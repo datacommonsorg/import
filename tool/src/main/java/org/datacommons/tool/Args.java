@@ -75,14 +75,30 @@ class Args {
     if (!LogWrapper.TEST_MODE && fileGroup != null) {
       List<String> allFiles = new ArrayList<>();
 
-      if (fileGroup.getMcfs() != null) {
-        for (File f : fileGroup.getMcfs()) {
-          allFiles.add(f.getPath());
+      if (fileGroup instanceof org.datacommons.util.McfFileGroup) {
+        org.datacommons.util.McfFileGroup mcfGroup = (org.datacommons.util.McfFileGroup) fileGroup;
+        if (mcfGroup.getMcfs() != null) {
+          for (File f : mcfGroup.getMcfs()) {
+            allFiles.add(f.getPath());
+          }
         }
-      }
-      if (fileGroup.getTmcfs() != null) {
-        for (File f : fileGroup.getTmcfs()) {
-          allFiles.add(f.getPath());
+        if (mcfGroup.getTmcfs() != null) {
+          for (File f : mcfGroup.getTmcfs()) {
+            allFiles.add(f.getPath());
+          }
+        }
+      } else if (fileGroup instanceof org.datacommons.util.JsonLdFileGroup) {
+        org.datacommons.util.JsonLdFileGroup jsonLdGroup =
+            (org.datacommons.util.JsonLdFileGroup) fileGroup;
+        if (jsonLdGroup.getJsonLds() != null) {
+          for (File f : jsonLdGroup.getJsonLds()) {
+            allFiles.add(f.getPath());
+          }
+        }
+        if (jsonLdGroup.getTmplJsonLds() != null) {
+          for (File f : jsonLdGroup.getTmplJsonLds()) {
+            allFiles.add(f.getPath());
+          }
         }
       }
       if (fileGroup.getCsvs() != null) {
