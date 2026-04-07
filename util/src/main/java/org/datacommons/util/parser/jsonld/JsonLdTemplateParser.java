@@ -1,6 +1,5 @@
-package org.datacommons.util.jsonld;
+package org.datacommons.util.parser.jsonld;
 
-import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.core.JsonLdProcessor;
 import com.github.jsonldjava.utils.JsonUtils;
 import java.io.IOException;
@@ -37,7 +36,6 @@ public class JsonLdTemplateParser {
    */
   public JsonLdTemplateParser(InputStream templateStream) throws IOException {
     Object templateJson = JsonUtils.fromInputStream(templateStream);
-    JsonLdOptions options = new JsonLdOptions();
     Object flattened = JsonLdProcessor.expand(templateJson);
 
     this.flattenedTemplate = new ArrayList<>();

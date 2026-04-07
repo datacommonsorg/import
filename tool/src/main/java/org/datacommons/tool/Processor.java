@@ -228,12 +228,13 @@ public class Processor {
     long numNodesProcessed = 0;
     if (args.verbose) logger.info("Checking {}", file.getName());
 
-    if (file.getPath().endsWith(".jsonld")) {
-      Mcf.McfGraph n =
-          org.datacommons.util.jsonld.JsonLdParser.parse(new java.io.FileInputStream(file));
-      processLoadedGraph(n, type);
-      numNodesProcessed = n.getNodesCount();
-      logCtx.trackStatus(numNodesProcessed, "nodes processed");
+    if (file.getPath().contains(".jsonld")) {
+      try (java.io.InputStream is = new java.io.FileInputStream(file)) {
+        Mcf.McfGraph n = org.datacommons.util.parser.jsonld.JsonLdParser.parse(is);
+        processLoadedGraph(n, type);
+        numNodesProcessed = n.getNodesCount();
+        logCtx.trackStatus(numNodesProcessed, "nodes processed");
+      }
     } else {
       McfParser parser = McfParser.init(type, file.getPath(), false, logCtx);
       Mcf.McfGraph n;
@@ -302,8 +303,8 @@ public class Processor {
       org.datacommons.util.JsonLdFileGroup jsonLdGroup =
           (org.datacommons.util.JsonLdFileGroup) args.fileGroup;
       File tmplFile = jsonLdGroup.getTmplJsonLd();
-      org.datacommons.util.jsonld.JsonLdTemplateParser jParser =
-          new org.datacommons.util.jsonld.JsonLdTemplateParser(
+      org.datacommons.util.parser.jsonld.JsonLdTemplateParser jParser =
+          new org.datacommons.util.parser.jsonld.JsonLdTemplateParser(
               new java.io.FileInputStream(tmplFile));
       jParser.initCsv(new java.io.FileReader(csvFile));
       parser = () -> jParser.parseNextRow();

@@ -1,4 +1,4 @@
-package org.datacommons.util.jsonld;
+package org.datacommons.util.parser.jsonld;
 
 import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.utils.JsonUtils;
@@ -8,12 +8,15 @@ import java.util.List;
 import java.util.Map;
 import org.datacommons.proto.Mcf;
 import org.datacommons.proto.Mcf.McfGraph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Parser for JSON-LD input files. Converts JSON-LD constructs into Data Commons McfGraph protobuf
  * representation.
  */
 public class JsonLdParser {
+  private static final Logger LOGGER = LoggerFactory.getLogger(JsonLdParser.class);
 
   /**
    * Parses a JSON-LD input stream and returns an McfGraph.
@@ -46,6 +49,9 @@ public class JsonLdParser {
           parseNode(nodeMap, graphBuilder);
         }
       }
+    } else if (jsonObject instanceof Map) {
+      Map<String, Object> nodeMap = (Map<String, Object>) jsonObject;
+      parseNode(nodeMap, graphBuilder);
     }
 
     return graphBuilder.build();
@@ -70,7 +76,7 @@ public class JsonLdParser {
         key = key.substring(key.lastIndexOf('#') + 1);
       }
       Object value = entry.getValue();
-      System.out.println("JSONLD_PARSER node " + id + ": " + key + " = " + value);
+      LOGGER.debug("JSONLD_PARSER node {}: {} = {}", id, key, value);
 
       if ("@id".equals(key)) {
         continue;
@@ -115,8 +121,7 @@ public class JsonLdParser {
             idStr.startsWith("l:") ? Mcf.ValueType.UNRESOLVED_REF : Mcf.ValueType.RESOLVED_REF;
         addProperty(nodeBuilder, property, idStr, type);
       } else {
-        System.err.println(
-            "WARNING: Ignoring unsupported JSON-LD object for property " + property + ": " + map);
+        LOGGER.warn("Ignoring unsupported JSON-LD object for property {}: {}", property, map);
       }
     } else if (item != null) {
       // Fallback for simple values if JSON-LD processor didn't fully expand/flatten as expected

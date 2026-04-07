@@ -48,7 +48,6 @@ import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.util.GraphUtils;
 import org.datacommons.util.jsonld.JsonLdParser;
-import org.datacommons.util.jsonld.JsonLdTemplateParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -211,16 +210,13 @@ public class PipelineUtils {
                       @Element KV<String, String> element, OutputReceiver<McfGraph> receiver) {
                     String tPath = element.getKey();
                     String cPath = element.getValue();
-                    try {
-                      // Open template
-                      ResourceId tRes = FileSystems.matchNewResource(tPath, false);
-                      InputStream tStream = Channels.newInputStream(FileSystems.open(tRes));
-                      JsonLdTemplateParser parser = new JsonLdTemplateParser(tStream);
-
-                      // Open CSV
-                      ResourceId cRes = FileSystems.matchNewResource(cPath, false);
-                      InputStream cStream = Channels.newInputStream(FileSystems.open(cRes));
-                      Reader cReader = new InputStreamReader(cStream, StandardCharsets.UTF_8);
+                    ResourceId tRes = FileSystems.matchNewResource(tPath, false);
+                    ResourceId cRes = FileSystems.matchNewResource(cPath, false);
+                    try (InputStream tStream = Channels.newInputStream(FileSystems.open(tRes));
+                        InputStream cStream = Channels.newInputStream(FileSystems.open(cRes));
+                        Reader cReader = new InputStreamReader(cStream, StandardCharsets.UTF_8)) {
+                      org.datacommons.util.parser.jsonld.JsonLdTemplateParser parser =
+                          new org.datacommons.util.parser.jsonld.JsonLdTemplateParser(tStream);
                       parser.initCsv(cReader);
 
                       McfGraph graph;

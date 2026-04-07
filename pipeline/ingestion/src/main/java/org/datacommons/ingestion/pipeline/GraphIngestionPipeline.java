@@ -167,8 +167,7 @@ public class GraphIngestionPipeline {
     PCollection<McfGraph> graph;
     if (graphPath != null && graphPath.contains("tfrecord")) {
       graph = PipelineUtils.readMcfGraph(importName, graphPath, pipeline);
-    } else if (graphPath != null
-        && (graphPath.endsWith(".jsonld") || graphPath.contains(".jsonld"))) {
+    } else if (graphPath != null && graphPath.contains(".jsonld")) {
       graph = PipelineUtils.readJsonLdFiles(importName, graphPath, pipeline);
     } else if (templatePath != null && csvPath != null) {
       graph = PipelineUtils.readJsonLdTemplateFiles(importName, templatePath, csvPath, pipeline);
