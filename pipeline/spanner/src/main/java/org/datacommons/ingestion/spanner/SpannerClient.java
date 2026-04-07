@@ -216,10 +216,7 @@ public class SpannerClient implements Serializable {
       dbAdminClient
           .updateDatabaseDdlAsync(
               com.google.spanner.admin.database.v1.UpdateDatabaseDdlRequest.newBuilder()
-                  .setDatabase(
-                      String.format(
-                          "projects/%s/instances/%s/databases/%s",
-                          gcpProjectId, spannerInstanceId, spannerDatabaseId))
+                  .setDatabase(databasePath)
                   .addAllStatements(statementsToApply)
                   .setProtoDescriptors(protoDescriptors)
                   .build())
