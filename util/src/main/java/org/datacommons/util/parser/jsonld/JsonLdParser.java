@@ -75,6 +75,9 @@ public class JsonLdParser {
       if (key.contains("#")) {
         key = key.substring(key.lastIndexOf('#') + 1);
       }
+      if (key.isEmpty()) {
+        continue;
+      }
       Object value = entry.getValue();
       LOGGER.debug("JSONLD_PARSER node {}: {} = {}", id, key, value);
 

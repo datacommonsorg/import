@@ -103,7 +103,7 @@ public class JsonLdTemplateParser {
           continue;
         }
 
-        processProperty(nodeBuilder, key, value, record);
+        processProperty(nodeBuilder, key, value, record, rowNum);
       }
 
       graphBuilder.putNodes(actualId, nodeBuilder.build());
@@ -122,7 +122,8 @@ public class JsonLdTemplateParser {
       McfGraph.PropertyValues.Builder nodeBuilder,
       String property,
       Object valueTemplate,
-      CSVRecord record) {
+      CSVRecord record,
+      int rowNum) {
     if (valueTemplate instanceof List) {
       for (Object item : (List<?>) valueTemplate) {
         if (item instanceof Map) {
@@ -155,10 +156,13 @@ public class JsonLdTemplateParser {
           if (map.containsKey("@value")) {
             addProperty(nodeBuilder, property, map.get("@value").toString(), Mcf.ValueType.TEXT);
           } else if (map.containsKey("@id")) {
-            String idStr = map.get("@id").toString();
+            String baseId = map.get("@id").toString();
+            String resolvedIdStr = resolveId(baseId, record, rowNum);
             Mcf.ValueType type =
-                idStr.startsWith("l:") ? Mcf.ValueType.UNRESOLVED_REF : Mcf.ValueType.RESOLVED_REF;
-            addProperty(nodeBuilder, property, idStr, type);
+                resolvedIdStr.startsWith("l:")
+                    ? Mcf.ValueType.UNRESOLVED_REF
+                    : Mcf.ValueType.RESOLVED_REF;
+            addProperty(nodeBuilder, property, resolvedIdStr, type);
           }
         }
       }

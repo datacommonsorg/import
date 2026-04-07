@@ -306,7 +306,9 @@ public class Processor {
       org.datacommons.util.parser.jsonld.JsonLdTemplateParser jParser =
           new org.datacommons.util.parser.jsonld.JsonLdTemplateParser(
               new java.io.FileInputStream(tmplFile));
-      jParser.initCsv(new java.io.FileReader(csvFile));
+      jParser.initCsv(
+          new java.io.InputStreamReader(
+              new java.io.FileInputStream(csvFile), java.nio.charset.StandardCharsets.UTF_8));
       parser = () -> jParser.parseNextRow();
     } else {
       org.datacommons.util.McfFileGroup mcfGroup =

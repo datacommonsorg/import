@@ -47,7 +47,7 @@ import org.datacommons.proto.Mcf.McfGraph.Values;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.util.GraphUtils;
-import org.datacommons.util.jsonld.JsonLdParser;
+import org.datacommons.util.parser.jsonld.JsonLdParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

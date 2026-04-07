@@ -7,7 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import org.datacommons.proto.Mcf.McfGraph;
-import org.datacommons.util.jsonld.JsonLdParser;
+import org.datacommons.util.parser.jsonld.JsonLdParser;
 import org.junit.Test;
 
 public class JsonLdParserTest {
