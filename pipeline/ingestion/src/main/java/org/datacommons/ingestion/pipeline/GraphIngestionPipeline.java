@@ -165,6 +165,8 @@ public class GraphIngestionPipeline {
     // 2. Read and Split Graph:
     // Read the graph data (TFRecord or MCF files) and split into schema and observation nodes.
     PCollection<McfGraph> graph;
+    // TODO: Refactor this explicit string-based path multiplexing block into a modular
+    // Strategy Registry Pattern (e.g., InputFormatHandler) for better extensibility.
     if (graphPath != null && graphPath.contains("tfrecord")) {
       graph = PipelineUtils.readMcfGraph(importName, graphPath, pipeline);
     } else if (graphPath != null && graphPath.contains(".jsonld")) {
