@@ -198,38 +198,6 @@ public class PipelineUtils {
                 }));
   }
 
-  public static PCollection<McfGraph> readJsonLdTemplateFiles(
-      String name, String templatePath, String csvPath, Pipeline p) {
-    return p.apply("CreateTemplateCsvKV-" + name, Create.of(KV.of(templatePath, csvPath)))
-        .apply(
-            "ProcessTemplateCsv-" + name,
-            ParDo.of(
-                new DoFn<KV<String, String>, McfGraph>() {
-                  @ProcessElement
-                  public void processElement(
-                      @Element KV<String, String> element, OutputReceiver<McfGraph> receiver) {
-                    String tPath = element.getKey();
-                    String cPath = element.getValue();
-                    ResourceId tRes = FileSystems.matchNewResource(tPath, false);
-                    ResourceId cRes = FileSystems.matchNewResource(cPath, false);
-                    try (InputStream tStream = Channels.newInputStream(FileSystems.open(tRes));
-                        InputStream cStream = Channels.newInputStream(FileSystems.open(cRes));
-                        Reader cReader = new InputStreamReader(cStream, StandardCharsets.UTF_8)) {
-                      org.datacommons.util.parser.jsonld.JsonLdTemplateParser parser =
-                          new org.datacommons.util.parser.jsonld.JsonLdTemplateParser(tStream);
-                      parser.initCsv(cReader);
-
-                      McfGraph graph;
-                      while ((graph = parser.parseNextRow()) != null) {
-                        receiver.output(graph);
-                      }
-                    } catch (IOException e) {
-                      throw new RuntimeException(
-                          "Failed to parse JSON-LD template/CSV: " + tPath + " / " + cPath, e);
-                    }
-                  }
-                }));
-  }
 
   public static PCollectionTuple splitGraph(String name, PCollection<McfGraph> graph) {
     return graph.apply(

@@ -171,8 +171,7 @@ public class GraphIngestionPipeline {
       graph = PipelineUtils.readMcfGraph(importName, graphPath, pipeline);
     } else if (graphPath != null && graphPath.contains(".jsonld")) {
       graph = PipelineUtils.readJsonLdFiles(importName, graphPath, pipeline);
-    } else if (templatePath != null && csvPath != null) {
-      graph = PipelineUtils.readJsonLdTemplateFiles(importName, templatePath, csvPath, pipeline);
+
     } else if (graphPath != null) {
       graph = PipelineUtils.readMcfFiles(importName, graphPath, pipeline);
     } else {
