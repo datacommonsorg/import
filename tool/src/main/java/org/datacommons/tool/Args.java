@@ -95,11 +95,6 @@ class Args {
             allFiles.add(f.getPath());
           }
         }
-        if (jsonLdGroup.getTmplJsonLds() != null) {
-          for (File f : jsonLdGroup.getTmplJsonLds()) {
-            allFiles.add(f.getPath());
-          }
-        }
       }
       if (fileGroup.getCsvs() != null) {
         for (File f : fileGroup.getCsvs()) {

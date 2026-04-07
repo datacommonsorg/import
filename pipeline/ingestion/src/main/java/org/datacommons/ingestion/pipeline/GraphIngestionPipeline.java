@@ -82,35 +82,20 @@ public class GraphIngestionPipeline {
     for (JsonElement element : jsonArray) {
       JsonElement importElement = element.getAsJsonObject().get("importName");
       JsonElement pathElement = element.getAsJsonObject().get("graphPath");
-      JsonElement templateElement = element.getAsJsonObject().get("templatePath");
-      JsonElement csvElement = element.getAsJsonObject().get("csvPath");
-
       if (isJsonNullOrEmpty(importElement)) {
         LOGGER.error("Invalid import input json, missing importName: {}", element.toString());
         continue;
       }
       String importName = importElement.getAsString();
       String graphPath = isJsonNullOrEmpty(pathElement) ? null : pathElement.getAsString();
-      String templatePath =
-          isJsonNullOrEmpty(templateElement) ? null : templateElement.getAsString();
-      String csvPath = isJsonNullOrEmpty(csvElement) ? null : csvElement.getAsString();
 
-      if (graphPath == null && (templatePath == null || csvPath == null)) {
-        LOGGER.error(
-            "Invalid import input json, missing graphPath or template/csv paths: {}",
-            element.toString());
+      if (graphPath == null) {
+        LOGGER.error("Invalid import input json, missing graphPath: {}", element.toString());
         continue;
       }
 
       // Process the individual import.
-      processImport(
-          pipeline,
-          spannerClient,
-          importName,
-          graphPath,
-          templatePath,
-          csvPath,
-          options.getSkipDelete());
+      processImport(pipeline, spannerClient, importName, graphPath, options.getSkipDelete());
     }
   }
 
@@ -128,15 +113,8 @@ public class GraphIngestionPipeline {
       SpannerClient spannerClient,
       String importName,
       String graphPath,
-      String templatePath,
-      String csvPath,
       boolean skipDelete) {
-    LOGGER.info(
-        "Import: {} Graph path: {} Template: {} CSV: {}",
-        importName,
-        graphPath,
-        templatePath,
-        csvPath);
+    LOGGER.info("Import: {} Graph path: {}", importName, graphPath);
 
     String provenance = "dc/base/" + importName;
 

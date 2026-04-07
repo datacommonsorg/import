@@ -256,12 +256,6 @@ public class Processor {
       if (args.fileGroup instanceof org.datacommons.util.McfFileGroup) {
         logger.info(
             "TMCF " + ((org.datacommons.util.McfFileGroup) args.fileGroup).getTmcf().getName());
-      } else if (args.fileGroup instanceof org.datacommons.util.JsonLdFileGroup) {
-        logger.info(
-            "JSON-LD Template "
-                + ((org.datacommons.util.JsonLdFileGroup) args.fileGroup)
-                    .getTmplJsonLd()
-                    .getName());
       }
     }
 
@@ -299,28 +293,14 @@ public class Processor {
     }
 
     GraphSupplier parser;
-    if (args.fileGroup instanceof org.datacommons.util.JsonLdFileGroup) {
-      org.datacommons.util.JsonLdFileGroup jsonLdGroup =
-          (org.datacommons.util.JsonLdFileGroup) args.fileGroup;
-      File tmplFile = jsonLdGroup.getTmplJsonLd();
-      org.datacommons.util.parser.jsonld.JsonLdTemplateParser jParser =
-          new org.datacommons.util.parser.jsonld.JsonLdTemplateParser(
-              new java.io.FileInputStream(tmplFile));
-      jParser.initCsv(
-          new java.io.InputStreamReader(
-              new java.io.FileInputStream(csvFile), java.nio.charset.StandardCharsets.UTF_8));
-      parser = () -> jParser.parseNextRow();
-    } else {
-      org.datacommons.util.McfFileGroup mcfGroup =
-          (org.datacommons.util.McfFileGroup) args.fileGroup;
-      TmcfCsvParser tParser =
-          TmcfCsvParser.init(
-              mcfGroup.getTmcf().getPath(), csvFile.getPath(), args.fileGroup.delimiter(), logCtx);
-      if (tParser == null) {
-        throw new DCTooManyFailuresException("processTables encountered too many failures");
-      }
-      parser = () -> tParser.parseNextRow();
+    org.datacommons.util.McfFileGroup mcfGroup = (org.datacommons.util.McfFileGroup) args.fileGroup;
+    TmcfCsvParser tParser =
+        TmcfCsvParser.init(
+            mcfGroup.getTmcf().getPath(), csvFile.getPath(), args.fileGroup.delimiter(), logCtx);
+    if (tParser == null) {
+      throw new DCTooManyFailuresException("processTables encountered too many failures");
     }
+    parser = () -> tParser.parseNextRow();
 
     WriterPair writerPair =
         new WriterPair(

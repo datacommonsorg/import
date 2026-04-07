@@ -20,25 +20,13 @@ import java.util.List;
 /** FileGroup implementation for JSON-LD processed files. */
 public class JsonLdFileGroup extends FileGroup {
   private final List<File> jsonLdFiles;
-  private final List<File> tmplJsonLdFiles;
 
-  public JsonLdFileGroup(
-      List<File> csvFiles, List<File> jsonLdFiles, List<File> tmplJsonLdFiles, char delimiter) {
+  public JsonLdFileGroup(List<File> csvFiles, List<File> jsonLdFiles, char delimiter) {
     super(csvFiles, delimiter);
     this.jsonLdFiles = jsonLdFiles;
-    this.tmplJsonLdFiles = tmplJsonLdFiles;
   }
 
   public List<File> getJsonLds() {
     return jsonLdFiles;
-  }
-
-  public List<File> getTmplJsonLds() {
-    return tmplJsonLdFiles;
-  }
-
-  public File getTmplJsonLd() {
-    if (tmplJsonLdFiles != null && !tmplJsonLdFiles.isEmpty()) return tmplJsonLdFiles.get(0);
-    return null;
   }
 }

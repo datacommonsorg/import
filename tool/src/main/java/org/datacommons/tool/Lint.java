@@ -34,7 +34,7 @@ class Lint implements Callable<Integer> {
       description =
           ("List of input files. The file extensions are used to infer the format. "
               + "Valid extensions include .mcf for Instance MCF, .tmcf for Template MCF, "
-              + ".jsonld for JSON-LD instances, .tmpl.jsonld for JSON-LD Templates, "
+              + ".jsonld for JSON-LD instances, "
               + ".csv for tabular text files delimited by comma (overridden with -d), and .tsv "
               + "for tab-delimited tabular files."))
   private File[] files;
