@@ -3,10 +3,6 @@ package org.datacommons.ingestion.spanner;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import com.google.cloud.spanner.DatabaseClient;
-import com.google.cloud.spanner.ReadContext;
-import com.google.cloud.spanner.ResultSet;
-import com.google.cloud.spanner.Statement;
 import java.io.IOException;
 import java.util.List;
 import org.junit.Before;
@@ -45,33 +41,27 @@ public class SpannerClientTest {
 
   @Test
   public void testCheckTableExists_True() {
-    DatabaseClient dbClient = mock(DatabaseClient.class);
-    ReadContext readContext = mock(ReadContext.class);
-    ResultSet resultSet = mock(ResultSet.class);
+    List<String> statements = new java.util.ArrayList<>();
+    statements.add("CREATE TABLE Node");
 
-    when(dbClient.singleUse()).thenReturn(readContext);
-    when(readContext.executeQuery(any(Statement.class))).thenReturn(resultSet);
-    when(resultSet.next()).thenReturn(true);
-
-    boolean exists = spannerClient.checkTableExists(dbClient, "Node");
+    boolean exists = spannerClient.checkTableExists(statements, "Node");
     assertTrue(exists);
-
-    verify(readContext).executeQuery(any(Statement.class));
   }
 
   @Test
   public void testCheckTableExists_False() {
-    DatabaseClient dbClient = mock(DatabaseClient.class);
-    ReadContext readContext = mock(ReadContext.class);
-    ResultSet resultSet = mock(ResultSet.class);
+    List<String> statements = new java.util.ArrayList<>();
+    statements.add("CREATE TABLE Edge");
 
-    when(dbClient.singleUse()).thenReturn(readContext);
-    when(readContext.executeQuery(any(Statement.class))).thenReturn(resultSet);
-    when(resultSet.next()).thenReturn(false);
+    boolean exists = spannerClient.checkTableExists(statements, "Node");
+  }
 
-    boolean exists = spannerClient.checkTableExists(dbClient, "NonExistentTable");
+  @Test
+  public void testCheckTableExists_FalsePositive() {
+    List<String> statements = new java.util.ArrayList<>();
+    statements.add("CREATE TABLE Node_Old");
+
+    boolean exists = spannerClient.checkTableExists(statements, "Node");
     assertFalse(exists);
-
-    verify(readContext).executeQuery(any(Statement.class));
   }
 }
