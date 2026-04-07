@@ -102,7 +102,7 @@ public class SpannerClient implements Serializable {
    * Parses DDL statements from a BufferedReader. DDL statements can span multiple lines and are are
    * delimited with a newline.
    */
-  private ArrayList<String> parseDdlStatements(BufferedReader reader) throws IOException {
+  private List<String> parseDdlStatements(BufferedReader reader) throws IOException {
     String fullText = reader.lines().collect(Collectors.joining("\n"));
     String[] blocksArray = fullText.split("\\n\\s*\\n+", 0);
     return new ArrayList<>(Arrays.asList(blocksArray));
@@ -189,7 +189,7 @@ public class SpannerClient implements Serializable {
     boolean observationExists = checkTableExists(currentDdlStatements, "Observation");
     boolean protoBundleExists =
         currentDdlStatements.stream()
-            .anyMatch(s -> s.toUpperCase().contains("CREATE PROTO BUNDLE"));
+            .anyMatch(s -> s.trim().toUpperCase().startsWith("CREATE PROTO BUNDLE"));
 
     if (nodeExists && edgeExists && observationExists && protoBundleExists) {
       LOGGER.info("Database is fully initialized.");
@@ -207,7 +207,7 @@ public class SpannerClient implements Serializable {
     List<String> statementsToApply = readDdlStatements();
     if (protoBundleExists) {
       LOGGER.info("Proto bundle already exists in database. Skipping CREATE PROTO BUNDLE.");
-      statementsToApply.removeIf(s -> s.toUpperCase().contains("CREATE PROTO BUNDLE"));
+      statementsToApply.removeIf(s -> s.trim().toUpperCase().startsWith("CREATE PROTO BUNDLE"));
     }
 
     ByteString protoDescriptors = loadProtoDescriptors();
@@ -232,7 +232,7 @@ public class SpannerClient implements Serializable {
   }
 
   /** Reads DDL statements from the spanner_schema.sql file in the resources directory. */
-  ArrayList<String> readDdlStatements() {
+  List<String> readDdlStatements() {
     InputStream inputStream = getClass().getClassLoader().getResourceAsStream("spanner_schema.sql");
     if (inputStream == null) {
       throw new IllegalStateException("Could not find spanner_schema.sql in resources.");
