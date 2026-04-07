@@ -41,8 +41,8 @@ public class JsonLdParser {
     McfGraph.Builder graphBuilder = McfGraph.newBuilder();
     graphBuilder.setType(Mcf.McfType.INSTANCE_MCF);
 
-    if (jsonObject instanceof java.util.List) {
-      java.util.List<Object> list = (java.util.List<Object>) jsonObject;
+    if (jsonObject instanceof List) {
+      List<Object> list = (List<Object>) jsonObject;
       for (Object obj : list) {
         if (obj instanceof Map) {
           Map<String, Object> nodeMap = (Map<String, Object>) obj;

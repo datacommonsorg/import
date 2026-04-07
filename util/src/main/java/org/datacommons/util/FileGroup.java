@@ -15,6 +15,7 @@
 package org.datacommons.util;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
@@ -46,9 +47,9 @@ public abstract class FileGroup {
       CommandLine.Model.CommandSpec spec,
       Character overrideDelimiter,
       Logger logger) {
-    List<File> fileList = java.util.Arrays.asList(files);
+    List<File> fileList = Arrays.asList(files);
     List<ParserStrategy> strategies =
-        java.util.Arrays.asList(new JsonLdParserStrategy(), new McfParserStrategy());
+        Arrays.asList(new JsonLdParserStrategy(), new McfParserStrategy());
 
     for (ParserStrategy strategy : strategies) {
       if (strategy.supports(fileList)) {
