@@ -23,8 +23,17 @@ public class JsonLdParser {
    * @throws IOException If there is an error reading the input.
    */
   public static McfGraph parse(InputStream inputStream) throws IOException {
+    // TODO: Optimize memory footprint by replacing full-graph buffering with a streaming Jackson
+    // JsonParser
     Object jsonObject = JsonUtils.fromInputStream(inputStream);
     JsonLdOptions options = new JsonLdOptions();
+
+    // Enforce JSON-LD Canonical Expansion mapping per W3C 1.1 rules
+    try {
+      jsonObject = com.github.jsonldjava.core.JsonLdProcessor.expand(jsonObject, options);
+    } catch (com.github.jsonldjava.core.JsonLdError e) {
+      throw new IOException("JSON-LD expansion failed: " + e.getMessage(), e);
+    }
 
     McfGraph.Builder graphBuilder = McfGraph.newBuilder();
     graphBuilder.setType(Mcf.McfType.INSTANCE_MCF);
@@ -54,6 +63,12 @@ public class JsonLdParser {
 
     for (Map.Entry<String, Object> entry : nodeMap.entrySet()) {
       String key = entry.getKey();
+      if (key.contains("/")) {
+        key = key.substring(key.lastIndexOf('/') + 1);
+      }
+      if (key.contains("#")) {
+        key = key.substring(key.lastIndexOf('#') + 1);
+      }
       Object value = entry.getValue();
       System.out.println("JSONLD_PARSER node " + id + ": " + key + " = " + value);
 
@@ -100,7 +115,8 @@ public class JsonLdParser {
             idStr.startsWith("l:") ? Mcf.ValueType.UNRESOLVED_REF : Mcf.ValueType.RESOLVED_REF;
         addProperty(nodeBuilder, property, idStr, type);
       } else {
-        System.err.println("WARNING: Ignoring unsupported JSON-LD object for property " + property + ": " + map);
+        System.err.println(
+            "WARNING: Ignoring unsupported JSON-LD object for property " + property + ": " + map);
       }
     } else if (item != null) {
       // Fallback for simple values if JSON-LD processor didn't fully expand/flatten as expected
