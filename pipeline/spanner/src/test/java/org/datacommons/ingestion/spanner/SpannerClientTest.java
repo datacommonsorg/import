@@ -3,7 +3,6 @@ package org.datacommons.ingestion.spanner;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import java.io.IOException;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +22,7 @@ public class SpannerClientTest {
   }
 
   @Test
-  public void testReadDdlStatements() throws IOException {
+  public void testReadDdlStatements() {
     List<String> ddlStatements = spannerClient.readDdlStatements();
     assertNotNull(ddlStatements);
     assertFalse(ddlStatements.isEmpty());
@@ -54,6 +53,7 @@ public class SpannerClientTest {
     statements.add("CREATE TABLE Edge");
 
     boolean exists = spannerClient.checkTableExists(statements, "Node");
+    assertFalse(exists);
   }
 
   @Test
