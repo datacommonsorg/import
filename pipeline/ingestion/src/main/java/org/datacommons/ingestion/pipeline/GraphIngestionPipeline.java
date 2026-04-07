@@ -58,7 +58,7 @@ public class GraphIngestionPipeline {
             .build();
 
     LOGGER.info("Starting Spanner DDL creation...");
-    spannerClient.createDatabase();
+    spannerClient.validateOrInitializeDatabase();
     LOGGER.info("Spanner DDL creation complete.");
 
     Pipeline pipeline = Pipeline.create(options);
