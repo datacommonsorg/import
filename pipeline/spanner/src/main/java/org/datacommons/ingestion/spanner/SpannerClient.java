@@ -125,29 +125,51 @@ public class SpannerClient implements Serializable {
         dbAdminClient = DatabaseAdminClient.create();
       }
 
+      List<String> ddlStatements = readDdlStatements();
+
       try {
         dbAdminClient.getDatabase(
             String.format(
                 "projects/%s/instances/%s/databases/%s",
                 gcpProjectId, spannerInstanceId, spannerDatabaseId));
         LOGGER.info("Spanner database {} already exists.", spannerDatabaseId);
+
+        // Check if tables exist
+        SpannerOptions.Builder builder = SpannerOptions.newBuilder().setProjectId(gcpProjectId);
+        if (emulatorHost != null) {
+          builder.setEmulatorHost(emulatorHost);
+          builder.setCredentials(com.google.cloud.NoCredentials.getInstance());
+        }
+        try (Spanner spanner = builder.build().getService()) {
+          DatabaseClient dbClient =
+              spanner.getDatabaseClient(
+                  DatabaseId.of(gcpProjectId, spannerInstanceId, spannerDatabaseId));
+
+          if (!checkTableExists(dbClient, "Node")) {
+            LOGGER.info("Table Node not found. Applying DDL statements to existing database.");
+            try {
+              dbAdminClient
+                  .updateDatabaseDdlAsync(
+                      com.google.spanner.admin.database.v1.UpdateDatabaseDdlRequest.newBuilder()
+                          .setDatabase(
+                              String.format(
+                                  "projects/%s/instances/%s/databases/%s",
+                                  gcpProjectId, spannerInstanceId, spannerDatabaseId))
+                          .addAllStatements(ddlStatements)
+                          .build())
+                  .get();
+              LOGGER.info("Successfully applied DDL statements to existing database.");
+            } catch (java.util.concurrent.ExecutionException executionE) {
+              throw SpannerExceptionFactory.newSpannerException(
+                  ErrorCode.UNKNOWN, "An error occurred during DDL update.", executionE);
+            } catch (InterruptedException interruptedE) {
+              LOGGER.error("Operation was interrupted while waiting for DDL update.", interruptedE);
+              throw SpannerExceptionFactory.propagateInterrupt(interruptedE);
+            }
+          }
+        }
       } catch (com.google.api.gax.rpc.NotFoundException notFoundE) {
         LOGGER.info("Spanner database {} not found. Creating it now.", spannerDatabaseId);
-
-        List<String> ddlStatements;
-        try (InputStream inputStream =
-            getClass().getClassLoader().getResourceAsStream("spanner_schema.sql")) {
-          if (inputStream == null) {
-            throw new java.io.FileNotFoundException(
-                "Could not find spanner_schema.sql in resources.");
-          }
-          try (BufferedReader reader =
-              new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-            ddlStatements = parseDdlStatements(reader);
-          }
-        } catch (IOException ioE) {
-          throw new IOException("Failed to read DDL file", ioE);
-        }
 
         ByteString protoDescriptors;
         try (InputStream inputStream =
@@ -157,8 +179,6 @@ public class SpannerClient implements Serializable {
                 "Could not find proto descriptor file (descriptor.proto.bin) in resources.");
           }
           protoDescriptors = ByteString.copyFrom(inputStream.readAllBytes());
-        } catch (IOException ioE) {
-          throw new IOException("Failed to read proto descriptor file", ioE);
         }
 
         CreateDatabaseRequest request =
@@ -184,6 +204,29 @@ public class SpannerClient implements Serializable {
       }
     } catch (IOException e) {
       throw new IllegalStateException("Failed to create DatabaseAdminClient.", e);
+    }
+  }
+
+  List<String> readDdlStatements() throws IOException {
+    try (InputStream inputStream =
+        getClass().getClassLoader().getResourceAsStream("spanner_schema.sql")) {
+      if (inputStream == null) {
+        throw new java.io.FileNotFoundException("Could not find spanner_schema.sql in resources.");
+      }
+      try (BufferedReader reader =
+          new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+        return parseDdlStatements(reader);
+      }
+    }
+  }
+
+  boolean checkTableExists(DatabaseClient dbClient, String tableName) {
+    String query =
+        "SELECT table_name FROM information_schema.tables WHERE table_schema = '' AND table_name = @tableName";
+    Statement statement = Statement.newBuilder(query).bind("tableName").to(tableName).build();
+    try (com.google.cloud.spanner.ResultSet resultSet =
+        dbClient.singleUse().executeQuery(statement)) {
+      return resultSet.next();
     }
   }
 
