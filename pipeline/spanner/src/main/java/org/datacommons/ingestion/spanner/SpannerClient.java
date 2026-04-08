@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.beam.sdk.Pipeline;
@@ -104,13 +105,51 @@ public class SpannerClient implements Serializable {
   private List<String> parseDdlStatements(BufferedReader reader) throws IOException {
     String fullText = reader.lines().collect(Collectors.joining("\n"));
     String[] blocksArray = fullText.split("\\n\\s*\\n+", 0);
-    return Arrays.asList(blocksArray);
+    return new ArrayList<>(Arrays.asList(blocksArray));
   }
 
-  public void createDatabase() {
+  private ByteString loadProtoDescriptors() {
+    InputStream is = getClass().getClassLoader().getResourceAsStream("descriptor.proto.bin");
+    if (is == null) {
+      throw new IllegalStateException(
+          "Could not find proto descriptor file (descriptor.proto.bin) in resources.");
+    }
     try {
-      DatabaseAdminClient dbAdminClient;
+      return ByteString.copyFrom(is.readAllBytes());
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to read proto descriptor file.", e);
+    }
+  }
 
+  /** Initializes the remote Spanner database. */
+  private void initializeRemoteDatabase(DatabaseAdminClient dbAdminClient) {
+    LOGGER.info("Spanner database {} not found. Creating it now.", spannerDatabaseId);
+
+    CreateDatabaseRequest request =
+        CreateDatabaseRequest.newBuilder()
+            .setParent(String.format("projects/%s/instances/%s", gcpProjectId, spannerInstanceId))
+            .setCreateStatement(String.format("CREATE DATABASE `%s`", spannerDatabaseId))
+            .build();
+
+    try {
+      // Block until the database is created.
+      dbAdminClient.createDatabaseAsync(request).get();
+    } catch (java.util.concurrent.ExecutionException executionE) {
+      throw SpannerExceptionFactory.newSpannerException(
+          ErrorCode.UNKNOWN, "An error occurred during database creation.", executionE);
+    } catch (InterruptedException interruptedE) {
+      LOGGER.error("Operation was interrupted while waiting for database creation.", interruptedE);
+      throw SpannerExceptionFactory.propagateInterrupt(interruptedE);
+    }
+    LOGGER.info("Successfully created Spanner database {}.", spannerDatabaseId);
+  }
+
+  /**
+   * Validates that the Spanner database and tables exist. Initializes the database if it doesn't.
+   */
+  public void validateOrInitializeDatabase() {
+    DatabaseAdminClient dbAdminClient;
+    try {
       if (emulatorHost != null) {
         DatabaseAdminSettings.Builder settingsBuilder = DatabaseAdminSettings.newBuilder();
         settingsBuilder.setCredentialsProvider(NoCredentialsProvider.create());
@@ -124,67 +163,99 @@ public class SpannerClient implements Serializable {
       } else {
         dbAdminClient = DatabaseAdminClient.create();
       }
-
-      try {
-        dbAdminClient.getDatabase(
-            String.format(
-                "projects/%s/instances/%s/databases/%s",
-                gcpProjectId, spannerInstanceId, spannerDatabaseId));
-        LOGGER.info("Spanner database {} already exists.", spannerDatabaseId);
-      } catch (com.google.api.gax.rpc.NotFoundException notFoundE) {
-        LOGGER.info("Spanner database {} not found. Creating it now.", spannerDatabaseId);
-
-        List<String> ddlStatements;
-        try (InputStream inputStream =
-            getClass().getClassLoader().getResourceAsStream("spanner_schema.sql")) {
-          if (inputStream == null) {
-            throw new java.io.FileNotFoundException(
-                "Could not find spanner_schema.sql in resources.");
-          }
-          try (BufferedReader reader =
-              new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-            ddlStatements = parseDdlStatements(reader);
-          }
-        } catch (IOException ioE) {
-          throw new IOException("Failed to read DDL file", ioE);
-        }
-
-        ByteString protoDescriptors;
-        try (InputStream inputStream =
-            getClass().getClassLoader().getResourceAsStream("descriptor.proto.bin")) {
-          if (inputStream == null) {
-            throw new java.io.FileNotFoundException(
-                "Could not find proto descriptor file (descriptor.proto.bin) in resources.");
-          }
-          protoDescriptors = ByteString.copyFrom(inputStream.readAllBytes());
-        } catch (IOException ioE) {
-          throw new IOException("Failed to read proto descriptor file", ioE);
-        }
-
-        CreateDatabaseRequest request =
-            CreateDatabaseRequest.newBuilder()
-                .setParent(
-                    String.format("projects/%s/instances/%s", gcpProjectId, spannerInstanceId))
-                .setCreateStatement(String.format("CREATE DATABASE `%s`", spannerDatabaseId))
-                .addAllExtraStatements(ddlStatements)
-                .setProtoDescriptors(protoDescriptors)
-                .build();
-
-        try {
-          dbAdminClient.createDatabaseAsync(request).get();
-        } catch (java.util.concurrent.ExecutionException executionE) {
-          throw SpannerExceptionFactory.newSpannerException(
-              ErrorCode.UNKNOWN, "An error occurred during database creation.", executionE);
-        } catch (InterruptedException interruptedE) {
-          LOGGER.error(
-              "Operation was interrupted while waiting for database creation.", interruptedE);
-          throw SpannerExceptionFactory.propagateInterrupt(interruptedE);
-        }
-        LOGGER.info("Successfully created Spanner database {}.", spannerDatabaseId);
-      }
     } catch (IOException e) {
       throw new IllegalStateException("Failed to create DatabaseAdminClient.", e);
     }
+
+    // Ensure the Database now has the proper Tables and Proto Bundle.
+    String databasePath =
+        String.format(
+            "projects/%s/instances/%s/databases/%s",
+            gcpProjectId, spannerInstanceId, spannerDatabaseId);
+
+    try {
+      dbAdminClient.getDatabase(databasePath);
+      LOGGER.info("Spanner database {} already exists.", spannerDatabaseId);
+    } catch (com.google.api.gax.rpc.NotFoundException notFoundE) {
+      initializeRemoteDatabase(dbAdminClient);
+    }
+
+    // Check if tables exist by fetching current DDL from Spanner once.
+    List<String> currentDdlStatements =
+        dbAdminClient.getDatabaseDdl(databasePath).getStatementsList();
+
+    boolean nodeExists = checkTableExists(currentDdlStatements, "Node");
+    boolean edgeExists = checkTableExists(currentDdlStatements, "Edge");
+    boolean observationExists = checkTableExists(currentDdlStatements, "Observation");
+    boolean protoBundleExists =
+        currentDdlStatements.stream()
+            .anyMatch(s -> s.trim().toUpperCase().startsWith("CREATE PROTO BUNDLE"));
+
+    if (nodeExists && edgeExists && observationExists && protoBundleExists) {
+      LOGGER.info("Database is fully initialized.");
+      return;
+    }
+
+    if (nodeExists || edgeExists || observationExists) {
+      throw new IllegalStateException(
+          String.format(
+              "Database is in an inconsistent state. Node: %b, Edge: %b, Observation: %b. Please clean up the database manually.",
+              nodeExists, edgeExists, observationExists));
+    }
+
+    LOGGER.info("Database is empty. Applying DDL statements to existing database.");
+    List<String> statementsToApply = readDdlStatements();
+    if (protoBundleExists) {
+      LOGGER.info("Proto bundle already exists in database. Skipping CREATE PROTO BUNDLE.");
+      statementsToApply.removeIf(s -> s.trim().toUpperCase().startsWith("CREATE PROTO BUNDLE"));
+    }
+
+    ByteString protoDescriptors = loadProtoDescriptors();
+    try {
+      // Update the Schema to include the new tables and proto bundle.
+      dbAdminClient
+          .updateDatabaseDdlAsync(
+              com.google.spanner.admin.database.v1.UpdateDatabaseDdlRequest.newBuilder()
+                  .setDatabase(databasePath)
+                  .addAllStatements(statementsToApply)
+                  .setProtoDescriptors(protoDescriptors)
+                  .build())
+          .get();
+      LOGGER.info("Successfully applied DDL statements to existing database.");
+    } catch (java.util.concurrent.ExecutionException executionE) {
+      throw SpannerExceptionFactory.newSpannerException(
+          ErrorCode.UNKNOWN, "An error occurred during DDL update.", executionE);
+    } catch (InterruptedException interruptedE) {
+      LOGGER.error("Operation was interrupted while waiting for DDL update.", interruptedE);
+      throw SpannerExceptionFactory.propagateInterrupt(interruptedE);
+    }
+  }
+
+  /** Reads DDL statements from the spanner_schema.sql file in the resources directory. */
+  List<String> readDdlStatements() {
+    InputStream inputStream = getClass().getClassLoader().getResourceAsStream("spanner_schema.sql");
+    if (inputStream == null) {
+      throw new IllegalStateException("Could not find spanner_schema.sql in resources.");
+    }
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+      return parseDdlStatements(reader);
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to read spanner_schema.sql", e);
+    }
+  }
+
+  /**
+   * Checks if a table exists in the list of DDL statements.
+   *
+   * @param statements The list of DDL statements retrieved from Spanner.
+   * @param tableName The name of the table to check.
+   * @return true if the table exists, false otherwise.
+   */
+  boolean checkTableExists(List<String> statements, String tableName) {
+    String regex = "(?i)\\bCREATE\\s+TABLE\\s+`?" + tableName + "`?\\b";
+    Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+    return statements.stream().anyMatch(s -> pattern.matcher(s).find());
   }
 
   public PCollection<Void> deleteDataForImport(

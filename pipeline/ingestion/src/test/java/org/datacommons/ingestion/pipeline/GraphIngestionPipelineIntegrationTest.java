@@ -113,7 +113,7 @@ public class GraphIngestionPipelineIntegrationTest {
             .numShards(1)
             .emulatorHost(emulatorHost)
             .build();
-    spannerClient.createDatabase();
+    spannerClient.validateOrInitializeDatabase();
 
     // Clear tables
     DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
