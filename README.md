@@ -17,6 +17,8 @@ Detailed documentation on the Import Tool is available [here](docs/usage.md).
 
 - Make sure Java 11+ is installed([download link](https://www.oracle.com/java/technologies/javase-downloads.html#javasejdk)).
 
+- Obtain an API key from [DataCommons API Portal](https://apikeys.datacommons.org/) and set environment variable DC_API_KEY as the key.
+
 - [Download the tool](https://github.com/datacommonsorg/import/releases) and run it with:
 
   ```bash

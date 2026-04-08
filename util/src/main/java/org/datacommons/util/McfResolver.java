@@ -3,6 +3,8 @@ package org.datacommons.util;
 import java.rmi.UnexpectedException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.logging.log4j.LogManager;
@@ -16,6 +18,7 @@ import org.datacommons.proto.Mcf;
 // If a node is left with an unassigned DCID or an unreplaced local-ref, it is considered failed.
 public class McfResolver {
   private static final Logger logger = LogManager.getLogger(McfResolver.class);
+  private static final int ROUND_PROGRESS_LOG_INTERVAL = 1000;
 
   private final ExternalIdResolver idResolver;
   private final Mcf.McfGraph.Builder output;
@@ -40,6 +43,7 @@ public class McfResolver {
     while (true) {
       if (round == 0 || dcidAssignment.numUpdated > 0) {
         // First round, or a new DCID got assigned, so we might have a local-ref to replace.
+        long replaceLocalRefsStartMillis = System.currentTimeMillis();
         localRefReplacement = replaceLocalRefs();
         if (verbose) {
           logger.info(
@@ -51,7 +55,9 @@ public class McfResolver {
                   + failed.getNodesMap().size()
                   + " failed, "
                   + localRefReplacement.needsWork.size()
-                  + " remaining");
+                  + " remaining, "
+                  + (System.currentTimeMillis() - replaceLocalRefsStartMillis)
+                  + " ms");
         }
         moveFailedNodes(localRefReplacement.failed, "ReplaceLocalRefs");
       } else {
@@ -60,6 +66,7 @@ public class McfResolver {
       if (round == 0 || localRefReplacement.numUpdated > 0) {
         // First round, or a new local-ref got replaced, so we might be able to assign DCID.
         // For instance, with SVObs or Obs if we assign DCID to place node.
+        long assignDcidsStartMillis = System.currentTimeMillis();
         dcidAssignment = assignDcids();
         if (verbose) {
           logger.info(
@@ -71,7 +78,9 @@ public class McfResolver {
                   + failed.getNodesMap().size()
                   + " failed, "
                   + dcidAssignment.needsWork.size()
-                  + " remaining");
+                  + " remaining, "
+                  + (System.currentTimeMillis() - assignDcidsStartMillis)
+                  + " ms");
         }
         moveFailedNodes(dcidAssignment.failed, "AssignDcids");
       } else {
@@ -138,66 +147,72 @@ public class McfResolver {
     public Map<String, String> needsWork = new HashMap<>();
   }
 
+  private enum AssignmentMode {
+    STAT_VAR_OBS(true),
+    LEGACY_POPULATION(true),
+    LEGACY_OBSERVATION(true),
+    OTHER(false);
+
+    private final boolean allRefsMustBeResolved;
+
+    AssignmentMode(boolean allRefsMustBeResolved) {
+      this.allRefsMustBeResolved = allRefsMustBeResolved;
+    }
+  }
+
+  private static class RoundState {
+    private final Map<String, Mcf.McfGraph.PropertyValues> outputSnapshot;
+    private final Set<String> failedSnapshot;
+    private final Map<String, Mcf.McfGraph.PropertyValues> updatedNodes;
+    private final int totalNodes;
+    private final long roundStartMillis;
+    private int processedNodes;
+
+    private RoundState(
+        Map<String, Mcf.McfGraph.PropertyValues> outputSnapshot, Set<String> failedSnapshot) {
+      this.outputSnapshot = outputSnapshot;
+      this.failedSnapshot = failedSnapshot;
+      this.updatedNodes = new LinkedHashMap<>();
+      this.totalNodes = outputSnapshot.size();
+      this.roundStartMillis = System.currentTimeMillis();
+      this.processedNodes = 0;
+    }
+  }
+
   private RoundResult assignDcids() throws UnexpectedException {
     RoundResult roundResult = new RoundResult();
+    RoundState roundState = newRoundState(false);
     // For each node...
-    for (var nodeId : output.getNodesMap().keySet()) {
-      var node = output.getNodesMap().get(nodeId).toBuilder();
+    for (var entry : roundState.outputSnapshot.entrySet()) {
+      var nodeId = entry.getKey();
+      var snapshotNode = entry.getValue();
+      var node = snapshotNode.toBuilder();
+      boolean nodeChanged = false;
 
       // 0. If DCID exists move on to the next node.
-      if (!McfUtil.getPropVal(node.build(), Vocabulary.DCID).isEmpty()) {
+      if (!McfUtil.getPropVal(snapshotNode, Vocabulary.DCID).isEmpty()) {
+        finishNode("DCID Assignment", roundState, nodeId, node, false);
         continue;
       }
 
       // 1. Check if there are any unresolved refs.
-      String unresolvedRef = new String();
-      for (var pv : node.getPvsMap().entrySet()) {
-        // For every value in PV...
-        for (var val : pv.getValue().getTypedValuesList()) {
-          unresolvedRef = getLocalId(val.toBuilder());
-          if (!unresolvedRef.isEmpty()) break;
-        }
-        if (!unresolvedRef.isEmpty()) break;
-      }
+      String unresolvedRef = findFirstUnresolvedLocalRef(snapshotNode);
 
       // 2. Identify the type of node.
-      boolean isSvObs = false;
-      boolean isLegacyPop = false;
-      boolean isLegacyObs = false;
-      var types = McfUtil.getPropVals(node.build(), Vocabulary.TYPE_OF);
-      for (var type : types) {
-        if (Vocabulary.isStatVarObs(type)) {
-          isSvObs = true;
-          break;
-        } else if (Vocabulary.isPopulation(type)) {
-          isLegacyPop = true;
-          break;
-        } else if (Vocabulary.isLegacyObservation(type)) {
-          isLegacyObs = true;
-          break;
-        }
-      }
+      var types = McfUtil.getPropVals(snapshotNode, Vocabulary.TYPE_OF);
+      var assignmentMode = getAssignmentMode(types);
 
       // 3. If there are unresolved refs necessary for DCID generation, defer to next round.
       //
       // For svobs/pop/obs types we need all refs to be resolved to assign DCID.
-      boolean allRefsMustBeResolved = isSvObs || isLegacyPop || isLegacyObs;
-      if (!unresolvedRef.isEmpty() && allRefsMustBeResolved) {
+      if (!unresolvedRef.isEmpty() && assignmentMode.allRefsMustBeResolved) {
         roundResult.needsWork.put(nodeId, unresolvedRef);
+        finishNode("DCID Assignment", roundState, nodeId, node, false);
         continue;
       }
 
       // 4. Attempt DCID generation.
-      DcidGenerator.Result result = new DcidGenerator.Result();
-      if (isSvObs) {
-        result = DcidGenerator.forStatVarObs(nodeId, node.build());
-      } else if (isLegacyPop) {
-        result = DcidGenerator.forPopulation(nodeId, node.build());
-      } else if (isLegacyObs) {
-        result = DcidGenerator.forObservation(nodeId, node.build());
-      } else if (idResolver != null) {
-        result.dcid = idResolver.resolveNode(nodeId, node.build());
-      }
+      DcidGenerator.Result result = generateDcid(nodeId, snapshotNode, assignmentMode);
       if (!result.dcid.isEmpty()) {
         roundResult.numUpdated++;
         if (!result.keyString.isEmpty()) {
@@ -205,6 +220,7 @@ public class McfResolver {
               Vocabulary.KEY_STRING, McfUtil.newValues(Mcf.ValueType.TEXT, result.keyString));
         }
         node.putPvs(Vocabulary.DCID, McfUtil.newValues(Mcf.ValueType.TEXT, result.dcid));
+        nodeChanged = true;
       } else {
         // This is not a node we can assign DCID. So move it to failed nodes.
         // TODO: propagate error from DcidGenerator and IDResolver library.
@@ -217,17 +233,22 @@ public class McfResolver {
             node.getLocationsList());
         node.setErrorMessage(userMessage);
         roundResult.failed.add(nodeId);
+        nodeChanged = true;
       }
-      output.putNodes(nodeId, node.build());
+      finishNode("DCID Assignment", roundState, nodeId, node, nodeChanged);
     }
+    writeNodeUpdates(roundState.updatedNodes);
     return roundResult;
   }
 
   private RoundResult replaceLocalRefs() {
     RoundResult roundResult = new RoundResult();
+    RoundState roundState = newRoundState(true);
     // For each node...
-    for (var nodeId : output.getNodesMap().keySet()) {
-      var node = output.getNodesMap().get(nodeId).toBuilder();
+    for (var entry : roundState.outputSnapshot.entrySet()) {
+      var nodeId = entry.getKey();
+      var node = entry.getValue().toBuilder();
+      boolean nodeChanged = false;
       // For each PV in the node...
       for (var prop : node.getPvsMap().keySet()) {
         var vals = node.getPvsMap().get(prop).toBuilder();
@@ -238,8 +259,8 @@ public class McfResolver {
           if (localId.isEmpty()) continue;
 
           // This is a local ref.
-          boolean inOutput = output.containsNodes(localId);
-          boolean inFailed = failed.containsNodes(localId);
+          boolean inOutput = roundState.outputSnapshot.containsKey(localId);
+          boolean inFailed = roundState.failedSnapshot.contains(localId);
           if (!inOutput && !inFailed) {
             // This local ID is missing from the entire sub-graph. Mark it as orphan local-ref
             // and move it to failed nodes.
@@ -258,15 +279,17 @@ public class McfResolver {
                 node.getLocationsList());
             node.setErrorMessage(userMessage);
             roundResult.failed.add(nodeId);
+            nodeChanged = true;
           } else if (inOutput) {
             // Check if it already has DCID assigned.
-            var dcid = McfUtil.getPropVal(output.getNodesOrThrow(localId), Vocabulary.DCID);
+            var dcid = McfUtil.getPropVal(roundState.outputSnapshot.get(localId), Vocabulary.DCID);
             if (!dcid.isEmpty()) {
               roundResult.numUpdated++;
               tv.setValue(dcid);
               tv.setType(Mcf.ValueType.RESOLVED_REF);
               // Update values in PV.
               node.putPvs(prop, vals.build());
+              nodeChanged = true;
             } else {
               // This could be waiting on the resolution of another ref, so defer to next round.
               roundResult.needsWork.put(nodeId, localId);
@@ -288,12 +311,101 @@ public class McfResolver {
                 node.getLocationsList());
             node.setErrorMessage(userMessage);
             roundResult.failed.add(nodeId);
+            nodeChanged = true;
           }
         }
       }
-      output.putNodes(nodeId, node.build());
+      finishNode("LocalRef Replacement", roundState, nodeId, node, nodeChanged);
     }
+    writeNodeUpdates(roundState.updatedNodes);
     return roundResult;
+  }
+
+  private RoundState newRoundState(boolean includeFailedSnapshot) {
+    Set<String> failedSnapshot = new HashSet<>();
+    if (includeFailedSnapshot) {
+      failedSnapshot.addAll(failed.getNodesMap().keySet());
+    }
+    return new RoundState(new LinkedHashMap<>(output.getNodesMap()), failedSnapshot);
+  }
+
+  private void finishNode(
+      String phase,
+      RoundState roundState,
+      String nodeId,
+      Mcf.McfGraph.PropertyValues.Builder node,
+      boolean nodeChanged) {
+    if (nodeChanged) {
+      roundState.updatedNodes.put(nodeId, node.build());
+    }
+    roundState.processedNodes++;
+    logRoundProgress(
+        phase, roundState.processedNodes, roundState.totalNodes, roundState.roundStartMillis);
+  }
+
+  private String findFirstUnresolvedLocalRef(Mcf.McfGraph.PropertyValues node) {
+    for (var pv : node.getPvsMap().entrySet()) {
+      for (var val : pv.getValue().getTypedValuesList()) {
+        String localId = getLocalId(val);
+        if (!localId.isEmpty()) {
+          return localId;
+        }
+      }
+    }
+    return "";
+  }
+
+  private AssignmentMode getAssignmentMode(List<String> types) {
+    for (var type : types) {
+      if (Vocabulary.isStatVarObs(type)) {
+        return AssignmentMode.STAT_VAR_OBS;
+      }
+      if (Vocabulary.isPopulation(type)) {
+        return AssignmentMode.LEGACY_POPULATION;
+      }
+      if (Vocabulary.isLegacyObservation(type)) {
+        return AssignmentMode.LEGACY_OBSERVATION;
+      }
+    }
+    return AssignmentMode.OTHER;
+  }
+
+  private DcidGenerator.Result generateDcid(
+      String nodeId, Mcf.McfGraph.PropertyValues node, AssignmentMode assignmentMode)
+      throws UnexpectedException {
+    return switch (assignmentMode) {
+      case STAT_VAR_OBS -> DcidGenerator.forStatVarObs(nodeId, node);
+      case LEGACY_POPULATION -> DcidGenerator.forPopulation(nodeId, node);
+      case LEGACY_OBSERVATION -> DcidGenerator.forObservation(nodeId, node);
+      case OTHER -> {
+        DcidGenerator.Result result = new DcidGenerator.Result();
+        if (idResolver != null) {
+          result.dcid = idResolver.resolveNode(nodeId, node);
+        }
+        yield result;
+      }
+    };
+  }
+
+  private void writeNodeUpdates(Map<String, Mcf.McfGraph.PropertyValues> updatedNodes) {
+    for (var entry : updatedNodes.entrySet()) {
+      output.putNodes(entry.getKey(), entry.getValue());
+    }
+  }
+
+  private void logRoundProgress(
+      String phase, int processedNodes, int totalNodes, long roundStartMillis) {
+    if (!verbose
+        || processedNodes % ROUND_PROGRESS_LOG_INTERVAL != 0
+        || processedNodes == totalNodes) {
+      return;
+    }
+    logger.info(
+        "{} progress: {}/{} nodes in {} ms",
+        phase,
+        processedNodes,
+        totalNodes,
+        System.currentTimeMillis() - roundStartMillis);
   }
 
   private void moveFailedNodes(Set<String> failedNodes, String context) {
@@ -311,7 +423,7 @@ public class McfResolver {
     output.removeNodes(failedNode);
   }
 
-  private String getLocalId(Mcf.McfGraph.TypedValue.Builder tv) {
+  private String getLocalId(Mcf.McfGraph.TypedValueOrBuilder tv) {
     String result = new String();
     if (tv.getType() == Mcf.ValueType.UNRESOLVED_REF
         && tv.getValue().startsWith(Vocabulary.INTERNAL_REF_PREFIX)) {

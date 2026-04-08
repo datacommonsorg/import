@@ -48,7 +48,8 @@ public class Main {
       scope = CommandLine.ScopeType.INHERIT,
       description =
           "Checks DCID references to schema nodes against the KG and locally. "
-              + "If this flag is set, then calls will be made to the Staging API server, "
+              + "If this flag is set, then calls will be made to the configured Data Commons "
+              + "API endpoint (autopush by default), "
               + "and instance MCFs get fully loaded into memory. Defaults to true.")
   public boolean doExistenceChecks;
 

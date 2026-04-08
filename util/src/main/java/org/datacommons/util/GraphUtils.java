@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
@@ -36,6 +37,13 @@ public class GraphUtils {
   }
 
   public static final String STAT_VAR_OB = "StatVarObservation";
+
+  private static final String DCID_PREFIX = "dcid:";
+
+  private static final String LOCAL_NODE_ID_PATTERN = "^[A-Za-z0-9_@.#-]+/E[0-9]+/[A-Za-z0-9_-]+$";
+
+  private static final Pattern LOCAL_NODE_ID_COMPILED_PATTERN =
+      Pattern.compile(LOCAL_NODE_ID_PATTERN);
 
   private static final String REQ_SV_OBS_PROPS[] = {
     /** Required properties for a StatVarObservation. */
@@ -68,6 +76,19 @@ public class GraphUtils {
    */
   public static boolean isSvObsProp(String prop) {
     return SVOBS_PROTO_PROPS.contains(prop);
+  }
+
+  /**
+   * Checks if a dcid and local node id are logically equivalent for optimized MCF.
+   *
+   * @param dcid The DCID of the node.
+   * @param localNodeId The local node ID from the graph.
+   * @return True if they are equivalent, false otherwise.
+   */
+  public static boolean useDcidForLocalNodeIdInOptimizedMcf(String dcid, String localNodeId) {
+    return LOCAL_NODE_ID_COMPILED_PATTERN.matcher(localNodeId).matches()
+        || localNodeId.equals(dcid)
+        || localNodeId.equals(DCID_PREFIX + dcid);
   }
 
   /**
@@ -239,11 +260,12 @@ public class GraphUtils {
   /**
    * Converts a single StatVarObservation graph node into an McfStatVarObsSeries proto.
    *
+   * @param nodeId The ID of the node in the MCF graph.
    * @param node The McfGraph.PropertyValues representing a StatVarObservation.
    * @return An McfStatVarObsSeries proto containing the data from the input node.
    */
   public static McfStatVarObsSeries convertMcfGraphToMcfStatVarObsSeries(
-      McfGraph.PropertyValues node) {
+      String nodeId, McfGraph.PropertyValues node) {
     if (!isObservation(node)) {
       throw new IllegalArgumentException("Not a StatVarObservation");
     }
@@ -278,6 +300,9 @@ public class GraphUtils {
     svo.setDate(getPropVal(node, "observationDate"));
     String dcid = getPropVal(node, "dcid");
     svo.setDcid(dcid);
+    if (!useDcidForLocalNodeIdInOptimizedMcf(dcid, nodeId)) {
+      svo.setLocalNodeId(nodeId);
+    }
     Double value;
     if (!(value = nodeDoubleValue(node, "value")).isNaN()) {
       svo.setNumber(value);
@@ -286,9 +311,14 @@ public class GraphUtils {
     }
     McfGraph.PropertyValues.Builder pvs = svo.getPvsBuilder();
     for (Map.Entry<String, McfGraph.Values> entry : node.getPvsMap().entrySet()) {
-      if (!isSvObsProp(entry.getKey())) {
-        pvs.putPvs(entry.getKey(), entry.getValue());
-      }
+      String prop = entry.getKey();
+      if (isSvObsProp(prop)) continue;
+
+      // Ignore keyString, which is present in lots of existing resolved MCFs.
+
+      if (prop.equals(Vocabulary.KEY_STRING)) continue;
+
+      pvs.putPvs(prop, entry.getValue());
     }
     pvs.build();
     svo.build();
@@ -353,9 +383,10 @@ public class GraphUtils {
   public static List<McfOptimizedGraph> buildOptimizedMcfGraph(List<McfGraph> graph) {
     List<McfStatVarObsSeries> svoList = new ArrayList<>();
     for (McfGraph g : graph) {
-      for (PropertyValues pv : g.getNodesMap().values()) {
+      for (Map.Entry<String, PropertyValues> entry : g.getNodesMap().entrySet()) {
+        PropertyValues pv = entry.getValue();
         if (isObservation(pv)) {
-          McfStatVarObsSeries svoSeries = convertMcfGraphToMcfStatVarObsSeries(pv);
+          McfStatVarObsSeries svoSeries = convertMcfGraphToMcfStatVarObsSeries(entry.getKey(), pv);
           svoList.add(svoSeries);
         }
       }

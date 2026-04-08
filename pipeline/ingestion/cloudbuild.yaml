@@ -14,7 +14,7 @@ steps:
       - 'pipeline/ingestion'
       - '-am'
     secretEnv:
-      - AUTOPUSH_DC_API_KEY
+      - DC_API_KEY
     id: 'build-jar'
 
   # 2. Run Dataflow Integration Tests
@@ -24,9 +24,16 @@ steps:
       - 'test'
       - '-Dmaven.repo.local=/workspace/.m2/repository'
       - '-Dtest=GraphIngestionPipelineIntegrationTest'
+      - '-DprojectId=$PROJECT_ID'
+      - '-DinstanceId=$_INSTANCE_ID'
+      - '-DdatabaseId=$_DATABASE_ID'
+      - '-DgcsBucket=$_GCS_BUCKET'
+      - '-Dregion=$_REGION'
       - '-pl'
       - 'pipeline/ingestion'
       - '-DtestMode=DATAFLOW'
+    secretEnv:
+      - DC_API_KEY
     id: 'run-dataflow-integration-test'
 
   # 3. Build the Dataflow Flex Template
@@ -54,10 +61,16 @@ steps:
 
 availableSecrets:
   secretManager:
-    - versionName: projects/datcom-ci/secrets/autopush-dc-api-key/versions/latest
-      env: AUTOPUSH_DC_API_KEY
+    - versionName: projects/$PROJECT_ID/secrets/dc-api-key/versions/latest
+      env: DC_API_KEY
+options:
+  logging: CLOUD_LOGGING_ONLY
 
 substitutions:
   _VERSION: "0.1-SNAPSHOT"
   _TEMPLATE_BUCKET: "datcom-templates"
-  _IMAGE_GCR_PATH: "gcr.io/datcom-ci/dataflow-templates/ingestion"
+  _IMAGE_GCR_PATH: "us-docker.pkg.dev/datcom-ci/gcr.io/dataflow-templates/ingestion"
+  _INSTANCE_ID: "datcom-spanner-test"
+  _DATABASE_ID: "dc-test-db"
+  _GCS_BUCKET: "datcom-ci-test"
+  _REGION: "us-central1"
