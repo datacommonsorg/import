@@ -61,6 +61,11 @@ public class GraphIngestionPipeline {
     spannerClient.validateOrInitializeDatabase();
     LOGGER.info("Spanner DDL creation complete.");
 
+    if (options.getInitializeDatabaseOnly()) {
+      LOGGER.info("Skipping Beam data ingestion. Database initialized successfully.");
+      return;
+    }
+
     Pipeline pipeline = Pipeline.create(options);
     buildPipeline(pipeline, options, spannerClient);
     pipeline.run();
