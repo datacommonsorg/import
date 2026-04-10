@@ -113,7 +113,7 @@ public class GraphIngestionPipelineIntegrationTest {
             .numShards(1)
             .emulatorHost(emulatorHost)
             .build();
-    spannerClient.createDatabase();
+    spannerClient.validateOrInitializeDatabase();
 
     // Clear tables
     DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
@@ -173,7 +173,7 @@ public class GraphIngestionPipelineIntegrationTest {
     instanceId = System.getProperty("instanceId", "datcom-spanner-test");
     databaseId = System.getProperty("databaseId", "dc-test-db");
     gcsBucket = System.getProperty("gcsBucket", "datcom-ci-test");
-    tempLocation = System.getProperty("tempLocation", "gs://datcom-ci-test/dataflow/temp");
+    tempLocation = "gs://" + gcsBucket + "/dataflow/temp";
     region = System.getProperty("region", "us-central1");
 
     SpannerOptions options = SpannerOptions.newBuilder().setProjectId(projectId).build();
