@@ -1,8 +1,10 @@
-package org.datacommons.util;
+package org.datacommons.util.parser.strategy;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import org.datacommons.util.FileGroup;
+import org.datacommons.util.JsonLdFileGroup;
 
 public class JsonLdParserStrategy implements ParserStrategy {
   @Override

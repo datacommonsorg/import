@@ -18,6 +18,24 @@ import org.slf4j.LoggerFactory;
 public class JsonLdParser {
   private static final Logger LOGGER = LoggerFactory.getLogger(JsonLdParser.class);
 
+  // W3C JSON-LD expansion URL bases that we want to strip back down to clean local strings
+  // to match DB expectations for node IDs and references in the Knowledge Graph.
+  private static final String DCID_PREFIX = "https://datacommons.org/browser/";
+  private static final String SCHEMA_PREFIX = "https://schema.org/";
+
+  private static String stripPrefix(String value) {
+    if (value == null) {
+      return null;
+    }
+    if (value.startsWith(DCID_PREFIX)) {
+      return value.substring(DCID_PREFIX.length());
+    }
+    if (value.startsWith(SCHEMA_PREFIX)) {
+      return value.substring(SCHEMA_PREFIX.length());
+    }
+    return value;
+  }
+
   /**
    * Parses a JSON-LD input stream and returns an McfGraph.
    *
@@ -63,6 +81,9 @@ public class JsonLdParser {
       // Skip nodes without ID for now. Data Commons requires IDs for resolution.
       return;
     }
+    // Strip URI prefixes to store pure DCIDs/tokens in Spanner, keeping JSON-LD
+    // compliance in files but clean tokens in the DB storage.
+    id = stripPrefix(id);
 
     McfGraph.PropertyValues.Builder nodeBuilder = McfGraph.PropertyValues.newBuilder();
     addProperty(nodeBuilder, "dcid", id, org.datacommons.proto.Mcf.ValueType.TEXT);
@@ -89,10 +110,12 @@ public class JsonLdParser {
         // Map @type to typeOf
         if (value instanceof List) {
           for (Object typeObj : (List<?>) value) {
-            addProperty(nodeBuilder, "typeOf", typeObj.toString(), Mcf.ValueType.RESOLVED_REF);
+            addProperty(
+                nodeBuilder, "typeOf", stripPrefix(typeObj.toString()), Mcf.ValueType.RESOLVED_REF);
           }
         } else if (value != null) {
-          addProperty(nodeBuilder, "typeOf", value.toString(), Mcf.ValueType.RESOLVED_REF);
+          addProperty(
+              nodeBuilder, "typeOf", stripPrefix(value.toString()), Mcf.ValueType.RESOLVED_REF);
         }
         continue;
       }
@@ -119,7 +142,8 @@ public class JsonLdParser {
         addProperty(nodeBuilder, property, val.toString(), Mcf.ValueType.TEXT);
       } else if (map.containsKey("@id")) {
         Object idVal = map.get("@id");
-        String idStr = idVal.toString();
+        // Strip URI prefixes from references as well to ensure clean graph edges
+        String idStr = stripPrefix(idVal.toString());
         Mcf.ValueType type =
             idStr.startsWith("l:") ? Mcf.ValueType.UNRESOLVED_REF : Mcf.ValueType.RESOLVED_REF;
         addProperty(nodeBuilder, property, idStr, type);

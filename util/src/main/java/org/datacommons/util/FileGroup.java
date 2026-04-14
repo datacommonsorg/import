@@ -18,6 +18,9 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.logging.log4j.Logger;
+import org.datacommons.util.parser.strategy.JsonLdParserStrategy;
+import org.datacommons.util.parser.strategy.McfParserStrategy;
+import org.datacommons.util.parser.strategy.ParserStrategy;
 import picocli.CommandLine;
 
 public abstract class FileGroup {

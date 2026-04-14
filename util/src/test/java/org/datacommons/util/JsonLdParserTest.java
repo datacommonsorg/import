@@ -48,4 +48,43 @@ public class JsonLdParserTest {
     assertNotNull(graph);
     assertTrue(graph.getNodesMap().containsKey("http://example.com/subject2"));
   }
+
+  @Test
+  public void testPrefixStripping_RemovesDcidAndSchemaPrefixes() throws Exception {
+    String jsonLd =
+        "{\n"
+            + "  \"@context\": {\n"
+            + "    \"schema\": \"https://schema.org/\",\n"
+            + "    \"dcid\": \"https://datacommons.org/browser/\"\n"
+            + "  },\n"
+            + "  \"@graph\": [\n"
+            + "    {\n"
+            + "      \"@id\": \"dcid:JaneDoe_Sample\",\n"
+            + "      \"@type\": \"schema:Person\",\n"
+            + "      \"schema:name\": \"Jane Doe\"\n"
+            + "    }\n"
+            + "  ]\n"
+            + "}";
+
+    InputStream in = new ByteArrayInputStream(jsonLd.getBytes(StandardCharsets.UTF_8));
+    McfGraph graph = JsonLdParser.parse(in);
+
+    assertNotNull(graph);
+    // The ID should be stripped of the dcid prefix
+    assertTrue(graph.getNodesMap().containsKey("JaneDoe_Sample"));
+
+    McfGraph.PropertyValues node = graph.getNodesMap().get("JaneDoe_Sample");
+    assertNotNull(node);
+
+    // The type should be stripped of the schema prefix
+    boolean hasCleanType = false;
+    for (org.datacommons.proto.Mcf.McfGraph.TypedValue tv :
+        node.getPvsMap().get("typeOf").getTypedValuesList()) {
+      if ("Person".equals(tv.getValue())) {
+        hasCleanType = true;
+        break;
+      }
+    }
+    assertTrue("Stored type should be 'Person' without schema prefix", hasCleanType);
+  }
 }

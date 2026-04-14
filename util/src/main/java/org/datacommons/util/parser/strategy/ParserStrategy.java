@@ -1,7 +1,8 @@
-package org.datacommons.util;
+package org.datacommons.util.parser.strategy;
 
 import java.io.File;
 import java.util.List;
+import org.datacommons.util.FileGroup;
 
 /**
  * Strategy interface that allows decoupled registration of different input schemas (e.g., MCF vs.
