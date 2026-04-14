@@ -30,7 +30,12 @@ public class McfParserStrategy implements ParserStrategy {
       }
     }
 
-    char delim = overrideDelimiter == null ? ',' : overrideDelimiter;
+    boolean hasTsv = csvFiles.stream().anyMatch(f -> f.getName().endsWith(".tsv"));
+    boolean hasCsv = csvFiles.stream().anyMatch(f -> f.getName().endsWith(".csv"));
+    if (hasTsv && hasCsv) {
+      throw new IllegalArgumentException("Please do not mix .tsv and .csv files");
+    }
+    char delim = overrideDelimiter != null ? overrideDelimiter : (hasTsv ? '\t' : ',');
     return new McfFileGroup(csvFiles, mcfFiles, tmcfFiles, delim);
   }
 }
