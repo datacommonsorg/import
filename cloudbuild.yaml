@@ -5,8 +5,8 @@ steps:
     secretEnv:
       - DC_API_KEY
 
-  - name: 'gcr.io/cloud-builders/gsutil'
-    args: ['cp', 'tool/target/datacommons-import-tool-0.1-SNAPSHOT-jar-with-dependencies.jar', 'gs://${_GCS_BUCKET}/import_tools/import-tool.jar']
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['storage', 'cp', 'tool/target/datacommons-import-tool-0.1-SNAPSHOT-jar-with-dependencies.jar', 'gs://${_GCS_BUCKET}/import_tools/import-tool.jar']
 
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['builds', 'triggers', 'run', 'dc-import-executor', '--branch=master', '--substitutions', '_DOCKER_IMAGE=${_DOCKER_IMAGE}']

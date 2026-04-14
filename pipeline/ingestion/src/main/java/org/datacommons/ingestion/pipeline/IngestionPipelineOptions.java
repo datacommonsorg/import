@@ -88,4 +88,10 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   String getSpannerEdgeTableName();
 
   void setSpannerEdgeTableName(String tableName);
+
+  @Description("Whether to initialize database schema only and skip importing data.")
+  @Default.Boolean(false)
+  boolean getInitializeDatabaseOnly();
+
+  void setInitializeDatabaseOnly(boolean initializeDatabaseOnly);
 }
