@@ -166,6 +166,28 @@ public class PipelineUtils {
     return mcf;
   }
 
+  // Input file formats supported by the ingestion pipeline.
+  public enum InputFormat {
+    JSONLD,
+    TFRECORD,
+    MCF
+  }
+
+  /** Resolves the input format based on the file path. */
+  public static InputFormat resolveFormat(String graphPath) {
+    if (graphPath == null) {
+      throw new IllegalArgumentException("graphPath cannot be null");
+    }
+    if (graphPath.contains("tfrecord")) {
+      return InputFormat.TFRECORD;
+    }
+    if (graphPath.endsWith(".jsonld")) {
+      return InputFormat.JSONLD;
+    }
+    // Fallback to MCF as default behavior
+    return InputFormat.MCF;
+  }
+
   /** Reads JSON-LD files and converts them to McfGraph protos. */
   public static PCollection<McfGraph> readJsonLdFiles(String name, String files, Pipeline p) {
     return p.apply("MatchJsonLdFiles-" + name, FileIO.match().filepattern(files))

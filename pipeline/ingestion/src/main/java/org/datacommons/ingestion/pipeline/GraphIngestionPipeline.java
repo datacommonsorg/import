@@ -145,22 +145,22 @@ public class GraphIngestionPipeline {
               "CreateEmptyEdgesWait-" + importName, Create.empty(TypeDescriptor.of(Void.class)));
     }
 
-    // 2. Read and Split Graph:
-    // Read the graph data (TFRecord or MCF files) and split into schema and observation nodes.
     PCollection<McfGraph> graph;
-    // TODO: Refactor this explicit string-based path multiplexing block into a modular
-    // Strategy Registry Pattern (e.g., InputFormatHandler) for better extensibility.
-    if (graphPath != null && graphPath.contains("tfrecord")) {
-      graph = PipelineUtils.readMcfGraph(importName, graphPath, pipeline);
-    } else if (graphPath != null && graphPath.contains(".jsonld")) {
-      graph = PipelineUtils.readJsonLdFiles(importName, graphPath, pipeline);
-
-    } else if (graphPath != null) {
-      graph = PipelineUtils.readMcfFiles(importName, graphPath, pipeline);
-    } else {
-      throw new IllegalArgumentException(
-          "Invalid import config: missing graphPath or template/csv paths");
+    switch (PipelineUtils.resolveFormat(graphPath)) {
+      case TFRECORD:
+        graph = PipelineUtils.readMcfGraph(importName, graphPath, pipeline);
+        break;
+      case JSONLD:
+        graph = PipelineUtils.readJsonLdFiles(importName, graphPath, pipeline);
+        break;
+      case MCF:
+        graph = PipelineUtils.readMcfFiles(importName, graphPath, pipeline);
+        break;
+      default:
+        throw new IllegalArgumentException(
+            "Invalid import config: missing graphPath or template/csv paths");
     }
+
     PCollectionTuple graphNodes = PipelineUtils.splitGraph(importName, graph);
     PCollection<McfGraph> observationNodes = graphNodes.get(PipelineUtils.OBSERVATION_NODES_TAG);
     PCollection<McfGraph> schemaNodes = graphNodes.get(PipelineUtils.SCHEMA_NODES_TAG);

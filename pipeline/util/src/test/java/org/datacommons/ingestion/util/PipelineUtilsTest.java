@@ -186,13 +186,19 @@ public class PipelineUtilsTest {
 
     java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("test", ".jsonld");
     String jsonLdContent =
-        "[\n"
-            + "  {\n"
-            + "    \"@id\": \"dcid:TestNode\",\n"
-            + "    \"@type\": \"schema:Thing\",\n"
-            + "    \"name\": \"Test Node Name\"\n"
-            + "  }\n"
-            + "]";
+        "{\n"
+            + "  \"@context\": {\n"
+            + "    \"schema\": \"https://schema.org/\",\n"
+            + "    \"name\": \"https://schema.org/name\"\n"
+            + "  },\n"
+            + "  \"@graph\": [\n"
+            + "    {\n"
+            + "      \"@id\": \"dcid:TestNode\",\n"
+            + "      \"@type\": \"schema:Thing\",\n"
+            + "      \"name\": \"Test Node Name\"\n"
+            + "    }\n"
+            + "  ]\n"
+            + "}";
     java.nio.file.Files.write(
         tempFile, jsonLdContent.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
@@ -204,7 +210,13 @@ public class PipelineUtilsTest {
         "typeOf",
         Values.newBuilder()
             .addTypedValues(
-                TypedValue.newBuilder().setValue("schema:Thing").setType(ValueType.RESOLVED_REF))
+                TypedValue.newBuilder().setValue("Thing").setType(ValueType.RESOLVED_REF))
+            .build());
+    pv.putPvs(
+        "dcid",
+        Values.newBuilder()
+            .addTypedValues(
+                TypedValue.newBuilder().setValue("dcid:TestNode").setType(ValueType.TEXT))
             .build());
     pv.putPvs(
         "name",
