@@ -181,7 +181,7 @@ public class PipelineUtils {
     if (graphPath.contains("tfrecord")) {
       return InputFormat.TFRECORD;
     }
-    if (graphPath.endsWith(".jsonld")) {
+    if (graphPath.contains(".jsonld")) {
       return InputFormat.JSONLD;
     }
     // Fallback to MCF as default behavior

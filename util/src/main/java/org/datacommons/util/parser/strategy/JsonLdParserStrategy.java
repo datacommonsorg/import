@@ -9,7 +9,7 @@ import org.datacommons.util.JsonLdFileGroup;
 public class JsonLdParserStrategy implements ParserStrategy {
   @Override
   public boolean supports(List<File> files) {
-    return files.stream().anyMatch(f -> f.getName().endsWith(".jsonld"));
+    return files.stream().anyMatch(f -> f.getName().contains(".jsonld"));
   }
 
   @Override
