@@ -8,7 +8,7 @@ fs==2.4.16
 fs-gcsfs==1.5.1
 google-cloud-storage==2.11.0
 httpx==0.26.0
-idna==3.4
+idna==3.7
 importlib-metadata==6.8.0
 mypy-protobuf==3.6.0
 numpy==1.25.2
