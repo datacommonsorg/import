@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM python:3.11.4-slim as base
+FROM python:3.11.14-slim as base
 
 ARG ENV
 ARG PIP_DISABLE_PIP_VERSION_CHECK=1
@@ -26,4 +26,12 @@ COPY simple/ .
 COPY build/simple/run.sh .
 
 RUN pip3 install -r /workspace/requirements.txt
+
+RUN pip3 install --upgrade \
+        pip \
+        setuptools \
+        "wheel==0.46.2" \
+        "urllib3==2.6.3" \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    
 CMD ./run.sh
