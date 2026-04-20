@@ -117,7 +117,12 @@ public class GraphReaderTest {
                 .name("Node One")
                 .types(List.of("Property"))
                 .build(),
-            Node.builder().subjectId("dcid2").value("dcid2").types(List.of("Thing")).build(),
+            Node.builder()
+                .subjectId("dcid2")
+                .value("dcid2")
+                .name("dcid2")
+                .types(List.of("Thing"))
+                .build(),
             Node.builder()
                 .subjectId("Node Zero:kUyRupzrJkxe/HIOIctxlJX4woEGeOTtlVwqyXYnfDE=")
                 .value("Node Zero")
