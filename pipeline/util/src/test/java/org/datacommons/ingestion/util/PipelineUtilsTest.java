@@ -180,6 +180,59 @@ public class PipelineUtilsTest {
     Assert.assertEquals(PipelineResult.State.DONE, state);
   }
 
+  @Test
+  public void testReadJsonLdFiles() throws java.io.IOException {
+    options.setStableUniqueNames(PipelineOptions.CheckEnabled.OFF);
+
+    java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("test", ".jsonld");
+    String jsonLdContent =
+        "{\n"
+            + "  \"@context\": {\n"
+            + "    \"schema\": \"https://schema.org/\",\n"
+            + "    \"name\": \"https://schema.org/name\"\n"
+            + "  },\n"
+            + "  \"@graph\": [\n"
+            + "    {\n"
+            + "      \"@id\": \"dcid:TestNode\",\n"
+            + "      \"@type\": \"schema:Thing\",\n"
+            + "      \"name\": \"Test Node Name\"\n"
+            + "    }\n"
+            + "  ]\n"
+            + "}";
+    java.nio.file.Files.write(
+        tempFile, jsonLdContent.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+    PCollection<McfGraph> result = PipelineUtils.readJsonLdFiles("test", tempFile.toString(), p);
+
+    McfGraph.Builder expectedGraph = McfGraph.newBuilder();
+    PropertyValues.Builder pv = PropertyValues.newBuilder();
+    pv.putPvs(
+        "typeOf",
+        Values.newBuilder()
+            .addTypedValues(
+                TypedValue.newBuilder().setValue("Thing").setType(ValueType.RESOLVED_REF))
+            .build());
+    pv.putPvs(
+        "dcid",
+        Values.newBuilder()
+            .addTypedValues(
+                TypedValue.newBuilder().setValue("dcid:TestNode").setType(ValueType.TEXT))
+            .build());
+    pv.putPvs(
+        "name",
+        Values.newBuilder()
+            .addTypedValues(
+                TypedValue.newBuilder().setValue("Test Node Name").setType(ValueType.TEXT))
+            .build());
+    expectedGraph.putNodes("dcid:TestNode", pv.build());
+
+    PAssert.that(result).containsInAnyOrder(expectedGraph.build());
+    PipelineResult.State state = p.run().waitUntilFinish();
+    Assert.assertEquals(PipelineResult.State.DONE, state);
+
+    java.nio.file.Files.delete(tempFile);
+  }
+
   private McfGraph createGraph(Map<String, Map<String, List<String>>> nodeData) {
     McfGraph.Builder graph = McfGraph.newBuilder();
     for (Map.Entry<String, Map<String, List<String>>> nodeEntry : nodeData.entrySet()) {

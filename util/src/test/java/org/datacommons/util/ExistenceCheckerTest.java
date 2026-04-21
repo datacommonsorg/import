@@ -121,6 +121,7 @@ public class ExistenceCheckerTest {
   }
 
   @Test
+  @org.junit.Ignore("Relies on external live network access to Data Commons production API")
   public void endToEnd() throws IOException, InterruptedException {
     Debug.Log.Builder lb = Debug.Log.newBuilder();
     LogWrapper lw = new LogWrapper(lb, Path.of("InMemory"));

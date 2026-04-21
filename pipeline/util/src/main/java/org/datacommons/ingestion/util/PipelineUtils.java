@@ -6,6 +6,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.channels.Channels;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import java.util.zip.GZIPOutputStream;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.io.TFRecordIO;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.fs.EmptyMatchTreatment;
@@ -39,6 +42,7 @@ import org.datacommons.proto.Mcf.McfGraph.Values;
 import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.util.GraphUtils;
+import org.datacommons.util.parser.jsonld.JsonLdParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,6 +164,55 @@ public class PipelineUtils {
                   }
                 }));
     return mcf;
+  }
+
+  // Input file formats supported by the ingestion pipeline.
+  public enum InputFormat {
+    JSONLD,
+    TFRECORD,
+    MCF
+  }
+
+  /** Resolves the input format based on the file path. */
+  public static InputFormat resolveFormat(String graphPath) {
+    if (graphPath == null) {
+      throw new IllegalArgumentException("graphPath cannot be null");
+    }
+    if (graphPath.contains("tfrecord")) {
+      return InputFormat.TFRECORD;
+    }
+    if (graphPath.contains(".jsonld")) {
+      return InputFormat.JSONLD;
+    }
+    // Fallback to MCF as default behavior
+    return InputFormat.MCF;
+  }
+
+  /** Reads JSON-LD files and converts them to McfGraph protos. */
+  public static PCollection<McfGraph> readJsonLdFiles(String name, String files, Pipeline p) {
+    return p.apply("MatchJsonLdFiles-" + name, FileIO.match().filepattern(files))
+        .apply("ReadJsonLdFiles-" + name, FileIO.readMatches())
+        .apply(
+            "ParseJsonLd-" + name,
+            ParDo.of(
+                new DoFn<FileIO.ReadableFile, McfGraph>() {
+                  @ProcessElement
+                  public void processElement(
+                      @Element FileIO.ReadableFile file, OutputReceiver<McfGraph> receiver) {
+                    try (InputStream is = Channels.newInputStream(file.open())) {
+                      McfGraph graph = JsonLdParser.parse(is);
+                      for (Map.Entry<String, org.datacommons.proto.Mcf.McfGraph.PropertyValues>
+                          entry : graph.getNodesMap().entrySet()) {
+                        McfGraph.Builder singleNodeGraph = McfGraph.newBuilder();
+                        singleNodeGraph.putNodes(entry.getKey(), entry.getValue());
+                        receiver.output(singleNodeGraph.build());
+                      }
+                    } catch (IOException e) {
+                      throw new RuntimeException(
+                          "Failed to parse JSON-LD file: " + file.toString(), e);
+                    }
+                  }
+                }));
   }
 
   public static PCollectionTuple splitGraph(String name, PCollection<McfGraph> graph) {

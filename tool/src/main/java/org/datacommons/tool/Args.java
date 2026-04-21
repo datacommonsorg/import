@@ -8,7 +8,9 @@ import java.util.Map;
 import org.apache.logging.log4j.util.Strings;
 import org.datacommons.proto.Debug;
 import org.datacommons.util.FileGroup;
+import org.datacommons.util.JsonLdFileGroup;
 import org.datacommons.util.LogWrapper;
+import org.datacommons.util.McfFileGroup;
 
 // Class representing the command line arguments to dc-import tool. Largely used as a struct.
 class Args {
@@ -75,14 +77,24 @@ class Args {
     if (!LogWrapper.TEST_MODE && fileGroup != null) {
       List<String> allFiles = new ArrayList<>();
 
-      if (fileGroup.getMcfs() != null) {
-        for (File f : fileGroup.getMcfs()) {
-          allFiles.add(f.getPath());
+      if (fileGroup instanceof McfFileGroup) {
+        McfFileGroup mcfGroup = (McfFileGroup) fileGroup;
+        if (mcfGroup.getMcfs() != null) {
+          for (File f : mcfGroup.getMcfs()) {
+            allFiles.add(f.getPath());
+          }
         }
-      }
-      if (fileGroup.getTmcfs() != null) {
-        for (File f : fileGroup.getTmcfs()) {
-          allFiles.add(f.getPath());
+        if (mcfGroup.getTmcfs() != null) {
+          for (File f : mcfGroup.getTmcfs()) {
+            allFiles.add(f.getPath());
+          }
+        }
+      } else if (fileGroup instanceof JsonLdFileGroup) {
+        JsonLdFileGroup jsonLdGroup = (JsonLdFileGroup) fileGroup;
+        if (jsonLdGroup.getJsonLds() != null) {
+          for (File f : jsonLdGroup.getJsonLds()) {
+            allFiles.add(f.getPath());
+          }
         }
       }
       if (fileGroup.getCsvs() != null) {

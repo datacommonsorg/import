@@ -23,7 +23,9 @@ import org.apache.logging.log4j.Logger;
 import org.datacommons.util.FileGroup;
 import picocli.CommandLine;
 
-@CommandLine.Command(name = "lint", description = "Run various checks on input MCF/TMCF/CSV files")
+@CommandLine.Command(
+    name = "lint",
+    description = "Run various checks on input MCF/TMCF/CSV/JSON-LD files")
 class Lint implements Callable<Integer> {
   private static final Logger logger = LogManager.getLogger(Lint.class);
 
@@ -32,6 +34,7 @@ class Lint implements Callable<Integer> {
       description =
           ("List of input files. The file extensions are used to infer the format. "
               + "Valid extensions include .mcf for Instance MCF, .tmcf for Template MCF, "
+              + ".jsonld for JSON-LD instances, "
               + ".csv for tabular text files delimited by comma (overridden with -d), and .tsv "
               + "for tab-delimited tabular files."))
   private File[] files;

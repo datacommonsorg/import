@@ -15,44 +15,34 @@
 package org.datacommons.util;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.logging.log4j.Logger;
+import org.datacommons.util.parser.strategy.JsonLdParserStrategy;
+import org.datacommons.util.parser.strategy.McfParserStrategy;
+import org.datacommons.util.parser.strategy.ParserStrategy;
 import picocli.CommandLine;
 
-public class FileGroup {
-  private List<File> csvFiles;
-  private List<File> mcfFiles;
-  // NOTE: When csvFiles is provided, then tmcfFiles must be <= 1.
-  private List<File> tmcfFiles;
-  char delimiter;
+public abstract class FileGroup {
+  protected List<File> csvFiles;
+  protected char delimiter;
 
-  public FileGroup(List<File> tmcfFiles, List<File> csvFiles, List<File> mcfFiles, char delimiter) {
-    this.tmcfFiles = tmcfFiles;
+  public FileGroup(List<File> csvFiles, char delimiter) {
     this.csvFiles = csvFiles;
-    this.mcfFiles = mcfFiles;
     this.delimiter = delimiter;
-  }
-
-  public File getTmcf() {
-    if (tmcfFiles != null && tmcfFiles.size() > 0) return tmcfFiles.get(0);
-    return null;
-  }
-
-  public List<File> getTmcfs() {
-    return tmcfFiles;
   }
 
   public List<File> getCsvs() {
     return csvFiles;
   }
 
-  public List<File> getMcfs() {
-    return mcfFiles;
-  }
-
   public char delimiter() {
     return delimiter;
+  }
+
+  // TODO: Remove this method, it's only used for the server command.
+  public File getTmcf() {
+    return null;
   }
 
   public static FileGroup build(
@@ -60,45 +50,19 @@ public class FileGroup {
       CommandLine.Model.CommandSpec spec,
       Character overrideDelimiter,
       Logger logger) {
-    List<File> tmcfFiles = new ArrayList<>();
-    List<File> csvFiles = new ArrayList<>();
-    List<File> mcfFiles = new ArrayList<>();
-    int nTsv = 0;
-    for (File file : files) {
-      String lowerPath = file.getPath().toLowerCase();
-      if (lowerPath.contains(".mcf")) {
-        mcfFiles.add(file);
-      } else if (lowerPath.endsWith(".tmcf")) {
-        tmcfFiles.add(file);
-      } else if (lowerPath.endsWith(".csv")) {
-        csvFiles.add(file);
-      } else if (lowerPath.endsWith(".tsv")) {
-        nTsv++;
-        csvFiles.add(file);
-      } else {
-        throw new CommandLine.ParameterException(
-            spec.commandLine(), "Found an unsupported file type: " + file.getPath());
+    List<File> fileList = Arrays.asList(files);
+    List<ParserStrategy> strategies =
+        Arrays.asList(new JsonLdParserStrategy(), new McfParserStrategy());
+
+    for (ParserStrategy strategy : strategies) {
+      if (strategy.supports(fileList)) {
+        logger.info(
+            "Delegating file grouping to strategy: {}", strategy.getClass().getSimpleName());
+        return strategy.createGroup(fileList, overrideDelimiter);
       }
     }
-    logger.info(
-        "Input includes {} MCF file(s), {} TMCF file(s), {} CSV file(s)",
-        mcfFiles.size(),
-        tmcfFiles.size(),
-        csvFiles.size());
-    // Various checks
-    if (nTsv > 0 && nTsv != csvFiles.size()) {
-      throw new CommandLine.ParameterException(
-          spec.commandLine(), "Please do not mix .tsv and .csv files");
-    }
-    if (!csvFiles.isEmpty() && tmcfFiles.size() != 1) {
-      throw new CommandLine.ParameterException(
-          spec.commandLine(), "Please provide one .tmcf file with CSV/TSV files");
-    }
-    char delim = (overrideDelimiter == null ? (nTsv > 0 ? '\t' : ',') : overrideDelimiter);
-    if (tmcfFiles.isEmpty()) {
-      return new FileGroup(null, csvFiles, mcfFiles, delim);
-    } else {
-      return new FileGroup(tmcfFiles, csvFiles, mcfFiles, delim);
-    }
+
+    throw new CommandLine.ParameterException(
+        spec.commandLine(), "Found no supporting strategy for the provided input files.");
   }
 }
