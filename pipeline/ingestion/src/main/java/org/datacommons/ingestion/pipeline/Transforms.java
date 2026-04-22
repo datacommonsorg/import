@@ -4,6 +4,8 @@ import static org.datacommons.ingestion.pipeline.SkipProcessing.SKIP_GRAPH;
 import static org.datacommons.ingestion.pipeline.SkipProcessing.SKIP_OBS;
 
 import com.google.cloud.spanner.Mutation;
+import com.google.common.base.Joiner;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.io.gcp.spanner.MutationGroup;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.*;
@@ -88,9 +91,12 @@ public class Transforms {
         NodesEdges nodesEdges = cacheReader.parseArcRow(row, MCF_NODES_WITHOUT_TYPE_COUNTER);
         outputGraphMutations(nodesEdges, out);
       } else if (CacheReader.isObsTimeSeriesCacheRow(row) && skipProcessing != SKIP_OBS) {
-        var obs = cacheReader.parseTimeSeriesRow(row);
-        var kvs = spannerClient.toObservationKVMutations(obs);
-        var filtered = spannerClient.filterObservationKVMutations(kvs, seenObs);
+        var obsList = cacheReader.parseTimeSeriesRow(row);
+        List<KV<String, Mutation>> kvs = new ArrayList<>();
+        for (var obs : obsList) {
+          kvs.addAll(toNewSchemaMutations(obs));
+        }
+        var filtered = filterNewSchemaMutations(kvs, seenObs);
         filtered.forEach(out.get(observationTag)::output);
 
         var dups = kvs.size() - filtered.size();
@@ -99,7 +105,7 @@ public class Transforms {
         }
 
         if (writeObsGraph) {
-          obs.stream()
+          obsList.stream()
               .map(Observation::getObsGraph)
               .forEach(obsGraph -> outputGraphMutations(obsGraph, out));
         }
@@ -212,19 +218,57 @@ public class Transforms {
                   .withOutputTags(graphTag, TupleTagList.of(observationTag)));
 
       var observations =
-          kvs.get(observationTag).apply("ExtractObservationMutations", Values.create());
+          kvs.get(observationTag)
+              .apply("GroupObsMutations", GroupByKey.create())
+              .apply(
+                  "CreateMutationGroups",
+                  ParDo.of(
+                      new DoFn<KV<String, Iterable<Mutation>>, MutationGroup>() {
+                        @ProcessElement
+                        public void processElement(ProcessContext c) {
+                          KV<String, Iterable<Mutation>> element = c.element();
+                          Mutation primary = null;
+                          List<Mutation> secondaries = new ArrayList<>();
+                          for (Mutation m : element.getValue()) {
+                            if (m.getTable().equals("TimeSeries")) {
+                              primary = m;
+                            } else {
+                              secondaries.add(m);
+                            }
+                          }
+                          if (primary != null) {
+                            c.output(MutationGroup.create(primary, secondaries));
+                          } else {
+                            LOGGER.warn(
+                                "No TimeSeries mutation found for group: " + element.getKey());
+                          }
+                        }
+                      }));
       // TODO: Explore emitting protos instead of mutations to reduce shuffle cost.
-      var graph =
-          kvs.get(graphTag)
-              .apply("GroupGraphMutations", GroupByKey.create())
-              .apply("ExtractGraphMutations", ParDo.of(new ExtractKVMutationsDoFn(spannerClient)));
+      var graphMutations = kvs.get(graphTag);
 
-      var write =
-          PCollectionList.of(graph)
-              .and(observations)
-              .apply("MergeMutations", Flatten.<Mutation>pCollections())
-              .apply("WriteToSpanner", spannerClient.getWriteTransform());
-      return write.getOutput();
+      var nodeMutations =
+          graphMutations
+              .apply("FilterNodes", Filter.by(kv -> kv.getValue().getTable().equals("Node")))
+              .apply("GroupNodeMutations", GroupByKey.create())
+              .apply("ExtractNodeMutations", ParDo.of(new ExtractKVMutationsDoFn(spannerClient)));
+
+      var edgeMutations =
+          graphMutations
+              .apply("FilterEdges", Filter.by(kv -> kv.getValue().getTable().equals("Edge")))
+              .apply("GroupEdgeMutations", GroupByKey.create())
+              .apply("ExtractEdgeMutations", ParDo.of(new ExtractKVMutationsDoFn(spannerClient)));
+
+      var writtenNodes =
+          nodeMutations.apply("WriteNodesToSpanner", spannerClient.getWriteTransform());
+
+      var waitingEdges = edgeMutations.apply("EdgesWaitOnNodes", Wait.on(writtenNodes.getOutput()));
+
+      waitingEdges.apply("WriteEdgesToSpanner", spannerClient.getWriteTransform());
+
+      var writeObs =
+          observations.apply("WriteObsToSpanner", spannerClient.getWriteGroupedTransform());
+      return writeObs.getOutput();
     }
   }
 
@@ -266,7 +310,7 @@ public class Transforms {
    * This method updates the key's usage, unlike `containsKey()`, which doesn't and would therefore
    * disrupt the LRU sequence.
    */
-  private static class LRUCache<K, V> extends LinkedHashMap<K, V> {
+  static class LRUCache<K, V> extends LinkedHashMap<K, V> {
     private final int capacity;
 
     public LRUCache(int capacity) {
@@ -278,5 +322,106 @@ public class Transforms {
     protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
       return size() > capacity;
     }
+  }
+
+  static List<KV<String, Mutation>> toNewSchemaMutations(Observation obs) {
+    List<KV<String, Mutation>> mutations = new ArrayList<>();
+    String seriesDcid =
+        "dc/os/"
+            + Joiner.on("_")
+                .join(
+                    obs.getVariableMeasured().replace('/', '_'),
+                    obs.getObservationAbout().replace('/', '_'),
+                    obs.getFacetId());
+
+    // 1. TimeSeries
+    mutations.add(
+        KV.of(
+            seriesDcid,
+            Mutation.newInsertOrUpdateBuilder("TimeSeries")
+                .set("id")
+                .to(seriesDcid)
+                .set("variable_measured")
+                .to(obs.getVariableMeasured())
+                .set("provenance")
+                .to("dc/base/" + obs.getImportName())
+                .build()));
+
+    // 2. TimeSeriesAttribute
+    mutations.add(
+        KV.of(
+            seriesDcid,
+            Mutation.newInsertOrUpdateBuilder("TimeSeriesAttribute")
+                .set("id")
+                .to(seriesDcid)
+                .set("property")
+                .to("observationAbout")
+                .set("value")
+                .to(obs.getObservationAbout())
+                .build()));
+
+    addIfNotEmpty(mutations, seriesDcid, "unit", obs.getUnit());
+    addIfNotEmpty(mutations, seriesDcid, "scalingFactor", obs.getScalingFactor());
+    addIfNotEmpty(mutations, seriesDcid, "measurementMethod", obs.getMeasurementMethod());
+    addIfNotEmpty(mutations, seriesDcid, "observationPeriod", obs.getObservationPeriod());
+
+    // 3. StatVarObservation
+    for (Map.Entry<String, String> entry : obs.getObservations().getValuesMap().entrySet()) {
+      mutations.add(
+          KV.of(
+              seriesDcid,
+              Mutation.newInsertOrUpdateBuilder("StatVarObservation")
+                  .set("id")
+                  .to(seriesDcid)
+                  .set("date")
+                  .to(entry.getKey())
+                  .set("value")
+                  .to(entry.getValue())
+                  .build()));
+    }
+
+    return mutations;
+  }
+
+  static void addIfNotEmpty(
+      List<KV<String, Mutation>> mutations, String id, String property, String value) {
+    if (value != null && !value.isEmpty()) {
+      mutations.add(
+          KV.of(
+              id,
+              Mutation.newInsertOrUpdateBuilder("TimeSeriesAttribute")
+                  .set("id")
+                  .to(id)
+                  .set("property")
+                  .to(property)
+                  .set("value")
+                  .to(value)
+                  .build()));
+    }
+  }
+
+  static List<KV<String, Mutation>> filterNewSchemaMutations(
+      List<KV<String, Mutation>> kvs, LRUCache<String, Boolean> seenObs) {
+    List<KV<String, Mutation>> filtered = new ArrayList<>();
+    for (var kv : kvs) {
+      Mutation mutation = kv.getValue();
+      String table = mutation.getTable();
+      String id = kv.getKey();
+      String dedupKey = "";
+
+      if (table.equals("TimeSeries") || table.equals("TimeSeriesAttribute")) {
+        dedupKey = table + "::" + id;
+      } else if (table.equals("StatVarObservation")) {
+        String date = mutation.asMap().get("date").getString();
+        dedupKey = table + "::" + id + "::" + date;
+      }
+
+      if (seenObs.get(dedupKey) != null) {
+        continue;
+      }
+      seenObs.put(dedupKey, true);
+      filtered.add(kv);
+    }
+    return filtered;
   }
 }
