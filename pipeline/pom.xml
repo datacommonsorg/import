@@ -22,6 +22,7 @@
     <module>differ</module>
     <module>ingestion</module>
     <module>spanner</module>
+    <module>timeseries-backfill</module>
     <module>util</module>
   </modules>
 
