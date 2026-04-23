@@ -269,12 +269,32 @@ public class Observation {
       return this;
     }
 
+    public String getImportName() {
+      return importName;
+    }
+
+    public String getMeasurementMethod() {
+      return measurementMethod;
+    }
+
+    public String getObservationPeriod() {
+      return observationPeriod;
+    }
+
+    public String getScalingFactor() {
+      return scalingFactor;
+    }
+
+    public String getUnit() {
+      return unit;
+    }
+
+    public boolean getIsDcAggregate() {
+      return isDcAggregate;
+    }
+
     public Observation build() {
-      int intHash =
-          Objects.hash(
-              importName, measurementMethod, observationPeriod, scalingFactor, unit, isDcAggregate);
-      // Convert to positive long and then to string
-      this.facetId = String.valueOf((long) intHash & 0x7fffffffL);
+      this.facetId = DataUtils.generateFacetId(this);
       return new Observation(this);
     }
   }
