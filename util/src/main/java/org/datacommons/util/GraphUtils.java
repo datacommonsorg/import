@@ -32,6 +32,7 @@ public class GraphUtils {
     measurementMethod,
     unit,
     value,
+    name,
     scalingFactor,
     dcid;
   }
@@ -98,8 +99,7 @@ public class GraphUtils {
    * @return True if the property values indicate a StatVarObservation, false otherwise.
    */
   public static boolean isObservation(PropertyValues pvs) {
-    return GraphUtils.getPropertyValue(pvs.getPvsMap(), GraphUtils.Property.typeOf.name())
-        .contains(GraphUtils.STAT_VAR_OB);
+    return getPropVal(pvs, GraphUtils.Property.typeOf.name()).contains(GraphUtils.STAT_VAR_OB);
   }
 
   /**
@@ -129,11 +129,7 @@ public class GraphUtils {
     McfGraph.Values v = node.getPvsMap().get(prop);
     if (v != null && v.getTypedValuesCount() > 0) {
       String val = v.getTypedValues(0).getValue();
-      if (val.startsWith("dcid:") || val.startsWith("dcs:") || val.startsWith("schema:")) {
-        return val.substring(val.indexOf(':') + 1);
-      } else {
-        return val;
-      }
+      return McfUtil.stripNamespace(val);
     }
     return "";
   }
