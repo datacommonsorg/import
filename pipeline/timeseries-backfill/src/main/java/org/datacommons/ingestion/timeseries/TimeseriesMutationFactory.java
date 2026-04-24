@@ -3,7 +3,9 @@ package org.datacommons.ingestion.timeseries;
 import com.google.cloud.spanner.Mutation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.apache.beam.sdk.io.gcp.spanner.MutationGroup;
+import org.datacommons.Storage.Observations;
 
 /** Converts source rows into normalized timeseries table mutations. */
 final class TimeseriesMutationFactory {
@@ -110,6 +112,42 @@ final class TimeseriesMutationFactory {
 
     return new BackfillMutationGroups(
         mutationGroups, attributeMutations.size(), pointMutations.size());
+  }
+
+  static BackfillMutationGroups toMutationGroups(
+      CompactSourceObservationRow row,
+      String timeSeriesTableName,
+      String timeSeriesAttributeTableName,
+      String statVarObservationTableName) {
+    Mutation timeSeriesMutation = toTimeSeriesMutation(row.seriesRow(), timeSeriesTableName);
+    List<Mutation> attributeMutations =
+        toTimeSeriesAttributeMutations(row.seriesRow(), timeSeriesAttributeTableName);
+    Observations observations =
+        SourceObservationRows.parseObservations(row.observationsProtoBytes());
+
+    List<MutationGroup> mutationGroups = new ArrayList<>();
+    List<Mutation> attached = new ArrayList<>(attributeMutations);
+    int maxAttachedMutations = MAX_GROUP_MUTATIONS - 1;
+    int pointMutationCount = 0;
+    for (Map.Entry<String, String> entry : observations.getValuesMap().entrySet()) {
+      if (attached.size() >= maxAttachedMutations) {
+        mutationGroups.add(MutationGroup.create(timeSeriesMutation, attached));
+        attached = new ArrayList<>();
+      }
+      attached.add(
+          toStatVarObservationMutation(
+              new SourcePointRow(
+                  row.seriesRow().observationAbout(),
+                  row.seriesRow().variableMeasured(),
+                  row.seriesRow().facetId(),
+                  entry.getKey(),
+                  entry.getValue()),
+              statVarObservationTableName));
+      pointMutationCount++;
+    }
+    mutationGroups.add(MutationGroup.create(timeSeriesMutation, attached));
+    return new BackfillMutationGroups(
+        mutationGroups, attributeMutations.size(), pointMutationCount);
   }
 
   static String seriesId(SourceSeriesRow row) {

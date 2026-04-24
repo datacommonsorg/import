@@ -5,6 +5,9 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.coders.SerializableCoder;
 import org.apache.beam.sdk.extensions.avro.io.AvroIO;
+import org.apache.beam.sdk.io.gcp.spanner.MutationGroup;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -48,22 +51,31 @@ public class TimeseriesBackfillAvroPipeline {
 
   static void buildPipeline(
       Pipeline pipeline, TimeseriesBackfillOptions options, List<String> inputFiles) {
-    PCollection<SourceObservationRow> sourceRows =
+    PCollection<CompactSourceObservationRow> sourceRows =
         pipeline
             .apply("CreateAvroFileSpecs", Create.of(inputFiles))
             .apply(
                 "ReadAvroSourceRows",
-                AvroIO.parseAllGenericRecords(SourceObservationRows::toObservationRow)
-                    .withCoder(SerializableCoder.of(SourceObservationRow.class)))
+                AvroIO.parseAllGenericRecords(SourceObservationRows::toCompactObservationRow)
+                    .withCoder(SerializableCoder.of(CompactSourceObservationRow.class)))
             .apply(
                 "FilterSourceRows",
                 ParDo.of(
-                    new FilterSourceObservationRowsFn(
+                    new FilterCompactSourceObservationRowsFn(
                         options.getStartObservationAbout(),
                         options.getEndObservationAboutExclusive(),
                         VariableMeasuredFilters.parse(options.getVariableMeasured()))));
-    sourceRows.setCoder(SerializableCoder.of(SourceObservationRow.class));
-    TimeseriesBackfillPipeline.buildPipelineFromSourceRows(sourceRows, options);
+    sourceRows.setCoder(SerializableCoder.of(CompactSourceObservationRow.class));
+
+    PCollection<MutationGroup> mutationGroups =
+        sourceRows.apply(
+            "MapMutationGroups",
+            ParDo.of(
+                new CompactRowsToMutationGroupsFn(
+                    options.getDestinationTimeSeriesTableName(),
+                    options.getDestinationTimeSeriesAttributeTableName(),
+                    options.getDestinationStatVarObservationTableName())));
+    mutationGroups.apply("WriteMutationGroups", TimeseriesBackfillIO.buildGroupedWrite(options));
   }
 
   static boolean matchesFilters(
@@ -83,13 +95,13 @@ public class TimeseriesBackfillAvroPipeline {
         || variableMeasuredFilters.contains(seriesRow.variableMeasured());
   }
 
-  static final class FilterSourceObservationRowsFn
-      extends DoFn<SourceObservationRow, SourceObservationRow> {
+  static final class FilterCompactSourceObservationRowsFn
+      extends DoFn<CompactSourceObservationRow, CompactSourceObservationRow> {
     private final String startObservationAbout;
     private final String endObservationAboutExclusive;
     private final List<String> variableMeasuredFilters;
 
-    FilterSourceObservationRowsFn(
+    FilterCompactSourceObservationRowsFn(
         String startObservationAbout,
         String endObservationAboutExclusive,
         List<String> variableMeasuredFilters) {
@@ -100,13 +112,64 @@ public class TimeseriesBackfillAvroPipeline {
 
     @ProcessElement
     public void processElement(
-        @Element SourceObservationRow sourceRow, OutputReceiver<SourceObservationRow> out) {
+        @Element CompactSourceObservationRow sourceRow,
+        OutputReceiver<CompactSourceObservationRow> out) {
       if (matchesFilters(
           sourceRow.seriesRow(),
           startObservationAbout,
           endObservationAboutExclusive,
           variableMeasuredFilters)) {
         out.output(sourceRow);
+      }
+    }
+  }
+
+  static final class CompactRowsToMutationGroupsFn
+      extends DoFn<CompactSourceObservationRow, MutationGroup> {
+    private static final Counter SOURCE_ROWS =
+        Metrics.counter(CompactRowsToMutationGroupsFn.class, "source_rows");
+    private static final Counter TIMESERIES_ROWS =
+        Metrics.counter(CompactRowsToMutationGroupsFn.class, "timeseries_rows_written");
+    private static final Counter TIMESERIES_ATTRIBUTE_ROWS =
+        Metrics.counter(CompactRowsToMutationGroupsFn.class, "timeseries_attribute_rows_written");
+    private static final Counter SOURCE_POINT_ROWS =
+        Metrics.counter(CompactRowsToMutationGroupsFn.class, "source_point_rows");
+    private static final Counter STAT_VAR_OBSERVATION_ROWS =
+        Metrics.counter(CompactRowsToMutationGroupsFn.class, "stat_var_observation_rows_written");
+    private final String timeSeriesTableName;
+    private final String timeSeriesAttributeTableName;
+    private final String statVarObservationTableName;
+
+    CompactRowsToMutationGroupsFn(
+        String timeSeriesTableName,
+        String timeSeriesAttributeTableName,
+        String statVarObservationTableName) {
+      this.timeSeriesTableName = timeSeriesTableName;
+      this.timeSeriesAttributeTableName = timeSeriesAttributeTableName;
+      this.statVarObservationTableName = statVarObservationTableName;
+    }
+
+    @ProcessElement
+    public void processElement(
+        @Element CompactSourceObservationRow sourceRow, OutputReceiver<MutationGroup> out) {
+      BackfillMutationGroups mutationGroups =
+          TimeseriesMutationFactory.toMutationGroups(
+              sourceRow,
+              timeSeriesTableName,
+              timeSeriesAttributeTableName,
+              statVarObservationTableName);
+      SOURCE_ROWS.inc();
+      TIMESERIES_ROWS.inc();
+      TIMESERIES_ATTRIBUTE_ROWS.inc(mutationGroups.timeSeriesAttributeRows());
+      SOURCE_POINT_ROWS.inc(mutationGroups.statVarObservationRows());
+      STAT_VAR_OBSERVATION_ROWS.inc(mutationGroups.statVarObservationRows());
+      LocalProgressTracker progressTracker = TimeseriesBackfillPipeline.localProgressTracker();
+      if (progressTracker != null) {
+        progressTracker.recordRow(
+            mutationGroups.timeSeriesAttributeRows(), mutationGroups.statVarObservationRows());
+      }
+      for (MutationGroup mutationGroup : mutationGroups.groups()) {
+        out.output(mutationGroup);
       }
     }
   }

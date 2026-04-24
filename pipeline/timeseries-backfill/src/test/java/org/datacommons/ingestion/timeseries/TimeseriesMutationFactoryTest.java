@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.beam.sdk.io.gcp.spanner.MutationGroup;
+import org.datacommons.Storage.Observations;
 import org.junit.Test;
 
 public class TimeseriesMutationFactoryTest {
@@ -158,6 +159,39 @@ public class TimeseriesMutationFactoryTest {
     assertEquals(2, mutationGroups.groups().size());
     assertEquals("TimeSeries", mutationGroups.groups().get(0).primary().getTable());
     assertEquals("TimeSeries", mutationGroups.groups().get(1).primary().getTable());
+  }
+
+  @Test
+  public void toMutationGroups_compactRowAvoidsExpandedPointListInput() {
+    SourceSeriesRow seriesRow =
+        new SourceSeriesRow(
+            "geoId/06",
+            "Count_Person",
+            "12345",
+            "",
+            "",
+            "",
+            "",
+            "TestImport",
+            "",
+            false,
+            "dc/base/TestImport");
+    CompactSourceObservationRow compactRow =
+        new CompactSourceObservationRow(
+            seriesRow,
+            Observations.newBuilder()
+                .putValues("2023", "1")
+                .putValues("2024", "2")
+                .build()
+                .toByteArray());
+
+    BackfillMutationGroups mutationGroups =
+        TimeseriesMutationFactory.toMutationGroups(
+            compactRow, "TimeSeries", "TimeSeriesAttribute", "StatVarObservation");
+
+    assertEquals(1, mutationGroups.groups().size());
+    assertEquals(2, mutationGroups.statVarObservationRows());
+    assertEquals("TimeSeries", mutationGroups.groups().get(0).primary().getTable());
   }
 
   @Test

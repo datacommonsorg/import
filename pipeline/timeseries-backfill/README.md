@@ -191,7 +191,14 @@ Set `--progressEverySourceRows` or `--heartbeatSeconds` if you want a different 
 mvn -Pgit-worktree compile exec:java \
   -pl timeseries-backfill -am \
   -Dexec.mainClass=org.datacommons.ingestion.timeseries.TimeseriesBackfillAvroPipeline \
-  -Dexec.args="--project=datcom-store --spannerInstanceId=dc-kg-test --spannerDatabaseId=dc_graph_2026_01_27 --inputExportDir=gs://<bucket>/<export_subdir> --destinationTimeSeriesTableName=TimeSeries_rk --destinationTimeSeriesAttributeTableName=TimeSeriesAttribute_rk --destinationStatVarObservationTableName=StatVarObservation_rk --variableMeasured=Count_Person --runner=DirectRunner"
+  -Dexec.args="--project=datcom-store --spannerInstanceId=dc-kg-test --spannerDatabaseId=dc_graph_2026_01_27 --inputFiles=gs://rohitrkumar-dataflow/spanner_obs_dump_2026_04_21/dc-kg-test-dc_graph_2026_01_27-2026-04-23_05_47_24-8439747614048276587/Observation.avro-00005-of-00303 --destinationTimeSeriesTableName=TimeSeries_rk --destinationTimeSeriesAttributeTableName=TimeSeriesAttribute_rk --destinationStatVarObservationTableName=StatVarObservation_rk  --runner=DirectRunner"
+
+
+  mvn -Pgit-worktree compile exec:java \
+  -pl timeseries-backfill -am \
+  -Dexec.mainClass=org.datacommons.ingestion.timeseries.TimeseriesBackfillAvroPipeline \
+  -Dexec.args="--project=datcom-store --spannerInstanceId=dc-kg-test --spannerDatabaseId=dc_graph_2026_01_27 --inputFiles=/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/pipeline/Observation.avro-00042-of-00303 --destinationTimeSeriesTableName=TimeSeries_rk --destinationTimeSeriesAttributeTableName=TimeSeriesAttribute_rk --destinationStatVarObservationTableName=StatVarObservation_rk  --runner=DirectRunner"
+
 ```
 
 The Avro entrypoint reads exported `Observation` Avro rows, recomputes `provenance` from `import_name`, parses `observations` from the serialized proto payload, and then reuses the same normalized write path as the Spanner entrypoint.
@@ -223,6 +230,22 @@ mvn -Pgit-worktree compile exec:java \
   -pl timeseries-backfill -am \
   -Dexec.mainClass=org.datacommons.ingestion.timeseries.TimeseriesBackfillAvroPipeline \
   -Dexec.args="--project=datcom-store --spannerInstanceId=dc-kg-test --spannerDatabaseId=dc_graph_2026_01_27 --inputExportDir=gs://rohitrkumar-dataflow/spanner_obs_dump_2026_04_21/<export_subdir> --destinationTimeSeriesTableName=TimeSeries_rk --destinationTimeSeriesAttributeTableName=TimeSeriesAttribute_rk --destinationStatVarObservationTableName=StatVarObservation_rk --variableMeasured=Count_Person --runner=DataflowRunner --region=us-central1 --tempLocation=gs://keyurs-dataflow/temp --stagingLocation=gs://keyurs-dataflow/temp --numWorkers=20 --maxNumWorkers=100 --workerMachineType=n2-custom-4-32768 --numberOfWorkerHarnessThreads=2"
+
+  mvn -Pgit-worktree compile exec:java \
+  -pl timeseries-backfill -am \
+  -Dexec.mainClass=org.datacommons.ingestion.timeseries.TimeseriesBackfillAvroPipeline \
+  -Dexec.args="--project=datcom-store --spannerInstanceId=dc-kg-test --spannerDatabaseId=dc_graph_2026_01_27 --inputFiles=gs://rohitrkumar-dataflow/spanner_obs_dump_2026_04_21/dc-kg-test-dc_graph_2026_01_27-2026-04-23_05_47_24-8439747614048276587/Observation.avro-00042-of-00303 --destinationTimeSeriesTableName=TimeSeries_rk --destinationTimeSeriesAttributeTableName=TimeSeriesAttribute_rk --destinationStatVarObservationTableName=StatVarObservation_rk  --runner=DataflowRunner --region=us-central1 --tempLocation=gs://keyurs-dataflow/temp --stagingLocation=gs://keyurs-dataflow/temp --numWorkers=20 --maxNumWorkers=100 --workerMachineType=n2-custom-4-32768 --numberOfWorkerHarnessThreads=2"
+
+  mvn -Pgit-worktree compile exec:java \
+  -pl timeseries-backfill -am \
+  -Dexec.mainClass=org.datacommons.ingestion.timeseries.TimeseriesBackfillAvroPipeline \
+  -Dexec.args="--project=datcom-store --spannerInstanceId=dc-kg-test --spannerDatabaseId=dc_graph_2026_01_27 --inputExportDir=gs://rohitrkumar-dataflow/spanner_obs_dump_2026_04_21/dc-kg-test-dc_graph_2026_01_27-2026-04-23_05_47_24-8439747614048276587 --destinationTimeSeriesTableName=TimeSeries_rk --destinationTimeSeriesAttributeTableName=TimeSeriesAttribute_rk --destinationStatVarObservationTableName=StatVarObservation_rk  --runner=DataflowRunner --region=us-central1 --tempLocation=gs://keyurs-dataflow/temp --stagingLocation=gs://keyurs-dataflow/temp --numWorkers=20 --maxNumWorkers=100 --workerMachineType=n2-custom-4-32768 --numberOfWorkerHarnessThreads=2"
+
+  mvn -Pgit-worktree compile exec:java \
+        -pl timeseries-backfill -am \
+        -Dexec.mainClass=org.datacommons.ingestion.timeseries.TimeseriesBackfillAvroPipeline \
+        -Dexec.args="--project=datcom-store --spannerInstanceId=dc-kg-test --spannerDatabaseId=dc_graph_2026_01_27 --inputExportDir=gs://rohitrkumar-dataflow/spanner_obs_dump_2026_04_21/dc-kg-test-dc_graph_2026_01_27-2026-04-23_05_47_24-8439747614048276587 --destinationTimeSeriesTableName=TimeSeries_rk --destinationTimeSeriesAttributeTableName=TimeSeriesAttribute_rk --destinationStatVarObservationTableName=StatVarObservation_rk  --runner=DataflowRunner --region=us-central1 --tempLocation=gs://keyurs-dataflow/temp --stagingLocation=gs://keyurs-dataflow/temp --numWorkers=20 --maxNumWorkers=100 --workerMachineType=n2-custom-4-32768 --numberOfWorkerHarnessThreads=2
+
 ```
 
 ## Recreate Destination Tables

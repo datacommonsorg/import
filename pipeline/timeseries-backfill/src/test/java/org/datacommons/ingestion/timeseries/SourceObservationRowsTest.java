@@ -1,5 +1,6 @@
 package org.datacommons.ingestion.timeseries;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.google.cloud.ByteArray;
@@ -95,6 +96,36 @@ public class SourceObservationRowsTest {
     assertEquals(2, rows.size());
     assertEquals(new SourcePointRow("geoId/06", "Count_Person", "123", "2023", "1"), rows.get(0));
     assertEquals(new SourcePointRow("geoId/06", "Count_Person", "123", "2024", "2"), rows.get(1));
+  }
+
+  @Test
+  public void toCompactObservationRow_keepsSeriesMetadataAndRawProtoBytes() {
+    byte[] observationBytes =
+        Observations.newBuilder()
+            .putValues("2023", "1")
+            .putValues("2024", "2")
+            .build()
+            .toByteArray();
+    GenericRecord row = new GenericData.Record(schemaWithoutGeneratedProvenance());
+    row.put("observation_about", "geoId/06");
+    row.put("variable_measured", "Count_Person");
+    row.put("facet_id", "123");
+    row.put("observation_period", null);
+    row.put("measurement_method", null);
+    row.put("unit", null);
+    row.put("scaling_factor", null);
+    row.put("import_name", "TestImport");
+    row.put("provenance_url", "https://example.com");
+    row.put("is_dc_aggregate", true);
+    row.put("observations", ByteBuffer.wrap(observationBytes));
+
+    CompactSourceObservationRow observationRow = SourceObservationRows.toCompactObservationRow(row);
+
+    assertEquals("geoId/06", observationRow.seriesRow().observationAbout());
+    assertEquals("Count_Person", observationRow.seriesRow().variableMeasured());
+    assertEquals("dc/base/TestImport", observationRow.seriesRow().provenance());
+    assertEquals("https://example.com", observationRow.seriesRow().provenanceUrl());
+    assertArrayEquals(observationBytes, observationRow.observationsProtoBytes());
   }
 
   private static Schema schemaWithoutGeneratedProvenance() {

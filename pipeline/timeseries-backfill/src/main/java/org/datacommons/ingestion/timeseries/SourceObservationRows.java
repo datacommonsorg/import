@@ -45,6 +45,23 @@ final class SourceObservationRows {
         parseObservations(row));
   }
 
+  static CompactSourceObservationRow toCompactObservationRow(GenericRecord row) {
+    return new CompactSourceObservationRow(
+        new SourceSeriesRow(
+            getNullableString(row, "observation_about"),
+            getNullableString(row, "variable_measured"),
+            getNullableString(row, "facet_id"),
+            getNullableString(row, "observation_period"),
+            getNullableString(row, "measurement_method"),
+            getNullableString(row, "unit"),
+            getNullableString(row, "scaling_factor"),
+            getNullableString(row, "import_name"),
+            getNullableString(row, "provenance_url"),
+            getNullableBoolean(row, "is_dc_aggregate"),
+            deriveProvenance(getNullableString(row, "import_name"))),
+        getObservationBytes(row));
+  }
+
   private static SourceObservationRow buildObservationRow(
       String observationAbout,
       String variableMeasured,
@@ -102,19 +119,26 @@ final class SourceObservationRows {
   }
 
   private static Observations parseObservations(GenericRecord row) {
-    Object value = getField(row, "observations");
-    if (value == null) {
-      return Observations.getDefaultInstance();
-    }
-    return parseObservations(toByteArray(value));
+    return parseObservations(getObservationBytes(row));
   }
 
-  private static Observations parseObservations(byte[] protoBytes) {
+  static Observations parseObservations(byte[] protoBytes) {
+    if (protoBytes == null || protoBytes.length == 0) {
+      return Observations.getDefaultInstance();
+    }
     try {
       return Observations.parseFrom(protoBytes);
     } catch (Exception e) {
       throw new RuntimeException("Failed to parse observations proto", e);
     }
+  }
+
+  private static byte[] getObservationBytes(GenericRecord row) {
+    Object value = getField(row, "observations");
+    if (value == null) {
+      return new byte[0];
+    }
+    return toByteArray(value);
   }
 
   private static byte[] toByteArray(Object value) {
@@ -146,6 +170,9 @@ final class SourceObservationRows {
 }
 
 record SourceObservationRow(SourceSeriesRow seriesRow, List<SourcePointRow> pointRows)
+    implements Serializable {}
+
+record CompactSourceObservationRow(SourceSeriesRow seriesRow, byte[] observationsProtoBytes)
     implements Serializable {}
 
 record SourceSeriesRow(

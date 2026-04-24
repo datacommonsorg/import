@@ -110,6 +110,10 @@ public class TimeseriesBackfillPipeline {
     localProgressTracker = null;
   }
 
+  static LocalProgressTracker localProgressTracker() {
+    return localProgressTracker;
+  }
+
   static final class StructToSourceObservationRowsFn extends DoFn<Struct, SourceObservationRow> {
     @ProcessElement
     public void processElement(@Element Struct row, OutputReceiver<SourceObservationRow> out) {
