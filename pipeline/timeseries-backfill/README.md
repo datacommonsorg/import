@@ -2,11 +2,15 @@
 
 This module backfills the normalized timeseries tables from the legacy `Observation` table in Spanner.
 
+It supports two execution paths:
+- **Spanner to Spanner**: Reads directly from the live `Observation` table in Spanner. This approach is direct and doesn't require an intermediate export, but it queries the live database which might impact performance or require stable snapshots for consistency. **Note:** Complete migration using this path failed as queries timed out in Spanner after 2 hours. It is recommended only for targeted small batches (e.g., scoped by variable measured + geo combination).
+- **Avro to Spanner**: Reads from exported `Observation` Avro files on GCS. This approach is decoupled from the live database for reading, making it suitable for large-scale backfills or when reading from a specific historical export. **Note:** For large backfills, this path is recommended. However, filtering in Avro reads all files in the selected directory/list. It supports 2 modes: all files in a directory or a single file. **Crucially, the Spanner table backup needs to be taken separately for this path to work (see One-Time Prep).**
+
 By default it writes:
 
-- `TimeSeries_rk`
-- `TimeSeriesAttribute_rk`
-- `StatVarObservation_rk`
+- `TimeSeries_<SUFFIX>`
+- `TimeSeriesAttribute_<SUFFIX>`
+- `StatVarObservation_<SUFFIX>`
 
 It does not populate `ObservationAttribute` in v1.
 
@@ -18,7 +22,7 @@ Source table:
 
 Destination schema:
 
-- [rk-experiments/mixer/spanner/bq_spanner_ingestion/timeseries_schema.sql](/home/rohitrkumar_google_com/Documents/dc/github/rohitkumarbhagat/dc_local/rk-experiments/mixer/spanner/bq_spanner_ingestion/timeseries_schema.sql)
+- [timeseries_schema.sql](<PATH_TO_SCHEMA>/timeseries_schema.sql)
 
 Important assumptions used by this module:
 
@@ -51,9 +55,9 @@ Core flags:
 - `--sourceObservationTableName`: Source table name. Normally `Observation`.
 - `--inputExportDir`: Avro-only. Spanner export directory containing `Observation-manifest.json`.
 - `--inputFiles`: Avro-only. Comma-separated exact Avro file paths.
-- `--destinationTimeSeriesTableName`: Destination parent series table. Normally `TimeSeries_rk`.
-- `--destinationTimeSeriesAttributeTableName`: Destination series-attribute table. Normally `TimeSeriesAttribute_rk`.
-- `--destinationStatVarObservationTableName`: Destination point table. Normally `StatVarObservation_rk`.
+- `--destinationTimeSeriesTableName`: Destination parent series table. Normally `TimeSeries_<SUFFIX>`.
+- `--destinationTimeSeriesAttributeTableName`: Destination series-attribute table. Normally `TimeSeriesAttribute_<SUFFIX>`.
+- `--destinationStatVarObservationTableName`: Destination point table. Normally `StatVarObservation_<SUFFIX>`.
 - `--readTimestamp`: Source read snapshot in RFC3339 format, for example `2026-04-22T00:00:00Z`. When set, the job reads from that exact Spanner snapshot for consistent backfill semantics. When empty, the code uses a Spanner strong read instead.
 - `--variableMeasured`: Fixed `variable_measured` filter. Use one stat var or a comma-separated list such as `Count_Person,Min_Temperature`.
 - `--startObservationAbout`: Inclusive lower bound on `observation_about`. Useful for sharding by place range.
@@ -130,6 +134,18 @@ Suggested order to test if the sink is too memory-heavy or too serialized:
 
 ## One-Time Prep
 
+### Exporting Observation Table (for Avro path)
+If you plan to use the Avro execution path, you must first export the `Observation` table from Spanner to GCS as Avro files. Run this command to start the Dataflow export job:
+
+```bash
+gcloud dataflow jobs run observation-export-$(date +%Y%m%d-%H%M%S) \
+    --project=datcom-store \
+    --region=us-central1 \
+    --gcs-location=gs://dataflow-templates-us-central1/latest/Cloud_Spanner_to_GCS_Avro \
+    --max-workers=50 \
+    --parameters=instanceId=dc-kg-test,databaseId=dc_graph_2026_01_27,spannerProjectId=datcom-store,tableNames=Observation,outputDir=gs://<USER_DATAFLOW_BUCKET>/spanner_obs_dump_2026_04_21,dataBoostEnabled=true,spannerPriority=LOW
+```
+
 If you see a missing artifact error for `org.datacommons:datacommons-import-util`, install that top-level module once from the `import/pipeline` directory:
 
 ```bash
@@ -197,7 +213,7 @@ mvn -Pgit-worktree compile exec:java \
   mvn -Pgit-worktree compile exec:java \
   -pl timeseries-backfill -am \
   -Dexec.mainClass=org.datacommons.ingestion.timeseries.TimeseriesBackfillAvroPipeline \
-  -Dexec.args="--project=datcom-store --spannerInstanceId=dc-kg-test --spannerDatabaseId=dc_graph_2026_01_27 --inputFiles=/usr/local/google/home/rohitrkumar/Documents/dc/github/rohitkumarbhagat/import/pipeline/Observation.avro-00042-of-00303 --destinationTimeSeriesTableName=TimeSeries_rk --destinationTimeSeriesAttributeTableName=TimeSeriesAttribute_rk --destinationStatVarObservationTableName=StatVarObservation_rk  --runner=DirectRunner"
+  -Dexec.args="--project=datcom-store --spannerInstanceId=dc-kg-test --spannerDatabaseId=dc_graph_2026_01_27 --inputFiles=<PATH_TO_IMPORT_REPO>/import/pipeline/Observation.avro-00042-of-00303 --destinationTimeSeriesTableName=TimeSeries_rk --destinationTimeSeriesAttributeTableName=TimeSeriesAttribute_rk --destinationStatVarObservationTableName=StatVarObservation_rk  --runner=DirectRunner"
 
 ```
 
@@ -256,7 +272,7 @@ Run this from the `import` repo root to drop any existing experimental normalize
 ./pipeline/timeseries-backfill/recreate_timeseries_tables.sh datcom-store dc-kg-test dc_graph_5
 ```
 
-The script reads the current database DDL, drops the normalized `_rk` tables and indexes if they already exist, and then reapplies a suffixed form of [timeseries_schema.sql](/home/rohitrkumar_google_com/Documents/dc/github/rohitkumarbhagat/dc_local/rk-experiments/mixer/spanner/bq_spanner_ingestion/timeseries_schema.sql).
+The script reads the current database DDL, drops the normalized `_rk` tables and indexes if they already exist, and then reapplies a suffixed form of [timeseries_schema.sql](<PATH_TO_SCHEMA>/timeseries_schema.sql).
 
 ## Notes
 
