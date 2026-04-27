@@ -20,6 +20,7 @@ from stats import schema_constants as sc
 from stats.data import Observation
 from stats.data import ObservationProperties
 from stats.data import strip_namespace
+from stats.data import Triple
 from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
@@ -54,12 +55,13 @@ class VariablePerRowImporter(Importer):
     """
 
   def __init__(self, input_file: File, db: Db, reporter: FileImportReporter,
-               nodes: Nodes) -> None:
+               nodes: Nodes, mode: str = "customdc") -> None:
     self.input_file = input_file
     self.db = db
     self.reporter = reporter
     self.nodes = nodes
     self.config = nodes.config
+    self.mode = mode
     # Reassign after reading CSV.
     self.column_mappings = dict(_DEFAULT_COLUMN_MAPPINGS)
     self.reader: DictReader = None
@@ -160,3 +162,54 @@ class VariablePerRowImporter(Importer):
       logging.info("Importing %s of %s entities.", len(dcid2type),
                    len(new_entity_dcids))
       self.nodes.entities_with_types(dcid2type)
+      
+      if self.mode == "dcpbridge":
+        # Get parent places chain and their details
+        logging.info("Getting parent places chain from DC for %s entities.", len(new_entity_dcids))
+        
+        resolved_dcids = set()
+        current_level_dcids = set(new_entity_dcids)
+        
+        while current_level_dcids:
+          # Filter out already resolved ones to optimize API calls
+          to_resolve = list(current_level_dcids - resolved_dcids)
+          if not to_resolve:
+            break
+            
+          logging.info("Resolving parents for %s entities.", len(to_resolve))
+          dcid2parents = dc.get_property_of_entities(to_resolve, "containedInPlace")
+          
+          if not dcid2parents:
+            break
+            
+          parent_triples = []
+          next_level_dcids = set()
+          
+          for child_dcid, parent_dcid in dcid2parents.items():
+            parent_triples.append(Triple(child_dcid, "containedInPlace", object_id=parent_dcid))
+            next_level_dcids.add(parent_dcid)
+            
+          self.db.insert_triples(parent_triples)
+          
+          # Mark current as resolved
+          resolved_dcids.update(to_resolve)
+          
+          # Prepare for next level
+          current_level_dcids = next_level_dcids
+          
+        # Resolve details for all unique parent places found in chain (excluding original ones)
+        all_parents = resolved_dcids - set(new_entity_dcids)
+        if all_parents:
+          logging.info("Resolving details for %s unique parent places found in chain.", len(all_parents))
+          parent_dcids_list = list(all_parents)
+          
+          parent_dcid2type = dc.get_property_of_entities(parent_dcids_list, sc.PREDICATE_TYPE_OF)
+          parent_dcid2name = dc.get_property_of_entities(parent_dcids_list, sc.PREDICATE_NAME)
+          
+          parent_info_triples = []
+          for dcid, type_str in parent_dcid2type.items():
+            parent_info_triples.append(Triple(dcid, sc.PREDICATE_TYPE_OF, object_id=type_str))
+          for dcid, name_str in parent_dcid2name.items():
+            parent_info_triples.append(Triple(dcid, sc.PREDICATE_NAME, object_value=name_str))
+            
+          self.db.insert_triples(parent_info_triples)

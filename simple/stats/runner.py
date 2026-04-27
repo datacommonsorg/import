@@ -10,6 +10,7 @@ from stats import stat_var_hierarchy_generator
 from stats.config import Config
 from stats.data import ImportType
 from stats.data import InputFileFormat
+from stats.data import McfNode
 from stats.data import ParentSVG2ChildSpecializedNames
 from stats.data import Triple
 from stats.data import VerticalSpec
@@ -42,6 +43,7 @@ class RunMode(StrEnum):
   CUSTOM_DC = "customdc"
   SCHEMA_UPDATE = "schemaupdate"
   MAIN_DC = "maindc"
+  DCP_BRIDGE = "dcpbridge"
 
 
 class Runner:
@@ -127,7 +129,7 @@ class Runner:
       if self.mode == RunMode.SCHEMA_UPDATE:
         logging.info("Skipping imports because run mode is schema update.")
 
-      elif self.mode == RunMode.CUSTOM_DC or self.mode == RunMode.MAIN_DC:
+      elif self.mode == RunMode.CUSTOM_DC or self.mode == RunMode.MAIN_DC or self.mode == RunMode.DCP_BRIDGE:
         self._run_imports_and_do_post_import_work()
 
       else:
@@ -213,6 +215,9 @@ class Runner:
     # Generate NL artifacts (sentences, embeddings, topic cache).
     self._generate_nl_artifacts()
 
+    if self.mode == RunMode.DCP_BRIDGE:
+      self._export_data_to_files_for_dcp()
+
     # Write import info to DB.
     self.db.insert_import_info(status=ImportStatus.SUCCESS)
 
@@ -237,6 +242,161 @@ class Runner:
           sc.TYPE_STAT_VAR_PEER_GROUP)
       topic_cache_triples = topic_triples + sv_peer_group_triples
       nl.generate_topic_cache(topic_cache_triples, self.nl_dir)
+
+  def _export_data_to_files_for_dcp(self):
+    logging.info("Exporting data to files for DCP Bridge.")
+    import pandas as pd
+    
+    # 1. Export observations to MCF
+    obs_tuples = self.db.engine.fetch_all("select * from observations")
+    if obs_tuples:
+      columns = ["entity", "variable", "date", "value", "provenance", "unit", "scaling_factor", "measurement_method", "observation_period", "properties"]
+      df = pd.DataFrame(obs_tuples, columns=columns)
+      
+      import hashlib
+      
+      mcf_nodes = []
+      for i, row in df.iterrows():
+        node_lines = []
+        node_lines.append(f"Node: E:obs->{i}")
+        node_lines.append("typeOf: dcid:StatVarObservation")
+        node_lines.append(f"observationAbout: dcid:{row['entity']}")
+        node_lines.append(f"variableMeasured: dcid:{row['variable']}")
+        node_lines.append(f"observationDate: \"{row['date']}\"")
+        node_lines.append(f"value: {row['value']}")
+        
+        # Generate a unique dcid for the observation
+        content_str = f"{row['entity']}_{row['variable']}_{row['date']}_{row['value']}"
+        obs_hash = hashlib.md5(content_str.encode()).hexdigest()
+        node_lines.append(f"dcid: \"dc/o/{obs_hash}\"")
+        
+        if pd.notna(row['unit']) and row['unit']:
+          node_lines.append(f"unit: dcid:{row['unit']}")
+        if pd.notna(row['measurement_method']) and row['measurement_method']:
+          node_lines.append(f"measurementMethod: dcid:{row['measurement_method']}")
+        if pd.notna(row['observation_period']) and row['observation_period']:
+          node_lines.append(f"observationPeriod: \"{row['observation_period']}\"")
+        if pd.notna(row['scaling_factor']) and row['scaling_factor']:
+          node_lines.append(f"scalingFactor: {row['scaling_factor']}")
+          
+        mcf_nodes.append("\n".join(node_lines))
+        
+      mcf = "\n\n".join(mcf_nodes)
+      obs_file = self.output_dir.open_file("observations.mcf")
+      obs_file.write(mcf)
+      logging.info("Exported %s observations to %s", len(df), obs_file.full_path())
+
+    # 2. Export triples to MCF
+    triples_tuples = self.db.engine.fetch_all("select * from triples")
+    if triples_tuples:
+      nodes = {}
+      for tuple in triples_tuples:
+        subject_id, predicate, object_id, object_value = tuple
+        node = nodes.get(subject_id)
+        if not node:
+          node = McfNode(subject_id)
+          nodes[subject_id] = node
+        
+        if object_id:
+          node.add_triple(Triple(subject_id, predicate, object_id=object_id))
+        else:
+          node.add_triple(Triple(subject_id, predicate, object_value=object_value))
+      
+      mcf = "\n\n".join(map(lambda node: node.to_mcf(), nodes.values()))
+      mcf_file = self.output_dir.open_file("schema.mcf")
+      mcf_file.write(mcf)
+      logging.info("Exported %s nodes to %s", len(nodes), mcf_file.full_path())
+
+    # 3. Upload to GCS and Trigger Workflow
+    self._upload_and_trigger_dcp_workflow()
+
+  def _upload_and_trigger_dcp_workflow(self):
+    import os
+    import subprocess
+    import json
+    from datetime import datetime
+    
+    bucket = os.getenv("DCP_INGESTION_BUCKET")
+    spanner_instance = os.getenv("SPANNER_INSTANCE_ID")
+    spanner_database = os.getenv("SPANNER_DATABASE_ID")
+    region = os.getenv("GCP_REGION", "us-central1")
+    project = os.getenv("GCP_PROJECT")
+    workflow_name = os.getenv("WORKFLOW_NAME")
+    
+    if not all([bucket, spanner_instance, spanner_database, project, workflow_name]):
+      logging.error("Missing required environment variables for DCP Bridge. Skipping upload and trigger.")
+      logging.error("Required: DCP_INGESTION_BUCKET, SPANNER_INSTANCE_ID, SPANNER_DATABASE_ID, GCP_PROJECT, WORKFLOW_NAME")
+      return
+      
+    logging.info("Uploading artifacts to GCS bucket: %s", bucket)
+    
+    import_gcs_dir = f"gs://{bucket}/imports/dcpbridge_testing/"
+    files_uploaded = False
+    
+    # Upload observations if file exists
+    obs_file = self.output_dir.open_file("observations.mcf")
+    obs_local_path = obs_file.syspath() if hasattr(obs_file, 'syspath') else obs_file.path
+    if obs_local_path and os.path.exists(obs_local_path):
+      obs_gcs_path = f"{import_gcs_dir}observations.mcf"
+      logging.info("Uploading %s to %s", obs_local_path, obs_gcs_path)
+      subprocess.run(["gcloud", "storage", "cp", obs_local_path, obs_gcs_path], check=True)
+      files_uploaded = True
+    
+    # Upload schema if file exists
+    mcf_file = self.output_dir.open_file("schema.mcf")
+    mcf_local_path = mcf_file.syspath() if hasattr(mcf_file, 'syspath') else mcf_file.path
+    if mcf_local_path and os.path.exists(mcf_local_path):
+      schema_gcs_path = f"{import_gcs_dir}schema.mcf"
+      logging.info("Uploading %s to %s", mcf_local_path, schema_gcs_path)
+      subprocess.run(["gcloud", "storage", "cp", mcf_local_path, schema_gcs_path], check=True)
+      files_uploaded = True
+      
+    # Upload NL artifacts
+    nl_local_path = self.nl_dir.syspath() if hasattr(self.nl_dir, 'syspath') else self.nl_dir.path
+    if nl_local_path and os.path.exists(nl_local_path):
+      nl_gcs_path = f"gs://{bucket}/nl/"
+      logging.info("Uploading NL artifacts from %s to %s", nl_local_path, nl_gcs_path)
+      subprocess.run(["gcloud", "storage", "cp", "-r", nl_local_path, nl_gcs_path], check=True)
+      
+    if not files_uploaded:
+      logging.warning("No artifacts to import. Skipping workflow trigger.")
+      return
+      
+    # Construct import list with single directory entry
+    prov_names = list(self.config.provenances.keys())
+    logical_import_name = prov_names[0] if prov_names else "DCP_Bridge_Import"
+    
+    import_list = [{"importName": logical_import_name, "graphPath": import_gcs_dir}]
+      
+    # Construct payload
+    import_name = f"dcp_bridge_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    
+    payload = {
+      "spannerInstanceId": spanner_instance,
+      "spannerDatabaseId": spanner_database,
+      "importName": import_name,
+      "importList": json.dumps(import_list),
+      "tempLocation": f"gs://{bucket}/temp",
+      "region": region
+    }
+    
+    payload_str = json.dumps(payload)
+    
+    # Trigger workflow
+    logging.info("Triggering Cloud Workflow: %s", workflow_name)
+    cmd = [
+      "gcloud", "workflows", "run", workflow_name,
+      f"--project={project}",
+      f"--location={region}",
+      f"--data={payload_str}"
+    ]
+    
+    logging.info("Running command: %s", " ".join(cmd))
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode == 0:
+      logging.info("Successfully triggered workflow. Output: %s", result.stdout)
+    else:
+      logging.error("Failed to trigger workflow. Error: %s", result.stderr)
 
   def _generate_svg_hierarchy(self):
     if self.mode == RunMode.MAIN_DC:
@@ -385,6 +545,7 @@ class Runner:
             db=self.db,
             reporter=reporter,
             nodes=self.nodes,
+            mode=self.mode,
         )
       return ObservationsImporter(
           input_file=input_file,
