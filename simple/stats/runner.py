@@ -4,6 +4,9 @@ import logging
 import os
 from typing import Optional
 
+from pyld import jsonld
+from rdflib import Graph, Literal, Namespace, RDF, URIRef
+
 import fs.path as fspath
 from stats import constants
 from stats import schema
@@ -34,6 +37,7 @@ from stats.mcf_importer import McfImporter
 import stats.nl as nl
 from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
+from stats.jsonld_exporter import export_to_jsonld
 from stats.reporter import ImportReporter
 import stats.schema_constants as sc
 from stats.svg_cache import generate_svg_cache
@@ -49,6 +53,7 @@ class RunMode(StrEnum):
   CUSTOM_DC = "customdc"
   SCHEMA_UPDATE = "schemaupdate"
   MAIN_DC = "maindc"
+  DCP_BRIDGE = "dcpbridge"
 
 
 class Runner:
@@ -148,6 +153,9 @@ class Runner:
           self._run_local_sqlite_build_import()
         else:
           self._run_imports_and_do_post_import_work()
+
+      elif self.mode == RunMode.DCP_BRIDGE:
+        self._run_imports_and_export_jsonld()
 
       else:
         raise ValueError(f"Unsupported mode: {self.mode}")
@@ -548,6 +556,31 @@ class Runner:
 
     raise ValueError(
         f"Unsupported import type: {import_type} ({input_file.full_path()})")
+
+  def _run_imports_and_export_jsonld(self):
+    # Clear tables if needed
+    self.db.maybe_clear_before_import()
+    
+    # Run data imports (CSV and MCF)
+    self._run_all_data_imports()
+    
+    # Generate triples from nodes
+    triples = self.nodes.triples()
+    self.db.insert_triples(triples)
+    
+    # Generate SVG hierarchy
+    self._generate_svg_hierarchy()
+    
+    # Generate NL artifacts
+    self._generate_nl_artifacts()
+    
+    # Write import info
+    self.db.insert_import_info(status=ImportStatus.SUCCESS)
+    
+    # Export to JSON-LD
+    export_to_jsonld(self.db, self.output_dir)
+
+
 
 
 def _check_not_overlapping(input_store: Store, output_store: Store):
