@@ -579,6 +579,59 @@ class Runner:
     
     # Export to JSON-LD
     export_to_jsonld(self.db, self.output_dir)
+    
+    # Auto-trigger workflow if output is on GCS
+    output_path = self.output_dir.full_path()
+    if output_path.startswith("gs://"):
+        gcs_pattern = output_path.rstrip('/') + "/output-*.jsonld"
+        self._trigger_ingestion_workflow(gcs_pattern)
+    else:
+        logging.info("Output is local, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually.")
+
+  def _trigger_ingestion_workflow(self, gcs_path):
+    import subprocess
+    import json
+    import os
+    
+    logging.info("Attempting to auto-trigger ingestion workflow...")
+    
+    # Read from environment variables with fallbacks to user's current values
+    spanner_instance = os.getenv("SPANNER_INSTANCE_ID", "gabe-test-dcp-instance")
+    spanner_database = os.getenv("SPANNER_DATABASE_ID", "gabe-test-dcp-db-v2")
+    workflow_name = os.getenv("WORKFLOW_NAME", "gabe-test-ingestion-orchestrator")
+    project_id = os.getenv("PROJECT_ID", "datcom-website-dev")
+    location = os.getenv("WORKFLOW_LOCATION", "us-central1")
+    temp_location = os.getenv("TEMP_LOCATION", "gs://gabe-test-ingestion-bucket-datcom-website-dev/temp")
+    region = os.getenv("REGION", "us-central1")
+    
+    data = {
+        "spannerInstanceId": spanner_instance,
+        "spannerDatabaseId": spanner_database,
+        "importName": "dcp_bridge_jsonld_sharded_test",
+        "importList": json.dumps([{
+            "importName": "JSONLD_Sharded_Import",
+            "graphPath": gcs_path
+        }]),
+        "tempLocation": temp_location,
+        "region": region
+    }
+    
+    cmd = [
+        "gcloud", "workflows", "run", workflow_name,
+        f"--project={project_id}",
+        f"--location={location}",
+        f"--data={json.dumps(data)}"
+    ]
+    
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        logging.info("Workflow triggered successfully!")
+        logging.info(result.stdout)
+    except subprocess.CalledProcessError as e:
+        logging.error("Failed to trigger workflow:")
+        logging.error(e.stderr)
+    except Exception as e:
+        logging.error(f"Error running gcloud command: {e}")
 
 
 
