@@ -1,11 +1,28 @@
+# Copyright 2026 Google Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from enum import StrEnum
 import json
 import logging
 import os
 from typing import Optional
 
+import google.auth
+import google.auth.transport.requests
 from pyld import jsonld
 from rdflib import Graph, Literal, Namespace, RDF, URIRef
+import requests
 
 import fs.path as fspath
 from stats import constants
@@ -37,6 +54,7 @@ from stats.mcf_importer import McfImporter
 import stats.nl as nl
 from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
+from stats.cloud_trigger import trigger_ingestion_workflow
 from stats.jsonld_exporter import export_to_jsonld
 from stats.reporter import ImportReporter
 import stats.schema_constants as sc
@@ -585,69 +603,10 @@ class Runner:
     # Auto-trigger workflow if output is on GCS
     output_path = self.output_dir.full_path()
     if output_path.startswith("gs://"):
-        gcs_pattern = output_path.rstrip('/') + "/output-*.jsonld"
-        self._trigger_ingestion_workflow(gcs_pattern)
+      gcs_pattern = f"{output_path.rstrip('/')}/output-*.jsonld"
+      trigger_ingestion_workflow(gcs_pattern)
     else:
-        logging.info("Output is local, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually.")
-
-  def _trigger_ingestion_workflow(self, gcs_path):
-    import json
-    import os
-    import requests
-    import google.auth
-    import google.auth.transport.requests
-    
-    logging.info("Attempting to auto-trigger ingestion workflow via API...")
-    
-    # Read from environment variables with fallbacks
-    spanner_instance = os.getenv("GCP_SPANNER_INSTANCE_ID", "gabe-test-dcp-instance")
-    spanner_database = os.getenv("GCP_SPANNER_DATABASE_NAME", "gabe-test-dcp-db-v2")
-    workflow_name = os.getenv("WORKFLOW_NAME", "gabe-test-ingestion-orchestrator")
-    project_id = os.getenv("PROJECT_ID", "datcom-website-dev")
-    location = os.getenv("WORKFLOW_LOCATION", "us-central1")
-    temp_location = os.getenv("TEMP_LOCATION", "gs://gabe-test-ingestion-bucket-datcom-website-dev/temp")
-    region = os.getenv("REGION", "us-central1")
-    
-    data_payload = {
-        "spannerInstanceId": spanner_instance,
-        "spannerDatabaseId": spanner_database,
-        "importName": "dcp_bridge_jsonld_sharded_test",
-        "importList": json.dumps([{
-            "importName": "JSONLD_Sharded_Import",
-            "graphPath": gcs_path
-        }]),
-        "tempLocation": temp_location,
-        "region": region
-    }
-    
-    try:
-        # Get credentials from the environment (Service Account attached to Cloud Run)
-        credentials, _ = google.auth.default()
-        auth_request = google.auth.transport.requests.Request()
-        credentials.refresh(auth_request)
-        
-        url = f"https://workflowexecutions.googleapis.com/v1/projects/{project_id}/locations/{location}/workflows/{workflow_name}/executions"
-        
-        headers = {
-            "Authorization": f"Bearer {credentials.token}",
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "argument": json.dumps(data_payload)
-        }
-        
-        response = requests.post(url, json=payload, headers=headers)
-        
-        if response.status_code == 200:
-            logging.info("Workflow triggered successfully!")
-            logging.info(response.json())
-        else:
-            logging.error(f"Failed to trigger workflow. Status: {response.status_code}")
-            logging.error(response.text)
-            
-    except Exception as e:
-        logging.error(f"Error triggering workflow via API: {e}")
+      logging.info("Output is local, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually.")
 
 
 
