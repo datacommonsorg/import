@@ -140,7 +140,7 @@ class Runner:
     try:
       # For blue-green, defer Cloud SQL connection until transfer phase
       # For normal imports, create connection now
-      if self.db is None and not blue_green_config["enabled"]:
+      if self.db is None and not blue_green_config["enabled"] and self.mode != RunMode.DCP_BRIDGE:
         self.db = create_and_update_db(self._get_db_config())
         self.db_cache = get_db_cache_from_env()
 
@@ -498,13 +498,9 @@ class Runner:
 
   def _create_mcf_importer(self, input_file: File, output_dir: Dir,
                            is_main_dc: bool) -> Importer:
-    # Right now, this overwrites any file with the same name,
-    # so if different input sources have files with the same relative path,
-    # they will clobber each others output. Treating this as an edge case
-    # for now since it only affects the main DC case, but we could resolve
-    # it in the future by allowing input sources to be mapped to output
-    # locations.
-    output_file = output_dir.open_file(input_file.path)
+    output_file = None
+    if is_main_dc:
+      output_file = output_dir.open_file(input_file.path)
     reporter = self.reporter.get_file_reporter(input_file)
     return McfImporter(
         input_file=input_file,
@@ -558,6 +554,12 @@ class Runner:
         f"Unsupported import type: {import_type} ({input_file.full_path()})")
 
   def _run_imports_and_export_jsonld(self):
+    # Force local SQLite DB for staging data in dcpbridge mode
+    logging.info("Forcing local SQLite DB for staging data in dcpbridge mode")
+    sqlite_file = self.output_dir.open_file("staging.db")
+    db_cfg = create_sqlite_config(sqlite_file)
+    self.db = create_and_update_db(db_cfg)
+    
     # Clear tables if needed
     self.db.maybe_clear_before_import()
     
@@ -589,22 +591,24 @@ class Runner:
         logging.info("Output is local, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually.")
 
   def _trigger_ingestion_workflow(self, gcs_path):
-    import subprocess
     import json
     import os
+    import requests
+    import google.auth
+    import google.auth.transport.requests
     
-    logging.info("Attempting to auto-trigger ingestion workflow...")
+    logging.info("Attempting to auto-trigger ingestion workflow via API...")
     
-    # Read from environment variables with fallbacks to user's current values
-    spanner_instance = os.getenv("SPANNER_INSTANCE_ID", "gabe-test-dcp-instance")
-    spanner_database = os.getenv("SPANNER_DATABASE_ID", "gabe-test-dcp-db-v2")
+    # Read from environment variables with fallbacks
+    spanner_instance = os.getenv("GCP_SPANNER_INSTANCE_ID", "gabe-test-dcp-instance")
+    spanner_database = os.getenv("GCP_SPANNER_DATABASE_NAME", "gabe-test-dcp-db-v2")
     workflow_name = os.getenv("WORKFLOW_NAME", "gabe-test-ingestion-orchestrator")
     project_id = os.getenv("PROJECT_ID", "datcom-website-dev")
     location = os.getenv("WORKFLOW_LOCATION", "us-central1")
     temp_location = os.getenv("TEMP_LOCATION", "gs://gabe-test-ingestion-bucket-datcom-website-dev/temp")
     region = os.getenv("REGION", "us-central1")
     
-    data = {
+    data_payload = {
         "spannerInstanceId": spanner_instance,
         "spannerDatabaseId": spanner_database,
         "importName": "dcp_bridge_jsonld_sharded_test",
@@ -616,22 +620,34 @@ class Runner:
         "region": region
     }
     
-    cmd = [
-        "gcloud", "workflows", "run", workflow_name,
-        f"--project={project_id}",
-        f"--location={location}",
-        f"--data={json.dumps(data)}"
-    ]
-    
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        logging.info("Workflow triggered successfully!")
-        logging.info(result.stdout)
-    except subprocess.CalledProcessError as e:
-        logging.error("Failed to trigger workflow:")
-        logging.error(e.stderr)
+        # Get credentials from the environment (Service Account attached to Cloud Run)
+        credentials, _ = google.auth.default()
+        auth_request = google.auth.transport.requests.Request()
+        credentials.refresh(auth_request)
+        
+        url = f"https://workflowexecutions.googleapis.com/v1/projects/{project_id}/locations/{location}/workflows/{workflow_name}/executions"
+        
+        headers = {
+            "Authorization": f"Bearer {credentials.token}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "argument": json.dumps(data_payload)
+        }
+        
+        response = requests.post(url, json=payload, headers=headers)
+        
+        if response.status_code == 200:
+            logging.info("Workflow triggered successfully!")
+            logging.info(response.json())
+        else:
+            logging.error(f"Failed to trigger workflow. Status: {response.status_code}")
+            logging.error(response.text)
+            
     except Exception as e:
-        logging.error(f"Error running gcloud command: {e}")
+        logging.error(f"Error triggering workflow via API: {e}")
 
 
 
