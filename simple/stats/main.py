@@ -13,6 +13,9 @@
 # limitations under the License.
 
 import logging
+import sys
+from pyld import jsonld
+from rdflib import Graph
 
 from absl import app
 from absl import flags
@@ -53,10 +56,12 @@ _FREEZE_TIME_IGNORE_LIST = ["transformers"]
 
 def _run():
   initialize_logger()
+  logging.info("Starting Runner in mode: %s", FLAGS.mode)
   Runner(config_file_path=FLAGS.config_file,
          input_dir_path=FLAGS.input_dir,
          output_dir_path=FLAGS.output_dir,
          mode=FLAGS.mode).run()
+    logging.info("Runner finished successfully.")
 
 
 def main(_):
