@@ -54,7 +54,7 @@ from stats.mcf_importer import McfImporter
 import stats.nl as nl
 from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
-from stats.cloud_trigger import trigger_ingestion_workflow
+from stats.trigger_ingestion_workflow import trigger_ingestion_workflow
 from stats.jsonld_exporter import export_to_jsonld
 from stats.reporter import ImportReporter
 import stats.schema_constants as sc

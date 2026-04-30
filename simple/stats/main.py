@@ -14,14 +14,8 @@
 
 import logging
 import sys
-
-try:
-    from pyld import jsonld
-    from rdflib import Graph
-except ImportError as e:
-    print(f"CRITICAL: Missing dependency! {e}", file=sys.stderr)
-    logging.error(f"CRITICAL: Missing dependency! {e}")
-    sys.exit(1)
+from pyld import jsonld
+from rdflib import Graph
 
 from absl import app
 from absl import flags
@@ -62,16 +56,12 @@ _FREEZE_TIME_IGNORE_LIST = ["transformers"]
 
 def _run():
   initialize_logger()
-  try:
-    logging.info("Starting Runner in mode: %s", FLAGS.mode)
-    Runner(config_file_path=FLAGS.config_file,
-           input_dir_path=FLAGS.input_dir,
-           output_dir_path=FLAGS.output_dir,
-           mode=FLAGS.mode).run()
+  logging.info("Starting Runner in mode: %s", FLAGS.mode)
+  Runner(config_file_path=FLAGS.config_file,
+         input_dir_path=FLAGS.input_dir,
+         output_dir_path=FLAGS.output_dir,
+         mode=FLAGS.mode).run()
     logging.info("Runner finished successfully.")
-  except Exception as e:
-    logging.exception("Runner failed with exception:")
-    raise e
 
 
 def main(_):
