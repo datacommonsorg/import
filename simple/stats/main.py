@@ -61,7 +61,7 @@ def _run():
          input_dir_path=FLAGS.input_dir,
          output_dir_path=FLAGS.output_dir,
          mode=FLAGS.mode).run()
-    logging.info("Runner finished successfully.")
+  logging.info("Runner finished successfully.")
 
 
 def main(_):
