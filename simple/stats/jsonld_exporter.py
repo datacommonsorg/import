@@ -60,7 +60,8 @@ def export_to_jsonld(db,
   offset = 0
   while True:
     triples_tuples = db.engine.fetch_all(
-        f"SELECT subject_id, predicate, object_id, object_value FROM triples LIMIT {chunk_size} OFFSET {offset}"
+        "SELECT subject_id, predicate, object_id, object_value FROM triples LIMIT ? OFFSET ?",
+        (chunk_size, offset)
     )
 
     if not triples_tuples:
@@ -96,7 +97,8 @@ def export_to_jsonld(db,
   offset = 0
   while True:
     obs_tuples = db.engine.fetch_all(
-        f"SELECT entity, variable, date, value, provenance, unit, scaling_factor, measurement_method, observation_period, properties FROM observations LIMIT {chunk_size} OFFSET {offset}"
+        "SELECT entity, variable, date, value, provenance, unit, scaling_factor, measurement_method, observation_period, properties FROM observations LIMIT ? OFFSET ?",
+        (chunk_size, offset)
     )
 
     if not obs_tuples:
@@ -111,7 +113,7 @@ def export_to_jsonld(db,
 
       # Generate a deterministic ID for the observation to avoid collisions across runs
       key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}"
-      obs_hash = hashlib.md5(key.encode('utf-8')).hexdigest()
+      obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
       subject = DCID[f"obs_{obs_hash}"]
 
       g.add((subject, RDF.type, DCID["StatVarObservation"]))
