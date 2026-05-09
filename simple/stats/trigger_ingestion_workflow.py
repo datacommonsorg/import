@@ -5,18 +5,17 @@ import requests
 import google.auth
 import google.auth.transport.requests
 
-def trigger_ingestion_workflow(gcs_path: str):
+def trigger_ingestion_workflow(gcs_path: str, import_name: str = "default_import_name"):
   """Triggers the Data Commons ingestion workflow via Google Cloud Workflows API."""
   logging.info("Attempting to auto-trigger ingestion workflow via API...")
-  
   required_env_vars = [
       "GCP_SPANNER_INSTANCE_ID",
       "GCP_SPANNER_DATABASE_NAME",
-      "WORKFLOW_NAME",
       "PROJECT_ID",
       "WORKFLOW_LOCATION",
       "TEMP_LOCATION",
-      "REGION"
+      "REGION",
+      "INGESTION_WORKFLOW_NAME"
   ]
   
   missing_vars = [var for var in required_env_vars if not os.getenv(var)]
@@ -28,7 +27,7 @@ def trigger_ingestion_workflow(gcs_path: str):
   
   spanner_instance = os.getenv("GCP_SPANNER_INSTANCE_ID")
   spanner_database = os.getenv("GCP_SPANNER_DATABASE_NAME")
-  workflow_name = os.getenv("WORKFLOW_NAME")
+  workflow_name = os.getenv("INGESTION_WORKFLOW_NAME")
   project_id = os.getenv("PROJECT_ID")
   location = os.getenv("WORKFLOW_LOCATION")
   temp_location = os.getenv("TEMP_LOCATION")
@@ -37,9 +36,9 @@ def trigger_ingestion_workflow(gcs_path: str):
   data_payload = {
       "spannerInstanceId": spanner_instance,
       "spannerDatabaseId": spanner_database,
-      "importName": "dcp_bridge_jsonld_sharded_test",
+      "importName": import_name,
       "importList": json.dumps([{
-          "importName": "JSONLD_Sharded_Import",
+          "importName": import_name,
           "graphPath": gcs_path
       }]),
       "tempLocation": temp_location,

@@ -598,17 +598,16 @@ class Runner:
     self.db.insert_import_info(status=ImportStatus.SUCCESS)
     
     # Export to JSON-LD
-    export_to_jsonld(self.db, self.output_dir)
+    jsonld_dir = self.output_dir.open_dir("jsonld")
+    export_to_jsonld(self.db, jsonld_dir)
     
     # Auto-trigger workflow if output is on GCS
-    output_path = self.output_dir.full_path()
+    output_path = jsonld_dir.full_path()
     if output_path.startswith("gs://"):
       gcs_pattern = f"{output_path.rstrip('/')}/output-*.jsonld"
-      trigger_ingestion_workflow(gcs_pattern)
+      trigger_ingestion_workflow(gcs_pattern, self.config.data.get("importName", "default_import_name"))
     else:
       logging.info("Output is local, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually.")
-
-
 
 
 def _check_not_overlapping(input_store: Store, output_store: Store):
