@@ -18,13 +18,16 @@ import logging
 import os
 from typing import Optional
 
+import fs.path as fspath
 import google.auth
 import google.auth.transport.requests
 from pyld import jsonld
-from rdflib import Graph, Literal, Namespace, RDF, URIRef
+from rdflib import Graph
+from rdflib import Literal
+from rdflib import Namespace
+from rdflib import RDF
+from rdflib import URIRef
 import requests
-
-import fs.path as fspath
 from stats import constants
 from stats import schema
 from stats import stat_var_hierarchy_generator
@@ -50,15 +53,15 @@ from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
 from stats.importer import Importer
+from stats.jsonld_exporter import export_to_jsonld
 from stats.mcf_importer import McfImporter
 import stats.nl as nl
 from stats.nodes import Nodes
 from stats.observations_importer import ObservationsImporter
-from stats.trigger_ingestion_workflow import trigger_ingestion_workflow
-from stats.jsonld_exporter import export_to_jsonld
 from stats.reporter import ImportReporter
 import stats.schema_constants as sc
 from stats.svg_cache import generate_svg_cache
+from stats.trigger_ingestion_workflow import trigger_ingestion_workflow
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
 from util.filesystem import create_store
@@ -158,7 +161,8 @@ class Runner:
     try:
       # For blue-green, defer Cloud SQL connection until transfer phase
       # For normal imports, create connection now
-      if self.db is None and not blue_green_config["enabled"] and self.mode != RunMode.DCP_BRIDGE:
+      if self.db is None and not blue_green_config[
+          "enabled"] and self.mode != RunMode.DCP_BRIDGE:
         self.db = create_and_update_db(self._get_db_config())
         self.db_cache = get_db_cache_from_env()
 
@@ -577,37 +581,41 @@ class Runner:
     sqlite_file = self.output_dir.open_file("staging.db")
     db_cfg = create_sqlite_config(sqlite_file)
     self.db = create_and_update_db(db_cfg)
-    
+
     # Clear tables if needed
     self.db.maybe_clear_before_import()
-    
+
     # Run data imports (CSV and MCF)
     self._run_all_data_imports()
-    
+
     # Generate triples from nodes
     triples = self.nodes.triples()
     self.db.insert_triples(triples)
-    
+
     # Generate SVG hierarchy
     self._generate_svg_hierarchy()
-    
+
     # Generate NL artifacts
     self._generate_nl_artifacts()
-    
+
     # Write import info
     self.db.insert_import_info(status=ImportStatus.SUCCESS)
-    
+
     # Export to JSON-LD
     jsonld_dir = self.output_dir.open_dir("jsonld")
     export_to_jsonld(self.db, jsonld_dir)
-    
+
     # Auto-trigger workflow if output is on GCS
     output_path = jsonld_dir.full_path()
     if output_path.startswith("gs://"):
       gcs_pattern = f"{output_path.rstrip('/')}/output-*.jsonld"
-      trigger_ingestion_workflow(gcs_pattern, self.config.data.get("importName", "default_import_name"))
+      trigger_ingestion_workflow(
+          gcs_pattern, self.config.data.get("importName",
+                                            "default_import_name"))
     else:
-      logging.info("Output is local, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually.")
+      logging.info(
+          "Output is local, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually."
+      )
 
 
 def _check_not_overlapping(input_store: Store, output_store: Store):

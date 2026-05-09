@@ -14,12 +14,12 @@
 
 import logging
 import sys
-from pyld import jsonld
-from rdflib import Graph
 
 from absl import app
 from absl import flags
 from freezegun import freeze_time
+from pyld import jsonld
+from rdflib import Graph
 from stats import constants
 from stats.logger import initialize_logger
 from stats.runner import RunMode
