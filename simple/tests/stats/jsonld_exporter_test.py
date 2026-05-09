@@ -181,6 +181,40 @@ class TestJsonLdExporter(unittest.TestCase):
         self.assertIn('ex:prop', nodes['dcid:sub1'])
         self.assertEqual(nodes['dcid:sub1']['ex:prop'], "Value1")
 
+  def test_non_numeric_value(self):
+    with tempfile.TemporaryDirectory() as temp_dir:
+      temp_store = create_store(temp_dir)
+      output_dir = temp_store.as_dir()
+      
+      db_file = output_dir.open_file("test_non_numeric.db")
+      db = create_and_update_db(create_sqlite_config(db_file))
+      
+      df = pd.DataFrame(
+          [("e1", "v1", "2026", "Unavailable", "p1", "", "", "", "", "")],
+          columns=[
+              "entity", "variable", "date", "value", "provenance", "unit",
+              "scaling_factor", "measurement_method", "observation_period",
+              "properties"
+          ])
+      
+      mock_file = mock.Mock()
+      mock_file.path = "dummy.csv"
+      db.insert_observations(df, mock_file)
+      db.commit()
+      
+      export_to_jsonld(db, output_dir, chunk_size=10)
+      
+      shard_path = os.path.join(temp_dir, "output-00000.jsonld")
+      self.assertTrue(os.path.exists(shard_path))
+      
+      with open(shard_path, 'r') as f:
+        shard = json.load(f)
+        nodes = {node['@id']: node for node in shard['@graph']}
+        obs_nodes = [node for node in nodes if node.startswith('dcid:obs_')]
+        self.assertTrue(len(obs_nodes) > 0)
+        obs_node_id = obs_nodes[0]
+        self.assertEqual(nodes[obs_node_id]['dcid:value'], "Unavailable")
+
 if __name__ == "__main__":
   unittest.main()
 

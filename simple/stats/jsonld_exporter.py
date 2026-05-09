@@ -19,10 +19,19 @@ import os
 from pyld import jsonld
 from rdflib import Graph, Literal, Namespace, RDF, URIRef
 
-def export_to_jsonld(db, output_dir, chunk_size=10000, context=None):
+DCID_URL = "https://datacommons.org/browser/"
+
+def export_to_jsonld(db, output_dir, chunk_size: int = 10000, context: dict = None):
+    """Exports resolved data from the database to JSON-LD shards.
+    
+    Args:
+        db: The database instance containing triples and observations.
+        output_dir: The directory where JSON-LD shards will be written.
+        chunk_size: The number of rows to fetch and process at a time.
+        context: Optional custom JSON-LD context mappings.
+    """
     logging.info("Exporting resolved data to JSON-LD in shards")
     
-    DCID_URL = "https://datacommons.org/browser/"
     ns_map = {"dcid": DCID_URL}
     if context:
         ns_map.update(context)
@@ -132,7 +141,15 @@ def export_to_jsonld(db, output_dir, chunk_size=10000, context=None):
         if len(obs_tuples) < chunk_size:
             break
 
-def write_shard(g, index, output_dir, ns_map):
+def write_shard(g: Graph, index: int, output_dir, ns_map: dict):
+    """Serializes and writes an RDF graph to a JSON-LD shard.
+    
+    Args:
+        g: The RDF graph to serialize.
+        index: The shard index for the filename.
+        output_dir: The directory to write the shard file to.
+        ns_map: The namespace map for context compaction.
+    """
     jsonld_str = g.serialize(context=ns_map, format="json-ld", indent=4)
     expanded_jsonld = json.loads(jsonld_str)
     compacted_jsonld = jsonld.compact(expanded_jsonld, ns_map)

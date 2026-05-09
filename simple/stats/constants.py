@@ -30,7 +30,7 @@ DB_FILE_NAME = "datacommons.db"
 OBSERVATIONS_FILE_NAME_PREFIX = "observations"
 DEBUG_RESOLVE_FILE_NAME_PREFIX = "debug_resolve"
 PROCESS_DIR_NAME = "process"
-NL_DIR_NAME = "nl"
+NL_DIR_NAME = "datacommons/nl"
 
 PROPERTY_DESCRIPTION = "description"
 """
