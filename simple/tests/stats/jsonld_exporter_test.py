@@ -78,8 +78,108 @@ class TestJsonLdExporter(unittest.TestCase):
         shard2 = json.load(f)
         self.assertIn('@graph', shard2)
         nodes = {node['@id']: node for node in shard2['@graph']}
-        self.assertIn('dcid:obs_0', nodes)
-        self.assertEqual(nodes['dcid:obs_0']['dcid:value'], 100.0)
+        obs_nodes = [node for node in nodes if node.startswith('dcid:obs_')]
+        self.assertTrue(len(obs_nodes) > 0, "No observation node found in shard")
+        obs_node_id = obs_nodes[0]
+        self.assertEqual(nodes[obs_node_id]['dcid:value'], 100.0)
+
+  def test_empty_db(self):
+    with tempfile.TemporaryDirectory() as temp_dir:
+      temp_store = create_store(temp_dir)
+      output_dir = temp_store.as_dir()
+      
+      db_file = output_dir.open_file("test_empty.db")
+      db = create_and_update_db(create_sqlite_config(db_file))
+      
+      export_to_jsonld(db, output_dir, chunk_size=1)
+      
+      # Verify no shards created
+      shard_paths = [os.path.join(temp_dir, f"output-{i:05d}.jsonld") for i in range(3)]
+      for path in shard_paths:
+        self.assertFalse(os.path.exists(path), f"File {path} should not exist")
+
+  def test_double_prefixing(self):
+    with tempfile.TemporaryDirectory() as temp_dir:
+      temp_store = create_store(temp_dir)
+      output_dir = temp_store.as_dir()
+      
+      db_file = output_dir.open_file("test_prefix.db")
+      db = create_and_update_db(create_sqlite_config(db_file))
+      
+      db.insert_triples([
+          Triple(subject_id="https://example.com/sub1", predicate="typeOf", object_id="StatisticalVariable"),
+          Triple(subject_id="dcid:sub2", predicate="name", object_value="Name2")
+      ])
+      db.commit()
+      
+      export_to_jsonld(db, output_dir, chunk_size=10)
+      
+      shard_path = os.path.join(temp_dir, "output-00000.jsonld")
+      self.assertTrue(os.path.exists(shard_path))
+      
+      with open(shard_path, 'r') as f:
+        shard = json.load(f)
+        nodes = {node['@id']: node for node in shard['@graph']}
+        self.assertIn('dcid:example.com/sub1', nodes)
+        self.assertIn('dcid:sub2', nodes)
+
+  def test_malformed_json(self):
+    with tempfile.TemporaryDirectory() as temp_dir:
+      temp_store = create_store(temp_dir)
+      output_dir = temp_store.as_dir()
+      
+      db_file = output_dir.open_file("test_json.db")
+      db = create_and_update_db(create_sqlite_config(db_file))
+      
+      df = pd.DataFrame(
+          [("e1", "v1", "2026", "100", "p1", "", "", "", "", "{invalid_json}")],
+          columns=[
+              "entity", "variable", "date", "value", "provenance", "unit",
+              "scaling_factor", "measurement_method", "observation_period",
+              "properties"
+          ])
+      
+      mock_file = mock.Mock()
+      mock_file.path = "dummy.csv"
+      db.insert_observations(df, mock_file)
+      db.commit()
+      
+      # Should log a warning but not fail
+      export_to_jsonld(db, output_dir, chunk_size=10)
+      
+      shard_path = os.path.join(temp_dir, "output-00000.jsonld")
+      self.assertTrue(os.path.exists(shard_path))
+
+  def test_custom_context(self):
+    with tempfile.TemporaryDirectory() as temp_dir:
+      temp_store = create_store(temp_dir)
+      output_dir = temp_store.as_dir()
+      
+      db_file = output_dir.open_file("test_context.db")
+      db = create_and_update_db(create_sqlite_config(db_file))
+      
+      db.insert_triples([
+          Triple(subject_id="sub1", predicate="https://example.com/ns/prop", object_value="Value1")
+      ])
+      db.commit()
+      
+      # Pass a custom context
+      custom_context = {"ex": "https://example.com/ns/"}
+      export_to_jsonld(db, output_dir, chunk_size=10, context=custom_context)
+      
+      shard_path = os.path.join(temp_dir, "output-00000.jsonld")
+      self.assertTrue(os.path.exists(shard_path))
+      
+      with open(shard_path, 'r') as f:
+        shard = json.load(f)
+        self.assertIn('@context', shard)
+        self.assertIn('ex', shard['@context'])
+        self.assertEqual(shard['@context']['ex'], "https://example.com/ns/")
+        
+        nodes = {node['@id']: node for node in shard['@graph']}
+        self.assertIn('dcid:sub1', nodes)
+        self.assertIn('ex:prop', nodes['dcid:sub1'])
+        self.assertEqual(nodes['dcid:sub1']['ex:prop'], "Value1")
 
 if __name__ == "__main__":
   unittest.main()

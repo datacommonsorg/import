@@ -12,21 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import hashlib
 import json
 import logging
 import os
 from pyld import jsonld
 from rdflib import Graph, Literal, Namespace, RDF, URIRef
 
-def export_to_jsonld(db, output_dir, chunk_size=10000):
+def export_to_jsonld(db, output_dir, chunk_size=10000, context=None):
     logging.info("Exporting resolved data to JSON-LD in shards")
     
     DCID_URL = "https://datacommons.org/browser/"
     ns_map = {"dcid": DCID_URL}
+    if context:
+        ns_map.update(context)
     
     def expand_id(item):
         if not item:
             return None
+        if item.startswith("http://") or item.startswith("https://"):
+            return URIRef(item)
+        if item.startswith("dcid:"):
+            return URIRef(f"{DCID_URL}{item[5:]}")
         return URIRef(f"{DCID_URL}{item.lstrip('/')}")
         
     shard_index = 0
@@ -69,7 +76,6 @@ def export_to_jsonld(db, output_dir, chunk_size=10000):
             
     # 2. Process Observations in chunks
     offset = 0
-    obs_counter = 0
     while True:
         obs_tuples = db.engine.fetch_all(
             f"SELECT entity, variable, date, value, provenance, unit, scaling_factor, measurement_method, observation_period, properties FROM observations LIMIT {chunk_size} OFFSET {offset}"
@@ -85,8 +91,10 @@ def export_to_jsonld(db, output_dir, chunk_size=10000):
         for row in obs_tuples:
             entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
             
-            subject = DCID[f"obs_{obs_counter}"]
-            obs_counter += 1
+            # Generate a deterministic ID for the observation to avoid collisions across runs
+            key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}"
+            obs_hash = hashlib.md5(key.encode('utf-8')).hexdigest()
+            subject = DCID[f"obs_{obs_hash}"]
             
             g.add((subject, RDF.type, DCID["StatVarObservation"]))
             g.add((subject, DCID["observationAbout"], expand_id(entity)))
@@ -114,8 +122,8 @@ def export_to_jsonld(db, output_dir, chunk_size=10000):
                     props_dict = json.loads(props)
                     for k, v in props_dict.items():
                         g.add((subject, expand_id(k), Literal(v)))
-                except json.JSONDecodeError:
-                    pass
+                except json.JSONDecodeError as e:
+                    logging.warning(f"Failed to decode properties JSON for observation {entity}/{variable}: {e}")
                     
         write_shard(g, shard_index, output_dir, ns_map)
         shard_index += 1
