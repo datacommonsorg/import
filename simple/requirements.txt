@@ -31,3 +31,4 @@ tomli==2.0.1
 tzdata==2023.3
 urllib3==1.26.20
 zipp==3.16.2
+google-auth>=2.0.0

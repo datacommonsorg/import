@@ -1,3 +1,17 @@
+# Copyright 2026 Google Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from enum import StrEnum
 import json
 import logging
@@ -30,6 +44,7 @@ from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
 from stats.importer import Importer
+from stats.jsonld_exporter import export_to_jsonld
 from stats.mcf_importer import McfImporter
 import stats.nl as nl
 from stats.nodes import Nodes
@@ -37,6 +52,7 @@ from stats.observations_importer import ObservationsImporter
 from stats.reporter import ImportReporter
 import stats.schema_constants as sc
 from stats.svg_cache import generate_svg_cache
+from stats.trigger_ingestion_workflow import trigger_ingestion_workflow
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
 from util.filesystem import create_store
@@ -49,6 +65,7 @@ class RunMode(StrEnum):
   CUSTOM_DC = "customdc"
   SCHEMA_UPDATE = "schemaupdate"
   MAIN_DC = "maindc"
+  DCP_BRIDGE = "dcpbridge"
 
 
 class Runner:
@@ -135,7 +152,8 @@ class Runner:
     try:
       # For blue-green, defer Cloud SQL connection until transfer phase
       # For normal imports, create connection now
-      if self.db is None and not blue_green_config["enabled"]:
+      if self.db is None and not blue_green_config[
+          "enabled"] and self.mode != RunMode.DCP_BRIDGE:
         self.db = create_and_update_db(self._get_db_config())
         self.db_cache = get_db_cache_from_env()
 
@@ -148,6 +166,9 @@ class Runner:
           self._run_local_sqlite_build_import()
         else:
           self._run_imports_and_do_post_import_work()
+
+      elif self.mode == RunMode.DCP_BRIDGE:
+        self._run_imports_and_export_jsonld()
 
       else:
         raise ValueError(f"Unsupported mode: {self.mode}")
@@ -490,13 +511,9 @@ class Runner:
 
   def _create_mcf_importer(self, input_file: File, output_dir: Dir,
                            is_main_dc: bool) -> Importer:
-    # Right now, this overwrites any file with the same name,
-    # so if different input sources have files with the same relative path,
-    # they will clobber each others output. Treating this as an edge case
-    # for now since it only affects the main DC case, but we could resolve
-    # it in the future by allowing input sources to be mapped to output
-    # locations.
-    output_file = output_dir.open_file(input_file.path)
+    output_file = None
+    if is_main_dc:
+      output_file = output_dir.open_file(input_file.path)
     reporter = self.reporter.get_file_reporter(input_file)
     return McfImporter(
         input_file=input_file,
@@ -548,6 +565,48 @@ class Runner:
 
     raise ValueError(
         f"Unsupported import type: {import_type} ({input_file.full_path()})")
+
+  def _run_imports_and_export_jsonld(self):
+    # Force local SQLite DB for staging data in dcpbridge mode
+    logging.info("Forcing local SQLite DB for staging data in dcpbridge mode")
+    sqlite_file = self.output_dir.open_file("staging.db")
+    db_cfg = create_sqlite_config(sqlite_file)
+    self.db = create_and_update_db(db_cfg)
+
+    # Clear tables if needed
+    self.db.maybe_clear_before_import()
+
+    # Run data imports (CSV and MCF)
+    self._run_all_data_imports()
+
+    # Generate triples from nodes
+    triples = self.nodes.triples()
+    self.db.insert_triples(triples)
+
+    # Generate SVG hierarchy
+    self._generate_svg_hierarchy()
+
+    # Generate NL artifacts
+    self._generate_nl_artifacts()
+
+    # Write import info
+    self.db.insert_import_info(status=ImportStatus.SUCCESS)
+
+    # Export to JSON-LD
+    jsonld_dir = self.output_dir.open_dir("jsonld")
+    export_to_jsonld(self.db, jsonld_dir)
+
+    # Auto-trigger workflow if output is on GCS
+    output_path = jsonld_dir.full_path()
+    if os.getenv("INGESTION_WORKFLOW_NAME") and output_path.startswith("gs://"):
+      gcs_pattern = f"{output_path.rstrip('/')}/*.jsonld"
+      trigger_ingestion_workflow(
+          gcs_pattern, self.config.data.get("importName",
+                                            "default_import_name"))
+    else:
+      logging.info(
+          "Output is local or workflow is missing, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually."
+      )
 
 
 def _check_not_overlapping(input_store: Store, output_store: Store):
