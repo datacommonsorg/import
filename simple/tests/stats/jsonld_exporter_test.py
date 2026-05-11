@@ -67,7 +67,9 @@ class TestJsonLdExporter(unittest.TestCase):
       # 2 triples with chunk_size=1 -> 2 shards (0 and 1)
       # 1 observation with chunk_size=1 -> 1 shard (2)
       shard_paths = [
-          os.path.join(temp_dir, f"output-{i:05d}.jsonld") for i in range(3)
+          os.path.join(temp_dir, "node-00000.jsonld"),
+          os.path.join(temp_dir, "node-00001.jsonld"),
+          os.path.join(temp_dir, "observation-00000.jsonld")
       ]
       for path in shard_paths:
         self.assertTrue(os.path.exists(path), f"File {path} does not exist")
@@ -104,7 +106,8 @@ class TestJsonLdExporter(unittest.TestCase):
 
       # Verify no shards created
       shard_paths = [
-          os.path.join(temp_dir, f"output-{i:05d}.jsonld") for i in range(3)
+          os.path.join(temp_dir, "node-00000.jsonld"),
+          os.path.join(temp_dir, "observation-00000.jsonld")
       ]
       for path in shard_paths:
         self.assertFalse(os.path.exists(path), f"File {path} should not exist")
@@ -127,7 +130,7 @@ class TestJsonLdExporter(unittest.TestCase):
 
       export_to_jsonld(db, output_dir, chunk_size=10)
 
-      shard_path = os.path.join(temp_dir, "output-00000.jsonld")
+      shard_path = os.path.join(temp_dir, "node-00000.jsonld")
       self.assertTrue(os.path.exists(shard_path))
 
       with open(shard_path, 'r') as f:
@@ -160,7 +163,7 @@ class TestJsonLdExporter(unittest.TestCase):
       # Should log a warning but not fail
       export_to_jsonld(db, output_dir, chunk_size=10)
 
-      shard_path = os.path.join(temp_dir, "output-00000.jsonld")
+      shard_path = os.path.join(temp_dir, "observation-00000.jsonld")
       self.assertTrue(os.path.exists(shard_path))
 
   def test_custom_context(self):
@@ -182,7 +185,7 @@ class TestJsonLdExporter(unittest.TestCase):
       custom_context = {"ex": "https://example.com/ns/"}
       export_to_jsonld(db, output_dir, chunk_size=10, context=custom_context)
 
-      shard_path = os.path.join(temp_dir, "output-00000.jsonld")
+      shard_path = os.path.join(temp_dir, "node-00000.jsonld")
       self.assertTrue(os.path.exists(shard_path))
 
       with open(shard_path, 'r') as f:
@@ -219,7 +222,7 @@ class TestJsonLdExporter(unittest.TestCase):
 
       export_to_jsonld(db, output_dir, chunk_size=10)
 
-      shard_path = os.path.join(temp_dir, "output-00000.jsonld")
+      shard_path = os.path.join(temp_dir, "observation-00000.jsonld")
       self.assertTrue(os.path.exists(shard_path))
 
       with open(shard_path, 'r') as f:
