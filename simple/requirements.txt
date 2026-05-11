@@ -19,7 +19,7 @@ protobuf==4.25.3
 PyLD==2.0.4
 PyMySQL==1.1.0
 python-dateutil==2.8.2
-pytest==7.4.2
+pytest==9.0.3
 PyYAML==6.0.1
 pytz==2023.3.post1
 redis==5.2.1
