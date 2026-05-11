@@ -74,7 +74,7 @@ class TestJsonLdExporter(unittest.TestCase):
       for path in shard_paths:
         self.assertTrue(os.path.exists(path), f"File {path} does not exist")
 
-        # Verify content of shard 0 (should have first triple)
+      # Verify content of shard 0 (should have first triple)
       with open(shard_paths[0], 'r') as f:
         shard0 = json.load(f)
         self.assertIn('@graph', shard0)
@@ -83,7 +83,7 @@ class TestJsonLdExporter(unittest.TestCase):
         self.assertEqual(nodes['dcid:sub1']['@type'],
                          'dcid:StatisticalVariable')
 
-        # Verify content of shard 2 (should have observations)
+      # Verify content of shard 2 (should have observations)
       with open(shard_paths[2], 'r') as f:
         shard2 = json.load(f)
         self.assertIn('@graph', shard2)

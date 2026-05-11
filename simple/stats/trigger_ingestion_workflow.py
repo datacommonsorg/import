@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Trigger the Data Commons ingestion workflow.
+"""
+Trigger the Data Commons ingestion workflow.
 
 Used by the Stats import runner to trigger the ingestion workflow after the Stats import is complete.
 """

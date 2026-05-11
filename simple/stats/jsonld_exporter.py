@@ -151,16 +151,14 @@ def export_to_jsonld(db,
                      output_dir,
                      chunk_size: int = 10000,
                      context: dict = None):
-  """
-  Exports resolved data from the database to JSON-LD shards.
+  """Exports resolved data from the database to JSON-LD shards.
 
   Args:
-  -----
+  ----
     db: The database instance containing triples and observations.
     output_dir: The directory where JSON-LD shards will be written.
     chunk_size: The number of rows to fetch and process at a time.
     context: Optional custom JSON-LD context mappings.
-
   """
   logging.info("Exporting resolved data to JSON-LD in shards")
 
