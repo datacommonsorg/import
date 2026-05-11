@@ -43,7 +43,7 @@ public class GraphReader implements Serializable {
         // Generate corresponding node
         Map<String, McfGraph.Values> pv = pvs.getPvsMap();
         Node.Builder node = Node.builder();
-        String dcid = GraphUtils.getPropertyValue(pv, "dcid");
+        String dcid = GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name());
         String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(nodeEntry.getKey());
         node.subjectId(subjectId);
 
@@ -54,7 +54,8 @@ public class GraphReader implements Serializable {
           mcfNodesWithoutTypeCounter.inc();
         }
         node.value(subjectId);
-        node.name(GraphUtils.getPropertyValue(pv, "name"));
+        String name = GraphUtils.getPropVal(pvs, GraphUtils.Property.name.name());
+        node.name(!name.isEmpty() ? name : subjectId);
         node.types(types);
         nodes.add(node.build());
 
@@ -92,7 +93,7 @@ public class GraphReader implements Serializable {
       PropertyValues pvs = nodeEntry.getValue();
       if (!GraphUtils.isObservation(pvs)) {
         Map<String, McfGraph.Values> pv = pvs.getPvsMap();
-        String dcid = GraphUtils.getPropertyValue(pv, "dcid");
+        String dcid = GraphUtils.getPropVal(pvs, GraphUtils.Property.dcid.name());
         String subjectId = !dcid.isEmpty() ? dcid : McfUtil.stripNamespace(nodeEntry.getKey());
         for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) {
           if (entry.getKey().equals("dcid")) {
