@@ -78,44 +78,44 @@ def process_triples(db, output_dir, ns_map: dict, chunk_size: int):
 
 
 def _add_observation_to_graph(g, row, DCID):
-    """Helper to add an observation row to the graph."""
-    entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
+  """Helper to add an observation row to the graph."""
+  entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
 
-    # Generate a deterministic ID for the observation to avoid collisions across runs
-    key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}"
-    obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
-    subject = DCID[f"obs_{obs_hash}"]
+  # Generate a deterministic ID for the observation to avoid collisions across runs
+  key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}"
+  obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
+  subject = DCID[f"obs_{obs_hash}"]
 
-    g.add((subject, RDF.type, DCID["StatVarObservation"]))
-    g.add((subject, DCID["observationAbout"], expand_id(entity)))
-    g.add((subject, DCID["variableMeasured"], expand_id(variable)))
-    g.add((subject, DCID["observationDate"], Literal(date)))
+  g.add((subject, RDF.type, DCID["StatVarObservation"]))
+  g.add((subject, DCID["observationAbout"], expand_id(entity)))
+  g.add((subject, DCID["variableMeasured"], expand_id(variable)))
+  g.add((subject, DCID["observationDate"], Literal(date)))
 
+  try:
+    g.add((subject, DCID["value"], Literal(float(value))))
+  except ValueError:
+    g.add((subject, DCID["value"], Literal(value)))
+
+  if provenance:
+    g.add((subject, DCID["provenance"], expand_id(provenance)))
+  if unit:
+    g.add((subject, DCID["unit"], expand_id(unit)))
+  if scaling_factor:
+    g.add((subject, DCID["scalingFactor"], Literal(scaling_factor)))
+  if mmethod:
+    g.add((subject, DCID["measurementMethod"], expand_id(mmethod)))
+  if period:
+    g.add((subject, DCID["observationPeriod"], Literal(period)))
+
+  if props:
     try:
-        g.add((subject, DCID["value"], Literal(float(value))))
-    except ValueError:
-        g.add((subject, DCID["value"], Literal(value)))
-
-    if provenance:
-        g.add((subject, DCID["provenance"], expand_id(provenance)))
-    if unit:
-        g.add((subject, DCID["unit"], expand_id(unit)))
-    if scaling_factor:
-        g.add((subject, DCID["scalingFactor"], Literal(scaling_factor)))
-    if mmethod:
-        g.add((subject, DCID["measurementMethod"], expand_id(mmethod)))
-    if period:
-        g.add((subject, DCID["observationPeriod"], Literal(period)))
-
-    if props:
-        try:
-            props_dict = json.loads(props)
-            for k, v in props_dict.items():
-                g.add((subject, expand_id(k), Literal(v)))
-        except json.JSONDecodeError as e:
-            logging.warning(
-                f"Failed to decode properties JSON for observation {entity}/{variable}: {e}"
-            )
+      props_dict = json.loads(props)
+      for k, v in props_dict.items():
+        g.add((subject, expand_id(k), Literal(v)))
+    except json.JSONDecodeError as e:
+      logging.warning(
+          f"Failed to decode properties JSON for observation {entity}/{variable}: {e}"
+      )
 
 
 def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
@@ -147,7 +147,6 @@ def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
       break
 
 
-
 def export_to_jsonld(db,
                      output_dir,
                      chunk_size: int = 10000,
@@ -172,7 +171,7 @@ def export_to_jsonld(db,
     # 1. Process Triples (Schema) in chunks
   process_triples(db, output_dir, ns_map, chunk_size)
 
-    # 2. Process Observations in chunks
+  # 2. Process Observations in chunks
   process_observations(db, output_dir, ns_map, chunk_size)
 
 

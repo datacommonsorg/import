@@ -33,11 +33,11 @@ class TestJsonLdExporter(unittest.TestCase):
       temp_store = create_store(temp_dir)
       output_dir = temp_store.as_dir()
 
-        # Create a test DB
+      # Create a test DB
       db_file = output_dir.open_file("test.db")
       db = create_and_update_db(create_sqlite_config(db_file))
 
-        # Insert some triples using keyword arguments as in db_test.py
+      # Insert some triples using keyword arguments as in db_test.py
       db.insert_triples([
           Triple(subject_id="sub1",
                  predicate="typeOf",
@@ -45,7 +45,7 @@ class TestJsonLdExporter(unittest.TestCase):
           Triple(subject_id="sub1", predicate="name", object_value="Name1")
       ])
 
-        # Insert some observations
+      # Insert some observations
       df = pd.DataFrame([("e1", "v1", "2026", "100", "p1", "", "", "", "", "")],
                         columns=[
                             "entity", "variable", "date", "value", "provenance",
@@ -53,19 +53,19 @@ class TestJsonLdExporter(unittest.TestCase):
                             "observation_period", "properties"
                         ])
 
-        # Mock input file as it's required by insert_observations but not used for DB operations in SqlDb
+      # Mock input file as it's required by insert_observations but not used for DB operations in SqlDb
       mock_file = mock.Mock()
       mock_file.path = "dummy.csv"
 
       db.insert_observations(df, mock_file)
       db.commit()
 
-        # Export with small chunk size to force multiple shards
+      # Export with small chunk size to force multiple shards
       export_to_jsonld(db, output_dir, chunk_size=1)
 
-        # Verify files exist
-        # 2 triples with chunk_size=1 -> 2 shards (0 and 1)
-        # 1 observation with chunk_size=1 -> 1 shard (2)
+      # Verify files exist
+      # 2 triples with chunk_size=1 -> 2 shards (0 and 1)
+      # 1 observation with chunk_size=1 -> 1 shard (2)
       shard_paths = [
           os.path.join(temp_dir, "node-00000.jsonld"),
           os.path.join(temp_dir, "node-00001.jsonld"),
@@ -104,7 +104,7 @@ class TestJsonLdExporter(unittest.TestCase):
 
       export_to_jsonld(db, output_dir, chunk_size=1)
 
-        # Verify no shards created
+      # Verify no shards created
       shard_paths = [
           os.path.join(temp_dir, "node-00000.jsonld"),
           os.path.join(temp_dir, "observation-00000.jsonld")
@@ -160,7 +160,7 @@ class TestJsonLdExporter(unittest.TestCase):
       db.insert_observations(df, mock_file)
       db.commit()
 
-        # Should log a warning but not fail
+      # Should log a warning but not fail
       export_to_jsonld(db, output_dir, chunk_size=10)
 
       shard_path = os.path.join(temp_dir, "observation-00000.jsonld")
@@ -181,7 +181,7 @@ class TestJsonLdExporter(unittest.TestCase):
       ])
       db.commit()
 
-        # Pass a custom context
+      # Pass a custom context
       custom_context = {"ex": "https://example.com/ns/"}
       export_to_jsonld(db, output_dir, chunk_size=10, context=custom_context)
 

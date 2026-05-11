@@ -51,15 +51,21 @@ def trigger_ingestion_workflow(gcs_path: str,
     return
 
   data_payload = {
-      "spannerInstanceId": env_vars["GCP_SPANNER_INSTANCE_ID"],
-      "spannerDatabaseId": env_vars["GCP_SPANNER_DATABASE_NAME"],
-      "importName": import_name,
-      "importList": json.dumps([{
-          "importName": import_name,
-          "graphPath": gcs_path
-      }]),
-      "tempLocation": env_vars["TEMP_LOCATION"],
-      "region": env_vars["REGION"]
+      "spannerInstanceId":
+          env_vars["GCP_SPANNER_INSTANCE_ID"],
+      "spannerDatabaseId":
+          env_vars["GCP_SPANNER_DATABASE_NAME"],
+      "importName":
+          import_name,
+      "importList":
+          json.dumps([{
+              "importName": import_name,
+              "graphPath": gcs_path
+          }]),
+      "tempLocation":
+          env_vars["TEMP_LOCATION"],
+      "region":
+          env_vars["REGION"]
   }
 
   try:
@@ -91,4 +97,3 @@ def trigger_ingestion_workflow(gcs_path: str,
 
   except Exception as e:
     logging.error(f"Error triggering workflow via API: {e}")
-
