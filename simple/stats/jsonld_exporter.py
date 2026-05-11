@@ -15,7 +15,6 @@
 import hashlib
 import json
 import logging
-import os
 
 from pyld import jsonld
 from rdflib import Graph
@@ -78,6 +77,47 @@ def process_triples(db, output_dir, ns_map: dict, chunk_size: int):
       break
 
 
+def _add_observation_to_graph(g, row, DCID):
+    """Helper to add an observation row to the graph."""
+    entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
+
+    # Generate a deterministic ID for the observation to avoid collisions across runs
+    key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}"
+    obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
+    subject = DCID[f"obs_{obs_hash}"]
+
+    g.add((subject, RDF.type, DCID["StatVarObservation"]))
+    g.add((subject, DCID["observationAbout"], expand_id(entity)))
+    g.add((subject, DCID["variableMeasured"], expand_id(variable)))
+    g.add((subject, DCID["observationDate"], Literal(date)))
+
+    try:
+        g.add((subject, DCID["value"], Literal(float(value))))
+    except ValueError:
+        g.add((subject, DCID["value"], Literal(value)))
+
+    if provenance:
+        g.add((subject, DCID["provenance"], expand_id(provenance)))
+    if unit:
+        g.add((subject, DCID["unit"], expand_id(unit)))
+    if scaling_factor:
+        g.add((subject, DCID["scalingFactor"], Literal(scaling_factor)))
+    if mmethod:
+        g.add((subject, DCID["measurementMethod"], expand_id(mmethod)))
+    if period:
+        g.add((subject, DCID["observationPeriod"], Literal(period)))
+
+    if props:
+        try:
+            props_dict = json.loads(props)
+            for k, v in props_dict.items():
+                g.add((subject, expand_id(k), Literal(v)))
+        except json.JSONDecodeError as e:
+            logging.warning(
+                f"Failed to decode properties JSON for observation {entity}/{variable}: {e}"
+            )
+
+
 def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
   """Processes observations in chunks and writes them to JSON-LD shards."""
   offset = 0
@@ -85,7 +125,8 @@ def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
 
   while True:
     obs_tuples = db.engine.fetch_all(
-        "SELECT entity, variable, date, value, provenance, unit, scaling_factor, measurement_method, observation_period, properties FROM observations LIMIT ? OFFSET ?",
+        "SELECT entity, variable, date, value, provenance, unit, scaling_factor, "
+        "measurement_method, observation_period, properties FROM observations LIMIT ? OFFSET ?",
         (chunk_size, offset))
 
     if not obs_tuples:
@@ -96,43 +137,7 @@ def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
     g.bind("dcid", DCID)
 
     for row in obs_tuples:
-      entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
-
-      # Generate a deterministic ID for the observation to avoid collisions across runs
-      key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}"
-      obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
-      subject = DCID[f"obs_{obs_hash}"]
-
-      g.add((subject, RDF.type, DCID["StatVarObservation"]))
-      g.add((subject, DCID["observationAbout"], expand_id(entity)))
-      g.add((subject, DCID["variableMeasured"], expand_id(variable)))
-      g.add((subject, DCID["observationDate"], Literal(date)))
-
-      try:
-        g.add((subject, DCID["value"], Literal(float(value))))
-      except ValueError:
-        g.add((subject, DCID["value"], Literal(value)))
-
-      if provenance:
-        g.add((subject, DCID["provenance"], expand_id(provenance)))
-      if unit:
-        g.add((subject, DCID["unit"], expand_id(unit)))
-      if scaling_factor:
-        g.add((subject, DCID["scalingFactor"], Literal(scaling_factor)))
-      if mmethod:
-        g.add((subject, DCID["measurementMethod"], expand_id(mmethod)))
-      if period:
-        g.add((subject, DCID["observationPeriod"], Literal(period)))
-
-      if props:
-        try:
-          props_dict = json.loads(props)
-          for k, v in props_dict.items():
-            g.add((subject, expand_id(k), Literal(v)))
-        except json.JSONDecodeError as e:
-          logging.warning(
-              f"Failed to decode properties JSON for observation {entity}/{variable}: {e}"
-          )
+      _add_observation_to_graph(g, row, DCID)
 
     write_shard(g, shard_index, output_dir, ns_map, prefix="observation")
     shard_index += 1
@@ -142,28 +147,32 @@ def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
       break
 
 
+
 def export_to_jsonld(db,
                      output_dir,
                      chunk_size: int = 10000,
                      context: dict = None):
-  """Exports resolved data from the database to JSON-LD shards.
-    
-    Args:
-        db: The database instance containing triples and observations.
-        output_dir: The directory where JSON-LD shards will be written.
-        chunk_size: The number of rows to fetch and process at a time.
-        context: Optional custom JSON-LD context mappings.
-    """
+  """
+  Exports resolved data from the database to JSON-LD shards.
+
+  Args:
+  -----
+    db: The database instance containing triples and observations.
+    output_dir: The directory where JSON-LD shards will be written.
+    chunk_size: The number of rows to fetch and process at a time.
+    context: Optional custom JSON-LD context mappings.
+
+  """
   logging.info("Exporting resolved data to JSON-LD in shards")
 
   ns_map = {"dcid": DCID_URL}
   if context:
     ns_map.update(context)
 
-  # 1. Process Triples (Schema) in chunks
+    # 1. Process Triples (Schema) in chunks
   process_triples(db, output_dir, ns_map, chunk_size)
 
-  # 2. Process Observations in chunks
+    # 2. Process Observations in chunks
   process_observations(db, output_dir, ns_map, chunk_size)
 
 
@@ -172,15 +181,18 @@ def write_shard(g: Graph,
                 output_dir,
                 ns_map: dict,
                 prefix: str = "output"):
-  """Serializes and writes an RDF graph to a JSON-LD shard.
-    
-    Args:
-        g: The RDF graph to serialize.
-        index: The shard index for the filename.
-        output_dir: The directory to write the shard file to.
-        ns_map: The namespace map for context compaction.
-        prefix: The file name prefix (e.g. 'node' or 'observation').
-    """
+  """
+  Serializes and writes an RDF graph to a JSON-LD shard.
+
+  Args:
+  -----
+    g: The RDF graph to serialize.
+    index: The shard index for the filename.
+    output_dir: The directory to write the shard file to.
+    ns_map: The namespace map for context compaction.
+    prefix: The file name prefix (e.g. 'node' or 'observation').
+
+  """
   jsonld_str = g.serialize(context=ns_map, format="json-ld", indent=4)
   expanded_jsonld = json.loads(jsonld_str)
   compacted_jsonld = jsonld.compact(expanded_jsonld, ns_map)

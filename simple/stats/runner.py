@@ -19,15 +19,6 @@ import os
 from typing import Optional
 
 import fs.path as fspath
-import google.auth
-import google.auth.transport.requests
-from pyld import jsonld
-from rdflib import Graph
-from rdflib import Literal
-from rdflib import Namespace
-from rdflib import RDF
-from rdflib import URIRef
-import requests
 from stats import constants
 from stats import schema
 from stats import stat_var_hierarchy_generator
