@@ -56,7 +56,7 @@ _FREEZE_TIME_IGNORE_LIST = ["transformers"]
 
 def _run():
   initialize_logger()
-  logging.info("Starting Runner in mode: %s", FLAGS.mode)
+  logging.info("Starting stats data importer job in mode: %s", FLAGS.mode)
   Runner(config_file_path=FLAGS.config_file,
          input_dir_path=FLAGS.input_dir,
          output_dir_path=FLAGS.output_dir,

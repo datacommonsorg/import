@@ -1,4 +1,4 @@
-# Copyright 2024 Google Inc.
+# Copyright 2026 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,42 +27,26 @@ from rdflib import URIRef
 DCID_URL = "https://datacommons.org/browser/"
 
 
-def export_to_jsonld(db,
-                     output_dir,
-                     chunk_size: int = 10000,
-                     context: dict = None):
-  """Exports resolved data from the database to JSON-LD shards.
-    
-    Args:
-        db: The database instance containing triples and observations.
-        output_dir: The directory where JSON-LD shards will be written.
-        chunk_size: The number of rows to fetch and process at a time.
-        context: Optional custom JSON-LD context mappings.
-    """
-  logging.info("Exporting resolved data to JSON-LD in shards")
+def expand_id(item):
+  """Expands a short ID into a full URIRef."""
+  if not item:
+    return None
+  if item.startswith("http://") or item.startswith("https://"):
+    return URIRef(item)
+  if item.startswith("dcid:"):
+    return URIRef(f"{DCID_URL}{item[5:]}")
+  return URIRef(f"{DCID_URL}{item.lstrip('/')}")
 
-  ns_map = {"dcid": DCID_URL}
-  if context:
-    ns_map.update(context)
 
-  def expand_id(item):
-    if not item:
-      return None
-    if item.startswith("http://") or item.startswith("https://"):
-      return URIRef(item)
-    if item.startswith("dcid:"):
-      return URIRef(f"{DCID_URL}{item[5:]}")
-    return URIRef(f"{DCID_URL}{item.lstrip('/')}")
-
+def process_triples(db, output_dir, ns_map: dict, chunk_size: int):
+  """Processes schema triples in chunks and writes them to JSON-LD shards."""
+  offset = 0
   shard_index = 0
 
-  # 1. Process Triples (Schema) in chunks
-  offset = 0
   while True:
     triples_tuples = db.engine.fetch_all(
         "SELECT subject_id, predicate, object_id, object_value FROM triples LIMIT ? OFFSET ?",
-        (chunk_size, offset)
-    )
+        (chunk_size, offset))
 
     if not triples_tuples:
       break
@@ -86,20 +70,23 @@ def export_to_jsonld(db,
       else:
         g.add((sub, p, o))
 
-    write_shard(g, shard_index, output_dir, ns_map)
+    write_shard(g, shard_index, output_dir, ns_map, prefix="node")
     shard_index += 1
     offset += chunk_size
 
     if len(triples_tuples) < chunk_size:
       break
 
-  # 2. Process Observations in chunks
+
+def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
+  """Processes observations in chunks and writes them to JSON-LD shards."""
   offset = 0
+  shard_index = 0
+
   while True:
     obs_tuples = db.engine.fetch_all(
         "SELECT entity, variable, date, value, provenance, unit, scaling_factor, measurement_method, observation_period, properties FROM observations LIMIT ? OFFSET ?",
-        (chunk_size, offset)
-    )
+        (chunk_size, offset))
 
     if not obs_tuples:
       break
@@ -147,7 +134,7 @@ def export_to_jsonld(db,
               f"Failed to decode properties JSON for observation {entity}/{variable}: {e}"
           )
 
-    write_shard(g, shard_index, output_dir, ns_map)
+    write_shard(g, shard_index, output_dir, ns_map, prefix="observation")
     shard_index += 1
     offset += chunk_size
 
@@ -155,7 +142,36 @@ def export_to_jsonld(db,
       break
 
 
-def write_shard(g: Graph, index: int, output_dir, ns_map: dict):
+def export_to_jsonld(db,
+                     output_dir,
+                     chunk_size: int = 10000,
+                     context: dict = None):
+  """Exports resolved data from the database to JSON-LD shards.
+    
+    Args:
+        db: The database instance containing triples and observations.
+        output_dir: The directory where JSON-LD shards will be written.
+        chunk_size: The number of rows to fetch and process at a time.
+        context: Optional custom JSON-LD context mappings.
+    """
+  logging.info("Exporting resolved data to JSON-LD in shards")
+
+  ns_map = {"dcid": DCID_URL}
+  if context:
+    ns_map.update(context)
+
+  # 1. Process Triples (Schema) in chunks
+  process_triples(db, output_dir, ns_map, chunk_size)
+
+  # 2. Process Observations in chunks
+  process_observations(db, output_dir, ns_map, chunk_size)
+
+
+def write_shard(g: Graph,
+                index: int,
+                output_dir,
+                ns_map: dict,
+                prefix: str = "output"):
   """Serializes and writes an RDF graph to a JSON-LD shard.
     
     Args:
@@ -163,6 +179,7 @@ def write_shard(g: Graph, index: int, output_dir, ns_map: dict):
         index: The shard index for the filename.
         output_dir: The directory to write the shard file to.
         ns_map: The namespace map for context compaction.
+        prefix: The file name prefix (e.g. 'node' or 'observation').
     """
   jsonld_str = g.serialize(context=ns_map, format="json-ld", indent=4)
   expanded_jsonld = json.loads(jsonld_str)
@@ -175,6 +192,6 @@ def write_shard(g: Graph, index: int, output_dir, ns_map: dict):
         "@graph": [data_only]
     }
 
-  shard_name = f"output-{index:05d}.jsonld"
+  shard_name = f"{prefix}-{index:05d}.jsonld"
   output_dir.open_file(shard_name).write(json.dumps(compacted_jsonld, indent=4))
   logging.info(f"Saved JSON-LD shard to {shard_name}")

@@ -607,14 +607,14 @@ class Runner:
 
     # Auto-trigger workflow if output is on GCS
     output_path = jsonld_dir.full_path()
-    if output_path.startswith("gs://"):
-      gcs_pattern = f"{output_path.rstrip('/')}/output-*.jsonld"
+    if INGESTION_WORKFLOW_NAME and output_path.startswith("gs://"):
+      gcs_pattern = f"{output_path.rstrip('/')}/*.jsonld"
       trigger_ingestion_workflow(
           gcs_pattern, self.config.data.get("importName",
                                             "default_import_name"))
     else:
       logging.info(
-          "Output is local, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually."
+          "Output is local or workflow is missing, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually."
       )
 
 
