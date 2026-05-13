@@ -42,7 +42,7 @@ Detailed documentation on the Import Tool is available [here](docs/usage.md).
     file URLs like
     [this](https://user-images.githubusercontent.com/4375037/129290496-ed8eb0a3-b5e2-4de6-bdf2-449814df8fcf.png)).
 
-    Another option is to copy/paste the JSON content in [jsongrid](https://jsongrid.com).
+    Another option is to copy/paste the JSON content in [jsongrid](https://jsongrid.com) or [JSON Parser](http://jsonparser.ai).
 
 - To see the list of flags that can be used and what the default values are: `dc-import --help`.
 
