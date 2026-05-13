@@ -594,6 +594,7 @@ class Runner:
 
     # Export to JSON-LD
     jsonld_dir = self.output_dir.open_dir("jsonld")
+    self.db.commit()
     export_to_jsonld(self.db, jsonld_dir)
 
     # Auto-trigger workflow if output is on GCS

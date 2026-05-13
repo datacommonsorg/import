@@ -600,6 +600,12 @@ class SqliteDbEngine(DbEngine):
     logging.info("Connected to SQLite: %s", self.db_file.full_path())
 
     self.cursor = self.connection.cursor()
+    
+    # Optimization PRAGMAs for bulk loading
+    self.cursor.execute("PRAGMA synchronous = OFF;")
+    self.cursor.execute("PRAGMA journal_mode = MEMORY;")
+    self.cursor.execute("PRAGMA cache_size = -2000000;")
+    
     self.indexes_created = False
 
   def _maybe_update_schema(self) -> None:

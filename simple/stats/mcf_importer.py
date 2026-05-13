@@ -69,10 +69,15 @@ class McfImporter(Importer):
     parser_triples: list[list[str]] = []
     # DCID references
     local2dcid: dict[str, str] = {}
+    
     for parser_triple in mcf_to_triples(self.input_file.read_string_io()):
       [subject_id, predicate, value, _] = parser_triple
       if predicate == _DCID:
-        local2dcid[subject_id] = value
+        # Only map if not already mapped to a non-empty DCID to avoid poisoning
+        if value and not local2dcid.get(subject_id):
+          local2dcid[subject_id] = value
+        elif local2dcid.get(subject_id) and local2dcid[subject_id] != value:
+          logging.warning("Detected likely multi-line list or duplicate DCID for subject %s. Skipping value: '%s'", subject_id, value)
       else:
         parser_triples.append(parser_triple)
 
@@ -85,11 +90,14 @@ def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
     raise ValueError(
         f"Value of property {predicate} in node {subject_id} too long (got: {len(value)}, max: {_MAX_CHARS})"
     )
-  if subject_id not in local2dcid:
+    
+  resolved_subject = local2dcid.get(subject_id, subject_id)
+  
+  # If not resolved and doesn't look like a DCID, raise error
+  if not resolved_subject or (not resolved_subject.startswith("dcid:") and resolved_subject == subject_id):
     raise ValueError(f"dcid not specified for node: {subject_id}")
 
-  subject_id = local2dcid[subject_id]
   if value_type == _ID:
-    return Triple(subject_id, predicate, object_id=value)
+    return Triple(resolved_subject, predicate, object_id=value)
   else:
-    return Triple(subject_id, predicate, object_value=value)
+    return Triple(resolved_subject, predicate, object_value=value)

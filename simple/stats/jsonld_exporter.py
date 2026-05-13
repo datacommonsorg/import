@@ -58,6 +58,16 @@ def process_triples(db, output_dir, ns_map: dict, chunk_size: int):
       sub_id, pred, obj_id, obj_val = row
       sub = expand_id(sub_id)
       p = expand_id(pred)
+      
+      if not sub:
+        logging.error("Subject is None for row: %s (sub_id: '%s')", row, sub_id)
+        # Print surrounding rows for context
+        idx = triples_tuples.index(row)
+        start = max(0, idx - 5)
+        end = min(len(triples_tuples), idx + 5)
+        logging.error("Surrounding rows for context:")
+        for r in triples_tuples[start:end]:
+          logging.error("  %s %s", "->" if r == row else "  ", r)
 
       if obj_id:
         o = expand_id(obj_id)
@@ -118,33 +128,61 @@ def _add_observation_to_graph(g, row, DCID):
       )
 
 
-def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
-  """Processes observations in chunks and writes them to JSON-LD shards."""
-  offset = 0
-  shard_index = 0
-
-  while True:
-    obs_tuples = db.engine.fetch_all(
-        "SELECT entity, variable, date, value, provenance, unit, scaling_factor, "
-        "measurement_method, observation_period, properties FROM observations LIMIT ? OFFSET ?",
-        (chunk_size, offset))
-
-    if not obs_tuples:
-      break
-
-    g = Graph()
-    DCID = Namespace(DCID_URL)
-    g.bind("dcid", DCID)
-
-    for row in obs_tuples:
-      _add_observation_to_graph(g, row, DCID)
-
+def _process_observation_chunk(args):
+  """Worker function to process a single chunk of observations."""
+  shard_index, offset, chunk_size, db_path, output_dir_path, ns_map = args
+  
+  import sqlite3
+  from rdflib import Graph, Namespace
+  from util.filesystem import create_store
+  
+  # Open new connection in worker
+  conn = sqlite3.connect(db_path)
+  cursor = conn.cursor()
+  
+  cursor.execute(
+      "SELECT entity, variable, date, value, provenance, unit, scaling_factor, "
+      "measurement_method, observation_period, properties FROM observations LIMIT ? OFFSET ?",
+      (chunk_size, offset))
+  obs_tuples = cursor.fetchall()
+  conn.close()
+  
+  if not obs_tuples:
+    return False
+    
+  g = Graph()
+  DCID = Namespace(DCID_URL)
+  g.bind("dcid", DCID)
+  
+  for row in obs_tuples:
+    _add_observation_to_graph(g, row, DCID)
+    
+  with create_store(output_dir_path) as store:
+    output_dir = store.as_dir()
     write_shard(g, shard_index, output_dir, ns_map, prefix="observation")
-    shard_index += 1
-    offset += chunk_size
+    
+  return True
 
-    if len(obs_tuples) < chunk_size:
-      break
+
+def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
+  """Processes observations in chunks in parallel and writes them to JSON-LD shards."""
+  db_path = db.engine.db_file.syspath()
+  output_dir_path = output_dir.full_path()
+  
+  total_obs = db.engine.fetch_all("SELECT COUNT(*) FROM observations")[0][0]
+  num_chunks = (total_obs + chunk_size - 1) // chunk_size
+  
+  args_list = [
+    (i, i * chunk_size, chunk_size, db_path, output_dir_path, ns_map)
+    for i in range(num_chunks)
+  ]
+  
+  import multiprocessing
+  num_processes = min(multiprocessing.cpu_count(), 8)
+  logging.info("Starting observations export with %d processes for %d chunks", num_processes, num_chunks)
+  
+  with multiprocessing.Pool(processes=num_processes) as pool:
+    pool.map(_process_observation_chunk, args_list)
 
 
 def export_to_jsonld(db,
