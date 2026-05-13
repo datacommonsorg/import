@@ -23,6 +23,7 @@ import re
 from httpx import AsyncClient
 from httpx import Limits
 import requests
+import time
 
 from .ngram_matcher import NgramMatcher
 from .resolvers import resolve_latlngs_2_s2cells
@@ -215,20 +216,23 @@ def get_entities_of_type(entity_type: str,
 # Returns a common entity type that the specified entity dcids resolve to.
 # Returns an empty string if there is no common entity type
 def resolve_entity_type(entity_dcids: list[str]) -> str:
-  data = {
-      "nodes": entity_dcids,
-      "property": "->typeOf",
-  }
-
-  logging.info("Fetching entity types: %s", data)
-  response = post(path="/v2/node", data=data)
-
+  chunks = chunked(entity_dcids, _BATCH_SIZE)
+  
   results: list[(str, set[str])] = []
-  for entity_dcid, entity_data in response.get("data", {}).items():
-    nodes = entity_data.get("arcs", {}).get("typeOf", {}).get("nodes", [])
-    entity_types = [node.get("dcid") for node in nodes if node.get("dcid")]
-    if entity_types:
-      results.append((entity_dcid, set(entity_types)))
+  for chunk in chunks:
+    data = {
+        "nodes": chunk,
+        "property": "->typeOf",
+    }
+
+    logging.info("Fetching entity types: %s", data)
+    response = post(path="/v2/node", data=data)
+
+    for entity_dcid, entity_data in response.get("data", {}).items():
+      nodes = entity_data.get("arcs", {}).get("typeOf", {}).get("nodes", [])
+      entity_types = [node.get("dcid") for node in nodes if node.get("dcid")]
+      if entity_types:
+        results.append((entity_dcid, set(entity_types)))
 
   logging.debug("Entity type results: %s", results)
   if not results or len(results) != len(entity_dcids):
@@ -298,14 +302,42 @@ def post(path: str, data={}) -> dict:
   if api_key:
     headers["x-api-key"] = api_key
   logging.debug("Request: %s", json.dumps(data, indent=1))
-  resp = requests.post(url, json=data, headers=headers)
-  response = resp.json()
-  logging.debug("Response: %s", json.dumps(response, indent=1))
-  if resp.status_code != 200:
-    raise Exception(
-        f'{resp.status_code}: {resp.reason}\n{response["message"]}\nRequest: {path}\n{data}'
-    )
-  return response
+  
+  max_retries = 3
+  base_delay = 1
+  resp = None
+  
+  for attempt in range(max_retries):
+    try:
+      resp = requests.post(url, json=data, headers=headers)
+      
+      if resp.status_code == 200:
+        return resp.json()
+        
+      if resp.status_code in [502, 503, 504]:
+        logging.warning("Received %d from %s. Attempt %d/%d.", resp.status_code, path, attempt + 1, max_retries)
+      else:
+        # Non-transient error, don't retry
+        break
+        
+    except Exception as e:
+      if attempt == max_retries - 1:
+        raise
+      logging.warning("Error calling %s: %s. Attempt %d/%d.", path, e, attempt + 1, max_retries)
+      
+    delay = base_delay * (2 ** attempt)
+    logging.info("Waiting %d seconds before retrying %s...", delay, path)
+    time.sleep(delay)
+    
+  if resp is not None and resp.status_code != 200:
+    try:
+      response = resp.json()
+      message = response.get("message", "")
+    except Exception:
+      message = resp.text
+    raise Exception(f'{resp.status_code}: {resp.reason}\n{message}\nRequest: {path}')
+  
+  raise Exception(f"Failed to call {path} after {max_retries} attempts.")
 
 
 async def post_async(client: AsyncClient, path: str, data={}) -> dict:
@@ -315,15 +347,43 @@ async def post_async(client: AsyncClient, path: str, data={}) -> dict:
   if api_key:
     headers["x-api-key"] = api_key
   logging.debug("Request: %s", json.dumps(data, indent=1))
-  async with asyncio.Semaphore(_HTTPX_LIMITS.max_connections):
-    resp = await client.post(url, json=data, headers=headers)
-  response = resp.json()
-  logging.debug("Response: %s", json.dumps(response, indent=1))
-  if resp.status_code != 200:
-    raise Exception(
-        f'{resp.status_code}: {resp.reason_phrase}\n{response["message"]}\nRequest: {path}\n{data}'
-    )
-  return response
+  
+  max_retries = 3
+  base_delay = 1
+  resp = None
+  
+  for attempt in range(max_retries):
+    try:
+      async with asyncio.Semaphore(_HTTPX_LIMITS.max_connections):
+        resp = await client.post(url, json=data, headers=headers)
+      
+      if resp.status_code == 200:
+        return resp.json()
+        
+      if resp.status_code in [502, 503, 504]:
+        logging.warning("Received %d from %s. Attempt %d/%d.", resp.status_code, path, attempt + 1, max_retries)
+      else:
+        # Non-transient error, don't retry
+        break
+        
+    except Exception as e:
+      if attempt == max_retries - 1:
+        raise
+      logging.warning("Error calling %s: %s. Attempt %d/%d.", path, e, attempt + 1, max_retries)
+      
+    delay = base_delay * (2 ** attempt)
+    logging.info("Waiting %d seconds before retrying %s...", delay, path)
+    await asyncio.sleep(delay)
+    
+  if resp is not None and resp.status_code != 200:
+    try:
+      response = resp.json()
+      message = response.get("message", "")
+    except Exception:
+      message = resp.text
+    raise Exception(f'{resp.status_code}: {resp.reason_phrase}\n{message}\nRequest: {path}')
+    
+  raise Exception(f"Failed to call {path} after {max_retries} attempts.")
 
 
 def chunked(elements: list, chunk_size: int) -> list[list]:
