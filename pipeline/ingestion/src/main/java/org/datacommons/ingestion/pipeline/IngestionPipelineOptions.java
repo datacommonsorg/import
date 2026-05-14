@@ -94,4 +94,10 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   boolean getInitializeDatabaseOnly();
 
   void setInitializeDatabaseOnly(boolean initializeDatabaseOnly);
+
+  @Description("Whether to force combination of schema nodes across shards.")
+  @Default.Boolean(false)
+  boolean getForceCombineNodes();
+
+  void setForceCombineNodes(boolean forceCombineNodes);
 }

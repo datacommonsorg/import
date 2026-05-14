@@ -100,7 +100,7 @@ public class GraphIngestionPipeline {
       }
 
       // Process the individual import.
-      processImport(pipeline, spannerClient, importName, graphPath, options.getSkipDelete());
+      processImport(pipeline, spannerClient, importName, graphPath, options);
     }
   }
 
@@ -111,14 +111,14 @@ public class GraphIngestionPipeline {
    * @param spannerClient The Spanner client.
    * @param importName The name of the import.
    * @param graphPath The full path to the graph data.
-   * @param skipDelete Whether to skip delete operations.
+   * @param options The ingestion pipeline options.
    */
   private static void processImport(
       Pipeline pipeline,
       SpannerClient spannerClient,
       String importName,
       String graphPath,
-      boolean skipDelete) {
+      IngestionPipelineOptions options) {
     LOGGER.info("Import: {} Graph path: {}", importName, graphPath);
 
     String provenance = "dc/base/" + importName;
@@ -129,7 +129,7 @@ public class GraphIngestionPipeline {
     // immediately.
     PCollection<Void> deleteObsWait;
     PCollection<Void> deleteEdgesWait;
-    if (!skipDelete) {
+    if (!options.getSkipDelete()) {
       deleteObsWait =
           spannerClient.deleteDataForImport(
               pipeline, importName, spannerClient.getObservationTableName(), "import_name");
@@ -168,7 +168,11 @@ public class GraphIngestionPipeline {
     // 3. Process Schema Nodes:
     // Combine nodes if required.
     PCollection<McfGraph> combinedGraph = schemaNodes;
-    if (IMPORTS_TO_COMBINE.contains(importName)) {
+    if (options.getForceCombineNodes() || IMPORTS_TO_COMBINE.contains(importName)) {
+      LOGGER.info(
+          ">>> Combining nodes for import: {} (ForceCombine: {})",
+          importName,
+          options.getForceCombineNodes());
       combinedGraph = PipelineUtils.combineGraphNodes(importName, schemaNodes);
     }
 

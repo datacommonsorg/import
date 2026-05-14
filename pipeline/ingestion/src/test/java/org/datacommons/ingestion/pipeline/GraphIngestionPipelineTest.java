@@ -104,6 +104,62 @@ public class GraphIngestionPipelineTest implements Serializable {
     assertTrue("Edge mutation for name not found", foundNameEdge);
   }
 
+  @Test
+  public void testBuildPipelineWithForceCombineNodes() throws Exception {
+    // 1. Setup Test Data (Two MCF files with same node ID)
+    File mcfFile1 = tmpFolder.newFile("test1.mcf");
+    Files.writeString(
+        Path.of(mcfFile1.getPath()),
+        "Node: dcid:geoId/06\n" + "typeOf: dcs:Place\n" + "name: \"California\"\n\n");
+
+    File mcfFile2 = tmpFolder.newFile("test2.mcf");
+    Files.writeString(
+        Path.of(mcfFile2.getPath()),
+        "Node: dcid:geoId/06\n" + "typeOf: dcs:Place\n" + "containedInPlace: dcid:country/USA\n\n");
+
+    // 2. Setup Options
+    IngestionPipelineOptions options = PipelineOptionsFactory.as(IngestionPipelineOptions.class);
+    // Point to the folder containing both files
+    String importListJson =
+        String.format(
+            "[{\"importName\": \"customImport\", \"graphPath\": \"%s/*\"}]",
+            tmpFolder.getRoot().getPath());
+    options.setImportList(importListJson);
+    options.setProjectId("test-project");
+    options.setSpannerInstanceId("test-instance");
+    options.setSpannerDatabaseId("test-database");
+    options.setForceCombineNodes(true); // Enable the new flag!
+
+    // 3. Setup Mock SpannerClient
+    PCollection<Void> emptySignal =
+        pipeline.apply("CreateEmptySignal_Combine", Create.empty(TypeDescriptor.of(Void.class)));
+
+    SpannerWriteResult mockWriteResult =
+        mock(SpannerWriteResult.class, withSettings().serializable());
+    PCollection<Void> mockWriteOutput =
+        pipeline.apply("CreateWriteSignal_Combine", Create.empty(TypeDescriptor.of(Void.class)));
+    when(mockWriteResult.getOutput()).thenReturn(mockWriteOutput);
+
+    SpannerClient mockSpannerClient = new MockSpannerClient(emptySignal, mockWriteResult);
+
+    // 4. Build Pipeline
+    GraphIngestionPipeline.buildPipeline(pipeline, options, mockSpannerClient);
+
+    // 5. Run Pipeline
+    pipeline.run().waitUntilFinish();
+
+    // 6. Assertions
+    // If combined, we should see only 1 Node mutation for geoId/06!
+    int nodeMutationCount = 0;
+    for (com.google.cloud.spanner.Mutation m : capturedMutations) {
+      if (m.getTable().equals("Node")
+          && m.asMap().get("subject_id").getString().equals("geoId/06")) {
+        nodeMutationCount++;
+      }
+    }
+    assertTrue("Node mutations should be combined into 1", nodeMutationCount == 1);
+  }
+
   static class MockSpannerClient extends SpannerClient {
     private final transient PCollection<Void> deleteSignal;
     private final transient SpannerWriteResult mockWriteResult;
