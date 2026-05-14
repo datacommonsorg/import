@@ -14,7 +14,7 @@ import org.apache.beam.sdk.metrics.Counter;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.NodesEdges;
-import org.datacommons.ingestion.data.Observation;
+import org.datacommons.ingestion.data.TimeSeries;
 import org.datacommons.proto.CacheData.EntityInfo;
 import org.datacommons.proto.CacheData.PagedEntities;
 import org.datacommons.proto.ChartStoreOuterClass.ChartStore;
@@ -171,8 +171,8 @@ public class CacheReader implements Serializable {
   }
 
   /** Parses a time series cache row to extract observations. */
-  public List<Observation> parseTimeSeriesRow(String row) {
-    List<Observation> result = new ArrayList<>();
+  public List<TimeSeries> parseTimeSeriesRow(String row) {
+    List<TimeSeries> result = new ArrayList<>();
 
     // Cache format: <placeId^statVarId>, ChartStore containing ObsTimeSeries.
     if (row != null && !row.isEmpty()) {
@@ -187,8 +187,8 @@ public class CacheReader implements Serializable {
           String observationAbout = keys[0];
           ChartStore chart = ProtoUtil.parseCacheProto(value, ChartStore.parser());
           for (SourceSeries source : chart.getObsTimeSeries().getSourceSeriesList()) {
-            Observation.Builder builder =
-                Observation.builder()
+            TimeSeries.Builder builder =
+                TimeSeries.builder()
                     .isBaseDc(this.isBaseDc)
                     .variableMeasured(variableMeasured)
                     .observationAbout(observationAbout)

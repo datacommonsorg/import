@@ -40,11 +40,5 @@ RUN uv sync --no-dev
 # Place the virtual environment's bin directory on the PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Fetch proto file from GitHub
-RUN curl -o storage.proto https://raw.githubusercontent.com/datacommonsorg/import/master/pipeline/data/src/main/proto/storage.proto
-
-# Generate proto descriptor set
-RUN protoc --include_imports --descriptor_set_out=clients/storage.pb storage.proto
-
 # Run the FastAPI service with Uvicorn
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]

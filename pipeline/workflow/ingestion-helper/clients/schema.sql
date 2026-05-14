@@ -11,12 +11,6 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
-
-CREATE PROTO BUNDLE (
-  `org.datacommons.Observations`,
-  `org.datacommons.Observations.ValuesEntry`
-);
-
 CREATE TABLE Node (
   subject_id STRING(1024) NOT NULL,
   value STRING(MAX),
@@ -35,19 +29,39 @@ CREATE TABLE Edge (
 ) PRIMARY KEY(subject_id, predicate, object_id, provenance),
 INTERLEAVE IN Node;
 
-CREATE TABLE Observation (
-  observation_about STRING(1024) NOT NULL,
+CREATE TABLE TimeSeries (
   variable_measured STRING(1024) NOT NULL,
+  entity1 STRING(1024) NOT NULL AS (JSON_VALUE(entities, '$.entity1')) STORED,
+  extra_entities_id STRING(1024) NOT NULL,
   facet_id STRING(1024) NOT NULL,
-  observation_period STRING(1024),
-  measurement_method STRING(1024),
-  unit STRING(1024),
-  scaling_factor STRING(1024),
-  observations org.datacommons.Observations,
-  import_name STRING(1024),
-  provenance_url STRING(1024),
-  is_dc_aggregate BOOL,
-) PRIMARY KEY(observation_about, variable_measured, facet_id);
+  entities JSON NOT NULL,
+  facet JSON NOT NULL,
+  entity2 STRING(1024) AS (JSON_VALUE(entities, '$.entity2')) STORED,
+  entity3 STRING(1024) AS (JSON_VALUE(entities, '$.entity3')) STORED,
+  observation_period STRING(1024) AS (JSON_VALUE(facet, '$.observationPeriod')) STORED,
+  unit STRING(1024) AS (JSON_VALUE(facet, '$.unit')) STORED,
+  measurement_method STRING(1024) AS (JSON_VALUE(facet, '$.measurementMethod')) STORED,
+  scaling_factor STRING(1024) AS (JSON_VALUE(facet, '$.scalingFactor')) STORED,
+  provenance STRING(1024) NOT NULL AS (JSON_VALUE(facet, '$.provenance')) STORED,
+) PRIMARY KEY(variable_measured, entity1, extra_entities_id, facet_id), OPTIONS (
+  columnar_policy = 'enabled'
+);
+
+CREATE TABLE Observation (
+  variable_measured STRING(1024) NOT NULL,
+  entity1 STRING(1024) NOT NULL,
+  extra_entities_id STRING(1024) NOT NULL,
+  facet_id STRING(1024) NOT NULL,
+  date STRING(32) NOT NULL,
+  value STRING(MAX) NOT NULL,
+) PRIMARY KEY(variable_measured, entity1, extra_entities_id, facet_id, date DESC),
+  INTERLEAVE IN PARENT TimeSeries ON DELETE CASCADE, OPTIONS (
+  columnar_policy = 'enabled'
+);
+
+CREATE INDEX TimeSeriesProvenance ON TimeSeries(provenance) OPTIONS (
+  columnar_policy = 'enabled'
+);
 
 CREATE TABLE ImportStatus (
   ImportName STRING(MAX) NOT NULL,
@@ -111,18 +125,10 @@ CREATE PROPERTY GRAPH DCGraph
         subject_id)
   );
 
-CREATE TABLE Cache (
-  type STRING(1024) NOT NULL,
-  key STRING(1024) NOT NULL,
-  provenance STRING(1024) NOT NULL,
-  value JSON,
-) PRIMARY KEY(type, key, provenance);
-
 CREATE INDEX InEdge ON Edge(object_id, predicate, subject_id, provenance) OPTIONS (
   columnar_policy = 'enabled'
 );
 
-CREATE INDEX VariableMeasuredObservationAbout ON Observation(variable_measured, observation_about);
 
 -- NodeEmbedding table, NodeEmbeddingIndex index and NodeEmbeddingModel model are necessary for embeddings to work properly.
 

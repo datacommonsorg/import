@@ -16,7 +16,7 @@ import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.*;
 import org.datacommons.ingestion.data.NodesEdges;
-import org.datacommons.ingestion.data.Observation;
+import org.datacommons.ingestion.data.TimeSeries;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.util.CacheReader;
 import org.datacommons.ingestion.util.ImportGroupVersions;
@@ -100,7 +100,7 @@ public class Transforms {
 
         if (writeObsGraph) {
           obs.stream()
-              .map(Observation::getObsGraph)
+              .map(TimeSeries::getObsGraph)
               .forEach(obsGraph -> outputGraphMutations(obsGraph, out));
         }
       }
@@ -157,8 +157,30 @@ public class Transforms {
             continue;
           }
           seenEdges.add(edgeKey);
+        } else if (mutation.getTable().equals(spannerClient.getTimeSeriesTableName())) {
+          var key = "TS::" + SpannerClient.getFullObservationKey(mutation);
+          if (seenObs.contains(key)) {
+            DUPLICATE_OBS_COUNTER.inc();
+            continue;
+          }
+          seenObs.add(key);
         } else if (mutation.getTable().equals(spannerClient.getObservationTableName())) {
-          var key = SpannerClient.getFullObservationKey(mutation);
+          var key =
+              "OBS::"
+                  + SpannerClient.getFullObservationKey(mutation)
+                  + "::"
+                  + SpannerClient.getMutationValue(mutation, "date");
+          if (seenObs.contains(key)) {
+            DUPLICATE_OBS_COUNTER.inc();
+            continue;
+          }
+          seenObs.add(key);
+        } else if (mutation.getTable().equals(spannerClient.getTimeSeriesAttributeTableName())) {
+          var key =
+              "ATTR::"
+                  + SpannerClient.getFullObservationKey(mutation)
+                  + "::"
+                  + SpannerClient.getMutationValue(mutation, "property");
           if (seenObs.contains(key)) {
             DUPLICATE_OBS_COUNTER.inc();
             continue;

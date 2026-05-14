@@ -11,17 +11,19 @@ import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.datacommons.ingestion.data.Observation;
 import org.datacommons.ingestion.data.ProvenanceUtils;
+import org.datacommons.ingestion.data.TimeSeries;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.util.GraphReader;
 import org.datacommons.ingestion.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
-import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +61,7 @@ public class GraphIngestionPipeline {
             .spannerDatabaseId(options.getSpannerDatabaseId())
             .nodeTableName(options.getSpannerNodeTableName())
             .edgeTableName(options.getSpannerEdgeTableName())
+            .timeSeriesTableName("TimeSeries")
             .observationTableName(options.getSpannerObservationTableName())
             .numShards(options.getNumShards())
             .build();
@@ -71,7 +74,7 @@ public class GraphIngestionPipeline {
 
     Pipeline pipeline = Pipeline.create(options);
     buildPipeline(pipeline, options, spannerClient);
-    pipeline.run();
+    pipeline.run().waitUntilFinish();
   }
 
   public static void buildPipeline(
@@ -136,7 +139,7 @@ public class GraphIngestionPipeline {
     if (!options.getSkipDelete()) {
       deleteObsWait =
           spannerClient.deleteDataForImport(
-              pipeline, importName, spannerClient.getObservationTableName(), "import_name");
+              pipeline, provenance, spannerClient.getTimeSeriesTableName(), "provenance");
       deleteEdgesWait =
           spannerClient.deleteDataForImport(
               pipeline, provenance, spannerClient.getEdgeTableName(), "provenance");
@@ -209,18 +212,38 @@ public class GraphIngestionPipeline {
             Wait.on(List.of(writtenNodes.getOutput(), deleteEdgesWait)));
     spannerClient.writeMutations(pipeline, "WriteEdgesToSpanner-" + importName, waitingEdges);
 
-    // 4. Process Observation Nodes:
-    // Build an optimized graph from observation nodes and convert to Observation mutations.
-    PCollection<McfOptimizedGraph> optimizedGraph =
-        PipelineUtils.buildOptimizedMcfGraph(importName, observationNodes);
-    PCollection<Mutation> observationMutations =
-        GraphReader.graphToObservations(
-                optimizedGraph, importName, spannerClient, obsCounter, isBaseDc)
-            .apply("ExtractObsMutations-" + importName, Values.create());
-    // Write Observations (wait for Obs delete)
-    PCollection<Mutation> waitingObs =
-        observationMutations.apply("ObsWaitOn-" + importName, Wait.on(deleteObsWait));
+    // Path 1: TimeSeries (Metadata)
+    // Extract unique series keys and convert to metadata-only TimeSeries
+    PCollection<TimeSeries> uniqueSeries =
+        GraphReader.extractUniqueSeries(observationNodes, importName, isBaseDc);
+    // Convert unique TimeSeries to TimeSeries mutations
+    PCollection<Mutation> tsMutations =
+        uniqueSeries.apply(
+            "ToTimeSeriesMutations-" + importName,
+            MapElements.into(TypeDescriptor.of(Mutation.class))
+                .via(spannerClient::toTimeSeriesMutation));
 
-    spannerClient.writeMutations(pipeline, "WriteObservationsToSpanner-" + importName, waitingObs);
+    // Path 2: Observations (Data Points)
+    // Extract all individual data points as Observations (one per date/value)
+    PCollection<Observation> obsDataPoints =
+        GraphReader.extractObservations(observationNodes, importName, isBaseDc);
+    // Convert Observations to Observation mutations
+    PCollection<Mutation> childMutations =
+        obsDataPoints.apply(
+            "ToObservationMutations-" + importName,
+            MapElements.into(TypeDescriptor.of(Mutation.class))
+                .via(spannerClient::toObservationMutation));
+
+    // Write TimeSeries (wait for Obs delete)
+    PCollection<Mutation> waitingTS =
+        tsMutations.apply("TSWaitOn-" + importName, Wait.on(deleteObsWait));
+    SpannerWriteResult writtenTS =
+        spannerClient.writeMutations(pipeline, "WriteTimeSeriesToSpanner-" + importName, waitingTS);
+
+    // Write Observations (wait for TimeSeries write)
+    PCollection<Mutation> waitingChildren =
+        childMutations.apply("ChildWaitOn-" + importName, Wait.on(writtenTS.getOutput()));
+    spannerClient.writeMutations(
+        pipeline, "WriteChildObservationsToSpanner-" + importName, waitingChildren);
   }
 }
