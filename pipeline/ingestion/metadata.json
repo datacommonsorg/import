@@ -28,6 +28,13 @@
             "helpText": "Spanner database Id",
             "paramType": "TEXT",
             "isOptional": true
+        },
+        {
+            "name": "forceCombineNodes",
+            "label": "Force Combine Nodes",
+            "helpText": "Whether to force combination of schema nodes across shards.",
+            "paramType": "TEXT",
+            "isOptional": true
         }
     ]
 }
