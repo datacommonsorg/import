@@ -15,6 +15,8 @@
 import hashlib
 import json
 import logging
+import multiprocessing
+import sqlite3
 
 from pyld import jsonld
 from rdflib import Graph
@@ -22,8 +24,6 @@ from rdflib import Literal
 from rdflib import Namespace
 from rdflib import RDF
 from rdflib import URIRef
-import multiprocessing
-import sqlite3
 from util.filesystem import create_store
 
 DCID_URL = "https://datacommons.org/browser/"
@@ -61,7 +61,7 @@ def process_triples(db, output_dir, ns_map: dict, chunk_size: int):
       sub_id, pred, obj_id, obj_val = row
       sub = expand_id(sub_id)
       p = expand_id(pred)
-      
+
       if not sub:
         logging.error("Subject is None for row: %s (sub_id: '%s')", row, sub_id)
         # Print surrounding rows for context (using loop index to avoid O(N) search)
@@ -138,11 +138,11 @@ def _process_observation_chunk(args):
   and import necessary modules locally.
   """
   shard_index, offset, chunk_size, db_path, output_dir_path, ns_map = args
-  
+
   # Open a new connection for this worker process (SQLite connections cannot be shared across processes)
   conn = sqlite3.connect(db_path)
   cursor = conn.cursor()
-  
+
   # Fetch the specific chunk of observations for this shard
   cursor.execute(
       "SELECT entity, variable, date, value, provenance, unit, scaling_factor, "
@@ -150,23 +150,23 @@ def _process_observation_chunk(args):
       (chunk_size, offset))
   obs_tuples = cursor.fetchall()
   conn.close()
-  
+
   if not obs_tuples:
     return False
-    
+
   # Build the RDF graph for this chunk
   g = Graph()
   DCID = Namespace(DCID_URL)
   g.bind("dcid", DCID)
-  
+
   for row in obs_tuples:
     _add_observation_to_graph(g, row, DCID)
-    
+
   # Write the graph to a JSON-LD shard file
   with create_store(output_dir_path) as store:
     output_dir = store.as_dir()
     write_shard(g, shard_index, output_dir, ns_map, prefix="observation")
-    
+
   return True
 
 
@@ -174,21 +174,20 @@ def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
   """Processes observations in chunks in parallel and writes them to JSON-LD shards."""
   db_path = db.engine.db_file.syspath()
   output_dir_path = output_dir.full_path()
-  
+
   # Calculate the total number of chunks needed
   total_obs = db.engine.fetch_all("SELECT COUNT(*) FROM observations")[0][0]
   num_chunks = (total_obs + chunk_size - 1) // chunk_size
-  
+
   # Prepare arguments for the worker pool (each chunk gets its own offset and index)
-  args_list = [
-    (i, i * chunk_size, chunk_size, db_path, output_dir_path, ns_map)
-    for i in range(num_chunks)
-  ]
-  
+  args_list = [(i, i * chunk_size, chunk_size, db_path, output_dir_path, ns_map)
+               for i in range(num_chunks)]
+
   # Cap the number of processes to avoid overloading the machine
   num_processes = min(multiprocessing.cpu_count(), 8)
-  logging.info("Starting observations export with %d processes for %d chunks", num_processes, num_chunks)
-  
+  logging.info("Starting observations export with %d processes for %d chunks",
+               num_processes, num_chunks)
+
   # Run the workers in parallel
   with multiprocessing.Pool(processes=num_processes) as pool:
     pool.map(_process_observation_chunk, args_list)

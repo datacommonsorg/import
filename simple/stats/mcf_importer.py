@@ -69,25 +69,25 @@ class McfImporter(Importer):
     parser_triples: list[list[str]] = []
     # DCID references
     local2dcid: dict[str, str] = {}
-    
+
     for parser_triple in mcf_to_triples(self.input_file.read_string_io()):
       [subject_id, predicate, value, _] = parser_triple
-      
+
       # If it's not a DCID property, save it for later processing and move on
       if predicate != _DCID:
         parser_triples.append(parser_triple)
         continue
-        
+
       # Ignore empty DCID values
       if not value:
         continue
-        
+
       # If we have seen it, warn if there is a conflict, but maintain legacy behavior (overwrite)
       if subject_id in local2dcid and local2dcid[subject_id] != value:
         logging.warning(
             "Conflicting DCID for subject %s: '%s' vs '%s'. Overwriting as per legacy behavior.",
             subject_id, local2dcid[subject_id], value)
-        
+
       local2dcid[subject_id] = value
 
     return list(map(lambda x: _to_triple(x, local2dcid), parser_triples))
@@ -99,15 +99,16 @@ def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
     raise ValueError(
         f"Value of property {predicate} in node {subject_id} too long (got: {len(value)}, max: {_MAX_CHARS})"
     )
-    
+
   # Resolve the subject ID using the map, fallback to original if not mapped
   resolved_subject = local2dcid.get(subject_id, subject_id)
-  
+
   # If it was not mapped AND it doesn't start with 'dcid:', it's an error!
-  if resolved_subject == subject_id and not resolved_subject.startswith("dcid:"):
+  if resolved_subject == subject_id and not resolved_subject.startswith(
+      "dcid:"):
     raise ValueError(f"dcid not specified for node: {subject_id}")
 
   if value_type == _ID:
     return Triple(resolved_subject, predicate, object_id=value)
-    
+
   return Triple(resolved_subject, predicate, object_value=value)

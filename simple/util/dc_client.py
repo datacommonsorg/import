@@ -19,11 +19,11 @@ import json
 import logging
 import os
 import re
+import time
 
 from httpx import AsyncClient
 from httpx import Limits
 import requests
-import time
 
 from .ngram_matcher import NgramMatcher
 from .resolvers import resolve_latlngs_2_s2cells
@@ -217,7 +217,7 @@ def get_entities_of_type(entity_type: str,
 # Returns an empty string if there is no common entity type
 def resolve_entity_type(entity_dcids: list[str]) -> str:
   chunks = chunked(entity_dcids, _BATCH_SIZE)
-  
+
   results: list[(str, set[str])] = []
   for chunk in chunks:
     data = {
@@ -302,41 +302,44 @@ def post(path: str, data={}) -> dict:
   if api_key:
     headers["x-api-key"] = api_key
   logging.debug("Request: %s", json.dumps(data, indent=1))
-  
+
   max_retries = 3
   base_delay = 1
   resp = None
-  
+
   for attempt in range(max_retries):
     try:
       resp = requests.post(url, json=data, headers=headers)
-      
+
       if resp.status_code == 200:
         return resp.json()
-        
+
       if resp.status_code in [502, 503, 504]:
-        logging.warning("Received %d from %s. Attempt %d/%d.", resp.status_code, path, attempt + 1, max_retries)
+        logging.warning("Received %d from %s. Attempt %d/%d.", resp.status_code,
+                        path, attempt + 1, max_retries)
       else:
         # Non-transient error, don't retry
         break
-        
+
     except Exception as e:
       if attempt == max_retries - 1:
         raise
-      logging.warning("Error calling %s: %s. Attempt %d/%d.", path, e, attempt + 1, max_retries)
-      
-    delay = base_delay * (2 ** attempt)
+      logging.warning("Error calling %s: %s. Attempt %d/%d.", path, e,
+                      attempt + 1, max_retries)
+
+    delay = base_delay * (2**attempt)
     logging.info("Waiting %d seconds before retrying %s...", delay, path)
     time.sleep(delay)
-    
+
   if resp is not None and resp.status_code != 200:
     try:
       response = resp.json()
       message = response.get("message", "")
     except Exception:
       message = resp.text
-    raise Exception(f'{resp.status_code}: {resp.reason}\n{message}\nRequest: {path}')
-  
+    raise Exception(
+        f'{resp.status_code}: {resp.reason}\n{message}\nRequest: {path}')
+
   raise Exception(f"Failed to call {path} after {max_retries} attempts.")
 
 
@@ -347,42 +350,45 @@ async def post_async(client: AsyncClient, path: str, data={}) -> dict:
   if api_key:
     headers["x-api-key"] = api_key
   logging.debug("Request: %s", json.dumps(data, indent=1))
-  
+
   max_retries = 3
   base_delay = 1
   resp = None
-  
+
   for attempt in range(max_retries):
     try:
       async with asyncio.Semaphore(_HTTPX_LIMITS.max_connections):
         resp = await client.post(url, json=data, headers=headers)
-      
+
       if resp.status_code == 200:
         return resp.json()
-        
+
       if resp.status_code in [502, 503, 504]:
-        logging.warning("Received %d from %s. Attempt %d/%d.", resp.status_code, path, attempt + 1, max_retries)
+        logging.warning("Received %d from %s. Attempt %d/%d.", resp.status_code,
+                        path, attempt + 1, max_retries)
       else:
         # Non-transient error, don't retry
         break
-        
+
     except Exception as e:
       if attempt == max_retries - 1:
         raise
-      logging.warning("Error calling %s: %s. Attempt %d/%d.", path, e, attempt + 1, max_retries)
-      
-    delay = base_delay * (2 ** attempt)
+      logging.warning("Error calling %s: %s. Attempt %d/%d.", path, e,
+                      attempt + 1, max_retries)
+
+    delay = base_delay * (2**attempt)
     logging.info("Waiting %d seconds before retrying %s...", delay, path)
     await asyncio.sleep(delay)
-    
+
   if resp is not None and resp.status_code != 200:
     try:
       response = resp.json()
       message = response.get("message", "")
     except Exception:
       message = resp.text
-    raise Exception(f'{resp.status_code}: {resp.reason_phrase}\n{message}\nRequest: {path}')
-    
+    raise Exception(
+        f'{resp.status_code}: {resp.reason_phrase}\n{message}\nRequest: {path}')
+
   raise Exception(f"Failed to call {path} after {max_retries} attempts.")
 
 
