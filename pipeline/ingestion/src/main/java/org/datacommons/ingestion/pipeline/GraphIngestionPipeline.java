@@ -100,7 +100,7 @@ public class GraphIngestionPipeline {
       }
 
       // Process the individual import.
-      processImport(pipeline, spannerClient, importName, graphPath, options.getSkipDelete());
+      processImport(pipeline, spannerClient, importName, graphPath, options);
     }
   }
 
@@ -118,7 +118,7 @@ public class GraphIngestionPipeline {
       SpannerClient spannerClient,
       String importName,
       String graphPath,
-      boolean skipDelete) {
+      IngestionPipelineOptions options) {
     LOGGER.info("Import: {} Graph path: {}", importName, graphPath);
 
     String provenance = "dc/base/" + importName;
@@ -129,7 +129,7 @@ public class GraphIngestionPipeline {
     // immediately.
     PCollection<Void> deleteObsWait;
     PCollection<Void> deleteEdgesWait;
-    if (!skipDelete) {
+    if (!options.getSkipDelete()) {
       deleteObsWait =
           spannerClient.deleteDataForImport(
               pipeline, importName, spannerClient.getObservationTableName(), "import_name");
@@ -168,7 +168,7 @@ public class GraphIngestionPipeline {
     // 3. Process Schema Nodes:
     // Combine nodes if required.
     PCollection<McfGraph> combinedGraph = schemaNodes;
-    if (IMPORTS_TO_COMBINE.contains(importName)) {
+    if (options.getForceCombineNodes() || IMPORTS_TO_COMBINE.contains(importName)) {
       combinedGraph = PipelineUtils.combineGraphNodes(importName, schemaNodes);
     }
 
