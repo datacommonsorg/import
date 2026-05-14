@@ -111,7 +111,7 @@ public class GraphIngestionPipeline {
    * @param spannerClient The Spanner client.
    * @param importName The name of the import.
    * @param graphPath The full path to the graph data.
-   * @param skipDelete Whether to skip delete operations.
+   * @param options The ingestion pipeline options.
    */
   private static void processImport(
       Pipeline pipeline,
