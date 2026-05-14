@@ -601,7 +601,9 @@ class SqliteDbEngine(DbEngine):
 
     self.cursor = self.connection.cursor()
     
-    # Optimization PRAGMAs for bulk loading
+    # Optimization PRAGMAs for bulk loading.
+    # synchronous = OFF and journal_mode = MEMORY trade off durability (safety on crash) for speed.
+    # cache_size = -2000000 sets the cache size to ~2GB (negative value is in kilobytes).
     self.cursor.execute("PRAGMA synchronous = OFF;")
     self.cursor.execute("PRAGMA journal_mode = MEMORY;")
     self.cursor.execute("PRAGMA cache_size = -2000000;")

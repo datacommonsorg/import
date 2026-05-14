@@ -22,6 +22,9 @@ from rdflib import Literal
 from rdflib import Namespace
 from rdflib import RDF
 from rdflib import URIRef
+import multiprocessing
+import sqlite3
+from util.filesystem import create_store
 
 DCID_URL = "https://datacommons.org/browser/"
 
@@ -54,20 +57,20 @@ def process_triples(db, output_dir, ns_map: dict, chunk_size: int):
     DCID = Namespace(DCID_URL)
     g.bind("dcid", DCID)
 
-    for row in triples_tuples:
+    for idx, row in enumerate(triples_tuples):
       sub_id, pred, obj_id, obj_val = row
       sub = expand_id(sub_id)
       p = expand_id(pred)
       
       if not sub:
         logging.error("Subject is None for row: %s (sub_id: '%s')", row, sub_id)
-        # Print surrounding rows for context
-        idx = triples_tuples.index(row)
+        # Print surrounding rows for context (using loop index to avoid O(N) search)
         start = max(0, idx - 5)
         end = min(len(triples_tuples), idx + 5)
         logging.error("Surrounding rows for context:")
         for r in triples_tuples[start:end]:
-          logging.error("  %s %s", "->" if r == row else "  ", r)
+          marker = "->" if r == row else "  "
+          logging.error("  %s %s", marker, r)
 
       if obj_id:
         o = expand_id(obj_id)
@@ -129,17 +132,18 @@ def _add_observation_to_graph(g, row, DCID):
 
 
 def _process_observation_chunk(args):
-  """Worker function to process a single chunk of observations."""
+  """Worker function to process a single chunk of observations in parallel.
+  
+  This runs in a separate process, so it must establish its own DB connection
+  and import necessary modules locally.
+  """
   shard_index, offset, chunk_size, db_path, output_dir_path, ns_map = args
   
-  import sqlite3
-  from rdflib import Graph, Namespace
-  from util.filesystem import create_store
-  
-  # Open new connection in worker
+  # Open a new connection for this worker process (SQLite connections cannot be shared across processes)
   conn = sqlite3.connect(db_path)
   cursor = conn.cursor()
   
+  # Fetch the specific chunk of observations for this shard
   cursor.execute(
       "SELECT entity, variable, date, value, provenance, unit, scaling_factor, "
       "measurement_method, observation_period, properties FROM observations LIMIT ? OFFSET ?",
@@ -150,6 +154,7 @@ def _process_observation_chunk(args):
   if not obs_tuples:
     return False
     
+  # Build the RDF graph for this chunk
   g = Graph()
   DCID = Namespace(DCID_URL)
   g.bind("dcid", DCID)
@@ -157,6 +162,7 @@ def _process_observation_chunk(args):
   for row in obs_tuples:
     _add_observation_to_graph(g, row, DCID)
     
+  # Write the graph to a JSON-LD shard file
   with create_store(output_dir_path) as store:
     output_dir = store.as_dir()
     write_shard(g, shard_index, output_dir, ns_map, prefix="observation")
@@ -169,18 +175,21 @@ def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
   db_path = db.engine.db_file.syspath()
   output_dir_path = output_dir.full_path()
   
+  # Calculate the total number of chunks needed
   total_obs = db.engine.fetch_all("SELECT COUNT(*) FROM observations")[0][0]
   num_chunks = (total_obs + chunk_size - 1) // chunk_size
   
+  # Prepare arguments for the worker pool (each chunk gets its own offset and index)
   args_list = [
     (i, i * chunk_size, chunk_size, db_path, output_dir_path, ns_map)
     for i in range(num_chunks)
   ]
   
-  import multiprocessing
+  # Cap the number of processes to avoid overloading the machine
   num_processes = min(multiprocessing.cpu_count(), 8)
   logging.info("Starting observations export with %d processes for %d chunks", num_processes, num_chunks)
   
+  # Run the workers in parallel
   with multiprocessing.Pool(processes=num_processes) as pool:
     pool.map(_process_observation_chunk, args_list)
 

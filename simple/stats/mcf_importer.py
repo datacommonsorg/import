@@ -103,11 +103,11 @@ def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
   # Resolve the subject ID using the map, fallback to original if not mapped
   resolved_subject = local2dcid.get(subject_id, subject_id)
   
-  # If not resolved and doesn't look like a DCID, raise error
-  if not resolved_subject or (not resolved_subject.startswith("dcid:") and resolved_subject == subject_id):
+  # If it was not mapped AND it doesn't start with 'dcid:', it's an error!
+  if resolved_subject == subject_id and not resolved_subject.startswith("dcid:"):
     raise ValueError(f"dcid not specified for node: {subject_id}")
 
   if value_type == _ID:
     return Triple(resolved_subject, predicate, object_id=value)
-  else:
-    return Triple(resolved_subject, predicate, object_value=value)
+    
+  return Triple(resolved_subject, predicate, object_value=value)
