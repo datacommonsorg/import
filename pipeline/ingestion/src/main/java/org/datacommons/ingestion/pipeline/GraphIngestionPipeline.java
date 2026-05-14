@@ -169,6 +169,10 @@ public class GraphIngestionPipeline {
     // Combine nodes if required.
     PCollection<McfGraph> combinedGraph = schemaNodes;
     if (options.getForceCombineNodes() || IMPORTS_TO_COMBINE.contains(importName)) {
+      LOGGER.info(
+          ">>> Combining nodes for import: {} (ForceCombine: {})",
+          importName,
+          options.getForceCombineNodes());
       combinedGraph = PipelineUtils.combineGraphNodes(importName, schemaNodes);
     }
 
