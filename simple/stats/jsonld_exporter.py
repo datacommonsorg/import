@@ -111,7 +111,7 @@ def _add_observation_to_graph(g, row, DCID, prov_urls):
 
   if provenance:
     g.add((subject, DCID["provenance"], expand_id(provenance)))
-    if provenance in prov_urls:
+    if provenance in prov_urls and prov_urls[provenance]:
       g.add((subject, DCID["provenanceUrl"], Literal(prov_urls[provenance])))
   if unit:
     g.add((subject, DCID["unit"], expand_id(unit)))
@@ -139,16 +139,11 @@ def _process_observation_chunk(args):
   This runs in a separate process, so it must establish its own DB connection
   and import necessary modules locally.
   """
-  shard_index, offset, chunk_size, db_path, output_dir_path, ns_map = args
+  shard_index, offset, chunk_size, db_path, output_dir_path, ns_map, prov_urls = args
 
   # Open a new connection for this worker process (SQLite connections cannot be shared across processes)
   conn = sqlite3.connect(db_path)
   cursor = conn.cursor()
-
-  # Fetch all provenance URLs to duplicate onto observations
-  cursor.execute(
-      "SELECT subject_id, object_value FROM triples WHERE predicate = 'url'")
-  prov_urls = {row[0]: row[1] for row in cursor.fetchall()}
 
   # Fetch the specific chunk of observations for this shard
   cursor.execute(
@@ -186,8 +181,12 @@ def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
   total_obs = db.engine.fetch_all("SELECT COUNT(*) FROM observations")[0][0]
   num_chunks = (total_obs + chunk_size - 1) // chunk_size
 
+  # Fetch all provenance URLs once to pass to workers
+  rows = db.engine.fetch_all("SELECT subject_id, object_value FROM triples WHERE predicate = 'url'")
+  prov_urls = {row[0]: row[1] for row in rows}
+
   # Prepare arguments for the worker pool (each chunk gets its own offset and index)
-  args_list = [(i, i * chunk_size, chunk_size, db_path, output_dir_path, ns_map)
+  args_list = [(i, i * chunk_size, chunk_size, db_path, output_dir_path, ns_map, prov_urls)
                for i in range(num_chunks)]
 
   # Cap the number of processes to avoid overloading the machine
