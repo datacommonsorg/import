@@ -123,6 +123,7 @@ message McfStatVarObsSeries {
     optional string observation_period = 4;
     optional string scaling_factor = 5;
     optional string unit = 6;
+    optional string provenance_url = 7;
   }
 
   required Key key = 1;

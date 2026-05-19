@@ -19,9 +19,13 @@ import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.McfType;
 import org.datacommons.proto.Mcf.ValueType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Util functions for processing MCF graphs. */
 public class GraphUtils {
+  private static final Logger LOGGER = LoggerFactory.getLogger(GraphUtils.class);
+
   public enum Property {
     /** Properties for a StatVarObservation. */
     typeOf,
@@ -34,7 +38,8 @@ public class GraphUtils {
     value,
     name,
     scalingFactor,
-    dcid;
+    dcid,
+    provenanceUrl;
   }
 
   public static final String STAT_VAR_OB = "StatVarObservation";
@@ -67,7 +72,8 @@ public class GraphUtils {
           Property.unit.name(),
           Property.value.name(),
           Property.scalingFactor.name(),
-          Property.dcid.name());
+          Property.dcid.name(),
+          Property.provenanceUrl.name());
 
   /**
    * Checks if a given property name is one of the standard SVObs properties.
@@ -289,6 +295,17 @@ public class GraphUtils {
     }
     if (!(val = getPropVal(node, "unit")).isEmpty()) {
       key.setUnit(val);
+    }
+    if (!(val = getPropVal(node, "provenanceUrl")).isEmpty()) {
+      LOGGER.info(">>> Found provenanceUrl: {}", val);
+      key.setProvenanceUrl(val);
+    } else if (!(val = getPropVal(node, "dcid:provenanceUrl")).isEmpty()) {
+      LOGGER.info(">>> Found dcid:provenanceUrl: {}", val);
+      key.setProvenanceUrl(val);
+    } else if (!(val = getPropVal(node, "https://datacommons.org/browser/provenanceUrl"))
+        .isEmpty()) {
+      LOGGER.info(">>> Found full URL provenanceUrl: {}", val);
+      key.setProvenanceUrl(val);
     }
     res.setKey(key.build());
     // Assemble StatVarObs.
