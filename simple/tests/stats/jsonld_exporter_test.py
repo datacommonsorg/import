@@ -42,7 +42,10 @@ class TestJsonLdExporter(unittest.TestCase):
           Triple(subject_id="sub1",
                  predicate="typeOf",
                  object_id="StatisticalVariable"),
-          Triple(subject_id="sub1", predicate="name", object_value="Name1")
+          Triple(subject_id="sub1", predicate="name", object_value="Name1"),
+          Triple(subject_id="p1",
+                 predicate="url",
+                 object_value="http://example.com/p1")
       ])
 
       # Insert some observations
@@ -64,11 +67,12 @@ class TestJsonLdExporter(unittest.TestCase):
       export_to_jsonld(db, output_dir, chunk_size=1)
 
       # Verify files exist
-      # 2 triples with chunk_size=1 -> 2 shards (0 and 1)
-      # 1 observation with chunk_size=1 -> 1 shard (2)
+      # 3 triples with chunk_size=1 -> 3 shards (0, 1 and 2)
+      # 1 observation with chunk_size=1 -> 1 shard (3)
       shard_paths = [
           os.path.join(temp_dir, "node-00000.jsonld"),
           os.path.join(temp_dir, "node-00001.jsonld"),
+          os.path.join(temp_dir, "node-00002.jsonld"),
           os.path.join(temp_dir, "observation-00000.jsonld")
       ]
       for path in shard_paths:
@@ -83,16 +87,18 @@ class TestJsonLdExporter(unittest.TestCase):
         self.assertEqual(nodes['dcid:sub1']['@type'],
                          'dcid:StatisticalVariable')
 
-      # Verify content of shard 2 (should have observations)
-      with open(shard_paths[2], 'r') as f:
-        shard2 = json.load(f)
-        self.assertIn('@graph', shard2)
-        nodes = {node['@id']: node for node in shard2['@graph']}
+      # Verify content of observation shard (should have observations)
+      with open(shard_paths[3], 'r') as f:
+        shard3 = json.load(f)
+        self.assertIn('@graph', shard3)
+        nodes = {node['@id']: node for node in shard3['@graph']}
         obs_nodes = [node for node in nodes if node.startswith('dcid:obs_')]
         self.assertTrue(
             len(obs_nodes) > 0, "No observation node found in shard")
         obs_node_id = obs_nodes[0]
         self.assertEqual(nodes[obs_node_id]['dcid:value'], 100.0)
+        self.assertEqual(nodes[obs_node_id]['dcid:provenanceUrl'],
+                         "http://example.com/p1")
 
   def test_empty_db(self):
     with tempfile.TemporaryDirectory() as temp_dir:

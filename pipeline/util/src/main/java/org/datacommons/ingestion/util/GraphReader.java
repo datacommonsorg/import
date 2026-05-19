@@ -145,6 +145,7 @@ public class GraphReader implements Serializable {
     obs.variableMeasured(graph.getSvObsSeries().getKey().getVariableMeasured());
     obs.unit(graph.getSvObsSeries().getKey().getUnit());
     obs.scalingFactor(graph.getSvObsSeries().getKey().getScalingFactor());
+    obs.provenanceUrl(graph.getSvObsSeries().getKey().getProvenanceUrl());
     Observations.Builder ob = Observations.newBuilder();
     for (StatVarObs svo : graph.getSvObsSeries().getSvObsListList()) {
       if (svo.hasNumber()) {

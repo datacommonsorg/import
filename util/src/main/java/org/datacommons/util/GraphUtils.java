@@ -34,7 +34,8 @@ public class GraphUtils {
     value,
     name,
     scalingFactor,
-    dcid;
+    dcid,
+    provenanceUrl;
   }
 
   public static final String STAT_VAR_OB = "StatVarObservation";
@@ -55,6 +56,9 @@ public class GraphUtils {
     Property.value.name()
   };
 
+  private static final List<String> PROVENANCE_URL_PROPS =
+      List.of("provenanceUrl", "dcid:provenanceUrl");
+
   private static final Set<String> SVOBS_PROTO_PROPS =
       Set.of(
           /** Standard properties expected in StatVarObservation nodes. */
@@ -67,7 +71,8 @@ public class GraphUtils {
           Property.unit.name(),
           Property.value.name(),
           Property.scalingFactor.name(),
-          Property.dcid.name());
+          Property.dcid.name(),
+          Property.provenanceUrl.name());
 
   /**
    * Checks if a given property name is one of the standard SVObs properties.
@@ -289,6 +294,12 @@ public class GraphUtils {
     }
     if (!(val = getPropVal(node, "unit")).isEmpty()) {
       key.setUnit(val);
+    }
+    for (String prop : PROVENANCE_URL_PROPS) {
+      if (!(val = getPropVal(node, prop)).isEmpty()) {
+        key.setProvenanceUrl(val);
+        break;
+      }
     }
     res.setKey(key.build());
     // Assemble StatVarObs.

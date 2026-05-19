@@ -312,7 +312,8 @@ public class GraphReaderTest {
                             .setObservationPeriod("P1Y")
                             .setMeasurementMethod("dcAggregate/testMethod")
                             .setUnit("testUnit")
-                            .setScalingFactor("100"))
+                            .setScalingFactor("100")
+                            .setProvenanceUrl("http://example.com"))
                     .addSvObsList(
                         StatVarObs.newBuilder().setDcid("obs1").setDate("2020").setNumber(10.0))
                     .addSvObsList(
@@ -335,6 +336,7 @@ public class GraphReaderTest {
             .observationPeriod("P1Y")
             .unit("testUnit")
             .scalingFactor("100")
+            .provenanceUrl("http://example.com")
             .observations(expectedObsValues)
             .build();
 

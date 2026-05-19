@@ -27,6 +27,7 @@ from rdflib import URIRef
 from util.filesystem import create_store
 
 DCID_URL = "https://datacommons.org/browser/"
+PREDICATE_URL = "url"
 
 
 def expand_id(item):
@@ -90,7 +91,7 @@ def process_triples(db, output_dir, ns_map: dict, chunk_size: int):
       break
 
 
-def _add_observation_to_graph(g, row, DCID):
+def _add_observation_to_graph(g, row, DCID, prov_urls):
   """Helper to add an observation row to the graph."""
   entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
 
@@ -111,6 +112,8 @@ def _add_observation_to_graph(g, row, DCID):
 
   if provenance:
     g.add((subject, DCID["provenance"], expand_id(provenance)))
+    if provenance in prov_urls and prov_urls[provenance]:
+      g.add((subject, DCID["provenanceUrl"], Literal(prov_urls[provenance])))
   if unit:
     g.add((subject, DCID["unit"], expand_id(unit)))
   if scaling_factor:
@@ -137,7 +140,7 @@ def _process_observation_chunk(args):
   This runs in a separate process, so it must establish its own DB connection
   and import necessary modules locally.
   """
-  shard_index, offset, chunk_size, db_path, output_dir_path, ns_map = args
+  shard_index, offset, chunk_size, db_path, output_dir_path, ns_map, prov_urls = args
 
   # Open a new connection for this worker process (SQLite connections cannot be shared across processes)
   conn = sqlite3.connect(db_path)
@@ -160,7 +163,7 @@ def _process_observation_chunk(args):
   g.bind("dcid", DCID)
 
   for row in obs_tuples:
-    _add_observation_to_graph(g, row, DCID)
+    _add_observation_to_graph(g, row, DCID, prov_urls)
 
   # Write the graph to a JSON-LD shard file
   with create_store(output_dir_path) as store:
@@ -179,9 +182,15 @@ def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
   total_obs = db.engine.fetch_all("SELECT COUNT(*) FROM observations")[0][0]
   num_chunks = (total_obs + chunk_size - 1) // chunk_size
 
+  # Fetch all provenance URLs once to pass to workers
+  rows = db.engine.fetch_all(
+      f"SELECT subject_id, object_value FROM triples WHERE predicate = '{PREDICATE_URL}'"
+  )
+  prov_urls = {row[0]: row[1] for row in rows}
+
   # Prepare arguments for the worker pool (each chunk gets its own offset and index)
-  args_list = [(i, i * chunk_size, chunk_size, db_path, output_dir_path, ns_map)
-               for i in range(num_chunks)]
+  args_list = [(i, i * chunk_size, chunk_size, db_path, output_dir_path, ns_map,
+                prov_urls) for i in range(num_chunks)]
 
   # Cap the number of processes to avoid overloading the machine
   num_processes = min(multiprocessing.cpu_count(), 8)
