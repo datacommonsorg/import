@@ -56,6 +56,9 @@ public class GraphUtils {
     Property.value.name()
   };
 
+  private static final List<String> PROVENANCE_URL_PROPS =
+      List.of("provenanceUrl", "dcid:provenanceUrl");
+
   private static final Set<String> SVOBS_PROTO_PROPS =
       Set.of(
           /** Standard properties expected in StatVarObservation nodes. */
@@ -292,13 +295,11 @@ public class GraphUtils {
     if (!(val = getPropVal(node, "unit")).isEmpty()) {
       key.setUnit(val);
     }
-    if (!(val = getPropVal(node, "provenanceUrl")).isEmpty()) {
-      key.setProvenanceUrl(val);
-    } else if (!(val = getPropVal(node, "dcid:provenanceUrl")).isEmpty()) {
-      key.setProvenanceUrl(val);
-    } else if (!(val = getPropVal(node, "https://datacommons.org/browser/provenanceUrl"))
-        .isEmpty()) {
-      key.setProvenanceUrl(val);
+    for (String prop : PROVENANCE_URL_PROPS) {
+      if (!(val = getPropVal(node, prop)).isEmpty()) {
+        key.setProvenanceUrl(val);
+        break;
+      }
     }
     res.setKey(key.build());
     // Assemble StatVarObs.

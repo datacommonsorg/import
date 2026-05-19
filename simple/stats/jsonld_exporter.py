@@ -27,6 +27,7 @@ from rdflib import URIRef
 from util.filesystem import create_store
 
 DCID_URL = "https://datacommons.org/browser/"
+PREDICATE_URL = "url"
 
 
 def expand_id(item):
@@ -183,7 +184,8 @@ def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
 
   # Fetch all provenance URLs once to pass to workers
   rows = db.engine.fetch_all(
-      "SELECT subject_id, object_value FROM triples WHERE predicate = 'url'")
+      f"SELECT subject_id, object_value FROM triples WHERE predicate = '{PREDICATE_URL}'"
+  )
   prov_urls = {row[0]: row[1] for row in rows}
 
   # Prepare arguments for the worker pool (each chunk gets its own offset and index)
