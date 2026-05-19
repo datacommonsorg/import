@@ -182,12 +182,13 @@ def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
   num_chunks = (total_obs + chunk_size - 1) // chunk_size
 
   # Fetch all provenance URLs once to pass to workers
-  rows = db.engine.fetch_all("SELECT subject_id, object_value FROM triples WHERE predicate = 'url'")
+  rows = db.engine.fetch_all(
+      "SELECT subject_id, object_value FROM triples WHERE predicate = 'url'")
   prov_urls = {row[0]: row[1] for row in rows}
 
   # Prepare arguments for the worker pool (each chunk gets its own offset and index)
-  args_list = [(i, i * chunk_size, chunk_size, db_path, output_dir_path, ns_map, prov_urls)
-               for i in range(num_chunks)]
+  args_list = [(i, i * chunk_size, chunk_size, db_path, output_dir_path, ns_map,
+                prov_urls) for i in range(num_chunks)]
 
   # Cap the number of processes to avoid overloading the machine
   num_processes = min(multiprocessing.cpu_count(), 8)
