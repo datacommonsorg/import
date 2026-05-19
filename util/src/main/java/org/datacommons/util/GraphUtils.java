@@ -19,13 +19,9 @@ import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.McfType;
 import org.datacommons.proto.Mcf.ValueType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Util functions for processing MCF graphs. */
 public class GraphUtils {
-  private static final Logger LOGGER = LoggerFactory.getLogger(GraphUtils.class);
-
   public enum Property {
     /** Properties for a StatVarObservation. */
     typeOf,
@@ -297,14 +293,11 @@ public class GraphUtils {
       key.setUnit(val);
     }
     if (!(val = getPropVal(node, "provenanceUrl")).isEmpty()) {
-      LOGGER.info(">>> Found provenanceUrl: {}", val);
       key.setProvenanceUrl(val);
     } else if (!(val = getPropVal(node, "dcid:provenanceUrl")).isEmpty()) {
-      LOGGER.info(">>> Found dcid:provenanceUrl: {}", val);
       key.setProvenanceUrl(val);
     } else if (!(val = getPropVal(node, "https://datacommons.org/browser/provenanceUrl"))
         .isEmpty()) {
-      LOGGER.info(">>> Found full URL provenanceUrl: {}", val);
       key.setProvenanceUrl(val);
     }
     res.setKey(key.build());
