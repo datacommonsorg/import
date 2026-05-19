@@ -43,7 +43,9 @@ class TestJsonLdExporter(unittest.TestCase):
                  predicate="typeOf",
                  object_id="StatisticalVariable"),
           Triple(subject_id="sub1", predicate="name", object_value="Name1"),
-          Triple(subject_id="p1", predicate="url", object_value="http://example.com/p1")
+          Triple(subject_id="p1",
+                 predicate="url",
+                 object_value="http://example.com/p1")
       ])
 
       # Insert some observations
@@ -95,7 +97,8 @@ class TestJsonLdExporter(unittest.TestCase):
             len(obs_nodes) > 0, "No observation node found in shard")
         obs_node_id = obs_nodes[0]
         self.assertEqual(nodes[obs_node_id]['dcid:value'], 100.0)
-        self.assertEqual(nodes[obs_node_id]['dcid:provenanceUrl'], "http://example.com/p1")
+        self.assertEqual(nodes[obs_node_id]['dcid:provenanceUrl'],
+                         "http://example.com/p1")
 
   def test_empty_db(self):
     with tempfile.TemporaryDirectory() as temp_dir:

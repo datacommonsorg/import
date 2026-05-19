@@ -146,7 +146,8 @@ def _process_observation_chunk(args):
   cursor = conn.cursor()
 
   # Fetch all provenance URLs to duplicate onto observations
-  cursor.execute("SELECT subject_id, object_value FROM triples WHERE predicate = 'url'")
+  cursor.execute(
+      "SELECT subject_id, object_value FROM triples WHERE predicate = 'url'")
   prov_urls = {row[0]: row[1] for row in cursor.fetchall()}
 
   # Fetch the specific chunk of observations for this shard
