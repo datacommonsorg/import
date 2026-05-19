@@ -90,7 +90,7 @@ def process_triples(db, output_dir, ns_map: dict, chunk_size: int):
       break
 
 
-def _add_observation_to_graph(g, row, DCID):
+def _add_observation_to_graph(g, row, DCID, prov_urls):
   """Helper to add an observation row to the graph."""
   entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
 
@@ -111,6 +111,8 @@ def _add_observation_to_graph(g, row, DCID):
 
   if provenance:
     g.add((subject, DCID["provenance"], expand_id(provenance)))
+    if provenance in prov_urls:
+      g.add((subject, DCID["provenanceUrl"], Literal(prov_urls[provenance])))
   if unit:
     g.add((subject, DCID["unit"], expand_id(unit)))
   if scaling_factor:
@@ -143,6 +145,10 @@ def _process_observation_chunk(args):
   conn = sqlite3.connect(db_path)
   cursor = conn.cursor()
 
+  # Fetch all provenance URLs to duplicate onto observations
+  cursor.execute("SELECT subject_id, object_value FROM triples WHERE predicate = 'url'")
+  prov_urls = {row[0]: row[1] for row in cursor.fetchall()}
+
   # Fetch the specific chunk of observations for this shard
   cursor.execute(
       "SELECT entity, variable, date, value, provenance, unit, scaling_factor, "
@@ -160,7 +166,7 @@ def _process_observation_chunk(args):
   g.bind("dcid", DCID)
 
   for row in obs_tuples:
-    _add_observation_to_graph(g, row, DCID)
+    _add_observation_to_graph(g, row, DCID, prov_urls)
 
   # Write the graph to a JSON-LD shard file
   with create_store(output_dir_path) as store:
