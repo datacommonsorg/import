@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import datetime
 from enum import StrEnum
 import json
 import logging
@@ -594,16 +595,21 @@ class Runner:
 
     # Export to JSON-LD
     jsonld_dir = self.output_dir.open_dir("jsonld")
+    
+    # Create a unique subfolder based on import name and timestamp
+    import_name = self.config.data.get("importName", "default_import_name")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    unique_dir_name = f"{import_name}_{timestamp}"
+    unique_jsonld_dir = jsonld_dir.open_dir(unique_dir_name)
+    
     self.db.commit()
-    export_to_jsonld(self.db, jsonld_dir)
+    export_to_jsonld(self.db, unique_jsonld_dir)
 
     # Auto-trigger workflow if output is on GCS
-    output_path = jsonld_dir.full_path()
+    output_path = unique_jsonld_dir.full_path()
     if os.getenv("INGESTION_WORKFLOW_NAME") and output_path.startswith("gs://"):
       gcs_pattern = f"{output_path.rstrip('/')}/*.jsonld"
-      trigger_ingestion_workflow(
-          gcs_pattern, self.config.data.get("importName",
-                                            "default_import_name"))
+      trigger_ingestion_workflow(gcs_pattern, import_name)
     else:
       logging.info(
           "Output is local or workflow is missing, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually."
