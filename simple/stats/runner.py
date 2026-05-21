@@ -595,13 +595,13 @@ class Runner:
 
     # Export to JSON-LD
     jsonld_dir = self.output_dir.open_dir("jsonld")
-    
+
     # Create a unique subfolder based on import name and timestamp for parallel runs
     import_name = self.config.data.get("importName") or "default_import_name"
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     unique_dir_name = f"{import_name}_{timestamp}"
     unique_jsonld_dir = jsonld_dir.open_dir(unique_dir_name)
-    
+
     self.db.commit()
     export_to_jsonld(self.db, unique_jsonld_dir)
 
