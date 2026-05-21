@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone
 from enum import StrEnum
 import json
 import logging
