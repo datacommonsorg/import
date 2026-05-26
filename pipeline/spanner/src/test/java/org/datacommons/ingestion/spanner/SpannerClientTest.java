@@ -70,17 +70,18 @@ public class SpannerClientTest {
 
   @Test
   public void testToNodeMutation_RegularNode() {
-    Node node = Node.builder()
-        .subjectId("dcid:123")
-        .value("value123")
-        .name("Node Name")
-        .types(List.of("Type1", "Type2"))
-        .build();
+    Node node =
+        Node.builder()
+            .subjectId("dcid:123")
+            .value("value123")
+            .name("Node Name")
+            .types(List.of("Type1", "Type2"))
+            .build();
 
     Mutation mutation = spannerClient.toNodeMutation(node);
     assertNotNull(mutation);
     assertEquals("Node", mutation.getTable());
-    
+
     var mutationMap = mutation.asMap();
     assertEquals("dcid:123", mutationMap.get("subject_id").getString());
     assertEquals("value123", mutationMap.get("value").getString());
@@ -91,15 +92,12 @@ public class SpannerClientTest {
 
   @Test
   public void testToNodeMutation_ProvisionalNode() {
-    Node node = Node.builder()
-        .subjectId("dcid:456")
-        .types(List.of("ProvisionalNode"))
-        .build();
+    Node node = Node.builder().subjectId("dcid:456").types(List.of("ProvisionalNode")).build();
 
     Mutation mutation = spannerClient.toNodeMutation(node);
     assertNotNull(mutation);
     assertEquals("Node", mutation.getTable());
-    
+
     var mutationMap = mutation.asMap();
     assertEquals("dcid:456", mutationMap.get("subject_id").getString());
     assertFalse(mutationMap.containsKey("value"));
