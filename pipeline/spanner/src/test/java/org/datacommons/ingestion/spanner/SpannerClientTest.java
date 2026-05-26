@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import com.google.cloud.spanner.Mutation;
-import com.google.cloud.spanner.Value;
 import java.util.List;
 import org.datacommons.ingestion.data.Node;
 import org.junit.Before;
@@ -87,8 +86,7 @@ public class SpannerClientTest {
     assertEquals("value123", mutationMap.get("value").getString());
     assertEquals("Node Name", mutationMap.get("name").getString());
     assertEquals(List.of("Type1", "Type2"), mutationMap.get("types").getStringArray());
-    assertEquals(
-        Value.COMMIT_TIMESTAMP.toString(), mutationMap.get("last_update_timestamp").toString());
+    assertEquals("spanner.commit_timestamp()", mutationMap.get("last_update_timestamp").toString());
   }
 
   @Test
@@ -102,7 +100,6 @@ public class SpannerClientTest {
     var mutationMap = mutation.asMap();
     assertEquals("dcid:456", mutationMap.get("subject_id").getString());
     assertFalse(mutationMap.containsKey("value"));
-    assertEquals(
-        Value.COMMIT_TIMESTAMP.toString(), mutationMap.get("last_update_timestamp").toString());
+    assertEquals("spanner.commit_timestamp()", mutationMap.get("last_update_timestamp").toString());
   }
 }
