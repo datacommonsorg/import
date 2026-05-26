@@ -87,7 +87,7 @@ public class SpannerClientTest {
     assertEquals("value123", mutationMap.get("value").getString());
     assertEquals("Node Name", mutationMap.get("name").getString());
     assertEquals(List.of("Type1", "Type2"), mutationMap.get("types").getStringArray());
-    assertEquals(Value.COMMIT_TIMESTAMP, mutationMap.get("last_update_timestamp"));
+    assertEquals(Value.COMMIT_TIMESTAMP.toString(), mutationMap.get("last_update_timestamp").toString());
   }
 
   @Test
@@ -101,6 +101,6 @@ public class SpannerClientTest {
     var mutationMap = mutation.asMap();
     assertEquals("dcid:456", mutationMap.get("subject_id").getString());
     assertFalse(mutationMap.containsKey("value"));
-    assertEquals(Value.COMMIT_TIMESTAMP, mutationMap.get("last_update_timestamp"));
+    assertEquals(Value.COMMIT_TIMESTAMP.toString(), mutationMap.get("last_update_timestamp").toString());
   }
 }
