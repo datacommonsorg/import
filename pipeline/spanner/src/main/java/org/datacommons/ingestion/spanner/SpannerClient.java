@@ -333,6 +333,8 @@ public class SpannerClient implements Serializable {
       return Mutation.newInsertOrUpdateBuilder(nodeTableName)
           .set("subject_id")
           .to(node.getSubjectId())
+          .set("last_update_timestamp")
+          .to(Value.COMMIT_TIMESTAMP)
           .build();
     }
     return Mutation.newInsertOrUpdateBuilder(nodeTableName)
@@ -346,6 +348,8 @@ public class SpannerClient implements Serializable {
         .to(node.getName())
         .set("types")
         .toStringArray(node.getTypes())
+        .set("last_update_timestamp")
+        .to(Value.COMMIT_TIMESTAMP)
         .build();
   }
 
