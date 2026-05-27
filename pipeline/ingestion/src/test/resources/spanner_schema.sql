@@ -6,6 +6,7 @@ CREATE TABLE Node (
   name STRING(MAX),
   types ARRAY<STRING(1024)>,
   name_tokenlist TOKENLIST AS (TOKENIZE_FULLTEXT(name)) HIDDEN,
+  last_update_timestamp TIMESTAMP OPTIONS (allow_commit_timestamp=true),
 ) PRIMARY KEY(subject_id)
 
 CREATE TABLE Edge (
