@@ -79,14 +79,14 @@ public class SpannerClientTest {
 
     Mutation mutation = spannerClient.toNodeMutation(node);
     assertNotNull(mutation);
-    assertEquals("Node", mutation.getTable());
+    assertEquals(mutation.getTable(), "Node");
 
     var mutationMap = mutation.asMap();
-    assertEquals("dcid:123", mutationMap.get("subject_id").getString());
-    assertEquals("value123", mutationMap.get("value").getString());
-    assertEquals("Node Name", mutationMap.get("name").getString());
-    assertEquals(List.of("Type1", "Type2"), mutationMap.get("types").getStringArray());
-    assertEquals("spanner.commit_timestamp()", mutationMap.get("last_update_timestamp").toString());
+    assertEquals(mutationMap.get("subject_id").getString(), "dcid:123");
+    assertEquals(mutationMap.get("value").getString(), "value123");
+    assertEquals(mutationMap.get("name").getString(), "Node Name");
+    assertEquals(mutationMap.get("types").getStringArray(), List.of("Type1", "Type2"));
+    assertEquals(mutationMap.get("last_update_timestamp").toString(), "spanner.commit_timestamp()");
   }
 
   @Test
@@ -95,11 +95,11 @@ public class SpannerClientTest {
 
     Mutation mutation = spannerClient.toNodeMutation(node);
     assertNotNull(mutation);
-    assertEquals("Node", mutation.getTable());
+    assertEquals(mutation.getTable(), "Node");
 
     var mutationMap = mutation.asMap();
-    assertEquals("dcid:456", mutationMap.get("subject_id").getString());
+    assertEquals(mutationMap.get("subject_id").getString(), "dcid:456");
     assertFalse(mutationMap.containsKey("value"));
-    assertEquals("spanner.commit_timestamp()", mutationMap.get("last_update_timestamp").toString());
+    assertEquals(mutationMap.get("last_update_timestamp").toString(), "spanner.commit_timestamp()");
   }
 }
