@@ -140,17 +140,23 @@ def _process_observation_chunk(args):
   This runs in a separate process, so it must establish its own DB connection
   and import necessary modules locally.
   """
-  shard_index, offset, chunk_size, db_path, output_dir_path, ns_map, prov_urls = args
+  shard_index, offset, chunk_size, db_path, output_dir_path, ns_map, prov_urls, provenance = args
 
   # Open a new connection for this worker process (SQLite connections cannot be shared across processes)
   conn = sqlite3.connect(db_path)
   cursor = conn.cursor()
 
   # Fetch the specific chunk of observations for this shard
-  cursor.execute(
-      "SELECT entity, variable, date, value, provenance, unit, scaling_factor, "
-      "measurement_method, observation_period, properties FROM observations LIMIT ? OFFSET ?",
-      (chunk_size, offset))
+  if provenance:
+    cursor.execute(
+        "SELECT entity, variable, date, value, provenance, unit, scaling_factor, "
+        "measurement_method, observation_period, properties FROM observations WHERE provenance = ? LIMIT ? OFFSET ?",
+        (provenance, chunk_size, offset))
+  else:
+    cursor.execute(
+        "SELECT entity, variable, date, value, provenance, unit, scaling_factor, "
+        "measurement_method, observation_period, properties FROM observations LIMIT ? OFFSET ?",
+        (chunk_size, offset))
   obs_tuples = cursor.fetchall()
   conn.close()
 
@@ -173,13 +179,17 @@ def _process_observation_chunk(args):
   return True
 
 
-def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
+def process_observations(db, output_dir, ns_map: dict, chunk_size: int, provenance: str = None):
   """Processes observations in chunks in parallel and writes them to JSON-LD shards."""
   db_path = db.engine.db_file.syspath()
   output_dir_path = output_dir.full_path()
 
   # Calculate the total number of chunks needed
-  total_obs = db.engine.fetch_all("SELECT COUNT(*) FROM observations")[0][0]
+  if provenance:
+    total_obs = db.engine.fetch_all("SELECT COUNT(*) FROM observations WHERE provenance = ?", (provenance,))[0][0]
+  else:
+    total_obs = db.engine.fetch_all("SELECT COUNT(*) FROM observations")[0][0]
+    
   num_chunks = (total_obs + chunk_size - 1) // chunk_size
 
   # Fetch all provenance URLs once to pass to workers
@@ -190,7 +200,7 @@ def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
 
   # Prepare arguments for the worker pool (each chunk gets its own offset and index)
   args_list = [(i, i * chunk_size, chunk_size, db_path, output_dir_path, ns_map,
-                prov_urls) for i in range(num_chunks)]
+                prov_urls, provenance) for i in range(num_chunks)]
 
   # Cap the number of processes to avoid overloading the machine
   num_processes = min(multiprocessing.cpu_count(), 8)
@@ -205,7 +215,8 @@ def process_observations(db, output_dir, ns_map: dict, chunk_size: int):
 def export_to_jsonld(db,
                      output_dir,
                      chunk_size: int = 10000,
-                     context: dict = None):
+                     context: dict = None,
+                     provenance: str = None):
   """Exports resolved data from the database to JSON-LD shards.
 
   Args:
@@ -214,6 +225,7 @@ def export_to_jsonld(db,
     output_dir: The directory where JSON-LD shards will be written.
     chunk_size: The number of rows to fetch and process at a time.
     context: Optional custom JSON-LD context mappings.
+    provenance: Optional provenance filter for observations.
   """
   logging.info("Exporting resolved data to JSON-LD in shards")
 
@@ -225,7 +237,7 @@ def export_to_jsonld(db,
   process_triples(db, output_dir, ns_map, chunk_size)
 
   # 2. Process Observations in chunks
-  process_observations(db, output_dir, ns_map, chunk_size)
+  process_observations(db, output_dir, ns_map, chunk_size, provenance)
 
 
 def write_shard(g: Graph,

@@ -46,7 +46,7 @@ from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
 from stats.importer import Importer
-from stats.jsonld_exporter import export_to_jsonld
+from stats.jsonld_exporter import DCID_URL, export_to_jsonld, process_observations, process_triples
 from stats.mcf_importer import McfImporter
 import stats.nl as nl
 from stats.nodes import Nodes
@@ -70,6 +70,9 @@ class RunMode(StrEnum):
   DCP_BRIDGE = "dcpbridge"
 
 
+_ARCHIVES_DIR_NAME = "archives"
+
+
 class Runner:
   """Runs and coordinates all imports."""
 
@@ -79,12 +82,14 @@ class Runner:
       input_dir_path: str,
       output_dir_path: str,
       mode: RunMode = RunMode.CUSTOM_DC,
+      import_name: Optional[str] = None,
   ) -> None:
     assert (config_file_path or
             input_dir_path), "One of config_file or input_dir must be specified"
     assert output_dir_path, "output_dir must be specified"
 
     self.mode = mode
+    self.import_name = import_name
 
     # File systems, both input and output. Must be closed when run finishes.
     self.all_stores: list[Store] = []
@@ -114,10 +119,19 @@ class Runner:
       self.all_stores.append(input_store)
       self.input_stores.append(input_store)
 
-      self._read_config_from_file(
-          config_file_path=constants.CONFIG_JSON_FILE_NAME,
-          config_file_dir=input_store.as_dir(),
-      )
+      if self.import_name == "ALL_IMPORTS":
+        self._read_configs_from_subdirs(input_store.as_dir())
+      elif self.import_name and "," in self.import_name:
+        self._read_configs_from_list(input_store.as_dir(), self.import_name.split(","))
+      else:
+        try:
+          self._read_config_from_file(
+              config_file_path=constants.CONFIG_JSON_FILE_NAME,
+              config_file_dir=input_store.as_dir(),
+          )
+        except FileNotFoundError:
+          logging.info("Config file not found at root of %s. Scanning subdirectories.", input_dir_path)
+          self._read_configs_from_subdirs(input_store.as_dir())
 
     # Get dict of special file type string to special file name.
     # Example entry: verticalSpecsFile -> vertical_specs.json
@@ -211,6 +225,85 @@ class Runner:
 
     config_data = json.loads(raw_config) if raw_config else {}
     self.config = Config(data=config_data)
+
+  def _merge_configs(self, configs: list, base_dir: Dir):
+    import json
+    import fs.path as fspath
+    
+    merged_data = {
+        "importName": "ALL_IMPORTS",
+        "includeInputSubdirs": True,
+        "inputFiles": {},
+        "variables": {},
+        "sources": {}
+    }
+    
+    for file in configs:
+        raw_config = file.read()
+        try:
+          config_data = json.loads(raw_config)
+        except json.JSONDecodeError as e:
+          logging.error("Failed to parse JSON from %s: %s", file.full_path(), e)
+          raise e
+        
+        dir_path = fspath.dirname(file.path)
+        rel_dir = dir_path.replace(base_dir.path, "").strip("/")
+        
+        logging.info("Merging config from import directory: %s", rel_dir)
+        
+        # Merge inputFiles, prefixing keys with rel_dir
+        input_files = config_data.get("inputFiles", {})
+        for k, v in input_files.items():
+            new_key = fspath.join(rel_dir, k)
+            merged_data["inputFiles"][new_key] = v
+            
+        # Merge variables
+        variables = config_data.get("variables", {})
+        for k, v in variables.items():
+            merged_data["variables"][k] = v
+            
+        # Merge sources
+        sources = config_data.get("sources", {})
+        for k, v in sources.items():
+            merged_data["sources"][k] = v
+            
+    self.config = Config(data=merged_data)
+
+  def _find_configs_in_dir(self, directory: Dir) -> list:
+    """Finds all config.json files in a directory, excluding archives."""
+    configs = []
+    for file in directory.all_files(include_subdirs=True):
+      if _ARCHIVES_DIR_NAME in file.path.split("/"):
+        continue
+      if file.name() == constants.CONFIG_JSON_FILE_NAME:
+        configs.append(file)
+    return configs
+
+  def _read_configs_from_subdirs(self, base_dir: Dir):
+    configs = self._find_configs_in_dir(base_dir)
+    logging.info("Found %s config files in subdirectories.", len(configs))
+    self._merge_configs(configs, base_dir)
+
+  def _read_configs_from_list(self, base_dir: Dir, import_names: list[str]):
+    configs = []
+    for name in import_names:
+      name = name.strip()
+      try:
+        imp_dir = base_dir.open_dir(name)
+        file = imp_dir.open_file(constants.CONFIG_JSON_FILE_NAME, create_if_missing=False)
+        configs.append(file)
+      except FileNotFoundError:
+        logging.info("Config file not found at root of %s. Scanning subdirectories.", name)
+        sub_configs = self._find_configs_in_dir(imp_dir)
+        if not sub_configs:
+          raise FileNotFoundError(f"No config files found for {name}")
+        configs.extend(sub_configs)
+      except ValueError as e:
+        logging.error("Invalid directory for import %s: %s", name, e)
+        raise e
+        
+    logging.info("Found %s config files from list.", len(configs))
+    self._merge_configs(configs, base_dir)
 
   def _get_db_config(self) -> dict:
     if self.mode == RunMode.MAIN_DC:
@@ -481,6 +574,8 @@ class Runner:
         input_files.append(input_store.as_file())
 
     for input_file in input_files:
+      if _ARCHIVES_DIR_NAME in input_file.path.split("/"):
+        continue
       if self._check_if_special_file(input_file):
         continue
       if match(input_file, "*.csv"):
@@ -494,6 +589,7 @@ class Runner:
 
     logging.info(f"Found {len(input_csv_files)} csv files to import")
     logging.info(f"Found {len(input_mcf_files)} mcf files to import")
+    logging.info("Matched files to process: %s", [f.full_path() for f in input_csv_files + input_mcf_files])
 
     self.reporter.report_started(import_files=list(input_csv_files +
                                                    input_mcf_files))
@@ -596,21 +692,48 @@ class Runner:
 
     # Export to JSON-LD
     jsonld_dir = self.output_dir.open_dir("jsonld")
-
-    # Create a unique subfolder based on import name and timestamp for parallel runs
-    import_name = self.config.data.get("importName") or "default_import_name"
+    
+    # Get all unique provenances from observations
+    rows = self.db.engine.fetch_all("SELECT DISTINCT provenance FROM observations")
+    provenances = [row[0] for row in rows if row[0]]
+    
+    logging.info("Found provenances to export: %s", provenances)
+    
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
-    unique_dir_name = f"{import_name}_{timestamp}"
-    unique_jsonld_dir = jsonld_dir.open_dir(unique_dir_name)
-
+    ns_map = {"dcid": DCID_URL}
+    
     self.db.commit()
-    export_to_jsonld(self.db, unique_jsonld_dir)
-
+    
+    # Export triples (schema) to a common folder
+    schema_dir = jsonld_dir.open_dir(f"schema_{timestamp}")
+    process_triples(self.db, schema_dir, ns_map, chunk_size=10000)
+    
+    import_list = []
+    # Add schema to import list
+    import_list.append({
+        "importName": "schema",
+        "graphPath": f"{schema_dir.full_path().rstrip('/')}/*.jsonld"
+    })
+    
+    # Export observations per provenance
+    for prov in provenances:
+        # Sanitize provenance name for folder
+        prov_folder = prov.replace("/", "_").replace(":", "_")
+        prov_dir = jsonld_dir.open_dir(f"{prov_folder}_{timestamp}")
+        process_observations(self.db, prov_dir, ns_map, chunk_size=10000, provenance=prov)
+        
+        import_list.append({
+            "importName": prov,
+            "graphPath": f"{prov_dir.full_path().rstrip('/')}/*.jsonld"
+        })
+        
     # Auto-trigger workflow if output is on GCS
-    output_path = unique_jsonld_dir.full_path()
-    if os.getenv("INGESTION_WORKFLOW_NAME") and output_path.startswith("gs://"):
-      gcs_pattern = f"{output_path.rstrip('/')}/*.jsonld"
-      trigger_ingestion_workflow(gcs_pattern, import_name)
+    import_name = self.import_name or self.config.data.get("importName") or "default_import_name"
+    if import_name and "/" in import_name:
+      import_name = import_name.replace("/", "_")
+      
+    if os.getenv("INGESTION_WORKFLOW_NAME") and jsonld_dir.full_path().startswith("gs://"):
+      trigger_ingestion_workflow(import_list, import_name)
     else:
       logging.info(
           "Output is local or workflow is missing, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually."
