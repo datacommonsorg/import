@@ -242,59 +242,55 @@ class TestRunner(unittest.TestCase):
       output_dir = os.path.join(temp_dir, "output")
       os.makedirs(input_dir)
       os.makedirs(output_dir)
-      
+
       oecd_dir = os.path.join(input_dir, "oecd")
       os.makedirs(oecd_dir)
       ilo_dir = os.path.join(input_dir, "ilo", "ds1")
       os.makedirs(ilo_dir)
-      
+
       # Create config.json files
-      oecd_config = {
-          "inputFiles": {
-              "data.csv": {"importType": "OBSERVATIONS"}
-          }
-      }
-      ilo_config = {
-          "inputFiles": {
-              "data.csv": {"importType": "OBSERVATIONS"}
-          }
-      }
-      
+      oecd_config = {"inputFiles": {"data.csv": {"importType": "OBSERVATIONS"}}}
+      ilo_config = {"inputFiles": {"data.csv": {"importType": "OBSERVATIONS"}}}
+
       with open(os.path.join(oecd_dir, "config.json"), "w") as f:
-          json.dump(oecd_config, f)
+        json.dump(oecd_config, f)
       with open(os.path.join(ilo_dir, "config.json"), "w") as f:
-          json.dump(ilo_config, f)
-          
+        json.dump(ilo_config, f)
+
       # Instantiate Runner
-      runner = Runner(config_file_path=None, input_dir_path=input_dir, output_dir_path=output_dir, import_names=[constants.ALL_IMPORTS])
-      
+      runner = Runner(config_file_path=None,
+                      input_dir_path=input_dir,
+                      output_dir_path=output_dir,
+                      import_names=[constants.ALL_IMPORTS])
+
       # Verify merged config
       config = runner.config
       self.assertEqual(config.data["importName"], constants.ALL_IMPORTS)
       self.assertIn("oecd/data.csv", config.data["inputFiles"])
       self.assertIn("ilo/ds1/data.csv", config.data["inputFiles"])
 
+
 class TestMain(unittest.TestCase):
+
   @mock.patch('stats.main.Runner')
   def test_run_with_import_name(self, mock_runner):
-    from stats.main import _run, FLAGS
-    
+    from stats.main import _run
+    from stats.main import FLAGS
+
     # Parse flags with dummy argv to avoid UnparsedFlagAccessError
     FLAGS(["test_program"])
-    
+
     # Set flags
     FLAGS.input_dir = "/base/input"
     FLAGS.imports = ["oecd"]
     FLAGS.config_file = None
     FLAGS.output_dir = "/output"
     FLAGS.mode = RunMode.CUSTOM_DC
-    
+
     _run()
-    
-    mock_runner.assert_called_once_with(
-        config_file_path=None,
-        input_dir_path="/base/input/oecd",
-        output_dir_path="/output",
-        mode=RunMode.CUSTOM_DC,
-        import_names=["oecd"]
-    )
+
+    mock_runner.assert_called_once_with(config_file_path=None,
+                                        input_dir_path="/base/input/oecd",
+                                        output_dir_path="/output",
+                                        mode=RunMode.CUSTOM_DC,
+                                        import_names=["oecd"])

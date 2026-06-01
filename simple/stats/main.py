@@ -31,7 +31,7 @@ flags.DEFINE_string("input_dir", constants.DEFAULT_INPUT_DIR,
 flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
                     "The output directory.")
 flags.DEFINE_list("imports", [],
-                   "The names of the imports (subdirectories under input_dir).")
+                  "The names of the imports (subdirectories under input_dir).")
 flags.DEFINE_enum(
     "mode",
     RunMode.CUSTOM_DC,
@@ -57,12 +57,13 @@ _FREEZE_TIME_IGNORE_LIST = ["transformers"]
 def _run():
   initialize_logger()
   logging.info("Starting stats data importer job in mode: %s", FLAGS.mode)
-  
+
   input_dir = FLAGS.input_dir
   if FLAGS.imports == [constants.ALL_IMPORTS]:
     logging.info("Running bulk load for all imports under: %s", input_dir)
   elif len(FLAGS.imports) > 1:
-    logging.info("Running combined load for specific imports: %s", FLAGS.imports)
+    logging.info("Running combined load for specific imports: %s",
+                 FLAGS.imports)
   elif FLAGS.imports:
     input_dir = os.path.join(input_dir, FLAGS.imports[0])
     logging.info("Using import specific directory: %s", input_dir)
