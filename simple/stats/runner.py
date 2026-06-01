@@ -253,7 +253,7 @@ class Runner:
           raise e
         
         dir_path = fspath.dirname(file.path)
-        rel_dir = dir_path.replace(base_dir.path, "").strip("/")
+        rel_dir = fspath.relativefrom(base_dir.path, dir_path)
         
         logging.info("Merging config from import directory: %s", rel_dir)
         
@@ -725,7 +725,8 @@ class Runner:
         import_name = constants.ALL_IMPORTS
       else:
         import_name = "_".join(import_names)
-        
+
+    # TODO(gmechali): Remove the fallbacks.
     import_name = import_name or self.config.data.get("importName") or "default_import_name"
     if import_name and "/" in import_name:
       import_name = import_name.replace("/", "_")

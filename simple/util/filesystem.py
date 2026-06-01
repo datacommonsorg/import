@@ -178,7 +178,7 @@ class Dir(_StoreWrapper):
     subfs = self.fs().opendir(self.path)
     max_depth = None if include_subdirs else 1
     for abspath in subfs.walk.files("/", max_depth=max_depth):
-      files.append(self.open_file(abspath))
+      files.append(self.open_file(abspath.lstrip("/")))
     return files
 
 
