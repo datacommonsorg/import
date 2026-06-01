@@ -46,10 +46,7 @@ from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
 from stats.importer import Importer
-from stats.jsonld_exporter import DCID_URL
 from stats.jsonld_exporter import export_to_jsonld
-from stats.jsonld_exporter import process_observations
-from stats.jsonld_exporter import process_triples
 from stats.mcf_importer import McfImporter
 import stats.nl as nl
 from stats.nodes import Nodes
@@ -118,25 +115,40 @@ class Runner:
 
     # Input dir driven (config file found in input dir)
     else:
-      input_store = create_store(input_dir_path)
+      effective_input_dir = input_dir_path
+      imports = self.import_names or []
+      
+      # Default action: read config from the root of the effective directory
+      load_action = lambda store: self._read_config_from_file(
+          config_file_path=constants.CONFIG_JSON_FILE_NAME,
+          config_file_dir=store.as_dir(),
+      )
+
+      if imports == [constants.ALL_IMPORTS]:
+        logging.info("Running bulk load for all imports under: %s", effective_input_dir)
+        load_action = lambda store: self._read_configs_from_subdirs(store.as_dir())
+      elif len(imports) > 1:
+        logging.info("Running combined load for specific imports: %s", imports)
+        load_action = lambda store: self._read_configs_from_list(store.as_dir(), imports)
+      elif imports:
+        effective_input_dir = fspath.join(input_dir_path, imports[0])
+        logging.info("Using import specific directory: %s", effective_input_dir)
+
+      # Create store and execute action ONCE
+      input_store = create_store(effective_input_dir)
       self.all_stores.append(input_store)
       self.input_stores.append(input_store)
-
-      if self.import_names == [constants.ALL_IMPORTS]:
-        self._read_configs_from_subdirs(input_store.as_dir())
-      elif self.import_names and len(self.import_names) > 1:
-        self._read_configs_from_list(input_store.as_dir(), self.import_names)
-      else:
-        try:
-          self._read_config_from_file(
-              config_file_path=constants.CONFIG_JSON_FILE_NAME,
-              config_file_dir=input_store.as_dir(),
-          )
-        except FileNotFoundError:
+      
+      try:
+        load_action(input_store)
+      except FileNotFoundError:
+        if not imports:
           logging.info(
               "Config file not found at root of %s. Scanning subdirectories.",
-              input_dir_path)
+              effective_input_dir)
           self._read_configs_from_subdirs(input_store.as_dir())
+        else:
+          raise
 
     # Get dict of special file type string to special file name.
     # Example entry: verticalSpecsFile -> vertical_specs.json

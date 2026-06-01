@@ -290,7 +290,7 @@ class TestMain(unittest.TestCase):
     _run()
 
     mock_runner.assert_called_once_with(config_file_path=None,
-                                        input_dir_path="/base/input/oecd",
+                                        input_dir_path="/base/input",
                                         output_dir_path="/output",
                                         mode=RunMode.CUSTOM_DC,
                                         import_names=["oecd"])

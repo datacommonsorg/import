@@ -58,18 +58,8 @@ def _run():
   initialize_logger()
   logging.info("Starting stats data importer job in mode: %s", FLAGS.mode)
 
-  input_dir = FLAGS.input_dir
-  if FLAGS.imports == [constants.ALL_IMPORTS]:
-    logging.info("Running bulk load for all imports under: %s", input_dir)
-  elif len(FLAGS.imports) > 1:
-    logging.info("Running combined load for specific imports: %s",
-                 FLAGS.imports)
-  elif FLAGS.imports:
-    input_dir = os.path.join(input_dir, FLAGS.imports[0])
-    logging.info("Using import specific directory: %s", input_dir)
-
   Runner(config_file_path=FLAGS.config_file,
-         input_dir_path=input_dir,
+         input_dir_path=FLAGS.input_dir,
          output_dir_path=FLAGS.output_dir,
          mode=FLAGS.mode,
          import_names=FLAGS.imports).run()
