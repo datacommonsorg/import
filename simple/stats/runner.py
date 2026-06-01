@@ -227,6 +227,12 @@ class Runner:
     self.config = Config(data=config_data)
 
   def _merge_configs(self, configs: list, base_dir: Dir):
+    """Merges multiple config.json files into a single configuration.
+    
+    Args:
+      configs: A list of File objects representing the config.json files to merge.
+      base_dir: The base directory used to calculate relative paths for input files.
+    """
     import json
     import fs.path as fspath
     
@@ -280,6 +286,14 @@ class Runner:
     return configs
 
   def _read_configs_from_subdirs(self, base_dir: Dir):
+    """Scans subdirectories for config.json files and merges them.
+    
+    Args:
+      base_dir: The base directory to scan.
+      
+    Raises:
+      FileNotFoundError: If no config.json files are found.
+    """
     configs = self._find_configs_in_dir(base_dir)
     logging.info("Found %s config files in subdirectories.", len(configs))
     if not configs:
@@ -287,6 +301,15 @@ class Runner:
     self._merge_configs(configs, base_dir)
 
   def _read_configs_from_list(self, base_dir: Dir, import_names: list[str]):
+    """Reads configs for specific imports specified in a list and merges them.
+    
+    Args:
+      base_dir: The base directory containing the import subdirectories.
+      import_names: A list of subdirectory names to look for configs in.
+      
+    Raises:
+      FileNotFoundError: If no config files are found for a requested import.
+    """
     configs = []
     for name in import_names:
       name = name.strip()
