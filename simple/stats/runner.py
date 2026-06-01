@@ -139,16 +139,7 @@ class Runner:
       self.all_stores.append(input_store)
       self.input_stores.append(input_store)
       
-      try:
-        load_action(input_store)
-      except FileNotFoundError:
-        if not imports:
-          logging.info(
-              "Config file not found at root of %s. Scanning subdirectories.",
-              effective_input_dir)
-          self._read_configs_from_subdirs(input_store.as_dir())
-        else:
-          raise
+      load_action(input_store)
 
     # Get dict of special file type string to special file name.
     # Example entry: verticalSpecsFile -> vertical_specs.json
