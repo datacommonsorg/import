@@ -16,8 +16,8 @@ import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.data.ProvenanceUtils;
+import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.util.GraphReader;
 import org.datacommons.ingestion.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
@@ -47,7 +47,8 @@ public class GraphIngestionPipeline {
     IngestionPipelineOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(IngestionPipelineOptions.class);
 
-    boolean isBaseDc = System.getenv("IS_BASE_DC") == null || Boolean.parseBoolean(System.getenv("IS_BASE_DC"));
+    boolean isBaseDc =
+        System.getenv("IS_BASE_DC") == null || Boolean.parseBoolean(System.getenv("IS_BASE_DC"));
     options.setIsBaseDc(isBaseDc);
 
     SpannerClient spannerClient =
@@ -215,7 +216,8 @@ public class GraphIngestionPipeline {
     PCollection<McfOptimizedGraph> optimizedGraph =
         PipelineUtils.buildOptimizedMcfGraph(importName, observationNodes);
     PCollection<Mutation> observationMutations =
-        GraphReader.graphToObservations(optimizedGraph, importName, spannerClient, obsCounter, isBaseDc)
+        GraphReader.graphToObservations(
+                optimizedGraph, importName, spannerClient, obsCounter, isBaseDc)
             .apply("ExtractObsMutations-" + importName, Values.create());
     // Write Observations (wait for Obs delete)
     PCollection<Mutation> waitingObs =
