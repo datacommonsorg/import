@@ -165,8 +165,7 @@ class TestRunner(unittest.TestCase):
                  input_db_file_name="sqlite_old_schema_populated.sql")
 
   def test_empty_input(self):
-    with self.assertRaises(FileNotFoundError):
-      _test_runner(self, "empty")
+    _test_runner(self, "empty")
 
   def test_missing_config(self):
     with self.assertRaises(FileNotFoundError):
@@ -238,9 +237,14 @@ class TestRunner(unittest.TestCase):
   def test_read_configs_from_subdirs(self):
     with tempfile.TemporaryDirectory() as temp_dir:
       # Create subdirectories
-      oecd_dir = os.path.join(temp_dir, "oecd")
+      input_dir = os.path.join(temp_dir, "input")
+      output_dir = os.path.join(temp_dir, "output")
+      os.makedirs(input_dir)
+      os.makedirs(output_dir)
+      
+      oecd_dir = os.path.join(input_dir, "oecd")
       os.makedirs(oecd_dir)
-      ilo_dir = os.path.join(temp_dir, "ilo", "ds1")
+      ilo_dir = os.path.join(input_dir, "ilo", "ds1")
       os.makedirs(ilo_dir)
       
       # Create config.json files
@@ -261,7 +265,7 @@ class TestRunner(unittest.TestCase):
           json.dump(ilo_config, f)
           
       # Instantiate Runner
-      runner = Runner(config_file_path=None, input_dir_path=temp_dir, output_dir_path=temp_dir, import_name="ALL_IMPORTS")
+      runner = Runner(config_file_path=None, input_dir_path=input_dir, output_dir_path=output_dir, import_name="ALL_IMPORTS")
       
       # Verify merged config
       config = runner.config

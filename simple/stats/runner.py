@@ -692,48 +692,24 @@ class Runner:
 
     # Export to JSON-LD
     jsonld_dir = self.output_dir.open_dir("jsonld")
-    
-    # Get all unique provenances from observations
-    rows = self.db.engine.fetch_all("SELECT DISTINCT provenance FROM observations")
-    provenances = [row[0] for row in rows if row[0]]
-    
-    logging.info("Found provenances to export: %s", provenances)
-    
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
-    ns_map = {"dcid": DCID_URL}
-    
-    self.db.commit()
-    
-    # Export triples (schema) to a common folder
-    schema_dir = jsonld_dir.open_dir(f"schema_{timestamp}")
-    process_triples(self.db, schema_dir, ns_map, chunk_size=10000)
-    
-    import_list = []
-    # Add schema to import list
-    import_list.append({
-        "importName": "schema",
-        "graphPath": f"{schema_dir.full_path().rstrip('/')}/*.jsonld"
-    })
-    
-    # Export observations per provenance
-    for prov in provenances:
-        # Sanitize provenance name for folder
-        prov_folder = prov.replace("/", "_").replace(":", "_")
-        prov_dir = jsonld_dir.open_dir(f"{prov_folder}_{timestamp}")
-        process_observations(self.db, prov_dir, ns_map, chunk_size=10000, provenance=prov)
-        
-        import_list.append({
-            "importName": prov,
-            "graphPath": f"{prov_dir.full_path().rstrip('/')}/*.jsonld"
-        })
-        
-    # Auto-trigger workflow if output is on GCS
+
+    # Create a unique subfolder based on import name and timestamp for parallel runs
     import_name = self.import_name or self.config.data.get("importName") or "default_import_name"
     if import_name and "/" in import_name:
       import_name = import_name.replace("/", "_")
       
-    if os.getenv("INGESTION_WORKFLOW_NAME") and jsonld_dir.full_path().startswith("gs://"):
-      trigger_ingestion_workflow(import_list, import_name)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+    unique_dir_name = f"{import_name}_{timestamp}"
+    unique_jsonld_dir = jsonld_dir.open_dir(unique_dir_name)
+
+    self.db.commit()
+    export_to_jsonld(self.db, unique_jsonld_dir)
+
+    # Auto-trigger workflow if output is on GCS
+    output_path = unique_jsonld_dir.full_path()
+    if os.getenv("INGESTION_WORKFLOW_NAME") and output_path.startswith("gs://"):
+      gcs_pattern = f"{output_path.rstrip('/')}/*.jsonld"
+      trigger_ingestion_workflow(gcs_pattern, import_name)
     else:
       logging.info(
           "Output is local or workflow is missing, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually."

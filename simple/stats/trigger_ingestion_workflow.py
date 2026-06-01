@@ -42,7 +42,7 @@ def _get_env_vars():
   return {var: os.getenv(var) for var in required_env_vars}
 
 
-def trigger_ingestion_workflow(import_list: list,
+def trigger_ingestion_workflow(gcs_path: str,
                                import_name: str = "default_import_name"):
   """Triggers the Data Commons ingestion workflow via Google Cloud Workflows API."""
   logging.info("Attempting to auto-trigger ingestion workflow via API...")
@@ -59,7 +59,10 @@ def trigger_ingestion_workflow(import_list: list,
       "importName":
           import_name,
       "importList":
-          json.dumps(import_list),
+          json.dumps([{
+              "importName": import_name,
+              "graphPath": gcs_path
+          }]),
       "tempLocation":
           env_vars["TEMP_LOCATION"],
       "region":
