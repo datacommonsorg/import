@@ -117,7 +117,7 @@ class Runner:
     else:
       effective_input_dir = input_dir_path
       imports = self.import_names or []
-      
+
       # Default action: read config from the root of the effective directory
       load_action = lambda store: self._read_config_from_file(
           config_file_path=constants.CONFIG_JSON_FILE_NAME,
@@ -125,11 +125,14 @@ class Runner:
       )
 
       if imports == [constants.ALL_IMPORTS]:
-        logging.info("Running bulk load for all imports under: %s", effective_input_dir)
-        load_action = lambda store: self._read_configs_from_subdirs(store.as_dir())
+        logging.info("Running bulk load for all imports under: %s",
+                     effective_input_dir)
+        load_action = lambda store: self._read_configs_from_subdirs(store.
+                                                                    as_dir())
       elif len(imports) > 1:
         logging.info("Running combined load for specific imports: %s", imports)
-        load_action = lambda store: self._read_configs_from_list(store.as_dir(), imports)
+        load_action = lambda store: self._read_configs_from_list(
+            store.as_dir(), imports)
       elif imports:
         effective_input_dir = fspath.join(input_dir_path, imports[0])
         logging.info("Using import specific directory: %s", effective_input_dir)
@@ -138,7 +141,7 @@ class Runner:
       input_store = create_store(effective_input_dir)
       self.all_stores.append(input_store)
       self.input_stores.append(input_store)
-      
+
       load_action(input_store)
 
     # Get dict of special file type string to special file name.
