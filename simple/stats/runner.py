@@ -282,6 +282,8 @@ class Runner:
   def _read_configs_from_subdirs(self, base_dir: Dir):
     configs = self._find_configs_in_dir(base_dir)
     logging.info("Found %s config files in subdirectories.", len(configs))
+    if not configs:
+      raise FileNotFoundError(f"No config.json files found in subdirectories of {base_dir.full_path()}")
     self._merge_configs(configs, base_dir)
 
   def _read_configs_from_list(self, base_dir: Dir, import_names: list[str]):

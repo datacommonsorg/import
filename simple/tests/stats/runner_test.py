@@ -165,7 +165,8 @@ class TestRunner(unittest.TestCase):
                  input_db_file_name="sqlite_old_schema_populated.sql")
 
   def test_empty_input(self):
-    _test_runner(self, "empty")
+    with self.assertRaises(FileNotFoundError):
+      _test_runner(self, "empty")
 
   def test_missing_config(self):
     with self.assertRaises(FileNotFoundError):
