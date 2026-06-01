@@ -22,7 +22,7 @@ if [ "$CONFIG_FILE" != "" ]; then
     echo "CONFIG_FILE=$CONFIG_FILE"
     echo "OUTPUT_DIR=$OUTPUT_DIR"
 
-    python3 -u -m stats.main \
+    python3 -m stats.main \
         --mode=maindc \
         --config_file=$CONFIG_FILE \
         --output_dir=$OUTPUT_DIR \
@@ -36,7 +36,7 @@ else
     echo "INPUT_DIR=$INPUT_DIR"
     echo "OUTPUT_DIR=$OUTPUT_DIR"
 
-    python3 -u -m stats.main \
+    python3 -m stats.main \
         --mode=maindc \
         --input_dir=$INPUT_DIR \
         --output_dir=$OUTPUT_DIR \
