@@ -47,9 +47,9 @@ public class GraphIngestionPipeline {
     IngestionPipelineOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(IngestionPipelineOptions.class);
 
-    boolean isBaseDc =
-        System.getenv("IS_BASE_DC") == null || Boolean.parseBoolean(System.getenv("IS_BASE_DC"));
-    options.setIsBaseDc(isBaseDc);
+    if (System.getenv("IS_BASE_DC") != null) {
+      options.setIsBaseDc(Boolean.parseBoolean(System.getenv("IS_BASE_DC")));
+    }
 
     SpannerClient spannerClient =
         SpannerClient.builder()

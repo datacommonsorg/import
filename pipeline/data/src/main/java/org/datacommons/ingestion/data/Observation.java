@@ -182,7 +182,8 @@ public class Observation {
         && Objects.equals(importName, that.importName)
         && Objects.equals(provenanceUrl, that.provenanceUrl)
         && Objects.equals(facetId, that.facetId)
-        && Objects.equals(isDcAggregate, that.isDcAggregate);
+        && Objects.equals(isDcAggregate, that.isDcAggregate)
+        && Objects.equals(isBaseDc, that.isBaseDc);
   }
 
   @Override
@@ -198,7 +199,8 @@ public class Observation {
         importName,
         provenanceUrl,
         facetId,
-        isDcAggregate);
+        isDcAggregate,
+        isBaseDc);
   }
 
   // Builder for Observation
