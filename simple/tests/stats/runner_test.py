@@ -266,11 +266,11 @@ class TestRunner(unittest.TestCase):
           json.dump(ilo_config, f)
           
       # Instantiate Runner
-      runner = Runner(config_file_path=None, input_dir_path=input_dir, output_dir_path=output_dir, import_name="ALL_IMPORTS")
+      runner = Runner(config_file_path=None, input_dir_path=input_dir, output_dir_path=output_dir, import_names=[constants.ALL_IMPORTS])
       
       # Verify merged config
       config = runner.config
-      self.assertEqual(config.data["importName"], "ALL_IMPORTS")
+      self.assertEqual(config.data["importName"], constants.ALL_IMPORTS)
       self.assertIn("oecd/data.csv", config.data["inputFiles"])
       self.assertIn("ilo/ds1/data.csv", config.data["inputFiles"])
 
@@ -284,7 +284,7 @@ class TestMain(unittest.TestCase):
     
     # Set flags
     FLAGS.input_dir = "/base/input"
-    FLAGS.import_name = "oecd"
+    FLAGS.imports = ["oecd"]
     FLAGS.config_file = None
     FLAGS.output_dir = "/output"
     FLAGS.mode = RunMode.CUSTOM_DC
@@ -296,5 +296,5 @@ class TestMain(unittest.TestCase):
         input_dir_path="/base/input/oecd",
         output_dir_path="/output",
         mode=RunMode.CUSTOM_DC,
-        import_name="oecd"
+        import_names=["oecd"]
     )

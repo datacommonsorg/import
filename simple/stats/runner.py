@@ -82,14 +82,14 @@ class Runner:
       input_dir_path: str,
       output_dir_path: str,
       mode: RunMode = RunMode.CUSTOM_DC,
-      import_name: Optional[str] = None,
+      import_names: Optional[list[str]] = None,
   ) -> None:
     assert (config_file_path or
             input_dir_path), "One of config_file or input_dir must be specified"
     assert output_dir_path, "output_dir must be specified"
 
     self.mode = mode
-    self.import_name = import_name
+    self.import_names = import_names
 
     # File systems, both input and output. Must be closed when run finishes.
     self.all_stores: list[Store] = []
@@ -119,10 +119,10 @@ class Runner:
       self.all_stores.append(input_store)
       self.input_stores.append(input_store)
 
-      if self.import_name == "ALL_IMPORTS":
+      if self.import_names == [constants.ALL_IMPORTS]:
         self._read_configs_from_subdirs(input_store.as_dir())
-      elif self.import_name and "," in self.import_name:
-        self._read_configs_from_list(input_store.as_dir(), self.import_name.split(","))
+      elif self.import_names and len(self.import_names) > 1:
+        self._read_configs_from_list(input_store.as_dir(), self.import_names)
       else:
         try:
           self._read_config_from_file(
@@ -231,7 +231,7 @@ class Runner:
     import fs.path as fspath
     
     merged_data = {
-        "importName": "ALL_IMPORTS",
+        "importName": constants.ALL_IMPORTS,
         "includeInputSubdirs": True,
         "inputFiles": {},
         "variables": {},
@@ -696,7 +696,14 @@ class Runner:
     jsonld_dir = self.output_dir.open_dir("jsonld")
 
     # Create a unique subfolder based on import name and timestamp for parallel runs
-    import_name = self.import_name or self.config.data.get("importName") or "default_import_name"
+    import_names = self.import_names
+    if isinstance(import_names, list):
+      if import_names == [constants.ALL_IMPORTS]:
+        import_name = constants.ALL_IMPORTS
+      else:
+        import_name = "_".join(import_names)
+        
+    import_name = import_name or self.config.data.get("importName") or "default_import_name"
     if import_name and "/" in import_name:
       import_name = import_name.replace("/", "_")
       

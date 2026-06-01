@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import os
 
 from absl import app
 from absl import flags
@@ -29,8 +30,8 @@ flags.DEFINE_string("input_dir", constants.DEFAULT_INPUT_DIR,
                     "The input directory.")
 flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
                     "The output directory.")
-flags.DEFINE_string("import_name", None,
-                    "The name of the import (subdirectory under input_dir).")
+flags.DEFINE_list("imports", [],
+                   "The names of the imports (subdirectories under input_dir).")
 flags.DEFINE_enum(
     "mode",
     RunMode.CUSTOM_DC,
@@ -58,20 +59,19 @@ def _run():
   logging.info("Starting stats data importer job in mode: %s", FLAGS.mode)
   
   input_dir = FLAGS.input_dir
-  if FLAGS.import_name == "ALL_IMPORTS":
+  if FLAGS.imports == [constants.ALL_IMPORTS]:
     logging.info("Running bulk load for all imports under: %s", input_dir)
-  elif FLAGS.import_name and "," in FLAGS.import_name:
-    logging.info("Running combined load for specific imports: %s", FLAGS.import_name)
-  elif FLAGS.import_name:
-    import os
-    input_dir = os.path.join(input_dir, FLAGS.import_name)
+  elif len(FLAGS.imports) > 1:
+    logging.info("Running combined load for specific imports: %s", FLAGS.imports)
+  elif FLAGS.imports:
+    input_dir = os.path.join(input_dir, FLAGS.imports[0])
     logging.info("Using import specific directory: %s", input_dir)
 
   Runner(config_file_path=FLAGS.config_file,
          input_dir_path=input_dir,
          output_dir_path=FLAGS.output_dir,
          mode=FLAGS.mode,
-         import_name=FLAGS.import_name).run()
+         import_names=FLAGS.imports).run()
   logging.info("Runner finished successfully.")
 
 
