@@ -252,6 +252,128 @@ public class CacheReaderTest {
     assertEquals(expectedGraph, actual.get(0).getObsGraph());
   }
 
+  @Test
+  public void testParseArcRowForInArcWithoutBaseDcPrefix() {
+    CacheReader reader = new CacheReader("datcom-store", false);
+    Counter mockMcfNodesWithoutTypeCounter = Mockito.mock(Counter.class);
+    String row =
+        "d/l/dc/d/UnitedNationsUn_SdgIndicatorsDatabase^isPartOf^Provenance^0,H4sIAAAAAAAAAOPS4GIL9YsPdnGX4ktJ1k9KLE7Vh/CV0PiCDGDwwR4AhMbiaDMAAAA=";
+
+    NodesEdges expected =
+        new NodesEdges()
+            .addNode(
+                Node.builder()
+                    .subjectId("UN_SDG")
+                    .value("UN_SDG")
+                    .name("UN_SDG")
+                    .types(List.of("Provenance"))
+                    .build())
+            .addEdge(
+                Edge.builder()
+                    .subjectId("UN_SDG")
+                    .predicate("isPartOf")
+                    .objectId("dc/d/UnitedNationsUn_SdgIndicatorsDatabase")
+                    .provenance("UN_SDG")
+                    .build());
+
+    NodesEdges actual = reader.parseArcRow(row, mockMcfNodesWithoutTypeCounter);
+
+    assertEquals(expected, actual);
+    Mockito.verify(mockMcfNodesWithoutTypeCounter, Mockito.times(0)).inc();
+  }
+
+  @Test
+  public void testParseTimeSeriesRowWithoutBaseDcPrefix() {
+    CacheReader reader = new CacheReader("datcom-store", false);
+    String row =
+        "d/3/geoId/sch2915390^Mean_PrecipitableWater_Atmosphere,H4sIAAAAAAAAAOPqZpHi8igtykmtVAjS9TT6w8wlysVlZGBkqmtgpGtkIMgQvilZeYOoA4qwkeBcve7Os9OVUIWNBQOzZ5XPaVJBEjbWNTAU3OHQ9Oj4DD1U1aaCIvbH7mx9ookibGguqN6xi98hSwZV2EJQ0Mxmb5CYFqohJoJMszik59WpogobCq49MOHqWjk5VJcYCRac67h074AqqrCxoOOVWoag1QqohlgIpnUkx96ZZoQqbC7IeI+Js2s+mkvMBKub9X2WrdJENdtE0N9BOPHwZkVU71gKGoOBioMUh5+/o2O8u1uwEnOAoYuWBIwbH56aWJKRWuSWX5SanFhcYsSRl5+YqJeeX+bE5ZuZk5OZm1qSWuTBGOSZUVJSUGylr19eXq6Xl5yaqQdTqF9QlJ9SmlxSrF8OMUs3GagtsSRVNzc/JTWnWD89Jz8pMUc3DWoFAAwgwZ8OAgAA";
+
+    Observations series =
+        Observations.newBuilder()
+            .putValues("2025-02-20", "5.42201")
+            .putValues("2025-02-22", "9.29649")
+            .putValues("2025-02-23", "10.2551")
+            .putValues("2025-03-01", "15.2984")
+            .putValues("2025-02-25", "12.9467")
+            .putValues("2025-02-17", "7.10376")
+            .putValues("2025-02-18", "13.0436")
+            .putValues("2025-02-24", "10.7473")
+            .putValues("2025-02-21", "7.52996")
+            .putValues("2025-03-02", "10.8767")
+            .putValues("2025-03-03", "8.33461")
+            .putValues("2025-02-28", "18.5893")
+            .putValues("2025-02-27", "13.3116")
+            .putValues("2025-02-26", "12.8333")
+            .putValues("2025-03-04", "8.8511")
+            .putValues("2025-02-19", "10.1")
+            .build();
+
+    List<Observation> expected =
+        List.of(
+            Observation.builder()
+                .isBaseDc(false)
+                .variableMeasured("Mean_PrecipitableWater_Atmosphere")
+                .observationAbout("geoId/sch2915390")
+                .observations(series)
+                .observationPeriod("P1D")
+                .measurementMethod("NOAA_GFS")
+                .scalingFactor("")
+                .unit("Millimeter")
+                .isDcAggregate(true)
+                .provenanceUrl(
+                    "https://www.ncei.noaa.gov/products/weather-climate-models/global-forecast")
+                .importName("NOAA_GFS_WeatherForecast")
+                .build());
+
+    NodesEdges expectedGraph =
+        new NodesEdges()
+            .addNode(
+                Node.builder()
+                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
+                    .value("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
+                    .name("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 870755137")
+                    .types(List.of("StatVarObsSeries"))
+                    .build())
+            .addNode(
+                Node.builder()
+                    .subjectId("jVWNIHt73yOspqKD0fnvTCH8GCW7m38F3gW+JB+aWms=")
+                    .value("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 870755137")
+                    .build())
+            .addEdge(
+                Edge.builder()
+                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
+                    .predicate("variableMeasured")
+                    .objectId("Mean_PrecipitableWater_Atmosphere")
+                    .provenance("NOAA_GFS_WeatherForecast")
+                    .build())
+            .addEdge(
+                Edge.builder()
+                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
+                    .predicate("observationAbout")
+                    .objectId("geoId/sch2915390")
+                    .provenance("NOAA_GFS_WeatherForecast")
+                    .build())
+            .addEdge(
+                Edge.builder()
+                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
+                    .predicate("name")
+                    .objectId("jVWNIHt73yOspqKD0fnvTCH8GCW7m38F3gW+JB+aWms=")
+                    .provenance("NOAA_GFS_WeatherForecast")
+                    .build())
+            .addEdge(
+                Edge.builder()
+                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
+                    .predicate("typeOf")
+                    .objectId("StatVarObsSeries")
+                    .provenance("NOAA_GFS_WeatherForecast")
+                    .build());
+
+    List<Observation> actual = reader.parseTimeSeriesRow(row);
+
+    assertEquals(expected, actual);
+    assertEquals(expectedGraph, actual.get(0).getObsGraph());
+  }
+
   private static CacheReader newCacheReader() {
     return new CacheReader("datcom-store");
   }

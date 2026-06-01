@@ -128,7 +128,13 @@ public class GraphReader implements Serializable {
   }
 
   public static Observation graphToObservations(McfOptimizedGraph graph, String importName) {
+    return graphToObservations(graph, importName, true);
+  }
+
+  public static Observation graphToObservations(
+      McfOptimizedGraph graph, String importName, boolean isBaseDc) {
     Observation.Builder obs = Observation.builder();
+    obs.isBaseDc(isBaseDc);
     String measurementMethod = graph.getSvObsSeries().getKey().getMeasurementMethod();
     obs.observationAbout(graph.getSvObsSeries().getKey().getObservationAbout());
     obs.observationPeriod(graph.getSvObsSeries().getKey().getObservationPeriod());
@@ -162,7 +168,8 @@ public class GraphReader implements Serializable {
       PCollection<McfOptimizedGraph> graph,
       String importName,
       SpannerClient spannerClient,
-      Counter obsCounter) {
+      Counter obsCounter,
+      boolean isBaseDc) {
     return graph.apply(
         "GraphToObs-" + importName,
         ParDo.of(
@@ -171,7 +178,7 @@ public class GraphReader implements Serializable {
               public void processElement(
                   @Element McfOptimizedGraph element,
                   OutputReceiver<KV<String, Mutation>> receiver) {
-                Observation observations = graphToObservations(element, importName);
+                Observation observations = graphToObservations(element, importName, isBaseDc);
                 List<KV<String, Mutation>> obs =
                     spannerClient.toObservationKVMutations(List.of(observations));
                 obs.stream()

@@ -15,6 +15,7 @@ import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.NodesEdges;
 import org.datacommons.ingestion.data.Observation;
+import org.datacommons.ingestion.data.ProvenanceUtils;
 import org.datacommons.proto.CacheData.EntityInfo;
 import org.datacommons.proto.CacheData.PagedEntities;
 import org.datacommons.proto.ChartStoreOuterClass.ChartStore;
@@ -33,9 +34,15 @@ public class CacheReader implements Serializable {
   private static final String CACHE_KEY_SEPARATOR_REGEX = "\\^";
 
   private final String gcsBucketId;
+  private final boolean isBaseDc;
 
   public CacheReader(String gcsBucketId) {
+    this(gcsBucketId, true);
+  }
+
+  public CacheReader(String gcsBucketId, boolean isBaseDc) {
     this.gcsBucketId = gcsBucketId;
+    this.isBaseDc = isBaseDc;
   }
 
   /** Returns the GCS cache path for the import group. */
@@ -139,11 +146,18 @@ public class CacheReader implements Serializable {
             // Triples with type Thing are from two different import groups.
             // The corresponding Node is a placeholder and shouldn't be added.
             // Instead it will be added as part of the import group where its defined.
-            if (!nodeId.isEmpty() && !typeOf.equals(PipelineUtils.TYPE_THING)) {
+            boolean isReferenceNode = isOutArcCacheRow(row) ? !entity.getDcid().isEmpty() : true;
+            String finalNodeId = stripPrefix(nodeId);
+            String finalNodeValue = isReferenceNode ? stripPrefix(nodeValue) : nodeValue;
+            String finalSubjectId = stripPrefix(subjectId);
+            String finalObjectId = stripPrefix(objectId);
+            String finalProvenance = stripPrefix(entity.getProvenanceId());
+
+            if (!finalNodeId.isEmpty() && !typeOf.equals(PipelineUtils.TYPE_THING)) {
               result.addNode(
                   Node.builder()
-                      .subjectId(nodeId)
-                      .value(nodeValue)
+                      .subjectId(finalNodeId)
+                      .value(finalNodeValue)
                       .bytes(bytes)
                       .name(entity.getName())
                       .types(types)
@@ -151,13 +165,13 @@ public class CacheReader implements Serializable {
             }
 
             // Add edge.
-            if (!subjectId.isEmpty() && !objectId.isEmpty()) {
+            if (!finalSubjectId.isEmpty() && !finalObjectId.isEmpty()) {
               result.addEdge(
                   Edge.builder()
-                      .subjectId(subjectId)
+                      .subjectId(finalSubjectId)
                       .predicate(predicate)
-                      .objectId(objectId)
-                      .provenance(entity.getProvenanceId())
+                      .objectId(finalObjectId)
+                      .provenance(finalProvenance)
                       .build());
             }
           }
@@ -187,6 +201,7 @@ public class CacheReader implements Serializable {
           for (SourceSeries source : chart.getObsTimeSeries().getSourceSeriesList()) {
             Observation.Builder builder =
                 Observation.builder()
+                    .isBaseDc(this.isBaseDc)
                     .variableMeasured(variableMeasured)
                     .observationAbout(observationAbout)
                     .observationPeriod(source.getObservationPeriod())
@@ -225,5 +240,9 @@ public class CacheReader implements Serializable {
 
   public static final boolean isObsTimeSeriesCacheRow(String row) {
     return row.startsWith(OBS_TIME_SERIES_CACHE_PREFIX);
+  }
+
+  private String stripPrefix(String s) {
+    return ProvenanceUtils.stripPrefix(s, this.isBaseDc);
   }
 }
