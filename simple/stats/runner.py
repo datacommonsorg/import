@@ -57,11 +57,7 @@ from stats.svg_cache import generate_svg_cache
 from stats.trigger_ingestion_workflow import trigger_ingestion_workflow
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
-from util.filesystem import create_store
-from util.filesystem import Dir
-from util.filesystem import File
-from util.filesystem import Store
-
+from util.filesystem import create_store, Dir, File, join_path, Store
 
 class RunMode(StrEnum):
   CUSTOM_DC = "customdc"
@@ -134,7 +130,7 @@ class Runner:
         load_action = lambda store: self._read_configs_from_list(
             store.as_dir(), imports)
       elif imports:
-        effective_input_dir = fspath.join(input_dir_path, imports[0])
+        effective_input_dir = join_path(input_dir_path, imports[0])
         logging.info("Using import specific directory: %s", effective_input_dir)
 
       # Create store and execute action ONCE

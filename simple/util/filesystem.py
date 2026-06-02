@@ -40,6 +40,15 @@ from fs_gcsfs import GCSFS
 _GCS_PATH_PREFIX = "gs://"
 
 
+def join_path(base: str, *args: str) -> str:
+  """Safely joins path components, keeping GCS/URL schemes (like gs://) intact."""
+  if "://" in base:
+    scheme, rest = base.split("://", 1)
+    joined_rest = fspath.join(rest, *args)
+    return f"{scheme}://{joined_rest}"
+  return fspath.join(base, *args)
+
+
 def create_store(path: str,
                  create_if_missing: bool = False,
                  treat_as_file: bool = False) -> "Store":
