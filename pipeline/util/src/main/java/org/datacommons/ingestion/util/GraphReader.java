@@ -127,10 +127,6 @@ public class GraphReader implements Serializable {
     return edges;
   }
 
-  public static Observation graphToObservations(McfOptimizedGraph graph, String importName) {
-    return graphToObservations(graph, importName, true);
-  }
-
   public static Observation graphToObservations(
       McfOptimizedGraph graph, String importName, boolean isBaseDc) {
     Observation.Builder obs = Observation.builder();

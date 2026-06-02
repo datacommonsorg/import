@@ -36,10 +36,6 @@ public class CacheReader implements Serializable {
   private final String gcsBucketId;
   private final boolean isBaseDc;
 
-  public CacheReader(String gcsBucketId) {
-    this(gcsBucketId, true);
-  }
-
   public CacheReader(String gcsBucketId, boolean isBaseDc) {
     this.gcsBucketId = gcsBucketId;
     this.isBaseDc = isBaseDc;

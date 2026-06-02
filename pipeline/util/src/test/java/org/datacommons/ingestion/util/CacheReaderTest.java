@@ -375,6 +375,6 @@ public class CacheReaderTest {
   }
 
   private static CacheReader newCacheReader() {
-    return new CacheReader("datcom-store");
+    return new CacheReader("datcom-store", true);
   }
 }
