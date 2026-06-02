@@ -15,7 +15,7 @@ import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.NodesEdges;
 import org.datacommons.ingestion.data.Observation;
-import org.datacommons.ingestion.data.ProvenanceUtils;
+import static org.datacommons.ingestion.data.ProvenanceUtils.stripPrefix;
 import org.datacommons.proto.CacheData.EntityInfo;
 import org.datacommons.proto.CacheData.PagedEntities;
 import org.datacommons.proto.ChartStoreOuterClass.ChartStore;
@@ -143,11 +143,11 @@ public class CacheReader implements Serializable {
             // The corresponding Node is a placeholder and shouldn't be added.
             // Instead it will be added as part of the import group where its defined.
             boolean isReferenceNode = isOutArcCacheRow(row) ? !entity.getDcid().isEmpty() : true;
-            String finalNodeId = stripPrefix(nodeId);
-            String finalNodeValue = isReferenceNode ? stripPrefix(nodeValue) : nodeValue;
-            String finalSubjectId = stripPrefix(subjectId);
-            String finalObjectId = stripPrefix(objectId);
-            String finalProvenance = stripPrefix(entity.getProvenanceId());
+            String finalNodeId = stripPrefix(nodeId, this.isBaseDc);
+            String finalNodeValue = isReferenceNode ? stripPrefix(nodeValue, this.isBaseDc) : nodeValue;
+            String finalSubjectId = stripPrefix(subjectId, this.isBaseDc);
+            String finalObjectId = stripPrefix(objectId, this.isBaseDc);
+            String finalProvenance = stripPrefix(entity.getProvenanceId(), this.isBaseDc);
 
             if (!finalNodeId.isEmpty() && !typeOf.equals(PipelineUtils.TYPE_THING)) {
               result.addNode(
@@ -238,7 +238,4 @@ public class CacheReader implements Serializable {
     return row.startsWith(OBS_TIME_SERIES_CACHE_PREFIX);
   }
 
-  private String stripPrefix(String s) {
-    return ProvenanceUtils.stripPrefix(s, this.isBaseDc);
-  }
 }
