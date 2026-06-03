@@ -336,6 +336,52 @@ class MainDcDb(Db):
     node.add_triple(triple)
 
 
+def _write_observation_shard(args):
+  chunk, shard_index, jsonld_dir_path, ns_map, prov_urls = args
+  from rdflib import Graph, Namespace
+  from stats.jsonld_exporter import DCID_URL, _add_observation_to_graph, write_shard
+  from util.filesystem import create_store
+
+  DCID = Namespace(DCID_URL)
+  g = Graph()
+  g.bind("dcid", DCID)
+
+  for row in chunk:
+    _add_observation_to_graph(g, row, DCID, prov_urls)
+
+  with create_store(jsonld_dir_path) as store:
+    output_dir = store.as_dir()
+    write_shard(g, shard_index, output_dir, ns_map, prefix="observation")
+
+
+def _write_node_shard(args):
+  chunk, shard_index, jsonld_dir_path, ns_map = args
+  from rdflib import Graph, Namespace, RDF, Literal
+  from stats.jsonld_exporter import DCID_URL, expand_id, write_shard
+  from util.filesystem import create_store
+
+  DCID = Namespace(DCID_URL)
+  g = Graph()
+  g.bind("dcid", DCID)
+
+  for row in chunk:
+    sub = expand_id(row.subject_id)
+    p = expand_id(row.predicate)
+    if row.object_id:
+      o = expand_id(row.object_id)
+    else:
+      o = Literal(row.object_value)
+
+    if row.predicate == 'typeOf':
+      g.add((sub, RDF.type, o))
+    else:
+      g.add((sub, p, o))
+
+  with create_store(jsonld_dir_path) as store:
+    output_dir = store.as_dir()
+    write_shard(g, shard_index, output_dir, ns_map, prefix="node")
+
+
 class JsonLdStreamDb(Db):
   """A DB implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk, bypassing SQLite."""
 
@@ -368,7 +414,7 @@ class JsonLdStreamDb(Db):
     self.ns_map = {"dcid": DCID_URL}
 
   def insert_observations(self, observations_df: pd.DataFrame, input_file: File):
-    from stats.jsonld_exporter import DCID_URL, _add_observation_to_graph, write_shard
+    import multiprocessing
     
     logging.info("Streaming %s observations to JSON-LD shards in %s",
                  len(observations_df), self.jsonld_dir.full_path())
@@ -382,50 +428,42 @@ class JsonLdStreamDb(Db):
     records = observations_df.to_records(index=False).tolist()
 
     chunk_size = 10000
-    DCID = Namespace(DCID_URL)
+    jsonld_dir_path = self.jsonld_dir.full_path()
 
+    args_list = []
     for i in range(0, len(records), chunk_size):
       chunk = records[i:i + chunk_size]
-      g = Graph()
-      g.bind("dcid", DCID)
-
-      for row in chunk:
-        _add_observation_to_graph(g, row, DCID, prov_urls)
-
-      write_shard(g, self.obs_shard_index, self.jsonld_dir, self.ns_map,
-                  prefix="observation")
+      args_list.append((chunk, self.obs_shard_index, jsonld_dir_path, self.ns_map, prov_urls))
       self.obs_shard_index += 1
 
+    num_processes = min(multiprocessing.cpu_count(), 8)
+    logging.info("Starting observations export with %d processes for %d chunks",
+                 num_processes, len(args_list))
+
+    with multiprocessing.Pool(processes=num_processes) as pool:
+      pool.map(_write_observation_shard, args_list)
+
   def insert_triples(self, triples: list[Triple]):
-    from stats.jsonld_exporter import DCID_URL, expand_id, write_shard
+    import multiprocessing
     
     logging.info("Streaming %s triples to JSON-LD shards in %s",
                  len(triples), self.jsonld_dir.full_path())
 
     chunk_size = 10000
-    DCID = Namespace(DCID_URL)
+    jsonld_dir_path = self.jsonld_dir.full_path()
 
+    args_list = []
     for i in range(0, len(triples), chunk_size):
       chunk = triples[i:i + chunk_size]
-      g = Graph()
-      g.bind("dcid", DCID)
-
-      for row in chunk:
-        sub = expand_id(row.subject_id)
-        p = expand_id(row.predicate)
-        if row.object_id:
-          o = expand_id(row.object_id)
-        else:
-          o = Literal(row.object_value)
-
-        if row.predicate == 'typeOf':
-          g.add((sub, RDF.type, o))
-        else:
-          g.add((sub, p, o))
-
-      write_shard(g, self.node_shard_index, self.jsonld_dir, self.ns_map,
-                  prefix="node")
+      args_list.append((chunk, self.node_shard_index, jsonld_dir_path, self.ns_map))
       self.node_shard_index += 1
+
+    num_processes = min(multiprocessing.cpu_count(), 8)
+    logging.info("Starting nodes export with %d processes for %d chunks",
+                 num_processes, len(args_list))
+
+    with multiprocessing.Pool(processes=num_processes) as pool:
+      pool.map(_write_node_shard, args_list)
 
   def commit(self):
     pass
