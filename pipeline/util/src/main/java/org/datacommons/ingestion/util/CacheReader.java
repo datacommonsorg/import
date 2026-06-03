@@ -15,7 +15,7 @@ import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.NodesEdges;
 import org.datacommons.ingestion.data.Observation;
-import static org.datacommons.ingestion.data.ProvenanceUtils.stripPrefix;
+
 import org.datacommons.proto.CacheData.EntityInfo;
 import org.datacommons.proto.CacheData.PagedEntities;
 import org.datacommons.proto.ChartStoreOuterClass.ChartStore;
@@ -142,18 +142,11 @@ public class CacheReader implements Serializable {
             // Triples with type Thing are from two different import groups.
             // The corresponding Node is a placeholder and shouldn't be added.
             // Instead it will be added as part of the import group where its defined.
-            boolean isReferenceNode = isOutArcCacheRow(row) ? !entity.getDcid().isEmpty() : true;
-            String finalNodeId = stripPrefix(nodeId, this.isBaseDc);
-            String finalNodeValue = isReferenceNode ? stripPrefix(nodeValue, this.isBaseDc) : nodeValue;
-            String finalSubjectId = stripPrefix(subjectId, this.isBaseDc);
-            String finalObjectId = stripPrefix(objectId, this.isBaseDc);
-            String finalProvenance = stripPrefix(entity.getProvenanceId(), this.isBaseDc);
-
-            if (!finalNodeId.isEmpty() && !typeOf.equals(PipelineUtils.TYPE_THING)) {
+            if (!nodeId.isEmpty() && !typeOf.equals(PipelineUtils.TYPE_THING)) {
               result.addNode(
                   Node.builder()
-                      .subjectId(finalNodeId)
-                      .value(finalNodeValue)
+                      .subjectId(nodeId)
+                      .value(nodeValue)
                       .bytes(bytes)
                       .name(entity.getName())
                       .types(types)
@@ -161,13 +154,13 @@ public class CacheReader implements Serializable {
             }
 
             // Add edge.
-            if (!finalSubjectId.isEmpty() && !finalObjectId.isEmpty()) {
+            if (!subjectId.isEmpty() && !objectId.isEmpty()) {
               result.addEdge(
                   Edge.builder()
-                      .subjectId(finalSubjectId)
+                      .subjectId(subjectId)
                       .predicate(predicate)
-                      .objectId(finalObjectId)
-                      .provenance(finalProvenance)
+                      .objectId(objectId)
+                      .provenance(entity.getProvenanceId())
                       .build());
             }
           }

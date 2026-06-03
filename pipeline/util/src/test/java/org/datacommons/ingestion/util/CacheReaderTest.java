@@ -253,36 +253,6 @@ public class CacheReaderTest {
   }
 
   @Test
-  public void testParseArcRowForInArcWithoutBaseDcPrefix() {
-    CacheReader reader = new CacheReader("datcom-store", false);
-    Counter mockMcfNodesWithoutTypeCounter = Mockito.mock(Counter.class);
-    String row =
-        "d/l/dc/d/UnitedNationsUn_SdgIndicatorsDatabase^isPartOf^Provenance^0,H4sIAAAAAAAAAOPS4GIL9YsPdnGX4ktJ1k9KLE7Vh/CV0PiCDGDwwR4AhMbiaDMAAAA=";
-
-    NodesEdges expected =
-        new NodesEdges()
-            .addNode(
-                Node.builder()
-                    .subjectId("UN_SDG")
-                    .value("UN_SDG")
-                    .name("UN_SDG")
-                    .types(List.of("Provenance"))
-                    .build())
-            .addEdge(
-                Edge.builder()
-                    .subjectId("UN_SDG")
-                    .predicate("isPartOf")
-                    .objectId("dc/d/UnitedNationsUn_SdgIndicatorsDatabase")
-                    .provenance("UN_SDG")
-                    .build());
-
-    NodesEdges actual = reader.parseArcRow(row, mockMcfNodesWithoutTypeCounter);
-
-    assertEquals(expected, actual);
-    Mockito.verify(mockMcfNodesWithoutTypeCounter, Mockito.times(0)).inc();
-  }
-
-  @Test
   public void testParseTimeSeriesRowWithoutBaseDcPrefix() {
     CacheReader reader = new CacheReader("datcom-store", false);
     String row =

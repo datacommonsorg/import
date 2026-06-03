@@ -18,17 +18,4 @@ public class ProvenanceUtils implements Serializable {
     return prefix + importName;
   }
 
-  /**
-   * Strips the 'dc/base/' prefix from the given ID if the run is not base DC.
-   *
-   * @param value The value to strip.
-   * @param isBaseDc Whether the run is base DC.
-   * @return The stripped value if not base DC and starts with prefix; otherwise the original value.
-   */
-  public static String stripPrefix(String value, boolean isBaseDc) {
-    if (!isBaseDc && value != null && value.startsWith(BASE_DC_PREFIX)) {
-      return value.substring(BASE_DC_PREFIX.length());
-    }
-    return value;
-  }
 }
