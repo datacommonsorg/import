@@ -43,6 +43,7 @@ from stats.db import get_datacommons_platform_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
 from stats.db import TYPE_CLOUD_SQL
+from stats.db import JsonLdStreamDb
 from stats.db_cache import get_db_cache_from_env
 from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
@@ -162,6 +163,9 @@ class Runner:
         _check_not_overlapping(input_store, output_store)
     self.all_stores.append(output_store)
     self.output_dir = output_store.as_dir()
+    self.nl_dir = None
+    if self.mode != RunMode.DCP_BRIDGE:
+      self.nl_dir = self.output_dir.open_dir(constants.NL_DIR_NAME)
     self.process_dir = self.output_dir.open_dir(constants.PROCESS_DIR_NAME)
 
     # Reporter.
