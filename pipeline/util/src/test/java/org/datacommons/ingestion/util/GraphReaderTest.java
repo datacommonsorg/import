@@ -340,7 +340,8 @@ public class GraphReaderTest {
             .observations(expectedObsValues)
             .build();
 
-    Observation actualObservation = GraphReader.graphToObservations(optimizedGraph, "test_import", true);
+    Observation actualObservation =
+        GraphReader.graphToObservations(optimizedGraph, "test_import", true);
 
     assertEquals(expectedObservation, actualObservation);
   }

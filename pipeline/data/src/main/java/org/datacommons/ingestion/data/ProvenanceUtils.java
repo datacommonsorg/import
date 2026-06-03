@@ -17,5 +17,4 @@ public class ProvenanceUtils implements Serializable {
     String prefix = isBaseDc ? BASE_DC_PREFIX : "";
     return prefix + importName;
   }
-
 }

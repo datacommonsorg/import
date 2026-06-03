@@ -15,7 +15,6 @@ import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.NodesEdges;
 import org.datacommons.ingestion.data.Observation;
-
 import org.datacommons.proto.CacheData.EntityInfo;
 import org.datacommons.proto.CacheData.PagedEntities;
 import org.datacommons.proto.ChartStoreOuterClass.ChartStore;
@@ -230,5 +229,4 @@ public class CacheReader implements Serializable {
   public static final boolean isObsTimeSeriesCacheRow(String row) {
     return row.startsWith(OBS_TIME_SERIES_CACHE_PREFIX);
   }
-
 }
