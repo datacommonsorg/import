@@ -40,6 +40,7 @@ from stats.data import McfNode
 from stats.data import STAT_VAR_GROUP
 from stats.data import STATISTICAL_VARIABLE
 from stats.data import Triple
+from stats.data import strip_namespace
 from util.filesystem import create_store
 from util.filesystem import Dir
 from util.filesystem import File
@@ -333,6 +334,104 @@ class MainDcDb(Db):
       node = McfNode(triple.subject_id)
       self.nodes[triple.subject_id] = node
     node.add_triple(triple)
+
+
+class JsonLdStreamDb(Db):
+  """A DB implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk, bypassing SQLite."""
+
+  def __init__(self, output_dir, import_names, nodes) -> None:
+    from datetime import timezone
+    from stats.jsonld_exporter import DCID_URL
+    self.output_dir = output_dir
+    self.import_names = import_names
+    self.nodes = nodes
+
+    # Generate unique folder name based on import name and timestamp
+    import_name = None
+    if isinstance(import_names, list):
+      if import_names == [constants.ALL_IMPORTS]:
+        import_name = constants.ALL_IMPORTS
+      else:
+        import_name = "_".join(import_names)
+
+    self.import_name = import_name or nodes.config.data.get(
+        "importName") or "default_import_name"
+    if self.import_name and "/" in self.import_name:
+      self.import_name = self.import_name.replace("/", "_")
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+    unique_dir_name = f"{self.import_name}_{timestamp}"
+    self.jsonld_dir = output_dir.open_dir("jsonld").open_dir(unique_dir_name)
+
+    self.obs_shard_index = 0
+    self.node_shard_index = 0
+    self.ns_map = {"dcid": DCID_URL}
+
+  def insert_observations(self, observations_df: pd.DataFrame, input_file: File):
+    from stats.jsonld_exporter import DCID_URL, _add_observation_to_graph, write_shard
+    
+    logging.info("Streaming %s observations to JSON-LD shards in %s",
+                 len(observations_df), self.jsonld_dir.full_path())
+
+    prov_urls = {}
+    for prov in self.nodes.provenances.values():
+      prov_id = strip_namespace(prov.id)
+      prov_urls[prov_id] = prov.url
+      prov_urls[prov.id] = prov.url
+
+    records = observations_df.to_records(index=False).tolist()
+
+    chunk_size = 10000
+    DCID = Namespace(DCID_URL)
+
+    for i in range(0, len(records), chunk_size):
+      chunk = records[i:i + chunk_size]
+      g = Graph()
+      g.bind("dcid", DCID)
+
+      for row in chunk:
+        _add_observation_to_graph(g, row, DCID, prov_urls)
+
+      write_shard(g, self.obs_shard_index, self.jsonld_dir, self.ns_map,
+                  prefix="observation")
+      self.obs_shard_index += 1
+
+  def insert_triples(self, triples: list[Triple]):
+    from stats.jsonld_exporter import DCID_URL, expand_id, write_shard
+    
+    logging.info("Streaming %s triples to JSON-LD shards in %s",
+                 len(triples), self.jsonld_dir.full_path())
+
+    chunk_size = 10000
+    DCID = Namespace(DCID_URL)
+
+    for i in range(0, len(triples), chunk_size):
+      chunk = triples[i:i + chunk_size]
+      g = Graph()
+      g.bind("dcid", DCID)
+
+      for row in chunk:
+        sub = expand_id(row.subject_id)
+        p = expand_id(row.predicate)
+        if row.object_id:
+          o = expand_id(row.object_id)
+        else:
+          o = Literal(row.object_value)
+
+        if row.predicate == 'typeOf':
+          g.add((sub, RDF.type, o))
+        else:
+          g.add((sub, p, o))
+
+      write_shard(g, self.node_shard_index, self.jsonld_dir, self.ns_map,
+                  prefix="node")
+      self.node_shard_index += 1
+
+  def commit(self):
+    pass
+
+  def commit_and_close(self):
+    pass
 
 
 class SqlDb(Db):

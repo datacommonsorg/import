@@ -41,6 +41,7 @@ from stats.db import get_datacommons_platform_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
 from stats.db import TYPE_CLOUD_SQL
+from stats.db import JsonLdStreamDb
 from stats.db_cache import get_db_cache_from_env
 from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
@@ -159,7 +160,9 @@ class Runner:
         _check_not_overlapping(input_store, output_store)
     self.all_stores.append(output_store)
     self.output_dir = output_store.as_dir()
-    self.nl_dir = self.output_dir.open_dir(constants.NL_DIR_NAME)
+    self.nl_dir = None
+    if self.mode != RunMode.DCP_BRIDGE:
+      self.nl_dir = self.output_dir.open_dir(constants.NL_DIR_NAME)
     self.process_dir = self.output_dir.open_dir(constants.PROCESS_DIR_NAME)
 
     # Reporter.
@@ -712,58 +715,19 @@ class Runner:
         f"Unsupported import type: {import_type} ({input_file.full_path()})")
 
   def _run_imports_and_export_jsonld(self):
-    # Force local SQLite DB for staging data in dcpbridge mode
-    logging.info("Forcing local SQLite DB for staging data in dcpbridge mode")
-    sqlite_file = self.output_dir.open_file("staging.db")
-    db_cfg = create_sqlite_config(sqlite_file)
-    self.db = create_and_update_db(db_cfg)
-
-    # Clear tables if needed
-    self.db.maybe_clear_before_import()
+    logging.info("Initializing JsonLdStreamDb to stream JSON-LD directly to GCS/Disk")
+    self.db = JsonLdStreamDb(self.output_dir, self.import_names, self.nodes)
 
     # Run data imports (CSV and MCF)
     self._run_all_data_imports()
 
-    # Generate triples from nodes
+    # Generate triples from nodes and write directly
     triples = self.nodes.triples()
     self.db.insert_triples(triples)
 
-    # Generate SVG hierarchy
-    self._generate_svg_hierarchy()
-
-    # Generate NL artifacts
-    self._generate_nl_artifacts()
-
-    # Write import info
-    self.db.insert_import_info(status=ImportStatus.SUCCESS)
-
-    # Export to JSON-LD
-    jsonld_dir = self.output_dir.open_dir("jsonld")
-
-    # Create a unique subfolder based on import name and timestamp for parallel runs
-    import_name = None
-    import_names = self.import_names
-    if isinstance(import_names, list):
-      if import_names == [constants.ALL_IMPORTS]:
-        import_name = constants.ALL_IMPORTS
-      else:
-        import_name = "_".join(import_names)
-
-    # TODO(gmechali): Remove the fallbacks.
-    import_name = import_name or self.config.data.get(
-        "importName") or "default_import_name"
-    if import_name and "/" in import_name:
-      import_name = import_name.replace("/", "_")
-
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
-    unique_dir_name = f"{import_name}_{timestamp}"
-    unique_jsonld_dir = jsonld_dir.open_dir(unique_dir_name)
-
-    self.db.commit()
-    export_to_jsonld(self.db, unique_jsonld_dir)
-
     # Auto-trigger workflow if output is on GCS
-    output_path = unique_jsonld_dir.full_path()
+    output_path = self.db.jsonld_dir.full_path()
+    import_name = self.db.import_name
     if os.getenv("INGESTION_WORKFLOW_NAME") and output_path.startswith("gs://"):
       gcs_pattern = f"{output_path.rstrip('/')}/*.jsonld"
       trigger_ingestion_workflow(gcs_pattern, import_name)
