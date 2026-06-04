@@ -338,20 +338,96 @@ class MainDcDb(Db):
 
 def _write_observation_shard(args):
   chunk, shard_index, jsonld_dir_path, ns_map, prov_urls = args
-  from rdflib import Graph, Namespace
-  from stats.jsonld_exporter import DCID_URL, _add_observation_to_graph, write_shard
   from util.filesystem import create_store
+  import hashlib
+  import json
+  import logging
 
-  DCID = Namespace(DCID_URL)
-  g = Graph()
-  g.bind("dcid", DCID)
+  def _uri_ref(val):
+    if not val:
+      return None
+    if val.startswith("http://") or val.startswith("https://"):
+      return {"@id": val}
+    if val.startswith("dcid:"):
+      return {"@id": val}
+    return {"@id": f"dcid:{val.lstrip('/')}"}
 
+  graph_list = []
+  
   for row in chunk:
-    _add_observation_to_graph(g, row, DCID, prov_urls)
+    entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
+    
+    key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}"
+    obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
+    
+    obs_obj = {
+      "@id": f"dcid:obs_{obs_hash}",
+      "@type": "dcid:StatVarObservation",
+      "dcid:observationAbout": _uri_ref(entity),
+      "dcid:variableMeasured": _uri_ref(variable)
+    }
+    
+    # Format date
+    try:
+      if str(date).isdigit():
+        obs_obj["dcid:observationDate"] = int(date)
+      else:
+        try:
+          obs_obj["dcid:observationDate"] = float(date)
+        except ValueError:
+          obs_obj["dcid:observationDate"] = str(date)
+    except Exception:
+      obs_obj["dcid:observationDate"] = str(date)
 
+    # Format value
+    try:
+      if '.' in str(value):
+        obs_obj["dcid:value"] = float(value)
+      else:
+        obs_obj["dcid:value"] = int(value)
+    except ValueError:
+      obs_obj["dcid:value"] = value
+
+    if provenance:
+      obs_obj["dcid:provenance"] = _uri_ref(provenance)
+      if provenance in prov_urls and prov_urls[provenance]:
+        obs_obj["dcid:provenanceUrl"] = prov_urls[provenance]
+    if unit:
+      obs_obj["dcid:unit"] = _uri_ref(unit)
+    if scaling_factor:
+      try:
+        if '.' in str(scaling_factor):
+          obs_obj["dcid:scalingFactor"] = float(scaling_factor)
+        else:
+          obs_obj["dcid:scalingFactor"] = int(scaling_factor)
+      except ValueError:
+        obs_obj["dcid:scalingFactor"] = scaling_factor
+    if mmethod:
+      obs_obj["dcid:measurementMethod"] = _uri_ref(mmethod)
+    if period:
+      obs_obj["dcid:observationPeriod"] = period
+
+    if props:
+      try:
+        props_dict = json.loads(props)
+        for k, v in props_dict.items():
+          prop_key = f"dcid:{k}" if not k.startswith("dcid:") and not k.startswith("http") else k
+          obs_obj[prop_key] = v
+      except Exception:
+        pass
+
+    graph_list.append(obs_obj)
+
+  compacted_jsonld = {
+    "@context": ns_map,
+    "@graph": graph_list
+  }
+
+  shard_name = f"observation-{shard_index:05d}.jsonld"
   with create_store(jsonld_dir_path) as store:
     output_dir = store.as_dir()
-    write_shard(g, shard_index, output_dir, ns_map, prefix="observation")
+    output_dir.open_file(shard_name).write(json.dumps(compacted_jsonld, indent=4))
+  logging.info(f"Saved JSON-LD shard to {shard_name}")
 
 
 def _write_node_shard(args):
@@ -434,9 +510,12 @@ class JsonLdStreamDb(Db):
     import multiprocessing
     num_processes = min(multiprocessing.cpu_count(), 8)
 
-    # Export observations in parallel
+    obs_args = []
+    node_args = []
+
+    # Prepare observations chunks
     if self._obs_dfs:
-      logging.info("Combining and exporting buffered observations to JSON-LD shards in %s",
+      logging.info("Combining and preparing buffered observations to JSON-LD shards in %s",
                    self.jsonld_dir.full_path())
       combined_obs_df = pd.concat(self._obs_dfs, ignore_index=True)
       records = combined_obs_df.to_records(index=False).tolist()
@@ -450,34 +529,32 @@ class JsonLdStreamDb(Db):
       chunk_size = 10000
       jsonld_dir_path = self.jsonld_dir.full_path()
 
-      obs_args = []
       for i in range(0, len(records), chunk_size):
         chunk = records[i:i + chunk_size]
         obs_args.append((chunk, self.obs_shard_index, jsonld_dir_path, self.ns_map, prov_urls))
         self.obs_shard_index += 1
 
-      logging.info("Starting observations export with %d processes for %d chunks",
-                   num_processes, len(obs_args))
-      with multiprocessing.Pool(processes=num_processes) as pool:
-        pool.map(_write_observation_shard, obs_args)
-
-    # Export triples in parallel
+    # Prepare triples chunks
     if self._triples:
-      logging.info("Exporting buffered %d triples to JSON-LD shards in %s",
+      logging.info("Preparing buffered %d triples to JSON-LD shards in %s",
                    len(self._triples), self.jsonld_dir.full_path())
       chunk_size = 10000
       jsonld_dir_path = self.jsonld_dir.full_path()
 
-      node_args = []
       for i in range(0, len(self._triples), chunk_size):
         chunk = self._triples[i:i + chunk_size]
         node_args.append((chunk, self.node_shard_index, jsonld_dir_path, self.ns_map))
         self.node_shard_index += 1
 
-      logging.info("Starting nodes export with %d processes for %d chunks",
-                   num_processes, len(node_args))
+    # Execute exports in parallel using a single Pool
+    if obs_args or node_args:
+      logging.info("Starting JSON-LD export with %d processes (observations: %d chunks, nodes: %d chunks)",
+                   num_processes, len(obs_args), len(node_args))
       with multiprocessing.Pool(processes=num_processes) as pool:
-        pool.map(_write_node_shard, node_args)
+        if obs_args:
+          pool.map(_write_observation_shard, obs_args)
+        if node_args:
+          pool.map(_write_node_shard, node_args)
 
 
 class SqlDb(Db):
