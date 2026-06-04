@@ -652,19 +652,40 @@ class JsonLdStreamDb(Db):
         # Bulk upload all generated JSON-LD shards from local temp dir to self.jsonld_dir
         files_to_upload = sorted(os.listdir(temp_local_dir))
         if files_to_upload:
+          target_path = self.jsonld_dir.full_path()
           logging.info("Bulk uploading %d JSON-LD shards to target directory %s in parallel",
-                       len(files_to_upload), self.jsonld_dir.full_path())
+                       len(files_to_upload), target_path)
           
-          local_store = create_store(temp_local_dir).as_dir()
-          target_store = self.jsonld_dir
+          if target_path.startswith("gs://"):
+            # Native GCS upload for high-speed multi-threaded execution
+            from google.cloud import storage
+            
+            parts = target_path[5:].split("/", 1)
+            bucket_name = parts[0]
+            blob_prefix = parts[1].rstrip("/") if len(parts) > 1 else ""
 
-          def _upload_fn(filename):
-            content = local_store.open_file(filename).read()
-            target_store.open_file(filename).write(content)
+            client = storage.Client()
+            bucket = client.bucket(bucket_name)
 
-          # Use 32 threads for high concurrency GCS uploads
-          with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
-            list(executor.map(_upload_fn, files_to_upload))
+            def _upload_gcs(filename):
+              local_file_path = os.path.join(temp_local_dir, filename)
+              blob_key = f"{blob_prefix}/{filename}" if blob_prefix else filename
+              blob = bucket.blob(blob_key)
+              blob.upload_from_filename(local_file_path)
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
+              list(executor.map(_upload_gcs, files_to_upload))
+          else:
+            # Local fallback (e.g. unit tests)
+            local_store = create_store(temp_local_dir).as_dir()
+            target_store = self.jsonld_dir
+
+            def _upload_local(filename):
+              content = local_store.open_file(filename).read()
+              target_store.open_file(filename).write(content)
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
+              list(executor.map(_upload_local, files_to_upload))
 
           logging.info("Bulk upload of JSON-LD shards completed successfully.")
 

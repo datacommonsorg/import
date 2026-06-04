@@ -55,6 +55,10 @@ _FREEZE_TIME_IGNORE_LIST = ["transformers"]
 
 
 def _run():
+  # Configure requests adapter default pool size to support parallel GCS uploads
+  import requests.adapters
+  requests.adapters.DEFAULT_POOLSIZE = 32
+
   initialize_logger()
   logging.info("Starting stats data importer job in mode: %s", FLAGS.mode)
 
