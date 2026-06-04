@@ -412,16 +412,20 @@ class JsonLdStreamDb(Db):
     self.obs_shard_index = 0
     self.node_shard_index = 0
     self.ns_map = {"dcid": DCID_URL}
+    import threading
+    self.lock = threading.Lock()
     self._obs_dfs = []
     self._triples = []
 
   def insert_observations(self, observations_df: pd.DataFrame, input_file: File):
     if not observations_df.empty:
-      self._obs_dfs.append(observations_df)
+      with self.lock:
+        self._obs_dfs.append(observations_df)
 
   def insert_triples(self, triples: list[Triple]):
     if triples:
-      self._triples.extend(triples)
+      with self.lock:
+        self._triples.extend(triples)
 
   def commit(self):
     pass
