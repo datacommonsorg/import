@@ -412,64 +412,68 @@ class JsonLdStreamDb(Db):
     self.obs_shard_index = 0
     self.node_shard_index = 0
     self.ns_map = {"dcid": DCID_URL}
+    self._obs_dfs = []
+    self._triples = []
 
   def insert_observations(self, observations_df: pd.DataFrame, input_file: File):
-    import multiprocessing
-    
-    logging.info("Streaming %s observations to JSON-LD shards in %s",
-                 len(observations_df), self.jsonld_dir.full_path())
-
-    prov_urls = {}
-    for prov in self.nodes.provenances.values():
-      prov_id = strip_namespace(prov.id)
-      prov_urls[prov_id] = prov.url
-      prov_urls[prov.id] = prov.url
-
-    records = observations_df.to_records(index=False).tolist()
-
-    chunk_size = 10000
-    jsonld_dir_path = self.jsonld_dir.full_path()
-
-    args_list = []
-    for i in range(0, len(records), chunk_size):
-      chunk = records[i:i + chunk_size]
-      args_list.append((chunk, self.obs_shard_index, jsonld_dir_path, self.ns_map, prov_urls))
-      self.obs_shard_index += 1
-
-    num_processes = min(multiprocessing.cpu_count(), 8)
-    logging.info("Starting observations export with %d processes for %d chunks",
-                 num_processes, len(args_list))
-
-    with multiprocessing.Pool(processes=num_processes) as pool:
-      pool.map(_write_observation_shard, args_list)
+    if not observations_df.empty:
+      self._obs_dfs.append(observations_df)
 
   def insert_triples(self, triples: list[Triple]):
-    import multiprocessing
-    
-    logging.info("Streaming %s triples to JSON-LD shards in %s",
-                 len(triples), self.jsonld_dir.full_path())
-
-    chunk_size = 10000
-    jsonld_dir_path = self.jsonld_dir.full_path()
-
-    args_list = []
-    for i in range(0, len(triples), chunk_size):
-      chunk = triples[i:i + chunk_size]
-      args_list.append((chunk, self.node_shard_index, jsonld_dir_path, self.ns_map))
-      self.node_shard_index += 1
-
-    num_processes = min(multiprocessing.cpu_count(), 8)
-    logging.info("Starting nodes export with %d processes for %d chunks",
-                 num_processes, len(args_list))
-
-    with multiprocessing.Pool(processes=num_processes) as pool:
-      pool.map(_write_node_shard, args_list)
+    if triples:
+      self._triples.extend(triples)
 
   def commit(self):
     pass
 
   def commit_and_close(self):
-    pass
+    import multiprocessing
+    num_processes = min(multiprocessing.cpu_count(), 8)
+
+    # Export observations in parallel
+    if self._obs_dfs:
+      logging.info("Combining and exporting buffered observations to JSON-LD shards in %s",
+                   self.jsonld_dir.full_path())
+      combined_obs_df = pd.concat(self._obs_dfs, ignore_index=True)
+      records = combined_obs_df.to_records(index=False).tolist()
+
+      prov_urls = {}
+      for prov in self.nodes.provenances.values():
+        prov_id = strip_namespace(prov.id)
+        prov_urls[prov_id] = prov.url
+        prov_urls[prov.id] = prov.url
+
+      chunk_size = 10000
+      jsonld_dir_path = self.jsonld_dir.full_path()
+
+      obs_args = []
+      for i in range(0, len(records), chunk_size):
+        chunk = records[i:i + chunk_size]
+        obs_args.append((chunk, self.obs_shard_index, jsonld_dir_path, self.ns_map, prov_urls))
+        self.obs_shard_index += 1
+
+      logging.info("Starting observations export with %d processes for %d chunks",
+                   num_processes, len(obs_args))
+      with multiprocessing.Pool(processes=num_processes) as pool:
+        pool.map(_write_observation_shard, obs_args)
+
+    # Export triples in parallel
+    if self._triples:
+      logging.info("Exporting buffered %d triples to JSON-LD shards in %s",
+                   len(self._triples), self.jsonld_dir.full_path())
+      chunk_size = 10000
+      jsonld_dir_path = self.jsonld_dir.full_path()
+
+      node_args = []
+      for i in range(0, len(self._triples), chunk_size):
+        chunk = self._triples[i:i + chunk_size]
+        node_args.append((chunk, self.node_shard_index, jsonld_dir_path, self.ns_map))
+        self.node_shard_index += 1
+
+      logging.info("Starting nodes export with %d processes for %d chunks",
+                   num_processes, len(node_args))
+      with multiprocessing.Pool(processes=num_processes) as pool:
+        pool.map(_write_node_shard, node_args)
 
 
 class SqlDb(Db):
