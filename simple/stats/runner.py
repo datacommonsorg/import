@@ -649,6 +649,11 @@ class Runner:
 
     self.reporter.report_started(import_files=list(input_csv_files +
                                                    input_mcf_files))
+    import threading
+    self._completed_files_count = 0
+    self._total_files_count = len(input_csv_files) + len(input_mcf_files)
+    self._counter_lock = threading.Lock()
+
     if self.mode == RunMode.DCP_BRIDGE:
       import concurrent.futures
       num_threads = min(32, (len(input_csv_files) + len(input_mcf_files)) or 1)
@@ -671,11 +676,17 @@ class Runner:
         self._run_single_mcf_import(input_mcf_file)
 
   def _run_single_import(self, input_file: File):
-    logging.info("Importing file: %s", input_file)
+    with self._counter_lock:
+      self._completed_files_count += 1
+      current_count = self._completed_files_count
+    logging.info("[%d/%d] Importing file: %s", current_count, self._total_files_count, input_file)
     self._create_importer(input_file).do_import()
 
   def _run_single_mcf_import(self, input_mcf_file: File):
-    logging.info("Importing MCF file: %s", input_mcf_file)
+    with self._counter_lock:
+      self._completed_files_count += 1
+      current_count = self._completed_files_count
+    logging.info("[%d/%d] Importing MCF file: %s", current_count, self._total_files_count, input_mcf_file)
     self._create_mcf_importer(input_mcf_file, self.output_dir,
                               self.mode == RunMode.MAIN_DC).do_import()
 
