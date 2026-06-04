@@ -57,6 +57,7 @@ _FREEZE_TIME_IGNORE_LIST = ["transformers"]
 
 def _run():
   # Configure requests adapter default pool size to support parallel GCS uploads
+
   requests.adapters.DEFAULT_POOLSIZE = 32
 
   initialize_logger()
