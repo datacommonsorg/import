@@ -22,21 +22,19 @@ import json
 import logging
 import multiprocessing
 import os
-import requests
 import tempfile
 import threading
 
 from google.cloud import storage
-
 import pandas as pd
 from rdflib import Graph
 from rdflib import Literal
 from rdflib import Namespace
 from rdflib import RDF
-
+import requests
 from stats import constants
-from stats.data import Triple
 from stats.data import strip_namespace
+from stats.data import Triple
 from stats.db import Db
 from stats.jsonld_exporter import DCID_URL
 from stats.jsonld_exporter import expand_id
@@ -341,12 +339,10 @@ class JsonLdStreamDb(Db):
     blob_prefix = parts[1].rstrip("/") if len(parts) > 1 else ""
 
     client = storage.Client()
-    
+
     # Configure connection pool size for concurrent GCS uploads
     adapter = requests.adapters.HTTPAdapter(
-        pool_connections=_UPLOAD_CONCURRENCY,
-        pool_maxsize=_UPLOAD_CONCURRENCY
-    )
+        pool_connections=_UPLOAD_CONCURRENCY, pool_maxsize=_UPLOAD_CONCURRENCY)
     client._http.mount("https://", adapter)
     client._http.mount("http://", adapter)
 

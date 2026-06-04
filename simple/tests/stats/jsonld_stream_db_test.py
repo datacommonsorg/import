@@ -19,7 +19,6 @@ import unittest
 from unittest import mock
 
 import pandas as pd
-
 from stats.data import Triple
 from stats.jsonld_stream_db import JsonLdStreamDb
 from util.filesystem import create_store
@@ -40,11 +39,9 @@ class TestJsonLdStreamDb(unittest.TestCase):
     with tempfile.TemporaryDirectory() as temp_dir:
       temp_store = create_store(temp_dir)
 
-      db = JsonLdStreamDb(
-          output_dir=temp_store.as_dir(),
-          import_names=["test_import"],
-          nodes=self.mock_nodes
-      )
+      db = JsonLdStreamDb(output_dir=temp_store.as_dir(),
+                          import_names=["test_import"],
+                          nodes=self.mock_nodes)
 
       # The jsonld folder should be created under the output dir
       self.assertTrue(os.path.isdir(os.path.join(temp_dir, "jsonld")))
@@ -57,11 +54,9 @@ class TestJsonLdStreamDb(unittest.TestCase):
   def test_insert_observations_and_triples(self):
     with tempfile.TemporaryDirectory() as temp_dir:
       temp_store = create_store(temp_dir)
-      db = JsonLdStreamDb(
-          output_dir=temp_store.as_dir(),
-          import_names=["test_import"],
-          nodes=self.mock_nodes
-      )
+      db = JsonLdStreamDb(output_dir=temp_store.as_dir(),
+                          import_names=["test_import"],
+                          nodes=self.mock_nodes)
 
       # Insert observations
       df = pd.DataFrame([("e1", "v1", "2026", "100", "p1", "", "", "", "", "")],
@@ -83,11 +78,9 @@ class TestJsonLdStreamDb(unittest.TestCase):
   def test_commit_and_close_local(self):
     with tempfile.TemporaryDirectory() as temp_dir:
       temp_store = create_store(temp_dir)
-      db = JsonLdStreamDb(
-          output_dir=temp_store.as_dir(),
-          import_names=["test_import"],
-          nodes=self.mock_nodes
-      )
+      db = JsonLdStreamDb(output_dir=temp_store.as_dir(),
+                          import_names=["test_import"],
+                          nodes=self.mock_nodes)
 
       # Insert observations
       df = pd.DataFrame([("e1", "v1", "2026", "100", "p1", "", "", "", "", "")],
@@ -146,11 +139,9 @@ class TestJsonLdStreamDb(unittest.TestCase):
       mock_output_dir.open_dir.return_value.open_dir.return_value.full_path.return_value = "gs://my-bucket/ingestion/test"
       mock_output_dir.open_dir.return_value.open_dir.return_value.isdir.return_value = False
 
-      db = JsonLdStreamDb(
-          output_dir=mock_output_dir,
-          import_names=["test_import"],
-          nodes=self.mock_nodes
-      )
+      db = JsonLdStreamDb(output_dir=mock_output_dir,
+                          import_names=["test_import"],
+                          nodes=self.mock_nodes)
 
       # Insert observation
       df = pd.DataFrame([("e1", "v1", "2026", "100", "p1", "", "", "", "", "")],
@@ -169,33 +160,43 @@ class TestJsonLdStreamDb(unittest.TestCase):
       mock_client_instance.bucket.assert_called_with("my-bucket")
 
       # Verify upload blob calls
-      mock_bucket.blob.assert_called_with("ingestion/test/observation-00000.jsonld")
+      mock_bucket.blob.assert_called_with(
+          "ingestion/test/observation-00000.jsonld")
       mock_blob.upload_from_filename.assert_called_once()
 
   def test_node_fast_vs_rdflib_parity(self):
     """Rigorous parity test: Compares fast path output with rdflib path output."""
-    from stats.jsonld_stream_db import _write_node_shard_fast, _write_node_shard_rdflib
-    
+    from stats.jsonld_stream_db import _write_node_shard_fast
+    from stats.jsonld_stream_db import _write_node_shard_rdflib
+
     complex_triples = [
-        Triple(subject_id="sub1", predicate="typeOf", object_id="StatisticalVariable"),
+        Triple(subject_id="sub1",
+               predicate="typeOf",
+               object_id="StatisticalVariable"),
         Triple(subject_id="sub1", predicate="name", object_value="Test Node"),
         # Multi-valued properties
-        Triple(subject_id="sub1", predicate="alternateName", object_value="Alias A"),
-        Triple(subject_id="sub1", predicate="alternateName", object_value="Alias B"),
+        Triple(subject_id="sub1",
+               predicate="alternateName",
+               object_value="Alias A"),
+        Triple(subject_id="sub1",
+               predicate="alternateName",
+               object_value="Alias B"),
         # References vs Values
         Triple(subject_id="sub1", predicate="memberOf", object_id="groupA"),
         # Number types
         Triple(subject_id="sub1", predicate="countValue", object_value=15.8),
         Triple(subject_id="sub1", predicate="intValue", object_value=99),
         # External URL predicate/object
-        Triple(subject_id="sub1", predicate="http://schema.org/url", object_id="https://example.org"),
+        Triple(subject_id="sub1",
+               predicate="http://schema.org/url",
+               object_id="https://example.org"),
     ]
     from stats.jsonld_exporter import DCID_URL
     ns_map = {"dcid": DCID_URL}
 
     with tempfile.TemporaryDirectory() as temp_dir_fast, \
          tempfile.TemporaryDirectory() as temp_dir_rdflib:
-      
+
       _write_node_shard_fast((complex_triples, 0, temp_dir_fast, ns_map))
       _write_node_shard_rdflib((complex_triples, 0, temp_dir_rdflib, ns_map))
 
@@ -223,8 +224,8 @@ class TestJsonLdStreamDb(unittest.TestCase):
             if isinstance(v, list):
               sorted_v = sorted(
                   v,
-                  key=lambda x: x["@id"] if isinstance(x, dict) and "@id" in x else str(x)
-              )
+                  key=lambda x: x["@id"]
+                  if isinstance(x, dict) and "@id" in x else str(x))
               normalized_item[k] = sorted_v
             else:
               normalized_item[k] = v
@@ -247,9 +248,12 @@ class TestJsonLdStreamDb(unittest.TestCase):
     # Rows with edge-case numbers and strings
     chunk = [
         # entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props
-        ("country/ALB", "v1", "2026", "99", "p1", "unit1", "100", "m1", "P1Y", custom_props),
-        ("country/USA", "v1", "2026.5", "123.45", "p1", None, "10.5", None, None, None),
-        ("country/IND", "v1", "2026-06", "Unavailable", "p1", None, None, None, None, None),
+        ("country/ALB", "v1", "2026", "99", "p1", "unit1", "100", "m1", "P1Y",
+         custom_props),
+        ("country/USA", "v1", "2026.5", "123.45", "p1", None, "10.5", None,
+         None, None),
+        ("country/IND", "v1", "2026-06", "Unavailable", "p1", None, None, None,
+         None, None),
     ]
 
     ns_map = {"dcid": "https://datacommons.org/ontology/"}
@@ -269,26 +273,36 @@ class TestJsonLdStreamDb(unittest.TestCase):
       self.assertEqual(len(graph), 3)
 
       # 1. Verify first observation (Int types, Custom Props)
-      obs1 = [o for o in graph if o["dcid:observationAbout"]["@id"] == "dcid:country/ALB"][0]
+      obs1 = [
+          o for o in graph
+          if o["dcid:observationAbout"]["@id"] == "dcid:country/ALB"
+      ][0]
       self.assertEqual(obs1["dcid:value"], 99)
       self.assertEqual(obs1["dcid:observationDate"], 2026)
       self.assertEqual(obs1["dcid:scalingFactor"], 100)
-      self.assertEqual(obs1["dcid:provenanceUrl"], "http://my-provenance.org/url")
+      self.assertEqual(obs1["dcid:provenanceUrl"],
+                       "http://my-provenance.org/url")
       self.assertEqual(obs1["dcid:observationPeriod"], "P1Y")
-      
+
       # Verify custom properties from JSON string
       self.assertEqual(obs1["dcid:customIntProp"], 42)
       self.assertEqual(obs1["dcid:customStrProp"], "customVal")
       self.assertEqual(obs1["http://schema.org/url"], "https://test-prop.org")
 
       # 2. Verify second observation (Float types)
-      obs2 = [o for o in graph if o["dcid:observationAbout"]["@id"] == "dcid:country/USA"][0]
+      obs2 = [
+          o for o in graph
+          if o["dcid:observationAbout"]["@id"] == "dcid:country/USA"
+      ][0]
       self.assertEqual(obs2["dcid:value"], 123.45)
       self.assertEqual(obs2["dcid:observationDate"], 2026.5)
       self.assertEqual(obs2["dcid:scalingFactor"], 10.5)
 
       # 3. Verify third observation (Non-numeric value & Date string)
-      obs3 = [o for o in graph if o["dcid:observationAbout"]["@id"] == "dcid:country/IND"][0]
+      obs3 = [
+          o for o in graph
+          if o["dcid:observationAbout"]["@id"] == "dcid:country/IND"
+      ][0]
       self.assertEqual(obs3["dcid:value"], "Unavailable")
       self.assertEqual(obs3["dcid:observationDate"], "2026-06")
 

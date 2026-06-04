@@ -14,11 +14,11 @@
 
 import logging
 import os
-import requests.adapters
 
 from absl import app
 from absl import flags
 from freezegun import freeze_time
+import requests.adapters
 from stats import constants
 from stats.logger import initialize_logger
 from stats.runner import RunMode
