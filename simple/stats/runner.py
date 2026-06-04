@@ -663,6 +663,7 @@ class Runner:
     self._total_files_count = len(csv_files) + len(mcf_files)
     self._counter_lock = threading.Lock()
 
+
     if self.mode == RunMode.DCP_BRIDGE:
       num_threads = min(32, self._total_files_count or 1)
       logging.info("Starting parallel ingestion of data files with %d threads",
