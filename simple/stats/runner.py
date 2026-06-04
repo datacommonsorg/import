@@ -172,6 +172,7 @@ class Runner:
     self.nodes = Nodes(self.config)
     self.db = None
     self.db_cache = None
+    self.trigger_workflow_info = None
 
   def run(self):
     # Check if blue-green is enabled
@@ -215,6 +216,11 @@ class Runner:
       for store in self.all_stores:
         store.close()
       logging.info("File storage closed.")
+
+      # Auto-trigger workflow now that all data is guaranteed to be exported and written to GCS
+      if self.trigger_workflow_info:
+        gcs_pattern, import_name = self.trigger_workflow_info
+        trigger_ingestion_workflow(gcs_pattern, import_name)
 
     except Exception as e:
       logging.exception("Error updating stats")
@@ -746,7 +752,7 @@ class Runner:
     import_name = self.db.import_name
     if os.getenv("INGESTION_WORKFLOW_NAME") and output_path.startswith("gs://"):
       gcs_pattern = f"{output_path.rstrip('/')}/*.jsonld"
-      trigger_ingestion_workflow(gcs_pattern, import_name)
+      self.trigger_workflow_info = (gcs_pattern, import_name)
     else:
       logging.info(
           "Output is local or workflow is missing, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually."
