@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+from functools import wraps
 import re
 
 import pandas as pd
@@ -52,9 +53,20 @@ _DEFAULT_PROVENANCE = Provenance(id=f"{_CUSTOM_PROVENANCE_ID_PREFIX}default",
                                  url="custom-import")
 
 
+def thread_safe(func):
+  """Decorator to make a method thread-safe using the object's reentrant lock."""
+  @wraps(func)
+  def wrapper(self, *args, **kwargs):
+    with self.lock:
+      return func(self, *args, **kwargs)
+  return wrapper
+
+
 class Nodes:
 
   def __init__(self, config: Config) -> None:
+    import threading
+    self.lock = threading.RLock()
     self.config = config
     # Custom namespace
     self._custom_id_namespace = self.config.custom_id_namespace()
@@ -122,10 +134,12 @@ class Nodes:
 
     return source.id
 
+  @thread_safe
   def provenance(self, input_file: File) -> Provenance:
     prov_name = self.config.provenance_name(input_file)
     return self.provenances.get(prov_name, _DEFAULT_PROVENANCE)
 
+  @thread_safe
   def variable(self, sv_column_name: str, input_file: File) -> StatVar:
     if not sv_column_name in self.variables:
       var_cfg = self.config.variable(sv_column_name)
@@ -142,6 +156,7 @@ class Nodes:
     return self._add_provenance(self.variables[sv_column_name],
                                 self.provenance(input_file))
 
+  @thread_safe
   def property(self, property_column_name: str) -> Property:
     if not property_column_name in self.properties:
       self.properties[property_column_name] = Property(
@@ -149,6 +164,7 @@ class Nodes:
 
     return self.properties[property_column_name]
 
+  @thread_safe
   def event_type(self, event_type_name: str, input_file: File) -> EventType:
     if not event_type_name in self.event_types:
       event_type_cfg = self.config.event(event_type_name)
@@ -160,6 +176,7 @@ class Nodes:
     return self.event_types[event_type_name].add_provenance(
         self.provenance(input_file))
 
+  @thread_safe
   def entity_type(self, entity_type_name: str, input_file: File) -> EntityType:
     if not entity_type_name in self.entity_types:
       entity_type_cfg = self.config.entity(entity_type_name)
@@ -227,6 +244,7 @@ class Nodes:
     self._entity_type_generated_id_count += 1
     return f"{_CUSTOM_ENTITY_TYPE_ID_PREFIX}{self._entity_type_generated_id_count}"
 
+  @thread_safe
   def group(self, group_path: str) -> StatVarGroup | None:
     if not group_path:
       return self._default_custom_group()
@@ -257,14 +275,17 @@ class Nodes:
       self.groups[_DEFAULT_CUSTOM_GROUP_PATH] = svg
     return self.groups[_DEFAULT_CUSTOM_GROUP_PATH]
 
+  @thread_safe
   def entity_with_type(self, entity_dcid: str, entity_type: str):
     if entity_dcid not in self.entities:
       self.entities[entity_dcid] = Entity(entity_dcid, entity_type)
 
+  @thread_safe
   def entities_with_type(self, entity_dcids: list[str], entity_type: str):
     for entity_dcid in entity_dcids:
       self.entity_with_type(entity_dcid, entity_type)
 
+  @thread_safe
   def entities_with_types(self, dcid2type: dict[str, str]):
     """
     Adds each dcid2type mapping to the list of entities with their types.
@@ -273,6 +294,7 @@ class Nodes:
     for entity_dcid, entity_type in dcid2type.items():
       self.entity_with_type(entity_dcid, entity_type)
 
+  @thread_safe
   def triples(self, triples_file: File | None = None) -> list[Triple]:
     triples: list[Triple] = []
     for source in self.sources.values():

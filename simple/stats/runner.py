@@ -643,10 +643,26 @@ class Runner:
 
     self.reporter.report_started(import_files=list(input_csv_files +
                                                    input_mcf_files))
-    for input_csv_file in input_csv_files:
-      self._run_single_import(input_csv_file)
-    for input_mcf_file in input_mcf_files:
-      self._run_single_mcf_import(input_mcf_file)
+    if self.mode == RunMode.DCP_BRIDGE:
+      import concurrent.futures
+      num_threads = min(32, (len(input_csv_files) + len(input_mcf_files)) or 1)
+      logging.info("Starting parallel ingestion of data files with %d threads", num_threads)
+
+      with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+        futures = []
+        for input_csv_file in input_csv_files:
+          futures.append(executor.submit(self._run_single_import, input_csv_file))
+        for input_mcf_file in input_mcf_files:
+          futures.append(executor.submit(self._run_single_mcf_import, input_mcf_file))
+
+        # Wait for all files to be processed and propagate any exception
+        for future in concurrent.futures.as_completed(futures):
+          future.result()
+    else:
+      for input_csv_file in input_csv_files:
+        self._run_single_import(input_csv_file)
+      for input_mcf_file in input_mcf_files:
+        self._run_single_mcf_import(input_mcf_file)
 
   def _run_single_import(self, input_file: File):
     logging.info("Importing file: %s", input_file)
