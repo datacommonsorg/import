@@ -510,6 +510,7 @@ class JsonLdStreamDb(Db):
     import multiprocessing
     import tempfile
     import os
+    import gc
     import concurrent.futures
     from util.filesystem import create_store
 
@@ -518,14 +519,10 @@ class JsonLdStreamDb(Db):
     with tempfile.TemporaryDirectory() as temp_local_dir:
       logging.info("Using local temporary directory for export buffering: %s", temp_local_dir)
 
-      obs_args = []
-      node_args = []
-
-      # Prepare observations chunks
-      if self._obs_dfs:
-        logging.info("Combining and preparing buffered observations to JSON-LD shards")
-        combined_obs_df = pd.concat(self._obs_dfs, ignore_index=True)
-        records = combined_obs_df.to_records(index=False).tolist()
+      # 1. Observations streaming generator
+      def _obs_chunk_generator():
+        chunk_size = 10000
+        current_chunk = []
 
         prov_urls = {}
         for prov in self.nodes.provenances.values():
@@ -533,33 +530,48 @@ class JsonLdStreamDb(Db):
           prov_urls[prov_id] = prov.url
           prov_urls[prov.id] = prov.url
 
-        chunk_size = 10000
+        # Pop DataFrames one-by-one to release their memory immediately
+        while self._obs_dfs:
+          df = self._obs_dfs.pop(0)
+          records = df.to_records(index=False).tolist()
+          
+          # Explicitly delete DataFrame reference and collect memory
+          del df
+          gc.collect()
 
-        for i in range(0, len(records), chunk_size):
-          chunk = records[i:i + chunk_size]
-          obs_args.append((chunk, self.obs_shard_index, temp_local_dir, self.ns_map, prov_urls))
+          for record in records:
+            current_chunk.append(record)
+            if len(current_chunk) == chunk_size:
+              yield (current_chunk, self.obs_shard_index, temp_local_dir, self.ns_map, prov_urls)
+              self.obs_shard_index += 1
+              current_chunk = []
+
+        if current_chunk:
+          yield (current_chunk, self.obs_shard_index, temp_local_dir, self.ns_map, prov_urls)
           self.obs_shard_index += 1
 
-      # Prepare triples chunks
-      if self._triples:
-        logging.info("Preparing buffered %d triples to JSON-LD shards",
-                     len(self._triples))
+      # 2. Triples streaming generator
+      def _node_chunk_generator():
         chunk_size = 10000
-
-        for i in range(0, len(self._triples), chunk_size):
-          chunk = self._triples[i:i + chunk_size]
-          node_args.append((chunk, self.node_shard_index, temp_local_dir, self.ns_map))
+        while self._triples:
+          chunk = self._triples[:chunk_size]
+          del self._triples[:chunk_size]
+          gc.collect()
+          yield (chunk, self.node_shard_index, temp_local_dir, self.ns_map)
           self.node_shard_index += 1
 
-      # Execute exports in parallel locally (very fast, no GCS latency)
-      if obs_args or node_args:
-        logging.info("Starting JSON-LD local export with %d processes (observations: %d chunks, nodes: %d chunks)",
-                     num_processes, len(obs_args), len(node_args))
+      # Execute exports in parallel streaming format (flat memory usage)
+      if self._obs_dfs or self._triples:
+        logging.info("Starting JSON-LD local export with %d processes in streaming mode", num_processes)
         with multiprocessing.Pool(processes=num_processes) as pool:
-          if obs_args:
-            pool.map(_write_observation_shard, obs_args)
-          if node_args:
-            pool.map(_write_node_shard, node_args)
+          if self._obs_dfs:
+            logging.info("Streaming observations export...")
+            for _ in pool.imap(_write_observation_shard, _obs_chunk_generator()):
+              pass
+          if self._triples:
+            logging.info("Streaming triples export...")
+            for _ in pool.imap(_write_node_shard, _node_chunk_generator()):
+              pass
 
         # Bulk upload all generated JSON-LD shards from local temp dir to self.jsonld_dir
         files_to_upload = sorted(os.listdir(temp_local_dir))
