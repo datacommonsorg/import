@@ -61,6 +61,17 @@ def _uri_ref(val):
   return {"@id": f"dcid:{val.lstrip('/')}"}
 
 
+def _parse_numeric(val):
+  if val is None or val == "":
+    return None
+  try:
+    if "." in str(val):
+      return float(val)
+    return int(val)
+  except ValueError:
+    return str(val)
+
+
 def _write_observation_shard(args):
   chunk, shard_index, jsonld_dir_path, ns_map, prov_urls = args
   graph_list = []
@@ -75,29 +86,10 @@ def _write_observation_shard(args):
         "@id": f"dcid:obs_{obs_hash}",
         "@type": "dcid:StatVarObservation",
         "dcid:observationAbout": _uri_ref(entity),
-        "dcid:variableMeasured": _uri_ref(variable)
+        "dcid:variableMeasured": _uri_ref(variable),
+        "dcid:observationDate": _parse_numeric(date),
+        "dcid:value": _parse_numeric(value),
     }
-
-    # Format date
-    try:
-      if str(date).isdigit():
-        obs_obj["dcid:observationDate"] = int(date)
-      else:
-        try:
-          obs_obj["dcid:observationDate"] = float(date)
-        except ValueError:
-          obs_obj["dcid:observationDate"] = str(date)
-    except Exception:
-      obs_obj["dcid:observationDate"] = str(date)
-
-    # Format value
-    try:
-      if '.' in str(value):
-        obs_obj["dcid:value"] = float(value)
-      else:
-        obs_obj["dcid:value"] = int(value)
-    except ValueError:
-      obs_obj["dcid:value"] = value
 
     if provenance:
       obs_obj["dcid:provenance"] = _uri_ref(provenance)
@@ -106,13 +98,7 @@ def _write_observation_shard(args):
     if unit:
       obs_obj["dcid:unit"] = _uri_ref(unit)
     if scaling_factor:
-      try:
-        if '.' in str(scaling_factor):
-          obs_obj["dcid:scalingFactor"] = float(scaling_factor)
-        else:
-          obs_obj["dcid:scalingFactor"] = int(scaling_factor)
-      except ValueError:
-        obs_obj["dcid:scalingFactor"] = scaling_factor
+      obs_obj["dcid:scalingFactor"] = _parse_numeric(scaling_factor)
     if mmethod:
       obs_obj["dcid:measurementMethod"] = _uri_ref(mmethod)
     if period:
@@ -172,14 +158,7 @@ def _write_node_shard_fast(args):
     if row.object_id:
       val = _uri_ref(row.object_id)
     else:
-      obj_val = row.object_value
-      try:
-        if '.' in str(obj_val):
-          val = float(obj_val)
-        else:
-          val = int(obj_val)
-      except ValueError:
-        val = str(obj_val)
+      val = _parse_numeric(row.object_value)
 
     if pred_key == "@type":
       val_str = val["@id"] if isinstance(val,
@@ -208,6 +187,14 @@ def _write_node_shard_fast(args):
 
 
 def _write_node_shard_rdflib(args):
+  """
+  Writes a chunk of triples to a JSON-LD shard using rdflib.
+  Args:
+    args: Tuple containing (chunk, shard_index, jsonld_dir_path, ns_map)
+  """
+
+  # TODO(gmechali): Completely deprecate this path after we have 100% certainty in the direct export.
+  # note that this path is exponentially slower.
   chunk, shard_index, jsonld_dir_path, ns_map = args
   DCID = Namespace(DCID_URL)
   g = Graph()
@@ -232,7 +219,7 @@ def _write_node_shard_rdflib(args):
 
 
 class JsonLdStreamDb(Db):
-  """A DB implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk, bypassing SQLite."""
+  """A DB implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk."""
 
   def __init__(self, output_dir, import_names, nodes) -> None:
     self.output_dir = output_dir
