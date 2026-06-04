@@ -12,10 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import concurrent.futures
 from dataclasses import dataclass
 from datetime import datetime
+from datetime import timezone
 from enum import auto
 from enum import Enum
+import gc
+import multiprocessing
+import tempfile
+import threading
 import json
 import logging
 import os
@@ -536,11 +542,16 @@ def _write_node_shard_rdflib(args):
     write_shard(g, shard_index, output_dir, ns_map, prefix="node")
 
 
+# Constants for JsonLdStreamDb configurations
+_CHUNK_SIZE = 10000
+_UPLOAD_CONCURRENCY = 32
+_EXPORT_PROCESSES_MAX = 8
+
+
 class JsonLdStreamDb(Db):
   """A DB implementation that streams triples and observations directly to JSON-LD shards on GCS/Disk, bypassing SQLite."""
 
   def __init__(self, output_dir, import_names, nodes) -> None:
-    from datetime import timezone
     from stats.jsonld_exporter import DCID_URL
     self.output_dir = output_dir
     self.import_names = import_names
@@ -566,7 +577,6 @@ class JsonLdStreamDb(Db):
     self.obs_shard_index = 0
     self.node_shard_index = 0
     self.ns_map = {"dcid": DCID_URL}
-    import threading
     self.lock = threading.Lock()
     self._obs_records = []
     self._triples = []
@@ -586,96 +596,100 @@ class JsonLdStreamDb(Db):
     pass
 
   def commit_and_close(self):
-    import multiprocessing
-    import tempfile
-    import os
-    import gc
-    import concurrent.futures
-    from util.filesystem import create_store
-
-    num_processes = min(multiprocessing.cpu_count(), 8)
+    num_processes = min(multiprocessing.cpu_count(), _EXPORT_PROCESSES_MAX)
 
     with tempfile.TemporaryDirectory() as temp_local_dir:
       logging.info("Using local temporary directory for export buffering: %s", temp_local_dir)
 
-      # 1. Observations streaming generator
-      def _obs_chunk_generator():
-        chunk_size = 10000
-
-        prov_urls = {}
-        for prov in self.nodes.provenances.values():
-          prov_id = strip_namespace(prov.id)
-          prov_urls[prov_id] = prov.url
-          prov_urls[prov.id] = prov.url
-
-        while self._obs_records:
-          chunk = self._obs_records[:chunk_size]
-          del self._obs_records[:chunk_size]
-          gc.collect()  # Release memory chunk
-          yield (chunk, self.obs_shard_index, temp_local_dir, self.ns_map, prov_urls)
-          self.obs_shard_index += 1
-
-      # 2. Triples streaming generator
-      def _node_chunk_generator():
-        chunk_size = 10000
-        while self._triples:
-          chunk = self._triples[:chunk_size]
-          del self._triples[:chunk_size]
-          yield (chunk, self.node_shard_index, temp_local_dir, self.ns_map)
-          self.node_shard_index += 1
-
-      # Execute exports in parallel streaming format (flat memory usage)
       if self._obs_records or self._triples:
         logging.info("Starting JSON-LD local export with %d processes in streaming mode", num_processes)
         with multiprocessing.Pool(processes=num_processes) as pool:
           if self._obs_records:
             logging.info("Streaming observations export...")
-            for _ in pool.imap(_write_observation_shard, _obs_chunk_generator()):
+            obs_gen = self._generate_observation_chunks(temp_local_dir)
+            for _ in pool.imap(_write_observation_shard, obs_gen):
               pass
+
           if self._triples:
             logging.info("Streaming triples export...")
-            for _ in pool.imap(_write_node_shard, _node_chunk_generator()):
+            node_gen = self._generate_node_chunks(temp_local_dir)
+            for _ in pool.imap(_write_node_shard, node_gen):
               pass
 
-        # Bulk upload all generated JSON-LD shards from local temp dir to self.jsonld_dir
-        files_to_upload = sorted(os.listdir(temp_local_dir))
-        if files_to_upload:
-          target_path = self.jsonld_dir.full_path()
-          logging.info("Bulk uploading %d JSON-LD shards to target directory %s in parallel",
-                       len(files_to_upload), target_path)
-          
-          if target_path.startswith("gs://"):
-            # Native GCS upload for high-speed multi-threaded execution
-            from google.cloud import storage
-            
-            parts = target_path[5:].split("/", 1)
-            bucket_name = parts[0]
-            blob_prefix = parts[1].rstrip("/") if len(parts) > 1 else ""
+        self._upload_shards(temp_local_dir)
 
-            client = storage.Client()
-            bucket = client.bucket(bucket_name)
+  def _generate_observation_chunks(self, temp_local_dir: str):
+    """Generates observation chunks of size _CHUNK_SIZE, cleaning memory dynamically."""
+    prov_urls = {}
+    for prov in self.nodes.provenances.values():
+      prov_id = strip_namespace(prov.id)
+      prov_urls[prov_id] = prov.url
+      prov_urls[prov.id] = prov.url
 
-            def _upload_gcs(filename):
-              local_file_path = os.path.join(temp_local_dir, filename)
-              blob_key = f"{blob_prefix}/{filename}" if blob_prefix else filename
-              blob = bucket.blob(blob_key)
-              blob.upload_from_filename(local_file_path)
+    while self._obs_records:
+      chunk = self._obs_records[:_CHUNK_SIZE]
+      del self._obs_records[:_CHUNK_SIZE]
+      gc.collect()  # Release memory chunk
+      yield (chunk, self.obs_shard_index, temp_local_dir, self.ns_map, prov_urls)
+      self.obs_shard_index += 1
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
-              list(executor.map(_upload_gcs, files_to_upload))
-          else:
-            # Local fallback (e.g. unit tests)
-            local_store = create_store(temp_local_dir).as_dir()
-            target_store = self.jsonld_dir
+  def _generate_node_chunks(self, temp_local_dir: str):
+    """Generates node chunks of size _CHUNK_SIZE."""
+    while self._triples:
+      chunk = self._triples[:_CHUNK_SIZE]
+      del self._triples[:_CHUNK_SIZE]
+      yield (chunk, self.node_shard_index, temp_local_dir, self.ns_map)
+      self.node_shard_index += 1
 
-            def _upload_local(filename):
-              content = local_store.open_file(filename).read()
-              target_store.open_file(filename).write(content)
+  def _upload_shards(self, temp_local_dir: str):
+    """Uploads files in temp_local_dir to jsonld_dir, optimizing for GCS via native SDK."""
+    files_to_upload = sorted(os.listdir(temp_local_dir))
+    if not files_to_upload:
+      return
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
-              list(executor.map(_upload_local, files_to_upload))
+    target_path = self.jsonld_dir.full_path()
+    logging.info("Bulk uploading %d JSON-LD shards to target directory %s in parallel",
+                 len(files_to_upload), target_path)
 
-          logging.info("Bulk upload of JSON-LD shards completed successfully.")
+    if target_path.startswith("gs://"):
+      self._upload_shards_gcs(temp_local_dir, files_to_upload, target_path)
+    else:
+      self._upload_shards_local(temp_local_dir, files_to_upload)
+
+    logging.info("Bulk upload of JSON-LD shards completed successfully.")
+
+  def _upload_shards_gcs(self, temp_local_dir: str, files: list[str], target_path: str):
+    """Performs concurrent GCS uploads using native google-cloud-storage client."""
+    from google.cloud import storage
+
+    # Parse bucket and blob prefix
+    parts = target_path[5:].split("/", 1)
+    bucket_name = parts[0]
+    blob_prefix = parts[1].rstrip("/") if len(parts) > 1 else ""
+
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+
+    def _upload_single(filename: str):
+      local_file_path = os.path.join(temp_local_dir, filename)
+      blob_key = f"{blob_prefix}/{filename}" if blob_prefix else filename
+      blob = bucket.blob(blob_key)
+      blob.upload_from_filename(local_file_path)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=_UPLOAD_CONCURRENCY) as executor:
+      list(executor.map(_upload_single, files))
+
+  def _upload_shards_local(self, temp_local_dir: str, files: list[str]):
+    """Performs concurrent local file copy (for test environments)."""
+    local_store = create_store(temp_local_dir).as_dir()
+    target_store = self.jsonld_dir
+
+    def _copy_single(filename: str):
+      content = local_store.open_file(filename).read()
+      target_store.open_file(filename).write(content)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=_UPLOAD_CONCURRENCY) as executor:
+      list(executor.map(_copy_single, files))
 
 
 class SqlDb(Db):
