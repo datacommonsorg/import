@@ -508,53 +508,77 @@ class JsonLdStreamDb(Db):
 
   def commit_and_close(self):
     import multiprocessing
+    import tempfile
+    import os
+    import concurrent.futures
+    from util.filesystem import create_store
+
     num_processes = min(multiprocessing.cpu_count(), 8)
 
-    obs_args = []
-    node_args = []
+    with tempfile.TemporaryDirectory() as temp_local_dir:
+      logging.info("Using local temporary directory for export buffering: %s", temp_local_dir)
 
-    # Prepare observations chunks
-    if self._obs_dfs:
-      logging.info("Combining and preparing buffered observations to JSON-LD shards in %s",
-                   self.jsonld_dir.full_path())
-      combined_obs_df = pd.concat(self._obs_dfs, ignore_index=True)
-      records = combined_obs_df.to_records(index=False).tolist()
+      obs_args = []
+      node_args = []
 
-      prov_urls = {}
-      for prov in self.nodes.provenances.values():
-        prov_id = strip_namespace(prov.id)
-        prov_urls[prov_id] = prov.url
-        prov_urls[prov.id] = prov.url
+      # Prepare observations chunks
+      if self._obs_dfs:
+        logging.info("Combining and preparing buffered observations to JSON-LD shards")
+        combined_obs_df = pd.concat(self._obs_dfs, ignore_index=True)
+        records = combined_obs_df.to_records(index=False).tolist()
 
-      chunk_size = 10000
-      jsonld_dir_path = self.jsonld_dir.full_path()
+        prov_urls = {}
+        for prov in self.nodes.provenances.values():
+          prov_id = strip_namespace(prov.id)
+          prov_urls[prov_id] = prov.url
+          prov_urls[prov.id] = prov.url
 
-      for i in range(0, len(records), chunk_size):
-        chunk = records[i:i + chunk_size]
-        obs_args.append((chunk, self.obs_shard_index, jsonld_dir_path, self.ns_map, prov_urls))
-        self.obs_shard_index += 1
+        chunk_size = 10000
 
-    # Prepare triples chunks
-    if self._triples:
-      logging.info("Preparing buffered %d triples to JSON-LD shards in %s",
-                   len(self._triples), self.jsonld_dir.full_path())
-      chunk_size = 10000
-      jsonld_dir_path = self.jsonld_dir.full_path()
+        for i in range(0, len(records), chunk_size):
+          chunk = records[i:i + chunk_size]
+          obs_args.append((chunk, self.obs_shard_index, temp_local_dir, self.ns_map, prov_urls))
+          self.obs_shard_index += 1
 
-      for i in range(0, len(self._triples), chunk_size):
-        chunk = self._triples[i:i + chunk_size]
-        node_args.append((chunk, self.node_shard_index, jsonld_dir_path, self.ns_map))
-        self.node_shard_index += 1
+      # Prepare triples chunks
+      if self._triples:
+        logging.info("Preparing buffered %d triples to JSON-LD shards",
+                     len(self._triples))
+        chunk_size = 10000
 
-    # Execute exports in parallel using a single Pool
-    if obs_args or node_args:
-      logging.info("Starting JSON-LD export with %d processes (observations: %d chunks, nodes: %d chunks)",
-                   num_processes, len(obs_args), len(node_args))
-      with multiprocessing.Pool(processes=num_processes) as pool:
-        if obs_args:
-          pool.map(_write_observation_shard, obs_args)
-        if node_args:
-          pool.map(_write_node_shard, node_args)
+        for i in range(0, len(self._triples), chunk_size):
+          chunk = self._triples[i:i + chunk_size]
+          node_args.append((chunk, self.node_shard_index, temp_local_dir, self.ns_map))
+          self.node_shard_index += 1
+
+      # Execute exports in parallel locally (very fast, no GCS latency)
+      if obs_args or node_args:
+        logging.info("Starting JSON-LD local export with %d processes (observations: %d chunks, nodes: %d chunks)",
+                     num_processes, len(obs_args), len(node_args))
+        with multiprocessing.Pool(processes=num_processes) as pool:
+          if obs_args:
+            pool.map(_write_observation_shard, obs_args)
+          if node_args:
+            pool.map(_write_node_shard, node_args)
+
+        # Bulk upload all generated JSON-LD shards from local temp dir to self.jsonld_dir
+        files_to_upload = sorted(os.listdir(temp_local_dir))
+        if files_to_upload:
+          logging.info("Bulk uploading %d JSON-LD shards to target directory %s in parallel",
+                       len(files_to_upload), self.jsonld_dir.full_path())
+          
+          local_store = create_store(temp_local_dir).as_dir()
+          target_store = self.jsonld_dir
+
+          def _upload_fn(filename):
+            content = local_store.open_file(filename).read()
+            target_store.open_file(filename).write(content)
+
+          # Use 32 threads for high concurrency GCS uploads
+          with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
+            list(executor.map(_upload_fn, files_to_upload))
+
+          logging.info("Bulk upload of JSON-LD shards completed successfully.")
 
 
 class SqlDb(Db):
