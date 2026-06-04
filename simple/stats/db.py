@@ -568,13 +568,14 @@ class JsonLdStreamDb(Db):
     self.ns_map = {"dcid": DCID_URL}
     import threading
     self.lock = threading.Lock()
-    self._obs_dfs = []
+    self._obs_records = []
     self._triples = []
 
   def insert_observations(self, observations_df: pd.DataFrame, input_file: File):
     if not observations_df.empty:
+      records = observations_df.to_records(index=False).tolist()
       with self.lock:
-        self._obs_dfs.append(observations_df)
+        self._obs_records.extend(records)
 
   def insert_triples(self, triples: list[Triple]):
     if triples:
@@ -600,7 +601,6 @@ class JsonLdStreamDb(Db):
       # 1. Observations streaming generator
       def _obs_chunk_generator():
         chunk_size = 10000
-        current_chunk = []
 
         prov_urls = {}
         for prov in self.nodes.provenances.values():
@@ -608,23 +608,11 @@ class JsonLdStreamDb(Db):
           prov_urls[prov_id] = prov.url
           prov_urls[prov.id] = prov.url
 
-        # Pop DataFrames one-by-one to release their memory immediately
-        while self._obs_dfs:
-          df = self._obs_dfs.pop(0)
-          records = df.to_records(index=False).tolist()
-          
-          # Explicitly delete DataFrame reference and collect memory
-          del df
-
-          for record in records:
-            current_chunk.append(record)
-            if len(current_chunk) == chunk_size:
-              yield (current_chunk, self.obs_shard_index, temp_local_dir, self.ns_map, prov_urls)
-              self.obs_shard_index += 1
-              current_chunk = []
-
-        if current_chunk:
-          yield (current_chunk, self.obs_shard_index, temp_local_dir, self.ns_map, prov_urls)
+        while self._obs_records:
+          chunk = self._obs_records[:chunk_size]
+          del self._obs_records[:chunk_size]
+          gc.collect()  # Release memory chunk
+          yield (chunk, self.obs_shard_index, temp_local_dir, self.ns_map, prov_urls)
           self.obs_shard_index += 1
 
       # 2. Triples streaming generator
@@ -637,10 +625,10 @@ class JsonLdStreamDb(Db):
           self.node_shard_index += 1
 
       # Execute exports in parallel streaming format (flat memory usage)
-      if self._obs_dfs or self._triples:
+      if self._obs_records or self._triples:
         logging.info("Starting JSON-LD local export with %d processes in streaming mode", num_processes)
         with multiprocessing.Pool(processes=num_processes) as pool:
-          if self._obs_dfs:
+          if self._obs_records:
             logging.info("Streaming observations export...")
             for _ in pool.imap(_write_observation_shard, _obs_chunk_generator()):
               pass
