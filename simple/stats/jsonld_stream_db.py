@@ -107,8 +107,10 @@ def _write_observation_shard(args):
           prop_key = f"dcid:{k}" if not k.startswith(
               "dcid:") and not k.startswith("http") else k
           obs_obj[prop_key] = v
-      except Exception:
-        pass
+      except json.JSONDecodeError as e:
+        logging.warning(
+            "Failed to decode properties JSON for observation %s/%s: %s",
+            entity, variable, e)
 
     graph_list.append(obs_obj)
 
@@ -172,8 +174,9 @@ def _write_node_shard_fast(args):
       if pred_key in subjects[sub_id]:
         existing = subjects[sub_id][pred_key]
         if isinstance(existing, list):
-          existing.append(val)
-        else:
+          if val not in existing:
+            existing.append(val)
+        elif existing != val:
           subjects[sub_id][pred_key] = [existing, val]
       else:
         subjects[sub_id][pred_key] = val

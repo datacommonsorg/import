@@ -184,6 +184,11 @@ class TestJsonLdStreamDb(unittest.TestCase):
         Triple(subject_id="sub1",
                predicate="alternateName",
                object_value="Alias B"),
+        # Duplicate values for testing deduplication
+        Triple(subject_id="sub1",
+               predicate="alternateName",
+               object_value="Alias A"),
+        Triple(subject_id="sub1", predicate="intValue", object_value=99),
         # References vs Values
         Triple(subject_id="sub1", predicate="memberOf", object_id="groupA"),
         # Number types
