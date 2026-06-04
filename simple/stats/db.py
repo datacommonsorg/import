@@ -431,6 +431,84 @@ def _write_observation_shard(args):
 
 
 def _write_node_shard(args):
+  import os
+  fast_export = os.getenv("FAST_NODE_EXPORT", "true").lower() in ("true", "1", "yes")
+  if fast_export:
+    _write_node_shard_fast(args)
+  else:
+    _write_node_shard_rdflib(args)
+
+
+def _write_node_shard_fast(args):
+  chunk, shard_index, jsonld_dir_path, ns_map = args
+  from util.filesystem import create_store
+  import json
+  import logging
+
+  def _uri_ref(val):
+    if not val:
+      return None
+    if val.startswith("http://") or val.startswith("https://"):
+      return {"@id": val}
+    if val.startswith("dcid:"):
+      return {"@id": val}
+    return {"@id": f"dcid:{val.lstrip('/')}"}
+
+  subjects = {}
+  for row in chunk:
+    sub_id = row.subject_id
+    if sub_id not in subjects:
+      subjects[sub_id] = {
+        "@id": f"dcid:{sub_id.lstrip('/')}" if not sub_id.startswith("http") and not sub_id.startswith("dcid:") else sub_id
+      }
+    
+    pred = row.predicate
+    pred_key = f"dcid:{pred}" if not pred.startswith("dcid:") and not pred.startswith("http") else pred
+    
+    if pred == "typeOf":
+      pred_key = "@type"
+
+    if row.object_id:
+      val = _uri_ref(row.object_id)
+    else:
+      obj_val = row.object_value
+      try:
+        if '.' in str(obj_val):
+          val = float(obj_val)
+        else:
+          val = int(obj_val)
+      except ValueError:
+        val = str(obj_val)
+
+    if pred_key == "@type":
+      val_str = val["@id"] if isinstance(val, dict) and "@id" in val else str(val)
+      subjects[sub_id]["@type"] = val_str
+    else:
+      if pred_key in subjects[sub_id]:
+        existing = subjects[sub_id][pred_key]
+        if isinstance(existing, list):
+          existing.append(val)
+        else:
+          subjects[sub_id][pred_key] = [existing, val]
+      else:
+        subjects[sub_id][pred_key] = val
+
+  # Sort by @id to match rdflib output order
+  graph_list = sorted(list(subjects.values()), key=lambda x: x["@id"])
+
+  compacted_jsonld = {
+    "@context": ns_map,
+    "@graph": graph_list
+  }
+
+  shard_name = f"node-{shard_index:05d}.jsonld"
+  with create_store(jsonld_dir_path) as store:
+    output_dir = store.as_dir()
+    output_dir.open_file(shard_name).write(json.dumps(compacted_jsonld, indent=4))
+  logging.info(f"Saved JSON-LD shard to {shard_name} (fast path)")
+
+
+def _write_node_shard_rdflib(args):
   chunk, shard_index, jsonld_dir_path, ns_map = args
   from rdflib import Graph, Namespace, RDF, Literal
   from stats.jsonld_exporter import DCID_URL, expand_id, write_shard
