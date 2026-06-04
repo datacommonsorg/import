@@ -173,9 +173,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
         Triple(subject_id="sub1",
                predicate="typeOf",
                object_id="StatisticalVariable"),
-        Triple(subject_id="sub1",
-               predicate="typeOf",
-               object_id="Thing"),
+        Triple(subject_id="sub1", predicate="typeOf", object_id="Thing"),
         Triple(subject_id="sub1", predicate="name", object_value="Test Node"),
         # Multi-valued properties
         Triple(subject_id="sub1",

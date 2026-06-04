@@ -160,7 +160,8 @@ def _write_node_shard_fast(args):
       val = _parse_numeric(row.object_value)
 
     if pred_key == "@type":
-      val_str = val["@id"] if isinstance(val, dict) and "@id" in val else str(val)
+      val_str = val["@id"] if isinstance(val,
+                                         dict) and "@id" in val else str(val)
       if "@type" in subjects[sub_id]:
         existing = subjects[sub_id]["@type"]
         if isinstance(existing, list):
