@@ -36,13 +36,6 @@ def initialize_logger():
   for handler in logging.root.handlers:
     logging.root.removeHandler(handler)
 
-  # Initialize logging
-  try:
-    sys.stdout.reconfigure(line_buffering=True)
-    sys.stderr.reconfigure(line_buffering=True)
-  except AttributeError:
-    # In some test environments sys.stdout may not support reconfigure
-    pass
   logger = logging.getLogger()
   logger.setLevel(log_level)
   handler = logging.StreamHandler(sys.stdout)

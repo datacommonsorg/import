@@ -52,9 +52,7 @@ _EXPORT_PROCESSES_MAX = 8
 def _uri_ref(val):
   if not val:
     return None
-  if val.startswith("http://") or val.startswith("https://"):
-    return {"@id": val}
-  if val.startswith("dcid:"):
+  if val.startswith(("http://", "https://", "dcid:")):
     return {"@id": val}
   return {"@id": f"dcid:{val.lstrip('/')}"}
 
@@ -125,6 +123,7 @@ def _write_observation_shard(args):
 
 
 def _write_node_shard(args):
+  # TODO(gmechali): Get rid of this and keep only the "fast" mode.
   fast_export = os.getenv("FAST_NODE_EXPORT",
                           "true").lower() in ("true", "1", "yes")
   if fast_export:
