@@ -14,6 +14,7 @@
 
 import logging
 import os
+import requests.adapters
 
 from absl import app
 from absl import flags
@@ -56,7 +57,6 @@ _FREEZE_TIME_IGNORE_LIST = ["transformers"]
 
 def _run():
   # Configure requests adapter default pool size to support parallel GCS uploads
-  import requests.adapters
   requests.adapters.DEFAULT_POOLSIZE = 32
 
   initialize_logger()

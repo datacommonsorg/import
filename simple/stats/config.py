@@ -242,7 +242,7 @@ class Config:
     - If explicitly set via 'customSvgPrefix', return it.
     - Else if 'customIdNamespace' is explicitly provided in config, derive as
       f"{namespace}/g/" where namespace is the validated value of
-      customIdNamespace.
+    customIdNamespace.
     - Else fall back to the built-in default (e.g., 'c/g/').
     """
     from stats import schema_constants as sc

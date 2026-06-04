@@ -17,6 +17,7 @@ from enum import auto
 from enum import Enum
 from functools import wraps
 import json
+import threading
 import time
 
 from util.filesystem import File
@@ -44,7 +45,6 @@ class ImportReporter:
     """
 
   def __init__(self, report_file: File) -> None:
-    import threading
     self.lock = threading.RLock()
     self.status = Status.NOT_STARTED
     self.start_time = None
@@ -156,8 +156,9 @@ class FileImportReporter:
 
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-      result = func(self, *args, **kwargs)
-      FileImportReporter.report(self)
+      with self.parent.lock:
+        result = func(self, *args, **kwargs)
+        FileImportReporter.report(self)
       return result
 
     return wrapper
@@ -173,7 +174,7 @@ class FileImportReporter:
 
   @_report
   def report_failure(self, error: str):
-    self.status = Status.SUCCESS
+    self.status = Status.FAILURE
     self.data["error"] = error
 
   def json(self) -> dict:

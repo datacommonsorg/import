@@ -15,6 +15,7 @@
 from functools import wraps
 import logging
 import re
+import threading
 
 import pandas as pd
 from stats.config import Config
@@ -67,7 +68,6 @@ def thread_safe(func):
 class Nodes:
 
   def __init__(self, config: Config) -> None:
-    import threading
     self.lock = threading.RLock()
     self.config = config
     # Custom namespace

@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import concurrent.futures
 from datetime import datetime
 from datetime import timezone
 from enum import StrEnum
 import json
 import logging
+import threading
 import os
 from typing import Optional
 
@@ -40,8 +42,8 @@ from stats.db import get_cloud_sql_config_from_env
 from stats.db import get_datacommons_platform_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
-from stats.db import JsonLdStreamDb
 from stats.db import TYPE_CLOUD_SQL
+from stats.jsonld_stream_db import JsonLdStreamDb
 from stats.db_cache import get_db_cache_from_env
 from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
@@ -160,9 +162,6 @@ class Runner:
         _check_not_overlapping(input_store, output_store)
     self.all_stores.append(output_store)
     self.output_dir = output_store.as_dir()
-    self.nl_dir = None
-    if self.mode != RunMode.DCP_BRIDGE:
-      self.nl_dir = self.output_dir.open_dir(constants.NL_DIR_NAME)
     self.process_dir = self.output_dir.open_dir(constants.PROCESS_DIR_NAME)
 
     # Reporter.
@@ -526,6 +525,7 @@ class Runner:
           logging.warning(f"Failed to cleanup local database: {e}")
 
   def _generate_nl_artifacts(self):
+    nl_dir = self.output_dir.open_dir(constants.NL_DIR_NAME)
     triples: list[Triple] = []
     topic_triples = self.db.select_triples_by_subject_type(sc.TYPE_TOPIC)
     sv_triples = self.db.select_triples_by_subject_type(
@@ -533,14 +533,14 @@ class Runner:
     triples = topic_triples + sv_triples
 
     # Generate sentences.
-    nl.generate_nl_sentences(triples, self.nl_dir)
+    nl.generate_nl_sentences(triples, nl_dir)
 
     # If generating topics, fetch svpg triples as well and generate topic cache
     if topic_triples:
       sv_peer_group_triples = self.db.select_triples_by_subject_type(
           sc.TYPE_STAT_VAR_PEER_GROUP)
       topic_cache_triples = topic_triples + sv_peer_group_triples
-      nl.generate_topic_cache(topic_cache_triples, self.nl_dir)
+      nl.generate_topic_cache(topic_cache_triples, nl_dir)
 
   def _generate_svg_hierarchy(self):
     if self.mode == RunMode.MAIN_DC:
@@ -616,11 +616,9 @@ class Runner:
         return True
     return False
 
-  def _run_all_data_imports(self):
+  def _find_and_filter_input_files(self) -> tuple[list[File], list[File]]:
+    """Discovers, filters, sorts, and returns matched CSV and MCF files."""
     input_files: list[File] = []
-    input_csv_files: list[File] = []
-    input_mcf_files: list[File] = []
-
     for input_store in self.input_stores:
       if input_store.isdir():
         input_files.extend(input_store.as_dir().all_files(
@@ -628,71 +626,75 @@ class Runner:
       else:
         input_files.append(input_store.as_file())
 
-    for input_file in input_files:
-      if _ARCHIVES_DIR_NAME in input_file.path.split("/"):
-        continue
-      if self._check_if_special_file(input_file):
-        continue
-      if match(input_file, "*.csv"):
-        input_csv_files.append(input_file)
-      if match(input_file, "*.mcf"):
-        input_mcf_files.append(input_file)
+    csv_files: list[File] = []
+    mcf_files: list[File] = []
 
-    # Sort input files alphabetically.
-    input_csv_files.sort(key=lambda f: f.full_path())
-    input_mcf_files.sort(key=lambda f: f.full_path())
+    for file in input_files:
+      if _ARCHIVES_DIR_NAME in file.path.split("/"):
+        continue
+      if self._check_if_special_file(file):
+        continue
+      if match(file, "*.csv"):
+        csv_files.append(file)
+      elif match(file, "*.mcf"):
+        mcf_files.append(file)
 
-    logging.info(f"Found {len(input_csv_files)} csv files to import")
-    logging.info(f"Found {len(input_mcf_files)} mcf files to import")
+    # Sort alphabetically to guarantee consistent order
+    csv_files.sort(key=lambda f: f.full_path())
+    mcf_files.sort(key=lambda f: f.full_path())
+    return csv_files, mcf_files
+
+  def _run_all_data_imports(self):
+    """Orchestrates file scanning, thread-pool configuration, and file ingestion."""
+    csv_files, mcf_files = self._find_and_filter_input_files()
+
+    logging.info("Found %d CSV files to import", len(csv_files))
+    logging.info("Found %d MCF files to import", len(mcf_files))
     logging.info("Matched files to process: %s",
-                 [f.full_path() for f in input_csv_files + input_mcf_files])
+                 [f.full_path() for f in csv_files + mcf_files])
 
-    self.reporter.report_started(import_files=list(input_csv_files +
-                                                   input_mcf_files))
-    import threading
+    self.reporter.report_started(import_files=list(csv_files + mcf_files))
+
     self._completed_files_count = 0
-    self._total_files_count = len(input_csv_files) + len(input_mcf_files)
+    self._total_files_count = len(csv_files) + len(mcf_files)
     self._counter_lock = threading.Lock()
 
     if self.mode == RunMode.DCP_BRIDGE:
-      import concurrent.futures
-      num_threads = min(32, (len(input_csv_files) + len(input_mcf_files)) or 1)
+      num_threads = min(32, self._total_files_count or 1)
       logging.info("Starting parallel ingestion of data files with %d threads",
                    num_threads)
 
       with concurrent.futures.ThreadPoolExecutor(
           max_workers=num_threads) as executor:
         futures = []
-        for input_csv_file in input_csv_files:
-          futures.append(
-              executor.submit(self._run_single_import, input_csv_file))
-        for input_mcf_file in input_mcf_files:
-          futures.append(
-              executor.submit(self._run_single_mcf_import, input_mcf_file))
+        for file in csv_files:
+          futures.append(executor.submit(self._run_single_import, file))
+        for file in mcf_files:
+          futures.append(executor.submit(self._run_single_mcf_import, file))
 
-        # Wait for all files to be processed and propagate any exception
+        # Wait for completion and raise any thread exceptions
         for future in concurrent.futures.as_completed(futures):
           future.result()
     else:
-      for input_csv_file in input_csv_files:
-        self._run_single_import(input_csv_file)
-      for input_mcf_file in input_mcf_files:
-        self._run_single_mcf_import(input_mcf_file)
+      for file in csv_files:
+        self._run_single_import(file)
+      for file in mcf_files:
+        self._run_single_mcf_import(file)
 
-  def _run_single_import(self, input_file: File):
+  def _log_file_progress(self, file_prefix: str, file: File):
+    """Increments file progress counter thread-safely and logs standard progress line."""
     with self._counter_lock:
       self._completed_files_count += 1
       current_count = self._completed_files_count
-    logging.info("[%d/%d] Importing file: %s", current_count,
-                 self._total_files_count, input_file)
+    logging.info("[%d/%d] %s: %s", current_count, self._total_files_count,
+                 file_prefix, file)
+
+  def _run_single_import(self, input_file: File):
+    self._log_file_progress("Importing CSV file", input_file)
     self._create_importer(input_file).do_import()
 
   def _run_single_mcf_import(self, input_mcf_file: File):
-    with self._counter_lock:
-      self._completed_files_count += 1
-      current_count = self._completed_files_count
-    logging.info("[%d/%d] Importing MCF file: %s", current_count,
-                 self._total_files_count, input_mcf_file)
+    self._log_file_progress("Importing MCF file", input_mcf_file)
     self._create_mcf_importer(input_mcf_file, self.output_dir,
                               self.mode == RunMode.MAIN_DC).do_import()
 
