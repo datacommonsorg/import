@@ -615,7 +615,6 @@ class JsonLdStreamDb(Db):
           
           # Explicitly delete DataFrame reference and collect memory
           del df
-          gc.collect()
 
           for record in records:
             current_chunk.append(record)
@@ -634,7 +633,6 @@ class JsonLdStreamDb(Db):
         while self._triples:
           chunk = self._triples[:chunk_size]
           del self._triples[:chunk_size]
-          gc.collect()
           yield (chunk, self.node_shard_index, temp_local_dir, self.ns_map)
           self.node_shard_index += 1
 
