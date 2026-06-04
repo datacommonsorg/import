@@ -19,13 +19,13 @@ from datetime import timezone
 from enum import auto
 from enum import Enum
 import gc
-import multiprocessing
-import tempfile
-import threading
 import json
 import logging
+import multiprocessing
 import os
 import sqlite3
+import tempfile
+import threading
 from typing import Any
 
 from google.cloud.sql.connector.connector import Connector
@@ -45,8 +45,8 @@ from stats import schema_constants as sc
 from stats.data import McfNode
 from stats.data import STAT_VAR_GROUP
 from stats.data import STATISTICAL_VARIABLE
-from stats.data import Triple
 from stats.data import strip_namespace
+from stats.data import Triple
 from util.filesystem import create_store
 from util.filesystem import Dir
 from util.filesystem import File
@@ -344,10 +344,11 @@ class MainDcDb(Db):
 
 def _write_observation_shard(args):
   chunk, shard_index, jsonld_dir_path, ns_map, prov_urls = args
-  from util.filesystem import create_store
   import hashlib
   import json
   import logging
+
+  from util.filesystem import create_store
 
   def _uri_ref(val):
     if not val:
@@ -359,20 +360,20 @@ def _write_observation_shard(args):
     return {"@id": f"dcid:{val.lstrip('/')}"}
 
   graph_list = []
-  
+
   for row in chunk:
     entity, variable, date, value, provenance, unit, scaling_factor, mmethod, period, props = row
-    
+
     key = f"{entity}_{variable}_{date}_{provenance}_{unit}_{mmethod}_{period}"
     obs_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
-    
+
     obs_obj = {
-      "@id": f"dcid:obs_{obs_hash}",
-      "@type": "dcid:StatVarObservation",
-      "dcid:observationAbout": _uri_ref(entity),
-      "dcid:variableMeasured": _uri_ref(variable)
+        "@id": f"dcid:obs_{obs_hash}",
+        "@type": "dcid:StatVarObservation",
+        "dcid:observationAbout": _uri_ref(entity),
+        "dcid:variableMeasured": _uri_ref(variable)
     }
-    
+
     # Format date
     try:
       if str(date).isdigit():
@@ -417,28 +418,28 @@ def _write_observation_shard(args):
       try:
         props_dict = json.loads(props)
         for k, v in props_dict.items():
-          prop_key = f"dcid:{k}" if not k.startswith("dcid:") and not k.startswith("http") else k
+          prop_key = f"dcid:{k}" if not k.startswith(
+              "dcid:") and not k.startswith("http") else k
           obs_obj[prop_key] = v
       except Exception:
         pass
 
     graph_list.append(obs_obj)
 
-  compacted_jsonld = {
-    "@context": ns_map,
-    "@graph": graph_list
-  }
+  compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
 
   shard_name = f"observation-{shard_index:05d}.jsonld"
   with create_store(jsonld_dir_path) as store:
     output_dir = store.as_dir()
-    output_dir.open_file(shard_name).write(json.dumps(compacted_jsonld, indent=4))
+    output_dir.open_file(shard_name).write(
+        json.dumps(compacted_jsonld, indent=4))
   logging.info(f"Saved JSON-LD shard to {shard_name}")
 
 
 def _write_node_shard(args):
   import os
-  fast_export = os.getenv("FAST_NODE_EXPORT", "true").lower() in ("true", "1", "yes")
+  fast_export = os.getenv("FAST_NODE_EXPORT",
+                          "true").lower() in ("true", "1", "yes")
   if fast_export:
     _write_node_shard_fast(args)
   else:
@@ -447,9 +448,10 @@ def _write_node_shard(args):
 
 def _write_node_shard_fast(args):
   chunk, shard_index, jsonld_dir_path, ns_map = args
-  from util.filesystem import create_store
   import json
   import logging
+
+  from util.filesystem import create_store
 
   def _uri_ref(val):
     if not val:
@@ -465,12 +467,15 @@ def _write_node_shard_fast(args):
     sub_id = row.subject_id
     if sub_id not in subjects:
       subjects[sub_id] = {
-        "@id": f"dcid:{sub_id.lstrip('/')}" if not sub_id.startswith("http") and not sub_id.startswith("dcid:") else sub_id
+          "@id":
+              f"dcid:{sub_id.lstrip('/')}" if not sub_id.startswith("http") and
+              not sub_id.startswith("dcid:") else sub_id
       }
-    
+
     pred = row.predicate
-    pred_key = f"dcid:{pred}" if not pred.startswith("dcid:") and not pred.startswith("http") else pred
-    
+    pred_key = f"dcid:{pred}" if not pred.startswith(
+        "dcid:") and not pred.startswith("http") else pred
+
     if pred == "typeOf":
       pred_key = "@type"
 
@@ -487,7 +492,8 @@ def _write_node_shard_fast(args):
         val = str(obj_val)
 
     if pred_key == "@type":
-      val_str = val["@id"] if isinstance(val, dict) and "@id" in val else str(val)
+      val_str = val["@id"] if isinstance(val,
+                                         dict) and "@id" in val else str(val)
       subjects[sub_id]["@type"] = val_str
     else:
       if pred_key in subjects[sub_id]:
@@ -502,22 +508,25 @@ def _write_node_shard_fast(args):
   # Sort by @id to match rdflib output order
   graph_list = sorted(list(subjects.values()), key=lambda x: x["@id"])
 
-  compacted_jsonld = {
-    "@context": ns_map,
-    "@graph": graph_list
-  }
+  compacted_jsonld = {"@context": ns_map, "@graph": graph_list}
 
   shard_name = f"node-{shard_index:05d}.jsonld"
   with create_store(jsonld_dir_path) as store:
     output_dir = store.as_dir()
-    output_dir.open_file(shard_name).write(json.dumps(compacted_jsonld, indent=4))
+    output_dir.open_file(shard_name).write(
+        json.dumps(compacted_jsonld, indent=4))
   logging.info(f"Saved JSON-LD shard to {shard_name} (fast path)")
 
 
 def _write_node_shard_rdflib(args):
   chunk, shard_index, jsonld_dir_path, ns_map = args
-  from rdflib import Graph, Namespace, RDF, Literal
-  from stats.jsonld_exporter import DCID_URL, expand_id, write_shard
+  from rdflib import Graph
+  from rdflib import Literal
+  from rdflib import Namespace
+  from rdflib import RDF
+  from stats.jsonld_exporter import DCID_URL
+  from stats.jsonld_exporter import expand_id
+  from stats.jsonld_exporter import write_shard
   from util.filesystem import create_store
 
   DCID = Namespace(DCID_URL)
@@ -581,7 +590,8 @@ class JsonLdStreamDb(Db):
     self._obs_records = []
     self._triples = []
 
-  def insert_observations(self, observations_df: pd.DataFrame, input_file: File):
+  def insert_observations(self, observations_df: pd.DataFrame,
+                          input_file: File):
     if not observations_df.empty:
       records = observations_df.to_records(index=False).tolist()
       with self.lock:
@@ -599,10 +609,13 @@ class JsonLdStreamDb(Db):
     num_processes = min(multiprocessing.cpu_count(), _EXPORT_PROCESSES_MAX)
 
     with tempfile.TemporaryDirectory() as temp_local_dir:
-      logging.info("Using local temporary directory for export buffering: %s", temp_local_dir)
+      logging.info("Using local temporary directory for export buffering: %s",
+                   temp_local_dir)
 
       if self._obs_records or self._triples:
-        logging.info("Starting JSON-LD local export with %d processes in streaming mode", num_processes)
+        logging.info(
+            "Starting JSON-LD local export with %d processes in streaming mode",
+            num_processes)
         with multiprocessing.Pool(processes=num_processes) as pool:
           if self._obs_records:
             logging.info("Streaming observations export...")
@@ -630,7 +643,8 @@ class JsonLdStreamDb(Db):
       chunk = self._obs_records[:_CHUNK_SIZE]
       del self._obs_records[:_CHUNK_SIZE]
       gc.collect()  # Release memory chunk
-      yield (chunk, self.obs_shard_index, temp_local_dir, self.ns_map, prov_urls)
+      yield (chunk, self.obs_shard_index, temp_local_dir, self.ns_map,
+             prov_urls)
       self.obs_shard_index += 1
 
   def _generate_node_chunks(self, temp_local_dir: str):
@@ -648,8 +662,9 @@ class JsonLdStreamDb(Db):
       return
 
     target_path = self.jsonld_dir.full_path()
-    logging.info("Bulk uploading %d JSON-LD shards to target directory %s in parallel",
-                 len(files_to_upload), target_path)
+    logging.info(
+        "Bulk uploading %d JSON-LD shards to target directory %s in parallel",
+        len(files_to_upload), target_path)
 
     if target_path.startswith("gs://"):
       self._upload_shards_gcs(temp_local_dir, files_to_upload, target_path)
@@ -658,7 +673,8 @@ class JsonLdStreamDb(Db):
 
     logging.info("Bulk upload of JSON-LD shards completed successfully.")
 
-  def _upload_shards_gcs(self, temp_local_dir: str, files: list[str], target_path: str):
+  def _upload_shards_gcs(self, temp_local_dir: str, files: list[str],
+                         target_path: str):
     """Performs concurrent GCS uploads using native google-cloud-storage client."""
     from google.cloud import storage
 
@@ -676,7 +692,8 @@ class JsonLdStreamDb(Db):
       blob = bucket.blob(blob_key)
       blob.upload_from_filename(local_file_path)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=_UPLOAD_CONCURRENCY) as executor:
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=_UPLOAD_CONCURRENCY) as executor:
       list(executor.map(_upload_single, files))
 
   def _upload_shards_local(self, temp_local_dir: str, files: list[str]):
@@ -688,7 +705,8 @@ class JsonLdStreamDb(Db):
       content = local_store.open_file(filename).read()
       target_store.open_file(filename).write(content)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=_UPLOAD_CONCURRENCY) as executor:
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=_UPLOAD_CONCURRENCY) as executor:
       list(executor.map(_copy_single, files))
 
 

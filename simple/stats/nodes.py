@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 from functools import wraps
+import logging
 import re
 
 import pandas as pd
@@ -55,10 +55,12 @@ _DEFAULT_PROVENANCE = Provenance(id=f"{_CUSTOM_PROVENANCE_ID_PREFIX}default",
 
 def thread_safe(func):
   """Decorator to make a method thread-safe using the object's reentrant lock."""
+
   @wraps(func)
   def wrapper(self, *args, **kwargs):
     with self.lock:
       return func(self, *args, **kwargs)
+
   return wrapper
 
 

@@ -40,8 +40,8 @@ from stats.db import get_cloud_sql_config_from_env
 from stats.db import get_datacommons_platform_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
-from stats.db import TYPE_CLOUD_SQL
 from stats.db import JsonLdStreamDb
+from stats.db import TYPE_CLOUD_SQL
 from stats.db_cache import get_db_cache_from_env
 from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
@@ -657,14 +657,18 @@ class Runner:
     if self.mode == RunMode.DCP_BRIDGE:
       import concurrent.futures
       num_threads = min(32, (len(input_csv_files) + len(input_mcf_files)) or 1)
-      logging.info("Starting parallel ingestion of data files with %d threads", num_threads)
+      logging.info("Starting parallel ingestion of data files with %d threads",
+                   num_threads)
 
-      with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+      with concurrent.futures.ThreadPoolExecutor(
+          max_workers=num_threads) as executor:
         futures = []
         for input_csv_file in input_csv_files:
-          futures.append(executor.submit(self._run_single_import, input_csv_file))
+          futures.append(
+              executor.submit(self._run_single_import, input_csv_file))
         for input_mcf_file in input_mcf_files:
-          futures.append(executor.submit(self._run_single_mcf_import, input_mcf_file))
+          futures.append(
+              executor.submit(self._run_single_mcf_import, input_mcf_file))
 
         # Wait for all files to be processed and propagate any exception
         for future in concurrent.futures.as_completed(futures):
@@ -679,14 +683,16 @@ class Runner:
     with self._counter_lock:
       self._completed_files_count += 1
       current_count = self._completed_files_count
-    logging.info("[%d/%d] Importing file: %s", current_count, self._total_files_count, input_file)
+    logging.info("[%d/%d] Importing file: %s", current_count,
+                 self._total_files_count, input_file)
     self._create_importer(input_file).do_import()
 
   def _run_single_mcf_import(self, input_mcf_file: File):
     with self._counter_lock:
       self._completed_files_count += 1
       current_count = self._completed_files_count
-    logging.info("[%d/%d] Importing MCF file: %s", current_count, self._total_files_count, input_mcf_file)
+    logging.info("[%d/%d] Importing MCF file: %s", current_count,
+                 self._total_files_count, input_mcf_file)
     self._create_mcf_importer(input_mcf_file, self.output_dir,
                               self.mode == RunMode.MAIN_DC).do_import()
 
@@ -748,7 +754,8 @@ class Runner:
         f"Unsupported import type: {import_type} ({input_file.full_path()})")
 
   def _run_imports_and_export_jsonld(self):
-    logging.info("Initializing JsonLdStreamDb to stream JSON-LD directly to GCS/Disk")
+    logging.info(
+        "Initializing JsonLdStreamDb to stream JSON-LD directly to GCS/Disk")
     self.db = JsonLdStreamDb(self.output_dir, self.import_names, self.nodes)
 
     # Run data imports (CSV and MCF)
