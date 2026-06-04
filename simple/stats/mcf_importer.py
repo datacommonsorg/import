@@ -58,7 +58,7 @@ class McfImporter(Importer):
         triples = self._mcf_to_triples()
         logging.info("Inserting %s triples from %s", len(triples),
                      self.input_file.full_path())
-        self.db.insert_triples(triples)
+        self.db.insert_triples(triples, self.input_file)
 
       self.reporter.report_success()
     except Exception as e:

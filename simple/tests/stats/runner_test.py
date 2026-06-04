@@ -267,8 +267,14 @@ class TestRunner(unittest.TestCase):
       timestamped_dir = os.path.join(jsonld_dir, subdirs[0])
       self.assertTrue(os.path.isdir(timestamped_dir))
 
-      # Ensure the timestamped directory has files
-      shard_files = os.listdir(timestamped_dir)
+      # Ensure the timestamped directory has import subfolders
+      import_dirs = os.listdir(timestamped_dir)
+      self.assertGreater(len(import_dirs), 0)
+      import_dir_path = os.path.join(timestamped_dir, import_dirs[0])
+      self.assertTrue(os.path.isdir(import_dir_path))
+
+      # Ensure the namespaced directory has files
+      shard_files = os.listdir(import_dir_path)
       self.assertGreater(len(shard_files), 0)
 
       # Check that we have both node and observation shard files
@@ -280,7 +286,7 @@ class TestRunner(unittest.TestCase):
 
       # Verify that files are valid JSON-LD
       for filename in shard_files:
-        filepath = os.path.join(timestamped_dir, filename)
+        filepath = os.path.join(import_dir_path, filename)
         self.assertTrue(filename.endswith(".jsonld"))
         with open(filepath, "r") as f:
           data = json.load(f)
@@ -319,6 +325,115 @@ class TestRunner(unittest.TestCase):
       self.assertEqual(config.data["importName"], constants.ALL_IMPORTS)
       self.assertIn("oecd/data.csv", config.data["inputFiles"])
       self.assertIn("ilo/ds1/data.csv", config.data["inputFiles"])
+
+  @mock.patch("google.cloud.storage.Client")
+  def test_dcp_bridge_multi_imports(self, mock_storage_client):
+    self.maxDiff = None
+    # Setup GCS mock
+    mock_client_instance = mock_storage_client.return_value
+    mock_bucket = mock_client_instance.bucket.return_value
+    mock_blob = mock_bucket.blob.return_value
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+      input_dir = os.path.join(temp_dir, "input")
+      output_dir = os.path.join(temp_dir, "output")
+      os.makedirs(input_dir)
+      os.makedirs(output_dir)
+
+      # Create oecd subdir
+      oecd_dir = os.path.join(input_dir, "oecd")
+      os.makedirs(oecd_dir)
+      oecd_config = {
+          "importName": "oecd",
+          "inputFiles": {
+              "data.csv": {
+                  "entityType": "Country",
+                  "provenance": "OECD Prov"
+              }
+          },
+          "sources": {
+              "OECD Source": {
+                  "url": "http://oecd.org",
+                  "provenances": {
+                      "OECD Prov": "http://oecd.org/prov"
+                  }
+              }
+          }
+      }
+      with open(os.path.join(oecd_dir, "config.json"), "w") as f:
+        json.dump(oecd_config, f)
+      
+      # OECD data.csv (entity, date, variable)
+      oecd_data = "entity,date,Average_Age_Frog\nUSA,2020,5.5\n"
+      with open(os.path.join(oecd_dir, "data.csv"), "w") as f:
+        f.write(oecd_data)
+
+      # Create ilo subdir
+      ilo_dir = os.path.join(input_dir, "ilo", "ds1")
+      os.makedirs(ilo_dir)
+      ilo_config = {
+          "importName": "ilo",
+          "inputFiles": {
+              "data.csv": {
+                  "entityType": "Country",
+                  "provenance": "ILO Prov"
+              }
+          },
+          "sources": {
+              "ILO Source": {
+                  "url": "http://ilo.org",
+                  "provenances": {
+                      "ILO Prov": "http://ilo.org/prov"
+                  }
+              }
+          }
+      }
+      with open(os.path.join(ilo_dir, "config.json"), "w") as f:
+        json.dump(ilo_config, f)
+
+      ilo_data = "entity,date,Count_Frog_Green\nUSA,2020,40\n"
+      with open(os.path.join(ilo_dir, "data.csv"), "w") as f:
+        f.write(ilo_data)
+
+      # Mock DC Client calls
+      dc_client.get_property_of_entities = mock.MagicMock(return_value={})
+
+      # Run runner with mocked GCS output path and workflow name
+      from util.filesystem import _StoreWrapper
+      original_full_path = _StoreWrapper.full_path
+      def mock_full_path(self, sub_path=""):
+        if "jsonld" in self.path:
+          return f"gs://my-bucket/jsonld/run_timestamp"
+        return original_full_path(self, sub_path)
+
+      with mock.patch.dict(os.environ, {"INGESTION_WORKFLOW_NAME": "my-workflow"}):
+        with mock.patch.object(_StoreWrapper, "full_path", mock_full_path):
+          runner = Runner(
+              config_file_path=None,
+              input_dir_path=input_dir,
+              output_dir_path=output_dir,
+              mode=RunMode.DCP_BRIDGE,
+              import_names=[constants.ALL_IMPORTS]
+          )
+          runner.run()
+
+      # Verify GCS client calls were made
+      mock_storage_client.assert_called_once()
+      mock_client_instance.bucket.assert_called_with("my-bucket")
+
+      # Verify that blob uploads were requested for both imports
+      called_blobs = [call[0][0] for call in mock_bucket.blob.call_args_list]
+      
+      # We expect node and observation files under each namespace
+      self.assertTrue(any(b.startswith("jsonld/run_timestamp/oecd/observation-") for b in called_blobs))
+      self.assertTrue(any(b.startswith("jsonld/run_timestamp/oecd/node-") for b in called_blobs))
+      self.assertTrue(any(b.startswith("jsonld/run_timestamp/ilo/observation-") for b in called_blobs))
+      self.assertTrue(any(b.startswith("jsonld/run_timestamp/ilo/node-") for b in called_blobs))
+
+      # Assert that trigger_workflow_info holds paths for both oecd and ilo
+      self.assertEqual(len(runner.trigger_workflow_info), 2)
+      trigger_names = sorted([t["importName"] for t in runner.trigger_workflow_info])
+      self.assertEqual(trigger_names, ["ilo", "oecd"])
 
 
 class TestMain(unittest.TestCase):

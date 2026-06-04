@@ -255,25 +255,52 @@ class JsonLdStreamDb(Db):
     self.node_shard_index = 0
     self.ns_map = {"dcid": DCID_URL}
     self.lock = threading.Lock()
-    self._obs_records = []
-    self._triples = []
+    self._obs_records = {} # dict[str, list]
+    self._triples = {}     # dict[str, list]
+    self._global_triples = []
+    self._processed_imports = set()
+
+  def _get_import_name(self, input_file: File) -> str:
+    if not input_file:
+      return self.import_name
+    parts = input_file.path.split("/")
+    if len(parts) > 1:
+      return parts[0]
+    return self.import_name
 
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
     if not observations_df.empty:
+      import_name = self._get_import_name(input_file)
       records = observations_df.to_records(index=False).tolist()
       with self.lock:
-        self._obs_records.extend(records)
+        self._processed_imports.add(import_name)
+        if import_name not in self._obs_records:
+          self._obs_records[import_name] = []
+        self._obs_records[import_name].extend(records)
 
-  def insert_triples(self, triples: list[Triple]):
+  def insert_triples(self, triples: list[Triple], input_file: File = None):
     if triples:
       with self.lock:
-        self._triples.extend(triples)
+        if input_file:
+          import_name = self._get_import_name(input_file)
+          self._processed_imports.add(import_name)
+          if import_name not in self._triples:
+            self._triples[import_name] = []
+          self._triples[import_name].extend(triples)
+        else:
+          self._global_triples.extend(triples)
 
   def commit(self):
     pass
 
   def commit_and_close(self):
+    # Add global triples to every processed import's triples
+    for import_name in self._processed_imports:
+      if import_name not in self._triples:
+        self._triples[import_name] = []
+      self._triples[import_name].extend(self._global_triples)
+
     num_processes = min(multiprocessing.cpu_count(), _EXPORT_PROCESSES_MAX)
 
     with tempfile.TemporaryDirectory() as temp_local_dir:
@@ -284,22 +311,36 @@ class JsonLdStreamDb(Db):
         logging.info(
             "Starting JSON-LD local export with %d processes in streaming mode",
             num_processes)
+
+        obs_chunks = []
+        node_chunks = []
+
+        for import_name in self._processed_imports:
+          import_temp_dir = os.path.join(temp_local_dir, import_name)
+          os.makedirs(import_temp_dir, exist_ok=True)
+
+          if import_name in self._obs_records:
+            obs_chunks.extend(
+                list(self._generate_observation_chunks(import_name, import_temp_dir)))
+          
+          if import_name in self._triples:
+            node_chunks.extend(
+                list(self._generate_node_chunks(import_name, import_temp_dir)))
+
         with multiprocessing.Pool(processes=num_processes) as pool:
-          if self._obs_records:
+          if obs_chunks:
             logging.info("Streaming observations export...")
-            obs_gen = self._generate_observation_chunks(temp_local_dir)
-            for _ in pool.imap(_write_observation_shard, obs_gen):
+            for _ in pool.imap(_write_observation_shard, obs_chunks):
               pass
 
-          if self._triples:
+          if node_chunks:
             logging.info("Streaming triples export...")
-            node_gen = self._generate_node_chunks(temp_local_dir)
-            for _ in pool.imap(_write_node_shard, node_gen):
+            for _ in pool.imap(_write_node_shard, node_chunks):
               pass
 
         self._upload_shards(temp_local_dir)
 
-  def _generate_observation_chunks(self, temp_local_dir: str):
+  def _generate_observation_chunks(self, import_name: str, import_temp_dir: str):
     """Generates observation chunks of size _CHUNK_SIZE, cleaning memory dynamically."""
     prov_urls = {}
     for prov in self.nodes.provenances.values():
@@ -307,26 +348,38 @@ class JsonLdStreamDb(Db):
       prov_urls[prov_id] = prov.url
       prov_urls[prov.id] = prov.url
 
-    num_records = len(self._obs_records)
+    records = self._obs_records.get(import_name, [])
+    num_records = len(records)
+    shard_index = 0
     for idx in range(0, num_records, _CHUNK_SIZE):
-      chunk = self._obs_records[idx:idx + _CHUNK_SIZE]
-      yield (chunk, self.obs_shard_index, temp_local_dir, self.ns_map,
+      chunk = records[idx:idx + _CHUNK_SIZE]
+      yield (chunk, shard_index, import_temp_dir, self.ns_map,
              prov_urls)
-      self.obs_shard_index += 1
-    self._obs_records.clear()
+      shard_index += 1
+    if import_name in self._obs_records:
+      self._obs_records[import_name].clear()
 
-  def _generate_node_chunks(self, temp_local_dir: str):
+  def _generate_node_chunks(self, import_name: str, import_temp_dir: str):
     """Generates node chunks of size _CHUNK_SIZE."""
-    num_triples = len(self._triples)
+    triples = self._triples.get(import_name, [])
+    num_triples = len(triples)
+    shard_index = 0
     for idx in range(0, num_triples, _CHUNK_SIZE):
-      chunk = self._triples[idx:idx + _CHUNK_SIZE]
-      yield (chunk, self.node_shard_index, temp_local_dir, self.ns_map)
-      self.node_shard_index += 1
-    self._triples.clear()
+      chunk = triples[idx:idx + _CHUNK_SIZE]
+      yield (chunk, shard_index, import_temp_dir, self.ns_map)
+      shard_index += 1
+    if import_name in self._triples:
+      self._triples[import_name].clear()
 
   def _upload_shards(self, temp_local_dir: str):
     """Uploads files in temp_local_dir to jsonld_dir, optimizing for GCS via native SDK."""
-    files_to_upload = sorted(os.listdir(temp_local_dir))
+    files_to_upload = []
+    for root, _, filenames in os.walk(temp_local_dir):
+      for filename in filenames:
+        abs_path = os.path.join(root, filename)
+        rel_path = os.path.relpath(abs_path, temp_local_dir)
+        files_to_upload.append(rel_path)
+
     if not files_to_upload:
       return
 
@@ -343,7 +396,7 @@ class JsonLdStreamDb(Db):
     logging.info("Bulk upload of JSON-LD shards completed successfully.")
 
   def _upload_shards_gcs(self, temp_local_dir: str, files: list[str],
-                         target_path: str):
+                          target_path: str):
     """Performs concurrent GCS uploads using native google-cloud-storage client."""
     # Parse bucket and blob prefix
     parts = target_path[5:].split("/", 1)
@@ -360,9 +413,9 @@ class JsonLdStreamDb(Db):
 
     bucket = client.bucket(bucket_name)
 
-    def _upload_single(filename: str):
-      local_file_path = os.path.join(temp_local_dir, filename)
-      blob_key = f"{blob_prefix}/{filename}" if blob_prefix else filename
+    def _upload_single(rel_path: str):
+      local_file_path = os.path.join(temp_local_dir, rel_path)
+      blob_key = f"{blob_prefix}/{rel_path}" if blob_prefix else rel_path
       blob = bucket.blob(blob_key)
       blob.upload_from_filename(local_file_path)
 
@@ -372,12 +425,17 @@ class JsonLdStreamDb(Db):
 
   def _upload_shards_local(self, temp_local_dir: str, files: list[str]):
     """Performs concurrent local file copy (for test environments)."""
-    local_store = create_store(temp_local_dir).as_dir()
     target_store = self.jsonld_dir
 
-    def _copy_single(filename: str):
-      content = local_store.open_file(filename).read()
-      target_store.open_file(filename).write(content)
+    parent_dirs = set(os.path.dirname(f) for f in files if os.path.dirname(f))
+    for d in sorted(parent_dirs):
+      target_store.open_dir(d)
+
+    def _copy_single(rel_path: str):
+      local_file_path = os.path.join(temp_local_dir, rel_path)
+      with open(local_file_path, "r") as f:
+        content = f.read()
+      target_store.open_file(rel_path).write(content)
 
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=_UPLOAD_CONCURRENCY) as executor:

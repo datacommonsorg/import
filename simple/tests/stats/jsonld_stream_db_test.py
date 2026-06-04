@@ -65,15 +65,15 @@ class TestJsonLdStreamDb(unittest.TestCase):
                             "unit", "scaling_factor", "measurement_method",
                             "observation_period", "properties"
                         ])
-      mock_file = mock.Mock()
+      mock_file = mock.Mock(path="test_import/data.csv")
       db.insert_observations(df, mock_file)
-      self.assertEqual(len(db._obs_records), 1)
-      self.assertEqual(db._obs_records[0][0], "e1")
+      self.assertEqual(len(db._obs_records["test_import"]), 1)
+      self.assertEqual(db._obs_records["test_import"][0][0], "e1")
 
       # Insert triples
       triples = [Triple("sub1", "pred1", object_value="val1")]
-      db.insert_triples(triples)
-      self.assertEqual(len(db._triples), 1)
+      db.insert_triples(triples, mock_file)
+      self.assertEqual(len(db._triples["test_import"]), 1)
 
   def test_commit_and_close_local(self):
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -89,19 +89,19 @@ class TestJsonLdStreamDb(unittest.TestCase):
                             "unit", "scaling_factor", "measurement_method",
                             "observation_period", "properties"
                         ])
-      mock_file = mock.Mock()
+      mock_file = mock.Mock(path="test_import/data.csv")
       db.insert_observations(df, mock_file)
 
       # Insert triples
       triples = [Triple("sub1", "typeOf", object_id="StatisticalVariable")]
-      db.insert_triples(triples)
+      db.insert_triples(triples, mock_file)
 
       db.commit_and_close()
 
       # Shards should be written directly to the target unique directory
       target_dir_path = db.jsonld_dir.full_path()
-      obs_shard = os.path.join(target_dir_path, "observation-00000.jsonld")
-      node_shard = os.path.join(target_dir_path, "node-00000.jsonld")
+      obs_shard = os.path.join(target_dir_path, "test_import", "observation-00000.jsonld")
+      node_shard = os.path.join(target_dir_path, "test_import", "node-00000.jsonld")
 
       self.assertTrue(os.path.exists(obs_shard))
       self.assertTrue(os.path.exists(node_shard))
@@ -150,7 +150,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
                             "unit", "scaling_factor", "measurement_method",
                             "observation_period", "properties"
                         ])
-      mock_file = mock.Mock()
+      mock_file = mock.Mock(path="test_import/data.csv")
       db.insert_observations(df, mock_file)
 
       db.commit_and_close()
@@ -161,7 +161,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
 
       # Verify upload blob calls
       mock_bucket.blob.assert_called_with(
-          "ingestion/test/observation-00000.jsonld")
+          "ingestion/test/test_import/observation-00000.jsonld")
       mock_blob.upload_from_filename.assert_called_once()
 
   def test_node_fast_vs_rdflib_parity(self):

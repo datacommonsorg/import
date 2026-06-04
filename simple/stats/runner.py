@@ -218,8 +218,7 @@ class Runner:
 
       # Auto-trigger workflow now that all data is guaranteed to be exported and written to GCS
       if self.trigger_workflow_info:
-        gcs_pattern, import_name = self.trigger_workflow_info
-        trigger_ingestion_workflow(gcs_pattern, import_name)
+        trigger_ingestion_workflow(import_list=self.trigger_workflow_info)
 
     except Exception as e:
       logging.exception("Error updating stats")
@@ -772,8 +771,14 @@ class Runner:
     output_path = self.db.jsonld_dir.full_path()
     import_name = self.db.import_name
     if os.getenv("INGESTION_WORKFLOW_NAME") and output_path.startswith("gs://"):
-      gcs_pattern = f"{output_path.rstrip('/')}/*.jsonld"
-      self.trigger_workflow_info = (gcs_pattern, import_name)
+      processed_imports = list(self.db._processed_imports)
+      if not processed_imports:
+        processed_imports = [import_name]
+      import_list = []
+      for imp in processed_imports:
+        gcs_pattern = f"{output_path.rstrip('/')}/{imp}/*.jsonld"
+        import_list.append({"importName": imp, "graphPath": gcs_pattern})
+      self.trigger_workflow_info = import_list
     else:
       logging.info(
           "Output is local or workflow is missing, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually."
