@@ -18,7 +18,6 @@ from datetime import timezone
 from enum import StrEnum
 import json
 import logging
-import threading
 import os
 import threading
 from typing import Optional
@@ -44,7 +43,6 @@ from stats.db import get_datacommons_platform_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
 from stats.db import TYPE_CLOUD_SQL
-from stats.jsonld_stream_db import JsonLdStreamDb
 from stats.db_cache import get_db_cache_from_env
 from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter

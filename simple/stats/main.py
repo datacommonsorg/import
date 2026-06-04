@@ -14,7 +14,6 @@
 
 import logging
 import os
-import requests.adapters
 
 from absl import app
 from absl import flags
