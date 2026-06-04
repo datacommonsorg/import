@@ -12,20 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import concurrent.futures
 from dataclasses import dataclass
 from datetime import datetime
-from datetime import timezone
 from enum import auto
 from enum import Enum
-import gc
 import json
 import logging
-import multiprocessing
 import os
 import sqlite3
-import tempfile
-import threading
 from typing import Any
 
 from google.cloud.sql.connector.connector import Connector
@@ -45,7 +39,6 @@ from stats import schema_constants as sc
 from stats.data import McfNode
 from stats.data import STAT_VAR_GROUP
 from stats.data import STATISTICAL_VARIABLE
-from stats.data import strip_namespace
 from stats.data import Triple
 from util.filesystem import create_store
 from util.filesystem import Dir
