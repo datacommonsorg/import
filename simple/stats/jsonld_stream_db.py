@@ -158,9 +158,16 @@ def _write_node_shard_fast(args):
       val = _parse_numeric(row.object_value)
 
     if pred_key == "@type":
-      val_str = val["@id"] if isinstance(val,
-                                         dict) and "@id" in val else str(val)
-      subjects[sub_id]["@type"] = val_str
+      val_str = val["@id"] if isinstance(val, dict) and "@id" in val else str(val)
+      if "@type" in subjects[sub_id]:
+        existing = subjects[sub_id]["@type"]
+        if isinstance(existing, list):
+          if val_str not in existing:
+            existing.append(val_str)
+        elif existing != val_str:
+          subjects[sub_id]["@type"] = [existing, val_str]
+      else:
+        subjects[sub_id]["@type"] = val_str
     else:
       if pred_key in subjects[sub_id]:
         existing = subjects[sub_id][pred_key]
@@ -296,20 +303,22 @@ class JsonLdStreamDb(Db):
       prov_urls[prov_id] = prov.url
       prov_urls[prov.id] = prov.url
 
-    while self._obs_records:
-      chunk = self._obs_records[:_CHUNK_SIZE]
-      del self._obs_records[:_CHUNK_SIZE]
+    num_records = len(self._obs_records)
+    for idx in range(0, num_records, _CHUNK_SIZE):
+      chunk = self._obs_records[idx:idx + _CHUNK_SIZE]
       yield (chunk, self.obs_shard_index, temp_local_dir, self.ns_map,
              prov_urls)
       self.obs_shard_index += 1
+    self._obs_records.clear()
 
   def _generate_node_chunks(self, temp_local_dir: str):
     """Generates node chunks of size _CHUNK_SIZE."""
-    while self._triples:
-      chunk = self._triples[:_CHUNK_SIZE]
-      del self._triples[:_CHUNK_SIZE]
+    num_triples = len(self._triples)
+    for idx in range(0, num_triples, _CHUNK_SIZE):
+      chunk = self._triples[idx:idx + _CHUNK_SIZE]
       yield (chunk, self.node_shard_index, temp_local_dir, self.ns_map)
       self.node_shard_index += 1
+    self._triples.clear()
 
   def _upload_shards(self, temp_local_dir: str):
     """Uploads files in temp_local_dir to jsonld_dir, optimizing for GCS via native SDK."""
