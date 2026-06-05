@@ -33,9 +33,11 @@ public class CacheReader implements Serializable {
   private static final String CACHE_KEY_SEPARATOR_REGEX = "\\^";
 
   private final String gcsBucketId;
+  private final boolean isBaseDc;
 
-  public CacheReader(String gcsBucketId) {
+  public CacheReader(String gcsBucketId, boolean isBaseDc) {
     this.gcsBucketId = gcsBucketId;
+    this.isBaseDc = isBaseDc;
   }
 
   /** Returns the GCS cache path for the import group. */
@@ -187,6 +189,7 @@ public class CacheReader implements Serializable {
           for (SourceSeries source : chart.getObsTimeSeries().getSourceSeriesList()) {
             Observation.Builder builder =
                 Observation.builder()
+                    .isBaseDc(this.isBaseDc)
                     .variableMeasured(variableMeasured)
                     .observationAbout(observationAbout)
                     .observationPeriod(source.getObservationPeriod())

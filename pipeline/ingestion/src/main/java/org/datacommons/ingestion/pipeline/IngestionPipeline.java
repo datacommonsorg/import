@@ -19,6 +19,11 @@ public class IngestionPipeline {
     IngestionPipelineOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(IngestionPipelineOptions.class);
 
+    String isBaseDcEnv = System.getenv("IS_BASE_DC");
+    if (isBaseDcEnv != null) {
+      options.setIsBaseDc(Boolean.parseBoolean(isBaseDcEnv));
+    }
+
     SpannerClient spannerClient =
         SpannerClient.builder()
             .gcpProjectId(options.getProjectId())
@@ -46,7 +51,7 @@ public class IngestionPipeline {
       importGroupVersions = getImportGroupVersions(options.getVersionEndpoint());
     }
 
-    CacheReader cacheReader = new CacheReader(options.getStorageBucketId());
+    CacheReader cacheReader = new CacheReader(options.getStorageBucketId(), options.getIsBaseDc());
 
     buildIngestionPipeline(pipeline, importGroupVersions, cacheReader, spannerClient);
 

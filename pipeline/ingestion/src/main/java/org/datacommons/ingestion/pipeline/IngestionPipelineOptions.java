@@ -100,4 +100,10 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   boolean getForceCombineNodes();
 
   void setForceCombineNodes(boolean forceCombineNodes);
+
+  @Description("Whether this is a base Data Commons ingestion run")
+  @Default.Boolean(true)
+  boolean getIsBaseDc();
+
+  void setIsBaseDc(boolean isBaseDc);
 }
