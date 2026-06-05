@@ -30,6 +30,8 @@ dependencies = [
     "absl-py",
     "google-cloud-bigquery",
     "redis",
+    "google-cloud-workflows",
+    "croniter",
 ]
 
 [tool.hatch.build.targets.wheel]

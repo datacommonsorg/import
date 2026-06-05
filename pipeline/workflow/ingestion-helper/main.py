@@ -8,6 +8,7 @@ from absl import flags
 import import_utils
 from flask import jsonify
 from aggregation_utils import AggregationUtils
+import feed_event_utils
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -69,11 +70,6 @@ def ingestion_helper(request):
     if not request_json:
         return ('Request is not a valid JSON', 400)
 
-    validation_error = _validate_params(request_json, ['actionType'])
-    if validation_error:
-        return (validation_error, 400)
-
-    action_type = request_json['actionType']
     spanner = SpannerClient(FLAGS.spanner_project_id,
                             FLAGS.spanner_instance_id,
                             FLAGS.spanner_database_id,
@@ -82,6 +78,24 @@ def ingestion_helper(request):
                             model_id=os.environ.get('EMBEDDING_MODEL_ID',
                                                     'text-embedding-005'))
     storage = StorageClient(FLAGS.gcs_bucket_id)
+
+    # Route Pub/Sub messages (CDA Feed Events) to feed_event_utils
+    if 'message' in request_json:
+        return feed_event_utils.handle_feed_event(
+            request_json=request_json,
+            spanner=spanner,
+            storage=storage,
+            project_id=FLAGS.project_id,
+            location=FLAGS.location,
+            gcs_bucket_id=FLAGS.gcs_bucket_id,
+            is_base_dc=FLAGS.is_base_dc
+        )
+
+    validation_error = _validate_params(request_json, ['actionType'])
+    if validation_error:
+        return (validation_error, 400)
+
+    action_type = request_json['actionType']
 
     if action_type == 'get_import_info':
         # Gets the details of imports that are ready for ingestion.
