@@ -280,6 +280,18 @@ class Config:
     return self.data.get(_DEFAULT_CUSTOM_ROOT_SVG_NAME_FIELD,
                          sc.DEFAULT_CUSTOM_ROOT_SVG_NAME)
 
+  def import_name(self, input_file: File) -> str:
+    """Returns the normalized import name associated with a given input file."""
+    raw_name = self._per_file_config(input_file).get("_import_name") or self.data.get("importName")
+    if not raw_name and input_file:
+      # Defensive fallback: extract from path
+      parts = input_file.path.split("/")
+      if len(parts) > 1:
+        raw_name = "_".join(parts[:-1])
+      else:
+        raw_name = "default"
+    return (raw_name or "default").replace("/", "_")
+
   def _per_file_config(self, input_file: File) -> dict:
     """ Looks up the config for a given file.
 

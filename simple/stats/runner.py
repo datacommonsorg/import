@@ -303,12 +303,14 @@ class Runner:
             for key_field in ["pattern", "filename"]:
               if key_field in new_entry:
                 new_entry[key_field] = fspath.join(rel_dir, new_entry[key_field])
+            new_entry["_import_name"] = config_data.get("importName") or rel_dir
             merged_data["inputFiles"].append(new_entry)
       elif isinstance(input_files, dict):
         for k, v in input_files.items():
           new_entry = {"pattern": fspath.join(rel_dir, k)}
           if isinstance(v, dict):
             new_entry.update(v)
+          new_entry["_import_name"] = config_data.get("importName") or rel_dir
           merged_data["inputFiles"].append(new_entry)
 
       # Merge variables

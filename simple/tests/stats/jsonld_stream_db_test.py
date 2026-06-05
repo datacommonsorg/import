@@ -30,6 +30,7 @@ class TestJsonLdStreamDb(unittest.TestCase):
     self.mock_config = mock.MagicMock()
     self.mock_config.custom_id_namespace.return_value = "custom"
     self.mock_config.data = {"importName": "test_import"}
+    self.mock_config.import_name = lambda f: f.path.split("/")[0] if (f and "/" in f.path) else "test_import"
 
     self.mock_nodes = mock.MagicMock()
     self.mock_nodes.config = self.mock_config

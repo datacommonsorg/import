@@ -233,6 +233,7 @@ class JsonLdStreamDb(Db):
     self.output_dir = output_dir
     self.import_names = import_names
     self.nodes = nodes
+    self.config = nodes.config
 
     # Generate unique folder name based on import name and timestamp
     import_name = None
@@ -260,18 +261,10 @@ class JsonLdStreamDb(Db):
     self._global_triples = []
     self._processed_imports = set()
 
-  def _get_import_name(self, input_file: File) -> str:
-    if not input_file:
-      return self.import_name
-    parts = input_file.path.split("/")
-    if len(parts) > 1:
-      return parts[0]
-    return self.import_name
-
   def insert_observations(self, observations_df: pd.DataFrame,
                           input_file: File):
     if not observations_df.empty:
-      import_name = self._get_import_name(input_file)
+      import_name = self.config.import_name(input_file)
       records = observations_df.to_records(index=False).tolist()
       with self.lock:
         self._processed_imports.add(import_name)
@@ -283,7 +276,7 @@ class JsonLdStreamDb(Db):
     if triples:
       with self.lock:
         if input_file:
-          import_name = self._get_import_name(input_file)
+          import_name = self.config.import_name(input_file)
           self._processed_imports.add(import_name)
           if import_name not in self._triples:
             self._triples[import_name] = []
