@@ -27,6 +27,7 @@ from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
 from stats.data import StatVarGroup
+from stats.data import strip_namespace
 from stats.data import Triple
 import stats.schema_constants as sc
 from util.filesystem import File
@@ -142,10 +143,13 @@ class Nodes:
   @thread_safe
   def register_provenance(self, id: str, name: str = "", url: str = "", source_id: str = "") -> Provenance:
     self.has_custom_mcf_nodes = True
-    prov = self.provenances.get(id)
+    clean_id = strip_namespace(id)
+    clean_source_id = strip_namespace(source_id) if source_id else ""
+    
+    prov = self.provenances.get(clean_id)
     if not prov:
-      prov = Provenance(id=id, source_id=source_id, name=name or id, url=url)
-      self.provenances[id] = prov
+      prov = Provenance(id=clean_id, source_id=clean_source_id, name=name or clean_id, url=url)
+      self.provenances[clean_id] = prov
       if name:
         self.provenances[name] = prov
     else:
@@ -153,17 +157,19 @@ class Nodes:
         prov.name = name
       if url and not prov.url:
         prov.url = url
-      if source_id and not prov.source_id:
-        prov.source_id = source_id
+      if clean_source_id and not prov.source_id:
+        prov.source_id = clean_source_id
     return prov
 
   @thread_safe
   def register_source(self, id: str, name: str = "", url: str = "") -> Source:
     self.has_custom_mcf_nodes = True
-    src = self.sources.get(id)
+    clean_id = strip_namespace(id)
+    
+    src = self.sources.get(clean_id)
     if not src:
-      src = Source(id=id, name=name or id, url=url)
-      self.sources[id] = src
+      src = Source(id=clean_id, name=name or clean_id, url=url)
+      self.sources[clean_id] = src
       if name:
         self.sources[name] = src
     else:

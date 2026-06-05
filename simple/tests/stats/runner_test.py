@@ -293,9 +293,11 @@ class TestRunner(unittest.TestCase):
       # Write provenance.mcf to satisfy strict validation
       provenance_mcf = (
           "Node: dcid:Source1\n"
-          "typeOf: dcs:Source\n\n"
+          "typeOf: dcs:Source\n"
+          "url: \"http://source1.com\"\n\n"
           "Node: dcid:Provenance1\n"
           "typeOf: dcs:Provenance\n"
+          "url: \"http://source1.com/provenance1\"\n"
           "sourceLink: dcid:Source1\n"
       )
       with open(os.path.join(input_dir, "provenance.mcf"), "w") as f:
@@ -353,6 +355,11 @@ class TestRunner(unittest.TestCase):
         with open(filepath, "r") as f:
           data = json.load(f)
           self.assertTrue(isinstance(data, (dict, list)))
+          if filename.startswith("observation-"):
+            graph = data.get("@graph", [])
+            self.assertGreater(len(graph), 0)
+            for obs in graph:
+              self.assertEqual(obs.get("dcid:provenanceUrl"), "http://source1.com/provenance1")
 
   def test_read_configs_from_subdirs(self):
     with tempfile.TemporaryDirectory() as temp_dir:
