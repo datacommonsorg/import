@@ -137,11 +137,48 @@ class Nodes:
     return source.id
 
   @thread_safe
+  def register_provenance(self, id: str, name: str = "", url: str = "", source_id: str = "") -> Provenance:
+    prov = self.provenances.get(id)
+    if not prov:
+      prov = Provenance(id=id, source_id=source_id, name=name or id, url=url)
+      self.provenances[id] = prov
+      if name:
+        self.provenances[name] = prov
+    else:
+      if name and not prov.name:
+        prov.name = name
+      if url and not prov.url:
+        prov.url = url
+      if source_id and not prov.source_id:
+        prov.source_id = source_id
+    return prov
+
+  @thread_safe
+  def register_source(self, id: str, name: str = "", url: str = "") -> Source:
+    src = self.sources.get(id)
+    if not src:
+      src = Source(id=id, name=name or id, url=url)
+      self.sources[id] = src
+      if name:
+        self.sources[name] = src
+    else:
+      if name and not src.name:
+        src.name = name
+      if url and not src.url:
+        src.url = url
+    return src
+
+  @thread_safe
   def provenance(self, input_file: File) -> Provenance:
     prov_name = self.config.provenance_name(input_file)
-    if prov_name and (prov_name.startswith(("dcid:", "http://", "https://")) or (":" in prov_name and " " not in prov_name)):
-      return Provenance(id=prov_name, source_id="", name=prov_name)
-    return self.provenances.get(prov_name, _DEFAULT_PROVENANCE)
+    if not prov_name:
+      return _DEFAULT_PROVENANCE
+    prov = self.provenances.get(prov_name)
+    if prov:
+      return prov
+    if prov_name.startswith(("dcid:", "http://", "https://")) or (":" in prov_name and " " not in prov_name):
+      return self.register_provenance(prov_name)
+    return _DEFAULT_PROVENANCE
 
   @thread_safe
   def variable(self, sv_column_name: str, input_file: File) -> StatVar:

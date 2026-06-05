@@ -41,12 +41,14 @@ class McfImporter(Importer):
     """
 
   def __init__(self, input_file: File, output_file: File, db: Db,
-               reporter: FileImportReporter, is_main_dc: bool) -> None:
+               reporter: FileImportReporter, is_main_dc: bool,
+               nodes: Nodes = None) -> None:
     self.input_file = input_file
     self.output_file = output_file
     self.db = db
     self.reporter = reporter
     self.is_main_dc = is_main_dc
+    self.nodes = nodes
 
   def do_import(self) -> None:
     self.reporter.report_started()
@@ -56,6 +58,39 @@ class McfImporter(Importer):
         self.output_file.write(self.input_file.read())
       else:
         triples = self._mcf_to_triples()
+
+        # Extract and register Provenance / Source nodes in nodes registry
+        if self.nodes:
+          subject_properties = {}
+          for triple in triples:
+            sub_id = triple.subject_id
+            if sub_id not in subject_properties:
+              subject_properties[sub_id] = {}
+            if triple.predicate == "typeOf":
+              subject_properties[sub_id]["typeOf"] = triple.object_id
+            elif triple.predicate == "url":
+              subject_properties[sub_id]["url"] = triple.object_value.strip('"') if triple.object_value else ""
+            elif triple.predicate == "name":
+              subject_properties[sub_id]["name"] = triple.object_value.strip('"') if triple.object_value else ""
+            elif triple.predicate == "sourceLink":
+              subject_properties[sub_id]["sourceLink"] = triple.object_id
+
+          for sub_id, props in subject_properties.items():
+            node_type = props.get("typeOf")
+            if node_type in ["dcs:Provenance", "Provenance"]:
+              self.nodes.register_provenance(
+                  id=sub_id,
+                  name=props.get("name", ""),
+                  url=props.get("url", ""),
+                  source_id=props.get("sourceLink", "")
+              )
+            elif node_type in ["dcs:Source", "Source"]:
+              self.nodes.register_source(
+                  id=sub_id,
+                  name=props.get("name", ""),
+                  url=props.get("url", "")
+              )
+
         logging.info("Inserting %s triples from %s", len(triples),
                      self.input_file.full_path())
         self.db.insert_triples(triples, self.input_file)

@@ -746,6 +746,7 @@ class Runner:
         db=self.db,
         reporter=reporter,
         is_main_dc=is_main_dc,
+        nodes=self.nodes,
     )
 
   def _create_importer(self, input_file: File) -> Importer:
@@ -816,7 +817,8 @@ class Runner:
       import_list = []
       for imp in processed_imports:
         gcs_pattern = f"{output_path.rstrip('/')}/{imp}/*.jsonld"
-        import_list.append({"importName": imp, "graphPath": gcs_pattern})
+        trigger_imp_name = imp.replace("/", "_")
+        import_list.append({"importName": trigger_imp_name, "graphPath": gcs_pattern})
       self.trigger_workflow_info = import_list
     else:
       logging.info(

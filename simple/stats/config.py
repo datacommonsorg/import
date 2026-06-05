@@ -301,7 +301,7 @@ class Config:
       else:
         raw_name = "default"
         
-    return (raw_name or "default").replace("/", "_")
+    return raw_name or "default"
 
   def _per_file_config(self, input_file: File) -> dict:
     """ Looks up the config for a given file.
