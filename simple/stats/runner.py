@@ -43,6 +43,7 @@ from stats.db import get_datacommons_platform_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
 from stats.db import TYPE_CLOUD_SQL
+from stats.validation import MetadataValidator
 from stats.db_cache import get_db_cache_from_env
 from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
@@ -259,7 +260,7 @@ class Runner:
     merged_data = {
         "importName": constants.ALL_IMPORTS,
         "includeInputSubdirs": True,
-        "inputFiles": {},
+        "inputFiles": [],
         "variables": {},
         "sources": {}
     }
@@ -277,11 +278,22 @@ class Runner:
 
       logging.info("Merging config from import directory: %s", rel_dir)
 
-      # Merge inputFiles, prefixing keys with rel_dir
-      input_files = config_data.get("inputFiles", {})
-      for k, v in input_files.items():
-        new_key = fspath.join(rel_dir, k)
-        merged_data["inputFiles"][new_key] = v
+      # Merge inputFiles, prefixing patterns with rel_dir and converting dicts to lists
+      input_files = config_data.get("inputFiles", [])
+      if isinstance(input_files, list):
+        for entry in input_files:
+          if isinstance(entry, dict):
+            new_entry = dict(entry)
+            for key_field in ["pattern", "filename"]:
+              if key_field in new_entry:
+                new_entry[key_field] = fspath.join(rel_dir, new_entry[key_field])
+            merged_data["inputFiles"].append(new_entry)
+      elif isinstance(input_files, dict):
+        for k, v in input_files.items():
+          new_entry = {"pattern": fspath.join(rel_dir, k)}
+          if isinstance(v, dict):
+            new_entry.update(v)
+          merged_data["inputFiles"].append(new_entry)
 
       # Merge variables
       variables = config_data.get("variables", {})
@@ -766,6 +778,9 @@ class Runner:
     # Generate triples from nodes and write directly
     triples = self.nodes.triples()
     self.db.insert_triples(triples)
+
+    # Perform strict metadata validation before committing and closing
+    MetadataValidator(self.config, self.db).validate()
 
     # Auto-trigger workflow if output is on GCS
     output_path = self.db.jsonld_dir.full_path()

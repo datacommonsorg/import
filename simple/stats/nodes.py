@@ -139,6 +139,8 @@ class Nodes:
   @thread_safe
   def provenance(self, input_file: File) -> Provenance:
     prov_name = self.config.provenance_name(input_file)
+    if prov_name and (prov_name.startswith(("dcid:", "http://", "https://")) or (":" in prov_name and " " not in prov_name)):
+      return Provenance(id=prov_name, source_id="", name=prov_name)
     return self.provenances.get(prov_name, _DEFAULT_PROVENANCE)
 
   @thread_safe

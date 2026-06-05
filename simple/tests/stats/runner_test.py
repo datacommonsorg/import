@@ -323,8 +323,9 @@ class TestRunner(unittest.TestCase):
       # Verify merged config
       config = runner.config
       self.assertEqual(config.data["importName"], constants.ALL_IMPORTS)
-      self.assertIn("oecd/data.csv", config.data["inputFiles"])
-      self.assertIn("ilo/ds1/data.csv", config.data["inputFiles"])
+      patterns = [entry["pattern"] for entry in config.data["inputFiles"]]
+      self.assertIn("oecd/data.csv", patterns)
+      self.assertIn("ilo/ds1/data.csv", patterns)
 
   @mock.patch("google.cloud.storage.Client")
   def test_dcp_bridge_multi_imports(self, mock_storage_client):
@@ -345,20 +346,13 @@ class TestRunner(unittest.TestCase):
       os.makedirs(oecd_dir)
       oecd_config = {
           "importName": "oecd",
-          "inputFiles": {
-              "data.csv": {
+          "inputFiles": [
+              {
+                  "pattern": "data.csv",
                   "entityType": "Country",
-                  "provenance": "OECD Prov"
+                  "provenance": "dcid:OecdProv"
               }
-          },
-          "sources": {
-              "OECD Source": {
-                  "url": "http://oecd.org",
-                  "provenances": {
-                      "OECD Prov": "http://oecd.org/prov"
-                  }
-              }
-          }
+          ]
       }
       with open(os.path.join(oecd_dir, "config.json"), "w") as f:
         json.dump(oecd_config, f)
@@ -368,25 +362,29 @@ class TestRunner(unittest.TestCase):
       with open(os.path.join(oecd_dir, "data.csv"), "w") as f:
         f.write(oecd_data)
 
+      # OECD oecd.mcf defining the provenance and source
+      oecd_mcf = (
+          "Node: dcid:OecdSource\n"
+          "typeOf: dcs:Source\n\n"
+          "Node: dcid:OecdProv\n"
+          "typeOf: dcs:Provenance\n"
+          "sourceLink: dcid:OecdSource\n"
+      )
+      with open(os.path.join(oecd_dir, "oecd.mcf"), "w") as f:
+        f.write(oecd_mcf)
+
       # Create ilo subdir
       ilo_dir = os.path.join(input_dir, "ilo", "ds1")
       os.makedirs(ilo_dir)
       ilo_config = {
           "importName": "ilo",
-          "inputFiles": {
-              "data.csv": {
+          "inputFiles": [
+              {
+                  "pattern": "data.csv",
                   "entityType": "Country",
-                  "provenance": "ILO Prov"
+                  "provenance": "dcid:IloProv"
               }
-          },
-          "sources": {
-              "ILO Source": {
-                  "url": "http://ilo.org",
-                  "provenances": {
-                      "ILO Prov": "http://ilo.org/prov"
-                  }
-              }
-          }
+          ]
       }
       with open(os.path.join(ilo_dir, "config.json"), "w") as f:
         json.dump(ilo_config, f)
@@ -394,6 +392,17 @@ class TestRunner(unittest.TestCase):
       ilo_data = "entity,date,Count_Frog_Green\nUSA,2020,40\n"
       with open(os.path.join(ilo_dir, "data.csv"), "w") as f:
         f.write(ilo_data)
+
+      # ILO ilo.mcf defining the provenance and source
+      ilo_mcf = (
+          "Node: dcid:IloSource\n"
+          "typeOf: dcs:Source\n\n"
+          "Node: dcid:IloProv\n"
+          "typeOf: dcs:Provenance\n"
+          "sourceLink: dcid:IloSource\n"
+      )
+      with open(os.path.join(ilo_dir, "ilo.mcf"), "w") as f:
+        f.write(ilo_mcf)
 
       # Mock DC Client calls
       dc_client.get_property_of_entities = mock.MagicMock(return_value={})

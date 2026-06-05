@@ -71,8 +71,16 @@ class Config:
 
   def __init__(self, data: dict) -> None:
     self.data = data
-    self._input_files_config: dict[str, dict] = self.data.get(
-        _INPUT_FILES_FIELD, {})
+    input_files_data = self.data.get(_INPUT_FILES_FIELD, [])
+    self._input_files_config: dict[str, dict] = {}
+    if isinstance(input_files_data, list):
+      for entry in input_files_data:
+        if isinstance(entry, dict):
+          key = entry.get("pattern") or entry.get("filename")
+          if key:
+            self._input_files_config[key] = entry
+    else:
+      self._input_files_config = input_files_data
     # If input file paths are specified with wildcards - e.g. "gs://bucket/foo*.csv",
     # this dict maintains a mapping from actual file path to the wildcard key
     # for fast lookup.
