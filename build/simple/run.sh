@@ -25,7 +25,8 @@ if [ "$CONFIG_FILE" != "" ]; then
     python3 -m stats.main \
         --mode=maindc \
         --config_file=$CONFIG_FILE \
-        --output_dir=$OUTPUT_DIR
+        --output_dir=$OUTPUT_DIR \
+        "$@"
 else
     if [ "$INPUT_DIR" = "" ]; then
         export INPUT_DIR=/input/
@@ -38,5 +39,6 @@ else
     python3 -m stats.main \
         --mode=maindc \
         --input_dir=$INPUT_DIR \
-        --output_dir=$OUTPUT_DIR
+        --output_dir=$OUTPUT_DIR \
+        "$@"
 fi

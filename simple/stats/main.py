@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import os
 
 from absl import app
 from absl import flags
@@ -29,6 +30,8 @@ flags.DEFINE_string("input_dir", constants.DEFAULT_INPUT_DIR,
                     "The input directory.")
 flags.DEFINE_string("output_dir", constants.DEFAULT_OUTPUT_DIR,
                     "The output directory.")
+flags.DEFINE_list("imports", [],
+                  "The names of the imports (subdirectories under input_dir).")
 flags.DEFINE_enum(
     "mode",
     RunMode.CUSTOM_DC,
@@ -54,10 +57,12 @@ _FREEZE_TIME_IGNORE_LIST = ["transformers"]
 def _run():
   initialize_logger()
   logging.info("Starting stats data importer job in mode: %s", FLAGS.mode)
+
   Runner(config_file_path=FLAGS.config_file,
          input_dir_path=FLAGS.input_dir,
          output_dir_path=FLAGS.output_dir,
-         mode=FLAGS.mode).run()
+         mode=FLAGS.mode,
+         import_names=FLAGS.imports).run()
   logging.info("Runner finished successfully.")
 
 

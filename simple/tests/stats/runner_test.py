@@ -234,3 +234,63 @@ class TestRunner(unittest.TestCase):
                    run_mode=RunMode.SCHEMA_UPDATE)
       # Redis cache should NOT be cleared in schema update mode.
       self.assertEqual(1, len(fake_redis.keys("*")))
+
+  def test_read_configs_from_subdirs(self):
+    with tempfile.TemporaryDirectory() as temp_dir:
+      # Create subdirectories
+      input_dir = os.path.join(temp_dir, "input")
+      output_dir = os.path.join(temp_dir, "output")
+      os.makedirs(input_dir)
+      os.makedirs(output_dir)
+
+      oecd_dir = os.path.join(input_dir, "oecd")
+      os.makedirs(oecd_dir)
+      ilo_dir = os.path.join(input_dir, "ilo", "ds1")
+      os.makedirs(ilo_dir)
+
+      # Create config.json files
+      oecd_config = {"inputFiles": {"data.csv": {"importType": "OBSERVATIONS"}}}
+      ilo_config = {"inputFiles": {"data.csv": {"importType": "OBSERVATIONS"}}}
+
+      with open(os.path.join(oecd_dir, "config.json"), "w") as f:
+        json.dump(oecd_config, f)
+      with open(os.path.join(ilo_dir, "config.json"), "w") as f:
+        json.dump(ilo_config, f)
+
+      # Instantiate Runner
+      runner = Runner(config_file_path=None,
+                      input_dir_path=input_dir,
+                      output_dir_path=output_dir,
+                      import_names=[constants.ALL_IMPORTS])
+
+      # Verify merged config
+      config = runner.config
+      self.assertEqual(config.data["importName"], constants.ALL_IMPORTS)
+      self.assertIn("oecd/data.csv", config.data["inputFiles"])
+      self.assertIn("ilo/ds1/data.csv", config.data["inputFiles"])
+
+
+class TestMain(unittest.TestCase):
+
+  @mock.patch('stats.main.Runner')
+  def test_run_with_import_name(self, mock_runner):
+    from stats.main import _run
+    from stats.main import FLAGS
+
+    # Parse flags with dummy argv to avoid UnparsedFlagAccessError
+    FLAGS(["test_program"])
+
+    # Set flags
+    FLAGS.input_dir = "/base/input"
+    FLAGS.imports = ["oecd"]
+    FLAGS.config_file = None
+    FLAGS.output_dir = "/output"
+    FLAGS.mode = RunMode.CUSTOM_DC
+
+    _run()
+
+    mock_runner.assert_called_once_with(config_file_path=None,
+                                        input_dir_path="/base/input",
+                                        output_dir_path="/output",
+                                        mode=RunMode.CUSTOM_DC,
+                                        import_names=["oecd"])

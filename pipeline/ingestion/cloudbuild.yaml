@@ -13,6 +13,7 @@ steps:
       - '-pl'
       - 'pipeline/ingestion'
       - '-am'
+      - '-Drevision=${_VERSION}'
     secretEnv:
       - DC_API_KEY
     id: 'build-jar'
@@ -32,6 +33,7 @@ steps:
       - '-pl'
       - 'pipeline/ingestion'
       - '-DtestMode=DATAFLOW'
+      - '-Drevision=${_VERSION}'
     secretEnv:
       - DC_API_KEY
     id: 'run-dataflow-integration-test'
@@ -44,9 +46,9 @@ steps:
       - 'dataflow'
       - 'flex-template'
       - 'build'
-      - 'gs://$_TEMPLATE_BUCKET/templates/flex/ingestion.json'
+      - 'gs://$_TEMPLATE_BUCKET/templates/flex/ingestion-${_VERSION}.json'
       - '--image-gcr-path'
-      - '${_IMAGE_GCR_PATH}:$SHORT_SHA'
+      - '${_IMAGE_GCR_PATH}:${_VERSION}'
       - '--sdk-language'
       - 'JAVA'
       - '--flex-template-base-image'
@@ -59,6 +61,15 @@ steps:
       - 'FLEX_TEMPLATE_JAVA_MAIN_CLASS=org.datacommons.ingestion.pipeline.GraphIngestionPipeline'
     id: 'build-flex-template'
 
+  # 4. Update the "latest" pointer for the workflow default
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gsutil'
+    args:
+      - 'cp'
+      - 'gs://$_TEMPLATE_BUCKET/templates/flex/ingestion-${_VERSION}.json'
+      - 'gs://$_TEMPLATE_BUCKET/templates/flex/ingestion.json'
+    id: 'update-latest-template'
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/dc-api-key/versions/latest
@@ -67,7 +78,7 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 substitutions:
-  _VERSION: "0.1-SNAPSHOT"
+  _VERSION: "$SHORT_SHA"
   _TEMPLATE_BUCKET: "datcom-templates"
   _IMAGE_GCR_PATH: "us-docker.pkg.dev/datcom-ci/gcr.io/dataflow-templates/ingestion"
   _INSTANCE_ID: "datcom-spanner-test"

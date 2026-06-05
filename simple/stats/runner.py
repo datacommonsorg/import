@@ -60,6 +60,7 @@ from util.file_match import match
 from util.filesystem import create_store
 from util.filesystem import Dir
 from util.filesystem import File
+from util.filesystem import join_path
 from util.filesystem import Store
 
 
@@ -68,6 +69,9 @@ class RunMode(StrEnum):
   SCHEMA_UPDATE = "schemaupdate"
   MAIN_DC = "maindc"
   DCP_BRIDGE = "dcpbridge"
+
+
+_ARCHIVES_DIR_NAME = "archives"
 
 
 class Runner:
@@ -79,12 +83,14 @@ class Runner:
       input_dir_path: str,
       output_dir_path: str,
       mode: RunMode = RunMode.CUSTOM_DC,
+      import_names: Optional[list[str]] = None,
   ) -> None:
     assert (config_file_path or
             input_dir_path), "One of config_file or input_dir must be specified"
     assert output_dir_path, "output_dir must be specified"
 
     self.mode = mode
+    self.import_names = import_names
 
     # File systems, both input and output. Must be closed when run finishes.
     self.all_stores: list[Store] = []
@@ -110,14 +116,34 @@ class Runner:
 
     # Input dir driven (config file found in input dir)
     else:
-      input_store = create_store(input_dir_path)
+      effective_input_dir = input_dir_path
+      imports = self.import_names or []
+
+      # Default action: read config from the root of the effective directory
+      load_action = lambda store: self._read_config_from_file(
+          config_file_path=constants.CONFIG_JSON_FILE_NAME,
+          config_file_dir=store.as_dir(),
+      )
+
+      if imports == [constants.ALL_IMPORTS]:
+        logging.info("Running bulk load for all imports under: %s",
+                     effective_input_dir)
+        load_action = lambda store: self._read_configs_from_subdirs(store.
+                                                                    as_dir())
+      elif len(imports) > 1:
+        logging.info("Running combined load for specific imports: %s", imports)
+        load_action = lambda store: self._read_configs_from_list(
+            store.as_dir(), imports)
+      elif imports:
+        effective_input_dir = join_path(input_dir_path, imports[0])
+        logging.info("Using import specific directory: %s", effective_input_dir)
+
+      # Create store and execute action ONCE
+      input_store = create_store(effective_input_dir)
       self.all_stores.append(input_store)
       self.input_stores.append(input_store)
 
-      self._read_config_from_file(
-          config_file_path=constants.CONFIG_JSON_FILE_NAME,
-          config_file_dir=input_store.as_dir(),
-      )
+      load_action(input_store)
 
     # Get dict of special file type string to special file name.
     # Example entry: verticalSpecsFile -> vertical_specs.json
@@ -211,6 +237,119 @@ class Runner:
 
     config_data = json.loads(raw_config) if raw_config else {}
     self.config = Config(data=config_data)
+
+  def _merge_configs(self, configs: list, base_dir: Dir):
+    """Merges multiple config.json files into a single configuration.
+    
+    Args:
+      configs: A list of File objects representing the config.json files to merge.
+      base_dir: The base directory used to calculate relative paths for input files.
+    """
+    import json
+
+    import fs.path as fspath
+
+    merged_data = {
+        "importName": constants.ALL_IMPORTS,
+        "includeInputSubdirs": True,
+        "inputFiles": {},
+        "variables": {},
+        "sources": {}
+    }
+
+    for file in configs:
+      raw_config = file.read()
+      try:
+        config_data = json.loads(raw_config)
+      except json.JSONDecodeError as e:
+        logging.error("Failed to parse JSON from %s: %s", file.full_path(), e)
+        raise e
+
+      dir_path = fspath.dirname(file.path)
+      rel_dir = fspath.relativefrom(base_dir.path, dir_path)
+
+      logging.info("Merging config from import directory: %s", rel_dir)
+
+      # Merge inputFiles, prefixing keys with rel_dir
+      input_files = config_data.get("inputFiles", {})
+      for k, v in input_files.items():
+        new_key = fspath.join(rel_dir, k)
+        merged_data["inputFiles"][new_key] = v
+
+      # Merge variables
+      variables = config_data.get("variables", {})
+      for k, v in variables.items():
+        merged_data["variables"][k] = v
+
+      # Merge sources
+      sources = config_data.get("sources", {})
+      for k, v in sources.items():
+        merged_data["sources"][k] = v
+
+    self.config = Config(data=merged_data)
+
+  def _find_configs_in_dir(self, directory: Dir) -> list:
+    """Finds all config.json files in a directory, excluding archives."""
+    configs = []
+    for file in directory.all_files(include_subdirs=True):
+      if _ARCHIVES_DIR_NAME in file.path.split("/"):
+        continue
+      if file.name() == constants.CONFIG_JSON_FILE_NAME:
+        configs.append(file)
+    return configs
+
+  def _read_configs_from_subdirs(self, base_dir: Dir):
+    """Scans subdirectories for config.json files and merges them.
+    
+    Args:
+      base_dir: The base directory to scan.
+      
+    Raises:
+      FileNotFoundError: If no config.json files are found.
+    """
+    configs = self._find_configs_in_dir(base_dir)
+    logging.info("Found %s config files in subdirectories.", len(configs))
+    if not configs:
+      raise FileNotFoundError(
+          f"No config.json files found in subdirectories of {base_dir.full_path()}"
+      )
+    self._merge_configs(configs, base_dir)
+
+  def _read_configs_from_list(self, base_dir: Dir, import_names: list[str]):
+    """Reads configs for specific imports specified in a list and merges them.
+    
+    Args:
+      base_dir: The base directory containing the import subdirectories.
+      import_names: A list of subdirectory names to look for configs in.
+      
+    Raises:
+      FileNotFoundError: If no config files are found for a requested import.
+    """
+    configs = []
+    for name in import_names:
+      name = name.strip()
+      target_path = fspath.join(base_dir.path, name)
+      if not base_dir.fs().isdir(target_path):
+        raise FileNotFoundError(f"Import directory not found: {name}")
+      try:
+        imp_dir = base_dir.open_dir(name)
+        file = imp_dir.open_file(constants.CONFIG_JSON_FILE_NAME,
+                                 create_if_missing=False)
+        configs.append(file)
+      except FileNotFoundError:
+        logging.info(
+            "Config file not found at root of %s. Scanning subdirectories.",
+            name)
+        sub_configs = self._find_configs_in_dir(imp_dir)
+        if not sub_configs:
+          raise FileNotFoundError(f"No config files found for {name}")
+        configs.extend(sub_configs)
+      except ValueError as e:
+        logging.error("Invalid directory for import %s: %s", name, e)
+        raise e
+
+    logging.info("Found %s config files from list.", len(configs))
+    self._merge_configs(configs, base_dir)
 
   def _get_db_config(self) -> dict:
     if self.mode == RunMode.MAIN_DC:
@@ -481,6 +620,8 @@ class Runner:
         input_files.append(input_store.as_file())
 
     for input_file in input_files:
+      if _ARCHIVES_DIR_NAME in input_file.path.split("/"):
+        continue
       if self._check_if_special_file(input_file):
         continue
       if match(input_file, "*.csv"):
@@ -494,6 +635,8 @@ class Runner:
 
     logging.info(f"Found {len(input_csv_files)} csv files to import")
     logging.info(f"Found {len(input_mcf_files)} mcf files to import")
+    logging.info("Matched files to process: %s",
+                 [f.full_path() for f in input_csv_files + input_mcf_files])
 
     self.reporter.report_started(import_files=list(input_csv_files +
                                                    input_mcf_files))
@@ -598,7 +741,20 @@ class Runner:
     jsonld_dir = self.output_dir.open_dir("jsonld")
 
     # Create a unique subfolder based on import name and timestamp for parallel runs
-    import_name = self.config.data.get("importName") or "default_import_name"
+    import_name = None
+    import_names = self.import_names
+    if isinstance(import_names, list):
+      if import_names == [constants.ALL_IMPORTS]:
+        import_name = constants.ALL_IMPORTS
+      else:
+        import_name = "_".join(import_names)
+
+    # TODO(gmechali): Remove the fallbacks.
+    import_name = import_name or self.config.data.get(
+        "importName") or "default_import_name"
+    if import_name and "/" in import_name:
+      import_name = import_name.replace("/", "_")
+
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     unique_dir_name = f"{import_name}_{timestamp}"
     unique_jsonld_dir = jsonld_dir.open_dir(unique_dir_name)
