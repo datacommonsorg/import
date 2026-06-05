@@ -90,6 +90,8 @@ class Nodes:
     self.event_types: dict[str, EventType] = {}
     # dict from entity type name to EntityType
     self.entity_types: dict[str, EntityType] = {}
+    self._used_provenance_ids = set()
+    self._used_source_ids = set()
     self._load_provenances_and_sources()
     # Used to generate SV IDs
     self._sv_generated_id_count = 0
@@ -172,13 +174,19 @@ class Nodes:
   def provenance(self, input_file: File) -> Provenance:
     prov_name = self.config.provenance_name(input_file)
     if not prov_name:
-      return _DEFAULT_PROVENANCE
-    prov = self.provenances.get(prov_name)
-    if prov:
-      return prov
-    if prov_name.startswith(("dcid:", "http://", "https://")) or (":" in prov_name and " " not in prov_name):
-      return self.register_provenance(prov_name)
-    return _DEFAULT_PROVENANCE
+      prov = _DEFAULT_PROVENANCE
+    else:
+      prov = self.provenances.get(prov_name)
+      if not prov:
+        if prov_name.startswith(("dcid:", "http://", "https://")) or (":" in prov_name and " " not in prov_name):
+          prov = self.register_provenance(prov_name)
+        else:
+          prov = _DEFAULT_PROVENANCE
+          
+    self._used_provenance_ids.add(prov.id)
+    if prov.source_id:
+      self._used_source_ids.add(prov.source_id)
+    return prov
 
   @thread_safe
   def variable(self, sv_column_name: str, input_file: File) -> StatVar:
@@ -339,8 +347,12 @@ class Nodes:
   def triples(self, triples_file: File | None = None) -> list[Triple]:
     triples: list[Triple] = []
     for source in self.sources.values():
+      if source.id == _DEFAULT_SOURCE.id and _DEFAULT_SOURCE.id not in self._used_source_ids:
+        continue
       triples.extend(source.triples())
     for provenance in self.provenances.values():
+      if provenance.id == _DEFAULT_PROVENANCE.id and _DEFAULT_PROVENANCE.id not in self._used_provenance_ids:
+        continue
       triples.extend(provenance.triples())
     for group in self.groups.values():
       triples.extend(group.triples())
