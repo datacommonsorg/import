@@ -30,7 +30,7 @@ substitutions:
   _AR_REPO_URL: 'us-docker.pkg.dev/datcom-ci/gcr.io'
   _BQ_SPANNER_CONN_ID: 'projects/datcom-import-automation-prod/locations/us/connections/bq_spanner_conn'
   _VERSION: '${SHORT_SHA}'
-  _DATAFLOW_TEMPLATE_PATH: 'gs://datcom-templates/templates/flex/ingestion-${_VERSION}.json'
+  _DATAFLOW_TEMPLATE_PATH: 'gs://datcom-templates/templates/flex/'
 
 steps:
 - id: 'ingestion-helper-service'
@@ -47,7 +47,7 @@ steps:
 
 - id: 'spanner-ingestion-workflow'
   name: 'gcr.io/cloud-builders/gcloud'
-  args: ['workflows', 'deploy', 'spanner-ingestion-workflow', '--project', '${_PROJECT_ID}', '--location', '${_LOCATION}', '--source', 'spanner-ingestion-workflow.yaml', '--set-env-vars', 'LOCATION=${_LOCATION},PROJECT_ID=${_PROJECT_ID},SPANNER_PROJECT_ID=${_SPANNER_PROJECT_ID},SPANNER_INSTANCE_ID=${_SPANNER_INSTANCE_ID},SPANNER_DATABASE_ID=${_SPANNER_GRAPH_DATABASE_ID},PROJECT_NUMBER=${_PROJECT_NUMBER},DATAFLOW_TEMPLATE_PATH=${_DATAFLOW_TEMPLATE_PATH}']
+  args: ['workflows', 'deploy', 'spanner-ingestion-workflow', '--project', '${_PROJECT_ID}', '--location', '${_LOCATION}', '--source', 'spanner-ingestion-workflow.yaml', '--set-env-vars', 'LOCATION=${_LOCATION},PROJECT_ID=${_PROJECT_ID},SPANNER_PROJECT_ID=${_SPANNER_PROJECT_ID},SPANNER_INSTANCE_ID=${_SPANNER_INSTANCE_ID},SPANNER_DATABASE_ID=${_SPANNER_GRAPH_DATABASE_ID},PROJECT_NUMBER=${_PROJECT_NUMBER},DATAFLOW_TEMPLATE_PATH=${_DATAFLOW_TEMPLATE_PATH}ingestion-${_VERSION}.json']
 
 options:
   logging: CLOUD_LOGGING_ONLY
