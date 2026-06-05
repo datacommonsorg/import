@@ -52,7 +52,3 @@ substitutions:
   _VERSION: "$SHORT_SHA"
   _TEMPLATE_BUCKET: "datcom-templates"
   _IMAGE_GCR_PATH: "us-docker.pkg.dev/datcom-ci/gcr.io/dataflow-templates/ingestion"
-  _INSTANCE_ID: "datcom-spanner-test"
-  _DATABASE_ID: "dc-test-db"
-  _GCS_BUCKET: "datcom-ci-test"
-  _REGION: "us-central1"
