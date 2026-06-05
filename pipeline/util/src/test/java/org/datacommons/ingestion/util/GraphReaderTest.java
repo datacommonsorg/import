@@ -340,8 +340,58 @@ public class GraphReaderTest {
             .observations(expectedObsValues)
             .build();
 
-    Observation actualObservation = GraphReader.graphToObservations(optimizedGraph, "test_import");
+    Observation actualObservation =
+        GraphReader.graphToObservations(optimizedGraph, "test_import", true);
 
     assertEquals(expectedObservation, actualObservation);
+  }
+
+  @Test
+  public void testGraphToObservationsWithoutBaseDcPrefix() {
+    McfOptimizedGraph optimizedGraph =
+        McfOptimizedGraph.newBuilder()
+            .setSvObsSeries(
+                McfStatVarObsSeries.newBuilder()
+                    .setKey(
+                        McfStatVarObsSeries.Key.newBuilder()
+                            .setObservationAbout("geoId/testPlace")
+                            .setVariableMeasured("testStatVar")
+                            .setObservationPeriod("P1Y")
+                            .setMeasurementMethod("dcAggregate/testMethod")
+                            .setUnit("testUnit")
+                            .setScalingFactor("100")
+                            .setProvenanceUrl("http://example.com"))
+                    .addSvObsList(
+                        StatVarObs.newBuilder().setDcid("obs1").setDate("2020").setNumber(10.0))
+                    .addSvObsList(
+                        StatVarObs.newBuilder()
+                            .setDcid("obs2")
+                            .setDate("2021")
+                            .setText("someText")))
+            .build();
+
+    Observations expectedObsValues =
+        Observations.newBuilder().putValues("2020", "10.0").putValues("2021", "someText").build();
+
+    Observation expectedObservation =
+        Observation.builder()
+            .isBaseDc(false) // Custom DC
+            .observationAbout("geoId/testPlace")
+            .variableMeasured("testStatVar")
+            .measurementMethod("testMethod")
+            .isDcAggregate(true)
+            .importName("test_import")
+            .observationPeriod("P1Y")
+            .unit("testUnit")
+            .scalingFactor("100")
+            .provenanceUrl("http://example.com")
+            .observations(expectedObsValues)
+            .build();
+
+    Observation actualObservation =
+        GraphReader.graphToObservations(optimizedGraph, "test_import", false);
+
+    assertEquals(expectedObservation, actualObservation);
+    assertEquals("test_import", actualObservation.getObsGraph().getEdges().get(0).getProvenance());
   }
 }

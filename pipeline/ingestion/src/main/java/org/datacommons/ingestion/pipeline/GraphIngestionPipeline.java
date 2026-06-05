@@ -16,6 +16,7 @@ import org.apache.beam.sdk.transforms.Wait;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.datacommons.ingestion.data.ProvenanceUtils;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.util.GraphReader;
 import org.datacommons.ingestion.util.PipelineUtils;
@@ -45,6 +46,11 @@ public class GraphIngestionPipeline {
   public static void main(String[] args) {
     IngestionPipelineOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(IngestionPipelineOptions.class);
+
+    String isBaseDcEnv = System.getenv("IS_BASE_DC");
+    if (isBaseDcEnv != null) {
+      options.setIsBaseDc(Boolean.parseBoolean(isBaseDcEnv));
+    }
 
     SpannerClient spannerClient =
         SpannerClient.builder()
@@ -121,7 +127,8 @@ public class GraphIngestionPipeline {
       IngestionPipelineOptions options) {
     LOGGER.info("Import: {} Graph path: {}", importName, graphPath);
 
-    String provenance = "dc/base/" + importName;
+    boolean isBaseDc = options.getIsBaseDc();
+    String provenance = ProvenanceUtils.getProvenanceDcid(importName, isBaseDc);
 
     // 1. Prepare Deletes:
     // Generate mutations to delete existing data for this import/provenance.
@@ -210,7 +217,8 @@ public class GraphIngestionPipeline {
     PCollection<McfOptimizedGraph> optimizedGraph =
         PipelineUtils.buildOptimizedMcfGraph(importName, observationNodes);
     PCollection<Mutation> observationMutations =
-        GraphReader.graphToObservations(optimizedGraph, importName, spannerClient, obsCounter)
+        GraphReader.graphToObservations(
+                optimizedGraph, importName, spannerClient, obsCounter, isBaseDc)
             .apply("ExtractObsMutations-" + importName, Values.create());
     // Write Observations (wait for Obs delete)
     PCollection<Mutation> waitingObs =

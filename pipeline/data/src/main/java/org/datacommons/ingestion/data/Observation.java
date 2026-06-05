@@ -18,7 +18,6 @@ public class Observation {
   private static final String VARIABLE_MEASURED_PREDICATE = "variableMeasured";
   private static final String NAME_PREDICATE = "name";
   private static final String TYPE_OF_PREDICATE = "typeOf";
-  private static final String PROVENANCE_DCID_PREFIX = "dc/base/";
 
   private String observationAbout;
   private String variableMeasured;
@@ -31,6 +30,7 @@ public class Observation {
   private String provenanceUrl;
   private String facetId;
   private boolean isDcAggregate;
+  private boolean isBaseDc;
   private NodesEdges obsGraph;
 
   private Observation(Builder builder) {
@@ -45,6 +45,7 @@ public class Observation {
     this.provenanceUrl = builder.provenanceUrl;
     this.facetId = builder.facetId;
     this.isDcAggregate = builder.isDcAggregate;
+    this.isBaseDc = builder.isBaseDc;
     this.obsGraph = toObsGraph();
   }
 
@@ -110,7 +111,7 @@ public class Observation {
                     replaceSlashesWithUnderscores(observationAbout),
                     facetId);
     var seriesName = Joiner.on(" | ").join(variableMeasured, observationAbout, facetId);
-    var provenanceDcid = PROVENANCE_DCID_PREFIX + importName;
+    var provenanceDcid = ProvenanceUtils.getProvenanceDcid(importName, this.isBaseDc);
 
     // Add series node
     graph.addNode(
@@ -181,7 +182,8 @@ public class Observation {
         && Objects.equals(importName, that.importName)
         && Objects.equals(provenanceUrl, that.provenanceUrl)
         && Objects.equals(facetId, that.facetId)
-        && Objects.equals(isDcAggregate, that.isDcAggregate);
+        && Objects.equals(isDcAggregate, that.isDcAggregate)
+        && Objects.equals(isBaseDc, that.isBaseDc);
   }
 
   @Override
@@ -197,7 +199,8 @@ public class Observation {
         importName,
         provenanceUrl,
         facetId,
-        isDcAggregate);
+        isDcAggregate,
+        isBaseDc);
   }
 
   // Builder for Observation
@@ -213,6 +216,7 @@ public class Observation {
     private String provenanceUrl = "";
     private String facetId = "";
     private boolean isDcAggregate = false;
+    private boolean isBaseDc = true;
 
     public Builder observationAbout(String observationAbout) {
       this.observationAbout = observationAbout;
@@ -251,6 +255,11 @@ public class Observation {
 
     public Builder isDcAggregate(boolean isDcAggregate) {
       this.isDcAggregate = isDcAggregate;
+      return this;
+    }
+
+    public Builder isBaseDc(boolean isBaseDc) {
+      this.isBaseDc = isBaseDc;
       return this;
     }
 
