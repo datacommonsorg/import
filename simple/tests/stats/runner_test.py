@@ -238,7 +238,69 @@ class TestRunner(unittest.TestCase):
   def test_dcp_bridge(self):
     self.maxDiff = None
     with tempfile.TemporaryDirectory() as temp_dir:
-      input_dir = os.path.join(_INPUT_DIR, "input_dir_driven")
+      # Create a dedicated temp input directory
+      input_dir = os.path.join(temp_dir, "input_dcp_bridge")
+      os.makedirs(input_dir)
+      
+      # Copy files from input_dir_driven (except config.json)
+      src_dir = os.path.join(_INPUT_DIR, "input_dir_driven")
+      for filename in os.listdir(src_dir):
+        if filename != "config.json":
+          with open(os.path.join(src_dir, filename), "r") as src, \
+               open(os.path.join(input_dir, filename), "w") as dst:
+            dst.write(src.read())
+            
+      # Write a strict config.json using dcid:Provenance1
+      strict_config = {
+          "inputFiles": {
+              "countries.csv": {
+                  "importType": "observations",
+                  "format": "variablePerColumn",
+                  "entityType": "Country",
+                  "provenance": "dcid:Provenance1"
+              },
+              "wikidataids.csv": {
+                  "importType": "observations",
+                  "format": "variablePerColumn",
+                  "entityType": "Country",
+                  "provenance": "dcid:Provenance1"
+              },
+              "variable_per_row.csv": {
+                  "importType": "observations",
+                  "format": "variablePerRow",
+                  "entityType": "Country",
+                  "provenance": "dcid:Provenance1"
+              },
+              "author_entities.csv": {
+                  "importType": "entities",
+                  "rowEntityType": "Author",
+                  "idColumn": "author_id",
+                  "entityColumns": ["author_country"],
+                  "provenance": "dcid:Provenance1"
+              },
+              "article_entities.csv": {
+                  "importType": "entities",
+                  "rowEntityType": "Article",
+                  "idColumn": "article_id",
+                  "entityColumns": ["article_author"],
+                  "provenance": "dcid:Provenance1"
+              }
+          }
+      }
+      with open(os.path.join(input_dir, "config.json"), "w") as f:
+        json.dump(strict_config, f)
+
+      # Write provenance.mcf to satisfy strict validation
+      provenance_mcf = (
+          "Node: dcid:Source1\n"
+          "typeOf: dcs:Source\n\n"
+          "Node: dcid:Provenance1\n"
+          "typeOf: dcs:Provenance\n"
+          "sourceLink: dcid:Source1\n"
+      )
+      with open(os.path.join(input_dir, "provenance.mcf"), "w") as f:
+        f.write(provenance_mcf)
+
       dc_client.get_property_of_entities = mock.MagicMock(return_value={})
 
       Runner(

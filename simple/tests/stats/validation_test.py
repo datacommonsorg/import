@@ -107,8 +107,8 @@ class TestMetadataValidator(unittest.TestCase):
     self.assertIn("points to missing/empty Source 'dcid:MissingSource'",
                   str(context.exception))
 
-  def test_validation_no_referenced_provenances(self):
-    # Setup mock config with no referenced provenances
+  def test_validation_missing_provenance_key(self):
+    # Setup mock config with missing provenance property
     mock_config = mock.MagicMock(spec=Config)
     mock_config.data = {
         "inputFiles": [
@@ -123,5 +123,31 @@ class TestMetadataValidator(unittest.TestCase):
     mock_db._triples = {}
 
     validator = MetadataValidator(mock_config, mock_db)
-    # Should bypass validation immediately and pass
-    validator.validate()
+    with self.assertRaises(ValueError) as context:
+      validator.validate()
+
+    self.assertIn("must have a 'provenance' property", str(context.exception))
+
+  def test_validation_invalid_provenance_format(self):
+    # Setup mock config with provenance that doesn't start with 'dcid:'
+    mock_config = mock.MagicMock(spec=Config)
+    mock_config.data = {
+        "inputFiles": [
+            {
+                "pattern": "data.csv",
+                "provenance": "InvalidProvenanceName"
+            }
+        ]
+    }
+
+    mock_db = mock.MagicMock(spec=Db)
+    mock_db._global_triples = []
+    mock_db._triples = {}
+
+    validator = MetadataValidator(mock_config, mock_db)
+    with self.assertRaises(ValueError) as context:
+      validator.validate()
+
+    self.assertIn("must be a valid DCID starting with 'dcid:'", str(context.exception))
+    self.assertIn("InvalidProvenanceName", str(context.exception))
+

@@ -95,6 +95,7 @@ class Runner:
 
     self.mode = mode
     self.import_names = import_names
+    self.active_import_prefixes = None
 
     # File systems, both input and output. Must be closed when run finishes.
     self.all_stores: list[Store] = []
@@ -122,32 +123,47 @@ class Runner:
     else:
       effective_input_dir = input_dir_path
       imports = self.import_names or []
+      self.active_import_prefixes = None
 
-      # Default action: read config from the root of the effective directory
-      load_action = lambda store: self._read_config_from_file(
-          config_file_path=constants.CONFIG_JSON_FILE_NAME,
-          config_file_dir=store.as_dir(),
-      )
-
+      # Case A: Bulk Load (ALL_IMPORTS)
       if imports == [constants.ALL_IMPORTS]:
-        logging.info("Running bulk load for all imports under: %s",
-                     effective_input_dir)
-        load_action = lambda store: self._read_configs_from_subdirs(store.
-                                                                    as_dir())
+        logging.info("Running bulk load for all imports under: %s", effective_input_dir)
+        input_store = create_store(effective_input_dir)
+        self.all_stores.append(input_store)
+        self.input_stores.append(input_store)
+        configs = self._read_configs_from_subdirs(input_store.as_dir())
+        self.active_import_prefixes = set(f"{fspath.dirname(c.path)}/" for c in configs)
+
+      # Case B: Combined Load for specific imports (len > 1)
       elif len(imports) > 1:
         logging.info("Running combined load for specific imports: %s", imports)
-        load_action = lambda store: self._read_configs_from_list(
-            store.as_dir(), imports)
+        input_store = create_store(effective_input_dir)
+        self.all_stores.append(input_store)
+        self.input_stores.append(input_store)
+        configs = self._read_configs_from_list(input_store.as_dir(), imports)
+        self.active_import_prefixes = set(f"{fspath.dirname(c.path)}/" for c in configs)
+
+      # Case C: Single Import
       elif imports:
         effective_input_dir = join_path(input_dir_path, imports[0])
         logging.info("Using import specific directory: %s", effective_input_dir)
+        input_store = create_store(effective_input_dir)
+        self.all_stores.append(input_store)
+        self.input_stores.append(input_store)
+        self._read_config_from_file(
+            config_file_path=constants.CONFIG_JSON_FILE_NAME,
+            config_file_dir=input_store.as_dir(),
+        )
 
-      # Create store and execute action ONCE
-      input_store = create_store(effective_input_dir)
-      self.all_stores.append(input_store)
-      self.input_stores.append(input_store)
-
-      load_action(input_store)
+      # Case D: Default action (config at root)
+      else:
+        input_store = create_store(effective_input_dir)
+        self.all_stores.append(input_store)
+        self.input_stores.append(input_store)
+        self._read_config_from_file(
+            config_file_path=constants.CONFIG_JSON_FILE_NAME,
+            config_file_dir=input_store.as_dir(),
+        )
 
     # Get dict of special file type string to special file name.
     # Example entry: verticalSpecsFile -> vertical_specs.json
@@ -317,7 +333,7 @@ class Runner:
         configs.append(file)
     return configs
 
-  def _read_configs_from_subdirs(self, base_dir: Dir):
+  def _read_configs_from_subdirs(self, base_dir: Dir) -> list:
     """Scans subdirectories for config.json files and merges them.
     
     Args:
@@ -333,8 +349,9 @@ class Runner:
           f"No config.json files found in subdirectories of {base_dir.full_path()}"
       )
     self._merge_configs(configs, base_dir)
+    return configs
 
-  def _read_configs_from_list(self, base_dir: Dir, import_names: list[str]):
+  def _read_configs_from_list(self, base_dir: Dir, import_names: list[str]) -> list:
     """Reads configs for specific imports specified in a list and merges them.
     
     Args:
@@ -369,6 +386,7 @@ class Runner:
 
     logging.info("Found %s config files from list.", len(configs))
     self._merge_configs(configs, base_dir)
+    return configs
 
   def _get_db_config(self) -> dict:
     if self.mode == RunMode.MAIN_DC:
@@ -645,6 +663,9 @@ class Runner:
         continue
       if self._check_if_special_file(file):
         continue
+      if self.active_import_prefixes:
+        if not any(file.path.startswith(prefix) for prefix in self.active_import_prefixes):
+          continue
       if match(file, "*.csv"):
         csv_files.append(file)
       elif match(file, "*.mcf"):

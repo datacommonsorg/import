@@ -51,21 +51,37 @@ class MetadataValidator:
     )
 
   def _collect_referenced_provenances(self) -> set[str]:
-    """Extracts all referenced provenance DCIDs from config.json."""
+    """Extracts all referenced provenance DCIDs from config.json.
+
+    Every input file is strictly required to have a valid provenance DCID
+    starting with 'dcid:'.
+    """
     referenced = set()
     input_files = self.config.data.get("inputFiles", [])
+    
+    entries = []
     if isinstance(input_files, list):
-      for entry in input_files:
-        if isinstance(entry, dict):
-          prov = entry.get("provenance")
-          if prov and prov.startswith("dcid:"):
-            referenced.add(self._clean_dcid(prov))
+      entries = input_files
     elif isinstance(input_files, dict):
-      for entry in input_files.values():
-        if isinstance(entry, dict):
-          prov = entry.get("provenance")
-          if prov and prov.startswith("dcid:"):
-            referenced.add(self._clean_dcid(prov))
+      entries = list(input_files.values())
+
+    for entry in entries:
+      if not isinstance(entry, dict):
+        continue
+      prov = entry.get("provenance")
+      if not prov:
+        raise ValueError(
+            f"Metadata Validation Failed: Every input file in config.json "
+            f"must have a 'provenance' property in dcpbridge mode. "
+            f"Found entry missing provenance: {entry}"
+        )
+      if not prov.startswith("dcid:"):
+        raise ValueError(
+            f"Metadata Validation Failed: The 'provenance' property must be "
+            f"a valid DCID starting with 'dcid:' (e.g., 'dcid:FrogCensusBureau'). "
+            f"Found invalid provenance: '{prov}'"
+        )
+      referenced.add(self._clean_dcid(prov))
     return referenced
 
   def _collect_defined_nodes(self) -> tuple[set[str], set[str], dict[str, str]]:
