@@ -282,7 +282,17 @@ class Config:
 
   def import_name(self, input_file: File) -> str:
     """Returns the normalized import name associated with a given input file."""
-    raw_name = self._per_file_config(input_file).get("_import_name") or self.data.get("importName")
+    raw_name = self._per_file_config(input_file).get("_import_name")
+    
+    if not raw_name and input_file:
+      import fs.path as fspath
+      dir_path = fspath.dirname(input_file.path)
+      dir_import_names = self.data.get("_dir_import_names", {})
+      raw_name = dir_import_names.get(dir_path)
+      
+    if not raw_name:
+      raw_name = self.data.get("importName")
+      
     if not raw_name and input_file:
       # Defensive fallback: extract from path
       parts = input_file.path.split("/")
@@ -290,6 +300,7 @@ class Config:
         raw_name = "_".join(parts[:-1])
       else:
         raw_name = "default"
+        
     return (raw_name or "default").replace("/", "_")
 
   def _per_file_config(self, input_file: File) -> dict:

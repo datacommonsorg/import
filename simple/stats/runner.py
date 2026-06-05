@@ -274,11 +274,11 @@ class Runner:
     import fs.path as fspath
 
     merged_data = {
-        "importName": constants.ALL_IMPORTS,
         "includeInputSubdirs": True,
         "inputFiles": [],
         "variables": {},
-        "sources": {}
+        "sources": {},
+        "_dir_import_names": {}
     }
 
     for file in configs:
@@ -293,6 +293,7 @@ class Runner:
       rel_dir = fspath.relativefrom(base_dir.path, dir_path)
 
       logging.info("Merging config from import directory: %s", rel_dir)
+      merged_data["_dir_import_names"][rel_dir] = config_data.get("importName") or rel_dir
 
       # Merge inputFiles, prefixing patterns with rel_dir and converting dicts to lists
       input_files = config_data.get("inputFiles", [])

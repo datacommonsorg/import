@@ -384,7 +384,8 @@ class TestRunner(unittest.TestCase):
 
       # Verify merged config
       config = runner.config
-      self.assertEqual(config.data["importName"], constants.ALL_IMPORTS)
+      self.assertEqual(config.data["_dir_import_names"]["oecd"], "oecd")
+      self.assertEqual(config.data["_dir_import_names"]["ilo/ds1"], "ilo/ds1")
       patterns = [entry["pattern"] for entry in config.data["inputFiles"]]
       self.assertIn("oecd/data.csv", patterns)
       self.assertIn("ilo/ds1/data.csv", patterns)
