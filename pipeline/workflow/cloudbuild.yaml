@@ -53,7 +53,7 @@ steps:
     - 'submit'
     - '.'
     - '--config=pipeline/ingestion/cloudbuild.yaml'
-    - '--substitutions=_VERSION=${_VERSION},_IMAGE_GCR_PATH=${_AR_REPO_URL}/dataflow-templates/ingestion,_INSTANCE_ID=${_SPANNER_INSTANCE_ID},_DATABASE_ID=${_SPANNER_DATABASE_ID},_GCS_BUCKET=${_GCS_BUCKET_ID},_REGION=${_LOCATION}'
+    - '--substitutions=_VERSION=${_VERSION},_IMAGE_GCR_PATH=${_AR_REPO_URL}/dataflow-templates/ingestion'
 
 # 2. Trigger Staging Build (Child)
 # Overrides default (Production) values with Staging values.
