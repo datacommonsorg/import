@@ -141,6 +141,31 @@ class TestMain(unittest.TestCase):
         self.assertIn("OK", response)
         mock_spanner_client.seed_database.assert_called_once()
 
+    @patch.dict(os.environ, {
+        "SPANNER_INSTANCE_ID": "test-instance",
+        "SPANNER_DATABASE_ID": "test-db",
+        "SPANNER_PROJECT_ID": "test-proj"
+    })
+    @patch('main.SpannerClient')
+    @patch('main.StorageClient')
+    @patch('main.feed_event_utils.handle_feed_event', return_value=('OK', 200))
+    def test_feed_event_routing(self, mock_handle, mock_storage_class, mock_spanner_class):
+        mock_request = MagicMock()
+        mock_request.get_json.return_value = {
+            "message": {
+                "attributes": {
+                    "transfer_status": "TRANSFER_COMPLETED",
+                },
+                "messageId": "msg123"
+            }
+        }
+
+        response, status_code = main.ingestion_helper(mock_request)
+
+        self.assertEqual(status_code, 200)
+        self.assertEqual(response, "OK")
+        mock_handle.assert_called_once()
+
 if __name__ == '__main__':
     unittest.main()
 

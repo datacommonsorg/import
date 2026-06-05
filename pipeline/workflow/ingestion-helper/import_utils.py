@@ -14,6 +14,7 @@
 """Utility functions for the ingestion helper."""
 
 import logging
+import os
 import re
 from datetime import datetime, timezone
 from googleapiclient.discovery import build
@@ -173,3 +174,43 @@ def get_ingestion_metrics(project_id, location, job_id):
         'edge_count': edge_count,
         'execution_time': execution_time
     }
+
+
+def handle_update_import_status(request_json: dict,
+                                spanner,
+                                storage,
+                                is_base_dc: bool,
+                                project_id: str,
+                                location: str):
+    """Updates the status of a specific import job.
+
+    Args:
+        request_json: The request payload containing import details.
+        spanner: Instantiated SpannerClient object.
+        storage: Instantiated StorageClient object.
+        is_base_dc: Flag indicating if this is base DC.
+        project_id: GCP project ID.
+        location: Location of scheduler / services.
+    """
+    import_name = request_json['importName']
+    status = request_json['status']
+    logging.info(f'Updating import {import_name} to status {status}')
+    params = get_import_params(request_json)
+    next_refresh = None
+    if is_base_dc:
+        next_refresh = get_next_refresh(project_id, location, import_name)
+
+    if next_refresh:
+        params['next_refresh'] = next_refresh
+
+    if status == 'STAGING':
+        version = os.path.basename(request_json.get('latestVersion', ''))
+        if not version:
+            raise ValueError(f'Empty version for import {import_name}')
+        storage.update_version_file(import_name, version, is_staging=True)
+        storage.update_provenance_file(import_name, version)
+        storage.update_import_summary(params)
+        storage.update_version_file(import_name, version, is_staging=False)
+        comment = f"import-workflow:{request_json.get('jobId','')}"
+        spanner.update_version_history(import_name, version, comment)
+    spanner.update_import_status(params)

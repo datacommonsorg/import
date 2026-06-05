@@ -215,37 +215,6 @@ resource "google_cloud_run_v2_service" "ingestion_helper" {
   depends_on = [google_project_service.services]
 }
 
-resource "google_cloud_run_v2_service" "import_helper" {
-  name     = "import-helper-service"
-  location = var.region
-  project  = var.project_id
-
-  template {
-    service_account = google_service_account.automation_sa.email
-    containers {
-      image = "${var.artifact_registry_url}/datacommons-import-helper:latest"
-      env {
-        name  = "PROJECT_ID"
-        value = var.project_id
-      }
-      env {
-        name  = "LOCATION"
-        value = var.region
-      }
-      env {
-        name  = "GCS_BUCKET_ID"
-        value = google_storage_bucket.import_bucket.name
-      }
-      env {
-        name  = "INGESTION_HELPER_URL"
-        value = google_cloud_run_v2_service.ingestion_helper.uri
-      }
-    }
-  }
-
-  depends_on = [google_project_service.services]
-}
-
 # --- Cloud Workflows ---
 
 resource "google_workflows_workflow" "import_automation_workflow" {
@@ -363,7 +332,7 @@ resource "google_pubsub_subscription" "import_automation_sub" {
   filter = "attributes.transfer_status=\"TRANSFER_COMPLETED\""
 
   push_config {
-    push_endpoint = google_cloud_run_v2_service.import_helper.uri
+    push_endpoint = google_cloud_run_v2_service.ingestion_helper.uri
     oidc_token {
       service_account_email = google_service_account.automation_sa.email
     }

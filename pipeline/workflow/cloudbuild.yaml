@@ -41,11 +41,6 @@ steps:
   args: ['builds', 'submit', 'ingestion-helper', '--config', 'ingestion-helper/cloudbuild.yaml', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
   dir: 'pipeline/workflow'
 
-- id: 'build-import-helper'
-  name: 'gcr.io/cloud-builders/gcloud'
-  args: ['builds', 'submit', 'import-helper', '--config', 'import-helper/cloudbuild.yaml', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
-  dir: 'pipeline/workflow'
-
 - id: 'build-dataflow-template'
   name: 'gcr.io/cloud-builders/gcloud'
   args:
