@@ -92,6 +92,7 @@ class Nodes:
     self.entity_types: dict[str, EntityType] = {}
     self._used_provenance_ids = set()
     self._used_source_ids = set()
+    self.has_custom_mcf_nodes = False
     self._load_provenances_and_sources()
     # Used to generate SV IDs
     self._sv_generated_id_count = 0
@@ -140,6 +141,7 @@ class Nodes:
 
   @thread_safe
   def register_provenance(self, id: str, name: str = "", url: str = "", source_id: str = "") -> Provenance:
+    self.has_custom_mcf_nodes = True
     prov = self.provenances.get(id)
     if not prov:
       prov = Provenance(id=id, source_id=source_id, name=name or id, url=url)
@@ -157,6 +159,7 @@ class Nodes:
 
   @thread_safe
   def register_source(self, id: str, name: str = "", url: str = "") -> Source:
+    self.has_custom_mcf_nodes = True
     src = self.sources.get(id)
     if not src:
       src = Source(id=id, name=name or id, url=url)
@@ -347,11 +350,11 @@ class Nodes:
   def triples(self, triples_file: File | None = None) -> list[Triple]:
     triples: list[Triple] = []
     for source in self.sources.values():
-      if source.id == _DEFAULT_SOURCE.id and _DEFAULT_SOURCE.id not in self._used_source_ids:
+      if self.has_custom_mcf_nodes and source.id == _DEFAULT_SOURCE.id and _DEFAULT_SOURCE.id not in self._used_source_ids:
         continue
       triples.extend(source.triples())
     for provenance in self.provenances.values():
-      if provenance.id == _DEFAULT_PROVENANCE.id and _DEFAULT_PROVENANCE.id not in self._used_provenance_ids:
+      if self.has_custom_mcf_nodes and provenance.id == _DEFAULT_PROVENANCE.id and _DEFAULT_PROVENANCE.id not in self._used_provenance_ids:
         continue
       triples.extend(provenance.triples())
     for group in self.groups.values():

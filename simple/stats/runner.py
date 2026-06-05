@@ -817,8 +817,7 @@ class Runner:
       import_list = []
       for imp in processed_imports:
         gcs_pattern = f"{output_path.rstrip('/')}/{imp}/*.jsonld"
-        trigger_imp_name = imp.replace("/", "_")
-        import_list.append({"importName": trigger_imp_name, "graphPath": gcs_pattern})
+        import_list.append({"importName": imp, "graphPath": gcs_pattern})
       self.trigger_workflow_info = import_list
     else:
       logging.info(
