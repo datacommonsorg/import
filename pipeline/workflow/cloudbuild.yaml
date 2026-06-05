@@ -30,8 +30,8 @@ substitutions:
   _AR_REPO_URL: 'us-docker.pkg.dev/datcom-ci/gcr.io'
   _BQ_SPANNER_CONN_ID: 'projects/datcom-ci/locations/us-central1/connections/bq_spanner_conn_test'
   _VERSION: '${SHORT_SHA}'
-  _DATAFLOW_TEMPLATE_PATH: 'gs://datcom-templates/templates/flex/ingestion.json'
-  _PROD_TAG: 'latest' # TODO: rename to prod
+  _DATAFLOW_TEMPLATE_PATH: 'gs://datcom-templates/templates/flex/ingestion-${_VERSION}.json'
+  _PROD_TAG: 'stable'
 
 steps:
 
@@ -39,12 +39,21 @@ steps:
 - id: 'build-ingestion-helper'
   name: 'gcr.io/cloud-builders/gcloud'
   args: ['builds', 'submit', 'ingestion-helper', '--config', 'ingestion-helper/cloudbuild.yaml', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
-  dir: 'import-automation/workflow'
+  dir: 'pipeline/workflow'
 
 - id: 'build-import-helper'
   name: 'gcr.io/cloud-builders/gcloud'
   args: ['builds', 'submit', 'import-helper', '--config', 'import-helper/cloudbuild.yaml', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
-  dir: 'import-automation/workflow'
+  dir: 'pipeline/workflow'
+
+- id: 'build-dataflow-template'
+  name: 'gcr.io/cloud-builders/gcloud'
+  args:
+    - 'builds'
+    - 'submit'
+    - '.'
+    - '--config=pipeline/ingestion/cloudbuild.yaml'
+    - '--substitutions=_VERSION=${_VERSION},_IMAGE_GCR_PATH=${_AR_REPO_URL}/dataflow-templates/ingestion,_INSTANCE_ID=${_SPANNER_INSTANCE_ID},_DATABASE_ID=${_SPANNER_DATABASE_ID},_GCS_BUCKET=${_GCS_BUCKET_ID},_REGION=${_LOCATION}'
 
 # 2. Trigger Staging Build (Child)
 # Overrides default (Production) values with Staging values.
@@ -57,7 +66,7 @@ steps:
     - '--config=deploy-services.yaml'
     - '--project=${_PROJECT_ID}'
     - '--substitutions=_PROJECT_ID=${_PROJECT_ID},_SPANNER_PROJECT_ID=${_SPANNER_PROJECT_ID},_SPANNER_INSTANCE_ID=${_SPANNER_INSTANCE_ID},_SPANNER_DATABASE_ID=${_SPANNER_DATABASE_ID},_SPANNER_GRAPH_DATABASE_ID=${_SPANNER_GRAPH_DATABASE_ID},_GCS_BUCKET_ID=${_GCS_BUCKET_ID},_LOCATION=${_LOCATION},_GCS_MOUNT_BUCKET=${_GCS_MOUNT_BUCKET},_BQ_DATASET_ID=${_BQ_DATASET_ID},_PROJECT_NUMBER=${_PROJECT_NUMBER},_BQ_SPANNER_CONN_ID=${_BQ_SPANNER_CONN_ID},_VERSION=${_VERSION},_DATAFLOW_TEMPLATE_PATH=${_DATAFLOW_TEMPLATE_PATH}'
-  dir: 'import-automation/workflow'
+  dir: 'pipeline/workflow'
 
 # 2. Run E2E Tests on Staging
 - id: 'e2e-test-staging'
@@ -75,12 +84,12 @@ steps:
     - 'SPANNER_INSTANCE_ID=${_SPANNER_INSTANCE_ID}'
     - 'SPANNER_DATABASE_ID=${_SPANNER_DATABASE_ID}'
     - 'GCS_BUCKET_ID=${_GCS_BUCKET_ID}'
-  dir: 'import-automation/workflow'
+  dir: 'pipeline/workflow'
 
 - id: 'tag-prod'
   name: 'gcr.io/cloud-builders/gcloud'
   args: ['builds', 'submit', '.', '--config', 'tag-prod.yaml', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_PROD_TAG=${_PROD_TAG},_VERSION=${_VERSION}']
-  dir: 'import-automation/workflow'
+  dir: 'pipeline/workflow'
 
 # 3. Trigger Production Build (Child)
 # Uses default (Production) values defined in cloudbuild.yaml.
@@ -93,7 +102,7 @@ steps:
     - '--config=deploy-services.yaml'
     - '--project=${_PROJECT_ID}'  # Build runs in CI project, deploys to Prod
     - '--substitutions=_VERSION=${_PROD_TAG}'
-  dir: 'import-automation/workflow'
+  dir: 'pipeline/workflow'
 
 options:
   logging: CLOUD_LOGGING_ONLY

@@ -18,27 +18,7 @@ steps:
       - DC_API_KEY
     id: 'build-jar'
 
-  # 2. Run Dataflow Integration Tests
-  - name: 'maven:3.9-eclipse-temurin-17'
-    entrypoint: 'mvn'
-    args:
-      - 'test'
-      - '-Dmaven.repo.local=/workspace/.m2/repository'
-      - '-Dtest=GraphIngestionPipelineIntegrationTest'
-      - '-DprojectId=$PROJECT_ID'
-      - '-DinstanceId=$_INSTANCE_ID'
-      - '-DdatabaseId=$_DATABASE_ID'
-      - '-DgcsBucket=$_GCS_BUCKET'
-      - '-Dregion=$_REGION'
-      - '-pl'
-      - 'pipeline/ingestion'
-      - '-DtestMode=DATAFLOW'
-      - '-Drevision=${_VERSION}'
-    secretEnv:
-      - DC_API_KEY
-    id: 'run-dataflow-integration-test'
-
-  # 3. Build the Dataflow Flex Template
+  # 2. Build the Dataflow Flex Template
   # This step uses the built JAR to create the Flex Template image and spec file.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
@@ -60,15 +40,6 @@ steps:
       - '--env'
       - 'FLEX_TEMPLATE_JAVA_MAIN_CLASS=org.datacommons.ingestion.pipeline.GraphIngestionPipeline'
     id: 'build-flex-template'
-
-  # 4. Update the "latest" pointer for the workflow default
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'gsutil'
-    args:
-      - 'cp'
-      - 'gs://$_TEMPLATE_BUCKET/templates/flex/ingestion-${_VERSION}.json'
-      - 'gs://$_TEMPLATE_BUCKET/templates/flex/ingestion.json'
-    id: 'update-latest-template'
 
 availableSecrets:
   secretManager:

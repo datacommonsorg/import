@@ -231,17 +231,17 @@ public class SpannerClient implements Serializable {
     }
   }
 
-  /** Reads DDL statements from the spanner_schema.sql file in the resources directory. */
+  /** Reads DDL statements from the schema.sql file in the resources directory. */
   List<String> readDdlStatements() {
-    InputStream inputStream = getClass().getClassLoader().getResourceAsStream("spanner_schema.sql");
+    InputStream inputStream = getClass().getClassLoader().getResourceAsStream("schema.sql");
     if (inputStream == null) {
-      throw new IllegalStateException("Could not find spanner_schema.sql in resources.");
+      throw new IllegalStateException("Could not find schema.sql in resources.");
     }
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
       return parseDdlStatements(reader);
     } catch (IOException e) {
-      throw new IllegalStateException("Failed to read spanner_schema.sql", e);
+      throw new IllegalStateException("Failed to read schema.sql", e);
     }
   }
 
