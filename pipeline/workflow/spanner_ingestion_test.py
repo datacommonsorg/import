@@ -22,10 +22,8 @@ import sys
 from absl import app
 from absl import logging
 
-# Add path for executor modules
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), '../executor/app')))
-from executor import cloud_workflow
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+import cloud_workflow
 
 from google.cloud import spanner
 
