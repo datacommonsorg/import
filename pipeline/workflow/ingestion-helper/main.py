@@ -259,6 +259,9 @@ def ingestion_helper(request):
         # Input:
         #   importList: list of imports to aggregate
         import_list = request_json.get('importList', [])
+        if not import_list:
+            logging.info("Empty import list. Skipping aggregation.")
+            return jsonify({'status': 'SUBMITTED', 'jobIds': []}), 200
         
         # Validate required flags are not empty or None
         missing_flags = []
@@ -312,7 +315,8 @@ def ingestion_helper(request):
         #   jobIds: list of BigQuery job IDs
         job_ids = request_json.get('jobIds', [])
         if not job_ids:
-             return ('Missing or empty jobIds', 400)
+             logging.info("Empty jobIds. Returning status DONE.")
+             return jsonify({'status': 'DONE'}), 200
 
         aggregation = AggregationUtils(
             connection_id=FLAGS.spanner_connection_id,
