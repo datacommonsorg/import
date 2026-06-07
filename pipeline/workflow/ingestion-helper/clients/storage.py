@@ -18,6 +18,7 @@ from google.cloud import storage
 from google.cloud import exceptions
 import json
 import os
+import config
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -37,7 +38,7 @@ class StorageClient:
     def _get_output_dir(self, import_name: str) -> str:
         """Constructs the output directory path."""
         output_dir = import_name.replace(':', '/')
-        output_prefix = os.environ.get('GCS_OUTPUT_PREFIX', '')
+        output_prefix = config.GCS_OUTPUT_PREFIX
         if output_prefix:
             output_dir = os.path.join(output_prefix, output_dir)
         return output_dir

@@ -1,103 +1,119 @@
-# Ingestion Helper Cloud Function
+# Data Commons Ingestion Helper
 
-This Cloud Function provides helper routines for the Data Commons Spanner ingestion workflow. It handles tasks such as locking, status updates, and import list retrieval.
+Provides orchestration, database synchronization, lock management, and metadata updates for the Data Commons Spanner ingestion workflow.
 
-## Usage
+The service is implemented as a FastAPI microservice designed to run on Google Cloud Run.
 
-The function expects a JSON payload with a required `actionType` parameter, which determines the operation to perform.
+---
 
-### Common Parameters
+## Architecture & Code Layout
 
-*   `actionType` (Required): A string specifying the action to execute.
+The codebase is organized into a layered architecture:
 
-### Supported Actions and Parameters
-
-#### `get_import_info`
-Gets the details of imports that are ready for ingestion.
-
-*   `importList` (Optional): list of imports to ingest.
-
-#### `acquire_ingestion_lock`
-Attempts to acquire the global lock for ingestion to prevent concurrent modifications.
-
-*   `workflowId` (Required): The ID of the workflow attempting to acquire the lock.
-*   `timeout` (Required): The duration (in seconds) for which the lock should be held.
-
-#### `release_ingestion_lock`
-Releases the global ingestion lock.
-
-*   `workflowId` (Required): The ID of the workflow releasing the lock.
-
-#### `update_ingestion_status`
-Updates the status of imports after an ingestion job completes.
-
-*   `importList` (Required): A list of import names involved in the ingestion.
-*   `workflowId` (Required): The ID of the workflow.
-*   `status` (Required): Import status.
-*   `jobId` (Required): The Dataflow job ID associated with the ingestion.
-
-#### `update_import_status`
-Updates the status of a specific import job.
-
-*   `importName` (Required): The name of the import.
-*   `status` (Required): The new status to set.
-*   `jobId` (Optional): The Dataflow job ID.
-*   `executionTime` (Optional): Execution time in seconds.
-*   `dataVolume` (Optional): Data volume in bytes.
-*   `latestVersion` (Optional): Latest version string.
-*   `graphPath` (Optional): Graph path regex.
-*   `nextRefresh` (Optional): Next refresh timestamp.
-
-
-#### `update_import_version`
-Updates the version of an import, records version history, and updates the status.
-
-*   `importName` (Required): The name of the import.
-*   `version` (Required): The version string. If set to `'STAGING'`, it resolves to the current staging version.
-*   `comment` (Required): A comment for the audit log explaining the version update.
-*   `override` (Optional): Override version without checking import status (boolean)
-
-#### `initialize_database`
-Initializes the Spanner database by creating all necessary tables and uploading proto descriptors.
-
-*   This action requires no payload parameters. It automatically reads `schema.sql` and `storage.pb` from the container directory to provision the database schema and proto descriptors.
-*   `enableEmbeddings` (Optional): Boolean to enable creation of embedding tables and models.
-*   **Note on Protos**: The `storage.pb` file is generated during the Docker build process. The `Dockerfile` fetches `storage.proto` from the `datacommonsorg/import` GitHub repository and compiles it into `storage.pb`.
-
-#### `seed_database`
-Seeds the Spanner database with base empty nodes required by the Data Commons schema (`StatisticalVariable`, `StatVarGroup`, `StatVarObservation`, `Topic`, and `c/g/Root`).
-
-*   This action requires no payload parameters.
-
-#### `embedding_ingestion`
-Triggers the generation of embeddings for updated nodes in Spanner. It fetches nodes of specific types (e.g., `StatisticalVariable`, `Topic`) that have been updated, generates embeddings using a remote ML model in Spanner, and stores the results in the `NodeEmbedding` table.
-
-*   `enableEmbeddings` (Optional): Boolean to override the default setting for enabling embeddings. If false or missing and default is false, it skips embedding generation.
-*   **Flags**:
-    -   `--node_types`: A comma-separated list of node types to process (default: `StatisticalVariable,Topic`). This is a command-line flag for the service, not a request parameter.
-
-## Local Development and Testing
-
-To run the helper service locally and test its functionality:
-
-### Running the Server
-Ensure you have installed the requirements (`uv pip install -r requirements.txt`), then start the functions framework:
-
-```bash
-uv run functions-framework --target ingestion_helper
 ```
-By default, this will start serving on `http://localhost:8080`.
-
-### Triggering Actions
-You can test specific actions by sending a POST request with a JSON payload. For example, to trigger database initialization locally:
-```bash
-curl -X POST http://localhost:8080 \
-  -H "Content-Type: application/json" \
-  -d '{"actionType": "initialize_database"}'
+ingestion-helper/
+├── app.py                     # Main application entry point; registers routers
+├── config.py                  # Centralized configuration (env vars)
+├── models.py                  # Shared base Pydantic models & Enums
+├── dependencies.py            # FastAPI dependency injections (Spanner & GCS lifecycles)
+├── __init__.py                # Top-level package init; defines __version__
+│
+├── clients/                   # Layer 1: External GCP Resource Interfaces
+│   ├── __init__.py            # Exposes SpannerClient & StorageClient
+│   ├── spanner.py             # Cloud Spanner driver & mutations
+│   ├── storage.py             # Google Cloud Storage driver
+│   ├── schema.sql             # Spanner DDL Schema
+│   └── spanner_test.py        # Client-level unit tests
+│
+├── utils/                     # Layer 2: Core Processing & Calculations
+│   ├── __init__.py
+│   ├── aggregation.py         # BigQuery async aggregation polling logic
+│   ├── embeddings.py          # Vertex AI text embedding generation
+│   ├── imports.py             # General metadata metrics extractor
+│   └── embeddings_test.py     # Embedding calculation unit tests
+│
+└── routes/                    # Layer 3: REST API Handlers
+    ├── models.py              # Route-shared base models (BaseResponse)
+    ├── imports.py             # /imports/*
+    ├── database.py            # /database/*
+    ├── embeddings.py          # /embeddings/*
+    ├── aggregation.py         # /aggregation/*
+    └── cache.py               # /cache/*
 ```
-### Running unit tests
-Run unit tests with uv using:
 
+---
+
+## API Documentation
+
+The microservice exposes RESTful endpoints. All responses return a structured JSON payload.
+
+Interactive OpenAPI documentation is automatically served at `/docs` (Swagger UI) and `/redoc` when running the service.
+
+### Summary of Routes
+
+| Endpoint | Method | Request Body | Response Model | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `/database/initialize` | `POST` | *None* | `BaseResponse` | Boots database DDL schemas & proto descriptors. |
+| `/database/seed` | `POST` | *None* | `BaseResponse` | Seeds baseline empty nodes required by schema. |
+| `/database/lock/acquire` | `POST` | `LockAcquireRequest` | `BaseResponse` | Attempts to acquire the global Spanner ingestion lock. |
+| `/database/lock/release` | `POST` | `LockReleaseRequest` | `BaseResponse` | Releases the global ingestion lock. |
+| `/embeddings/ingest` | `POST` | `EmbeddingIngestionRequest` | `EmbeddingIngestionResponse` | Generates text embeddings for updated Spanner nodes. |
+| `/imports/info` | `POST` | `ImportInfoRequest` | `List[ImportInfoItem]` | Returns all imports in `STAGING` state ready to ingest. |
+| `/imports/status` | `POST` | `UpdateImportStatusRequest` | `BaseResponse` | Updates import-specific status and refresh windows. |
+| `/imports/version` | `POST` | `UpdateImportVersionRequest` | `BaseResponse` | Updates import version and records audit logs. |
+| `/imports/ingestion-status` | `POST` | `UpdateIngestionStatusRequest` | `BaseResponse` | Records final pipeline statuses and Dataflow metrics. |
+| `/aggregation/run` | `POST` | `AggregationRequest` | `AggregationResponse` | Submits BigQuery aggregation queries asynchronously. |
+| `/aggregation/status` | `POST` | `AggregationStatusRequest` | `AggregationStatusResponse` | Polls active BigQuery aggregation job statuses. |
+| `/cache/clear` | `POST` | *None* | `BaseResponse` | Flushes the Redis cache (if configured). |
+
+---
+
+## Local Development
+
+This project uses **`uv`** for dependency locking, virtual environment management, and packaging.
+
+### Prerequisites
+Make sure you have `uv` installed:
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### 1. Run the Server Locally
+To start the FastAPI development server with hot-reloading:
+```bash
+uv run uvicorn app:app --host 127.0.0.1 --port 8080 --reload
+```
+This will start the service locally on `http://127.0.0.1:8080`.
+
+### 2. Run the Unit Test Suite
+Unit tests are located next to the source files they verify. Run them using:
 ```bash
 uv run pytest
 ```
+*Note: Pytest is configured in `pyproject.toml` to map the root project directory into the Python path.*
+
+### 3. Build & Package Natively
+The package utilizes the **Hatchling** build backend. The version is resolved dynamically from `__init__.py`. 
+
+To build source distributions and wheels:
+```bash
+uv build
+```
+The build system is configured to include the Spanner DDL schema (`clients/schema.sql`) inside the built wheel.
+
+---
+
+## Containerization & Deployment
+
+The service is packaged as a Docker container. 
+
+The `Dockerfile` utilizes multi-stage building and layer caching:
+1. It copies `pyproject.toml` and performs `uv sync --no-dev --no-install-project` to cache dependencies before copying the application code.
+2. It compiles the required Google Cloud Spanner protobuf descriptor sets during build time:
+   ```dockerfile
+   RUN protoc --include_imports --descriptor_set_out=clients/storage.pb storage.proto
+   ```
+3. It starts the web server inside the container using Uvicorn:
+   ```dockerfile
+   CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
+   ```

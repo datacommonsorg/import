@@ -20,11 +20,10 @@ main:
         try:
           call: http.post
           args:
-            url: ${helper_url}
+            url: ${helper_url + "/database/lock/acquire"}
             auth:
               type: OIDC
             body:
-              actionType: acquire_ingestion_lock
               workflowId: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
               timeout: ${lock_timeout}
           result: lock_status
@@ -41,11 +40,10 @@ main:
             - get_import_info:
                 call: http.post
                 args:
-                  url: ${helper_url}
+                  url: ${helper_url + "/imports/info"}
                   auth:
                     type: OIDC
                   body:
-                    actionType: get_import_info
                     importList: ${import_list}
                 result: import_info
             - run_ingestion_job:
@@ -71,11 +69,10 @@ main:
             - update_ingestion_status:
                 call: http.post
                 args:
-                  url: ${helper_url}
+                  url: ${helper_url + "/imports/ingestion-status"}
                   auth:
                     type: OIDC
                   body:
-                    actionType: update_ingestion_status
                     workflowId: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
                     jobId: '${dataflow_job_id}'
                     importList: '${import_info.body}'
@@ -87,11 +84,10 @@ main:
             - record_failure:
                 call: http.post
                 args:
-                  url: ${helper_url}
+                  url: ${helper_url + "/imports/ingestion-status"}
                   auth:
                     type: OIDC
                   body:
-                    actionType: update_ingestion_status
                     workflowId: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
                     jobId: ${default(dataflow_job_id, default(map.get(e, "job_id"), "N/A"))}
                     importList: '${import_info.body}'
@@ -103,11 +99,10 @@ main:
     - release_ingestion_lock:
         call: http.post
         args:
-          url: ${helper_url}
+          url: ${helper_url + "/database/lock/release"}
           auth:
             type: OIDC
           body:
-            actionType: release_ingestion_lock
             workflowId: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
         result: function_response
     - fail_workflow:
@@ -124,12 +119,11 @@ run_aggregation_job:
     - run_aggregation:
         call: http.post
         args:
-          url: ${helper_url}
+          url: ${helper_url + "/aggregation/run"}
           timeout: 300
           auth:
             type: OIDC
           body:
-            actionType: run_aggregation
             importList: ${import_list}
         result: aggregation_response
     - check_aggregation_status_loop:
@@ -141,11 +135,10 @@ run_aggregation_job:
           - check_aggregation_status:
               call: http.post
               args:
-                url: ${helper_url}
+                url: ${helper_url + "/aggregation/status"}
                 auth:
                   type: OIDC
                 body:
-                  actionType: check_aggregation_status
                   jobIds: ${aggregation_response.body.jobIds}
               result: aggregation_status_response
           - evaluate_aggregation_status:

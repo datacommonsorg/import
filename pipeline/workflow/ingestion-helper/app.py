@@ -1,0 +1,33 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from fastapi import FastAPI
+from routes import imports, database, embeddings, aggregation, cache
+from utils.logging import log_requests
+
+app = FastAPI(
+    title="Data Commons Ingestion Helper",
+    description="FastAPI service providing helper routines for Spanner ingestion workflow.",
+    version="0.3.0"
+)
+
+# Register the centralized HTTP request/response logging middleware
+app.middleware("http")(log_requests)
+
+# Include APIRouters
+app.include_router(imports.router)
+app.include_router(database.router)
+app.include_router(embeddings.router)
+app.include_router(aggregation.router)
+app.include_router(cache.router)

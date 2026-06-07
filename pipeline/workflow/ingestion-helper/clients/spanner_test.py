@@ -19,7 +19,7 @@ import os
 
 # Add the current directory to path so we can import spanner_client
 sys.path.append(os.path.dirname(__file__))
-from spanner_client import SpannerClient
+from clients.spanner import SpannerClient
 
 class TestSpannerClient(unittest.TestCase):
 
@@ -54,7 +54,7 @@ class TestSpannerClient(unittest.TestCase):
         # Verify update_ddl was NOT called
         mock_db.update_ddl.assert_not_called()
 
-    @patch('spanner_client.DatabaseAdminClient')
+    @patch('clients.spanner.DatabaseAdminClient')
     @patch('google.cloud.spanner.Client')
     def test_initialize_database_none_exist(self, mock_spanner_client,
                                             mock_admin_client):
