@@ -80,7 +80,7 @@
     <build>
         <resources>
             <resource>
-                <directory>../workflow/ingestion-helper</directory>
+                <directory>../workflow/ingestion-helper/client/client</directory>
                 <includes>
                     <include>schema.sql</include>
                 </includes>
