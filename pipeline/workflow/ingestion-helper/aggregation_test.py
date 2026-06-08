@@ -24,6 +24,7 @@ sys.path.append(os.path.dirname(__file__))
 from aggregation import BigQueryExecutor
 from aggregation import LinkedEdgeGenerator
 from aggregation import ProvenanceSummaryGenerator
+from aggregation import PlaceAggregationGenerator
 from aggregation.sql_utils import _escape_sql_literal
 from aggregation_utils import AggregationUtils
 
@@ -241,6 +242,40 @@ class TestProvenanceSummaryGenerator(unittest.TestCase):
         self.assertIn("spanner-uri", query)
         self.assertIn("CONCAT('dc/base/', raw.import_name)",
                       query)  # Since is_base_dc=True
+
+
+class TestPlaceAggregationGenerator(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_executor = MagicMock()
+        self.mock_executor.connection_id = "test-conn"
+        self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
+
+    def test_run_all_empty(self):
+        generator = PlaceAggregationGenerator(self.mock_executor)
+        jobs = generator.run_all([])
+        self.assertEqual(jobs, [])
+        self.mock_executor.execute.assert_not_called()
+
+    def test_run_all(self):
+        generator = PlaceAggregationGenerator(self.mock_executor,
+                                              is_base_dc=True)
+
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        jobs = generator.run_all(["import1"])
+
+        self.assertEqual(len(jobs), 2)
+        self.assertEqual(self.mock_executor.execute.call_count, 2)
+
+        query1 = self.mock_executor.execute.call_args_list[0][0][0]
+        self.assertIn("test-conn", query1)
+        self.assertIn("import1", query1)
+
+        query2 = self.mock_executor.execute.call_args_list[1][0][0]
+        self.assertIn("test-conn", query2)
+        self.assertIn("import1", query2)
 
 
 @patch('aggregation_utils.BigQueryExecutor')
