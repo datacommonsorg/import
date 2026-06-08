@@ -13,6 +13,7 @@
 # limitations under the License.
 """A DB implementation that streams JSON-LD shards directly to GCS/Disk."""
 
+from collections import defaultdict
 import concurrent.futures
 from datetime import datetime
 from datetime import timezone
@@ -20,7 +21,6 @@ import gc
 import hashlib
 import json
 import logging
-import multiprocessing
 import os
 import tempfile
 import threading
@@ -256,9 +256,8 @@ class JsonLdStreamDb(Db):
     self.node_shard_index = 0
     self.ns_map = {"dcid": DCID_URL}
     self.lock = threading.Lock()
-    self._obs_records = {} # dict[str, list]
-    self._triples = {}     # dict[str, list]
-    self._global_triples = []
+    self._obs_records = defaultdict(list)
+    self._triples = defaultdict(list)
     self._processed_imports = set()
 
   def insert_observations(self, observations_df: pd.DataFrame,
@@ -268,8 +267,6 @@ class JsonLdStreamDb(Db):
       records = observations_df.to_records(index=False).tolist()
       with self.lock:
         self._processed_imports.add(import_name)
-        if import_name not in self._obs_records:
-          self._obs_records[import_name] = []
         self._obs_records[import_name].extend(records)
 
   def insert_triples(self, triples: list[Triple], input_file: File = None):
@@ -278,53 +275,43 @@ class JsonLdStreamDb(Db):
         if input_file:
           import_name = self.config.import_name(input_file)
           self._processed_imports.add(import_name)
-          if import_name not in self._triples:
-            self._triples[import_name] = []
           self._triples[import_name].extend(triples)
         else:
-          self._global_triples.extend(triples)
+          self._triples["_global"].extend(triples)
 
   def commit(self):
     pass
 
   def commit_and_close(self):
     # Add global triples to every processed import's triples
+    global_triples = self._triples.pop("_global", [])
     for import_name in self._processed_imports:
-      if import_name not in self._triples:
-        self._triples[import_name] = []
-      self._triples[import_name].extend(self._global_triples)
-
-    num_processes = min(multiprocessing.cpu_count(), _EXPORT_PROCESSES_MAX)
+      self._triples[import_name].extend(global_triples)
 
     with tempfile.TemporaryDirectory() as temp_local_dir:
       logging.info("Using local temporary directory for export buffering: %s",
                    temp_local_dir)
 
       if self._obs_records or self._triples:
-        logging.info(
-            "Starting JSON-LD local export with %d processes in streaming mode",
-            num_processes)
+        logging.info("Starting JSON-LD local export in sequential streaming mode")
 
-        # Process each import sequentially to minimize peak memory usage,
-        # but write shards in parallel within each import.
-        with multiprocessing.Pool(processes=num_processes) as pool:
-          for import_name in self._processed_imports:
-            import_temp_dir = os.path.join(temp_local_dir, import_name)
-            os.makedirs(import_temp_dir, exist_ok=True)
+        # Process each import sequentially to minimize peak memory usage and
+        # prevent any serverless OOM crashes.
+        for import_name in self._processed_imports:
+          import_temp_dir = os.path.join(temp_local_dir, import_name)
+          os.makedirs(import_temp_dir, exist_ok=True)
 
-            if import_name in self._obs_records:
-              logging.info("Streaming observations export for %s...", import_name)
-              obs_gen = self._generate_observation_chunks(import_name, import_temp_dir)
-              for _ in pool.imap(_write_observation_shard, obs_gen):
-                pass
-              logging.info("Completed observations export for %s.", import_name)
+          if import_name in self._obs_records:
+            logging.info("Streaming observations export for %s...", import_name)
+            for args in self._generate_observation_chunks(import_name, import_temp_dir):
+              _write_observation_shard(args)
+            logging.info("Completed observations export for %s.", import_name)
 
-            if import_name in self._triples:
-              logging.info("Streaming triples export for %s...", import_name)
-              node_gen = self._generate_node_chunks(import_name, import_temp_dir)
-              for _ in pool.imap(_write_node_shard, node_gen):
-                pass
-              logging.info("Completed triples export for %s.", import_name)
+          if import_name in self._triples:
+            logging.info("Streaming triples export for %s...", import_name)
+            for args in self._generate_node_chunks(import_name, import_temp_dir):
+              _write_node_shard(args)
+            logging.info("Completed triples export for %s.", import_name)
 
         self._upload_shards(temp_local_dir)
 

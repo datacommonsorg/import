@@ -24,6 +24,7 @@ from stats.data import InputFileFormat
 from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
+from stats.data import strip_namespace
 from util.file_match import match
 from util.filesystem import File
 
@@ -287,7 +288,6 @@ class Config:
     """Returns the normalized import name associated with a given input file."""
     prov_id = self._per_file_config(input_file).get("provenance")
     if prov_id:
-      from stats.data import strip_namespace
       return strip_namespace(prov_id).lower()
     raise ValueError(
         f"Could not determine import name: missing 'provenance' configuration for file '{input_file.path}'."
