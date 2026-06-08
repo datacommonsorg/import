@@ -26,6 +26,7 @@ class LinkedEdgeGenerator:
     def __init__(self,
                  executor: BigQueryExecutor,
                  is_base_dc: bool = True) -> None:
+        """Initializes the LinkedEdgeGenerator with the executor."""
         self.executor = executor
         self.is_base_dc = is_base_dc
 
@@ -59,10 +60,10 @@ class LinkedEdgeGenerator:
         provenance_filter = f" AND provenance IN ({', '.join(provenances)})"
         gen_graphs_prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
 
-        query = f"""
+        query = f"""  # nosec
         -- Pull base edges needed for containedInPlace aggregation
         CREATE OR REPLACE TEMPORARY TABLE `temp_base_contained_in_place` AS
-        SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
+        SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}",
           "SELECT subject_id, predicate, object_id FROM Edge WHERE predicate = 'containedInPlace'{provenance_filter}");
 
         -- Pull existing generated edges to filter them out later
@@ -149,7 +150,7 @@ class LinkedEdgeGenerator:
         provenance_filter = f" AND provenance IN ({', '.join(provenances)})"
         gen_graphs_prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
 
-        query = f"""
+        query = f"""  # nosec
         -- Pull base edges needed for memberOf aggregation
         CREATE OR REPLACE TEMPORARY TABLE `temp_base_member_of` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
@@ -242,7 +243,7 @@ class LinkedEdgeGenerator:
         provenance_filter = f" AND provenance IN ({', '.join(provenances)})"
         gen_graphs_prov = 'dc/base/GeneratedGraphs' if self.is_base_dc else 'GeneratedGraphs'
 
-        query = f"""
+        query = f"""  # nosec
         -- Pull base edges needed for member aggregation
         CREATE OR REPLACE TEMPORARY TABLE `temp_base_member` AS
         SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 

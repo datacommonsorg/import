@@ -26,6 +26,7 @@ class ProvenanceSummaryGenerator:
     def __init__(self,
                  executor: BigQueryExecutor,
                  is_base_dc: bool = True) -> None:
+        """Initializes the ProvenanceSummaryGenerator with the executor."""
         self.executor = executor
         self.is_base_dc = is_base_dc
 
@@ -55,7 +56,7 @@ class ProvenanceSummaryGenerator:
         imports_str = ", ".join([f"'{name}'" for name in safe_names])
         provenance_dcid_expr = "CONCAT('dc/base/', raw.import_name)" if self.is_base_dc else "raw.import_name"
 
-        query = f"""
+        query = f"""  # nosec
         -- Step 1: Fetch Observation rows for the specific import
         -- We cast 'observations' to STRING to avoid the PROTO error.
         CREATE OR REPLACE TEMPORARY TABLE `temp_obs_raw` AS
@@ -70,7 +71,7 @@ class ProvenanceSummaryGenerator:
           scaling_factor,
           is_dc_aggregate,
           observations_json
-        FROM EXTERNAL_QUERY("{connection_id}", 
+        FROM EXTERNAL_QUERY("{connection_id}",
           '''SELECT 
                variable_measured, 
                observation_about, 

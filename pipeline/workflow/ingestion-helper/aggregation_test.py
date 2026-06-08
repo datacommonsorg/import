@@ -19,8 +19,6 @@ import unittest
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-from google.cloud import bigquery
-
 sys.path.append(os.path.dirname(__file__))
 
 from aggregation import BigQueryExecutor

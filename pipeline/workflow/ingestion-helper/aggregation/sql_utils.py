@@ -14,7 +14,8 @@
 
 
 def _escape_sql_literal(val: str) -> str:
-    r"""Escapes a string literal for use in nested BigQuery/Spanner queries.
+    r"""
+    Escapes a string literal for use in nested BigQuery/Spanner queries.
 
     This is required because the query string travels through two SQL parsers:
     1. BigQuery parses the EXTERNAL_QUERY double-quoted string literal.

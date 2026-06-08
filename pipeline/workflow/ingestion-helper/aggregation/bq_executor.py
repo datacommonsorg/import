@@ -29,6 +29,7 @@ class BigQueryExecutor:
                  database_id: str,
                  location: Optional[str] = None,
                  run_sequential: bool = True) -> None:
+        """Initializes the BigQueryExecutor with connection and destination details."""
         self.connection_id = connection_id
         self.project_id = project_id
         self.instance_id = instance_id
@@ -51,7 +52,8 @@ class BigQueryExecutor:
         query: str,
         job_config: Optional[bigquery.QueryJobConfig] = None
     ) -> bigquery.job.QueryJob:
-        """Submits a query and returns the QueryJob.
+        """
+        Submits a query and returns the QueryJob.
 
         If run_sequential is True, it blocks and waits for the query to complete
         before returning.
