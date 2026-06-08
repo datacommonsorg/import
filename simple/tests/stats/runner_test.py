@@ -252,40 +252,45 @@ class TestRunner(unittest.TestCase):
             
       # Write a strict config.json using dcid:Provenance1
       strict_config = {
-          "inputFiles": {
-              "countries.csv": {
+          "inputFiles": [
+              {
+                  "pattern": "countries.csv",
                   "importType": "observations",
                   "format": "variablePerColumn",
                   "entityType": "Country",
                   "provenance": "dcid:Provenance1"
               },
-              "wikidataids.csv": {
+              {
+                  "pattern": "wikidataids.csv",
                   "importType": "observations",
                   "format": "variablePerColumn",
                   "entityType": "Country",
                   "provenance": "dcid:Provenance1"
               },
-              "variable_per_row.csv": {
+              {
+                  "pattern": "variable_per_row.csv",
                   "importType": "observations",
                   "format": "variablePerRow",
                   "entityType": "Country",
                   "provenance": "dcid:Provenance1"
               },
-              "author_entities.csv": {
+              {
+                  "pattern": "author_entities.csv",
                   "importType": "entities",
                   "rowEntityType": "Author",
                   "idColumn": "author_id",
                   "entityColumns": ["author_country"],
                   "provenance": "dcid:Provenance1"
               },
-              "article_entities.csv": {
+              {
+                  "pattern": "article_entities.csv",
                   "importType": "entities",
                   "rowEntityType": "Article",
                   "idColumn": "article_id",
                   "entityColumns": ["article_author"],
                   "provenance": "dcid:Provenance1"
               }
-          }
+          ]
       }
       with open(os.path.join(input_dir, "config.json"), "w") as f:
         json.dump(strict_config, f)
@@ -374,9 +379,8 @@ class TestRunner(unittest.TestCase):
       ilo_dir = os.path.join(input_dir, "ilo", "ds1")
       os.makedirs(ilo_dir)
 
-      # Create config.json files
-      oecd_config = {"inputFiles": {"data.csv": {"importType": "OBSERVATIONS"}}}
-      ilo_config = {"inputFiles": {"data.csv": {"importType": "OBSERVATIONS"}}}
+      oecd_config = {"inputFiles": [{"pattern": "data.csv", "importType": "OBSERVATIONS"}]}
+      ilo_config = {"inputFiles": [{"pattern": "data.csv", "importType": "OBSERVATIONS"}]}
 
       with open(os.path.join(oecd_dir, "config.json"), "w") as f:
         json.dump(oecd_config, f)

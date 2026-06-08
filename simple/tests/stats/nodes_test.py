@@ -33,25 +33,34 @@ _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 CONFIG_DATA = {
-    "inputFiles": {
-        "a.csv": {
+    "inputFiles": [
+        {
+            "pattern": "a.csv",
             "entityType": "Country",
             "provenance": "Provenance1"
         },
-        "b.csv": {
+        {
+            "pattern": "b.csv",
             "entityType": "",
             "ignoreColumns": ["ignore1", "ignore2"]
         },
-        "events.csv": {
+        {
+            "pattern": "events.csv",
             "entityType": "Country",
             "provenance": "Provenance1",
             "eventType": "CrimeEvent"
         },
-        "entities.csv": {
+        {
+            "pattern": "entities.csv",
             "rowEntityType": "FooEntity",
             "provenance": "Provenance1"
+        },
+        {
+            "pattern": "x.csv",
+            "entityType": "",
+            "provenance": "Provenance1"
         }
-    },
+    ],
     "variables": {
         "Variable 1": {
             "group": "Parent Group/Child Group 1"
@@ -285,10 +294,10 @@ class TestNodes(unittest.TestCase):
                    url="http://source1.com/provenance1"))
     self.assertEqual(
         nodes.provenance(self.x),
-        Provenance(id="c/p/default",
-                   source_id="c/s/default",
-                   name="Custom Import",
-                   url="custom-import"))
+        Provenance(id="c/p/1",
+                   source_id="c/s/1",
+                   name="Provenance1",
+                   url="http://source1.com/provenance1"))
 
   def test_multiple_parent_groups(self):
     """This is to test a bug fix related to groups.
@@ -299,7 +308,20 @@ class TestNodes(unittest.TestCase):
 
     The fix checks that both parents are under dc/g/Root
     """
-    nodes = Nodes(Config({}))
+    cfg = Config({
+        "inputFiles": [
+            {"pattern": "x.csv", "provenance": "dcid:Provenance1"}
+        ],
+        "sources": {
+            "Source1": {
+                "url": "http://source1.com",
+                "provenances": {
+                    "Provenance1": "http://source1.com/p1"
+                }
+            }
+        }
+    })
+    nodes = Nodes(cfg)
     nodes.group("Parent 1/Child 1")
     nodes.variable("foo", self.x)
     nodes.group("Parent 2/Child 1")

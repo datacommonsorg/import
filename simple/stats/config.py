@@ -74,17 +74,13 @@ class Config:
   def __init__(self, data: dict) -> None:
     self.data = data
     self._input_files_config: dict[str, dict] = {}
-    for entry in self.data.get(_INPUT_FILES_FIELD, []):
-      if not isinstance(entry, dict):
-        raise ValueError(
-            f"Invalid entry in '{_INPUT_FILES_FIELD}': must be a JSON object. Got: {entry}"
-        )
-      key = entry.get("pattern") or entry.get("filename")
-      if not key:
-        raise ValueError(
-            f"Invalid entry in '{_INPUT_FILES_FIELD}': must specify 'pattern' or 'filename'. Got: {entry}"
-        )
-      self._input_files_config[key] = entry
+    input_files = self.data.get(_INPUT_FILES_FIELD, [])
+
+    if isinstance(input_files, list):
+      self._parse_input_files_config(input_files)
+    elif isinstance(input_files, dict):
+      self._parse_legacy_input_files_config(input_files)
+
     # If input file paths are specified with wildcards - e.g. "gs://bucket/foo*.csv",
     # this dict maintains a mapping from actual file path to the wildcard key
     # for fast lookup.
@@ -96,6 +92,36 @@ class Config:
     # dict from provenance name to Source
     self.provenance_sources: dict[str, Source] = {}
     self._parse_provenances_and_sources()
+
+  def _parse_input_files_config(self, input_files: list) -> None:
+    """Parses the modern list-of-objects format for inputFiles."""
+    for entry in input_files:
+      if not isinstance(entry, dict):
+        raise ValueError(
+            f"Invalid entry in '{_INPUT_FILES_FIELD}': must be a JSON object. Got: {entry}"
+        )
+      key = entry.get("pattern") or entry.get("filename")
+      if not key:
+        raise ValueError(
+            f"Invalid entry in '{_INPUT_FILES_FIELD}': must specify 'pattern' or 'filename'. Got: {entry}"
+        )
+      self._input_files_config[key] = entry
+
+  def _parse_legacy_input_files_config(self, input_files: dict) -> None:
+    """Parses the legacy dictionary format for inputFiles.
+
+    TODO: Deprecate and completely remove this legacy dictionary format
+    once all test config.json files and legacy custom installations have been
+    migrated to the modern list-of-objects format.
+    """
+    for key, entry in input_files.items():
+      if not isinstance(entry, dict):
+        raise ValueError(
+            f"Invalid entry in '{_INPUT_FILES_FIELD}': must be a JSON object. Got: {entry}"
+        )
+      if "pattern" not in entry and "filename" not in entry:
+        entry["pattern"] = key
+      self._input_files_config[key] = entry
 
   def data_download_urls(self) -> list[str]:
     cfg = self.data.get(_DATA_DOWNLOAD_URL_FIELD)

@@ -40,6 +40,7 @@ from stats.db import Db
 from stats.jsonld_exporter import DCID_URL
 from stats.jsonld_exporter import expand_id
 from stats.jsonld_exporter import write_shard
+from stats.util import is_uri_or_namespace
 from util.filesystem import create_store
 from util.filesystem import Dir
 from util.filesystem import File
@@ -50,21 +51,10 @@ _UPLOAD_CONCURRENCY = 32
 _EXPORT_PROCESSES_MAX = 8
 
 
-def _is_uri_or_namespace(val: str) -> bool:
-  """Returns True if the value is a full URL, standard DCID, or valid custom namespace."""
-  if val.startswith(("http://", "https://", "dcid:")):
-    return True
-  if ":" in val and " " not in val:
-    prefix = val.split(":", 1)[0]
-    # A valid namespace prefix must be purely alphanumeric (e.g. 'custom', 'un', 'myorg')
-    return prefix.isalnum()
-  return False
-
-
 def _uri_ref(val):
   if not val:
     return None
-  if _is_uri_or_namespace(val):
+  if is_uri_or_namespace(val):
     return {"@id": val}
   return {"@id": f"dcid:{val.lstrip('/')}"}
 
@@ -155,11 +145,11 @@ def _write_node_shard_fast(args):
     if sub_id not in subjects:
       subjects[sub_id] = {
           "@id":
-              sub_id if _is_uri_or_namespace(sub_id) else f"dcid:{sub_id.lstrip('/')}"
+              sub_id if is_uri_or_namespace(sub_id) else f"dcid:{sub_id.lstrip('/')}"
       }
 
     pred = row.predicate
-    pred_key = pred if _is_uri_or_namespace(pred) else f"dcid:{pred}"
+    pred_key = pred if is_uri_or_namespace(pred) else f"dcid:{pred}"
 
     if pred == "typeOf":
       pred_key = "@type"

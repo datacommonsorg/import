@@ -15,6 +15,7 @@
 import logging
 from stats.config import Config
 from stats.db import Db
+from stats.util import is_uri_or_namespace
 
 
 class MetadataValidator:
@@ -69,7 +70,7 @@ class MetadataValidator:
             f"must have a 'provenance' property. "
             f"Found entry missing provenance: {entry}"
         )
-      if ":" not in prov or " " in prov:
+      if not is_uri_or_namespace(prov):
         raise ValueError(
             f"Metadata Validation Failed: The 'provenance' property must be "
             f"a valid DCID or URI (e.g., 'dcid:FrogCensusBureau', 'custom:WHO', or a URL). "

@@ -46,3 +46,16 @@ def gzip_and_base64_encode_json(data: dict) -> str:
 
 def base64_decode_and_gunzip_json(encoded_data: str) -> dict:
   return json.loads(base64_decode_and_gunzip(encoded_data))
+
+
+def is_uri_or_namespace(val: str) -> bool:
+  """Returns True if the value is a full URL, standard DCID, or valid custom namespace."""
+  if not val:
+    return False
+  if val.startswith(("http://", "https://", "dcid:")):
+    return True
+  if ":" in val and " " not in val:
+    prefix = val.split(":", 1)[0]
+    # A valid namespace prefix must be purely alphanumeric (e.g. 'custom', 'un', 'myorg')
+    return prefix.isalnum()
+  return False

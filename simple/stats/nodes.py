@@ -190,13 +190,7 @@ class Nodes:
     
     prov = self.provenances.get(prov_name)
     if not prov:
-      if prov_name.startswith(("dcid:", "http://", "https://")) or (":" in prov_name and " " not in prov_name):
-        prov = self.register_provenance(prov_name)
-      else:
-        raise ValueError(
-            f"Invalid provenance '{prov_name}' for file '{input_file.path}'. "
-            f"Must start with 'dcid:', 'http://', or 'https://'."
-        )
+      prov = self.register_provenance(prov_name)
           
     self._used_provenance_ids.add(prov.id)
     if prov.source_id:

@@ -23,6 +23,7 @@ from stats.db import Db
 from stats.importer import Importer
 from stats.nodes import Nodes
 from stats.reporter import FileImportReporter
+from stats.util import is_uri_or_namespace
 from util.filesystem import File
 
 _ID = 'ID'
@@ -139,7 +140,7 @@ def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
   resolved_subject = local2dcid.get(subject_id, subject_id)
 
   # If it was not mapped AND it doesn't start with a valid namespace or URI, it's an error!
-  if resolved_subject == subject_id and (":" not in resolved_subject or " " in resolved_subject):
+  if resolved_subject == subject_id and not is_uri_or_namespace(resolved_subject):
     raise ValueError(f"dcid not specified for node: {subject_id}")
 
   if value_type == _ID:
