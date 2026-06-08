@@ -297,22 +297,27 @@ class Runner:
 
       # Merge inputFiles, prefixing patterns with rel_dir and converting dicts to lists
       input_files = config_data.get("inputFiles", [])
+      
+      # 1. Normalize legacy dictionary format to standard list format
+      entries = []
       if isinstance(input_files, list):
-        for entry in input_files:
-          if isinstance(entry, dict):
-            new_entry = dict(entry)
-            for key_field in ["pattern", "filename"]:
-              if key_field in new_entry:
-                new_entry[key_field] = fspath.join(rel_dir, new_entry[key_field])
-            new_entry["_import_name"] = config_data.get("importName") or rel_dir
-            merged_data["inputFiles"].append(new_entry)
+        entries = [entry for entry in input_files if isinstance(entry, dict)]
       elif isinstance(input_files, dict):
         for k, v in input_files.items():
-          new_entry = {"pattern": fspath.join(rel_dir, k)}
+          entry = {"pattern": k}
           if isinstance(v, dict):
-            new_entry.update(v)
-          new_entry["_import_name"] = config_data.get("importName") or rel_dir
-          merged_data["inputFiles"].append(new_entry)
+            entry.update(v)
+          entries.append(entry)
+
+      # 2. Process all entries uniformly (DRY)
+      import_name = config_data.get("importName") or rel_dir
+      for entry in entries:
+        new_entry = dict(entry)
+        for key_field in ["pattern", "filename"]:
+          if key_field in new_entry:
+            new_entry[key_field] = fspath.join(rel_dir, new_entry[key_field])
+        new_entry["_import_name"] = import_name
+        merged_data["inputFiles"].append(new_entry)
 
       # Merge variables
       variables = config_data.get("variables", {})
@@ -687,12 +692,8 @@ class Runner:
           )
       elif match(file, "*.mcf"):
         # MCF files are included if they match a config pattern OR if they are under the active folders
-        if matches_config:
-          mcf_files.append(file)
-        elif self.active_import_prefixes:
-          if any(file.path.startswith(prefix) for prefix in self.active_import_prefixes):
-            mcf_files.append(file)
-        else:
+        if (matches_config or not self.active_import_prefixes or
+            any(file.path.startswith(prefix) for prefix in self.active_import_prefixes)):
           mcf_files.append(file)
 
     # Sort alphabetically to guarantee consistent order
