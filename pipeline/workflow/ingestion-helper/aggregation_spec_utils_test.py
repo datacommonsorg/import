@@ -60,6 +60,15 @@ class DelayedFieldResults:
         return iter(self.rows)
 
 
+class NoneFieldResults:
+    def __init__(self, rows):
+        self.rows = rows
+        self.fields = None
+
+    def __iter__(self):
+        return iter(self.rows)
+
+
 class TestAggregationSpecUtils(unittest.TestCase):
 
     def test_local_jsonl_source_to_local_jsonl_sink(self):
@@ -144,6 +153,17 @@ class TestAggregationSpecUtils(unittest.TestCase):
                              'SELECT subject_id, name FROM Node').read())
 
         self.assertEqual(rows, [{'subject_id': 'dc/1', 'name': 'Node 1'}])
+
+    def test_spanner_source_handles_none_fields(self):
+        database = MagicMock()
+        snapshot = database.snapshot.return_value.__enter__.return_value
+        snapshot.execute_sql.return_value = NoneFieldResults(rows=[("dc/1", "Node 1")])
+
+        rows = list(
+            SpannerSqlSource(database, "SELECT subject_id, name FROM Node").read()
+        )
+
+        self.assertEqual(rows, [{"value": ("dc/1", "Node 1")}])
 
     def test_spanner_sink_writes_multiple_batches(self):
         with tempfile.TemporaryDirectory() as temp_dir:

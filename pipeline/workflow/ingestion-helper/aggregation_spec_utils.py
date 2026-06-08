@@ -54,9 +54,9 @@ class SpannerSqlSource:
                     continue
 
                 if field_names is None:
-                    field_names = [
-                        field.name for field in getattr(results, 'fields', [])
-                    ]
+                    fields = getattr(results, "fields", None)
+                    if fields:
+                        field_names = [field.name for field in fields]
 
                 if field_names:
                     yield dict(zip(field_names, row))
