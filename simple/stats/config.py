@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import re
+import fs.path as fspath
 
 from stats import constants
 from stats.data import AggregationConfig
@@ -71,16 +72,13 @@ class Config:
 
   def __init__(self, data: dict) -> None:
     self.data = data
-    input_files_data = self.data.get(_INPUT_FILES_FIELD, [])
+    # Enforce the clean, structured list-of-objects schema:
     self._input_files_config: dict[str, dict] = {}
-    if isinstance(input_files_data, list):
-      for entry in input_files_data:
-        if isinstance(entry, dict):
-          key = entry.get("pattern") or entry.get("filename")
-          if key:
-            self._input_files_config[key] = entry
-    else:
-      self._input_files_config = input_files_data
+    for entry in self.data.get(_INPUT_FILES_FIELD, []):
+      if isinstance(entry, dict):
+        key = entry.get("pattern") or entry.get("filename")
+        if key:
+          self._input_files_config[key] = entry
     # If input file paths are specified with wildcards - e.g. "gs://bucket/foo*.csv",
     # this dict maintains a mapping from actual file path to the wildcard key
     # for fast lookup.
@@ -282,26 +280,22 @@ class Config:
 
   def import_name(self, input_file: File) -> str:
     """Returns the normalized import name associated with a given input file."""
+    if not input_file:
+      return self.data.get("importName") or "default"
+
+    # 1. Check optional file-level override (highest priority)
     raw_name = self._per_file_config(input_file).get("_import_name")
     
-    if not raw_name and input_file:
-      import fs.path as fspath
-      dir_path = fspath.dirname(input_file.path)
-      dir_import_names = self.data.get("_dir_import_names", {})
-      raw_name = dir_import_names.get(dir_path)
-      
+    # 2. Check global fallback (for single-import datasets)
     if not raw_name:
       raw_name = self.data.get("importName")
       
-    if not raw_name and input_file:
-      # Defensive fallback: extract from path
+    # 3. Automatic directory-based fallback (e.g., who/csv/data.csv -> who)
+    if not raw_name:
       parts = input_file.path.split("/")
-      if len(parts) > 1:
-        raw_name = "_".join(parts[:-1])
-      else:
-        raw_name = "default"
-        
-    return raw_name or "default"
+      raw_name = parts[0] if len(parts) > 1 else "default"
+
+    return raw_name
 
   def _per_file_config(self, input_file: File) -> dict:
     """ Looks up the config for a given file.

@@ -20,6 +20,7 @@ Used by the Stats import runner to trigger the ingestion workflow after the Stat
 import json
 import logging
 import os
+import re
 
 import google.auth
 import google.auth.transport.requests
@@ -42,18 +43,20 @@ def _get_env_vars():
   return {var: os.getenv(var) for var in required_env_vars}
 
 
-def trigger_ingestion_workflow(gcs_path: str = None,
-                               import_name: str = "default_import_name",
-                               import_list: list[dict] = None):
+def trigger_ingestion_workflow(import_list: list[dict]):
   """Triggers the Data Commons ingestion workflow via Google Cloud Workflows API."""
+  if not import_list:
+    logging.warning("No import list provided. Skipping ingestion workflow trigger.")
+    return
+
   logging.info("Attempting to auto-trigger ingestion workflow via API...")
 
   env_vars = _get_env_vars()
   if not env_vars:
     return
 
-  if import_list is None:
-    import_list = [{"importName": import_name, "graphPath": gcs_path}]
+  raw_import_name = "_".join(item["importName"] for item in import_list)
+  sanitized_import_name = re.sub(r'[^a-zA-Z0-9_-]', '_', raw_import_name)
 
   data_payload = {
       "spannerInstanceId":
@@ -61,7 +64,7 @@ def trigger_ingestion_workflow(gcs_path: str = None,
       "spannerDatabaseId":
           env_vars["GCP_SPANNER_DATABASE_NAME"],
       "importName":
-          import_list[0]["importName"] if import_list else import_name,
+          sanitized_import_name,
       "importList":
           json.dumps(import_list),
       "tempLocation":
