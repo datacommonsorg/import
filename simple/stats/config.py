@@ -119,8 +119,6 @@ class Config:
         raise ValueError(
             f"Invalid entry in '{_INPUT_FILES_FIELD}': must be a JSON object. Got: {entry}"
         )
-      if "pattern" not in entry and "filename" not in entry:
-        entry["pattern"] = key
       self._input_files_config[key] = entry
 
   def data_download_urls(self) -> list[str]:

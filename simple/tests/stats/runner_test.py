@@ -289,6 +289,10 @@ class TestRunner(unittest.TestCase):
                   "idColumn": "article_id",
                   "entityColumns": ["article_author"],
                   "provenance": "dcid:Provenance1"
+              },
+              {
+                  "pattern": "*.mcf",
+                  "provenance": "dcid:Provenance1"
               }
           ]
       }
@@ -424,7 +428,11 @@ class TestRunner(unittest.TestCase):
               {
                   "pattern": "data.csv",
                   "entityType": "Country",
-                  "provenance": "dcid:OecdProv"
+                  "provenance": "dcid:oecd"
+              },
+              {
+                  "pattern": "*.mcf",
+                  "provenance": "dcid:oecd"
               }
           ]
       }
@@ -440,7 +448,7 @@ class TestRunner(unittest.TestCase):
       oecd_mcf = (
           "Node: dcid:OecdSource\n"
           "typeOf: dcs:Source\n\n"
-          "Node: dcid:OecdProv\n"
+          "Node: dcid:oecd\n"
           "typeOf: dcs:Provenance\n"
           "sourceLink: dcid:OecdSource\n"
       )
@@ -456,7 +464,11 @@ class TestRunner(unittest.TestCase):
               {
                   "pattern": "data.csv",
                   "entityType": "Country",
-                  "provenance": "dcid:IloProv"
+                  "provenance": "dcid:ilo"
+              },
+              {
+                  "pattern": "*.mcf",
+                  "provenance": "dcid:ilo"
               }
           ]
       }
@@ -471,7 +483,7 @@ class TestRunner(unittest.TestCase):
       ilo_mcf = (
           "Node: dcid:IloSource\n"
           "typeOf: dcs:Source\n\n"
-          "Node: dcid:IloProv\n"
+          "Node: dcid:ilo\n"
           "typeOf: dcs:Provenance\n"
           "sourceLink: dcid:IloSource\n"
       )
