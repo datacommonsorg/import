@@ -138,6 +138,7 @@ class AggregationRunner:
         mapper = spec.mapper or _identity_mapper
         batch = []
         row_count = 0
+        batch_size = getattr(spec.sink, "batch_size", 1000)
 
         spec.sink.start()
         try:
@@ -147,7 +148,7 @@ class AggregationRunner:
                     continue
 
                 batch.append(mapped_row)
-                if len(batch) >= spec.sink.batch_size:
+                if len(batch) >= batch_size:
                     spec.sink.write_many(batch)
                     row_count += len(batch)
                     batch = []

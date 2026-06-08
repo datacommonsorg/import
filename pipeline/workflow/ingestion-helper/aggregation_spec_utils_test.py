@@ -61,12 +61,29 @@ class DelayedFieldResults:
 
 
 class NoneFieldResults:
+
     def __init__(self, rows):
         self.rows = rows
         self.fields = None
 
     def __iter__(self):
         return iter(self.rows)
+
+
+class NoBatchSizeSink:
+    def __init__(self):
+        self.batches = []
+        self.started = False
+        self.closed = False
+
+    def start(self):
+        self.started = True
+
+    def write_many(self, rows):
+        self.batches.append(rows)
+
+    def close(self):
+        self.closed = True
 
 
 class TestAggregationSpecUtils(unittest.TestCase):
@@ -221,6 +238,29 @@ class TestAggregationSpecUtils(unittest.TestCase):
 
             self.assertEqual(count, 0)
             database.batch.assert_not_called()
+
+    def test_runner_uses_default_batch_size_when_sink_omits_it(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            input_path = Path(temp_dir) / "input.jsonl"
+            self._write_jsonl(
+                input_path, [{"subject_id": "dc/1"}, {"subject_id": "dc/2"}]
+            )
+            sink = NoBatchSizeSink()
+
+            count = AggregationRunner().run(
+                AggregationSpec(
+                    name="default_batch_size",
+                    source=LocalJsonlSource(str(input_path)),
+                    sink=sink,
+                )
+            )
+
+            self.assertEqual(count, 2)
+            self.assertTrue(sink.started)
+            self.assertTrue(sink.closed)
+            self.assertEqual(
+                sink.batches, [[{"subject_id": "dc/1"}, {"subject_id": "dc/2"}]]
+            )
 
     def _write_jsonl(self, path, rows):
         path.write_text(''.join(json.dumps(row) + '\n' for row in rows),
