@@ -305,36 +305,31 @@ class JsonLdStreamDb(Db):
             "Starting JSON-LD local export with %d processes in streaming mode",
             num_processes)
 
-        obs_chunks = []
-        node_chunks = []
-
-        for import_name in self._processed_imports:
-          import_temp_dir = os.path.join(temp_local_dir, import_name)
-          os.makedirs(import_temp_dir, exist_ok=True)
-
-          if import_name in self._obs_records:
-            obs_chunks.extend(
-                list(self._generate_observation_chunks(import_name, import_temp_dir)))
-          
-          if import_name in self._triples:
-            node_chunks.extend(
-                list(self._generate_node_chunks(import_name, import_temp_dir)))
-
+        # Process each import sequentially to minimize peak memory usage,
+        # but write shards in parallel within each import.
         with multiprocessing.Pool(processes=num_processes) as pool:
-          if obs_chunks:
-            logging.info("Streaming observations export...")
-            for _ in pool.imap(_write_observation_shard, obs_chunks):
-              pass
+          for import_name in self._processed_imports:
+            import_temp_dir = os.path.join(temp_local_dir, import_name)
+            os.makedirs(import_temp_dir, exist_ok=True)
 
-          if node_chunks:
-            logging.info("Streaming triples export...")
-            for _ in pool.imap(_write_node_shard, node_chunks):
-              pass
+            if import_name in self._obs_records:
+              logging.info("Streaming observations export for %s...", import_name)
+              obs_gen = self._generate_observation_chunks(import_name, import_temp_dir)
+              for _ in pool.imap(_write_observation_shard, obs_gen):
+                pass
+              logging.info("Completed observations export for %s.", import_name)
+
+            if import_name in self._triples:
+              logging.info("Streaming triples export for %s...", import_name)
+              node_gen = self._generate_node_chunks(import_name, import_temp_dir)
+              for _ in pool.imap(_write_node_shard, node_gen):
+                pass
+              logging.info("Completed triples export for %s.", import_name)
 
         self._upload_shards(temp_local_dir)
 
   def _generate_observation_chunks(self, import_name: str, import_temp_dir: str):
-    """Generates observation chunks of size _CHUNK_SIZE, cleaning memory dynamically."""
+    """Generates observation chunks of size _CHUNK_SIZE, cleaning memory progressively."""
     prov_urls = {}
     for prov in self.nodes.provenances.values():
       prov_id = strip_namespace(prov.id)
@@ -342,10 +337,12 @@ class JsonLdStreamDb(Db):
       prov_urls[prov.id] = prov.url
 
     records = self._obs_records.get(import_name, [])
-    num_records = len(records)
     shard_index = 0
-    for idx in range(0, num_records, _CHUNK_SIZE):
-      chunk = records[idx:idx + _CHUNK_SIZE]
+    while records:
+      chunk = []
+      # Pop from the end to avoid O(N) list shifting overhead
+      for _ in range(min(_CHUNK_SIZE, len(records))):
+        chunk.append(records.pop())
       yield (chunk, shard_index, import_temp_dir, self.ns_map,
              prov_urls)
       shard_index += 1
@@ -353,12 +350,14 @@ class JsonLdStreamDb(Db):
       self._obs_records[import_name].clear()
 
   def _generate_node_chunks(self, import_name: str, import_temp_dir: str):
-    """Generates node chunks of size _CHUNK_SIZE."""
+    """Generates node chunks of size _CHUNK_SIZE, cleaning memory progressively."""
     triples = self._triples.get(import_name, [])
-    num_triples = len(triples)
     shard_index = 0
-    for idx in range(0, num_triples, _CHUNK_SIZE):
-      chunk = triples[idx:idx + _CHUNK_SIZE]
+    while triples:
+      chunk = []
+      # Pop from the end to avoid O(N) list shifting overhead
+      for _ in range(min(_CHUNK_SIZE, len(triples))):
+        chunk.append(triples.pop())
       yield (chunk, shard_index, import_temp_dir, self.ns_map)
       shard_index += 1
     if import_name in self._triples:
