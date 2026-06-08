@@ -102,7 +102,7 @@ class ProvenanceSummaryGenerator:
         -- Step 3: Fetch ALL typeOf edges (Narrow selection)
         CREATE OR REPLACE TEMPORARY TABLE `temp_type_edges` AS
         SELECT subject_id, object_id as place_type
-        FROM EXTERNAL_QUERY("{connection_id}", 
+        FROM EXTERNAL_QUERY("{connection_id}",
           "SELECT subject_id, object_id FROM Edge WHERE predicate = 'typeOf'");
 
         -- Step 4: Join and Flatten in BigQuery

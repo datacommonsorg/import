@@ -54,7 +54,6 @@ class BigQueryExecutor:
         If run_sequential is True, it blocks and waits for the query to complete
         before returning.
         """
-
         logging.info(
             f"Submitting query (first 100 chars): {query.strip()[:100]}...")
 
@@ -80,7 +79,6 @@ class BigQueryExecutor:
 
     def get_jobs_status(self, job_ids: List[str]) -> Dict[str, Any]:
         """Returns the overall status of a list of BigQuery jobs."""
-
         overall_status = "DONE"
         failed_jobs = []
         error_message = ""

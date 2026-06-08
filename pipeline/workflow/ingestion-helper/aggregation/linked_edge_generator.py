@@ -69,7 +69,7 @@ class LinkedEdgeGenerator:
 
         -- Pull existing generated edges to filter them out later
         CREATE OR REPLACE TEMPORARY TABLE `temp_existing_linked_contained_in_place` AS
-        SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}", 
+        SELECT * FROM EXTERNAL_QUERY("{self.executor.connection_id}",
           "SELECT subject_id, predicate, object_id, provenance FROM Edge WHERE predicate = 'linkedContainedInPlace'");
 
         CREATE OR REPLACE TEMPORARY TABLE `temp_contained_in_place` AS
