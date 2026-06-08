@@ -56,6 +56,14 @@ class TestBigQueryExecutor(unittest.TestCase):
             "https://spanner.googleapis.com/projects/proj/instances/inst/databases/db"
         )
 
+    def test_init_failure(self, mock_bq_client):
+        mock_bq_client.side_effect = Exception("Auth error")
+        with self.assertRaises(Exception):
+            BigQueryExecutor(connection_id="conn",
+                             project_id="proj",
+                             instance_id="inst",
+                             database_id="db")
+
     def test_execute_sequential(self, mock_bq_client):
         mock_client_instance = MagicMock()
         mock_bq_client.return_value = mock_client_instance

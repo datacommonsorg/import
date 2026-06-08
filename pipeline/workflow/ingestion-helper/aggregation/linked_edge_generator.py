@@ -15,9 +15,10 @@
 import logging
 from typing import List, Optional
 
-from aggregation.bq_executor import BigQueryExecutor
-from aggregation.sql_utils import _escape_sql_literal
 from google.cloud import bigquery
+
+from .bq_executor import BigQueryExecutor
+from .sql_utils import _escape_sql_literal
 
 
 class LinkedEdgeGenerator:

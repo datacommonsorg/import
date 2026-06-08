@@ -36,12 +36,8 @@ class BigQueryExecutor:
         self.database_id = database_id
         self.location = location
         self.run_sequential = run_sequential
-        try:
-            self.client = bigquery.Client(project=self.project_id,
-                                          location=self.location)
-        except Exception as e:
-            logging.warning(f"Failed to initialize BigQuery client: {e}")
-            self.client = None
+        self.client = bigquery.Client(project=self.project_id,
+                                      location=self.location)
 
     def get_spanner_destination_uri(self) -> str:
         """Returns the Spanner destination URI for EXPORT DATA."""
@@ -58,9 +54,6 @@ class BigQueryExecutor:
         If run_sequential is True, it blocks and waits for the query to complete
         before returning.
         """
-        if not self.client:
-            logging.error("BigQuery client not initialized")
-            raise RuntimeError("BigQuery client not initialized")
 
         logging.info(
             f"Submitting query (first 100 chars): {query.strip()[:100]}...")
@@ -87,9 +80,6 @@ class BigQueryExecutor:
 
     def get_jobs_status(self, job_ids: List[str]) -> Dict[str, Any]:
         """Returns the overall status of a list of BigQuery jobs."""
-        if not self.client:
-            logging.error("BigQuery client not initialized")
-            raise RuntimeError("BigQuery client not initialized")
 
         overall_status = "DONE"
         failed_jobs = []

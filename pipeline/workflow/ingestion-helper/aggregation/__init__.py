@@ -17,9 +17,9 @@ This package contains modules for executing BigQuery queries and generating
 linked relationship edges and provenance summaries in Spanner.
 """
 
-from aggregation.bq_executor import BigQueryExecutor
-from aggregation.linked_edge_generator import LinkedEdgeGenerator
-from aggregation.provenance_summary_generator import ProvenanceSummaryGenerator
+from .bq_executor import BigQueryExecutor
+from .linked_edge_generator import LinkedEdgeGenerator
+from .provenance_summary_generator import ProvenanceSummaryGenerator
 
 __all__ = [
     'BigQueryExecutor',
