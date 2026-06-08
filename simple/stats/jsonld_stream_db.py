@@ -21,6 +21,7 @@ import gc
 import hashlib
 import json
 import logging
+import multiprocessing
 import os
 import tempfile
 import threading
@@ -288,30 +289,38 @@ class JsonLdStreamDb(Db):
     for import_name in self._processed_imports:
       self._triples[import_name].extend(global_triples)
 
+    num_processes = min(multiprocessing.cpu_count(), _EXPORT_PROCESSES_MAX)
+
     with tempfile.TemporaryDirectory() as temp_local_dir:
       logging.info("Using local temporary directory for export buffering: %s",
                    temp_local_dir)
 
       if self._obs_records or self._triples:
-        logging.info("Starting JSON-LD local export in sequential streaming mode")
+        logging.info(
+            "Starting JSON-LD local export with %d processes in sequential-parallel mode",
+            num_processes)
 
-        # Process each import sequentially to minimize peak memory usage and
-        # prevent any serverless OOM crashes.
+        # Process each import sequentially to minimize peak memory usage,
+        # but write shards in parallel within each import to maximize speed.
         for import_name in self._processed_imports:
           import_temp_dir = os.path.join(temp_local_dir, import_name)
           os.makedirs(import_temp_dir, exist_ok=True)
 
-          if import_name in self._obs_records:
-            logging.info("Streaming observations export for %s...", import_name)
-            for args in self._generate_observation_chunks(import_name, import_temp_dir):
-              _write_observation_shard(args)
-            logging.info("Completed observations export for %s.", import_name)
+          if import_name in self._obs_records or import_name in self._triples:
+            with multiprocessing.Pool(processes=num_processes) as pool:
+              if import_name in self._obs_records:
+                logging.info("Streaming observations export for %s...", import_name)
+                obs_gen = self._generate_observation_chunks(import_name, import_temp_dir)
+                for _ in pool.imap(_write_observation_shard, obs_gen):
+                  pass
+                logging.info("Completed observations export for %s.", import_name)
 
-          if import_name in self._triples:
-            logging.info("Streaming triples export for %s...", import_name)
-            for args in self._generate_node_chunks(import_name, import_temp_dir):
-              _write_node_shard(args)
-            logging.info("Completed triples export for %s.", import_name)
+              if import_name in self._triples:
+                logging.info("Streaming triples export for %s...", import_name)
+                node_gen = self._generate_node_chunks(import_name, import_temp_dir)
+                for _ in pool.imap(_write_node_shard, node_gen):
+                  pass
+                logging.info("Completed triples export for %s.", import_name)
 
         self._upload_shards(temp_local_dir)
 
