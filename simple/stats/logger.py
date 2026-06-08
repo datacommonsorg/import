@@ -36,7 +36,6 @@ def initialize_logger():
   for handler in logging.root.handlers:
     logging.root.removeHandler(handler)
 
-  # Initialize logging
   logger = logging.getLogger()
   logger.setLevel(log_level)
   handler = logging.StreamHandler(sys.stdout)

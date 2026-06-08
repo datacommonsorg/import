@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import concurrent.futures
 from datetime import datetime
 from datetime import timezone
 from enum import StrEnum
 import json
 import logging
 import os
+import threading
 from typing import Optional
 
 import fs.path as fspath
@@ -47,6 +49,7 @@ from stats.entities_importer import EntitiesImporter
 from stats.events_importer import EventsImporter
 from stats.importer import Importer
 from stats.jsonld_exporter import export_to_jsonld
+from stats.jsonld_stream_db import JsonLdStreamDb
 from stats.mcf_importer import McfImporter
 import stats.nl as nl
 from stats.nodes import Nodes
@@ -159,7 +162,6 @@ class Runner:
         _check_not_overlapping(input_store, output_store)
     self.all_stores.append(output_store)
     self.output_dir = output_store.as_dir()
-    self.nl_dir = self.output_dir.open_dir(constants.NL_DIR_NAME)
     self.process_dir = self.output_dir.open_dir(constants.PROCESS_DIR_NAME)
 
     # Reporter.
@@ -169,6 +171,7 @@ class Runner:
     self.nodes = Nodes(self.config)
     self.db = None
     self.db_cache = None
+    self.trigger_workflow_info = None
 
   def run(self):
     # Check if blue-green is enabled
@@ -212,6 +215,11 @@ class Runner:
       for store in self.all_stores:
         store.close()
       logging.info("File storage closed.")
+
+      # Auto-trigger workflow now that all data is guaranteed to be exported and written to GCS
+      if self.trigger_workflow_info:
+        gcs_pattern, import_name = self.trigger_workflow_info
+        trigger_ingestion_workflow(gcs_pattern, import_name)
 
     except Exception as e:
       logging.exception("Error updating stats")
@@ -517,6 +525,7 @@ class Runner:
           logging.warning(f"Failed to cleanup local database: {e}")
 
   def _generate_nl_artifacts(self):
+    nl_dir = self.output_dir.open_dir(constants.NL_DIR_NAME)
     triples: list[Triple] = []
     topic_triples = self.db.select_triples_by_subject_type(sc.TYPE_TOPIC)
     sv_triples = self.db.select_triples_by_subject_type(
@@ -524,14 +533,14 @@ class Runner:
     triples = topic_triples + sv_triples
 
     # Generate sentences.
-    nl.generate_nl_sentences(triples, self.nl_dir)
+    nl.generate_nl_sentences(triples, nl_dir)
 
     # If generating topics, fetch svpg triples as well and generate topic cache
     if topic_triples:
       sv_peer_group_triples = self.db.select_triples_by_subject_type(
           sc.TYPE_STAT_VAR_PEER_GROUP)
       topic_cache_triples = topic_triples + sv_peer_group_triples
-      nl.generate_topic_cache(topic_cache_triples, self.nl_dir)
+      nl.generate_topic_cache(topic_cache_triples, nl_dir)
 
   def _generate_svg_hierarchy(self):
     if self.mode == RunMode.MAIN_DC:
@@ -607,11 +616,9 @@ class Runner:
         return True
     return False
 
-  def _run_all_data_imports(self):
+  def _find_and_filter_input_files(self) -> tuple[list[File], list[File]]:
+    """Discovers, filters, sorts, and returns matched CSV and MCF files."""
     input_files: list[File] = []
-    input_csv_files: list[File] = []
-    input_mcf_files: list[File] = []
-
     for input_store in self.input_stores:
       if input_store.isdir():
         input_files.extend(input_store.as_dir().all_files(
@@ -619,38 +626,75 @@ class Runner:
       else:
         input_files.append(input_store.as_file())
 
-    for input_file in input_files:
-      if _ARCHIVES_DIR_NAME in input_file.path.split("/"):
-        continue
-      if self._check_if_special_file(input_file):
-        continue
-      if match(input_file, "*.csv"):
-        input_csv_files.append(input_file)
-      if match(input_file, "*.mcf"):
-        input_mcf_files.append(input_file)
+    csv_files: list[File] = []
+    mcf_files: list[File] = []
 
-    # Sort input files alphabetically.
-    input_csv_files.sort(key=lambda f: f.full_path())
-    input_mcf_files.sort(key=lambda f: f.full_path())
+    for file in input_files:
+      if _ARCHIVES_DIR_NAME in file.path.split("/"):
+        continue
+      if self._check_if_special_file(file):
+        continue
+      if match(file, "*.csv"):
+        csv_files.append(file)
+      elif match(file, "*.mcf"):
+        mcf_files.append(file)
 
-    logging.info(f"Found {len(input_csv_files)} csv files to import")
-    logging.info(f"Found {len(input_mcf_files)} mcf files to import")
+    # Sort alphabetically to guarantee consistent order
+    csv_files.sort(key=lambda f: f.full_path())
+    mcf_files.sort(key=lambda f: f.full_path())
+    return csv_files, mcf_files
+
+  def _run_all_data_imports(self):
+    """Orchestrates file scanning, thread-pool configuration, and file ingestion."""
+    csv_files, mcf_files = self._find_and_filter_input_files()
+
+    logging.info("Found %d CSV files to import", len(csv_files))
+    logging.info("Found %d MCF files to import", len(mcf_files))
     logging.info("Matched files to process: %s",
-                 [f.full_path() for f in input_csv_files + input_mcf_files])
+                 [f.full_path() for f in csv_files + mcf_files])
 
-    self.reporter.report_started(import_files=list(input_csv_files +
-                                                   input_mcf_files))
-    for input_csv_file in input_csv_files:
-      self._run_single_import(input_csv_file)
-    for input_mcf_file in input_mcf_files:
-      self._run_single_mcf_import(input_mcf_file)
+    self.reporter.report_started(import_files=list(csv_files + mcf_files))
+
+    self._completed_files_count = 0
+    self._total_files_count = len(csv_files) + len(mcf_files)
+    self._counter_lock = threading.Lock()
+
+    if self.mode == RunMode.DCP_BRIDGE:
+      num_threads = min(32, self._total_files_count or 1)
+      logging.info("Starting parallel ingestion of data files with %d threads",
+                   num_threads)
+
+      with concurrent.futures.ThreadPoolExecutor(
+          max_workers=num_threads) as executor:
+        futures = []
+        for file in csv_files:
+          futures.append(executor.submit(self._run_single_import, file))
+        for file in mcf_files:
+          futures.append(executor.submit(self._run_single_mcf_import, file))
+
+        # Wait for completion and raise any thread exceptions
+        for future in concurrent.futures.as_completed(futures):
+          future.result()
+    else:
+      for file in csv_files:
+        self._run_single_import(file)
+      for file in mcf_files:
+        self._run_single_mcf_import(file)
+
+  def _log_file_progress(self, file_prefix: str, file: File):
+    """Increments file progress counter thread-safely and logs standard progress line."""
+    with self._counter_lock:
+      self._completed_files_count += 1
+      current_count = self._completed_files_count
+    logging.info("[%d/%d] %s: %s", current_count, self._total_files_count,
+                 file_prefix, file)
 
   def _run_single_import(self, input_file: File):
-    logging.info("Importing file: %s", input_file)
+    self._log_file_progress("Importing CSV file", input_file)
     self._create_importer(input_file).do_import()
 
   def _run_single_mcf_import(self, input_mcf_file: File):
-    logging.info("Importing MCF file: %s", input_mcf_file)
+    self._log_file_progress("Importing MCF file", input_mcf_file)
     self._create_mcf_importer(input_mcf_file, self.output_dir,
                               self.mode == RunMode.MAIN_DC).do_import()
 
@@ -712,61 +756,23 @@ class Runner:
         f"Unsupported import type: {import_type} ({input_file.full_path()})")
 
   def _run_imports_and_export_jsonld(self):
-    # Force local SQLite DB for staging data in dcpbridge mode
-    logging.info("Forcing local SQLite DB for staging data in dcpbridge mode")
-    sqlite_file = self.output_dir.open_file("staging.db")
-    db_cfg = create_sqlite_config(sqlite_file)
-    self.db = create_and_update_db(db_cfg)
-
-    # Clear tables if needed
-    self.db.maybe_clear_before_import()
+    logging.info(
+        "Initializing JsonLdStreamDb to stream JSON-LD directly to GCS/Disk")
+    self.db = JsonLdStreamDb(self.output_dir, self.import_names, self.nodes)
 
     # Run data imports (CSV and MCF)
     self._run_all_data_imports()
 
-    # Generate triples from nodes
+    # Generate triples from nodes and write directly
     triples = self.nodes.triples()
     self.db.insert_triples(triples)
 
-    # Generate SVG hierarchy
-    self._generate_svg_hierarchy()
-
-    # Generate NL artifacts
-    self._generate_nl_artifacts()
-
-    # Write import info
-    self.db.insert_import_info(status=ImportStatus.SUCCESS)
-
-    # Export to JSON-LD
-    jsonld_dir = self.output_dir.open_dir("jsonld")
-
-    # Create a unique subfolder based on import name and timestamp for parallel runs
-    import_name = None
-    import_names = self.import_names
-    if isinstance(import_names, list):
-      if import_names == [constants.ALL_IMPORTS]:
-        import_name = constants.ALL_IMPORTS
-      else:
-        import_name = "_".join(import_names)
-
-    # TODO(gmechali): Remove the fallbacks.
-    import_name = import_name or self.config.data.get(
-        "importName") or "default_import_name"
-    if import_name and "/" in import_name:
-      import_name = import_name.replace("/", "_")
-
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
-    unique_dir_name = f"{import_name}_{timestamp}"
-    unique_jsonld_dir = jsonld_dir.open_dir(unique_dir_name)
-
-    self.db.commit()
-    export_to_jsonld(self.db, unique_jsonld_dir)
-
     # Auto-trigger workflow if output is on GCS
-    output_path = unique_jsonld_dir.full_path()
+    output_path = self.db.jsonld_dir.full_path()
+    import_name = self.db.import_name
     if os.getenv("INGESTION_WORKFLOW_NAME") and output_path.startswith("gs://"):
       gcs_pattern = f"{output_path.rstrip('/')}/*.jsonld"
-      trigger_ingestion_workflow(gcs_pattern, import_name)
+      self.trigger_workflow_info = (gcs_pattern, import_name)
     else:
       logging.info(
           "Output is local or workflow is missing, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually."

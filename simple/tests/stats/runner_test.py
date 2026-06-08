@@ -235,6 +235,57 @@ class TestRunner(unittest.TestCase):
       # Redis cache should NOT be cleared in schema update mode.
       self.assertEqual(1, len(fake_redis.keys("*")))
 
+  def test_dcp_bridge(self):
+    self.maxDiff = None
+    with tempfile.TemporaryDirectory() as temp_dir:
+      input_dir = os.path.join(_INPUT_DIR, "input_dir_driven")
+      dc_client.get_property_of_entities = mock.MagicMock(return_value={})
+
+      Runner(
+          config_file_path=None,
+          input_dir_path=input_dir,
+          output_dir_path=temp_dir,
+          mode=RunMode.DCP_BRIDGE,
+      ).run()
+
+      # Verify that NO SQLite database file is created
+      db_path = os.path.join(temp_dir, "datacommons.db")
+      self.assertFalse(os.path.exists(db_path))
+
+      # Verify that NO nl directory is created (since GCS/local embeddings are stripped/disabled)
+      nl_dir = os.path.join(temp_dir, "nl")
+      self.assertFalse(os.path.exists(nl_dir))
+
+      # Verify that a jsonld directory is created
+      jsonld_dir = os.path.join(temp_dir, "jsonld")
+      self.assertTrue(os.path.exists(jsonld_dir))
+
+      # Find the subdirectory inside jsonld/
+      subdirs = os.listdir(jsonld_dir)
+      # There should be exactly 1 folder in jsonld/
+      self.assertEqual(len(subdirs), 1)
+      timestamped_dir = os.path.join(jsonld_dir, subdirs[0])
+      self.assertTrue(os.path.isdir(timestamped_dir))
+
+      # Ensure the timestamped directory has files
+      shard_files = os.listdir(timestamped_dir)
+      self.assertGreater(len(shard_files), 0)
+
+      # Check that we have both node and observation shard files
+      node_shards = [f for f in shard_files if f.startswith("node-")]
+      obs_shards = [f for f in shard_files if f.startswith("observation-")]
+
+      self.assertGreater(len(node_shards), 0)
+      self.assertGreater(len(obs_shards), 0)
+
+      # Verify that files are valid JSON-LD
+      for filename in shard_files:
+        filepath = os.path.join(timestamped_dir, filename)
+        self.assertTrue(filename.endswith(".jsonld"))
+        with open(filepath, "r") as f:
+          data = json.load(f)
+          self.assertTrue(isinstance(data, (dict, list)))
+
   def test_read_configs_from_subdirs(self):
     with tempfile.TemporaryDirectory() as temp_dir:
       # Create subdirectories
