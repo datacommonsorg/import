@@ -69,10 +69,10 @@ class MetadataValidator:
             f"must have a 'provenance' property. "
             f"Found entry missing provenance: {entry}"
         )
-      if not prov.startswith("dcid:"):
+      if ":" not in prov or " " in prov:
         raise ValueError(
             f"Metadata Validation Failed: The 'provenance' property must be "
-            f"a valid DCID starting with 'dcid:' (e.g., 'dcid:FrogCensusBureau'). "
+            f"a valid DCID or URI (e.g., 'dcid:FrogCensusBureau', 'custom:WHO', or a URL). "
             f"Found invalid provenance: '{prov}'"
         )
       referenced.add(self._clean_dcid(prov))

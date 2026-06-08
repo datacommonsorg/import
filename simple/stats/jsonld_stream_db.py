@@ -50,10 +50,21 @@ _UPLOAD_CONCURRENCY = 32
 _EXPORT_PROCESSES_MAX = 8
 
 
+def _is_uri_or_namespace(val: str) -> bool:
+  """Returns True if the value is a full URL, standard DCID, or valid custom namespace."""
+  if val.startswith(("http://", "https://", "dcid:")):
+    return True
+  if ":" in val and " " not in val:
+    prefix = val.split(":", 1)[0]
+    # A valid namespace prefix must be purely alphanumeric (e.g. 'custom', 'un', 'myorg')
+    return prefix.isalnum()
+  return False
+
+
 def _uri_ref(val):
   if not val:
     return None
-  if val.startswith(("http://", "https://", "dcid:")):
+  if _is_uri_or_namespace(val):
     return {"@id": val}
   return {"@id": f"dcid:{val.lstrip('/')}"}
 
@@ -144,13 +155,11 @@ def _write_node_shard_fast(args):
     if sub_id not in subjects:
       subjects[sub_id] = {
           "@id":
-              f"dcid:{sub_id.lstrip('/')}" if not sub_id.startswith("http") and
-              not sub_id.startswith("dcid:") else sub_id
+              sub_id if _is_uri_or_namespace(sub_id) else f"dcid:{sub_id.lstrip('/')}"
       }
 
     pred = row.predicate
-    pred_key = f"dcid:{pred}" if not pred.startswith(
-        "dcid:") and not pred.startswith("http") else pred
+    pred_key = pred if _is_uri_or_namespace(pred) else f"dcid:{pred}"
 
     if pred == "typeOf":
       pred_key = "@type"

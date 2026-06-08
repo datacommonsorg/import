@@ -149,6 +149,6 @@ class TestMetadataValidator(unittest.TestCase):
     with self.assertRaises(ValueError) as context:
       validator.validate()
 
-    self.assertIn("must be a valid DCID starting with 'dcid:'", str(context.exception))
+    self.assertIn("must be a valid DCID or URI", str(context.exception))
     self.assertIn("InvalidProvenanceName", str(context.exception))
 
