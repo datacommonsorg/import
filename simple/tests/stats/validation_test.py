@@ -37,15 +37,16 @@ class TestMetadataValidator(unittest.TestCase):
 
     # Setup mock database with matching MCF definitions
     mock_db = mock.MagicMock(spec=Db)
-    mock_db._global_triples = [
-        # Define Source
-        Triple("dcid:MySource", "typeOf", object_id="Source"),
-        # Define Provenance
-        Triple("dcid:MyProvenance", "typeOf", object_id="Provenance"),
-        # Link Provenance to Source
-        Triple("dcid:MyProvenance", "sourceLink", object_id="dcid:MySource"),
-    ]
-    mock_db._triples = {}
+    mock_db._triples = {
+        "_global": [
+            # Define Source
+            Triple("dcid:MySource", "typeOf", object_id="Source"),
+            # Define Provenance
+            Triple("dcid:MyProvenance", "typeOf", object_id="Provenance"),
+            # Link Provenance to Source
+            Triple("dcid:MyProvenance", "sourceLink", object_id="dcid:MySource"),
+        ]
+    }
 
     validator = MetadataValidator(mock_config, mock_db)
     # Should complete without raising an error
@@ -65,10 +66,11 @@ class TestMetadataValidator(unittest.TestCase):
 
     # Setup mock database missing the provenance definition
     mock_db = mock.MagicMock(spec=Db)
-    mock_db._global_triples = [
-        Triple("dcid:MySource", "typeOf", object_id="Source"),
-    ]
-    mock_db._triples = {}
+    mock_db._triples = {
+        "_global": [
+            Triple("dcid:MySource", "typeOf", object_id="Source"),
+        ]
+  }
 
     validator = MetadataValidator(mock_config, mock_db)
     with self.assertRaises(ValueError) as context:
@@ -92,11 +94,12 @@ class TestMetadataValidator(unittest.TestCase):
 
     # Setup mock database where Provenance is defined but points to a missing Source
     mock_db = mock.MagicMock(spec=Db)
-    mock_db._global_triples = [
-        Triple("dcid:MyProvenance", "typeOf", object_id="Provenance"),
-        Triple("dcid:MyProvenance", "sourceLink", object_id="dcid:MissingSource"),
-    ]
-    mock_db._triples = {}
+    mock_db._triples = {
+        "_global": [
+            Triple("dcid:MyProvenance", "typeOf", object_id="Provenance"),
+            Triple("dcid:MyProvenance", "sourceLink", object_id="dcid:MissingSource"),
+        ]
+    }
 
     validator = MetadataValidator(mock_config, mock_db)
     with self.assertRaises(ValueError) as context:
@@ -119,7 +122,6 @@ class TestMetadataValidator(unittest.TestCase):
     }
 
     mock_db = mock.MagicMock(spec=Db)
-    mock_db._global_triples = []
     mock_db._triples = {}
 
     validator = MetadataValidator(mock_config, mock_db)
@@ -141,7 +143,6 @@ class TestMetadataValidator(unittest.TestCase):
     }
 
     mock_db = mock.MagicMock(spec=Db)
-    mock_db._global_triples = []
     mock_db._triples = {}
 
     validator = MetadataValidator(mock_config, mock_db)

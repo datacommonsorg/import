@@ -57,13 +57,7 @@ class MetadataValidator:
     starting with 'dcid:'.
     """
     referenced = set()
-    input_files = self.config.data.get("inputFiles", [])
-    
-    entries = []
-    if isinstance(input_files, list):
-      entries = input_files
-    elif isinstance(input_files, dict):
-      entries = list(input_files.values())
+    entries = self.config.data.get("inputFiles", [])
 
     for entry in entries:
       if not isinstance(entry, dict):
@@ -72,7 +66,7 @@ class MetadataValidator:
       if not prov:
         raise ValueError(
             f"Metadata Validation Failed: Every input file in config.json "
-            f"must have a 'provenance' property in dcpbridge mode. "
+            f"must have a 'provenance' property. "
             f"Found entry missing provenance: {entry}"
         )
       if not prov.startswith("dcid:"):
@@ -90,8 +84,7 @@ class MetadataValidator:
     defined_sources = set()
     provenance_to_source = {}
 
-    # Gather all triples currently stored in the database buffers
-    all_triples = list(getattr(self.db, "_global_triples", []))
+    all_triples = []
     db_triples = getattr(self.db, "_triples", {})
     if isinstance(db_triples, dict):
       for triples_list in db_triples.values():
@@ -149,6 +142,8 @@ class MetadataValidator:
 
   def _clean_dcid(self, val: str) -> str:
     """Normalizes a DCID value by ensuring it starts with 'dcid:' and has no prefix namespaces."""
+    if val.startswith(("http://", "https://")):
+      return val
     if val.startswith("dcid:"):
       return val
     if ":" in val:
