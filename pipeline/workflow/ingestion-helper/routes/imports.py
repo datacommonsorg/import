@@ -113,7 +113,7 @@ def update_import_status(
     if req.status == ImportState.STAGING:
         version = os.path.basename(req.latestVersion or '')
         if not version:
-            raise HTTPException(status_code=500, detail=f"Empty version for import {req.importName}")
+            raise HTTPException(status_code=400, detail=f"Empty version for import {req.importName}")
         storage.update_version_file(req.importName, version, is_staging=True)
         storage.update_provenance_file(req.importName, version)
         storage.update_import_summary(params)

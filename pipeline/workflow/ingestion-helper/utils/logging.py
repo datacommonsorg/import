@@ -56,9 +56,9 @@ async def log_requests(request: Request, call_next):
             )
 
     # Process request and measure duration
-    start_time = time.time()
+    start_time = time.perf_counter()
     response = await call_next(request)
-    duration = (time.time() - start_time) * 1000
+    duration = (time.perf_counter() - start_time) * 1000
     
     # Log the completion with the correlated request ID
     logging.info(
