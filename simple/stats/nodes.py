@@ -40,7 +40,7 @@ _CUSTOM_PROPERTY_ID_PREFIX = "c/prop/"
 _CUSTOM_EVENT_TYPE_ID_PREFIX = "c/e/"
 _CUSTOM_ENTITY_TYPE_ID_PREFIX = "c/n/"
 # Pattern to check if a string conforms to that of a valid DCID.
-_DCID_PATTERN = r"^[A-Za-z0-9_/:.-]+$"
+_DCID_PATTERN = r"^(?:[A-Za-z0-9_/]+:)?[A-Za-z0-9_/]+$"
 # If group path for a variable is empty, we'll put it under a default custom group.
 _DEFAULT_CUSTOM_GROUP_PATH = "__DEFAULT__"
 _DEFAULT_CUSTOM_GROUP = StatVarGroup(sc.DEFAULT_CUSTOM_ROOT_SVG_ID,
