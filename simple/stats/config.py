@@ -285,22 +285,13 @@ class Config:
 
   def import_name(self, input_file: File) -> str:
     """Returns the normalized import name associated with a given input file."""
-    if not input_file:
-      return self.data.get("importName") or "default"
-
-    # 1. Check optional file-level override (highest priority)
-    raw_name = self._per_file_config(input_file).get("_import_name")
-    
-    # 2. Check global fallback (for single-import datasets)
-    if not raw_name:
-      raw_name = self.data.get("importName")
-      
-    # 3. Automatic directory-based fallback (e.g., who/csv/data.csv -> who)
-    if not raw_name:
-      parts = input_file.path.split("/")
-      raw_name = parts[0] if len(parts) > 1 else "default"
-
-    return raw_name
+    prov_id = self._per_file_config(input_file).get("provenance")
+    if prov_id:
+      from stats.data import strip_namespace
+      return strip_namespace(prov_id).lower()
+    raise ValueError(
+        f"Could not determine import name: missing 'provenance' configuration for file '{input_file.path}'."
+    )
 
   def _per_file_config(self, input_file: File) -> dict:
     """ Looks up the config for a given file.

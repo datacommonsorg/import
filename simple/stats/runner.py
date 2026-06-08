@@ -669,10 +669,31 @@ class Runner:
       if self.active_import_prefixes:
         if not any(file.path.startswith(prefix) for prefix in self.active_import_prefixes):
           continue
+
+      # Check if this file matches at least one pattern in config.json
+      matches_config = False
+      for pattern in self.config._input_files_config.keys():
+        if match(file, pattern):
+          matches_config = True
+          break
+
       if match(file, "*.csv"):
-        csv_files.append(file)
+        if matches_config:
+          csv_files.append(file)
+        else:
+          logging.info(
+              "Ignoring CSV file '%s' as it does not match any pattern in config.json",
+              file.path
+          )
       elif match(file, "*.mcf"):
-        mcf_files.append(file)
+        # MCF files are included if they match a config pattern OR if they are under the active folders
+        if matches_config:
+          mcf_files.append(file)
+        elif self.active_import_prefixes:
+          if any(file.path.startswith(prefix) for prefix in self.active_import_prefixes):
+            mcf_files.append(file)
+        else:
+          mcf_files.append(file)
 
     # Sort alphabetically to guarantee consistent order
     csv_files.sort(key=lambda f: f.full_path())

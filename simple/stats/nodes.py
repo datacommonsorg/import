@@ -183,14 +183,20 @@ class Nodes:
   def provenance(self, input_file: File) -> Provenance:
     prov_name = self.config.provenance_name(input_file)
     if not prov_name:
-      prov = _DEFAULT_PROVENANCE
-    else:
-      prov = self.provenances.get(prov_name)
-      if not prov:
-        if prov_name.startswith(("dcid:", "http://", "https://")) or (":" in prov_name and " " not in prov_name):
-          prov = self.register_provenance(prov_name)
-        else:
-          prov = _DEFAULT_PROVENANCE
+      raise ValueError(
+          f"A provenance is absolutely required for file '{input_file.path}'. "
+          f"Please specify the 'provenance' property in your config.json."
+      )
+    
+    prov = self.provenances.get(prov_name)
+    if not prov:
+      if prov_name.startswith(("dcid:", "http://", "https://")) or (":" in prov_name and " " not in prov_name):
+        prov = self.register_provenance(prov_name)
+      else:
+        raise ValueError(
+            f"Invalid provenance '{prov_name}' for file '{input_file.path}'. "
+            f"Must start with 'dcid:', 'http://', or 'https://'."
+        )
           
     self._used_provenance_ids.add(prov.id)
     if prov.source_id:
