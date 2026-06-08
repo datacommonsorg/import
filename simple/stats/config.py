@@ -72,13 +72,18 @@ class Config:
 
   def __init__(self, data: dict) -> None:
     self.data = data
-    # Enforce the clean, structured list-of-objects schema:
     self._input_files_config: dict[str, dict] = {}
     for entry in self.data.get(_INPUT_FILES_FIELD, []):
-      if isinstance(entry, dict):
-        key = entry.get("pattern") or entry.get("filename")
-        if key:
-          self._input_files_config[key] = entry
+      if not isinstance(entry, dict):
+        raise ValueError(
+            f"Invalid entry in '{_INPUT_FILES_FIELD}': must be a JSON object. Got: {entry}"
+        )
+      key = entry.get("pattern") or entry.get("filename")
+      if not key:
+        raise ValueError(
+            f"Invalid entry in '{_INPUT_FILES_FIELD}': must specify 'pattern' or 'filename'. Got: {entry}"
+        )
+      self._input_files_config[key] = entry
     # If input file paths are specified with wildcards - e.g. "gs://bucket/foo*.csv",
     # this dict maintains a mapping from actual file path to the wildcard key
     # for fast lookup.
