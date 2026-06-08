@@ -241,7 +241,7 @@ class TestRunner(unittest.TestCase):
       # Create a dedicated temp input directory
       input_dir = os.path.join(temp_dir, "input_dcp_bridge")
       os.makedirs(input_dir)
-      
+
       # Copy files from input_dir_driven (except config.json)
       src_dir = os.path.join(_INPUT_DIR, "input_dir_driven")
       for filename in os.listdir(src_dir):
@@ -249,66 +249,57 @@ class TestRunner(unittest.TestCase):
           with open(os.path.join(src_dir, filename), "r") as src, \
                open(os.path.join(input_dir, filename), "w") as dst:
             dst.write(src.read())
-            
+
       # Write a strict config.json using dcid:Provenance1
       strict_config = {
-          "inputFiles": [
-              {
-                  "pattern": "countries.csv",
-                  "importType": "observations",
-                  "format": "variablePerColumn",
-                  "entityType": "Country",
-                  "provenance": "dcid:Provenance1"
-              },
-              {
-                  "pattern": "wikidataids.csv",
-                  "importType": "observations",
-                  "format": "variablePerColumn",
-                  "entityType": "Country",
-                  "provenance": "dcid:Provenance1"
-              },
-              {
-                  "pattern": "variable_per_row.csv",
-                  "importType": "observations",
-                  "format": "variablePerRow",
-                  "entityType": "Country",
-                  "provenance": "dcid:Provenance1"
-              },
-              {
-                  "pattern": "author_entities.csv",
-                  "importType": "entities",
-                  "rowEntityType": "Author",
-                  "idColumn": "author_id",
-                  "entityColumns": ["author_country"],
-                  "provenance": "dcid:Provenance1"
-              },
-              {
-                  "pattern": "article_entities.csv",
-                  "importType": "entities",
-                  "rowEntityType": "Article",
-                  "idColumn": "article_id",
-                  "entityColumns": ["article_author"],
-                  "provenance": "dcid:Provenance1"
-              },
-              {
-                  "pattern": "*.mcf",
-                  "provenance": "dcid:Provenance1"
-              }
-          ]
+          "inputFiles": [{
+              "pattern": "countries.csv",
+              "importType": "observations",
+              "format": "variablePerColumn",
+              "entityType": "Country",
+              "provenance": "dcid:Provenance1"
+          }, {
+              "pattern": "wikidataids.csv",
+              "importType": "observations",
+              "format": "variablePerColumn",
+              "entityType": "Country",
+              "provenance": "dcid:Provenance1"
+          }, {
+              "pattern": "variable_per_row.csv",
+              "importType": "observations",
+              "format": "variablePerRow",
+              "entityType": "Country",
+              "provenance": "dcid:Provenance1"
+          }, {
+              "pattern": "author_entities.csv",
+              "importType": "entities",
+              "rowEntityType": "Author",
+              "idColumn": "author_id",
+              "entityColumns": ["author_country"],
+              "provenance": "dcid:Provenance1"
+          }, {
+              "pattern": "article_entities.csv",
+              "importType": "entities",
+              "rowEntityType": "Article",
+              "idColumn": "article_id",
+              "entityColumns": ["article_author"],
+              "provenance": "dcid:Provenance1"
+          }, {
+              "pattern": "*.mcf",
+              "provenance": "dcid:Provenance1"
+          }]
       }
       with open(os.path.join(input_dir, "config.json"), "w") as f:
         json.dump(strict_config, f)
 
       # Write provenance.mcf to satisfy strict validation
-      provenance_mcf = (
-          "Node: dcid:Source1\n"
-          "typeOf: dcs:Source\n"
-          "url: \"http://source1.com\"\n\n"
-          "Node: dcid:Provenance1\n"
-          "typeOf: dcs:Provenance\n"
-          "url: \"http://source1.com/provenance1\"\n"
-          "sourceLink: dcid:Source1\n"
-      )
+      provenance_mcf = ("Node: dcid:Source1\n"
+                        "typeOf: dcs:Source\n"
+                        "url: \"http://source1.com\"\n\n"
+                        "Node: dcid:Provenance1\n"
+                        "typeOf: dcs:Provenance\n"
+                        "url: \"http://source1.com/provenance1\"\n"
+                        "sourceLink: dcid:Source1\n")
       with open(os.path.join(input_dir, "provenance.mcf"), "w") as f:
         f.write(provenance_mcf)
 
@@ -368,7 +359,8 @@ class TestRunner(unittest.TestCase):
             graph = data.get("@graph", [])
             self.assertGreater(len(graph), 0)
             for obs in graph:
-              self.assertEqual(obs.get("dcid:provenanceUrl"), "http://source1.com/provenance1")
+              self.assertEqual(obs.get("dcid:provenanceUrl"),
+                               "http://source1.com/provenance1")
 
   def test_read_configs_from_subdirs(self):
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -383,8 +375,18 @@ class TestRunner(unittest.TestCase):
       ilo_dir = os.path.join(input_dir, "ilo", "ds1")
       os.makedirs(ilo_dir)
 
-      oecd_config = {"inputFiles": [{"pattern": "data.csv", "importType": "OBSERVATIONS"}]}
-      ilo_config = {"inputFiles": [{"pattern": "data.csv", "importType": "OBSERVATIONS"}]}
+      oecd_config = {
+          "inputFiles": [{
+              "pattern": "data.csv",
+              "importType": "OBSERVATIONS"
+          }]
+      }
+      ilo_config = {
+          "inputFiles": [{
+              "pattern": "data.csv",
+              "importType": "OBSERVATIONS"
+          }]
+      }
 
       with open(os.path.join(oecd_dir, "config.json"), "w") as f:
         json.dump(oecd_config, f)
@@ -423,35 +425,31 @@ class TestRunner(unittest.TestCase):
       oecd_dir = os.path.join(input_dir, "oecd")
       os.makedirs(oecd_dir)
       oecd_config = {
-          "importName": "oecd",
-          "inputFiles": [
-              {
-                  "pattern": "data.csv",
-                  "entityType": "Country",
-                  "provenance": "dcid:oecd"
-              },
-              {
-                  "pattern": "*.mcf",
-                  "provenance": "dcid:oecd"
-              }
-          ]
+          "importName":
+              "oecd",
+          "inputFiles": [{
+              "pattern": "data.csv",
+              "entityType": "Country",
+              "provenance": "dcid:oecd"
+          }, {
+              "pattern": "*.mcf",
+              "provenance": "dcid:oecd"
+          }]
       }
       with open(os.path.join(oecd_dir, "config.json"), "w") as f:
         json.dump(oecd_config, f)
-      
+
       # OECD data.csv (entity, date, variable)
       oecd_data = "entity,date,Average_Age_Frog\nUSA,2020,5.5\n"
       with open(os.path.join(oecd_dir, "data.csv"), "w") as f:
         f.write(oecd_data)
 
       # OECD oecd.mcf defining the provenance and source
-      oecd_mcf = (
-          "Node: dcid:OecdSource\n"
-          "typeOf: dcs:Source\n\n"
-          "Node: dcid:oecd\n"
-          "typeOf: dcs:Provenance\n"
-          "sourceLink: dcid:OecdSource\n"
-      )
+      oecd_mcf = ("Node: dcid:OecdSource\n"
+                  "typeOf: dcs:Source\n\n"
+                  "Node: dcid:oecd\n"
+                  "typeOf: dcs:Provenance\n"
+                  "sourceLink: dcid:OecdSource\n")
       with open(os.path.join(oecd_dir, "oecd.mcf"), "w") as f:
         f.write(oecd_mcf)
 
@@ -459,18 +457,16 @@ class TestRunner(unittest.TestCase):
       ilo_dir = os.path.join(input_dir, "ilo", "ds1")
       os.makedirs(ilo_dir)
       ilo_config = {
-          "importName": "ilo",
-          "inputFiles": [
-              {
-                  "pattern": "data.csv",
-                  "entityType": "Country",
-                  "provenance": "dcid:ilo"
-              },
-              {
-                  "pattern": "*.mcf",
-                  "provenance": "dcid:ilo"
-              }
-          ]
+          "importName":
+              "ilo",
+          "inputFiles": [{
+              "pattern": "data.csv",
+              "entityType": "Country",
+              "provenance": "dcid:ilo"
+          }, {
+              "pattern": "*.mcf",
+              "provenance": "dcid:ilo"
+          }]
       }
       with open(os.path.join(ilo_dir, "config.json"), "w") as f:
         json.dump(ilo_config, f)
@@ -480,13 +476,11 @@ class TestRunner(unittest.TestCase):
         f.write(ilo_data)
 
       # ILO ilo.mcf defining the provenance and source
-      ilo_mcf = (
-          "Node: dcid:IloSource\n"
-          "typeOf: dcs:Source\n\n"
-          "Node: dcid:ilo\n"
-          "typeOf: dcs:Provenance\n"
-          "sourceLink: dcid:IloSource\n"
-      )
+      ilo_mcf = ("Node: dcid:IloSource\n"
+                 "typeOf: dcs:Source\n\n"
+                 "Node: dcid:ilo\n"
+                 "typeOf: dcs:Provenance\n"
+                 "sourceLink: dcid:IloSource\n")
       with open(os.path.join(ilo_dir, "ilo.mcf"), "w") as f:
         f.write(ilo_mcf)
 
@@ -496,20 +490,20 @@ class TestRunner(unittest.TestCase):
       # Run runner with mocked GCS output path and workflow name
       from util.filesystem import _StoreWrapper
       original_full_path = _StoreWrapper.full_path
+
       def mock_full_path(self, sub_path=""):
         if "jsonld" in self.path:
           return f"gs://my-bucket/jsonld/run_timestamp"
         return original_full_path(self, sub_path)
 
-      with mock.patch.dict(os.environ, {"INGESTION_WORKFLOW_NAME": "my-workflow"}):
+      with mock.patch.dict(os.environ,
+                           {"INGESTION_WORKFLOW_NAME": "my-workflow"}):
         with mock.patch.object(_StoreWrapper, "full_path", mock_full_path):
-          runner = Runner(
-              config_file_path=None,
-              input_dir_path=input_dir,
-              output_dir_path=output_dir,
-              mode=RunMode.DCP_BRIDGE,
-              import_names=[constants.ALL_IMPORTS]
-          )
+          runner = Runner(config_file_path=None,
+                          input_dir_path=input_dir,
+                          output_dir_path=output_dir,
+                          mode=RunMode.DCP_BRIDGE,
+                          import_names=[constants.ALL_IMPORTS])
           runner.run()
 
       # Verify GCS client calls were made
@@ -518,16 +512,29 @@ class TestRunner(unittest.TestCase):
 
       # Verify that blob uploads were requested for both imports
       called_blobs = [call[0][0] for call in mock_bucket.blob.call_args_list]
-      
+
       # We expect node and observation files under each namespace
-      self.assertTrue(any(b.startswith("jsonld/run_timestamp/oecd/observation-") for b in called_blobs))
-      self.assertTrue(any(b.startswith("jsonld/run_timestamp/oecd/node-") for b in called_blobs))
-      self.assertTrue(any(b.startswith("jsonld/run_timestamp/ilo/observation-") for b in called_blobs))
-      self.assertTrue(any(b.startswith("jsonld/run_timestamp/ilo/node-") for b in called_blobs))
+      self.assertTrue(
+          any(
+              b.startswith("jsonld/run_timestamp/oecd/observation-")
+              for b in called_blobs))
+      self.assertTrue(
+          any(
+              b.startswith("jsonld/run_timestamp/oecd/node-")
+              for b in called_blobs))
+      self.assertTrue(
+          any(
+              b.startswith("jsonld/run_timestamp/ilo/observation-")
+              for b in called_blobs))
+      self.assertTrue(
+          any(
+              b.startswith("jsonld/run_timestamp/ilo/node-")
+              for b in called_blobs))
 
       # Assert that trigger_workflow_info holds paths for both oecd and ilo
       self.assertEqual(len(runner.trigger_workflow_info), 2)
-      trigger_names = sorted([t["importName"] for t in runner.trigger_workflow_info])
+      trigger_names = sorted(
+          [t["importName"] for t in runner.trigger_workflow_info])
       self.assertEqual(trigger_names, ["ilo", "oecd"])
 
 

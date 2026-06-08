@@ -33,34 +33,28 @@ _TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 _EXPECTED_DIR = os.path.join(_TEST_DATA_DIR, "expected")
 
 CONFIG_DATA = {
-    "inputFiles": [
-        {
-            "pattern": "a.csv",
-            "entityType": "Country",
-            "provenance": "Provenance1"
-        },
-        {
-            "pattern": "b.csv",
-            "entityType": "",
-            "ignoreColumns": ["ignore1", "ignore2"]
-        },
-        {
-            "pattern": "events.csv",
-            "entityType": "Country",
-            "provenance": "Provenance1",
-            "eventType": "CrimeEvent"
-        },
-        {
-            "pattern": "entities.csv",
-            "rowEntityType": "FooEntity",
-            "provenance": "Provenance1"
-        },
-        {
-            "pattern": "x.csv",
-            "entityType": "",
-            "provenance": "Provenance1"
-        }
-    ],
+    "inputFiles": [{
+        "pattern": "a.csv",
+        "entityType": "Country",
+        "provenance": "Provenance1"
+    }, {
+        "pattern": "b.csv",
+        "entityType": "",
+        "ignoreColumns": ["ignore1", "ignore2"]
+    }, {
+        "pattern": "events.csv",
+        "entityType": "Country",
+        "provenance": "Provenance1",
+        "eventType": "CrimeEvent"
+    }, {
+        "pattern": "entities.csv",
+        "rowEntityType": "FooEntity",
+        "provenance": "Provenance1"
+    }, {
+        "pattern": "x.csv",
+        "entityType": "",
+        "provenance": "Provenance1"
+    }],
     "variables": {
         "Variable 1": {
             "group": "Parent Group/Child Group 1"
@@ -309,9 +303,10 @@ class TestNodes(unittest.TestCase):
     The fix checks that both parents are under dc/g/Root
     """
     cfg = Config({
-        "inputFiles": [
-            {"pattern": "x.csv", "provenance": "dcid:Provenance1"}
-        ],
+        "inputFiles": [{
+            "pattern": "x.csv",
+            "provenance": "dcid:Provenance1"
+        }],
         "sources": {
             "Source1": {
                 "url": "http://source1.com",

@@ -30,7 +30,8 @@ class TestJsonLdStreamDb(unittest.TestCase):
     self.mock_config = mock.MagicMock()
     self.mock_config.custom_id_namespace.return_value = "custom"
     self.mock_config.data = {"importName": "test_import"}
-    self.mock_config.import_name = lambda f: f.path.split("/")[0] if (f and "/" in f.path) else "test_import"
+    self.mock_config.import_name = lambda f: f.path.split("/")[0] if (
+        f and "/" in f.path) else "test_import"
 
     self.mock_nodes = mock.MagicMock()
     self.mock_nodes.config = self.mock_config
@@ -101,8 +102,10 @@ class TestJsonLdStreamDb(unittest.TestCase):
 
       # Shards should be written directly to the target unique directory
       target_dir_path = db.jsonld_dir.full_path()
-      obs_shard = os.path.join(target_dir_path, "test_import", "observation-00000.jsonld")
-      node_shard = os.path.join(target_dir_path, "test_import", "node-00000.jsonld")
+      obs_shard = os.path.join(target_dir_path, "test_import",
+                               "observation-00000.jsonld")
+      node_shard = os.path.join(target_dir_path, "test_import",
+                                "node-00000.jsonld")
 
       self.assertTrue(os.path.exists(obs_shard))
       self.assertTrue(os.path.exists(node_shard))

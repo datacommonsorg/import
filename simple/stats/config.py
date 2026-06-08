@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import re
-import fs.path as fspath
 
+import fs.path as fspath
 from stats import constants
 from stats.data import AggregationConfig
 from stats.data import EntityType

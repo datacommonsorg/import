@@ -46,7 +46,8 @@ def _get_env_vars():
 def trigger_ingestion_workflow(import_list: list[dict]):
   """Triggers the Data Commons ingestion workflow via Google Cloud Workflows API."""
   if not import_list:
-    logging.warning("No import list provided. Skipping ingestion workflow trigger.")
+    logging.warning(
+        "No import list provided. Skipping ingestion workflow trigger.")
     return
 
   logging.info("Attempting to auto-trigger ingestion workflow via API...")
@@ -59,18 +60,12 @@ def trigger_ingestion_workflow(import_list: list[dict]):
   sanitized_import_name = re.sub(r'[^a-zA-Z0-9_-]', '_', raw_import_name)
 
   data_payload = {
-      "spannerInstanceId":
-          env_vars["GCP_SPANNER_INSTANCE_ID"],
-      "spannerDatabaseId":
-          env_vars["GCP_SPANNER_DATABASE_NAME"],
-      "importName":
-          sanitized_import_name,
-      "importList":
-          json.dumps(import_list),
-      "tempLocation":
-          env_vars["TEMP_LOCATION"],
-      "region":
-          env_vars["REGION"]
+      "spannerInstanceId": env_vars["GCP_SPANNER_INSTANCE_ID"],
+      "spannerDatabaseId": env_vars["GCP_SPANNER_DATABASE_NAME"],
+      "importName": sanitized_import_name,
+      "importList": json.dumps(import_list),
+      "tempLocation": env_vars["TEMP_LOCATION"],
+      "region": env_vars["REGION"]
   }
 
   try:

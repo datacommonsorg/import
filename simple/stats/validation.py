@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+
 from stats.config import Config
 from stats.db import Db
 from stats.util import is_uri_or_namespace
@@ -40,7 +41,8 @@ class MetadataValidator:
     if not referenced_provenances:
       return
 
-    defined_provenances, defined_sources, provenance_to_source = self._collect_defined_nodes()
+    defined_provenances, defined_sources, provenance_to_source = self._collect_defined_nodes(
+    )
 
     self._validate_provenance_definitions(referenced_provenances,
                                           defined_provenances)
@@ -68,14 +70,12 @@ class MetadataValidator:
         raise ValueError(
             f"Metadata Validation Failed: Every input file in config.json "
             f"must have a 'provenance' property. "
-            f"Found entry missing provenance: {entry}"
-        )
+            f"Found entry missing provenance: {entry}")
       if not is_uri_or_namespace(prov):
         raise ValueError(
             f"Metadata Validation Failed: The 'provenance' property must be "
             f"a valid DCID or URI (e.g., 'dcid:FrogCensusBureau', 'custom:WHO', or a URL). "
-            f"Found invalid provenance: '{prov}'"
-        )
+            f"Found invalid provenance: '{prov}'")
       referenced.add(self._clean_dcid(prov))
     return referenced
 
@@ -138,8 +138,7 @@ class MetadataValidator:
       raise ValueError(
           f"Metadata Validation Failed: Linked sources are missing for "
           f"defined provenances:\n" + "\n".join(details) +
-          f"\nPlease define the missing Source nodes in your MCF files."
-      )
+          f"\nPlease define the missing Source nodes in your MCF files.")
 
   def _clean_dcid(self, val: str) -> str:
     """Normalizes a DCID value by ensuring it starts with 'dcid:' and has no prefix namespaces."""

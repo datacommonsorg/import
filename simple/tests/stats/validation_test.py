@@ -27,12 +27,10 @@ class TestMetadataValidator(unittest.TestCase):
     # Setup mock config with referenced provenance
     mock_config = mock.MagicMock(spec=Config)
     mock_config.data = {
-        "inputFiles": [
-            {
-                "pattern": "data.csv",
-                "provenance": "dcid:MyProvenance"
-            }
-        ]
+        "inputFiles": [{
+            "pattern": "data.csv",
+            "provenance": "dcid:MyProvenance"
+        }]
     }
 
     # Setup mock database with matching MCF definitions
@@ -44,7 +42,8 @@ class TestMetadataValidator(unittest.TestCase):
             # Define Provenance
             Triple("dcid:MyProvenance", "typeOf", object_id="Provenance"),
             # Link Provenance to Source
-            Triple("dcid:MyProvenance", "sourceLink", object_id="dcid:MySource"),
+            Triple("dcid:MyProvenance", "sourceLink",
+                   object_id="dcid:MySource"),
         ]
     }
 
@@ -56,21 +55,17 @@ class TestMetadataValidator(unittest.TestCase):
     # Setup mock config with referenced provenance
     mock_config = mock.MagicMock(spec=Config)
     mock_config.data = {
-        "inputFiles": [
-            {
-                "pattern": "data.csv",
-                "provenance": "dcid:MissingProvenance"
-            }
-        ]
+        "inputFiles": [{
+            "pattern": "data.csv",
+            "provenance": "dcid:MissingProvenance"
+        }]
     }
 
     # Setup mock database missing the provenance definition
     mock_db = mock.MagicMock(spec=Db)
     mock_db._triples = {
-        "_global": [
-            Triple("dcid:MySource", "typeOf", object_id="Source"),
-        ]
-  }
+        "_global": [Triple("dcid:MySource", "typeOf", object_id="Source"),]
+    }
 
     validator = MetadataValidator(mock_config, mock_db)
     with self.assertRaises(ValueError) as context:
@@ -84,12 +79,10 @@ class TestMetadataValidator(unittest.TestCase):
     # Setup mock config with referenced provenance
     mock_config = mock.MagicMock(spec=Config)
     mock_config.data = {
-        "inputFiles": [
-            {
-                "pattern": "data.csv",
-                "provenance": "dcid:MyProvenance"
-            }
-        ]
+        "inputFiles": [{
+            "pattern": "data.csv",
+            "provenance": "dcid:MyProvenance"
+        }]
     }
 
     # Setup mock database where Provenance is defined but points to a missing Source
@@ -97,7 +90,9 @@ class TestMetadataValidator(unittest.TestCase):
     mock_db._triples = {
         "_global": [
             Triple("dcid:MyProvenance", "typeOf", object_id="Provenance"),
-            Triple("dcid:MyProvenance", "sourceLink", object_id="dcid:MissingSource"),
+            Triple("dcid:MyProvenance",
+                   "sourceLink",
+                   object_id="dcid:MissingSource"),
         ]
     }
 
@@ -113,13 +108,7 @@ class TestMetadataValidator(unittest.TestCase):
   def test_validation_missing_provenance_key(self):
     # Setup mock config with missing provenance property
     mock_config = mock.MagicMock(spec=Config)
-    mock_config.data = {
-        "inputFiles": [
-            {
-                "pattern": "data.csv"
-            }
-        ]
-    }
+    mock_config.data = {"inputFiles": [{"pattern": "data.csv"}]}
 
     mock_db = mock.MagicMock(spec=Db)
     mock_db._triples = {}
@@ -134,12 +123,10 @@ class TestMetadataValidator(unittest.TestCase):
     # Setup mock config with provenance that doesn't start with 'dcid:'
     mock_config = mock.MagicMock(spec=Config)
     mock_config.data = {
-        "inputFiles": [
-            {
-                "pattern": "data.csv",
-                "provenance": "InvalidProvenanceName"
-            }
-        ]
+        "inputFiles": [{
+            "pattern": "data.csv",
+            "provenance": "InvalidProvenanceName"
+        }]
     }
 
     mock_db = mock.MagicMock(spec=Db)
@@ -151,4 +138,3 @@ class TestMetadataValidator(unittest.TestCase):
 
     self.assertIn("must be a valid DCID or URI", str(context.exception))
     self.assertIn("InvalidProvenanceName", str(context.exception))
-

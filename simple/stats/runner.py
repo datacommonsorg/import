@@ -43,7 +43,6 @@ from stats.db import get_datacommons_platform_config_from_env
 from stats.db import get_sqlite_path_from_env
 from stats.db import ImportStatus
 from stats.db import TYPE_CLOUD_SQL
-from stats.validation import MetadataValidator
 from stats.db_cache import get_db_cache_from_env
 from stats.db_transfer import transfer_sqlite_to_cloud_sql
 from stats.entities_importer import EntitiesImporter
@@ -59,6 +58,7 @@ from stats.reporter import ImportReporter
 import stats.schema_constants as sc
 from stats.svg_cache import generate_svg_cache
 from stats.trigger_ingestion_workflow import trigger_ingestion_workflow
+from stats.validation import MetadataValidator
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
 from util.filesystem import create_store
@@ -127,12 +127,14 @@ class Runner:
 
       # Case A: Bulk Load (ALL_IMPORTS)
       if imports == [constants.ALL_IMPORTS]:
-        logging.info("Running bulk load for all imports under: %s", effective_input_dir)
+        logging.info("Running bulk load for all imports under: %s",
+                     effective_input_dir)
         input_store = create_store(effective_input_dir)
         self.all_stores.append(input_store)
         self.input_stores.append(input_store)
         configs = self._read_configs_from_subdirs(input_store.as_dir())
-        self.active_import_prefixes = set(f"{fspath.dirname(c.path)}/" for c in configs)
+        self.active_import_prefixes = set(
+            f"{fspath.dirname(c.path)}/" for c in configs)
 
       # Case B: Combined Load for specific imports (len > 1)
       elif len(imports) > 1:
@@ -141,7 +143,8 @@ class Runner:
         self.all_stores.append(input_store)
         self.input_stores.append(input_store)
         configs = self._read_configs_from_list(input_store.as_dir(), imports)
-        self.active_import_prefixes = set(f"{fspath.dirname(c.path)}/" for c in configs)
+        self.active_import_prefixes = set(
+            f"{fspath.dirname(c.path)}/" for c in configs)
 
       # Case C: Single Import
       elif imports:
@@ -293,11 +296,12 @@ class Runner:
       rel_dir = fspath.relativefrom(base_dir.path, dir_path)
 
       logging.info("Merging config from import directory: %s", rel_dir)
-      merged_data["_dir_import_names"][rel_dir] = config_data.get("importName") or rel_dir
+      merged_data["_dir_import_names"][rel_dir] = config_data.get(
+          "importName") or rel_dir
 
       # Merge inputFiles, prefixing patterns with rel_dir and converting dicts to lists
       input_files = config_data.get("inputFiles", [])
-      
+
       # 1. Normalize legacy dictionary format to standard list format
       entries = []
       if isinstance(input_files, list):
@@ -359,7 +363,8 @@ class Runner:
     self._merge_configs(configs, base_dir)
     return configs
 
-  def _read_configs_from_list(self, base_dir: Dir, import_names: list[str]) -> list:
+  def _read_configs_from_list(self, base_dir: Dir,
+                              import_names: list[str]) -> list:
     """Reads configs for specific imports specified in a list and merges them.
     
     Args:
@@ -672,7 +677,9 @@ class Runner:
       if self._check_if_special_file(file):
         continue
       if self.active_import_prefixes:
-        if not any(file.path.startswith(prefix) for prefix in self.active_import_prefixes):
+        if not any(
+            file.path.startswith(prefix)
+            for prefix in self.active_import_prefixes):
           continue
 
       # Check if this file matches at least one pattern in config.json
@@ -688,12 +695,12 @@ class Runner:
         else:
           logging.info(
               "Ignoring CSV file '%s' as it does not match any pattern in config.json",
-              file.path
-          )
+              file.path)
       elif match(file, "*.mcf"):
         # MCF files are included if they match a config pattern OR if they are under the active folders
-        if (matches_config or not self.active_import_prefixes or
-            any(file.path.startswith(prefix) for prefix in self.active_import_prefixes)):
+        if (matches_config or not self.active_import_prefixes or any(
+            file.path.startswith(prefix)
+            for prefix in self.active_import_prefixes)):
           mcf_files.append(file)
 
     # Sort alphabetically to guarantee consistent order
@@ -715,7 +722,6 @@ class Runner:
     self._completed_files_count = 0
     self._total_files_count = len(csv_files) + len(mcf_files)
     self._counter_lock = threading.Lock()
-
 
     if self.mode == RunMode.DCP_BRIDGE:
       num_threads = min(32, self._total_files_count or 1)

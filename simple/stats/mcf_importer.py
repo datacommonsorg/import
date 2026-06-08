@@ -42,8 +42,12 @@ class McfImporter(Importer):
   For custom DC, the MCF nodes are inserted as triples in the DB.
     """
 
-  def __init__(self, input_file: File, output_file: File, db: Db,
-               reporter: FileImportReporter, is_main_dc: bool,
+  def __init__(self,
+               input_file: File,
+               output_file: File,
+               db: Db,
+               reporter: FileImportReporter,
+               is_main_dc: bool,
                nodes: Nodes = None) -> None:
     self.input_file = input_file
     self.output_file = output_file
@@ -112,7 +116,8 @@ def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
   resolved_subject = local2dcid.get(subject_id, subject_id)
 
   # If it was not mapped AND it doesn't start with a valid namespace or URI, it's an error!
-  if resolved_subject == subject_id and not is_uri_or_namespace(resolved_subject):
+  if resolved_subject == subject_id and not is_uri_or_namespace(
+      resolved_subject):
     raise ValueError(f"dcid not specified for node: {subject_id}")
 
   if value_type == _ID:
@@ -143,8 +148,8 @@ def _register_metadata_nodes(triples: list[Triple], nodes: Nodes) -> None:
     pred = strip_namespace(triple.predicate)
 
     if pred == "typeOf":
-      subject_properties[sub_id]["typeOf"] = strip_namespace(
-          triple.object_id or "")
+      subject_properties[sub_id]["typeOf"] = strip_namespace(triple.object_id or
+                                                             "")
     elif pred == "url":
       val = triple.object_value or triple.object_id or ""
       subject_properties[sub_id]["url"] = _clean_literal(val)

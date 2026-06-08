@@ -145,7 +145,8 @@ def _write_node_shard_fast(args):
     if sub_id not in subjects:
       subjects[sub_id] = {
           "@id":
-              sub_id if is_uri_or_namespace(sub_id) else f"dcid:{sub_id.lstrip('/')}"
+              sub_id
+              if is_uri_or_namespace(sub_id) else f"dcid:{sub_id.lstrip('/')}"
       }
 
     pred = row.predicate
@@ -308,22 +309,27 @@ class JsonLdStreamDb(Db):
           if import_name in self._obs_records or import_name in self._triples:
             with multiprocessing.Pool(processes=num_processes) as pool:
               if import_name in self._obs_records:
-                logging.info("Streaming observations export for %s...", import_name)
-                obs_gen = self._generate_observation_chunks(import_name, import_temp_dir)
+                logging.info("Streaming observations export for %s...",
+                             import_name)
+                obs_gen = self._generate_observation_chunks(
+                    import_name, import_temp_dir)
                 for _ in pool.imap(_write_observation_shard, obs_gen):
                   pass
-                logging.info("Completed observations export for %s.", import_name)
+                logging.info("Completed observations export for %s.",
+                             import_name)
 
               if import_name in self._triples:
                 logging.info("Streaming triples export for %s...", import_name)
-                node_gen = self._generate_node_chunks(import_name, import_temp_dir)
+                node_gen = self._generate_node_chunks(import_name,
+                                                      import_temp_dir)
                 for _ in pool.imap(_write_node_shard, node_gen):
                   pass
                 logging.info("Completed triples export for %s.", import_name)
 
         self._upload_shards(temp_local_dir)
 
-  def _generate_observation_chunks(self, import_name: str, import_temp_dir: str):
+  def _generate_observation_chunks(self, import_name: str,
+                                   import_temp_dir: str):
     """Generates observation chunks of size _CHUNK_SIZE, cleaning memory progressively."""
     prov_urls = {}
     for prov in self.nodes.provenances.values():
@@ -338,8 +344,7 @@ class JsonLdStreamDb(Db):
       # Pop from the end to avoid O(N) list shifting overhead
       for _ in range(min(_CHUNK_SIZE, len(records))):
         chunk.append(records.pop())
-      yield (chunk, shard_index, import_temp_dir, self.ns_map,
-             prov_urls)
+      yield (chunk, shard_index, import_temp_dir, self.ns_map, prov_urls)
       shard_index += 1
     if import_name in self._obs_records:
       self._obs_records[import_name].clear()
@@ -383,7 +388,7 @@ class JsonLdStreamDb(Db):
     logging.info("Bulk upload of JSON-LD shards completed successfully.")
 
   def _upload_shards_gcs(self, temp_local_dir: str, files: list[str],
-                          target_path: str):
+                         target_path: str):
     """Performs concurrent GCS uploads using native google-cloud-storage client."""
     # Parse bucket and blob prefix
     parts = target_path[5:].split("/", 1)

@@ -141,14 +141,21 @@ class Nodes:
     return source.id
 
   @thread_safe
-  def register_provenance(self, id: str, name: str = "", url: str = "", source_id: str = "") -> Provenance:
+  def register_provenance(self,
+                          id: str,
+                          name: str = "",
+                          url: str = "",
+                          source_id: str = "") -> Provenance:
     self.has_custom_mcf_nodes = True
     clean_id = strip_namespace(id)
     clean_source_id = strip_namespace(source_id) if source_id else ""
-    
+
     prov = self.provenances.get(clean_id)
     if not prov:
-      prov = Provenance(id=clean_id, source_id=clean_source_id, name=name or clean_id, url=url)
+      prov = Provenance(id=clean_id,
+                        source_id=clean_source_id,
+                        name=name or clean_id,
+                        url=url)
       self.provenances[clean_id] = prov
       if name:
         self.provenances[name] = prov
@@ -165,7 +172,7 @@ class Nodes:
   def register_source(self, id: str, name: str = "", url: str = "") -> Source:
     self.has_custom_mcf_nodes = True
     clean_id = strip_namespace(id)
-    
+
     src = self.sources.get(clean_id)
     if not src:
       src = Source(id=clean_id, name=name or clean_id, url=url)
@@ -185,13 +192,12 @@ class Nodes:
     if not prov_name:
       raise ValueError(
           f"A provenance is absolutely required for file '{input_file.path}'. "
-          f"Please specify the 'provenance' property in your config.json."
-      )
-    
+          f"Please specify the 'provenance' property in your config.json.")
+
     prov = self.provenances.get(prov_name)
     if not prov:
       prov = self.register_provenance(prov_name)
-          
+
     self._used_provenance_ids.add(prov.id)
     if prov.source_id:
       self._used_source_ids.add(prov.source_id)
