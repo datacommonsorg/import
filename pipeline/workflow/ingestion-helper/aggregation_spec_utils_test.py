@@ -22,6 +22,8 @@ from aggregation_spec_utils import AggregationRunner
 from aggregation_spec_utils import AggregationSpec
 from aggregation_spec_utils import LocalJsonlSink
 from aggregation_spec_utils import LocalJsonlSource
+from aggregation_spec_utils import SpannerDmlMode
+from aggregation_spec_utils import SpannerDmlSink
 from aggregation_spec_utils import SpannerSqlSource
 from aggregation_spec_utils import SpannerTableSink
 
@@ -261,6 +263,75 @@ class TestAggregationSpecUtils(unittest.TestCase):
             self.assertEqual(
                 sink.batches, [[{"subject_id": "dc/1"}, {"subject_id": "dc/2"}]]
             )
+
+    def test_runner_runs_transactional_dml_sink_without_source(self):
+        database = MagicMock()
+        transaction = MagicMock()
+        transaction.execute_update.return_value = 3
+        sql = "INSERT INTO Target (id) SELECT id FROM Source"
+
+        def run_in_transaction_side_effect(callback):
+            return callback(transaction)
+
+        database.run_in_transaction.side_effect = run_in_transaction_side_effect
+
+        count = AggregationRunner().run(
+            AggregationSpec(
+                name="insert_select",
+                source=None,
+                sink=SpannerDmlSink(
+                    database=database,
+                    sql=sql,
+                    params={"import_name": "dc/test"},
+                    param_types={"import_name": "STRING"},
+                    timeout=120,
+                ),
+            ))
+
+        self.assertEqual(count, 3)
+        database.run_in_transaction.assert_called_once()
+        transaction.execute_update.assert_called_once_with(
+            sql,
+            params={"import_name": "dc/test"},
+            param_types={"import_name": "STRING"},
+            timeout=120,
+        )
+
+    def test_runner_runs_partitioned_dml_sink_without_source(self):
+        database = MagicMock()
+        database.execute_partitioned_dml.return_value = 4
+        sql = "DELETE FROM Target WHERE import_name = @import_name"
+
+        count = AggregationRunner().run(
+            AggregationSpec(
+                name="delete_target",
+                source=None,
+                sink=SpannerDmlSink(
+                    database=database,
+                    sql=sql,
+                    params={"import_name": "dc/test"},
+                    param_types={"import_name": "STRING"},
+                    mode=SpannerDmlMode.PARTITIONED,
+                ),
+            ))
+
+        self.assertEqual(count, 4)
+        database.execute_partitioned_dml.assert_called_once_with(
+            sql,
+            params={"import_name": "dc/test"},
+            param_types={"import_name": "STRING"},
+        )
+
+    def test_partitioned_dml_rejects_timeout(self):
+        sink = SpannerDmlSink(
+            database=MagicMock(),
+            sql="DELETE FROM Target WHERE import_name = @import_name",
+            mode=SpannerDmlMode.PARTITIONED,
+            timeout=120,
+        )
+
+        with self.assertRaisesRegex(ValueError, "does not support timeout"):
+            sink.run()
 
     def _write_jsonl(self, path, rows):
         path.write_text(''.join(json.dumps(row) + '\n' for row in rows),

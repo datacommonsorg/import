@@ -25,9 +25,14 @@ Mapper = Callable[[Row], Optional[Row]]
 @dataclass
 class AggregationSpec:
     name: str
-    source: Any
+    source: Optional[Any]
     sink: Any
     mapper: Optional[Mapper] = None
+
+
+class SpannerDmlMode:
+    TRANSACTIONAL = 'transactional'
+    PARTITIONED = 'partitioned'
 
 
 class SpannerSqlSource:
@@ -132,9 +137,53 @@ class LocalJsonlSink:
             self._file = None
 
 
+@dataclass
+class SpannerDmlSink:
+    database: Any
+    sql: str
+    params: Optional[Dict[str, Any]] = None
+    param_types: Optional[Dict[str, Any]] = None
+    mode: str = SpannerDmlMode.TRANSACTIONAL
+    timeout: Optional[int] = None
+
+    def run(self) -> int:
+        if self.mode == SpannerDmlMode.TRANSACTIONAL:
+            return self._run_transactional()
+        if self.mode == SpannerDmlMode.PARTITIONED:
+            return self._run_partitioned()
+        raise ValueError(f"Unknown Spanner DML mode: {self.mode}")
+
+    def _run_transactional(self) -> int:
+
+        def _execute_dml(transaction):
+            kwargs = {
+                'params': self.params or {},
+                'param_types': self.param_types or {},
+            }
+            if self.timeout is not None:
+                kwargs['timeout'] = self.timeout
+            return transaction.execute_update(self.sql, **kwargs)
+
+        return self.database.run_in_transaction(_execute_dml)
+
+    def _run_partitioned(self) -> int:
+        if self.timeout is not None:
+            raise ValueError(
+                "Partitioned DML does not support timeout in this client")
+
+        return self.database.execute_partitioned_dml(
+            self.sql,
+            params=self.params or {},
+            param_types=self.param_types or {},
+        )
+
+
 class AggregationRunner:
 
     def run(self, spec: AggregationSpec) -> int:
+        if spec.source is None:
+            return spec.sink.run()
+
         mapper = spec.mapper or _identity_mapper
         batch = []
         row_count = 0
