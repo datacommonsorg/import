@@ -18,6 +18,7 @@ from kg_util.mcf_parser import mcf_to_triples
 import pandas as pd
 from stats import constants
 from stats.data import RowEntity
+from stats.data import strip_namespace
 from stats.data import Triple
 from stats.db import Db
 from stats.importer import Importer
@@ -61,36 +62,7 @@ class McfImporter(Importer):
         triples = self._mcf_to_triples()
 
         # Extract and register Provenance / Source nodes in nodes registry
-        if self.nodes:
-          subject_properties = {}
-          for triple in triples:
-            sub_id = triple.subject_id
-            if sub_id not in subject_properties:
-              subject_properties[sub_id] = {}
-            if triple.predicate == "typeOf":
-              subject_properties[sub_id]["typeOf"] = triple.object_id
-            elif triple.predicate == "url":
-              subject_properties[sub_id]["url"] = triple.object_value.strip('"') if triple.object_value else ""
-            elif triple.predicate == "name":
-              subject_properties[sub_id]["name"] = triple.object_value.strip('"') if triple.object_value else ""
-            elif triple.predicate == "sourceLink":
-              subject_properties[sub_id]["sourceLink"] = triple.object_id
-
-          for sub_id, props in subject_properties.items():
-            node_type = props.get("typeOf")
-            if node_type in ["dcs:Provenance", "Provenance"]:
-              self.nodes.register_provenance(
-                  id=sub_id,
-                  name=props.get("name", ""),
-                  url=props.get("url", ""),
-                  source_id=props.get("sourceLink", "")
-              )
-            elif node_type in ["dcs:Source", "Source"]:
-              self.nodes.register_source(
-                  id=sub_id,
-                  name=props.get("name", ""),
-                  url=props.get("url", "")
-              )
+        _register_metadata_nodes(triples, self.nodes)
 
         logging.info("Inserting %s triples from %s", len(triples),
                      self.input_file.full_path())
@@ -147,3 +119,57 @@ def _to_triple(parser_triple: list[str], local2dcid: dict[str, str]) -> Triple:
     return Triple(resolved_subject, predicate, object_id=value)
 
   return Triple(resolved_subject, predicate, object_value=value)
+
+
+def _register_metadata_nodes(triples: list[Triple], nodes: Nodes) -> None:
+  """Extracts and registers Provenance and Source nodes from parsed MCF triples.
+
+  This helper is robust against:
+  - Namespaced predicates (e.g., 'dcs:url', 'schema:name', 'dcs:sourceLink').
+  - Namespaced typeOf values (e.g., 'dcs:Provenance', 'dcs:Source').
+  - Dual property names for source links ('sourceLink' vs 'source').
+  - String literal quote escaping.
+  """
+  if not nodes:
+    return
+
+  subject_properties = {}
+  for triple in triples:
+    sub_id = triple.subject_id
+    if sub_id not in subject_properties:
+      subject_properties[sub_id] = {}
+
+  # Strip namespace from predicate for robust matching
+    pred = strip_namespace(triple.predicate)
+
+    if pred == "typeOf":
+      subject_properties[sub_id]["typeOf"] = strip_namespace(
+          triple.object_id or "")
+    elif pred == "url":
+      val = triple.object_value or triple.object_id or ""
+      subject_properties[sub_id]["url"] = _clean_literal(val)
+    elif pred == "name":
+      val = triple.object_value or triple.object_id or ""
+      subject_properties[sub_id]["name"] = _clean_literal(val)
+    elif pred == "sourceLink":
+      # Map sourceLink to the source ID
+      subject_properties[sub_id]["sourceLink"] = triple.object_id
+
+  for sub_id, props in subject_properties.items():
+    node_type = props.get("typeOf")
+    if node_type == "Provenance":
+      nodes.register_provenance(id=sub_id,
+                                name=props.get("name", ""),
+                                url=props.get("url", ""),
+                                source_id=props.get("sourceLink", ""))
+    elif node_type == "Source":
+      nodes.register_source(id=sub_id,
+                            name=props.get("name", ""),
+                            url=props.get("url", ""))
+
+
+def _clean_literal(val: str) -> str:
+  """Cleans leading/trailing quotes and whitespace from literal strings safely."""
+  if not val:
+    return ""
+  return val.strip().strip('"').strip("'")
