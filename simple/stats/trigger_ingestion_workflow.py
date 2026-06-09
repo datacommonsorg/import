@@ -26,6 +26,8 @@ import google.auth
 import google.auth.transport.requests
 import requests
 
+_MAX_IMPORT_NAME_LENGTH = 64
+
 
 def _get_env_vars():
   """Helper to get and validate required environment variables."""
@@ -58,6 +60,7 @@ def trigger_ingestion_workflow(import_list: list[dict]):
 
   raw_import_name = "_".join(item["importName"] for item in import_list)
   sanitized_import_name = re.sub(r'[^a-zA-Z0-9_-]', '_', raw_import_name)
+  sanitized_import_name = sanitized_import_name[:_MAX_IMPORT_NAME_LENGTH]
 
   data_payload = {
       "spannerInstanceId": env_vars["GCP_SPANNER_INSTANCE_ID"],

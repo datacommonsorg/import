@@ -50,6 +50,8 @@ def base64_decode_and_gunzip_json(encoded_data: str) -> dict:
 
 def is_uri_or_namespace(val: str) -> bool:
   """Returns True if the value is a full URL, standard DCID, or valid custom namespace."""
+  if not isinstance(val, str):
+    return False
   if not val:
     return False
   if val.startswith(("http://", "https://", "dcid:")):

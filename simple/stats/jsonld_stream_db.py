@@ -286,6 +286,8 @@ class JsonLdStreamDb(Db):
   def commit_and_close(self):
     # Add global triples to every processed import's triples
     global_triples = self._triples.pop("_global", [])
+    if not self._processed_imports:
+      self._processed_imports.add(self.import_name)
     for import_name in self._processed_imports:
       self._triples[import_name].extend(global_triples)
 

@@ -162,8 +162,10 @@ class Nodes:
       if name:
         self.provenances[name] = prov
     else:
-      if name and not prov.name:
-        prov.name = name
+      if name:
+        if not prov.name:
+          prov.name = name
+        self.provenances[name] = prov
       if url and not prov.url:
         prov.url = url
       if clean_source_id and not prov.source_id:
@@ -191,8 +193,10 @@ class Nodes:
       if name:
         self.sources[name] = src
     else:
-      if name and not src.name:
-        src.name = name
+      if name:
+        if not src.name:
+          src.name = name
+        self.sources[name] = src
       if url and not src.url:
         src.url = url
       if properties:

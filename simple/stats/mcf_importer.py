@@ -132,7 +132,6 @@ def _register_metadata_nodes(triples: list[Triple], nodes: Nodes) -> None:
   This helper is robust against:
   - Namespaced predicates (e.g., 'dcs:url', 'schema:name', 'dcs:sourceLink').
   - Namespaced typeOf values (e.g., 'dcs:Provenance', 'dcs:Source').
-  - Dual property names for source links ('sourceLink' vs 'source').
   - String literal quote escaping.
   """
   if not nodes:
