@@ -75,8 +75,10 @@ def compare_csv_files(test: unittest.TestCase,
     return
 
   # Check if files are empty (0 bytes) to prevent pandas EmptyDataError
-  actual_empty = not os.path.exists(actual_path) or os.path.getsize(actual_path) == 0
-  expected_empty = not os.path.exists(expected_path) or os.path.getsize(expected_path) == 0
+  actual_empty = not os.path.exists(actual_path) or os.path.getsize(
+      actual_path) == 0
+  expected_empty = not os.path.exists(expected_path) or os.path.getsize(
+      expected_path) == 0
 
   if actual_empty and expected_empty:
     return  # Both are empty, which is a perfect match!
