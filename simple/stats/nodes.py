@@ -173,13 +173,20 @@ class Nodes:
     return prov
 
   @thread_safe
-  def register_source(self, id: str, name: str = "", url: str = "", properties: dict[str, str] = None) -> Source:
+  def register_source(self,
+                      id: str,
+                      name: str = "",
+                      url: str = "",
+                      properties: dict[str, str] = None) -> Source:
     self.has_custom_mcf_nodes = True
     clean_id = _clean_metadata_id(id)
 
     src = self.sources.get(clean_id)
     if not src:
-      src = Source(id=clean_id, name=name or clean_id, url=url, properties=properties or {})
+      src = Source(id=clean_id,
+                   name=name or clean_id,
+                   url=url,
+                   properties=properties or {})
       self.sources[clean_id] = src
       if name:
         self.sources[name] = src
