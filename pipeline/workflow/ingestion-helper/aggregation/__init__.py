@@ -11,24 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Aggregation package for Data Commons ingestion workflow.
 
-steps:
-  # Run unit tests
-  - name: 'ghcr.io/astral-sh/uv:latest'
-    args: ['run', 'pytest']
+This package contains modules for executing BigQuery queries and generating
+linked relationship edges and provenance summaries in Spanner.
+"""
 
-  # Build the container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', '${_AR_REPO_URL}/${_IMAGE_NAME}:${_VERSION}', '.']
+from .bq_executor import BigQueryExecutor
+from .linked_edge_generator import LinkedEdgeGenerator
+from .provenance_summary_generator import ProvenanceSummaryGenerator
 
-  # Push the container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_AR_REPO_URL}/${_IMAGE_NAME}:${_VERSION}']
-
-substitutions:
-  _AR_REPO_URL: 'us-docker.pkg.dev/datcom-ci/gcr.io'
-  _IMAGE_NAME: 'datacommons-ingestion-helper'
-  _VERSION: 'latest'
-
-images:
-  - '${_AR_REPO_URL}/${_IMAGE_NAME}:${_VERSION}'
+__all__ = [
+    'BigQueryExecutor',
+    'LinkedEdgeGenerator',
+    'ProvenanceSummaryGenerator',
+]
