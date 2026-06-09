@@ -35,21 +35,6 @@ CREATE TABLE triples (
     object_id varchar(255),
     object_value TEXT
 );
-INSERT INTO "triples" VALUES('sv','typeOf','StatisticalVariable','');
-INSERT INTO "triples" VALUES('sv','measuredProperty','value','');
-INSERT INTO "triples" VALUES('sv','name','','SV');
-INSERT INTO "triples" VALUES('sv','populationType','sv','');
-INSERT INTO "triples" VALUES('sv','statType','measuredValue','');
-INSERT INTO "triples" VALUES('sv_female','typeOf','StatisticalVariable','');
-INSERT INTO "triples" VALUES('sv_female','measuredProperty','value','');
-INSERT INTO "triples" VALUES('sv_female','name','','SV Female');
-INSERT INTO "triples" VALUES('sv_female','populationType','sv','');
-INSERT INTO "triples" VALUES('sv_female','statType','measuredValue','');
-INSERT INTO "triples" VALUES('sv_male','typeOf','StatisticalVariable','');
-INSERT INTO "triples" VALUES('sv_male','measuredProperty','value','');
-INSERT INTO "triples" VALUES('sv_male','name','','SV Male');
-INSERT INTO "triples" VALUES('sv_male','populationType','sv','');
-INSERT INTO "triples" VALUES('sv_male','statType','measuredValue','');
 INSERT INTO "triples" VALUES('observations.csv','typeOf','Provenance','');
 INSERT INTO "triples" VALUES('observations.csv','name','','observations.csv');
 INSERT INTO "triples" VALUES('observations.csv','source','','');

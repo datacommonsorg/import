@@ -689,19 +689,16 @@ class Runner:
           matches_config = True
           break
 
-      if match(file, "*.csv"):
-        if matches_config:
+      # Unified Selection: Only process files explicitly matched in config
+      if matches_config:
+        if match(file, "*.csv"):
           csv_files.append(file)
-        else:
-          logging.info(
-              "Ignoring CSV file '%s' as it does not match any pattern in config.json",
-              file.path)
-      elif match(file, "*.mcf"):
-        # MCF files are included if they match a config pattern OR if they are under the active folders
-        if (matches_config or not self.active_import_prefixes or any(
-            file.path.startswith(prefix)
-            for prefix in self.active_import_prefixes)):
+        elif match(file, "*.mcf"):
           mcf_files.append(file)
+      else:
+        logging.info(
+            "Ignoring file '%s' as it does not match any pattern in config.json",
+            file.path)
 
     # Sort alphabetically to guarantee consistent order
     csv_files.sort(key=lambda f: f.full_path())
