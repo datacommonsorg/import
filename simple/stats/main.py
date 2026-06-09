@@ -18,6 +18,7 @@ import os
 from absl import app
 from absl import flags
 from freezegun import freeze_time
+import requests.adapters
 from stats import constants
 from stats.logger import initialize_logger
 from stats.runner import RunMode
@@ -55,6 +56,9 @@ _FREEZE_TIME_IGNORE_LIST = ["transformers"]
 
 
 def _run():
+  # Configure requests adapter default pool size to support parallel GCS uploads
+  requests.adapters.DEFAULT_POOLSIZE = 32
+
   initialize_logger()
   logging.info("Starting stats data importer job in mode: %s", FLAGS.mode)
 
