@@ -31,9 +31,7 @@ class PlaceAggregationGenerator:
         self.executor = executor
         self.is_base_dc = is_base_dc
 
-    def run_all(self,
-                import_names: List[str],
-                variable: str,
+    def run_all(self, import_names: List[str], variable: str,
                 measurement_method: str,
                 date: str) -> List[bigquery.job.QueryJob]:
         """Runs all place aggregations asynchronously and returns their jobs.
@@ -51,17 +49,15 @@ class PlaceAggregationGenerator:
 
         logging.info(f"Running place aggregations for imports: {import_names}")
         jobs = [
-            self.aggregate_us_population_from_states(
-                import_names, variable, measurement_method, date),
+            self.aggregate_us_population_from_states(import_names, variable,
+                                                     measurement_method, date),
             self.aggregate_us_state_population_from_counties(
                 import_names, variable, measurement_method, date)
         ]
         return [job for job in jobs if job]
 
     def aggregate_us_population_from_states(
-            self,
-            import_names: List[str],
-            variable: str,
+            self, import_names: List[str], variable: str,
             measurement_method: str,
             date: str) -> Optional[bigquery.job.QueryJob]:
         """Calculates US country population by summing up populations of its states.
@@ -139,9 +135,7 @@ class PlaceAggregationGenerator:
         return self.executor.execute(query)
 
     def aggregate_us_state_population_from_counties(
-            self,
-            import_names: List[str],
-            variable: str,
+            self, import_names: List[str], variable: str,
             measurement_method: str,
             date: str) -> Optional[bigquery.job.QueryJob]:
         """Calculates US state populations by summing up populations of their counties.

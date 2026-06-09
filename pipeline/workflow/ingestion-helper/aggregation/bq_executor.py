@@ -35,6 +35,7 @@ class BigQueryExecutor:
         self.instance_id = instance_id
         self.database_id = database_id
         self.location = location
+        # TODO: Remove run_sequential logic once DCP migrates to async execution.
         self.run_sequential = run_sequential
         self.client = bigquery.Client(project=self.project_id,
                                       location=self.location)
@@ -48,11 +49,17 @@ class BigQueryExecutor:
         query: str,
         job_config: Optional[bigquery.QueryJobConfig] = None
     ) -> bigquery.job.QueryJob:
-        """
-        Submits a query and returns the QueryJob.
+        """Submits a BigQuery query and returns the QueryJob.
 
-        If run_sequential is True, it blocks and waits for the query to complete
-        before returning.
+        Args:
+            query: The SQL query string to execute.
+            job_config: Optional BigQuery QueryJobConfig.
+
+        Returns:
+            The BigQuery QueryJob.
+
+        Raises:
+            Exception: If the query submission or execution fails.
         """
         logging.info(
             f"Submitting query (first 100 chars): {query.strip()[:100]}...")
@@ -62,6 +69,7 @@ class BigQueryExecutor:
             query_job = self.client.query(query, job_config=job_config)
             logging.info(f"Query submitted. Job ID: {query_job.job_id}")
 
+            # TODO: Remove sequential execution once DCP migrates to async.
             if self.run_sequential:
                 logging.info(
                     f"Waiting for Query Job {query_job.job_id} to complete (sequential mode)..."
@@ -78,7 +86,21 @@ class BigQueryExecutor:
             raise
 
     def get_jobs_status(self, job_ids: List[str]) -> Dict[str, Any]:
-        """Returns the overall status of a list of BigQuery jobs."""
+        """Returns the overall status of a list of BigQuery jobs.
+
+        Args:
+            job_ids: A list of BigQuery job IDs to check.
+
+        Returns:
+            A dictionary containing the overall status. If any job failed, the
+            dictionary will contain "status": "FAILED", "error": <error message>,
+            and "failedJobs": <list of failed job IDs>. Otherwise, if all jobs
+            are done, it returns {"status": "DONE"}. If any job is still
+            running, it returns {"status": "RUNNING"}.
+
+        Raises:
+            Exception: If fetching job status fails.
+        """
         overall_status = "DONE"
         failed_jobs = []
         error_message = ""
