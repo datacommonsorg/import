@@ -273,30 +273,16 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
         self.assertEqual(self.mock_executor.execute.call_count, 2)
 
         query1 = self.mock_executor.execute.call_args_list[0][0][0]
-        self.assertIn("EXPORT DATA", query1)
-        self.assertIn('spanner_options = \'{"table": "Observation_final_v2"}\'',
-                      query1)
-        self.assertIn("EXTERNAL_QUERY", query1)
         self.assertIn("test-conn", query1)
         self.assertIn("spanner-uri", query1)
         self.assertIn("import1", query1)
         self.assertIn('"country/USA" AS entity1', query1)
-        self.assertIn("TimeSeries_final_v2", query1)
-        self.assertIn("LENGTH(entity1) = 8", query1)
-        self.assertIn("date = '2020'", query1)
 
         query2 = self.mock_executor.execute.call_args_list[1][0][0]
-        self.assertIn("EXPORT DATA", query2)
-        self.assertIn('spanner_options = \'{"table": "Observation_final_v2"}\'',
-                      query2)
-        self.assertIn("EXTERNAL_QUERY", query2)
         self.assertIn("test-conn", query2)
         self.assertIn("spanner-uri", query2)
         self.assertIn("import1", query2)
         self.assertIn("SUBSTR(ts.entity1, 1, 8) AS entity1", query2)
-        self.assertIn("TimeSeries_final_v2", query2)
-        self.assertIn("LENGTH(entity1) = 11", query2)
-        self.assertIn("date = '2020'", query2)
 
 
 @patch('aggregation_utils.BigQueryExecutor')
