@@ -38,6 +38,7 @@ class ImportState(str, Enum):
 
 class ImportItem(BaseModel):
     importName: str
+    latestVersion: Optional[str] = None
 
 class ImportInfoRequest(BaseModel):
     importList: Optional[List[str]] = Field(default_factory=list)

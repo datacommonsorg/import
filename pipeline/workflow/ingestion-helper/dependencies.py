@@ -17,25 +17,35 @@ from clients.spanner import SpannerClient
 from clients.storage import StorageClient
 import config
 
+# Cached singleton instances to reuse connection/session pools across requests
+_spanner_client = None
+_storage_client = None
+
 def get_spanner_client() -> SpannerClient:
-    if not config.SPANNER_PROJECT_ID or not config.SPANNER_INSTANCE_ID or not config.SPANNER_DATABASE_ID:
-        raise HTTPException(
-            status_code=500,
-            detail="Spanner configuration is missing. Ensure SPANNER_PROJECT_ID, SPANNER_INSTANCE_ID, and SPANNER_DATABASE_ID are set."
+    global _spanner_client
+    if _spanner_client is None:
+        if not config.SPANNER_PROJECT_ID or not config.SPANNER_INSTANCE_ID or not config.SPANNER_DATABASE_ID:
+            raise HTTPException(
+                status_code=500,
+                detail="Spanner configuration is missing. Ensure SPANNER_PROJECT_ID, SPANNER_INSTANCE_ID, and SPANNER_DATABASE_ID are set."
+            )
+        _spanner_client = SpannerClient(
+            config.SPANNER_PROJECT_ID,
+            config.SPANNER_INSTANCE_ID,
+            config.SPANNER_DATABASE_ID,
+            graph_database_id=config.SPANNER_GRAPH_DATABASE_ID,
+            location=config.LOCATION,
+            model_id=config.EMBEDDING_MODEL_ID
         )
-    return SpannerClient(
-        config.SPANNER_PROJECT_ID,
-        config.SPANNER_INSTANCE_ID,
-        config.SPANNER_DATABASE_ID,
-        graph_database_id=config.SPANNER_GRAPH_DATABASE_ID,
-        location=config.LOCATION,
-        model_id=config.EMBEDDING_MODEL_ID
-    )
+    return _spanner_client
 
 def get_storage_client() -> StorageClient:
-    if not config.GCS_BUCKET_ID:
-        raise HTTPException(
-            status_code=500,
-            detail="GCS Bucket ID configuration is missing. Ensure GCS_BUCKET_ID is set."
-        )
-    return StorageClient(config.GCS_BUCKET_ID)
+    global _storage_client
+    if _storage_client is None:
+        if not config.GCS_BUCKET_ID:
+            raise HTTPException(
+                status_code=500,
+                detail="GCS Bucket ID configuration is missing. Ensure GCS_BUCKET_ID is set."
+            )
+        _storage_client = StorageClient(config.GCS_BUCKET_ID)
+    return _storage_client
