@@ -66,7 +66,8 @@ class TestMain(unittest.TestCase):
             MockResults(
                 rows=[
                     ("dc/1", "Node 1", ["Topic"]),
-                    ("dc/2", None, ["Topic"])
+                    ("dc/2", None, ["Topic"]),
+                    ("dc/3", "SV 1", ["StatisticalVariable"])
                 ],
                 field_names=["subject_id", "name", "types"]
             )
@@ -76,7 +77,7 @@ class TestMain(unittest.TestCase):
         transactions = []
         def run_in_transaction_side_effect(func):
             mock_transaction = MagicMock()
-            mock_transaction.execute_update.return_value = 1
+            mock_transaction.execute_update.return_value = 2
             transactions.append(mock_transaction)
             return func(mock_transaction)
 
@@ -91,7 +92,7 @@ class TestMain(unittest.TestCase):
         # Assertions
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "OK")
-        self.assertEqual(response.json()["affected_rows"], 1)
+        self.assertEqual(response.json()["affected_rows"], 2)
 
         # Assertions for get_latest_lock_timestamp and get_updated_nodes
         self.assertEqual(mock_database.snapshot.call_count, 2)
@@ -116,8 +117,9 @@ class TestMain(unittest.TestCase):
 
         # Verify data passed to generate_embeddings_partitioned reached execute_update
         batch = kwargs_tx["params"]["nodes"]
-        self.assertEqual(len(batch), 1)
+        self.assertEqual(len(batch), 2)
         self.assertEqual(batch[0][0], "dc/1")
+        self.assertEqual(batch[1][0], "dc/3")
         self.assertEqual(batch[0][1], "Node 1")
 
     def test_seed_database_success(self):

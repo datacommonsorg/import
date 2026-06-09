@@ -68,6 +68,32 @@ Interactive OpenAPI documentation is automatically served at `/docs` (Swagger UI
 
 ---
 
+## Environment Configuration
+
+All application configurations are centralized inside **[config.py](config.py)** and loaded from system environment variables. 
+
+### Configuration Options
+
+| Variable | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `PROJECT_ID` | `str` | *None* | GCP Project ID. |
+| `SPANNER_PROJECT_ID` | `str` | *None* | GCP Project ID hosting the target Spanner instance. |
+| `SPANNER_INSTANCE_ID` | `str` | *None* | Cloud Spanner Instance ID. |
+| `SPANNER_DATABASE_ID` | `str` | *None* | Cloud Spanner Metadata Database ID (tracks jobs). |
+| `SPANNER_GRAPH_DATABASE_ID` | `str` | *None* | Cloud Spanner Graph Database ID (stores triples). |
+| `BQ_SPANNER_CONN_ID` | `str` | *None* | BigQuery connection ID used to query Spanner in aggregations. |
+| `GCS_BUCKET_ID` | `str` | *None* | GCS Bucket ID used for staging and versioning imports. |
+| `LOCATION` / `REGION` | `str` | `us-central1` | GCP region where resources are deployed. |
+| `ENABLE_EMBEDDINGS` | `bool` | `false` | Enables/disables Vertex AI embedding generation. |
+| `IS_BASE_DC` | `bool` | `true` | Identifies if this is a Base Data Commons instance. |
+| `TIMEOUT` | `int` | `1700` | Query execution timeout in seconds for Spanner transactions. |
+| `EMBEDDING_MODEL_ID` | `str` | `text-embedding-005` | Vertex AI Text Embedding model version. |
+| `REDIS_HOST` | `str` | *None* | Redis host address (triggers cache clears). |
+| `REDIS_PORT` | `str` | `6379` | Redis port. |
+| `GCS_OUTPUT_PREFIX` | `str` | `""` | Optional folder prefix for GCS writes. |
+
+---
+
 ## Local Development
 
 This project uses **`uv`** for dependency locking, virtual environment management, and packaging.
