@@ -145,17 +145,19 @@ class Nodes:
                           id: str,
                           name: str = "",
                           url: str = "",
-                          source_id: str = "") -> Provenance:
+                          source_id: str = "",
+                          properties: dict[str, str] = None) -> Provenance:
     self.has_custom_mcf_nodes = True
-    clean_id = strip_namespace(id)
-    clean_source_id = strip_namespace(source_id) if source_id else ""
+    clean_id = _clean_metadata_id(id)
+    clean_source_id = _clean_metadata_id(source_id) if source_id else ""
 
     prov = self.provenances.get(clean_id)
     if not prov:
       prov = Provenance(id=clean_id,
                         source_id=clean_source_id,
                         name=name or clean_id,
-                        url=url)
+                        url=url,
+                        properties=properties or {})
       self.provenances[clean_id] = prov
       if name:
         self.provenances[name] = prov
@@ -166,16 +168,18 @@ class Nodes:
         prov.url = url
       if clean_source_id and not prov.source_id:
         prov.source_id = clean_source_id
+      if properties:
+        prov.properties.update(properties)
     return prov
 
   @thread_safe
-  def register_source(self, id: str, name: str = "", url: str = "") -> Source:
+  def register_source(self, id: str, name: str = "", url: str = "", properties: dict[str, str] = None) -> Source:
     self.has_custom_mcf_nodes = True
-    clean_id = strip_namespace(id)
+    clean_id = _clean_metadata_id(id)
 
     src = self.sources.get(clean_id)
     if not src:
-      src = Source(id=clean_id, name=name or clean_id, url=url)
+      src = Source(id=clean_id, name=name or clean_id, url=url, properties=properties or {})
       self.sources[clean_id] = src
       if name:
         self.sources[name] = src
@@ -184,6 +188,8 @@ class Nodes:
         src.name = name
       if url and not src.url:
         src.url = url
+      if properties:
+        src.properties.update(properties)
     return src
 
   @thread_safe
@@ -387,3 +393,12 @@ class Nodes:
       triples_file.write(pd.DataFrame(triples).to_csv(index=False))
 
     return triples
+
+
+def _clean_metadata_id(id: str) -> str:
+  """Only strips standard Data Commons system prefixes, preserving custom namespaces."""
+  if id.startswith("dcid:"):
+    return id[5:]
+  if id.startswith("dcs:"):
+    return id[4:]
+  return id

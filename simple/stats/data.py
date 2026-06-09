@@ -28,6 +28,7 @@ from stats import constants
 from stats import schema_constants as sc
 from stats.util import base64_decode_and_gunzip_json
 from stats.util import gzip_and_base64_encode_json
+from stats.util import is_uri_or_namespace
 
 _PREDICATE_TYPE_OF = "typeOf"
 _PREDICATE_NAME = "name"
@@ -194,6 +195,7 @@ class Provenance:
   source_id: str
   name: str
   url: str = ""
+  properties: dict[str, str] = field(default_factory=dict)
 
   def triples(self) -> list[Triple]:
     triples: list[Triple] = []
@@ -204,6 +206,17 @@ class Provenance:
     ])
     if self.url:
       triples.append(Triple(self.id, _PREDICATE_URL, object_value=self.url))
+
+    # Dynamically serialize any custom properties
+    for pred, val in self.properties.items():
+      # Skip hardcoded fields to prevent duplication
+      if pred in ["typeOf", "name", "sourceLink", "source", "url"]:
+        continue
+      if is_uri_or_namespace(val):
+        triples.append(Triple(self.id, pred, object_id=val))
+      else:
+        triples.append(Triple(self.id, pred, object_value=val))
+
     return triples
 
 
@@ -213,6 +226,7 @@ class Source:
   name: str
   url: str = ""
   domain: str = field(init=False)
+  properties: dict[str, str] = field(default_factory=dict)
 
   def __post_init__(self):
     self.domain = urlparse(self.url).netloc
@@ -228,6 +242,17 @@ class Source:
     if self.domain:
       triples.append(
           Triple(self.id, _PREDICATE_DOMAIN, object_value=self.domain))
+
+    # Dynamically serialize any custom properties
+    for pred, val in self.properties.items():
+      # Skip hardcoded fields to prevent duplication
+      if pred in ["typeOf", "name", "url", "domain"]:
+        continue
+      if is_uri_or_namespace(val):
+        triples.append(Triple(self.id, pred, object_id=val))
+      else:
+        triples.append(Triple(self.id, pred, object_value=val))
+
     return triples
 
 
