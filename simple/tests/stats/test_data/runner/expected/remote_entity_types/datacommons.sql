@@ -26,30 +26,27 @@ INSERT INTO "observations" VALUES('country/FAKE1','var1','2024','1','c/p/1','','
 INSERT INTO "observations" VALUES('country/FAKE2','var1','2024','3','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/FAKE1','var2','2024','2','c/p/1','','','','','{}');
 INSERT INTO "observations" VALUES('country/FAKE2','var2','2024','4','c/p/1','','','','','{}');
-INSERT INTO "observations" VALUES('country/FAKE3','var1','2024','5','c/p/default','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE3','var2','2024','6','c/p/default','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE4','var1','2024','7','c/p/default','','','','','');
-INSERT INTO "observations" VALUES('country/FAKE4','var2','2024','8','c/p/default','','','','','');
+INSERT INTO "observations" VALUES('country/FAKE3','var1','2024','5','Provenance1','','','','','');
+INSERT INTO "observations" VALUES('country/FAKE3','var2','2024','6','Provenance1','','','','','');
+INSERT INTO "observations" VALUES('country/FAKE4','var1','2024','7','Provenance1','','','','','');
+INSERT INTO "observations" VALUES('country/FAKE4','var2','2024','8','Provenance1','','','','','');
 CREATE TABLE triples (
     subject_id varchar(255),
     predicate varchar(255),
     object_id varchar(255),
     object_value TEXT
 );
-INSERT INTO "triples" VALUES('c/s/default','typeOf','Source','');
-INSERT INTO "triples" VALUES('c/s/default','name','','Custom Data Commons');
 INSERT INTO "triples" VALUES('c/s/1','typeOf','Source','');
 INSERT INTO "triples" VALUES('c/s/1','name','','Source1 Name');
 INSERT INTO "triples" VALUES('c/s/1','url','','http://source1.com');
 INSERT INTO "triples" VALUES('c/s/1','domain','','source1.com');
-INSERT INTO "triples" VALUES('c/p/default','typeOf','Provenance','');
-INSERT INTO "triples" VALUES('c/p/default','name','','Custom Import');
-INSERT INTO "triples" VALUES('c/p/default','source','c/s/default','');
-INSERT INTO "triples" VALUES('c/p/default','url','','custom-import');
 INSERT INTO "triples" VALUES('c/p/1','typeOf','Provenance','');
 INSERT INTO "triples" VALUES('c/p/1','name','','Provenance1 Name');
 INSERT INTO "triples" VALUES('c/p/1','source','c/s/1','');
 INSERT INTO "triples" VALUES('c/p/1','url','','http://source1.com/provenance1');
+INSERT INTO "triples" VALUES('Provenance1','typeOf','Provenance','');
+INSERT INTO "triples" VALUES('Provenance1','name','','Provenance1');
+INSERT INTO "triples" VALUES('Provenance1','source','','');
 INSERT INTO "triples" VALUES('c/g/Root','typeOf','StatVarGroup','');
 INSERT INTO "triples" VALUES('c/g/Root','name','','Custom Variables');
 INSERT INTO "triples" VALUES('c/g/Root','specializationOf','dc/g/Root','');
