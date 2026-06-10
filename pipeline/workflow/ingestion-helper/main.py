@@ -53,6 +53,11 @@ if not FLAGS.is_parsed():
     FLAGS(['ingestion_helper'])
 
 
+_DEFAULT_MODELS = [
+    {"name": "NodeEmbeddingModel", "endpoint": "text-embedding-005"}
+]
+
+
 def _validate_params(request_json, required_params):
     for param in required_params:
         if param not in request_json:
@@ -74,13 +79,14 @@ def ingestion_helper(request):
         return (validation_error, 400)
 
     action_type = request_json['actionType']
+    models = _DEFAULT_MODELS
+
     spanner = SpannerClient(FLAGS.spanner_project_id,
                             FLAGS.spanner_instance_id,
                             FLAGS.spanner_database_id,
                             graph_database_id=FLAGS.spanner_graph_database_id,
                             location=FLAGS.location,
-                            model_id=os.environ.get('EMBEDDING_MODEL_ID',
-                                                    'text-embedding-005'))
+                            models=models)
     storage = StorageClient(FLAGS.gcs_bucket_id)
 
     if action_type == 'get_import_info':
