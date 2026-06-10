@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import unittest
 from unittest.mock import MagicMock, patch
 from datetime import datetime
@@ -118,8 +119,8 @@ class TestEmbeddingUtils(unittest.TestCase):
 
         converted = list(filter_and_convert_nodes(nodes))
         self.assertEqual(len(converted), 2)
-        self.assertEqual(converted[0], ("dc/1", {"title": "dc/1", "text": {"description": "Node 1"}}, ["Topic"]))
-        self.assertEqual(converted[1], ("dc/3", {"title": "dc/3", "text": {"description": "Node 3"}}, ["Topic", "StatisticalVariable"]))
+        self.assertEqual(converted[0], ("dc/1", json.dumps({"title": "dc/1", "text": {"description": "Node 1"}}), ["Topic"]))
+        self.assertEqual(converted[1], ("dc/3", json.dumps({"title": "dc/3", "text": {"description": "Node 3"}}), ["Topic", "StatisticalVariable"]))
 
     @patch('embedding_utils._BATCH_SIZE', 2)
     def test_generate_embeddings_partitioned(self):

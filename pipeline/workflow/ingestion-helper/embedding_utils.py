@@ -15,6 +15,7 @@
 """Helper utilities for embedding workflows."""
 
 import itertools
+import json
 import logging
 import time
 from datetime import datetime
@@ -104,12 +105,12 @@ def filter_and_convert_nodes(nodes_generator):
         name = node.get("name")
         subject_id = node.get("subject_id")
         if name:
-            embedding_content = {
+            embedding_content = json.dumps({
                 "title": subject_id,
                 "text": {
                     "description": name
                 }
-            }
+            })
             yield (subject_id, embedding_content, node.get("types"))
 
 

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import unittest
 from unittest.mock import MagicMock, patch
 from datetime import datetime
@@ -121,7 +122,7 @@ class TestMain(unittest.TestCase):
         batch = kwargs_tx["params"]["nodes"]
         self.assertEqual(len(batch), 1)
         self.assertEqual(batch[0][0], "dc/1")
-        self.assertEqual(batch[0][1], {"title": "dc/1", "text": {"description": "Node 1"}})
+        self.assertEqual(batch[0][1], json.dumps({"title": "dc/1", "text": {"description": "Node 1"}}))
 
     @patch.dict(os.environ, {
         "SPANNER_INSTANCE_ID": "test-instance",
