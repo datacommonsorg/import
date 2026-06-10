@@ -25,7 +25,7 @@ from aggregation import BigQueryExecutor
 from aggregation import LinkedEdgeGenerator
 from aggregation import ProvenanceSummaryGenerator
 from aggregation.sql_utils import _escape_sql_literal
-from aggregation_utils import AggregationUtils
+from utils.aggregation import AggregationUtils
 
 
 class TestSQLUtils(unittest.TestCase):
@@ -243,9 +243,9 @@ class TestProvenanceSummaryGenerator(unittest.TestCase):
                       query)  # Since is_base_dc=True
 
 
-@patch('aggregation_utils.BigQueryExecutor')
-@patch('aggregation_utils.LinkedEdgeGenerator')
-@patch('aggregation_utils.ProvenanceSummaryGenerator')
+@patch('utils.aggregation.BigQueryExecutor')
+@patch('utils.aggregation.LinkedEdgeGenerator')
+@patch('utils.aggregation.ProvenanceSummaryGenerator')
 class TestAggregationUtils(unittest.TestCase):
 
     def test_run_aggregation(self, mock_prov_gen, mock_edge_gen, mock_executor):
