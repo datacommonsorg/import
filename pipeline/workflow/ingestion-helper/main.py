@@ -58,6 +58,16 @@ _DEFAULT_MODELS = [
 ]
 
 
+_DEFAULT_EMBEDDING_SPECS = [
+    {
+        "embedding_type": "base_text_embedding",
+        "model_name": "NodeEmbeddingModel",
+        "task_type": "RETRIEVAL_QUERY",
+        "node_types": ["StatisticalVariable", "Topic"]
+    }
+]
+
+
 def _validate_params(request_json, required_params):
     for param in required_params:
         if param not in request_json:
@@ -249,14 +259,41 @@ def ingestion_helper(request):
             logging.info("Embeddings not enabled, skipping.")
             return ('Invalid request on embedding ingestion.', 400)
             
-        node_types = FLAGS.node_types
+        specs_env = os.environ.get('EMBEDDING_SPECS')
+        if specs_env:
+            import json
+            try:
+                specs = json.loads(specs_env)
+            except Exception as e:
+                logging.error(f"Failed to parse EMBEDDING_SPECS env var: {e}")
+                specs = _DEFAULT_EMBEDDING_SPECS
+        else:
+            specs = _DEFAULT_EMBEDDING_SPECS
+
         try:
-            logging.info(f"Job started. Fetching all nodes for types: {node_types}")
             timestamp = get_latest_lock_timestamp(spanner.database)
-            nodes = get_updated_nodes(spanner.database, timestamp, node_types, timeout=FLAGS.timeout)
-            converted_nodes = filter_and_convert_nodes(nodes)
-            affected_rows = generate_embeddings_partitioned(spanner.database, converted_nodes, timeout=FLAGS.timeout)
-            return (f"OK [Affected rows: {affected_rows}]", 200)
+            total_affected_rows = 0
+            for spec in specs:
+                node_types = spec["node_types"]
+                model_name = spec["model_name"]
+                embedding_type = spec["embedding_type"]
+                task_type = spec["task_type"]
+
+                logging.info(f"Job started for {embedding_type}. Fetching all nodes for types: {node_types}")
+                nodes = get_updated_nodes(spanner.database, timestamp, node_types, timeout=FLAGS.timeout)
+                converted_nodes = list(filter_and_convert_nodes(nodes))
+
+                logging.info(f"Generating embeddings for model {model_name} (embedding_type: {embedding_type})")
+                affected_rows = generate_embeddings_partitioned(
+                    spanner.database,
+                    converted_nodes,
+                    model_name=model_name,
+                    embedding_type=embedding_type,
+                    task_type=task_type,
+                    timeout=FLAGS.timeout
+                )
+                total_affected_rows += affected_rows
+            return (f"OK [Affected rows: {total_affected_rows}]", 200)
         except Exception as e:
             logging.error(f"Embedding ingestion failed: {e}")
             return (f"Error: {e}", 500)

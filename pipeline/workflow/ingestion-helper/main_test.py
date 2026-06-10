@@ -33,6 +33,9 @@ class TestMain(unittest.TestCase):
         mock_database = MagicMock()
         mock_spanner_client.database = mock_database
         mock_spanner_client_class.return_value = mock_spanner_client
+        mock_spanner_client.models = [
+            {"name": "NodeEmbeddingModel", "model_id": "base_text_embedding"}
+        ]
 
         # Mock snapshot and execute_sql
         mock_snapshot = MagicMock()

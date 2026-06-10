@@ -145,7 +145,14 @@ class TestEmbeddingUtils(unittest.TestCase):
 
         mock_database.run_in_transaction.side_effect = side_effect
 
-        affected_rows = generate_embeddings_partitioned(mock_database, nodes, 3600)
+        affected_rows = generate_embeddings_partitioned(
+            mock_database,
+            nodes,
+            model_name="NodeEmbeddingModel",
+            embedding_type="base_text_embedding",
+            task_type="RETRIEVAL_QUERY",
+            timeout=3600
+        )
         self.assertEqual(affected_rows, 8)
         self.assertEqual(mock_database.run_in_transaction.call_count, 4)
         
