@@ -29,3 +29,8 @@ dependencies = [
 
 [tool.hatch.build.targets.wheel]
 bypass-selection = true
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true

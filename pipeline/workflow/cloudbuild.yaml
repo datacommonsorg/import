@@ -65,8 +65,7 @@ steps:
   args:
     - '-c'
     - |
-      rm -f uv.lock
-      uv run --index-url https://pypi.org/simple python spanner_ingestion_test.py
+      uv run python spanner_ingestion_test.py
   env:
     - 'PROJECT_ID=${_PROJECT_ID}'
     - 'LOCATION=${_LOCATION}'
