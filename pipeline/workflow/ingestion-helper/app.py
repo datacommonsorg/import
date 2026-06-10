@@ -15,11 +15,12 @@
 from fastapi import FastAPI
 from routes import imports, database, embeddings, aggregation, cache
 from utils.logging import log_requests
+from __init__ import __version__
 
 app = FastAPI(
     title="Data Commons Ingestion Helper",
     description="FastAPI service providing helper routines for Spanner ingestion workflow.",
-    version="0.3.0"
+    version=__version__
 )
 
 # Register the centralized HTTP request/response logging middleware

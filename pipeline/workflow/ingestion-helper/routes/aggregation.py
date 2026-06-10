@@ -87,14 +87,8 @@ def check_aggregation_status(req: AggregationStatusRequest):
     )
     try:
         status_info = aggregation.check_aggregation_status(req.jobIds)
-        raw_status = status_info.get("status", "ERROR")
-        try:
-            enum_status = ResponseStatus(raw_status)
-        except ValueError:
-            enum_status = ResponseStatus.ERROR
-            
         return AggregationStatusResponse(
-            status=enum_status,
+            status=ResponseStatus.from_str(status_info.get("status", "ERROR")),
             error=status_info.get("error"),
             failedJobs=status_info.get("failedJobs", [])
         )

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
@@ -25,6 +27,14 @@ class ResponseStatus(str, Enum):
     SKIPPED = "SKIPPED"
     DONE = "DONE"
     RUNNING = "RUNNING"
+
+    @classmethod
+    def from_str(cls, value: str, default: ResponseStatus = None) -> ResponseStatus:
+        """Safely parses a string into a ResponseStatus, returning the default (ERROR) if invalid."""
+        try:
+            return cls(value)
+        except ValueError:
+            return default or cls.ERROR
 
 class BaseResponse(BaseModel):
     status: ResponseStatus = Field(description="The execution status of the request")

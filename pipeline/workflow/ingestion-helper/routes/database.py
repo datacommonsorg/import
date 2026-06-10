@@ -33,28 +33,54 @@ router = APIRouter(prefix="/database", tags=["database"])
 @log_start
 def initialize_database(spanner: SpannerClient = Depends(get_spanner_client)):
     """Initializes the database by creating all required tables and proto bundles."""
-    spanner.initialize_database()
-    return BaseResponse(status=ResponseStatus.OK)
+    try:
+        spanner.initialize_database()
+        return BaseResponse(status=ResponseStatus.OK)
+    except Exception as e:
+        logging.error(f"Failed to initialize database: {e}")
+        raise HTTPException(status_code=500, detail=f"Database initialization failed: {str(e)}")
 
 @router.post("/seed", response_model=BaseResponse)
 @log_start
 def seed_database(spanner: SpannerClient = Depends(get_spanner_client)):
     """Seeds the database with base empty nodes."""
-    spanner.seed_database()
-    return BaseResponse(status=ResponseStatus.OK)
+    try:
+        spanner.seed_database()
+        return BaseResponse(status=ResponseStatus.OK)
+    except Exception as e:
+        logging.error(f"Failed to seed database: {e}")
+        raise HTTPException(status_code=500, detail=f"Database seeding failed: {str(e)}")
 
 @router.post("/lock/acquire", response_model=BaseResponse)
 def acquire_ingestion_lock(req: LockAcquireRequest, spanner: SpannerClient = Depends(get_spanner_client)):
     """Attempts to acquire the global lock for ingestion."""
-    status_ok = spanner.acquire_lock(req.workflowId, req.timeout)
-    if not status_ok:
-        raise HTTPException(status_code=500, detail="Failed to acquire lock")
-    return BaseResponse(status=ResponseStatus.OK)
+    try:
+        status_ok = spanner.acquire_lock(req.workflowId, req.timeout)
+        if not status_ok:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Failed to acquire lock: Lock already held or acquisition timed out for workflow {req.workflowId}"
+            )
+        return BaseResponse(status=ResponseStatus.OK)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error during lock acquisition: {e}")
+        raise HTTPException(status_code=500, detail=f"Lock acquisition failed due to database error: {str(e)}")
 
 @router.post("/lock/release", response_model=BaseResponse)
 def release_ingestion_lock(req: LockReleaseRequest, spanner: SpannerClient = Depends(get_spanner_client)):
     """Releases the global ingestion lock."""
-    status_ok = spanner.release_lock(req.workflowId)
-    if not status_ok:
-        raise HTTPException(status_code=500, detail="Failed to release lock")
-    return BaseResponse(status=ResponseStatus.OK)
+    try:
+        status_ok = spanner.release_lock(req.workflowId)
+        if not status_ok:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Failed to release lock: Lock not held by workflow {req.workflowId} or already released"
+            )
+        return BaseResponse(status=ResponseStatus.OK)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error during lock release: {e}")
+        raise HTTPException(status_code=500, detail=f"Lock release failed due to database error: {str(e)}")

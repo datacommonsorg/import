@@ -34,7 +34,13 @@ substitutions:
 
 steps:
 
-# 1. Build and push helper images
+# 1. Copy required proto file dynamically to ingestion-helper
+- id: 'copy-proto-to-ingestion-helper'
+  name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'cp'
+  args: ['pipeline/data/src/main/proto/storage.proto', 'pipeline/workflow/ingestion-helper/storage.proto']
+
+# 2. Build and push helper images
 - id: 'build-ingestion-helper'
   name: 'gcr.io/cloud-builders/gcloud'
   args: ['builds', 'submit', 'ingestion-helper', '--config', 'ingestion-helper/cloudbuild.yaml', '--substitutions', '_AR_REPO_URL=${_AR_REPO_URL},_VERSION=${_VERSION}']
@@ -74,7 +80,8 @@ steps:
   args:
     - '-c'
     - |
-      uv run python spanner_ingestion_test.py
+      rm -f uv.lock
+      uv run --index-url https://pypi.org/simple python spanner_ingestion_test.py
   env:
     - 'PROJECT_ID=${_PROJECT_ID}'
     - 'LOCATION=${_LOCATION}'

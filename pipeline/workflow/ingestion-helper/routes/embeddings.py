@@ -38,7 +38,10 @@ def embedding_ingestion(req: EmbeddingIngestionRequest, spanner: SpannerClient =
     enable_embeddings = req.enableEmbeddings if req.enableEmbeddings is not None else config.ENABLE_EMBEDDINGS
     if not enable_embeddings:
         logging.info("Embeddings not enabled, skipping.")
-        raise HTTPException(status_code=400, detail="Invalid request on embedding ingestion: Embeddings not enabled.")
+        raise HTTPException(
+            status_code=412,
+            detail="Precondition Failed: Embedding generation is disabled in this environment."
+        )
         
     try:
         logging.info(f"Job started. Fetching all nodes for types: {config.NODE_TYPES}")

@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import logging
-from fastapi import APIRouter, HTTPException
 import config
+import redis
+from fastapi import APIRouter, HTTPException
 from routes.models import BaseResponse, ResponseStatus
 
 router = APIRouter(prefix="/cache", tags=["cache"])
@@ -24,16 +25,14 @@ def clear_redis_cache():
     """Clears the Redis cache."""
     redis_host = config.REDIS_HOST
     redis_port = config.REDIS_PORT
-    if redis_host:
-        try:
-            import redis
-            r = redis.Redis(host=redis_host, port=int(redis_port))
-            r.flushall(asynchronous=True)
-            logging.info(f"Redis cache at {redis_host}:{redis_port} flushed successfully (async).")
-            return BaseResponse(status=ResponseStatus.SUCCESS, message="Cache cleared")
-        except Exception as e:
-            logging.error(f"Failed to flush Redis cache: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to flush Redis cache: {e}")
-    else:
+    if not redis_host:
         logging.warning("REDIS_HOST not set, skipping cache flush.")
         return BaseResponse(status=ResponseStatus.SKIPPED, message="REDIS_HOST not set")
+    try:
+        r = redis.Redis(host=redis_host, port=int(redis_port))
+        r.flushall(asynchronous=True)
+        logging.info(f"Redis cache at {redis_host}:{redis_port} flushed successfully (async).")
+        return BaseResponse(status=ResponseStatus.SUCCESS, message="Cache cleared")
+    except Exception as e:
+        logging.error(f"Failed to flush Redis cache: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to flush Redis cache: {e}")
