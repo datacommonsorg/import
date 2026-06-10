@@ -63,13 +63,10 @@ public class GraphIngestionPipeline {
             .numShards(options.getNumShards())
             .build();
 
-    LOGGER.info("Starting Spanner DDL creation...");
-    spannerClient.validateOrInitializeDatabase();
-    LOGGER.info("Spanner DDL creation complete.");
-
-    if (options.getInitializeDatabaseOnly()) {
-      LOGGER.info("Skipping Beam data ingestion. Database initialized successfully.");
-      return;
+    if (options.getInitializeDatabase()) {
+      LOGGER.info("Starting Spanner DDL creation...");
+      spannerClient.validateOrInitializeDatabase();
+      LOGGER.info("Spanner DDL creation complete.");
     }
 
     Pipeline pipeline = Pipeline.create(options);
