@@ -27,6 +27,7 @@ from stats.data import Provenance
 from stats.data import Source
 from stats.data import StatVar
 from stats.data import StatVarGroup
+from stats.data import strip_namespace
 from stats.data import Triple
 import stats.schema_constants as sc
 from util.filesystem import File
@@ -39,7 +40,7 @@ _CUSTOM_PROPERTY_ID_PREFIX = "c/prop/"
 _CUSTOM_EVENT_TYPE_ID_PREFIX = "c/e/"
 _CUSTOM_ENTITY_TYPE_ID_PREFIX = "c/n/"
 # Pattern to check if a string conforms to that of a valid DCID.
-_DCID_PATTERN = r"^[A-Za-z0-9_/]+$"
+_DCID_PATTERN = r"^(?:[A-Za-z0-9_/]+:)?[A-Za-z0-9_/]+$"
 # If group path for a variable is empty, we'll put it under a default custom group.
 _DEFAULT_CUSTOM_GROUP_PATH = "__DEFAULT__"
 _DEFAULT_CUSTOM_GROUP = StatVarGroup(sc.DEFAULT_CUSTOM_ROOT_SVG_ID,
@@ -90,6 +91,9 @@ class Nodes:
     self.event_types: dict[str, EventType] = {}
     # dict from entity type name to EntityType
     self.entity_types: dict[str, EntityType] = {}
+    self._used_provenance_ids = set()
+    self._used_source_ids = set()
+    self.has_custom_mcf_nodes = False
     self._load_provenances_and_sources()
     # Used to generate SV IDs
     self._sv_generated_id_count = 0
@@ -137,9 +141,84 @@ class Nodes:
     return source.id
 
   @thread_safe
+  def register_provenance(self,
+                          id: str,
+                          name: str = "",
+                          url: str = "",
+                          source_id: str = "",
+                          properties: dict[str, str] = None) -> Provenance:
+    self.has_custom_mcf_nodes = True
+    clean_id = _clean_metadata_id(id)
+    clean_source_id = _clean_metadata_id(source_id) if source_id else ""
+
+    prov = self.provenances.get(clean_id)
+    if not prov:
+      prov = Provenance(id=clean_id,
+                        source_id=clean_source_id,
+                        name=name or clean_id,
+                        url=url,
+                        properties=properties or {})
+      self.provenances[clean_id] = prov
+      if name:
+        self.provenances[name] = prov
+    else:
+      if name:
+        if not prov.name:
+          prov.name = name
+        self.provenances[name] = prov
+      if url and not prov.url:
+        prov.url = url
+      if clean_source_id and not prov.source_id:
+        prov.source_id = clean_source_id
+      if properties:
+        prov.properties.update(properties)
+    return prov
+
+  @thread_safe
+  def register_source(self,
+                      id: str,
+                      name: str = "",
+                      url: str = "",
+                      properties: dict[str, str] = None) -> Source:
+    self.has_custom_mcf_nodes = True
+    clean_id = _clean_metadata_id(id)
+
+    src = self.sources.get(clean_id)
+    if not src:
+      src = Source(id=clean_id,
+                   name=name or clean_id,
+                   url=url,
+                   properties=properties or {})
+      self.sources[clean_id] = src
+      if name:
+        self.sources[name] = src
+    else:
+      if name:
+        if not src.name:
+          src.name = name
+        self.sources[name] = src
+      if url and not src.url:
+        src.url = url
+      if properties:
+        src.properties.update(properties)
+    return src
+
+  @thread_safe
   def provenance(self, input_file: File) -> Provenance:
     prov_name = self.config.provenance_name(input_file)
-    return self.provenances.get(prov_name, _DEFAULT_PROVENANCE)
+    if not prov_name:
+      raise ValueError(
+          f"A provenance is absolutely required for file '{input_file.path}'. "
+          f"Please specify the 'provenance' property in your config.json.")
+
+    prov = self.provenances.get(prov_name)
+    if not prov:
+      prov = self.register_provenance(prov_name)
+
+    self._used_provenance_ids.add(prov.id)
+    if prov.source_id:
+      self._used_source_ids.add(prov.source_id)
+    return prov
 
   @thread_safe
   def variable(self, sv_column_name: str, input_file: File) -> StatVar:
@@ -300,8 +379,12 @@ class Nodes:
   def triples(self, triples_file: File | None = None) -> list[Triple]:
     triples: list[Triple] = []
     for source in self.sources.values():
+      if self.has_custom_mcf_nodes and source.id == _DEFAULT_SOURCE.id and _DEFAULT_SOURCE.id not in self._used_source_ids:
+        continue
       triples.extend(source.triples())
     for provenance in self.provenances.values():
+      if self.has_custom_mcf_nodes and provenance.id == _DEFAULT_PROVENANCE.id and _DEFAULT_PROVENANCE.id not in self._used_provenance_ids:
+        continue
       triples.extend(provenance.triples())
     for group in self.groups.values():
       triples.extend(group.triples())
@@ -321,3 +404,12 @@ class Nodes:
       triples_file.write(pd.DataFrame(triples).to_csv(index=False))
 
     return triples
+
+
+def _clean_metadata_id(id: str) -> str:
+  """Only strips standard Data Commons system prefixes, preserving custom namespaces."""
+  if id.startswith("dcid:"):
+    return id[5:]
+  if id.startswith("dcs:"):
+    return id[4:]
+  return id

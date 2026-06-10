@@ -1,25 +1,22 @@
 subject_id,predicate,object_id,object_value
-c/s/default,typeOf,Source,
-c/s/default,name,,Custom Data Commons
 c/s/1,typeOf,Source,
 c/s/1,name,,Source1
 c/s/1,url,,http://source1.com
 c/s/1,domain,,source1.com
-c/p/default,typeOf,Provenance,
-c/p/default,name,,Custom Import
-c/p/default,source,c/s/default,
-c/p/default,url,,custom-import
 c/p/1,typeOf,Provenance,
 c/p/1,name,,Provenance1
 c/p/1,source,c/s/1,
 c/p/1,url,,http://source1.com/provenance1
+b.csv,typeOf,Provenance,
+b.csv,name,,b.csv
+b.csv,source,,
 custom/g/group_1,typeOf,StatVarGroup,
 custom/g/group_1,name,,Parent Group
 custom/g/group_1,specializationOf,dc/g/Root,
 custom/g/group_1,includedIn,c/p/1,
-custom/g/group_1,includedIn,c/p/default,
+custom/g/group_1,includedIn,b.csv,
 custom/g/group_1,includedIn,c/s/1,
-custom/g/group_1,includedIn,c/s/default,
+custom/g/group_1,includedIn,,
 custom/g/group_2,typeOf,StatVarGroup,
 custom/g/group_2,name,,Child Group 1
 custom/g/group_2,specializationOf,custom/g/group_1,
@@ -28,8 +25,8 @@ custom/g/group_2,includedIn,c/s/1,
 custom/g/group_3,typeOf,StatVarGroup,
 custom/g/group_3,name,,Child Group 2
 custom/g/group_3,specializationOf,custom/g/group_1,
-custom/g/group_3,includedIn,c/p/default,
-custom/g/group_3,includedIn,c/s/default,
+custom/g/group_3,includedIn,b.csv,
+custom/g/group_3,includedIn,,
 c/g/Root,typeOf,StatVarGroup,
 c/g/Root,name,,Custom Variables
 c/g/Root,specializationOf,dc/g/Root,
@@ -55,16 +52,16 @@ var3,description,,Var 3 Description
 var3,searchDescription,,Sentence 1
 var3,searchDescription,,Sentence 2
 var3,memberOf,custom/g/group_3,
-var3,includedIn,c/p/default,
-var3,includedIn,c/s/default,
+var3,includedIn,b.csv,
+var3,includedIn,,
 var3,populationType,schema:Thing,
 var3,statType,dcs:measuredValue,
 var3,measuredProperty,dcs:var3,
 Variable_with_no_config,typeOf,StatisticalVariable,
 Variable_with_no_config,name,,Variable with no config
 Variable_with_no_config,memberOf,c/g/Root,
-Variable_with_no_config,includedIn,c/p/default,
-Variable_with_no_config,includedIn,c/s/default,
+Variable_with_no_config,includedIn,c/p/1,
+Variable_with_no_config,includedIn,c/s/1,
 Variable_with_no_config,populationType,schema:Thing,
 Variable_with_no_config,statType,dcs:measuredValue,
 Variable_with_no_config,measuredProperty,dcs:Variable_with_no_config,
@@ -77,8 +74,8 @@ CrimeEvent,includedIn,c/s/1,
 Event_no_config,typeOf,Class,
 Event_no_config,subClassOf,Event,
 Event_no_config,name,,Event no config
-Event_no_config,includedIn,c/p/default,
-Event_no_config,includedIn,c/s/default,
+Event_no_config,includedIn,c/p/1,
+Event_no_config,includedIn,c/s/1,
 FooEntity,typeOf,Class,
 FooEntity,name,,Foo Entity
 FooEntity,description,,Foo Entity description
@@ -86,8 +83,8 @@ FooEntity,includedIn,c/p/1,
 FooEntity,includedIn,c/s/1,
 Entity_no_config,typeOf,Class,
 Entity_no_config,name,,Entity no config
-Entity_no_config,includedIn,c/p/default,
-Entity_no_config,includedIn,c/s/default,
+Entity_no_config,includedIn,c/p/1,
+Entity_no_config,includedIn,c/s/1,
 foo,typeOf,Property,
 foo,name,,foo
 foo_bar,typeOf,Property,

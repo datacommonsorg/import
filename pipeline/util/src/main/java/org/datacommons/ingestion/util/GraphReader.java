@@ -61,6 +61,9 @@ public class GraphReader implements Serializable {
 
         // Generate any leaf nodes
         for (Map.Entry<String, McfGraph.Values> entry : pv.entrySet()) {
+          if (entry.getKey().equals("dcid")) {
+            continue;
+          }
           for (TypedValue val : entry.getValue().getTypedValuesList()) {
             if (val.getType() != ValueType.RESOLVED_REF) {
               int valSize = val.getValue().getBytes(StandardCharsets.UTF_8).length;

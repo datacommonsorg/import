@@ -233,6 +233,7 @@ public class GraphIngestionPipelineIntegrationTest {
     options.setSpannerDatabaseId(databaseId);
     options.setNumShards(1);
     options.setImportList(importArray.toString());
+    options.setInitializeDatabase(true);
   }
 
   @Test

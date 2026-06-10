@@ -4,7 +4,7 @@ CREATE TABLE imports (
     status varchar(16),
     metadata text
 );
-INSERT INTO "imports" VALUES('2025-01-23 00:00:00','SUCCESS','{"numVars": 2, "numObs": 4}');
+INSERT INTO "imports" VALUES('2025-01-23 00:00:00','SUCCESS','{"numVars": 0, "numObs": 0}');
 CREATE TABLE key_value_store (
     lookup_key varchar(255),
     value longtext
@@ -22,10 +22,6 @@ CREATE TABLE observations (
     observation_period varchar(255),
     properties TEXT
 );
-INSERT INTO "observations" VALUES('country/IND','var1','2020','0.16','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/IND','var2','2020','53','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/CHN','var1','2020','0.23','c/p/1','','','','','');
-INSERT INTO "observations" VALUES('country/CHN','var2','2020','67','c/p/1','','','','','');
 CREATE TABLE triples (
     subject_id varchar(255),
     predicate varchar(255),
@@ -34,18 +30,10 @@ CREATE TABLE triples (
 );
 INSERT INTO "triples" VALUES('c/s/default','typeOf','Source','');
 INSERT INTO "triples" VALUES('c/s/default','name','','Custom Data Commons');
-INSERT INTO "triples" VALUES('c/s/1','typeOf','Source','');
-INSERT INTO "triples" VALUES('c/s/1','name','','Source1');
-INSERT INTO "triples" VALUES('c/s/1','url','','http://source1.com');
-INSERT INTO "triples" VALUES('c/s/1','domain','','source1.com');
 INSERT INTO "triples" VALUES('c/p/default','typeOf','Provenance','');
 INSERT INTO "triples" VALUES('c/p/default','name','','Custom Import');
 INSERT INTO "triples" VALUES('c/p/default','source','c/s/default','');
 INSERT INTO "triples" VALUES('c/p/default','url','','custom-import');
-INSERT INTO "triples" VALUES('c/p/1','typeOf','Provenance','');
-INSERT INTO "triples" VALUES('c/p/1','name','','Provenance1');
-INSERT INTO "triples" VALUES('c/p/1','source','c/s/1','');
-INSERT INTO "triples" VALUES('c/p/1','url','','http://source1.com/provenance1');
 CREATE INDEX observations_entity_variable on observations (entity, variable);
 CREATE INDEX triples_subject_id on triples (subject_id);
 CREATE INDEX triples_subject_id_predicate on triples (subject_id, predicate);

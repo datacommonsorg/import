@@ -58,6 +58,7 @@ from stats.reporter import ImportReporter
 import stats.schema_constants as sc
 from stats.svg_cache import generate_svg_cache
 from stats.trigger_ingestion_workflow import trigger_ingestion_workflow
+from stats.validation import MetadataValidator
 from stats.variable_per_row_importer import VariablePerRowImporter
 from util.file_match import match
 from util.filesystem import create_store
@@ -94,6 +95,7 @@ class Runner:
 
     self.mode = mode
     self.import_names = import_names
+    self.active_import_prefixes = None
 
     # File systems, both input and output. Must be closed when run finishes.
     self.all_stores: list[Store] = []
@@ -121,32 +123,50 @@ class Runner:
     else:
       effective_input_dir = input_dir_path
       imports = self.import_names or []
+      self.active_import_prefixes = None
 
-      # Default action: read config from the root of the effective directory
-      load_action = lambda store: self._read_config_from_file(
-          config_file_path=constants.CONFIG_JSON_FILE_NAME,
-          config_file_dir=store.as_dir(),
-      )
-
+      # Case A: Bulk Load (ALL_IMPORTS)
       if imports == [constants.ALL_IMPORTS]:
         logging.info("Running bulk load for all imports under: %s",
                      effective_input_dir)
-        load_action = lambda store: self._read_configs_from_subdirs(store.
-                                                                    as_dir())
+        input_store = create_store(effective_input_dir)
+        self.all_stores.append(input_store)
+        self.input_stores.append(input_store)
+        configs = self._read_configs_from_subdirs(input_store.as_dir())
+        self.active_import_prefixes = set(
+            f"{fspath.dirname(c.path)}/" for c in configs)
+
+      # Case B: Combined Load for specific imports (len > 1)
       elif len(imports) > 1:
         logging.info("Running combined load for specific imports: %s", imports)
-        load_action = lambda store: self._read_configs_from_list(
-            store.as_dir(), imports)
+        input_store = create_store(effective_input_dir)
+        self.all_stores.append(input_store)
+        self.input_stores.append(input_store)
+        configs = self._read_configs_from_list(input_store.as_dir(), imports)
+        self.active_import_prefixes = set(
+            f"{fspath.dirname(c.path)}/" for c in configs)
+
+      # Case C: Single Import
       elif imports:
         effective_input_dir = join_path(input_dir_path, imports[0])
         logging.info("Using import specific directory: %s", effective_input_dir)
+        input_store = create_store(effective_input_dir)
+        self.all_stores.append(input_store)
+        self.input_stores.append(input_store)
+        self._read_config_from_file(
+            config_file_path=constants.CONFIG_JSON_FILE_NAME,
+            config_file_dir=input_store.as_dir(),
+        )
 
-      # Create store and execute action ONCE
-      input_store = create_store(effective_input_dir)
-      self.all_stores.append(input_store)
-      self.input_stores.append(input_store)
-
-      load_action(input_store)
+      # Case D: Default action (config at root)
+      else:
+        input_store = create_store(effective_input_dir)
+        self.all_stores.append(input_store)
+        self.input_stores.append(input_store)
+        self._read_config_from_file(
+            config_file_path=constants.CONFIG_JSON_FILE_NAME,
+            config_file_dir=input_store.as_dir(),
+        )
 
     # Get dict of special file type string to special file name.
     # Example entry: verticalSpecsFile -> vertical_specs.json
@@ -218,8 +238,7 @@ class Runner:
 
       # Auto-trigger workflow now that all data is guaranteed to be exported and written to GCS
       if self.trigger_workflow_info:
-        gcs_pattern, import_name = self.trigger_workflow_info
-        trigger_ingestion_workflow(gcs_pattern, import_name)
+        trigger_ingestion_workflow(import_list=self.trigger_workflow_info)
 
     except Exception as e:
       logging.exception("Error updating stats")
@@ -258,11 +277,11 @@ class Runner:
     import fs.path as fspath
 
     merged_data = {
-        "importName": constants.ALL_IMPORTS,
         "includeInputSubdirs": True,
-        "inputFiles": {},
+        "inputFiles": [],
         "variables": {},
-        "sources": {}
+        "sources": {},
+        "_dir_import_names": {}
     }
 
     for file in configs:
@@ -277,12 +296,32 @@ class Runner:
       rel_dir = fspath.relativefrom(base_dir.path, dir_path)
 
       logging.info("Merging config from import directory: %s", rel_dir)
+      merged_data["_dir_import_names"][rel_dir] = config_data.get(
+          "importName") or rel_dir
 
-      # Merge inputFiles, prefixing keys with rel_dir
-      input_files = config_data.get("inputFiles", {})
-      for k, v in input_files.items():
-        new_key = fspath.join(rel_dir, k)
-        merged_data["inputFiles"][new_key] = v
+      # Merge inputFiles, prefixing patterns with rel_dir and converting dicts to lists
+      input_files = config_data.get("inputFiles", [])
+
+      # 1. Normalize legacy dictionary format to standard list format
+      entries = []
+      if isinstance(input_files, list):
+        entries = [entry for entry in input_files if isinstance(entry, dict)]
+      elif isinstance(input_files, dict):
+        for k, v in input_files.items():
+          entry = {"pattern": k}
+          if isinstance(v, dict):
+            entry.update(v)
+          entries.append(entry)
+
+      # 2. Process all entries uniformly (DRY)
+      import_name = config_data.get("importName") or rel_dir
+      for entry in entries:
+        new_entry = dict(entry)
+        for key_field in ["pattern", "filename"]:
+          if key_field in new_entry:
+            new_entry[key_field] = fspath.join(rel_dir, new_entry[key_field])
+        new_entry["_import_name"] = import_name
+        merged_data["inputFiles"].append(new_entry)
 
       # Merge variables
       variables = config_data.get("variables", {})
@@ -306,7 +345,7 @@ class Runner:
         configs.append(file)
     return configs
 
-  def _read_configs_from_subdirs(self, base_dir: Dir):
+  def _read_configs_from_subdirs(self, base_dir: Dir) -> list:
     """Scans subdirectories for config.json files and merges them.
     
     Args:
@@ -322,8 +361,10 @@ class Runner:
           f"No config.json files found in subdirectories of {base_dir.full_path()}"
       )
     self._merge_configs(configs, base_dir)
+    return configs
 
-  def _read_configs_from_list(self, base_dir: Dir, import_names: list[str]):
+  def _read_configs_from_list(self, base_dir: Dir,
+                              import_names: list[str]) -> list:
     """Reads configs for specific imports specified in a list and merges them.
     
     Args:
@@ -358,6 +399,7 @@ class Runner:
 
     logging.info("Found %s config files from list.", len(configs))
     self._merge_configs(configs, base_dir)
+    return configs
 
   def _get_db_config(self) -> dict:
     if self.mode == RunMode.MAIN_DC:
@@ -634,10 +676,29 @@ class Runner:
         continue
       if self._check_if_special_file(file):
         continue
-      if match(file, "*.csv"):
-        csv_files.append(file)
-      elif match(file, "*.mcf"):
-        mcf_files.append(file)
+      if self.active_import_prefixes:
+        if not any(
+            file.path.startswith(prefix)
+            for prefix in self.active_import_prefixes):
+          continue
+
+      # Check if this file matches at least one pattern in config.json
+      matches_config = False
+      for pattern in self.config._input_files_config.keys():
+        if match(file, pattern):
+          matches_config = True
+          break
+
+      # Unified Selection: Only process files explicitly matched in config
+      if matches_config:
+        if match(file, "*.csv"):
+          csv_files.append(file)
+        elif match(file, "*.mcf"):
+          mcf_files.append(file)
+      else:
+        logging.info(
+            "Ignoring file '%s' as it does not match any pattern in config.json",
+            file.path)
 
     # Sort alphabetically to guarantee consistent order
     csv_files.sort(key=lambda f: f.full_path())
@@ -710,6 +771,7 @@ class Runner:
         db=self.db,
         reporter=reporter,
         is_main_dc=is_main_dc,
+        nodes=self.nodes,
     )
 
   def _create_importer(self, input_file: File) -> Importer:
@@ -767,12 +829,21 @@ class Runner:
     triples = self.nodes.triples()
     self.db.insert_triples(triples)
 
+    # Perform strict metadata validation before committing and closing
+    MetadataValidator(self.config, self.db).validate()
+
     # Auto-trigger workflow if output is on GCS
     output_path = self.db.jsonld_dir.full_path()
     import_name = self.db.import_name
     if os.getenv("INGESTION_WORKFLOW_NAME") and output_path.startswith("gs://"):
-      gcs_pattern = f"{output_path.rstrip('/')}/*.jsonld"
-      self.trigger_workflow_info = (gcs_pattern, import_name)
+      processed_imports = list(self.db._processed_imports)
+      if not processed_imports:
+        processed_imports = [import_name]
+      import_list = []
+      for imp in processed_imports:
+        gcs_pattern = f"{output_path.rstrip('/')}/{imp}/*.jsonld"
+        import_list.append({"importName": imp, "graphPath": gcs_pattern})
+      self.trigger_workflow_info = import_list
     else:
       logging.info(
           "Output is local or workflow is missing, skipping auto-trigger of ingestion workflow. Please upload files to GCS and trigger manually."

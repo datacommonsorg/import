@@ -229,7 +229,7 @@ class Db:
   def maybe_clear_before_import(self):
     pass
 
-  def insert_triples(self, triples: list[Triple]):
+  def insert_triples(self, triples: list[Triple], input_file: File = None):
     pass
 
   def insert_observations(self, observations_df: pd.DataFrame,
@@ -280,7 +280,7 @@ class MainDcDb(Db):
     # dcid to node dict
     self.nodes: dict[str, McfNode] = {}
 
-  def insert_triples(self, triples: list[Triple]):
+  def insert_triples(self, triples: list[Triple], input_file: File = None):
     for triple in triples:
       self._add_triple(triple)
 
@@ -348,7 +348,7 @@ class SqlDb(Db):
   def maybe_clear_before_import(self):
     self.engine.clear_tables_and_indexes()
 
-  def insert_triples(self, triples: list[Triple]):
+  def insert_triples(self, triples: list[Triple], input_file: File = None):
     logging.info("Writing %s triples to [%s]", len(triples), self.engine)
     if triples:
       self.engine.executemany(_INSERT_TRIPLES_STATEMENT,
@@ -420,7 +420,7 @@ class DataCommonsPlatformDb(Db):
     # Not applicable for Data Commons Platform.
     pass
 
-  def insert_triples(self, triples: list[Triple]):
+  def insert_triples(self, triples: list[Triple], input_file: File = None):
     """
     Convert triples to a jsonld graph and writes the graph to the Data Commons Platform instance.
     """
