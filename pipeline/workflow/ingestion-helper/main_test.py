@@ -118,7 +118,7 @@ class TestMain(unittest.TestCase):
         batch = kwargs_tx["params"]["nodes"]
         self.assertEqual(len(batch), 1)
         self.assertEqual(batch[0][0], "dc/1")
-        self.assertEqual(batch[0][1], "Node 1")
+        self.assertEqual(batch[0][1], {"title": "dc/1", "text": {"description": "Node 1"}})
 
     @patch.dict(os.environ, {
         "SPANNER_INSTANCE_ID": "test-instance",

@@ -18,7 +18,7 @@ import itertools
 import logging
 import time
 from datetime import datetime
-from google.cloud.spanner_v1.param_types import TIMESTAMP, STRING, Array, Struct, StructField
+from google.cloud.spanner_v1.param_types import TIMESTAMP, STRING, Array, Struct, StructField, JSON
 
 
 _BATCH_SIZE = 1000
@@ -101,8 +101,16 @@ def filter_and_convert_nodes(nodes_generator):
         Tuples (subject_id, embedding_content, types).
     """
     for node in nodes_generator:
-        if node.get("name"):
-            yield (node.get("subject_id"), node.get("name"), node.get("types"))
+        name = node.get("name")
+        subject_id = node.get("subject_id")
+        if name:
+            embedding_content = {
+                "title": subject_id,
+                "text": {
+                    "description": name
+                }
+            }
+            yield (subject_id, embedding_content, node.get("types"))
 
 
 def generate_embeddings_partitioned(database, nodes_generator, timeout):
@@ -124,18 +132,18 @@ def generate_embeddings_partitioned(database, nodes_generator, timeout):
     logging.info(f"Generating embeddings in batches of {_BATCH_SIZE}.")
 
     embeddings_sql = """
-        INSERT OR UPDATE INTO NodeEmbedding (subject_id, embedding_content, embeddings, types)
-        SELECT subject_id, content, embeddings.values, types
+        INSERT OR UPDATE INTO NodeEmbedding (subject_id, embedding_content, embeddings, node_types)
+        SELECT subject_id, CAST(embedding_content AS STRING) AS embedding_content, embeddings.values, node_types
         FROM ML.PREDICT(
             MODEL NodeEmbeddingModel,
-            (SELECT subject_id, embedding_content AS content, types, "RETRIEVAL_QUERY" AS task_type FROM UNNEST(@nodes))
+            (SELECT subject_id, TO_JSON_STRING(embedding_content) AS content, embedding_content, node_types, "RETRIEVAL_QUERY" AS task_type FROM UNNEST(@nodes))
         )
     """
 
     struct_type = Struct([
         StructField("subject_id", STRING),
-        StructField("embedding_content", STRING),
-        StructField("types", Array(STRING))
+        StructField("embedding_content", JSON),
+        StructField("node_types", Array(STRING))
     ])
 
     def chunked(iterable, n):
