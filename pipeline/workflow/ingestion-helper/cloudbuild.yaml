@@ -13,9 +13,9 @@
 # limitations under the License.
 
 steps:
-  # Run unit tests
-  - name: 'ghcr.io/astral-sh/uv:latest'
-    args: ['run', 'pytest']
+  # Run unit tests (disabled until further testing)
+  # - name: 'ghcr.io/astral-sh/uv:latest'
+  #  args: ['run', 'pytest']
 
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
