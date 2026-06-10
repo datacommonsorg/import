@@ -89,11 +89,11 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setSpannerEdgeTableName(String tableName);
 
-  @Description("Whether to initialize database schema only and skip importing data.")
+  @Description("Whether to initialize database schema.")
   @Default.Boolean(false)
-  boolean getInitializeDatabaseOnly();
+  boolean getInitializeDatabase();
 
-  void setInitializeDatabaseOnly(boolean initializeDatabaseOnly);
+  void setInitializeDatabase(boolean initializeDatabase);
 
   @Description("Whether to force combination of schema nodes across shards.")
   @Default.Boolean(false)

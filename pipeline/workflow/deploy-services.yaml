@@ -21,7 +21,7 @@ substitutions:
   _SPANNER_PROJECT_ID: 'datcom-store'
   _SPANNER_INSTANCE_ID: 'dc-kg-test'
   _SPANNER_DATABASE_ID: 'dc_graph_import'
-  _SPANNER_GRAPH_DATABASE_ID: 'dc_graph_2025_11_07'
+  _SPANNER_GRAPH_DATABASE_ID: 'dc_graph_2026_01_27'
   _GCS_BUCKET_ID: 'datcom-prod-imports'
   _LOCATION: 'us-central1'
   _GCS_MOUNT_BUCKET: 'datcom-volume-mount'

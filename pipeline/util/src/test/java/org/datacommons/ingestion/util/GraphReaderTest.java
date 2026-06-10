@@ -43,6 +43,12 @@ public class GraphReaderTest {
                                     .setValue("Node Zero"))
                             .build())
                     .putPvs(
+                        "dcid",
+                        McfGraph.Values.newBuilder()
+                            .addTypedValues(
+                                TypedValue.newBuilder().setType(ValueType.TEXT).setValue("dcid0"))
+                            .build())
+                    .putPvs(
                         "typeOf",
                         McfGraph.Values.newBuilder()
                             .addTypedValues(
