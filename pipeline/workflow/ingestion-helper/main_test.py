@@ -18,6 +18,8 @@ from unittest.mock import MagicMock, patch
 from datetime import datetime
 import os
 
+from google.cloud.spanner_v1 import _helpers
+
 import main
 
 class TestMain(unittest.TestCase):
@@ -74,7 +76,14 @@ class TestMain(unittest.TestCase):
         transactions = []
         def run_in_transaction_side_effect(func):
             mock_transaction = MagicMock()
-            mock_transaction.execute_update.return_value = 1
+            
+            def mock_execute_update(*args, **kwargs):
+                for name, val in kwargs.get("params", {}).items():
+                    val_type = kwargs.get("param_types", {}).get(name)
+                    _helpers.parse_value_and_type(val, val_type)
+                return 1
+
+            mock_transaction.execute_update.side_effect = mock_execute_update
             transactions.append(mock_transaction)
             return func(mock_transaction)
 

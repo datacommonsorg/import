@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import json
+from collections import OrderedDict
 import unittest
 from unittest.mock import MagicMock, patch
 from datetime import datetime
+from google.cloud.spanner_v1 import _helpers
 
 from embedding_utils import (
     get_latest_lock_timestamp,
@@ -122,25 +124,48 @@ class TestEmbeddingUtils(unittest.TestCase):
         self.assertEqual(converted[0], ("dc/1", json.dumps({"title": "dc/1", "text": {"description": "Node 1"}}), ["Topic"]))
         self.assertEqual(converted[1], ("dc/3", json.dumps({"title": "dc/3", "text": {"description": "Node 3"}}), ["Topic", "StatisticalVariable"]))
 
+    def test_filter_and_convert_nodes_json_order(self):
+        nodes = [{"subject_id": "dc/order_test", "name": "Test Name", "types": ["Topic"]}]
+        converted = list(filter_and_convert_nodes(nodes))
+        self.assertEqual(len(converted), 1)
+
+        json_str = converted[0][1]
+
+        # Decode using OrderedDict hook to preserve the keys order
+        decoded = json.loads(json_str, object_pairs_hook=OrderedDict)
+
+        # Check first-level keys order
+        self.assertEqual(list(decoded.keys()), ["title", "text"])
+
+        # Check second-level keys order
+        self.assertEqual(list(decoded["text"].keys()), ["description"])
+
     @patch('embedding_utils._BATCH_SIZE', 2)
     def test_generate_embeddings_partitioned(self):
         mock_database = MagicMock()
 
         nodes = [
-            ("dc/1", "Node 1", ["Topic"]),
-            ("dc/2", "Node 2", ["Topic"]),
-            ("dc/3", "Node 3", ["Topic"]),
-            ("dc/4", "Node 4", ["Topic"]),
-            ("dc/5", "Node 5", ["Topic"]),
-            ("dc/6", "Node 6", ["Topic"]),
-            ("dc/7", "Node 7", ["Topic"]),
-            ("dc/8", "Node 8", ["Topic"])
+            ("dc/1", json.dumps({"title": "dc/1", "text": {"description": "Node 1"}}), ["Topic"]),
+            ("dc/2", json.dumps({"title": "dc/2", "text": {"description": "Node 2"}}), ["Topic"]),
+            ("dc/3", json.dumps({"title": "dc/3", "text": {"description": "Node 3"}}), ["Topic"]),
+            ("dc/4", json.dumps({"title": "dc/4", "text": {"description": "Node 4"}}), ["Topic"]),
+            ("dc/5", json.dumps({"title": "dc/5", "text": {"description": "Node 5"}}), ["Topic"]),
+            ("dc/6", json.dumps({"title": "dc/6", "text": {"description": "Node 6"}}), ["Topic"]),
+            ("dc/7", json.dumps({"title": "dc/7", "text": {"description": "Node 7"}}), ["Topic"]),
+            ("dc/8", json.dumps({"title": "dc/8", "text": {"description": "Node 8"}}), ["Topic"])
         ]
 
         transactions = []
         def side_effect(func):
             mock_transaction = MagicMock()
-            mock_transaction.execute_update.return_value = 2
+            
+            def mock_execute_update(*args, **kwargs):
+                for name, val in kwargs.get("params", {}).items():
+                    val_type = kwargs.get("param_types", {}).get(name)
+                    _helpers.parse_value_and_type(val, val_type)
+                return 2
+
+            mock_transaction.execute_update.side_effect = mock_execute_update
             transactions.append(mock_transaction)
             return func(mock_transaction)
 

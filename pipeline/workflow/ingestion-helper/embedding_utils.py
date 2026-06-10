@@ -14,6 +14,7 @@
 
 """Helper utilities for embedding workflows."""
 
+from collections import OrderedDict
 import itertools
 import json
 import logging
@@ -105,12 +106,12 @@ def filter_and_convert_nodes(nodes_generator):
         name = node.get("name")
         subject_id = node.get("subject_id")
         if name:
-            embedding_content = json.dumps({
-                "title": subject_id,
-                "text": {
-                    "description": name
-                }
-            })
+            embedding_content = json.dumps(OrderedDict([
+                ("title", subject_id),
+                ("text", OrderedDict([
+                    ("description", name)
+                ]))
+            ]))
             yield (subject_id, embedding_content, node.get("types"))
 
 
