@@ -136,7 +136,7 @@ def generate_embeddings_partitioned(database, nodes_generator, model_name, embed
 
     embeddings_sql = f"""
         INSERT OR UPDATE INTO NodeEmbedding (subject_id, embedding_type, embedding_content, embeddings, node_types)
-        SELECT subject_id, @embedding_type, CAST(embedding_content AS STRING) AS embedding_content, embeddings.values, node_types
+        SELECT subject_id, @embedding_type, embedding_content, embeddings.values, node_types
         FROM ML.PREDICT(
             MODEL {model_name},
             (SELECT subject_id, TO_JSON_STRING(embedding_content) AS content, embedding_content, node_types, @task_type AS task_type FROM UNNEST(@nodes))
