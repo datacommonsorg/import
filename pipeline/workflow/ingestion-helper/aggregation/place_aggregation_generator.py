@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Place-based aggregation generator using BQ Federation (Generic, Dynamic & Feature-rich)."""
+"""Place-based aggregation generator using BQ Federation."""
 
 import logging
 from typing import List, Optional
@@ -25,9 +25,11 @@ from .sql_utils import _escape_sql_literal
 class PlaceAggregationGenerator:
     """Generates and runs place-based aggregations using BigQuery Federation.
 
-    Resolves place containment and types using the Edge table, and aggregates
-    all variables, facets, and dates in the import in a single execution.
-    Fully compatible with Spanner Data Boost.
+    Uses a multi-statement SQL script that:
+    1. Calculates the new aggregated TimeSeries metadata (with dcAggregate/
+       measurementMethod and _Agg<Type> provenance) and exports it to Spanner first.
+    2. Aggregates all variables, facets, and dates in parallel, calculates
+       the facet_id via MD5, and exports the Observations.
     """
 
     def __init__(self,
@@ -42,7 +44,13 @@ class PlaceAggregationGenerator:
             source_type: str,
             destination_type: str,
             allow_multiple_to_places: bool = False) -> Optional[bigquery.job.QueryJob]:
-        """Generic aggregation that rolls up all data from source_type to destination_type.
+        """Generates and runs place-based aggregations using BigQuery Federation.
+
+        This is a multi-statement SQL script that:
+        1. Calculates the new aggregated TimeSeries metadata (with dcAggregate/
+           measurementMethod and _Agg<Type> provenance) and exports it to Spanner first.
+        2. Aggregates all variables, facets, and dates in parallel, calculates
+           the facet_id via MD5, and exports the Observations.
 
         Args:
             import_names: List of import names to filter by.
@@ -74,6 +82,7 @@ class PlaceAggregationGenerator:
             f"Running dynamic place aggregation: {source_type} -> {destination_type} (allow_multiple={allow_multiple_to_places}) for imports: {import_names}"
         )
 
+        # If allow_multiple_to_places is False, use MIN() to select only one parent per child.
         if allow_multiple_to_places:
             containment_sql = f"""
             SELECT subject_id AS child_id, object_id AS parent_id
@@ -103,7 +112,109 @@ class PlaceAggregationGenerator:
             GROUP BY child_id
             """
 
+        # SQL helper fragments for dynamic lineage and hashing
+        new_prov_sql = f"CONCAT(ts.source_provenance, '_Agg', '{destination_type}')"
+        
+        new_method_sql = f"""
+            IF(
+              ts.source_method IS NULL OR ts.source_method = '' OR ts.source_method = 'DataCommonsAggregate',
+              'DataCommonsAggregate',
+              CONCAT('dcAggregate/', ts.source_method)
+            )
+        """
+        
+        target_facet_id_sql = f"""
+            TO_HEX(MD5(CONCAT(
+              ts.variable_measured, '_',
+              {new_method_sql}, '_',
+              {new_prov_sql}
+            )))
+        """
+
+        # Multi-Statement SQL Script:
+        # 1. Calculates and exports the new TimeSeries parent rows.
+        # 2. Calculates and exports the aggregated Observation child rows.
         query = f"""
+        -- =========================================================================
+        -- STEP 1: Export Parent TimeSeries Metadata (The Parent Rows)
+        -- =========================================================================
+        EXPORT DATA
+          OPTIONS( uri="{dest}",
+            format='CLOUD_SPANNER',
+            spanner_options = '{{"table": "TimeSeries"}}' ) AS
+        SELECT
+            variable_measured,
+            JSON_OBJECT('entity1', parent_id) AS entities,
+            extra_entities_id,
+            facet_id,
+            JSON_OBJECT(
+              'measurementMethod', new_method,
+              'provenance', new_prov
+            ) AS facet
+        FROM (
+          -- Inner query performs the DISTINCT on STRING columns only (Allowed in BQ!)
+          SELECT DISTINCT
+              ts.variable_measured,
+              parent.parent_id,
+              '' AS extra_entities_id,
+              {target_facet_id_sql} AS facet_id,
+              {new_method_sql} AS new_method,
+              {new_prov_sql} AS new_prov
+          FROM (
+            -- Source TimeSeries (filtered by provenance)
+            -- Extracts JSON fields as flat STRINGS immediately
+            SELECT 
+                entity1, 
+                variable_measured, 
+                facet_id, 
+                extra_entities_id,
+                JSON_VALUE(facet, '$.provenance') AS source_provenance,
+                JSON_VALUE(facet, '$.measurementMethod') AS source_method
+            FROM EXTERNAL_QUERY(
+              "{connection_id}",
+              '''
+              SELECT entity1, variable_measured, facet_id, extra_entities_id, facet
+              FROM TimeSeries
+              WHERE provenance IN ({provenance_str})
+              '''
+            )
+          ) ts
+          JOIN (
+            -- Source Type Check (Edge where predicate = 'typeOf' and object_id = source_type)
+            SELECT subject_id
+            FROM EXTERNAL_QUERY(
+              "{connection_id}",
+              '''
+              SELECT subject_id
+              FROM Edge
+              WHERE predicate = "typeOf"
+                AND object_id = "{source_type}"
+              '''
+            )
+          ) src_type ON ts.entity1 = src_type.subject_id
+          JOIN (
+            -- Containment (child -> parent)
+            {containment_sql}
+          ) parent ON ts.entity1 = parent.child_id
+          JOIN (
+            -- Destination Type Check (Edge where predicate = 'typeOf' and object_id = destination_type)
+            SELECT subject_id
+            FROM EXTERNAL_QUERY(
+              "{connection_id}",
+              '''
+              SELECT subject_id
+              FROM Edge
+              WHERE predicate = "typeOf"
+                AND object_id = "{destination_type}"
+              '''
+            )
+          ) dest_type ON parent.parent_id = dest_type.subject_id
+        ) ;
+
+
+        -- =========================================================================
+        -- STEP 2: Export Aggregated Observations (The Child Rows)
+        -- =========================================================================
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
@@ -111,26 +222,31 @@ class PlaceAggregationGenerator:
         SELECT 
             parent.parent_id AS entity1, 
             ts.variable_measured,
-            ts.facet_id,
+            {target_facet_id_sql} AS facet_id,
             ts.extra_entities_id,
             obs.date,
             CAST(SUM(SAFE_CAST(obs.value AS FLOAT64)) AS STRING) AS value
         FROM (
-          -- 1. Source TimeSeries (filtered by provenance)
-          -- Single table, no join (Data Boost compatible)
-          SELECT entity1, variable_measured, facet_id, extra_entities_id
+          -- Source TimeSeries (filtered by provenance)
+          -- Extracts JSON fields as flat STRINGS immediately
+          SELECT 
+              entity1, 
+              variable_measured, 
+              facet_id, 
+              extra_entities_id,
+              JSON_VALUE(facet, '$.provenance') AS source_provenance,
+              JSON_VALUE(facet, '$.measurementMethod') AS source_method
           FROM EXTERNAL_QUERY(
             "{connection_id}",
             '''
-            SELECT entity1, variable_measured, facet_id, extra_entities_id
+            SELECT entity1, variable_measured, facet_id, extra_entities_id, facet
             FROM TimeSeries
             WHERE provenance IN ({provenance_str})
             '''
           )
         ) ts
         JOIN (
-          -- 2. Source Type Check (Edge where predicate = 'typeOf' and object_id = source_type)
-          -- Single table, no join (Data Boost compatible)
+          -- Source Type Check
           SELECT subject_id
           FROM EXTERNAL_QUERY(
             "{connection_id}",
@@ -143,8 +259,7 @@ class PlaceAggregationGenerator:
           )
         ) src_type ON ts.entity1 = src_type.subject_id
         JOIN (
-          -- 3. Source Observations
-          -- Single table, no join (Data Boost compatible)
+          -- Source Observations
           SELECT variable_measured, entity1, extra_entities_id, facet_id, date, value
           FROM EXTERNAL_QUERY(
             "{connection_id}",
@@ -159,14 +274,11 @@ class PlaceAggregationGenerator:
             ts.extra_entities_id = obs.extra_entities_id AND 
             ts.facet_id = obs.facet_id
         JOIN (
-          -- 4. Containment (child -> parent)
-          -- Single table, no join (Data Boost compatible).
-          -- Dynamically handles allow_multiple_to_places.
+          -- Containment (child -> parent)
           {containment_sql}
         ) parent ON ts.entity1 = parent.child_id
         JOIN (
-          -- 5. Destination Type Check (Edge where predicate = 'typeOf' and object_id = destination_type)
-          -- Single table, no join (Data Boost compatible)
+          -- Destination Type Check
           SELECT subject_id
           FROM EXTERNAL_QUERY(
             "{connection_id}",
@@ -181,10 +293,11 @@ class PlaceAggregationGenerator:
         GROUP BY 
             parent_id, 
             ts.variable_measured, 
-            ts.facet_id, 
             ts.extra_entities_id, 
-            obs.date
+            obs.date,
+            ts.source_provenance,
+            ts.source_method ;
         """
 
-        logging.info(f"Running dynamic generic place aggregation query ({source_type} -> {destination_type})...")
+        logging.info(f"Running place aggregation query for {import_names} ({source_type} -> {destination_type})...")
         return self.executor.execute(query)
