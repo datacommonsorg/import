@@ -8,6 +8,10 @@ from absl import flags
 import import_utils
 from flask import jsonify
 from aggregation_utils import AggregationUtils
+from aggregation_spec_utils import AggregationRunner
+from aggregation_spec_utils import AggregationSpec
+from aggregation_spec_utils import LocalJsonlSink
+from aggregation_spec_utils import SpannerSqlSource
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -57,6 +61,19 @@ def _validate_params(request_json, required_params):
     for param in required_params:
         if param not in request_json:
             return f"'{param}' parameter is missing"
+    return None
+
+
+def _get_aggregation_spec(spec_name, spanner):
+    if spec_name == 'sample_nodes_to_local_jsonl':
+        return AggregationSpec(
+            name=spec_name,
+            source=SpannerSqlSource(
+                spanner.graph_database,
+                'SELECT subject_id, name FROM Node LIMIT 10',
+            ),
+            sink=LocalJsonlSink('/tmp/aggregation_spec_nodes.jsonl'),
+        )
     return None
 
 
@@ -292,6 +309,17 @@ def ingestion_helper(request):
             return jsonify({'status': 'SUBMITTED', 'jobIds': job_ids}), 200
         except Exception as e:
             return (f"Aggregation failed: {str(e)}", 500)
+    elif action_type == 'run_aggregation_spec':
+        spec_name = request_json.get('specName', 'sample_nodes_to_local_jsonl')
+        spec = _get_aggregation_spec(spec_name, spanner)
+        if not spec:
+            return (f'Unknown aggregation spec: {spec_name}', 400)
+
+        try:
+            row_count = AggregationRunner().run(spec)
+            return (f'OK [Spec: {spec_name} Rows: {row_count}]', 200)
+        except Exception as e:
+            return (f"Aggregation spec failed: {str(e)}", 500)
     elif action_type == 'clear_redis_cache':
         logging.info("Action: clear_redis_cache")
         redis_host = os.environ.get("REDIS_HOST")

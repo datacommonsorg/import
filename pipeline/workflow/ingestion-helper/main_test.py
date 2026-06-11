@@ -141,6 +141,30 @@ class TestMain(unittest.TestCase):
         self.assertIn("OK", response)
         mock_spanner_client.seed_database.assert_called_once()
 
+    @patch('main.StorageClient')
+    @patch('main.AggregationRunner')
+    @patch('main.SpannerClient')
+    def test_run_aggregation_spec_success(self, mock_spanner_client_class,
+                                          mock_runner_class,
+                                          mock_storage_client_class):
+        mock_spanner_client = MagicMock()
+        mock_spanner_client_class.return_value = mock_spanner_client
+        mock_runner_class.return_value.run.return_value = 3
+
+        mock_request = MagicMock()
+        mock_request.get_json.return_value = {
+            "actionType": "run_aggregation_spec",
+            "specName": "sample_nodes_to_local_jsonl",
+        }
+
+        response, status_code = main.ingestion_helper(mock_request)
+
+        self.assertEqual(status_code, 200)
+        self.assertIn("Rows: 3", response)
+        spec = mock_runner_class.return_value.run.call_args.args[0]
+        self.assertEqual(spec.name, "sample_nodes_to_local_jsonl")
+        self.assertEqual(spec.sink.path, "/tmp/aggregation_spec_nodes.jsonl")
+        mock_storage_client_class.assert_called_once()
+
 if __name__ == '__main__':
     unittest.main()
-
