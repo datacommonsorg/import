@@ -16,7 +16,6 @@ import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.*;
 import org.datacommons.ingestion.data.NodesEdges;
-import org.datacommons.ingestion.data.TimeSeries;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.util.CacheReader;
 import org.datacommons.ingestion.util.ImportGroupVersions;
@@ -40,7 +39,6 @@ public class Transforms {
     private final CacheReader cacheReader;
     private final SpannerClient spannerClient;
     private final SkipProcessing skipProcessing;
-    private final boolean writeObsGraph;
     private final TupleTag<KV<String, Mutation>> graphTag;
     private final TupleTag<KV<String, Mutation>> observationTag;
     // Using a bounded cache to prevent excessive memory consumption.
@@ -57,13 +55,11 @@ public class Transforms {
         CacheReader cacheReader,
         SpannerClient spannerClient,
         SkipProcessing skipProcessing,
-        boolean writeObsGraph,
         TupleTag<KV<String, Mutation>> graphTag,
         TupleTag<KV<String, Mutation>> observationTag) {
       this.cacheReader = cacheReader;
       this.spannerClient = spannerClient;
       this.skipProcessing = skipProcessing;
-      this.writeObsGraph = writeObsGraph;
       this.graphTag = graphTag;
       this.observationTag = observationTag;
     }
@@ -96,12 +92,6 @@ public class Transforms {
         var dups = kvs.size() - filtered.size();
         if (dups > 0) {
           DUPLICATE_OBS_COUNTER.inc(dups);
-        }
-
-        if (writeObsGraph) {
-          obs.stream()
-              .map(TimeSeries::getObsGraph)
-              .forEach(obsGraph -> outputGraphMutations(obsGraph, out));
         }
       }
     }
@@ -175,17 +165,6 @@ public class Transforms {
             continue;
           }
           seenObs.add(key);
-        } else if (mutation.getTable().equals(spannerClient.getTimeSeriesAttributeTableName())) {
-          var key =
-              "ATTR::"
-                  + SpannerClient.getFullObservationKey(mutation)
-                  + "::"
-                  + SpannerClient.getMutationValue(mutation, "property");
-          if (seenObs.contains(key)) {
-            DUPLICATE_OBS_COUNTER.inc();
-            continue;
-          }
-          seenObs.add(key);
         }
         out.output(mutation);
       }
@@ -196,17 +175,12 @@ public class Transforms {
     private final CacheReader cacheReader;
     private final SpannerClient spannerClient;
     private final SkipProcessing skipProcessing;
-    private final boolean writeObsGraph;
 
     public ImportGroupTransform(
-        CacheReader cacheReader,
-        SpannerClient spannerClient,
-        SkipProcessing skipProcessing,
-        boolean writeObsGraph) {
+        CacheReader cacheReader, SpannerClient spannerClient, SkipProcessing skipProcessing) {
       this.cacheReader = cacheReader;
       this.spannerClient = spannerClient;
       this.skipProcessing = skipProcessing;
-      this.writeObsGraph = writeObsGraph;
     }
 
     @Override
@@ -225,12 +199,7 @@ public class Transforms {
               "CreateMutations",
               ParDo.of(
                       new CacheRowKVMutationsDoFn(
-                          cacheReader,
-                          spannerClient,
-                          skipProcessing,
-                          writeObsGraph,
-                          graphTag,
-                          observationTag))
+                          cacheReader, spannerClient, skipProcessing, graphTag, observationTag))
                   .withOutputTags(graphTag, TupleTagList.of(observationTag)));
 
       var observations =
@@ -263,10 +232,7 @@ public class Transforms {
         .apply(
             "Ingest: " + importGroupName,
             new Transforms.ImportGroupTransform(
-                cacheReader,
-                spannerClient,
-                options.getSkipProcessing(),
-                options.getWriteObsGraph()));
+                cacheReader, spannerClient, options.getSkipProcessing()));
   }
 
   static void buildIngestionPipeline(

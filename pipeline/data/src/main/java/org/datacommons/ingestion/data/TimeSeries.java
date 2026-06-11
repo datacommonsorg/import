@@ -5,7 +5,6 @@ import com.google.common.hash.Hashing;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -15,14 +14,8 @@ import java.util.Objects;
  * <p>This class is used to store the result of parsing a time series row in memory.
  */
 public class TimeSeries implements Serializable {
-  private static final String OBS_SERIES_DCID_PREFIX = "dc/os/";
-  private static final String OBS_SERIES_TYPE = "StatVarObsSeries";
-  private static final String OBSERVATION_ABOUT_PREDICATE = "observationAbout";
-  private static final String VARIABLE_MEASURED_PREDICATE = "variableMeasured";
-  private static final String NAME_PREDICATE = "name";
-  private static final String TYPE_OF_PREDICATE = "typeOf";
-
-  private String observationAbout;
+  private String entity1;
+  private String extraEntitiesId;
   private String variableMeasured;
   private Map<String, String> observations;
   private String observationPeriod;
@@ -34,10 +27,10 @@ public class TimeSeries implements Serializable {
   private String facetId;
   private boolean isDcAggregate;
   private boolean isBaseDc;
-  private NodesEdges obsGraph;
 
   private TimeSeries(Builder builder) {
-    this.observationAbout = builder.observationAbout;
+    this.entity1 = builder.entity1;
+    this.extraEntitiesId = builder.extraEntitiesId;
     this.variableMeasured = builder.variableMeasured;
     this.observations = builder.observations;
     this.observationPeriod = builder.observationPeriod;
@@ -49,7 +42,6 @@ public class TimeSeries implements Serializable {
     this.facetId = builder.facetId;
     this.isDcAggregate = builder.isDcAggregate;
     this.isBaseDc = builder.isBaseDc;
-    this.obsGraph = toObsGraph();
   }
 
   public static Builder builder() {
@@ -59,7 +51,8 @@ public class TimeSeries implements Serializable {
   public TimeSeriesKey getKey() {
     return new TimeSeriesKey(
         variableMeasured,
-        observationAbout,
+        entity1,
+        extraEntitiesId,
         observationPeriod,
         measurementMethod,
         unit,
@@ -67,8 +60,12 @@ public class TimeSeries implements Serializable {
         facetId);
   }
 
-  public String getObservationAbout() {
-    return observationAbout;
+  public String getEntity1() {
+    return entity1;
+  }
+
+  public String getExtraEntitiesId() {
+    return extraEntitiesId;
   }
 
   public String getVariableMeasured() {
@@ -115,82 +112,14 @@ public class TimeSeries implements Serializable {
     return isBaseDc;
   }
 
-  public NodesEdges getObsGraph() {
-    return obsGraph;
-  }
-
-  private NodesEdges toObsGraph() {
-    var graph = new NodesEdges();
-    var seriesDcid =
-        OBS_SERIES_DCID_PREFIX
-            + Joiner.on("_")
-                .join(
-                    replaceSlashesWithUnderscores(variableMeasured),
-                    replaceSlashesWithUnderscores(observationAbout),
-                    facetId);
-    var seriesName = Joiner.on(" | ").join(variableMeasured, observationAbout, facetId);
-    var provenanceDcid = ProvenanceUtils.getProvenanceDcid(importName, this.isBaseDc);
-
-    // Add series node
-    graph.addNode(
-        Node.builder()
-            .subjectId(seriesDcid)
-            .value(seriesDcid)
-            .name(seriesName)
-            .types(List.of(OBS_SERIES_TYPE))
-            .build());
-
-    // Add leaf node
-    graph.addNode(
-        Node.builder().subjectId(Encode.generateSha256(seriesName)).value(seriesName).build());
-
-    // Add variableMeasured edge
-    graph.addEdge(
-        Edge.builder()
-            .subjectId(seriesDcid)
-            .predicate(VARIABLE_MEASURED_PREDICATE)
-            .objectId(variableMeasured)
-            .provenance(provenanceDcid)
-            .build());
-    // Add observationAbout edge
-    graph.addEdge(
-        Edge.builder()
-            .subjectId(seriesDcid)
-            .predicate(OBSERVATION_ABOUT_PREDICATE)
-            .objectId(observationAbout)
-            .provenance(provenanceDcid)
-            .build());
-    // Add name edge
-    graph.addEdge(
-        Edge.builder()
-            .subjectId(seriesDcid)
-            .predicate(NAME_PREDICATE)
-            .objectId(Encode.generateSha256(seriesName))
-            .provenance(provenanceDcid)
-            .build());
-    // Add typeOf edge
-    graph.addEdge(
-        Edge.builder()
-            .subjectId(seriesDcid)
-            .predicate(TYPE_OF_PREDICATE)
-            .objectId(OBS_SERIES_TYPE)
-            .provenance(provenanceDcid)
-            .build());
-
-    return graph;
-  }
-
-  private static String replaceSlashesWithUnderscores(String s) {
-    return s == null ? null : s.replace('/', '_');
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     TimeSeries that = (TimeSeries) o;
 
-    return Objects.equals(observationAbout, that.observationAbout)
+    return Objects.equals(entity1, that.entity1)
+        && Objects.equals(extraEntitiesId, that.extraEntitiesId)
         && Objects.equals(variableMeasured, that.variableMeasured)
         && Objects.equals(observations, that.observations)
         && Objects.equals(observationPeriod, that.observationPeriod)
@@ -207,7 +136,8 @@ public class TimeSeries implements Serializable {
   @Override
   public int hashCode() {
     return Objects.hash(
-        observationAbout,
+        entity1,
+        extraEntitiesId,
         variableMeasured,
         observations,
         observationPeriod,
@@ -245,7 +175,8 @@ public class TimeSeries implements Serializable {
 
   // Builder for TimeSeries
   public static class Builder {
-    private String observationAbout = "";
+    private String entity1 = "";
+    private String extraEntitiesId = "";
     private String variableMeasured = "";
     private Map<String, String> observations = new HashMap<>();
     private String observationPeriod = "";
@@ -258,8 +189,13 @@ public class TimeSeries implements Serializable {
     private boolean isDcAggregate = false;
     private boolean isBaseDc = true;
 
-    public Builder observationAbout(String observationAbout) {
-      this.observationAbout = observationAbout;
+    public Builder entity1(String entity1) {
+      this.entity1 = entity1;
+      return this;
+    }
+
+    public Builder extraEntitiesId(String extraEntitiesId) {
+      this.extraEntitiesId = extraEntitiesId;
       return this;
     }
 

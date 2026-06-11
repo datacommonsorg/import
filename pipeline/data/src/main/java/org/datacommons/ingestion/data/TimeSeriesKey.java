@@ -6,7 +6,8 @@ import java.util.Objects;
 /** Uniquely identifies a time series. */
 public class TimeSeriesKey implements Serializable {
   private final String variableMeasured;
-  private final String observationAbout;
+  private final String entity1;
+  private final String extraEntitiesId;
   private final String observationPeriod;
   private final String measurementMethod;
   private final String unit;
@@ -15,14 +16,16 @@ public class TimeSeriesKey implements Serializable {
 
   public TimeSeriesKey(
       String variableMeasured,
-      String observationAbout,
+      String entity1,
+      String extraEntitiesId,
       String observationPeriod,
       String measurementMethod,
       String unit,
       String scalingFactor,
       String facetId) {
     this.variableMeasured = Objects.requireNonNull(variableMeasured);
-    this.observationAbout = Objects.requireNonNull(observationAbout);
+    this.entity1 = Objects.requireNonNull(entity1);
+    this.extraEntitiesId = Objects.requireNonNull(extraEntitiesId);
     this.observationPeriod = Objects.requireNonNull(observationPeriod);
     this.measurementMethod = Objects.requireNonNull(measurementMethod);
     this.unit = Objects.requireNonNull(unit);
@@ -34,8 +37,12 @@ public class TimeSeriesKey implements Serializable {
     return variableMeasured;
   }
 
-  public String getObservationAbout() {
-    return observationAbout;
+  public String getEntity1() {
+    return entity1;
+  }
+
+  public String getExtraEntitiesId() {
+    return extraEntitiesId;
   }
 
   public String getObservationPeriod() {
@@ -64,7 +71,8 @@ public class TimeSeriesKey implements Serializable {
     if (o == null || getClass() != o.getClass()) return false;
     TimeSeriesKey that = (TimeSeriesKey) o;
     return variableMeasured.equals(that.variableMeasured)
-        && observationAbout.equals(that.observationAbout)
+        && entity1.equals(that.entity1)
+        && extraEntitiesId.equals(that.extraEntitiesId)
         && observationPeriod.equals(that.observationPeriod)
         && measurementMethod.equals(that.measurementMethod)
         && unit.equals(that.unit)
@@ -76,7 +84,8 @@ public class TimeSeriesKey implements Serializable {
   public int hashCode() {
     return Objects.hash(
         variableMeasured,
-        observationAbout,
+        entity1,
+        extraEntitiesId,
         observationPeriod,
         measurementMethod,
         unit,
@@ -87,10 +96,11 @@ public class TimeSeriesKey implements Serializable {
   @Override
   public String toString() {
     return String.format(
-        "TimeSeriesKey{variableMeasured='%s', observationAbout='%s', observationPeriod='%s', "
+        "TimeSeriesKey{variableMeasured='%s', entity1='%s', extraEntitiesId='%s', observationPeriod='%s', "
             + "measurementMethod='%s', unit='%s', scalingFactor='%s', facetId='%s'}",
         variableMeasured,
-        observationAbout,
+        entity1,
+        extraEntitiesId,
         observationPeriod,
         measurementMethod,
         unit,

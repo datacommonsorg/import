@@ -252,7 +252,7 @@ public class GraphIngestionPipelineIntegrationTest {
     importArray.add(importObj);
 
     options.setProjectId(projectId);
-    options.setWriteObsGraph(false);
+
     options.setSpannerInstanceId(instanceId);
     options.setSpannerDatabaseId(databaseId);
     options.setNumShards(1);

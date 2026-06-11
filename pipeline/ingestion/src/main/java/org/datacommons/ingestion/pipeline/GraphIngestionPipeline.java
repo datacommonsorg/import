@@ -37,6 +37,8 @@ public class GraphIngestionPipeline {
       Metrics.counter(GraphIngestionPipeline.class, "graph_edge_count");
   private static final Counter obsCounter =
       Metrics.counter(GraphIngestionPipeline.class, "graph_observation_count");
+  private static final Counter tsCounter =
+      Metrics.counter(GraphIngestionPipeline.class, "graph_timeseries_count");
 
   // List of imports that require node combination.
   private static final List<String> IMPORTS_TO_COMBINE = List.of("Schema", "Place");
@@ -74,7 +76,7 @@ public class GraphIngestionPipeline {
 
     Pipeline pipeline = Pipeline.create(options);
     buildPipeline(pipeline, options, spannerClient);
-    pipeline.run().waitUntilFinish();
+    pipeline.run();
   }
 
   public static void buildPipeline(
@@ -215,7 +217,7 @@ public class GraphIngestionPipeline {
     // Path 1: TimeSeries (Metadata)
     // Extract unique series keys and convert to metadata-only TimeSeries
     PCollection<TimeSeries> uniqueSeries =
-        GraphReader.extractUniqueSeries(observationNodes, importName, isBaseDc);
+        GraphReader.extractUniqueSeries(observationNodes, importName, isBaseDc, tsCounter);
     // Convert unique TimeSeries to TimeSeries mutations
     PCollection<Mutation> tsMutations =
         uniqueSeries.apply(
@@ -226,7 +228,7 @@ public class GraphIngestionPipeline {
     // Path 2: Observations (Data Points)
     // Extract all individual data points as Observations (one per date/value)
     PCollection<Observation> obsDataPoints =
-        GraphReader.extractObservations(observationNodes, importName, isBaseDc);
+        GraphReader.extractObservations(observationNodes, importName, isBaseDc, obsCounter);
     // Convert Observations to Observation mutations
     PCollection<Mutation> childMutations =
         obsDataPoints.apply(

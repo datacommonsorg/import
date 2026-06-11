@@ -77,7 +77,6 @@ public class SpannerClient implements Serializable {
   private final String edgeTableName;
   private final String timeSeriesTableName;
   private final String observationTableName;
-  private final String timeSeriesAttributeTableName;
   private final int numShards;
   private final String emulatorHost;
 
@@ -89,7 +88,6 @@ public class SpannerClient implements Serializable {
     this.edgeTableName = builder.edgeTableName;
     this.timeSeriesTableName = builder.timeSeriesTableName;
     this.observationTableName = builder.observationTableName;
-    this.timeSeriesAttributeTableName = builder.timeSeriesAttributeTableName;
     this.numShards = builder.numShards;
     this.emulatorHost = builder.emulatorHost;
   }
@@ -394,8 +392,8 @@ public class SpannerClient implements Serializable {
       kvs.add(KV.of("TS::" + tsKey, ts));
 
       String variableMeasured = obs.getVariableMeasured();
-      String entity1 = obs.getObservationAbout();
-      String extraEntitiesId = "";
+      String entity1 = obs.getEntity1();
+      String extraEntitiesId = obs.getExtraEntitiesId();
       String facetId = obs.getFacetId();
 
       for (java.util.Map.Entry<String, String> entry : obs.getObservations().entrySet()) {
@@ -413,6 +411,8 @@ public class SpannerClient implements Serializable {
                 .to(entry.getKey())
                 .set("value")
                 .to(entry.getValue())
+                .set("last_update_timestamp")
+                .to(Value.COMMIT_TIMESTAMP)
                 .build();
         kvs.add(KV.of("OBS::" + tsKey + "::" + entry.getKey(), o));
       }
@@ -422,8 +422,8 @@ public class SpannerClient implements Serializable {
 
   public Mutation toTimeSeriesMutation(TimeSeries obs) {
     String variableMeasured = obs.getVariableMeasured();
-    String entity1 = obs.getObservationAbout();
-    String extraEntitiesId = "";
+    String entity1 = obs.getEntity1();
+    String extraEntitiesId = obs.getExtraEntitiesId();
     String facetId = obs.getFacetId();
 
     // Create entities JSON
@@ -438,7 +438,7 @@ public class SpannerClient implements Serializable {
     facetJson.addProperty("observationPeriod", obs.getObservationPeriod());
     facetJson.addProperty("scalingFactor", obs.getScalingFactor());
     facetJson.addProperty("unit", obs.getUnit());
-    facetJson.addProperty("isDcAggregate", String.valueOf(obs.getIsDcAggregate()));
+    facetJson.addProperty("isDcAggregate", obs.getIsDcAggregate());
 
     return Mutation.newInsertOrUpdateBuilder(timeSeriesTableName)
         .set("variable_measured")
@@ -452,6 +452,8 @@ public class SpannerClient implements Serializable {
         .to(Value.json(GSON.toJson(entitiesJson)))
         .set("facet")
         .to(Value.json(GSON.toJson(facetJson)))
+        .set("last_update_timestamp")
+        .to(Value.COMMIT_TIMESTAMP)
         .build();
   }
 
@@ -461,15 +463,17 @@ public class SpannerClient implements Serializable {
         .set("variable_measured")
         .to(key.getVariableMeasured())
         .set("entity1")
-        .to(key.getObservationAbout())
+        .to(key.getEntity1())
         .set("extra_entities_id")
-        .to("")
+        .to(key.getExtraEntitiesId())
         .set("facet_id")
         .to(key.getFacetId())
         .set("date")
         .to(obs.getDate())
         .set("value")
         .to(obs.getValue())
+        .set("last_update_timestamp")
+        .to(Value.COMMIT_TIMESTAMP)
         .build();
   }
 
@@ -485,8 +489,8 @@ public class SpannerClient implements Serializable {
               .join(
                   getMutationValue(mutationMap, "variable_measured"),
                   getMutationValue(mutationMap, "entity1"),
-                  getMutationValue(mutationMap, "extra_entity_key"),
-                  getMutationValue(mutationMap, "facet_key"));
+                  getMutationValue(mutationMap, "extra_entities_id"),
+                  getMutationValue(mutationMap, "facet_id"));
 
       if (m.getTable().equals(timeSeriesTableName)) {
         dedupeKey = "TS::" + tsKey;
@@ -600,7 +604,7 @@ public class SpannerClient implements Serializable {
         new Object[] {
           getMutationValue(mutationMap, "variable_measured"),
           hashShard(
-              getMutationValue(mutationMap, "entity1"), getMutationValue(mutationMap, "facet_key"))
+              getMutationValue(mutationMap, "entity1"), getMutationValue(mutationMap, "facet_id"))
         };
 
     return Joiner.on("::").join(parts);
@@ -666,10 +670,6 @@ public class SpannerClient implements Serializable {
     return observationTableName;
   }
 
-  public String getTimeSeriesAttributeTableName() {
-    return timeSeriesAttributeTableName;
-  }
-
   public static Builder builder() {
     return new Builder();
   }
@@ -684,8 +684,7 @@ public class SpannerClient implements Serializable {
             + "nodeTableName='%s', "
             + "edgeTableName='%s', "
             + "timeSeriesTableName='%s', "
-            + "observationTableName='%s', "
-            + "timeSeriesAttributeTableName='%s'"
+            + "observationTableName='%s'"
             + "}",
         gcpProjectId,
         spannerInstanceId,
@@ -693,8 +692,7 @@ public class SpannerClient implements Serializable {
         nodeTableName,
         edgeTableName,
         timeSeriesTableName,
-        observationTableName,
-        timeSeriesAttributeTableName);
+        observationTableName);
   }
 
   public static class Builder {
@@ -705,7 +703,6 @@ public class SpannerClient implements Serializable {
     private String edgeTableName = "Edge";
     private String timeSeriesTableName = "TimeSeries";
     private String observationTableName = "Observation";
-    private String timeSeriesAttributeTableName = "TimeSeriesAttribute";
     private int numShards = 0;
     private String emulatorHost;
 
@@ -743,11 +740,6 @@ public class SpannerClient implements Serializable {
 
     public Builder observationTableName(String observationTableName) {
       this.observationTableName = observationTableName;
-      return this;
-    }
-
-    public Builder timeSeriesAttributeTableName(String timeSeriesAttributeTableName) {
-      this.timeSeriesAttributeTableName = timeSeriesAttributeTableName;
       return this;
     }
 

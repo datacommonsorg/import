@@ -133,7 +133,7 @@ public class GraphReader implements Serializable {
   }
 
   public static PCollection<TimeSeries> extractUniqueSeries(
-      PCollection<McfGraph> graph, String importName, boolean isBaseDc) {
+      PCollection<McfGraph> graph, String importName, boolean isBaseDc, Counter tsCounter) {
     PCollection<McfStatVarObsSeries.Key> keys =
         graph.apply(
             "ExtractSeriesKeys-" + importName,
@@ -164,12 +164,13 @@ public class GraphReader implements Serializable {
               public void processElement(
                   @Element McfStatVarObsSeries.Key key, OutputReceiver<TimeSeries> receiver) {
                 receiver.output(toTimeSeries(key, importName, isBaseDc));
+                tsCounter.inc();
               }
             }));
   }
 
   public static PCollection<Observation> extractObservations(
-      PCollection<McfGraph> graph, String importName, boolean isBaseDc) {
+      PCollection<McfGraph> graph, String importName, boolean isBaseDc, Counter obsCounter) {
     return graph.apply(
         "ExtractObservationDataPoints-" + importName,
         ParDo.of(
@@ -185,6 +186,7 @@ public class GraphReader implements Serializable {
                     TimeSeriesKey seriesKey = toTimeSeriesKey(svoSeries.getKey(), importName);
                     for (StatVarObs obs : svoSeries.getSvObsListList()) {
                       receiver.output(toObservation(seriesKey, obs));
+                      obsCounter.inc();
                     }
                   }
                 }
@@ -206,7 +208,7 @@ public class GraphReader implements Serializable {
 
     return TimeSeries.builder()
         .variableMeasured(key.getVariableMeasured())
-        .observationAbout(key.getObservationAbout())
+        .entity1(key.getObservationAbout())
         .observationPeriod(key.getObservationPeriod())
         .measurementMethod(measurementMethod)
         .unit(key.getUnit())
@@ -242,6 +244,7 @@ public class GraphReader implements Serializable {
     return new TimeSeriesKey(
         key.getVariableMeasured(),
         key.getObservationAbout(),
+        "",
         key.getObservationPeriod(),
         measurementMethod,
         key.getUnit(),

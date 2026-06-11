@@ -43,6 +43,7 @@ CREATE TABLE TimeSeries (
   measurement_method STRING(1024) AS (JSON_VALUE(facet, '$.measurementMethod')) STORED,
   scaling_factor STRING(1024) AS (JSON_VALUE(facet, '$.scalingFactor')) STORED,
   provenance STRING(1024) NOT NULL AS (JSON_VALUE(facet, '$.provenance')) STORED,
+  last_update_timestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
 ) PRIMARY KEY(variable_measured, entity1, extra_entities_id, facet_id), OPTIONS (
   columnar_policy = 'enabled'
 );
@@ -54,12 +55,13 @@ CREATE TABLE Observation (
   facet_id STRING(1024) NOT NULL,
   date STRING(32) NOT NULL,
   value STRING(MAX) NOT NULL,
+  last_update_timestamp TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
 ) PRIMARY KEY(variable_measured, entity1, extra_entities_id, facet_id, date DESC),
   INTERLEAVE IN PARENT TimeSeries ON DELETE CASCADE, OPTIONS (
   columnar_policy = 'enabled'
 );
 
-CREATE INDEX TimeSeriesProvenance ON TimeSeries(provenance) OPTIONS (
+CREATE INDEX TimeSeriesByProvenance ON TimeSeries(provenance) OPTIONS (
   columnar_policy = 'enabled'
 );
 
@@ -124,6 +126,13 @@ CREATE PROPERTY GRAPH DCGraph
         provenance,
         subject_id)
   );
+
+CREATE TABLE Cache (
+  type STRING(1024) NOT NULL,
+  key STRING(1024) NOT NULL,
+  provenance STRING(1024) NOT NULL,
+  value JSON,
+) PRIMARY KEY(type, key, provenance);
 
 CREATE INDEX InEdge ON Edge(object_id, predicate, subject_id, provenance) OPTIONS (
   columnar_policy = 'enabled'

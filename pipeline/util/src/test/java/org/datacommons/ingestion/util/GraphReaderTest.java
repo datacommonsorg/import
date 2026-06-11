@@ -320,7 +320,7 @@ public class GraphReaderTest {
 
     TimeSeries expected1 =
         TimeSeries.builder()
-            .observationAbout("geoId/testPlace")
+            .entity1("geoId/testPlace")
             .variableMeasured("testStatVar")
             .measurementMethod("testMethod")
             .isDcAggregate(true)
@@ -334,7 +334,7 @@ public class GraphReaderTest {
 
     TimeSeries expected2 =
         TimeSeries.builder()
-            .observationAbout("geoId/testPlace")
+            .entity1("geoId/testPlace")
             .variableMeasured("testStatVar")
             .measurementMethod("testMethod")
             .isDcAggregate(true)
@@ -351,9 +351,6 @@ public class GraphReaderTest {
 
     TimeSeries actual2 = GraphReader.toTimeSeries(key, "test_import", false);
     assertEquals(expected2, actual2);
-
-    assertEquals("dc/base/test_import", actual1.getObsGraph().getEdges().get(0).getProvenance());
-    assertEquals("test_import", actual2.getObsGraph().getEdges().get(0).getProvenance());
   }
 
   @Test
@@ -373,7 +370,7 @@ public class GraphReaderTest {
         TimeSeries.calculateFacetId("test_import", "testMethod", "P1Y", "100", "testUnit", true);
     TimeSeriesKey expectedKey =
         new TimeSeriesKey(
-            "testStatVar", "geoId/testPlace", "P1Y", "testMethod", "testUnit", "100", facetId);
+            "testStatVar", "geoId/testPlace", "", "P1Y", "testMethod", "testUnit", "100", facetId);
 
     TimeSeriesKey actualKey = GraphReader.toTimeSeriesKey(key, "test_import");
     assertEquals(expectedKey, actualKey);
@@ -385,7 +382,7 @@ public class GraphReaderTest {
         TimeSeries.calculateFacetId("test_import", "testMethod", "P1Y", "100", "testUnit", true);
     TimeSeriesKey seriesKey =
         new TimeSeriesKey(
-            "testStatVar", "geoId/testPlace", "P1Y", "testMethod", "testUnit", "100", facetId);
+            "testStatVar", "geoId/testPlace", "", "P1Y", "testMethod", "testUnit", "100", facetId);
 
     StatVarObs obs1 =
         StatVarObs.newBuilder().setDcid("obs1").setDate("2020").setNumber(10.0).build();

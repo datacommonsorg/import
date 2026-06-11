@@ -184,14 +184,14 @@ public class CacheReader implements Serializable {
         String[] keys = suffix.split(CACHE_KEY_SEPARATOR_REGEX);
         if (!(value.isEmpty()) && keys.length >= 2) {
           String variableMeasured = keys[1];
-          String observationAbout = keys[0];
+          String entity1 = keys[0];
           ChartStore chart = ProtoUtil.parseCacheProto(value, ChartStore.parser());
           for (SourceSeries source : chart.getObsTimeSeries().getSourceSeriesList()) {
             TimeSeries.Builder builder =
                 TimeSeries.builder()
                     .isBaseDc(this.isBaseDc)
                     .variableMeasured(variableMeasured)
-                    .observationAbout(observationAbout)
+                    .entity1(entity1)
                     .observationPeriod(source.getObservationPeriod())
                     .measurementMethod(source.getMeasurementMethod())
                     .scalingFactor(source.getScalingFactor())
