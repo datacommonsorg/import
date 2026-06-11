@@ -35,7 +35,11 @@ _DEFAULT_MODELS = [
 models_env = os.environ.get('EMBEDDING_MODELS')
 if models_env:
     try:
-        EMBEDDING_MODELS = json.loads(models_env)
+        parsed = json.loads(models_env)
+        if isinstance(parsed, list) and all(isinstance(m, dict) and "name" in m and "endpoint" in m for m in parsed):
+            EMBEDDING_MODELS = parsed
+        else:
+            EMBEDDING_MODELS = _DEFAULT_MODELS
     except Exception:
         EMBEDDING_MODELS = _DEFAULT_MODELS
 else:
@@ -53,7 +57,12 @@ _DEFAULT_EMBEDDING_SPECS = [
 specs_env = os.environ.get('EMBEDDING_SPECS')
 if specs_env:
     try:
-        EMBEDDING_SPECS = json.loads(specs_env)
+        parsed = json.loads(specs_env)
+        required_keys = {"embedding_type", "model_name", "task_type", "node_types"}
+        if isinstance(parsed, list) and all(isinstance(s, dict) and required_keys.issubset(s.keys()) for s in parsed):
+            EMBEDDING_SPECS = parsed
+        else:
+            EMBEDDING_SPECS = _DEFAULT_EMBEDDING_SPECS
     except Exception:
         EMBEDDING_SPECS = _DEFAULT_EMBEDDING_SPECS
 else:
