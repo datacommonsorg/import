@@ -128,10 +128,11 @@ CREATE INDEX VariableMeasuredObservationAbout ON Observation(variable_measured, 
 
 CREATE TABLE NodeEmbedding (
   subject_id STRING(1024) NOT NULL,
-  embedding_content STRING(MAX),
-  types ARRAY<STRING(1024)>,
-  embeddings ARRAY<FLOAT64>(vector_length=>768)
-) PRIMARY KEY(subject_id),
+  embedding_type STRING(1024) NOT NULL,
+  embedding_content JSON,
+  node_types ARRAY<STRING(1024)>,
+  embeddings ARRAY<FLOAT64>(vector_length=>{{ embedding_space }})
+) PRIMARY KEY(subject_id, embedding_type),
 INTERLEAVE IN PARENT Node ON DELETE CASCADE;
 
 CREATE VECTOR INDEX NodeEmbeddingIndex
@@ -141,7 +142,8 @@ OPTIONS (
   distance_type = 'COSINE'
 );
 
-CREATE MODEL NodeEmbeddingModel
+{% for model in models %}
+CREATE MODEL {{ model.name }}
 INPUT(
   content STRING(MAX),
   task_type STRING(MAX),
@@ -153,5 +155,6 @@ OUTPUT(
       values ARRAY<FLOAT64>>
 )
 REMOTE OPTIONS (
-  endpoint = '{{ embeddings_endpoint }}'
+  endpoint = '{{ model.endpoint }}'
 );
+{% endfor %}

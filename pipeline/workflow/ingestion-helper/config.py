@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import json
 
 PROJECT_ID = os.environ.get('PROJECT_ID')
 SPANNER_PROJECT_ID = os.environ.get('SPANNER_PROJECT_ID')
@@ -25,8 +26,38 @@ LOCATION = os.environ.get('LOCATION') or os.environ.get('REGION')
 ENABLE_EMBEDDINGS = os.environ.get('ENABLE_EMBEDDINGS', 'false').lower() == 'true'
 IS_BASE_DC = os.environ.get('IS_BASE_DC', 'true').lower() == 'true'
 TIMEOUT = int(os.environ.get('TIMEOUT', 1700))
-EMBEDDING_MODEL_ID = os.environ.get('EMBEDDING_MODEL_ID', 'text-embedding-005')
-NODE_TYPES = ['StatisticalVariable', 'Topic']
+EMBEDDING_SPACE = int(os.environ.get('EMBEDDING_SPACE', 768))
+
+_DEFAULT_MODELS = [
+    {"name": "NodeEmbeddingModel", "endpoint": "text-embedding-005"}
+]
+
+models_env = os.environ.get('EMBEDDING_MODELS')
+if models_env:
+    try:
+        EMBEDDING_MODELS = json.loads(models_env)
+    except Exception:
+        EMBEDDING_MODELS = _DEFAULT_MODELS
+else:
+    EMBEDDING_MODELS = _DEFAULT_MODELS
+
+_DEFAULT_EMBEDDING_SPECS = [
+    {
+        "embedding_type": "base_text_embedding",
+        "model_name": "NodeEmbeddingModel",
+        "task_type": "RETRIEVAL_QUERY",
+        "node_types": ["StatisticalVariable", "Topic"]
+    }
+]
+
+specs_env = os.environ.get('EMBEDDING_SPECS')
+if specs_env:
+    try:
+        EMBEDDING_SPECS = json.loads(specs_env)
+    except Exception:
+        EMBEDDING_SPECS = _DEFAULT_EMBEDDING_SPECS
+else:
+    EMBEDDING_SPECS = _DEFAULT_EMBEDDING_SPECS
 
 REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = os.environ.get('REDIS_PORT', '6379')

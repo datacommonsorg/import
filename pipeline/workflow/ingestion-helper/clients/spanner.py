@@ -32,6 +32,9 @@ class SpannerClient:
     """
     _LOCK_ID = "global_ingestion_lock"
     _EMBEDDING_MODEL_PATH = "//aiplatform.googleapis.com/projects/{project}/locations/{location}/publishers/google/models/{model}"
+    _DEFAULT_MODELS = [
+        {"name": "NodeEmbeddingModel", "endpoint": "text-embedding-005"}
+    ]
 
     def __init__(self,
                  project_id: str,
@@ -39,7 +42,8 @@ class SpannerClient:
                  database_id: str,
                  graph_database_id: str = None,
                  location: str = None,
-                 model_id: str = None):
+                 models: list[dict] = None,
+                 embedding_space: int = 768):
         """Initializes a Spanner client and connects to a specific database."""
         spanner_client = spanner.Client(
             project=project_id,
@@ -60,15 +64,26 @@ class SpannerClient:
             )
         self.project_id = project_id
         self.location = location
-        self.model_id = model_id
+        self.embedding_space = embedding_space
 
-    def _get_embeddings_endpoint(self) -> str:
+        if not models:
+            models = self._DEFAULT_MODELS
+
+        self.models = []
+        for model in models:
+            name = model["name"]
+            endpoint = self._get_embeddings_endpoint(model["endpoint"])
+            self.models.append({
+                "name": name,
+                "endpoint": endpoint
+            })
+
+    def _get_embeddings_endpoint(self, model: str) -> str:
         """Returns the parameterized embedding model endpoint."""
         return self._EMBEDDING_MODEL_PATH.format(project=self.project_id,
                                                  location=self.location or
                                                  "us-central1",
-                                                 model=self.model_id or
-                                                 "text-embedding-005")
+                                                 model=model)
 
     def acquire_lock(self, workflow_id: str, timeout: int) -> bool:
         """Attempts to acquire the global ingestion lock.
@@ -280,7 +295,7 @@ class SpannerClient:
         def _insert(transaction: Transaction):
             columns = [
                 "CompletionTimestamp", "IngestionFailure",
-                "WorkflowExecutionID", "DataflowJobId", "IngestedImports",
+                "WorkflowExecutionID", "DataflowJobID", "IngestedImports",
                 "ExecutionTime", "NodeCount", "EdgeCount", "ObservationCount"
             ]
             values = [[
@@ -470,7 +485,7 @@ class SpannerClient:
             "ImportVersionHistory", "IngestionLock", "Cache", "NodeEmbedding"
         ]
         required_indexes = ["InEdge", "VariableMeasuredObservationAbout", "NodeEmbeddingIndex"]
-        required_models = ["NodeEmbeddingModel"]
+        required_models = [m['name'] for m in self.models]
 
         missing_tables = [
             t for t in required_tables if t not in existing_tables
@@ -501,13 +516,13 @@ class SpannerClient:
         schema_path = os.path.join(os.path.dirname(__file__), 'schema.sql')
         logging.info(f"Reading schema from {schema_path}")
         try:
-            embeddings_endpoint = self._get_embeddings_endpoint()
             with open(schema_path, 'r') as f:
                 schema_content = f.read()
 
             schema_content = Template(
                 schema_content).render(
-                    embeddings_endpoint=embeddings_endpoint)
+                    models=self.models,
+                    embedding_space=self.embedding_space)
 
             ddl_statements = [
                 s.strip() for s in schema_content.split(';') if s.strip()
