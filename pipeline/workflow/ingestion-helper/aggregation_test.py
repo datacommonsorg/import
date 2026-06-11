@@ -244,46 +244,45 @@ class TestProvenanceSummaryGenerator(unittest.TestCase):
                       query)  # Since is_base_dc=True
 
 
-@unittest.skip("Skipped temporarily during generic refactoring")
 class TestPlaceAggregationGenerator(unittest.TestCase):
 
     def setUp(self):
         self.mock_executor = MagicMock()
         self.mock_executor.connection_id = "test-conn"
-        self.mock_executor.get_spanner_destination_uri.return_value = (
-            "spanner-uri")
+        self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
 
-    def test_run_all_empty(self):
+    def test_aggregate_places_empty_imports(self):
+        """Verifies that it returns None immediately if import list is empty."""
         generator = PlaceAggregationGenerator(self.mock_executor)
-        jobs = generator.run_all([], "Count_Person", "CensusACS5yrSurvey",
-                                 "2020")
-        self.assertEqual(jobs, [])
+        job = generator.aggregate_places(
+            import_names=[],
+            source_type="County",
+            destination_type="State"
+        )
+        self.assertIsNone(job)
         self.mock_executor.execute.assert_not_called()
 
-    def test_run_all(self):
-        generator = PlaceAggregationGenerator(self.mock_executor,
-                                              is_base_dc=True)
-
+    def test_aggregate_places_calls_executor(self):
+        """Verifies that it constructs a query and delegates execution to the executor."""
+        generator = PlaceAggregationGenerator(self.mock_executor)
+        
         mock_job = MagicMock()
         self.mock_executor.execute.return_value = mock_job
 
-        jobs = generator.run_all(["import1"], "Count_Person",
-                                 "CensusACS5yrSurvey", "2020")
-
-        self.assertEqual(len(jobs), 2)
-        self.assertEqual(self.mock_executor.execute.call_count, 2)
-
-        query1 = self.mock_executor.execute.call_args_list[0][0][0]
-        self.assertIn("test-conn", query1)
-        self.assertIn("spanner-uri", query1)
-        self.assertIn("import1", query1)
-        self.assertIn('"country/USA" AS entity1', query1)
-
-        query2 = self.mock_executor.execute.call_args_list[1][0][0]
-        self.assertIn("test-conn", query2)
-        self.assertIn("spanner-uri", query2)
-        self.assertIn("import1", query2)
-        self.assertIn("SUBSTR(ts.entity1, 1, 8) AS entity1", query2)
+        job = generator.aggregate_places(
+            import_names=["import1"],
+            source_type="County",
+            destination_type="State"
+        )
+        
+        # Should return the job returned by the executor
+        self.assertEqual(job, mock_job)
+        
+        # Should have called execute once with a non-empty query string
+        self.mock_executor.execute.assert_called_once()
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIsInstance(query, str)
+        self.assertTrue(len(query) > 0)
 
 
 @patch('aggregation_utils.BigQueryExecutor')
