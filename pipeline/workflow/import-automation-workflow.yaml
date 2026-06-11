@@ -76,11 +76,10 @@ main:
             - updateImportStatus:
                 call: http.post
                 args:
-                  url: ${helperUrl}
+                  url: ${helperUrl + "/imports/status"}
                   auth:
                     type: OIDC
                   body:
-                    actionType: 'update_import_status'
                     jobId: ${jobId}
                     importName: ${importName}
                     status: 'FAILURE'
@@ -92,11 +91,10 @@ main:
     - updateImportVersion:
         call: http.post
         args:
-          url: ${helperUrl}
+          url: ${helperUrl + "/imports/version"}
           auth:
             type: OIDC
           body:
-            actionType: 'update_import_version'
             importName: ${importName}
             version: 'STAGING'
             override: false

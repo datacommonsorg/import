@@ -17,41 +17,18 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "datacommons-ingestion-helper"
-dynamic = ["version"]
-requires-python = ">=3.12"
-description = "Ingestion helper for Data Commons Spanner ingestion"
+name = "datacommons-import-workflow"
+version = "0.1.0"
+requires-python = ">=3.11"
+description = "Integration test runner and workflow utilities for Data Commons Spanner ingestion"
 dependencies = [
-    "fastapi>=0.110.0",
-    "uvicorn[standard]>=0.28.0",
-    "pydantic>=2.0.0",
-    "google-cloud-spanner",
-    "google-api-python-client",
-    "google-cloud-storage",
-    "google-auth",
-    "absl-py",
-    "google-cloud-bigquery",
-    "redis",
-    "jinja2",
+    "google-cloud-spanner>=3.0.0",
+    "google-cloud-workflows>=1.0.0",
+    "absl-py>=1.0.0",
 ]
-
-[tool.hatch.version]
-path = "__init__.py"
 
 [tool.hatch.build.targets.wheel]
 bypass-selection = true
-
-[tool.hatch.build.targets.wheel.force-include]
-"clients/schema.sql" = "clients/schema.sql"
-
-[dependency-groups]
-dev = [
-    "pytest",
-    "httpx",
-]
-
-[tool.pytest.ini_options]
-pythonpath = ["."]
 
 [[tool.uv.index]]
 name = "pypi"

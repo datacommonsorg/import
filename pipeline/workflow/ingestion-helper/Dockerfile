@@ -25,17 +25,26 @@ WORKDIR /app
 # Install protobuf compiler and curl
 RUN apt-get update && apt-get install -y protobuf-compiler curl && rm -rf /var/lib/apt/lists/*
 
-# Copy local code to the container image.
+# Copy dependency definition files to leverage Docker layer caching
+COPY pyproject.toml __init__.py ./
+
+# Install production dependencies (without the project itself)
+RUN uv sync --no-dev --no-install-project
+
+# Copy local code to the container image
 COPY . .
 
-# Install production dependencies using uv.
-RUN uv pip install --system --no-cache .
+# Install the project itself
+RUN uv sync --no-dev
+
+# Place the virtual environment's bin directory on the PATH
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Fetch proto file from GitHub
 RUN curl -o storage.proto https://raw.githubusercontent.com/datacommonsorg/import/master/pipeline/data/src/main/proto/storage.proto
 
 # Generate proto descriptor set
-RUN protoc --include_imports --descriptor_set_out=storage.pb storage.proto
+RUN protoc --include_imports --descriptor_set_out=clients/storage.pb storage.proto
 
-# Run the functions framework
-CMD ["functions-framework", "--target", "ingestion_helper"]
+# Run the FastAPI service with Uvicorn
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
