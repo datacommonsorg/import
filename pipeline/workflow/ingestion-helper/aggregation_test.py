@@ -24,6 +24,7 @@ sys.path.append(os.path.dirname(__file__))
 from aggregation import BigQueryExecutor
 from aggregation import LinkedEdgeGenerator
 from aggregation import ProvenanceSummaryGenerator
+from aggregation import PlaceAggregationGenerator
 from aggregation.sql_utils import _escape_sql_literal
 from aggregation_utils import AggregationUtils
 
@@ -241,6 +242,47 @@ class TestProvenanceSummaryGenerator(unittest.TestCase):
         self.assertIn("spanner-uri", query)
         self.assertIn("CONCAT('dc/base/', raw.import_name)",
                       query)  # Since is_base_dc=True
+
+
+class TestPlaceAggregationGenerator(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_executor = MagicMock()
+        self.mock_executor.connection_id = "test-conn"
+        self.mock_executor.get_spanner_destination_uri.return_value = "spanner-uri"
+
+    def test_aggregate_places_empty_imports(self):
+        """Verifies that it returns None immediately if import list is empty."""
+        generator = PlaceAggregationGenerator(self.mock_executor)
+        job = generator.aggregate_places(
+            import_names=[],
+            source_type="County",
+            destination_type="State"
+        )
+        self.assertIsNone(job)
+        self.mock_executor.execute.assert_not_called()
+
+    def test_aggregate_places_calls_executor(self):
+        """Verifies that it constructs a query and delegates execution to the executor."""
+        generator = PlaceAggregationGenerator(self.mock_executor)
+        
+        mock_job = MagicMock()
+        self.mock_executor.execute.return_value = mock_job
+
+        job = generator.aggregate_places(
+            import_names=["import1"],
+            source_type="County",
+            destination_type="State"
+        )
+        
+        # Should return the job returned by the executor
+        self.assertEqual(job, mock_job)
+        
+        # Should have called execute once with a non-empty query string
+        self.mock_executor.execute.assert_called_once()
+        query = self.mock_executor.execute.call_args[0][0]
+        self.assertIsInstance(query, str)
+        self.assertTrue(len(query) > 0)
 
 
 @patch('aggregation_utils.BigQueryExecutor')
