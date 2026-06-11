@@ -123,12 +123,14 @@ class PlaceAggregationGenerator:
             )
         """
         
+        # 3. Deterministic Facet ID: Farm Fingerprint of (variable + new_method + new_provenance)
+        # We cast the resulting INT64 to STRING to match Spanner's schema.
         target_facet_id_sql = f"""
-            TO_HEX(MD5(CONCAT(
+            CAST(FARM_FINGERPRINT(CONCAT(
               ts.variable_measured, '_',
               {new_method_sql}, '_',
               {new_prov_sql}
-            )))
+            )) AS STRING)
         """
 
         # Multi-Statement SQL Script:
