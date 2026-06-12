@@ -17,7 +17,6 @@ from collections import OrderedDict
 import unittest
 from unittest.mock import MagicMock, patch
 from datetime import datetime
-from google.cloud.spanner_v1 import _helpers
 
 from utils.embeddings import (
     get_latest_lock_timestamp,
@@ -158,7 +157,6 @@ class TestEmbeddingUtils(unittest.TestCase):
             
             def mock_execute_update(*args, **kwargs):
                 params = kwargs.get("params", {})
-                param_types = kwargs.get("param_types", {})
                 self.assertIn("nodes", params)
                 self.assertIn("embedding_type", params)
                 self.assertIn("task_type", params)

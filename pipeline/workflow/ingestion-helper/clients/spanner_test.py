@@ -290,8 +290,18 @@ class TestSpannerClient(unittest.TestCase):
         self.assertEqual(len(statements), 4)
         self.assertEqual(statements[0], "CREATE TABLE Node")
         self.assertEqual(statements[1], "CREATE TABLE NodeEmbedding (embeddings ARRAY<FLOAT64>(vector_length=>512))")
-        self.assertEqual(statements[2], "CREATE MODEL NodeEmbeddingModel REMOTE OPTIONS (endpoint = '//aiplatform.googleapis.com/projects/project/locations/us-central1/publishers/google/models/text-embedding-005')")
-        self.assertEqual(statements[3], "CREATE MODEL NodeEmbeddingModel_multimodalembedding_001 REMOTE OPTIONS (endpoint = '//aiplatform.googleapis.com/projects/project/locations/us-central1/publishers/google/models/multimodalembedding-001')")
+        self.assertEqual(
+            statements[2],
+            "CREATE MODEL NodeEmbeddingModel REMOTE OPTIONS (endpoint = "
+            "'//aiplatform.googleapis.com/projects/project/locations/"
+            "us-central1/publishers/google/models/text-embedding-005')"
+        )
+        self.assertEqual(
+            statements[3],
+            "CREATE MODEL NodeEmbeddingModel_multimodalembedding_001 REMOTE "
+            "OPTIONS (endpoint = '//aiplatform.googleapis.com/projects/project/"
+            "locations/us-central1/publishers/google/models/multimodalembedding-001')"
+        )
 
     @patch('clients.spanner.DatabaseAdminClient')
     @patch('google.cloud.spanner.Client')
@@ -352,7 +362,13 @@ class TestSpannerClient(unittest.TestCase):
         statements = request.statements
         self.assertEqual(len(statements), 3)
         self.assertEqual(statements[0], "CREATE TABLE Node")
-        self.assertEqual(statements[1].strip(), "CREATE TABLE CustomEmbeddingTable (\n          subject_id STRING(1024) NOT NULL,\n          embeddings ARRAY<FLOAT64>(vector_length=>768)\n        ) PRIMARY KEY(subject_id)")
+        self.assertEqual(
+            statements[1].strip(),
+            "CREATE TABLE CustomEmbeddingTable (\n"
+            "          subject_id STRING(1024) NOT NULL,\n"
+            "          embeddings ARRAY<FLOAT64>(vector_length=>768)\n"
+            "        ) PRIMARY KEY(subject_id)"
+        )
         self.assertEqual(statements[2].strip(), "CREATE VECTOR INDEX CustomEmbeddingIndex ON CustomEmbeddingTable(embeddings)")
 
 if __name__ == '__main__':
