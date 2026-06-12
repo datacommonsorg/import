@@ -30,6 +30,13 @@
             "isOptional": true
         },
         {
+            "name": "skipDelete",
+            "label": "Skip Delete",
+            "helpText": "Whether to skip the delete operation.",
+            "paramType": "TEXT",
+            "isOptional": true
+        },
+        {
             "name": "forceCombineNodes",
             "label": "Force Combine Nodes",
             "helpText": "Whether to force combination of schema nodes across shards.",
