@@ -141,22 +141,24 @@ CREATE INDEX InEdge ON Edge(object_id, predicate, subject_id, provenance) OPTION
 
 -- NodeEmbedding table, NodeEmbeddingIndex index and NodeEmbeddingModel model are necessary for embeddings to work properly.
 
-CREATE TABLE NodeEmbedding (
+CREATE TABLE {{ embedding_table }} (
   subject_id STRING(1024) NOT NULL,
-  embedding_content STRING(MAX),
-  types ARRAY<STRING(1024)>,
-  embeddings ARRAY<FLOAT64>(vector_length=>768)
-) PRIMARY KEY(subject_id),
+  embedding_type STRING(1024) NOT NULL,
+  embedding_content JSON,
+  node_types ARRAY<STRING(1024)>,
+  embeddings ARRAY<FLOAT64>(vector_length=>{{ embedding_space }})
+) PRIMARY KEY(subject_id, embedding_type),
 INTERLEAVE IN PARENT Node ON DELETE CASCADE;
 
-CREATE VECTOR INDEX NodeEmbeddingIndex
-ON NodeEmbedding(embeddings)
+CREATE VECTOR INDEX {{ embedding_index }}
+ON {{ embedding_table }}(embeddings)
 WHERE embeddings IS NOT NULL
 OPTIONS (
   distance_type = 'COSINE'
 );
 
-CREATE MODEL NodeEmbeddingModel
+{% for model in models %}
+CREATE MODEL {{ model.name }}
 INPUT(
   content STRING(MAX),
   task_type STRING(MAX),
@@ -168,5 +170,6 @@ OUTPUT(
       values ARRAY<FLOAT64>>
 )
 REMOTE OPTIONS (
-  endpoint = '{{ embeddings_endpoint }}'
+  endpoint = '{{ model.endpoint }}'
 );
+{% endfor %}
