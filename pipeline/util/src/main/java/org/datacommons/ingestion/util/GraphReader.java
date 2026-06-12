@@ -9,19 +9,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.transforms.Distinct;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.datacommons.Storage.Observations;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
+import org.datacommons.ingestion.data.TimeSeries;
+import org.datacommons.ingestion.data.TimeSeriesKey;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
-import org.datacommons.proto.Mcf.McfOptimizedGraph;
+import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.ValueType;
 import org.datacommons.util.GraphUtils;
@@ -130,64 +132,135 @@ public class GraphReader implements Serializable {
     return edges;
   }
 
-  public static Observation graphToObservations(
-      McfOptimizedGraph graph, String importName, boolean isBaseDc) {
-    Observation.Builder obs = Observation.builder();
-    obs.isBaseDc(isBaseDc);
-    String measurementMethod = graph.getSvObsSeries().getKey().getMeasurementMethod();
-    obs.observationAbout(graph.getSvObsSeries().getKey().getObservationAbout());
-    obs.observationPeriod(graph.getSvObsSeries().getKey().getObservationPeriod());
-    obs.importName(importName);
-    if (measurementMethod.startsWith(DC_AGGREGATE)) {
-      obs.isDcAggregate(true);
-      measurementMethod = measurementMethod.replace(DC_AGGREGATE, "");
-    }
-    if (measurementMethod == DATCOM_AGGREGATE) {
-      obs.isDcAggregate(true);
-      measurementMethod = "";
-    }
-    obs.measurementMethod(measurementMethod);
-    obs.variableMeasured(graph.getSvObsSeries().getKey().getVariableMeasured());
-    obs.unit(graph.getSvObsSeries().getKey().getUnit());
-    obs.scalingFactor(graph.getSvObsSeries().getKey().getScalingFactor());
-    obs.provenanceUrl(graph.getSvObsSeries().getKey().getProvenanceUrl());
-    Observations.Builder ob = Observations.newBuilder();
-    for (StatVarObs svo : graph.getSvObsSeries().getSvObsListList()) {
-      if (svo.hasNumber()) {
-        ob.putValues(svo.getDate(), Double.toString(svo.getNumber()));
-      } else if (svo.hasText()) {
-        ob.putValues(svo.getDate(), svo.getText());
-      }
-    }
-    obs.observations(ob.build());
-    return obs.build();
-  }
+  public static PCollection<TimeSeries> extractUniqueSeries(
+      PCollection<McfGraph> graph, String importName, boolean isBaseDc, Counter tsCounter) {
+    PCollection<McfStatVarObsSeries.Key> keys =
+        graph.apply(
+            "ExtractSeriesKeys-" + importName,
+            ParDo.of(
+                new DoFn<McfGraph, McfStatVarObsSeries.Key>() {
+                  @ProcessElement
+                  public void processElement(
+                      @Element McfGraph g, OutputReceiver<McfStatVarObsSeries.Key> receiver) {
+                    for (Map.Entry<String, PropertyValues> entry : g.getNodesMap().entrySet()) {
+                      PropertyValues pv = entry.getValue();
+                      if (GraphUtils.isObservation(pv)) {
+                        McfStatVarObsSeries svoSeries =
+                            GraphUtils.convertMcfGraphToMcfStatVarObsSeries(entry.getKey(), pv);
+                        receiver.output(svoSeries.getKey());
+                      }
+                    }
+                  }
+                }));
 
-  public static PCollection<KV<String, Mutation>> graphToObservations(
-      PCollection<McfOptimizedGraph> graph,
-      String importName,
-      SpannerClient spannerClient,
-      Counter obsCounter,
-      boolean isBaseDc) {
-    return graph.apply(
-        "GraphToObs-" + importName,
+    PCollection<McfStatVarObsSeries.Key> uniqueKeys =
+        keys.apply("DeduplicateKeys-" + importName, Distinct.create());
+
+    return uniqueKeys.apply(
+        "KeysToTimeSeriesObservations-" + importName,
         ParDo.of(
-            new DoFn<McfOptimizedGraph, KV<String, Mutation>>() {
+            new DoFn<McfStatVarObsSeries.Key, TimeSeries>() {
               @ProcessElement
               public void processElement(
-                  @Element McfOptimizedGraph element,
-                  OutputReceiver<KV<String, Mutation>> receiver) {
-                Observation observations = graphToObservations(element, importName, isBaseDc);
-                List<KV<String, Mutation>> obs =
-                    spannerClient.toObservationKVMutations(List.of(observations));
-                obs.stream()
-                    .forEach(
-                        e -> {
-                          receiver.output(e);
-                        });
-                obsCounter.inc(obs.size());
+                  @Element McfStatVarObsSeries.Key key, OutputReceiver<TimeSeries> receiver) {
+                receiver.output(toTimeSeries(key, importName, isBaseDc));
+                tsCounter.inc();
               }
             }));
+  }
+
+  public static PCollection<Observation> extractObservations(
+      PCollection<McfGraph> graph, String importName, boolean isBaseDc, Counter obsCounter) {
+    return graph.apply(
+        "ExtractObservationDataPoints-" + importName,
+        ParDo.of(
+            new DoFn<McfGraph, Observation>() {
+              @ProcessElement
+              public void processElement(
+                  @Element McfGraph g, OutputReceiver<Observation> receiver) {
+                for (Map.Entry<String, PropertyValues> entry : g.getNodesMap().entrySet()) {
+                  PropertyValues pv = entry.getValue();
+                  if (GraphUtils.isObservation(pv)) {
+                    McfStatVarObsSeries svoSeries =
+                        GraphUtils.convertMcfGraphToMcfStatVarObsSeries(entry.getKey(), pv);
+                    TimeSeriesKey seriesKey = toTimeSeriesKey(svoSeries.getKey(), importName);
+                    for (StatVarObs obs : svoSeries.getSvObsListList()) {
+                      receiver.output(toObservation(seriesKey, obs));
+                      obsCounter.inc();
+                    }
+                  }
+                }
+              }
+            }));
+  }
+
+  static TimeSeries toTimeSeries(McfStatVarObsSeries.Key key, String importName, boolean isBaseDc) {
+    String measurementMethod = key.getMeasurementMethod();
+    boolean isDcAggregate = false;
+    if (measurementMethod.startsWith(DC_AGGREGATE)) {
+      isDcAggregate = true;
+      measurementMethod = measurementMethod.replace(DC_AGGREGATE, "");
+    }
+    if (measurementMethod.equals(DATCOM_AGGREGATE)) {
+      isDcAggregate = true;
+      measurementMethod = "";
+    }
+
+    return TimeSeries.builder()
+        .variableMeasured(key.getVariableMeasured())
+        .entity1(key.getObservationAbout())
+        .observationPeriod(key.getObservationPeriod())
+        .measurementMethod(measurementMethod)
+        .unit(key.getUnit())
+        .scalingFactor(key.getScalingFactor())
+        .importName(importName)
+        .isBaseDc(isBaseDc)
+        .isDcAggregate(isDcAggregate)
+        .provenanceUrl(key.getProvenanceUrl())
+        .build();
+  }
+
+  static TimeSeriesKey toTimeSeriesKey(McfStatVarObsSeries.Key key, String importName) {
+    String measurementMethod = key.getMeasurementMethod();
+    boolean isDcAggregate = false;
+    if (measurementMethod.startsWith(DC_AGGREGATE)) {
+      isDcAggregate = true;
+      measurementMethod = measurementMethod.replace(DC_AGGREGATE, "");
+    }
+    if (measurementMethod.equals(DATCOM_AGGREGATE)) {
+      isDcAggregate = true;
+      measurementMethod = "";
+    }
+
+    String facetId =
+        TimeSeries.calculateFacetId(
+            importName,
+            measurementMethod,
+            key.getObservationPeriod(),
+            key.getScalingFactor(),
+            key.getUnit(),
+            isDcAggregate);
+
+    return new TimeSeriesKey(
+        key.getVariableMeasured(),
+        key.getObservationAbout(),
+        "",
+        key.getObservationPeriod(),
+        measurementMethod,
+        key.getUnit(),
+        key.getScalingFactor(),
+        facetId);
+  }
+
+  static Observation toObservation(TimeSeriesKey seriesKey, StatVarObs obs) {
+    String value = "";
+    if (obs.hasNumber()) {
+      value = Double.toString(obs.getNumber());
+    } else if (obs.hasText()) {
+      value = obs.getText();
+    }
+
+    return Observation.builder().seriesKey(seriesKey).date(obs.getDate()).value(value).build();
   }
 
   public static PCollection<KV<String, Mutation>> graphToNodes(
