@@ -126,7 +126,7 @@ CREATE INDEX VariableMeasuredObservationAbout ON Observation(variable_measured, 
 
 -- NodeEmbedding table, NodeEmbeddingIndex index and NodeEmbeddingModel model are necessary for embeddings to work properly.
 
-CREATE TABLE NodeEmbedding (
+CREATE TABLE {{ embedding_table }} (
   subject_id STRING(1024) NOT NULL,
   embedding_type STRING(1024) NOT NULL,
   embedding_content JSON,
@@ -135,8 +135,8 @@ CREATE TABLE NodeEmbedding (
 ) PRIMARY KEY(subject_id, embedding_type),
 INTERLEAVE IN PARENT Node ON DELETE CASCADE;
 
-CREATE VECTOR INDEX NodeEmbeddingIndex
-ON NodeEmbedding(embeddings)
+CREATE VECTOR INDEX {{ embedding_index }}
+ON {{ embedding_table }}(embeddings)
 WHERE embeddings IS NOT NULL
 OPTIONS (
   distance_type = 'COSINE'

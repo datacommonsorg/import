@@ -102,18 +102,19 @@ def filter_and_convert_nodes(nodes_generator):
     Yields:
         Tuples (subject_id, embedding_content, types).
     """
+    # TODO: make embedding content configurable with parameters from the user config. Right now it is hardcoded.
     for node in nodes_generator:
         name = node.get("name")
         subject_id = node.get("subject_id")
         if name:
             embedding_content = json.dumps(OrderedDict([
                 ("title", subject_id),
-                ("description", name)
+                ("name", name)
             ]))
             yield (subject_id, embedding_content, node.get("types"))
 
 
-def generate_embeddings_partitioned(database, nodes_generator, model_name, embedding_type, task_type, timeout):
+def generate_embeddings_partitioned(database, nodes_generator, model_name, embedding_table, embedding_type, task_type, timeout):
     """Generates embeddings in batches using standard transactions.
     Processes nodes in chunks of 500 to avoid transaction size limits.
     Accepts a generator or list to avoid loading all nodes into memory.
@@ -122,6 +123,7 @@ def generate_embeddings_partitioned(database, nodes_generator, model_name, embed
         database: google.cloud.spanner.Database object.
         nodes_generator: An iterable yielding tuples containing (subject_id, embedding_content, types).
         model_name: Name of the remote model defined in Spanner DDL.
+        embedding_table: Name of the embedding table.
         embedding_type: Embedding type key (e.g. model ID) to insert.
         task_type: Task type parameter for ML.PREDICT (e.g. "RETRIEVAL_QUERY").
         timeout: Timeout for the spanner client to execute queries.
@@ -135,7 +137,7 @@ def generate_embeddings_partitioned(database, nodes_generator, model_name, embed
     logging.info(f"Generating embeddings in batches of {_BATCH_SIZE}.")
 
     embeddings_sql = f"""
-        INSERT OR UPDATE INTO NodeEmbedding (subject_id, embedding_type, embedding_content, embeddings, node_types)
+        INSERT OR UPDATE INTO {embedding_table} (subject_id, embedding_type, embedding_content, embeddings, node_types)
         SELECT subject_id, @embedding_type, embedding_content, embeddings.values, node_types
         FROM ML.PREDICT(
             MODEL {model_name},

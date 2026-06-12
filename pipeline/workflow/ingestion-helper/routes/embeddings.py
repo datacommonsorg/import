@@ -62,6 +62,7 @@ def embedding_ingestion(req: EmbeddingIngestionRequest, spanner: SpannerClient =
                 spanner.database,
                 converted_nodes,
                 model_name=model_name,
+                embedding_table=spanner.embedding_table,
                 embedding_type=embedding_type,
                 task_type=task_type,
                 timeout=config.TIMEOUT

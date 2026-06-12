@@ -43,7 +43,9 @@ class SpannerClient:
                  graph_database_id: str = None,
                  location: str = None,
                  models: list[dict] = None,
-                 embedding_space: int = 768):
+                 embedding_space: int = 768,
+                 embedding_table: str = "NodeEmbedding",
+                 embedding_index: str = "NodeEmbeddingIndex"):
         """Initializes a Spanner client and connects to a specific database."""
         spanner_client = spanner.Client(
             project=project_id,
@@ -65,6 +67,8 @@ class SpannerClient:
         self.project_id = project_id
         self.location = location
         self.embedding_space = embedding_space
+        self.embedding_table = embedding_table
+        self.embedding_index = embedding_index
 
         if not models:
             models = self._DEFAULT_MODELS
@@ -449,10 +453,10 @@ class SpannerClient:
         """Initializes the database by creating all required tables and proto bundles."""
         logging.info("Initializing database...")
 
-        query = """
+        query = f"""
             SELECT 'table' as type, table_name as name FROM information_schema.tables WHERE table_schema = ''
             UNION ALL
-            SELECT 'index' as type, index_name as name FROM information_schema.indexes WHERE table_schema = '' AND table_name IN ('NodeEmbedding', 'Edge', 'Observation')
+            SELECT 'index' as type, index_name as name FROM information_schema.indexes WHERE table_schema = '' AND table_name IN ('{self.embedding_table}', 'Edge', 'Observation')
             UNION ALL
             SELECT 'model' as type, model_name as name FROM information_schema.models WHERE model_schema = ''
         """
@@ -482,9 +486,9 @@ class SpannerClient:
 
         required_tables = [
             "Node", "Edge", "Observation", "ImportStatus", "IngestionHistory",
-            "ImportVersionHistory", "IngestionLock", "Cache", "NodeEmbedding"
+            "ImportVersionHistory", "IngestionLock", "Cache", self.embedding_table
         ]
-        required_indexes = ["InEdge", "VariableMeasuredObservationAbout", "NodeEmbeddingIndex"]
+        required_indexes = ["InEdge", "VariableMeasuredObservationAbout", self.embedding_index]
         required_models = [m['name'] for m in self.models]
 
         missing_tables = [
@@ -522,7 +526,9 @@ class SpannerClient:
             schema_content = Template(
                 schema_content).render(
                     models=self.models,
-                    embedding_space=self.embedding_space)
+                    embedding_space=self.embedding_space,
+                    embedding_table=self.embedding_table,
+                    embedding_index=self.embedding_index)
 
             ddl_statements = [
                 s.strip() for s in schema_content.split(';') if s.strip()

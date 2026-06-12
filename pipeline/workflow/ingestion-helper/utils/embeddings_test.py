@@ -176,6 +176,7 @@ class TestEmbeddingUtils(unittest.TestCase):
             mock_database,
             nodes,
             model_name="NodeEmbeddingModel",
+            embedding_table="NodeEmbedding",
             embedding_type="base_text_embedding",
             task_type="RETRIEVAL_QUERY",
             timeout=3600
