@@ -121,8 +121,8 @@ class TestEmbeddingUtils(unittest.TestCase):
 
         converted = list(filter_and_convert_nodes(nodes))
         self.assertEqual(len(converted), 2)
-        self.assertEqual(converted[0], ("dc/1", json.dumps({"title": "dc/1", "description": "Node 1"}), ["Topic"]))
-        self.assertEqual(converted[1], ("dc/3", json.dumps({"title": "dc/3", "description": "Node 3"}), ["Topic", "StatisticalVariable"]))
+        self.assertEqual(converted[0], ("dc/1", json.dumps({"title": "dc/1", "name": "Node 1"}), ["Topic"]))
+        self.assertEqual(converted[1], ("dc/3", json.dumps({"title": "dc/3", "name": "Node 3"}), ["Topic", "StatisticalVariable"]))
 
     def test_filter_and_convert_nodes_json_order(self):
         nodes = [{"subject_id": "dc/order_test", "name": "Test Name", "types": ["Topic"]}]
@@ -135,7 +135,7 @@ class TestEmbeddingUtils(unittest.TestCase):
         decoded = json.loads(json_str, object_pairs_hook=OrderedDict)
 
         # Check first-level keys order
-        self.assertEqual(list(decoded.keys()), ["title", "description"])
+        self.assertEqual(list(decoded.keys()), ["title", "name"])
 
     @patch('utils.embeddings._BATCH_SIZE', 2)
     def test_generate_embeddings_partitioned(self):
