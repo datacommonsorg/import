@@ -63,7 +63,7 @@ public class GraphIngestionPipeline {
             .spannerDatabaseId(options.getSpannerDatabaseId())
             .nodeTableName(options.getSpannerNodeTableName())
             .edgeTableName(options.getSpannerEdgeTableName())
-            .timeSeriesTableName("TimeSeries")
+            .timeSeriesTableName(options.getSpannerTimeSeriesTableName())
             .observationTableName(options.getSpannerObservationTableName())
             .numShards(options.getNumShards())
             .build();
