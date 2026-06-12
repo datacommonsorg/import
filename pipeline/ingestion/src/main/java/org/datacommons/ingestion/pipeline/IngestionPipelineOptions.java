@@ -65,12 +65,6 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setSkipDelete(boolean skipDelete);
 
-  @Description("Whether to write observation graph to Spanner.")
-  @Default.Boolean(false)
-  boolean getWriteObsGraph();
-
-  void setWriteObsGraph(boolean writeObsGraph);
-
   @Description("Spanner Observation table name")
   @Default.String("Observation")
   String getSpannerObservationTableName();
@@ -88,6 +82,12 @@ public interface IngestionPipelineOptions extends PipelineOptions {
   String getSpannerEdgeTableName();
 
   void setSpannerEdgeTableName(String tableName);
+
+  @Description("Spanner TimeSeries table name")
+  @Default.String("TimeSeries")
+  String getSpannerTimeSeriesTableName();
+
+  void setSpannerTimeSeriesTableName(String tableName);
 
   @Description("Whether to initialize database schema.")
   @Default.Boolean(false)

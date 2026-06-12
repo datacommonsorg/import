@@ -14,6 +14,7 @@ main:
           - spanner_database_id: '${sys.get_env("SPANNER_DATABASE_ID")}'
           - helper_url: ${"https://ingestion-helper-service-" + sys.get_env("PROJECT_NUMBER") + "." + location + ".run.app"}
           - import_list: ${default(map.get(args, "importList"), [])}
+          - skip_aggregation: ${default(map.get(args, "skipAggregation"), true)}
           - dataflow_job_id: null
           - execution_error: null
     - acquire_ingestion_lock:
@@ -61,6 +62,10 @@ main:
                   helper_url: ${helper_url}
                   workflow_id: '${sys.get_env("GOOGLE_CLOUD_WORKFLOW_EXECUTION_ID")}'
                 result: dataflow_job_id
+            - check_skip_aggregation:
+                switch:
+                  - condition: ${skip_aggregation}
+                    next: update_ingestion_status
             - run_aggregation_job:
                 call: run_aggregation_job
                 args:
@@ -181,6 +186,9 @@ run_dataflow_job:
                 projectId: '${spanner_project_id}'
                 spannerInstanceId: '${spanner_instance_id}'
                 spannerDatabaseId: '${spanner_database_id}'
+                # Revert this once switched to the new DB.
+                spannerObservationTableName: 'Observation_final_v2'
+                spannerTimeSeriesTableName: 'TimeSeries_final_v2'
               environment:
                 numWorkers: ${numWorkers}
                 machineType: ${machineType}

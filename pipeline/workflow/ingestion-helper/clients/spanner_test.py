@@ -35,14 +35,14 @@ class TestSpannerClient(unittest.TestCase):
         mock_snapshot = MagicMock()
         mock_db.snapshot.return_value.__enter__.return_value = mock_snapshot
         mock_snapshot.execute_sql.return_value = [
-            ["table", "Node"], ["table", "Edge"], ["table", "Observation"],
+            ["table", "Node"], ["table", "Edge"], ["table", "TimeSeries"], ["table", "Observation"],
             ["table", "NodeEmbedding"], ["table", "ImportStatus"],
             ["table", "IngestionHistory"], ["table", "ImportVersionHistory"],
             ["table", "IngestionLock"], ["table", "Cache"],
             ["table", "VariableMetadata"],
             ["index", "NodeEmbeddingIndex"],
             ["index", "InEdge"],
-            ["index", "VariableMeasuredObservationAbout"],
+            ["index", "TimeSeriesByProvenance"],
             ["model", "NodeEmbeddingModel"]
         ]
         

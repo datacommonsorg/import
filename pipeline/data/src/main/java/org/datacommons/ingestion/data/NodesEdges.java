@@ -1,5 +1,6 @@
 package org.datacommons.ingestion.data;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -10,7 +11,7 @@ import java.util.Objects;
  *
  * <p>Objects of this class will only be used in-memory and will not be transmitted in the pipeline.
  */
-public class NodesEdges {
+public class NodesEdges implements Serializable {
 
   private List<Node> nodes;
   private List<Edge> edges;

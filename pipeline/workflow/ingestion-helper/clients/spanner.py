@@ -456,7 +456,7 @@ class SpannerClient:
         query = f"""
             SELECT 'table' as type, table_name as name FROM information_schema.tables WHERE table_schema = ''
             UNION ALL
-            SELECT 'index' as type, index_name as name FROM information_schema.indexes WHERE table_schema = '' AND table_name IN ('{self.embedding_table}', 'Edge', 'Observation')
+            SELECT 'index' as type, index_name as name FROM information_schema.indexes WHERE table_schema = '' AND table_name IN ('NodeEmbedding', 'Edge', 'TimeSeries')
             UNION ALL
             SELECT 'model' as type, model_name as name FROM information_schema.models WHERE model_schema = ''
         """
@@ -485,11 +485,11 @@ class SpannerClient:
         logging.info(f"Existing models: {existing_models}")
 
         required_tables = [
-            "Node", "Edge", "Observation", "ImportStatus", "IngestionHistory",
-            "ImportVersionHistory", "IngestionLock", "Cache", self.embedding_table
+            "Node", "Edge", "TimeSeries", "Observation", "ImportStatus", "IngestionHistory",
+            "ImportVersionHistory", "IngestionLock", "Cache", "NodeEmbedding"
         ]
-        required_indexes = ["InEdge", "VariableMeasuredObservationAbout", self.embedding_index]
-        required_models = [m['name'] for m in self.models]
+        required_indexes = ["InEdge", "TimeSeriesByProvenance", "NodeEmbeddingIndex"]
+        required_models = ["NodeEmbeddingModel"]
 
         missing_tables = [
             t for t in required_tables if t not in existing_tables

@@ -8,14 +8,14 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import org.apache.beam.sdk.metrics.Counter;
-import org.datacommons.Storage.Observations;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
+import org.datacommons.ingestion.data.TimeSeries;
+import org.datacommons.ingestion.data.TimeSeriesKey;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.datacommons.proto.Mcf.McfGraph.PropertyValues;
 import org.datacommons.proto.Mcf.McfGraph.TypedValue;
-import org.datacommons.proto.Mcf.McfOptimizedGraph;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries;
 import org.datacommons.proto.Mcf.McfStatVarObsSeries.StatVarObs;
 import org.datacommons.proto.Mcf.McfType;
@@ -306,35 +306,21 @@ public class GraphReaderTest {
   }
 
   @Test
-  public void testGraphToObservations() {
-    McfOptimizedGraph optimizedGraph =
-        McfOptimizedGraph.newBuilder()
-            .setSvObsSeries(
-                McfStatVarObsSeries.newBuilder()
-                    .setKey(
-                        McfStatVarObsSeries.Key.newBuilder()
-                            .setObservationAbout("geoId/testPlace")
-                            .setVariableMeasured("testStatVar")
-                            .setObservationPeriod("P1Y")
-                            .setMeasurementMethod("dcAggregate/testMethod")
-                            .setUnit("testUnit")
-                            .setScalingFactor("100")
-                            .setProvenanceUrl("http://example.com"))
-                    .addSvObsList(
-                        StatVarObs.newBuilder().setDcid("obs1").setDate("2020").setNumber(10.0))
-                    .addSvObsList(
-                        StatVarObs.newBuilder()
-                            .setDcid("obs2")
-                            .setDate("2021")
-                            .setText("someText")))
+  public void testToTimeSeries() {
+    McfStatVarObsSeries.Key key =
+        McfStatVarObsSeries.Key.newBuilder()
+            .setObservationAbout("geoId/testPlace")
+            .setVariableMeasured("testStatVar")
+            .setObservationPeriod("P1Y")
+            .setMeasurementMethod("dcAggregate/testMethod")
+            .setUnit("testUnit")
+            .setScalingFactor("100")
+            .setProvenanceUrl("http://example.com")
             .build();
 
-    Observations expectedObsValues =
-        Observations.newBuilder().putValues("2020", "10.0").putValues("2021", "someText").build();
-
-    Observation expectedObservation =
-        Observation.builder()
-            .observationAbout("geoId/testPlace")
+    TimeSeries expected1 =
+        TimeSeries.builder()
+            .entity1("geoId/testPlace")
             .variableMeasured("testStatVar")
             .measurementMethod("testMethod")
             .isDcAggregate(true)
@@ -343,61 +329,76 @@ public class GraphReaderTest {
             .unit("testUnit")
             .scalingFactor("100")
             .provenanceUrl("http://example.com")
-            .observations(expectedObsValues)
+            .isBaseDc(true)
             .build();
 
-    Observation actualObservation =
-        GraphReader.graphToObservations(optimizedGraph, "test_import", true);
+    TimeSeries expected2 =
+        TimeSeries.builder()
+            .entity1("geoId/testPlace")
+            .variableMeasured("testStatVar")
+            .measurementMethod("testMethod")
+            .isDcAggregate(true)
+            .importName("test_import")
+            .observationPeriod("P1Y")
+            .unit("testUnit")
+            .scalingFactor("100")
+            .provenanceUrl("http://example.com")
+            .isBaseDc(false)
+            .build();
 
-    assertEquals(expectedObservation, actualObservation);
+    TimeSeries actual1 = GraphReader.toTimeSeries(key, "test_import", true);
+    assertEquals(expected1, actual1);
+
+    TimeSeries actual2 = GraphReader.toTimeSeries(key, "test_import", false);
+    assertEquals(expected2, actual2);
   }
 
   @Test
-  public void testGraphToObservationsWithoutBaseDcPrefix() {
-    McfOptimizedGraph optimizedGraph =
-        McfOptimizedGraph.newBuilder()
-            .setSvObsSeries(
-                McfStatVarObsSeries.newBuilder()
-                    .setKey(
-                        McfStatVarObsSeries.Key.newBuilder()
-                            .setObservationAbout("geoId/testPlace")
-                            .setVariableMeasured("testStatVar")
-                            .setObservationPeriod("P1Y")
-                            .setMeasurementMethod("dcAggregate/testMethod")
-                            .setUnit("testUnit")
-                            .setScalingFactor("100")
-                            .setProvenanceUrl("http://example.com"))
-                    .addSvObsList(
-                        StatVarObs.newBuilder().setDcid("obs1").setDate("2020").setNumber(10.0))
-                    .addSvObsList(
-                        StatVarObs.newBuilder()
-                            .setDcid("obs2")
-                            .setDate("2021")
-                            .setText("someText")))
+  public void testToTimeSeriesKey() {
+    McfStatVarObsSeries.Key key =
+        McfStatVarObsSeries.Key.newBuilder()
+            .setObservationAbout("geoId/testPlace")
+            .setVariableMeasured("testStatVar")
+            .setObservationPeriod("P1Y")
+            .setMeasurementMethod("dcAggregate/testMethod")
+            .setUnit("testUnit")
+            .setScalingFactor("100")
+            .setProvenanceUrl("http://example.com")
             .build();
 
-    Observations expectedObsValues =
-        Observations.newBuilder().putValues("2020", "10.0").putValues("2021", "someText").build();
+    String facetId =
+        TimeSeries.calculateFacetId("test_import", "testMethod", "P1Y", "100", "testUnit", true);
+    TimeSeriesKey expectedKey =
+        new TimeSeriesKey(
+            "testStatVar", "geoId/testPlace", "", "P1Y", "testMethod", "testUnit", "100", facetId);
 
-    Observation expectedObservation =
-        Observation.builder()
-            .isBaseDc(false) // Custom DC
-            .observationAbout("geoId/testPlace")
-            .variableMeasured("testStatVar")
-            .measurementMethod("testMethod")
-            .isDcAggregate(true)
-            .importName("test_import")
-            .observationPeriod("P1Y")
-            .unit("testUnit")
-            .scalingFactor("100")
-            .provenanceUrl("http://example.com")
-            .observations(expectedObsValues)
-            .build();
+    TimeSeriesKey actualKey = GraphReader.toTimeSeriesKey(key, "test_import");
+    assertEquals(expectedKey, actualKey);
+  }
 
-    Observation actualObservation =
-        GraphReader.graphToObservations(optimizedGraph, "test_import", false);
+  @Test
+  public void testToObservation() {
+    String facetId =
+        TimeSeries.calculateFacetId("test_import", "testMethod", "P1Y", "100", "testUnit", true);
+    TimeSeriesKey seriesKey =
+        new TimeSeriesKey(
+            "testStatVar", "geoId/testPlace", "", "P1Y", "testMethod", "testUnit", "100", facetId);
 
-    assertEquals(expectedObservation, actualObservation);
-    assertEquals("test_import", actualObservation.getObsGraph().getEdges().get(0).getProvenance());
+    StatVarObs obs1 =
+        StatVarObs.newBuilder().setDcid("obs1").setDate("2020").setNumber(10.0).build();
+    StatVarObs obs2 =
+        StatVarObs.newBuilder().setDcid("obs2").setDate("2021").setText("someText").build();
+
+    Observation expected1 =
+        Observation.builder().seriesKey(seriesKey).date("2020").value("10.0").build();
+
+    Observation expected2 =
+        Observation.builder().seriesKey(seriesKey).date("2021").value("someText").build();
+
+    Observation actual1 = GraphReader.toObservation(seriesKey, obs1);
+    assertEquals(expected1, actual1);
+
+    Observation actual2 = GraphReader.toObservation(seriesKey, obs2);
+    assertEquals(expected2, actual2);
   }
 }
