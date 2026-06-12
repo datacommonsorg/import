@@ -83,6 +83,12 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setSpannerEdgeTableName(String tableName);
 
+  @Description("Spanner TimeSeries table name")
+  @Default.String("TimeSeries")
+  String getSpannerTimeSeriesTableName();
+
+  void setSpannerTimeSeriesTableName(String tableName);
+
   @Description("Whether to initialize database schema.")
   @Default.Boolean(false)
   boolean getInitializeDatabase();
