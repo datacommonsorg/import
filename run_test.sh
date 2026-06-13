@@ -19,22 +19,22 @@ set -e
 # Fixes lint
 function run_lint_fix {
   echo -e "#### Fixing Python code"
-  python3 -m venv .env
-  source .env/bin/activate
+  python3 -m venv .venv
+  source .venv/bin/activate
   pip3 install yapf==0.40.2 -q
   if ! command -v isort &> /dev/null
   then
     pip3 install isort -q
   fi
-  yapf -r -i -p --style='{based_on_style: google, indent_width: 2}' simple/ -e=*pb2.py -e=**/.env/**
-  isort simple/ --skip-glob=*pb2.py  --skip-glob=**/.env/** --profile google
+  yapf -r -i -p --style='{based_on_style: google, indent_width: 2}' simple/ -e=*pb2.py -e=**/.venv/**
+  isort simple/ --skip-glob=*pb2.py  --skip-glob=**/.venv/** --profile google
   deactivate
 }
 
 # Lint test
 function run_lint_test {
-  python3 -m venv .env
-  source .env/bin/activate
+  python3 -m venv .venv
+  source .venv/bin/activate
   pip3 install yapf==0.40.2 -q
   if ! command -v isort &> /dev/null
   then
@@ -42,13 +42,13 @@ function run_lint_test {
   fi
 
   echo -e "#### Checking Python style"
-  if ! yapf --recursive --diff --style='{based_on_style: google, indent_width: 2}' -p simple/ -e=*pb2.py -e=**/.env/**; then
+  if ! yapf --recursive --diff --style='{based_on_style: google, indent_width: 2}' -p simple/ -e=*pb2.py -e=**/.venv/**; then
     echo "Fix Python lint errors by running ./run_test.sh -f"
     exit 1
   fi
 
   echo -e "#### Checking Python import order"
-  if ! isort simple/ -c --skip-glob=*pb2.py  --skip-glob=**/.env/** --profile google; then
+  if ! isort simple/ -c --skip-glob=*pb2.py  --skip-glob=**/.venv/** --profile google; then
     echo "Fix Python import sort orders by running ./run_test.sh -f"
     exit 1
   fi
@@ -72,8 +72,8 @@ function py_test {
   # Do not use Cloud SQL.
   export USE_CLOUDSQL=false
 
-  python3 -m venv .env
-  source .env/bin/activate
+  python3 -m venv .venv
+  source .venv/bin/activate
 
   cd simple
   pip3 install -r requirements.txt -q

@@ -22,8 +22,12 @@ import os
 import sqlite3
 from typing import Any
 
+from google.auth.exceptions import DefaultCredentialsError
+import google.auth.transport.requests
+from google.auth.transport.requests import AuthorizedSession
 from google.cloud.sql.connector.connector import Connector
 from google.cloud.sql.connector.connector import IPTypes
+from google.oauth2 import id_token
 import pandas as pd
 from pyld import jsonld
 from pymysql.connections import Connection
@@ -415,6 +419,27 @@ class DataCommonsPlatformDb(Db):
 
   def __init__(self, config: dict) -> None:
     self.url = config[FIELD_DB_PARAMS][DATA_COMMONS_PLATFORM_URL]
+    self.nodes_url = self.url + self.NODES_PATH
+
+    def _get_id_token(url):
+      # 1. Try to get default credentials
+      creds, _ = google.auth.default()
+      auth_req = google.auth.transport.requests.Request()
+      
+      # 2. Refresh to ensure the token is loaded
+      creds.refresh(auth_req)
+      
+      # 3. Check if the credentials already have an id_token (typical for local gcloud)
+      if hasattr(creds, 'id_token') and creds.id_token:
+          return creds.id_token
+          
+      # 4. Fallback to fetching it (typical for Service Accounts/Cloud environments)
+      return google.oauth2.id_token.fetch_id_token(auth_req, url)
+    id_token = _get_id_token(self.url)
+
+    # 2. Make the authenticated request
+    self.headers = {"Authorization": f"Bearer {id_token}"}
+
 
   def maybe_clear_before_import(self):
     # Not applicable for Data Commons Platform.
@@ -430,8 +455,7 @@ class DataCommonsPlatformDb(Db):
         "Writing %s triples (%s nodes) to Data Commons Platform at [%s]",
         len(triples), len(jsonld["@graph"]), self.url)
     logging.info("Writing jsonld: %s", json.dumps(jsonld, indent=2))
-    nodes_url = self.url + self.NODES_PATH
-    response = requests.post(nodes_url, json=jsonld)
+    response = requests.post(self.nodes_url, json=jsonld, headers=self.headers)
     if response.status_code != 200:
       # TODO: For now, we just log a warning, but we should raise an exception.
       logging.warning("Failed to write triples to Data Commons Platform: %s",
