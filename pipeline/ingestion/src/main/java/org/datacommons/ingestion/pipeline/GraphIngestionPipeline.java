@@ -22,6 +22,7 @@ import org.datacommons.ingestion.data.ProvenanceUtils;
 import org.datacommons.ingestion.data.TimeSeries;
 import org.datacommons.ingestion.spanner.SpannerClient;
 import org.datacommons.ingestion.util.GraphReader;
+import org.datacommons.ingestion.util.GraphTransformer;
 import org.datacommons.ingestion.util.PipelineUtils;
 import org.datacommons.proto.Mcf.McfGraph;
 import org.slf4j.Logger;
@@ -185,11 +186,17 @@ public class GraphIngestionPipeline {
       combinedGraph = PipelineUtils.combineGraphNodes(importName, schemaNodes);
     }
 
+    // Transform schema nodes (handle quantities, etc.)
+    PCollection<McfGraph> transformedGraph =
+        combinedGraph.apply(
+            "TransformNodes-" + importName,
+            org.apache.beam.sdk.transforms.ParDo.of(new GraphTransformer()));
+
     // Convert all nodes to mutations
     PCollection<Mutation> nodeMutations =
         GraphReader.graphToNodes(
                 "NodeMutations-" + importName,
-                combinedGraph,
+                transformedGraph,
                 spannerClient,
                 nodeCounter,
                 nodeInvalidTypeCounter)
@@ -197,7 +204,7 @@ public class GraphIngestionPipeline {
     PCollection<Mutation> edgeMutations =
         GraphReader.graphToEdges(
                 "EdgeMutations-" + importName,
-                combinedGraph,
+                transformedGraph,
                 provenance,
                 spannerClient,
                 edgeCounter)
