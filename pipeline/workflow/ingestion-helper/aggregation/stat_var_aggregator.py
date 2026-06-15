@@ -14,7 +14,7 @@
 """Generates aggregated Observations and TimeSeries directly in Spanner."""
 
 import logging
-from typing import List
+from typing import List, Optional
 
 from google.cloud import bigquery
 
@@ -32,12 +32,24 @@ class StatVarAggregator:
     TimeSeries and Observation rows back to Spanner.
     """
 
-    def __init__(self, executor: BigQueryExecutor) -> None:
-        """Initializes the StatVarAggregator with the executor."""
+    def __init__(self, executor: BigQueryExecutor, is_base_dc: bool = True) -> None:
+        """Initializes the StatVarAggregator.
+
+        Args:
+            executor: The BigQueryExecutor to use.
+            is_base_dc: Whether this is running in the base Data Commons environment,
+                which determines if "dc/base/" prefix should be added to provenances.
+        """
         self.executor = executor
+        self.is_base_dc = is_base_dc
 
     def aggregate_stat_vars(
-        self, ancestor_sv: str, source_svs: List[str], import_names: List[str]
+        self,
+        ancestor_sv: str,
+        source_svs: List[str],
+        import_names: List[str],
+        output_import_name: Optional[str] = None,
+        skip_all_sources_present_check: bool = False
     ) -> List[bigquery.job.QueryJob]:
         """Aggregates multiple source StatVars into an ancestor StatVar.
 
@@ -47,7 +59,11 @@ class StatVarAggregator:
         Args:
             ancestor_sv: The target parent StatVar ID (e.g., 'Count_Person').
             source_svs: List of source StatVar IDs to aggregate.
-            import_names: List of import names (provenances) to process.
+            import_names: List of input import names (provenances) to process.
+            output_import_name: Optional name for the output import (provenance).
+                If not specified, defaults to '{import_names[0]}_StatVarAgg'.
+            skip_all_sources_present_check: If True, aggregates even if some source
+                variables are missing. If False, only aggregates if all sources are present.
 
         Returns:
             A list of BigQuery QueryJob objects representing the async execution.
@@ -56,20 +72,32 @@ class StatVarAggregator:
             logging.info("Empty imports or sources. Skipping aggregation.")
             return []
 
+        if not output_import_name:
+            output_import_name = f"{import_names[0]}_StatVarAgg"
+
         logging.info(
-            f"Aggregating {source_svs} into {ancestor_sv} for imports {import_names}"
+            f"Aggregating {source_svs} into {ancestor_sv} for imports {import_names} "
+            f"-> output import: {output_import_name} (skip_check={skip_all_sources_present_check})"
         )
 
         # 1. Populate TimeSeries parent rows first (required due to interleaving)
-        ts_job = self._populate_timeseries(ancestor_sv, source_svs, import_names)
+        ts_job = self._populate_timeseries(
+            ancestor_sv, source_svs, import_names, output_import_name
+        )
         
         # 2. Aggregate and populate Observation child rows
-        obs_job = self._populate_observations(ancestor_sv, source_svs, import_names)
+        obs_job = self._populate_observations(
+            ancestor_sv, source_svs, import_names, output_import_name, skip_all_sources_present_check
+        )
 
         return [ts_job, obs_job]
 
     def _populate_timeseries(
-        self, ancestor_sv: str, source_svs: List[str], import_names: List[str]
+        self,
+        ancestor_sv: str,
+        source_svs: List[str],
+        import_names: List[str],
+        output_import_name: str
     ) -> bigquery.job.QueryJob:
         """Creates parent TimeSeries entries for the ancestor StatVar."""
         dest = self.executor.get_spanner_destination_uri()
@@ -79,41 +107,68 @@ class StatVarAggregator:
         safe_sources = [_escape_sql_literal(sv) for sv in source_svs]
         safe_imports = [_escape_sql_literal(name) for name in import_names]
 
+        prefix = "dc/base/" if self.is_base_dc else ""
         sources_str = ", ".join([f"'{sv}'" for sv in safe_sources])
-        imports_str = ", ".join([f"'{name}'" for name in safe_imports])
+        imports_str = ", ".join([f"'{prefix}{name}'" for name in safe_imports])
+        
+        output_provenance = f"{prefix}{output_import_name}"
+        safe_output_provenance = _escape_sql_literal(output_provenance)
+
+        # Construct the facet expression to update measurementMethod and provenance.
+        # We do this on the 'facet' column.
+        facet_expr = f"""
+          JSON_SET(
+            JSON_SET(facet, '$.measurementMethod', 
+                     CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), 'DataCommons'))
+            ),
+            '$.provenance', '{safe_output_provenance}'
+          )
+        """
 
         # SQL to insert new TimeSeries rows.
-        # We read from Spanner, compute new facet_id and facet, and export back to Spanner.
-        # Note: We exclude 'entity1' and other stored generated columns from the SELECT list
-        # because Spanner will automatically compute them from 'entities' and 'facet'.
+        # We stringify JSON columns (entities, facet) before applying DISTINCT,
+        # and then parse them back to JSON in the final SELECT. This is required
+        # because BigQuery does not support SELECT DISTINCT on JSON columns.
         query = f"""  # nosec
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
             spanner_options = '{{"table": "TimeSeries"}}' ) AS
-        SELECT DISTINCT
+        WITH SourceTS AS (
+          SELECT
+            extra_entities_id,
+            TO_JSON_STRING(entities) as entities_str,
+            TO_JSON_STRING({facet_expr}) as facet_str
+          FROM EXTERNAL_QUERY("{connection_id}",
+            '''SELECT extra_entities_id, entities, facet
+               FROM TimeSeries
+               WHERE variable_measured IN ({sources_str})
+                 AND provenance IN ({imports_str})''')
+        ),
+        UniqueTS AS (
+          SELECT DISTINCT
+            extra_entities_id,
+            entities_str,
+            facet_str
+          FROM SourceTS
+        )
+        SELECT
           '{safe_ancestor_sv}' AS variable_measured,
           extra_entities_id,
-          -- Generate new facet_id by hashing the updated facet JSON
-          TO_HEX(SHA256(TO_JSON_STRING(
-            JSON_SET(facet, '$.measurementMethod', 
-                     CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), 'DataCommons'))
-            )
-          ))) AS facet_id,
-          entities,
-          JSON_SET(facet, '$.measurementMethod', 
-                   CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), 'DataCommons'))
-          ) AS facet
-        FROM EXTERNAL_QUERY("{connection_id}",
-          '''SELECT variable_measured, extra_entities_id, entities, facet
-             FROM TimeSeries
-             WHERE variable_measured IN ({sources_str})
-               AND provenance IN ({imports_str})''');
+          TO_HEX(SHA256(facet_str)) AS facet_id,
+          SAFE.PARSE_JSON(entities_str) AS entities,
+          SAFE.PARSE_JSON(facet_str) AS facet
+        FROM UniqueTS;
         """
         return self.executor.execute(query)
 
     def _populate_observations(
-        self, ancestor_sv: str, source_svs: List[str], import_names: List[str]
+        self,
+        ancestor_sv: str,
+        source_svs: List[str],
+        import_names: List[str],
+        output_import_name: str,
+        skip_all_sources_present_check: bool
     ) -> bigquery.job.QueryJob:
         """Aggregates child Observations and writes them to Spanner."""
         dest = self.executor.get_spanner_destination_uri()
@@ -123,12 +178,29 @@ class StatVarAggregator:
         safe_sources = [_escape_sql_literal(sv) for sv in source_svs]
         safe_imports = [_escape_sql_literal(name) for name in import_names]
 
+        prefix = "dc/base/" if self.is_base_dc else ""
         sources_str = ", ".join([f"'{sv}'" for sv in safe_sources])
-        imports_str = ", ".join([f"'{name}'" for name in safe_imports])
+        imports_str = ", ".join([f"'{prefix}{name}'" for name in safe_imports])
 
-        # SQL to aggregate Observations.
-        # We join Observation with TimeSeries in Spanner to get the facet (to compute the new facet_id),
-        # perform the SUM aggregation in BigQuery, and export back to Spanner.
+        output_provenance = f"{prefix}{output_import_name}"
+        safe_output_provenance = _escape_sql_literal(output_provenance)
+
+        # Construct the same facet expression to ensure facet_id matches
+        facet_expr = f"""
+          JSON_SET(
+            JSON_SET(facet, '$.measurementMethod', 
+                     CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), 'DataCommons'))
+            ),
+            '$.provenance', '{safe_output_provenance}'
+          )
+        """
+
+        # Filter condition for completeness check
+        if skip_all_sources_present_check:
+            filter_condition = "TRUE"
+        else:
+            filter_condition = f"contribution_count = {len(source_svs)}"
+
         query = f"""  # nosec
         EXPORT DATA
           OPTIONS( uri="{dest}",
@@ -136,18 +208,17 @@ class StatVarAggregator:
             spanner_options = '{{"table": "Observation"}}' ) AS
         WITH MappedObservations AS (
           SELECT
+            o.variable_measured,
             o.entity1,
             o.extra_entities_id,
             o.date,
             SAFE_CAST(o.value AS FLOAT64) as val_num,
             -- Rebuild the same new_facet_id based on the updated facet
             TO_HEX(SHA256(TO_JSON_STRING(
-              JSON_SET(ts.facet, '$.measurementMethod', 
-                       CONCAT('dcAggregate/', COALESCE(JSON_VALUE(ts.facet, '$.measurementMethod'), 'DataCommons'))
-              )
+              {facet_expr}
             ))) AS new_facet_id
           FROM EXTERNAL_QUERY("{connection_id}",
-            '''SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.facet_id, o.date, o.value, ts.facet
+            '''SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.facet_id, o.date, o.value, ts.facet AS facet
                FROM Observation o
                JOIN TimeSeries ts ON o.variable_measured = ts.variable_measured
                  AND o.entity1 = ts.entity1
@@ -155,16 +226,27 @@ class StatVarAggregator:
                  AND o.facet_id = ts.facet_id
                WHERE o.variable_measured IN ({sources_str})
                  AND ts.provenance IN ({imports_str})''') AS o
+        ),
+        AggregatedObs AS (
+          SELECT
+            entity1,
+            extra_entities_id,
+            new_facet_id AS facet_id,
+            date,
+            SUM(val_num) as total_val,
+            COUNT(DISTINCT variable_measured) as contribution_count
+          FROM MappedObservations
+          GROUP BY entity1, extra_entities_id, new_facet_id, date
         )
         SELECT
           '{safe_ancestor_sv}' AS variable_measured,
           entity1,
           extra_entities_id,
-          new_facet_id AS facet_id,
+          facet_id,
           date,
           -- Cast back to string as Spanner Observation.value is STRING(MAX)
-          CAST(SUM(val_num) AS STRING) AS value
-        FROM MappedObservations
-        GROUP BY entity1, extra_entities_id, new_facet_id, date;
+          CAST(total_val AS STRING) AS value
+        FROM AggregatedObs
+        WHERE {filter_condition};
         """
         return self.executor.execute(query)
