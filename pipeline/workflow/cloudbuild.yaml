@@ -34,6 +34,7 @@ substitutions:
 
 steps:
 
+
 # 1. Build services and helper images
 - id: 'build-services'
   name: 'gcr.io/cloud-builders/gcloud'
@@ -59,13 +60,12 @@ steps:
 
 # 3. Run E2E Tests on Staging
 - id: 'e2e-test-staging'
-  name: 'python:3.11'
-  entrypoint: 'bash'
+  name: 'ghcr.io/astral-sh/uv:python3.11-bookworm'
+  entrypoint: 'sh'
   args:
     - '-c'
     - |
-      pip install google-cloud-spanner google-cloud-workflows absl-py
-      python spanner_ingestion_test.py
+      uv run python spanner_ingestion_test.py
   env:
     - 'PROJECT_ID=${_PROJECT_ID}'
     - 'LOCATION=${_LOCATION}'

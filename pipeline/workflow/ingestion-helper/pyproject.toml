@@ -17,12 +17,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "ingestion-helper"
-version = "0.1.0"
+name = "datacommons-ingestion-helper"
+dynamic = ["version"]
 requires-python = ">=3.12"
 description = "Ingestion helper for Data Commons Spanner ingestion"
 dependencies = [
-    "functions-framework==3.*",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.28.0",
+    "pydantic>=2.0.0",
     "google-cloud-spanner",
     "google-api-python-client",
     "google-cloud-storage",
@@ -30,12 +32,28 @@ dependencies = [
     "absl-py",
     "google-cloud-bigquery",
     "redis",
+    "jinja2",
 ]
+
+[tool.hatch.version]
+path = "__init__.py"
 
 [tool.hatch.build.targets.wheel]
 bypass-selection = true
 
+[tool.hatch.build.targets.wheel.force-include]
+"clients/schema.sql" = "clients/schema.sql"
+
 [dependency-groups]
 dev = [
     "pytest",
+    "httpx",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true

@@ -17,22 +17,30 @@ from unittest.mock import MagicMock, patch
 from datetime import datetime
 import os
 
-import main
+from fastapi.testclient import TestClient
+from app import app
+from dependencies import get_spanner_client
+
+client = TestClient(app)
+
 
 class TestMain(unittest.TestCase):
 
-    @patch.dict(os.environ, {
-        "SPANNER_INSTANCE_ID": "test-instance",
-        "SPANNER_DATABASE_ID": "test-db",
-        "SPANNER_PROJECT_ID": "test-proj"
-    })
-    @patch('main.SpannerClient')
-    def test_embedding_ingestion_success(self, mock_spanner_client_class):
+    def setUp(self):
+        # Clear overrides before each test
+        app.dependency_overrides.clear()
+
+    def tearDown(self):
+        # Clear overrides after each test
+        app.dependency_overrides.clear()
+
+    def test_embedding_ingestion_success(self):
         # Mock SpannerClient instance and its database
         mock_spanner_client = MagicMock()
         mock_database = MagicMock()
         mock_spanner_client.database = mock_database
-        mock_spanner_client_class.return_value = mock_spanner_client
+        mock_spanner_client.embedding_table = "NodeEmbedding"
+        mock_spanner_client.embedding_index = "NodeEmbeddingIndex"
 
         # Mock snapshot and execute_sql
         mock_snapshot = MagicMock()
@@ -60,7 +68,8 @@ class TestMain(unittest.TestCase):
             MockResults(
                 rows=[
                     ("dc/1", "Node 1", ["Topic"]),
-                    ("dc/2", None, ["Topic"])
+                    ("dc/2", None, ["Topic"]),
+                    ("dc/3", "SV 1", ["StatisticalVariable"])
                 ],
                 field_names=["subject_id", "name", "types"]
             )
@@ -70,28 +79,22 @@ class TestMain(unittest.TestCase):
         transactions = []
         def run_in_transaction_side_effect(func):
             mock_transaction = MagicMock()
-            mock_transaction.execute_update.return_value = 1
+            mock_transaction.execute_update.return_value = 2
             transactions.append(mock_transaction)
             return func(mock_transaction)
 
         mock_database.run_in_transaction.side_effect = run_in_transaction_side_effect
 
-        # Mock request object
-        mock_request = MagicMock()
-        mock_request.get_json.return_value = {
-            "actionType": "embedding_ingestion",
-            "enableEmbeddings": True
-        }
+        # Register dependency override
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
 
-        # Call the function
-        response, status_code = main.ingestion_helper(mock_request)
+        # Call the FastAPI endpoint
+        response = client.post("/embeddings/ingest", json={"enableEmbeddings": True})
 
         # Assertions
-        self.assertEqual(status_code, 200)
-        self.assertIn("OK", response)
-
-        # Verify SpannerClient was initialized
-        mock_spanner_client_class.assert_called_once()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "OK")
+        self.assertEqual(response.json()["affected_rows"], 2)
 
         # Assertions for get_latest_lock_timestamp and get_updated_nodes
         self.assertEqual(mock_database.snapshot.call_count, 2)
@@ -116,31 +119,22 @@ class TestMain(unittest.TestCase):
 
         # Verify data passed to generate_embeddings_partitioned reached execute_update
         batch = kwargs_tx["params"]["nodes"]
-        self.assertEqual(len(batch), 1)
+        self.assertEqual(len(batch), 2)
         self.assertEqual(batch[0][0], "dc/1")
-        self.assertEqual(batch[0][1], "Node 1")
+        self.assertEqual(batch[1][0], "dc/3")
+        self.assertEqual(batch[0][1], '{"title": "dc/1", "name": "Node 1"}')
 
-    @patch.dict(os.environ, {
-        "SPANNER_INSTANCE_ID": "test-instance",
-        "SPANNER_DATABASE_ID": "test-db",
-        "SPANNER_PROJECT_ID": "test-proj"
-    })
-    @patch('main.SpannerClient')
-    def test_seed_database_success(self, mock_spanner_client_class):
+    def test_seed_database_success(self):
         mock_spanner_client = MagicMock()
-        mock_spanner_client_class.return_value = mock_spanner_client
+        app.dependency_overrides[get_spanner_client] = lambda: mock_spanner_client
 
-        mock_request = MagicMock()
-        mock_request.get_json.return_value = {
-            "actionType": "seed_database"
-        }
+        # Call the FastAPI endpoint
+        response = client.post("/database/seed")
 
-        response, status_code = main.ingestion_helper(mock_request)
-
-        self.assertEqual(status_code, 200)
-        self.assertIn("OK", response)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "OK")
         mock_spanner_client.seed_database.assert_called_once()
+
 
 if __name__ == '__main__':
     unittest.main()
-

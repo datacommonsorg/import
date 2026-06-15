@@ -15,7 +15,8 @@ import com.google.cloud.spanner.Value;
 import com.google.cloud.spanner.admin.database.v1.DatabaseAdminClient;
 import com.google.cloud.spanner.admin.database.v1.DatabaseAdminSettings;
 import com.google.common.base.Joiner;
-import com.google.protobuf.ByteString;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.spanner.admin.database.v1.CreateDatabaseRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -45,12 +46,16 @@ import org.apache.beam.sdk.values.PCollection;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.Observation;
+import org.datacommons.ingestion.data.ProvenanceUtils;
+import org.datacommons.ingestion.data.TimeSeries;
+import org.datacommons.ingestion.data.TimeSeriesKey;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SpannerClient implements Serializable {
   private static final Logger LOGGER = LoggerFactory.getLogger(SpannerClient.class);
+  private static final Gson GSON = new Gson();
 
   // Decrease batch size for observations (bigger rows)
   private static final int SPANNER_BATCH_SIZE_BYTES = 500 * 1024;
@@ -70,6 +75,7 @@ public class SpannerClient implements Serializable {
   private final String spannerDatabaseId;
   private final String nodeTableName;
   private final String edgeTableName;
+  private final String timeSeriesTableName;
   private final String observationTableName;
   private final int numShards;
   private final String emulatorHost;
@@ -80,6 +86,7 @@ public class SpannerClient implements Serializable {
     this.spannerDatabaseId = builder.spannerDatabaseId;
     this.nodeTableName = builder.nodeTableName;
     this.edgeTableName = builder.edgeTableName;
+    this.timeSeriesTableName = builder.timeSeriesTableName;
     this.observationTableName = builder.observationTableName;
     this.numShards = builder.numShards;
     this.emulatorHost = builder.emulatorHost;
@@ -105,20 +112,20 @@ public class SpannerClient implements Serializable {
   private List<String> parseDdlStatements(BufferedReader reader) throws IOException {
     String fullText = reader.lines().collect(Collectors.joining("\n"));
     String[] blocksArray = fullText.split("\\n\\s*\\n+", 0);
-    return new ArrayList<>(Arrays.asList(blocksArray));
+    return Arrays.stream(blocksArray)
+        .map(String::trim)
+        .filter(stmt -> !stmt.isEmpty())
+        .filter(stmt -> !isCommentsOnly(stmt))
+        .map(stmt -> stmt.endsWith(";") ? stmt.substring(0, stmt.length() - 1) : stmt)
+        .map(String::trim)
+        .collect(Collectors.toList());
   }
 
-  private ByteString loadProtoDescriptors() {
-    InputStream is = getClass().getClassLoader().getResourceAsStream("descriptor.proto.bin");
-    if (is == null) {
-      throw new IllegalStateException(
-          "Could not find proto descriptor file (descriptor.proto.bin) in resources.");
-    }
-    try {
-      return ByteString.copyFrom(is.readAllBytes());
-    } catch (IOException e) {
-      throw new IllegalStateException("Failed to read proto descriptor file.", e);
-    }
+  private static boolean isCommentsOnly(String block) {
+    return Arrays.stream(block.split("\n"))
+        .map(String::trim)
+        .filter(line -> !line.isEmpty())
+        .allMatch(line -> line.startsWith("--"));
   }
 
   /** Initializes the remote Spanner database. */
@@ -186,39 +193,31 @@ public class SpannerClient implements Serializable {
 
     boolean nodeExists = checkTableExists(currentDdlStatements, "Node");
     boolean edgeExists = checkTableExists(currentDdlStatements, "Edge");
+    boolean timeSeriesExists = checkTableExists(currentDdlStatements, "TimeSeries");
     boolean observationExists = checkTableExists(currentDdlStatements, "Observation");
-    boolean protoBundleExists =
-        currentDdlStatements.stream()
-            .anyMatch(s -> s.trim().toUpperCase().startsWith("CREATE PROTO BUNDLE"));
 
-    if (nodeExists && edgeExists && observationExists && protoBundleExists) {
+    if (nodeExists && edgeExists && timeSeriesExists && observationExists) {
       LOGGER.info("Database is fully initialized.");
       return;
     }
 
-    if (nodeExists || edgeExists || observationExists) {
+    if (nodeExists || edgeExists || timeSeriesExists || observationExists) {
       throw new IllegalStateException(
           String.format(
-              "Database is in an inconsistent state. Node: %b, Edge: %b, Observation: %b. Please clean up the database manually.",
-              nodeExists, edgeExists, observationExists));
+              "Database is in an inconsistent state. Node: %b, Edge: %b, TimeSeries: %b, Observation: %b. Please clean up the database manually.",
+              nodeExists, edgeExists, timeSeriesExists, observationExists));
     }
 
     LOGGER.info("Database is empty. Applying DDL statements to existing database.");
     List<String> statementsToApply = readDdlStatements();
-    if (protoBundleExists) {
-      LOGGER.info("Proto bundle already exists in database. Skipping CREATE PROTO BUNDLE.");
-      statementsToApply.removeIf(s -> s.trim().toUpperCase().startsWith("CREATE PROTO BUNDLE"));
-    }
 
-    ByteString protoDescriptors = loadProtoDescriptors();
     try {
-      // Update the Schema to include the new tables and proto bundle.
+      // Update the Schema to include the new tables.
       dbAdminClient
           .updateDatabaseDdlAsync(
               com.google.spanner.admin.database.v1.UpdateDatabaseDdlRequest.newBuilder()
                   .setDatabase(databasePath)
                   .addAllStatements(statementsToApply)
-                  .setProtoDescriptors(protoDescriptors)
                   .build())
           .get();
       LOGGER.info("Successfully applied DDL statements to existing database.");
@@ -239,7 +238,18 @@ public class SpannerClient implements Serializable {
     }
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-      return parseDdlStatements(reader);
+      List<String> statements = parseDdlStatements(reader);
+      if (emulatorHost != null) {
+        statements =
+            statements.stream()
+                .map(
+                    stmt ->
+                        stmt.replaceAll(
+                            "(?i),?\\s*OPTIONS\\s*\\(\\s*columnar_policy\\s*=\\s*'enabled'\\s*\\)",
+                            ""))
+                .toList();
+      }
+      return statements;
     } catch (IOException e) {
       throw new IllegalStateException("Failed to read schema.sql", e);
     }
@@ -366,33 +376,6 @@ public class SpannerClient implements Serializable {
         .build();
   }
 
-  public Mutation toObservationMutation(Observation observation) {
-    return Mutation.newInsertOrUpdateBuilder(observationTableName)
-        .set("observation_about")
-        .to(observation.getObservationAbout())
-        .set("variable_measured")
-        .to(observation.getVariableMeasured())
-        .set("facet_id")
-        .to(observation.getFacetId())
-        .set("observation_period")
-        .to(observation.getObservationPeriod())
-        .set("measurement_method")
-        .to(observation.getMeasurementMethod())
-        .set("unit")
-        .to(observation.getUnit())
-        .set("scaling_factor")
-        .to(observation.getScalingFactor())
-        .set("observations")
-        .to(Value.protoMessage(observation.getObservations()))
-        .set("import_name")
-        .to(observation.getImportName())
-        .set("provenance_url")
-        .to(observation.getProvenanceUrl())
-        .set("is_dc_aggregate")
-        .to(observation.getIsDcAggregate())
-        .build();
-  }
-
   public List<KV<String, Mutation>> toGraphKVMutations(List<Node> nodes, List<Edge> edges) {
     return Stream.concat(
             nodes.stream().map(this::toNodeMutation), edges.stream().map(this::toEdgeMutation))
@@ -400,22 +383,132 @@ public class SpannerClient implements Serializable {
         .toList();
   }
 
-  public List<KV<String, Mutation>> toObservationKVMutations(List<Observation> observations) {
-    return observations.stream()
-        .map(this::toObservationMutation)
-        .map(mutation -> KV.of(getObservationKVKey(mutation), mutation))
-        .toList();
+  public List<KV<String, Mutation>> toObservationKVMutations(List<TimeSeries> observations) {
+    List<KV<String, Mutation>> kvs = new ArrayList<>();
+    for (TimeSeries obs : observations) {
+      // Reuse toTimeSeriesMutation to build the TimeSeries mutation
+      Mutation ts = toTimeSeriesMutation(obs);
+      String tsKey = getFullObservationKey(ts);
+      kvs.add(KV.of("TS::" + tsKey, ts));
+
+      String variableMeasured = obs.getVariableMeasured();
+      String entity1 = obs.getEntity1();
+      String extraEntitiesId = obs.getExtraEntitiesId();
+      String facetId = obs.getFacetId();
+
+      for (java.util.Map.Entry<String, String> entry : obs.getObservations().entrySet()) {
+        Mutation o =
+            Mutation.newInsertOrUpdateBuilder(observationTableName)
+                .set("variable_measured")
+                .to(variableMeasured)
+                .set("entity1")
+                .to(entity1)
+                .set("extra_entities_id")
+                .to(extraEntitiesId)
+                .set("facet_id")
+                .to(facetId)
+                .set("date")
+                .to(entry.getKey())
+                .set("value")
+                .to(entry.getValue())
+                .set("last_update_timestamp")
+                .to(Value.COMMIT_TIMESTAMP)
+                .build();
+        kvs.add(KV.of("OBS::" + tsKey + "::" + entry.getKey(), o));
+      }
+    }
+    return kvs;
+  }
+
+  public Mutation toTimeSeriesMutation(TimeSeries obs) {
+    String variableMeasured = obs.getVariableMeasured();
+    String entity1 = obs.getEntity1();
+    String extraEntitiesId = obs.getExtraEntitiesId();
+    String facetId = obs.getFacetId();
+
+    // Create entities JSON
+    JsonObject entitiesJson = new JsonObject();
+    entitiesJson.addProperty("entity1", entity1);
+
+    // Create facet JSON
+    JsonObject facetJson = new JsonObject();
+    facetJson.addProperty(
+        "provenance", ProvenanceUtils.getProvenanceDcid(obs.getImportName(), obs.getIsBaseDc()));
+    addPropertyIfNotEmpty(facetJson, "measurementMethod", obs.getMeasurementMethod());
+    addPropertyIfNotEmpty(facetJson, "observationPeriod", obs.getObservationPeriod());
+    addPropertyIfNotEmpty(facetJson, "scalingFactor", obs.getScalingFactor());
+    addPropertyIfNotEmpty(facetJson, "unit", obs.getUnit());
+    facetJson.addProperty("isDcAggregate", obs.getIsDcAggregate());
+
+    return Mutation.newInsertOrUpdateBuilder(timeSeriesTableName)
+        .set("variable_measured")
+        .to(variableMeasured)
+        // entity1 is a STORED generated column in TimeSeries, DO NOT write to it directly!
+        .set("extra_entities_id")
+        .to(extraEntitiesId)
+        .set("facet_id")
+        .to(facetId)
+        .set("entities")
+        .to(Value.json(GSON.toJson(entitiesJson)))
+        .set("facet")
+        .to(Value.json(GSON.toJson(facetJson)))
+        .set("last_update_timestamp")
+        .to(Value.COMMIT_TIMESTAMP)
+        .build();
+  }
+
+  private static void addPropertyIfNotEmpty(JsonObject json, String property, String value) {
+    if (value != null && !value.trim().isEmpty()) {
+      json.addProperty(property, value);
+    }
+  }
+
+  public Mutation toObservationMutation(Observation obs) {
+    TimeSeriesKey key = obs.getSeriesKey();
+    return Mutation.newInsertOrUpdateBuilder(observationTableName)
+        .set("variable_measured")
+        .to(key.getVariableMeasured())
+        .set("entity1")
+        .to(key.getEntity1())
+        .set("extra_entities_id")
+        .to(key.getExtraEntitiesId())
+        .set("facet_id")
+        .to(key.getFacetId())
+        .set("date")
+        .to(obs.getDate())
+        .set("value")
+        .to(obs.getValue())
+        .set("last_update_timestamp")
+        .to(Value.COMMIT_TIMESTAMP)
+        .build();
   }
 
   public List<KV<String, Mutation>> filterObservationKVMutations(
       List<KV<String, Mutation>> kvs, Map<String, Boolean> seenObs) {
     var filtered = new ArrayList<KV<String, Mutation>>();
     for (var kv : kvs) {
-      var key = getFullObservationKey(kv.getValue());
-      if (seenObs.get(key) != null) {
+      Mutation m = kv.getValue();
+      String dedupeKey;
+      var mutationMap = m.asMap();
+      String tsKey =
+          Joiner.on("::")
+              .join(
+                  getMutationValue(mutationMap, "variable_measured"),
+                  getMutationValue(mutationMap, "entity1"),
+                  getMutationValue(mutationMap, "extra_entities_id"),
+                  getMutationValue(mutationMap, "facet_id"));
+
+      if (m.getTable().equals(timeSeriesTableName)) {
+        dedupeKey = "TS::" + tsKey;
+      } else if (m.getTable().equals(observationTableName)) {
+        dedupeKey = "OBS::" + tsKey + "::" + getMutationValue(mutationMap, "date");
+      } else {
+        dedupeKey = "UNKNOWN::" + kv.getKey();
+      }
+      if (seenObs.get(dedupeKey) != null) {
         continue;
       }
-      seenObs.putIfAbsent(key, true);
+      seenObs.putIfAbsent(dedupeKey, true);
 
       filtered.add(kv);
     }
@@ -458,7 +551,7 @@ public class SpannerClient implements Serializable {
     return getMutationValue(mutation, "subject_id");
   }
 
-  private static String getMutationValue(Mutation mutation, String columnName) {
+  public static String getMutationValue(Mutation mutation, String columnName) {
     return getMutationValue(mutation.asMap(), columnName);
   }
 
@@ -478,7 +571,7 @@ public class SpannerClient implements Serializable {
    *     var valueN = getMutationValue(mutationMap, "columnN");
    * </code>
    */
-  private static String getMutationValue(Map<String, Value> mutationMap, String columnName) {
+  public static String getMutationValue(Map<String, Value> mutationMap, String columnName) {
     return mutationMap.getOrDefault(columnName, Value.string("")).getString();
   }
 
@@ -517,8 +610,7 @@ public class SpannerClient implements Serializable {
         new Object[] {
           getMutationValue(mutationMap, "variable_measured"),
           hashShard(
-              getMutationValue(mutationMap, "observation_about"),
-              getMutationValue(mutationMap, "import_name"))
+              getMutationValue(mutationMap, "entity1"), getMutationValue(mutationMap, "facet_id"))
         };
 
     return Joiner.on("::").join(parts);
@@ -530,10 +622,26 @@ public class SpannerClient implements Serializable {
 
   public static String getFullObservationKey(Mutation mutation) {
     var mutationMap = mutation.asMap();
+    String entity1 = getMutationValue(mutationMap, "entity1");
+    if (entity1 == null || entity1.isEmpty()) {
+      // Try to extract from entities JSON (since entity1 is generated in TimeSeries table)
+      String entitiesJson = getMutationValue(mutationMap, "entities");
+      if (entitiesJson != null && !entitiesJson.isEmpty()) {
+        try {
+          JsonObject json = GSON.fromJson(entitiesJson, JsonObject.class);
+          if (json.has("entity1")) {
+            entity1 = json.get("entity1").getAsString();
+          }
+        } catch (Exception e) {
+          // Ignore
+        }
+      }
+    }
     var parts =
         new String[] {
-          getMutationValue(mutationMap, "observation_about"),
           getMutationValue(mutationMap, "variable_measured"),
+          entity1,
+          getMutationValue(mutationMap, "extra_entities_id"),
           getMutationValue(mutationMap, "facet_id")
         };
 
@@ -560,6 +668,10 @@ public class SpannerClient implements Serializable {
     return edgeTableName;
   }
 
+  public String getTimeSeriesTableName() {
+    return timeSeriesTableName;
+  }
+
   public String getObservationTableName() {
     return observationTableName;
   }
@@ -577,6 +689,7 @@ public class SpannerClient implements Serializable {
             + "spannerDatabaseId='%s', "
             + "nodeTableName='%s', "
             + "edgeTableName='%s', "
+            + "timeSeriesTableName='%s', "
             + "observationTableName='%s'"
             + "}",
         gcpProjectId,
@@ -584,6 +697,7 @@ public class SpannerClient implements Serializable {
         spannerDatabaseId,
         nodeTableName,
         edgeTableName,
+        timeSeriesTableName,
         observationTableName);
   }
 
@@ -593,6 +707,7 @@ public class SpannerClient implements Serializable {
     private String spannerDatabaseId;
     private String nodeTableName = "Node";
     private String edgeTableName = "Edge";
+    private String timeSeriesTableName = "TimeSeries";
     private String observationTableName = "Observation";
     private int numShards = 0;
     private String emulatorHost;
@@ -621,6 +736,11 @@ public class SpannerClient implements Serializable {
 
     public Builder edgeTableName(String edgeTableName) {
       this.edgeTableName = edgeTableName;
+      return this;
+    }
+
+    public Builder timeSeriesTableName(String timeSeriesTableName) {
+      this.timeSeriesTableName = timeSeriesTableName;
       return this;
     }
 

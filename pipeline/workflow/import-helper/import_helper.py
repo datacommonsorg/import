@@ -120,10 +120,9 @@ def update_import_status(import_name,
     latest_version = 'gs://' + GCS_BUCKET_ID + '/' + import_name.replace(
         ':', '/') + '/' + import_version
     request = {
-        'actionType': 'update_import_status',
         'importName': import_name,
         'status': import_status,
-        'job_id': job_id,
+        'jobId': job_id,
         'latestVersion': latest_version,
         'graphPath': graph_path
     }
@@ -141,7 +140,7 @@ def update_import_status(import_name,
     auth_req = Request()
     token = id_token.fetch_id_token(auth_req, INGESTION_HELPER_URL)
     headers = {'Authorization': f'Bearer {token}'}
-    response = requests.post(INGESTION_HELPER_URL,
+    response = requests.post(INGESTION_HELPER_URL + '/imports/status',
                              json=request,
                              headers=headers)
     response.raise_for_status()

@@ -4,12 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.cloud.ByteArray;
 import java.util.List;
+import java.util.Map;
 import org.apache.beam.sdk.metrics.Counter;
-import org.datacommons.Storage.Observations;
 import org.datacommons.ingestion.data.Edge;
 import org.datacommons.ingestion.data.Node;
 import org.datacommons.ingestion.data.NodesEdges;
-import org.datacommons.ingestion.data.Observation;
+import org.datacommons.ingestion.data.TimeSeries;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -166,31 +166,30 @@ public class CacheReaderTest {
     String row =
         "d/3/geoId/sch2915390^Mean_PrecipitableWater_Atmosphere,H4sIAAAAAAAAAOPqZpHi8igtykmtVAjS9TT6w8wlysVlZGBkqmtgpGtkIMgQvilZeYOoA4qwkeBcve7Os9OVUIWNBQOzZ5XPaVJBEjbWNTAU3OHQ9Oj4DD1U1aaCIvbH7mx9ookibGguqN6xi98hSwZV2EJQ0Mxmb5CYFqohJoJMszik59WpogobCq49MOHqWjk5VJcYCRac67h074AqqrCxoOOVWoag1QqohlgIpnUkx96ZZoQqbC7IeI+Js2s+mkvMBKub9X2WrdJENdtE0N9BOPHwZkVU71gKGoOBioMUh5+/o2O8u1uwEnOAoYuWBIwbH56aWJKRWuSWX5SanFhcYsSRl5+YqJeeX+bE5ZuZk5OZm1qSWuTBGOSZUVJSUGylr19eXq6Xl5yaqQdTqF9QlJ9SmlxSrF8OMUs3GagtsSRVNzc/JTWnWD89Jz8pMUc3DWoFAAwgwZ8OAgAA";
 
-    Observations series =
-        Observations.newBuilder()
-            .putValues("2025-02-20", "5.42201")
-            .putValues("2025-02-22", "9.29649")
-            .putValues("2025-02-23", "10.2551")
-            .putValues("2025-03-01", "15.2984")
-            .putValues("2025-02-25", "12.9467")
-            .putValues("2025-02-17", "7.10376")
-            .putValues("2025-02-18", "13.0436")
-            .putValues("2025-02-24", "10.7473")
-            .putValues("2025-02-21", "7.52996")
-            .putValues("2025-03-02", "10.8767")
-            .putValues("2025-03-03", "8.33461")
-            .putValues("2025-02-28", "18.5893")
-            .putValues("2025-02-27", "13.3116")
-            .putValues("2025-02-26", "12.8333")
-            .putValues("2025-03-04", "8.8511")
-            .putValues("2025-02-19", "10.1")
-            .build();
+    Map<String, String> series =
+        Map.ofEntries(
+            Map.entry("2025-02-20", "5.42201"),
+            Map.entry("2025-02-22", "9.29649"),
+            Map.entry("2025-02-23", "10.2551"),
+            Map.entry("2025-03-01", "15.2984"),
+            Map.entry("2025-02-25", "12.9467"),
+            Map.entry("2025-02-17", "7.10376"),
+            Map.entry("2025-02-18", "13.0436"),
+            Map.entry("2025-02-24", "10.7473"),
+            Map.entry("2025-02-21", "7.52996"),
+            Map.entry("2025-03-02", "10.8767"),
+            Map.entry("2025-03-03", "8.33461"),
+            Map.entry("2025-02-28", "18.5893"),
+            Map.entry("2025-02-27", "13.3116"),
+            Map.entry("2025-02-26", "12.8333"),
+            Map.entry("2025-03-04", "8.8511"),
+            Map.entry("2025-02-19", "10.1"));
 
-    List<Observation> expected =
+    List<TimeSeries> expected =
         List.of(
-            Observation.builder()
+            TimeSeries.builder()
                 .variableMeasured("Mean_PrecipitableWater_Atmosphere")
-                .observationAbout("geoId/sch2915390")
+                .entity1("geoId/sch2915390")
                 .observations(series)
                 .observationPeriod("P1D")
                 .measurementMethod("NOAA_GFS")
@@ -202,54 +201,9 @@ public class CacheReaderTest {
                 .importName("NOAA_GFS_WeatherForecast")
                 .build());
 
-    NodesEdges expectedGraph =
-        new NodesEdges()
-            .addNode(
-                Node.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .value("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .name("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 870755137")
-                    .types(List.of("StatVarObsSeries"))
-                    .build())
-            .addNode(
-                Node.builder()
-                    .subjectId("jVWNIHt73yOspqKD0fnvTCH8GCW7m38F3gW+JB+aWms=")
-                    .value("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 870755137")
-                    .build())
-            .addEdge(
-                Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .predicate("variableMeasured")
-                    .objectId("Mean_PrecipitableWater_Atmosphere")
-                    .provenance("dc/base/NOAA_GFS_WeatherForecast")
-                    .build())
-            .addEdge(
-                Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .predicate("observationAbout")
-                    .objectId("geoId/sch2915390")
-                    .provenance("dc/base/NOAA_GFS_WeatherForecast")
-                    .build())
-            .addEdge(
-                Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .predicate("name")
-                    .objectId("jVWNIHt73yOspqKD0fnvTCH8GCW7m38F3gW+JB+aWms=")
-                    .provenance("dc/base/NOAA_GFS_WeatherForecast")
-                    .build())
-            .addEdge(
-                Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .predicate("typeOf")
-                    .objectId("StatVarObsSeries")
-                    .provenance("dc/base/NOAA_GFS_WeatherForecast")
-                    .build());
-
-    List<Observation> actual = reader.parseTimeSeriesRow(row);
+    List<TimeSeries> actual = reader.parseTimeSeriesRow(row);
 
     assertEquals(expected, actual);
-
-    assertEquals(expectedGraph, actual.get(0).getObsGraph());
   }
 
   @Test
@@ -258,32 +212,31 @@ public class CacheReaderTest {
     String row =
         "d/3/geoId/sch2915390^Mean_PrecipitableWater_Atmosphere,H4sIAAAAAAAAAOPqZpHi8igtykmtVAjS9TT6w8wlysVlZGBkqmtgpGtkIMgQvilZeYOoA4qwkeBcve7Os9OVUIWNBQOzZ5XPaVJBEjbWNTAU3OHQ9Oj4DD1U1aaCIvbH7mx9ookibGguqN6xi98hSwZV2EJQ0Mxmb5CYFqohJoJMszik59WpogobCq49MOHqWjk5VJcYCRac67h074AqqrCxoOOVWoag1QqohlgIpnUkx96ZZoQqbC7IeI+Js2s+mkvMBKub9X2WrdJENdtE0N9BOPHwZkVU71gKGoOBioMUh5+/o2O8u1uwEnOAoYuWBIwbH56aWJKRWuSWX5SanFhcYsSRl5+YqJeeX+bE5ZuZk5OZm1qSWuTBGOSZUVJSUGylr19eXq6Xl5yaqQdTqF9QlJ9SmlxSrF8OMUs3GagtsSRVNzc/JTWnWD89Jz8pMUc3DWoFAAwgwZ8OAgAA";
 
-    Observations series =
-        Observations.newBuilder()
-            .putValues("2025-02-20", "5.42201")
-            .putValues("2025-02-22", "9.29649")
-            .putValues("2025-02-23", "10.2551")
-            .putValues("2025-03-01", "15.2984")
-            .putValues("2025-02-25", "12.9467")
-            .putValues("2025-02-17", "7.10376")
-            .putValues("2025-02-18", "13.0436")
-            .putValues("2025-02-24", "10.7473")
-            .putValues("2025-02-21", "7.52996")
-            .putValues("2025-03-02", "10.8767")
-            .putValues("2025-03-03", "8.33461")
-            .putValues("2025-02-28", "18.5893")
-            .putValues("2025-02-27", "13.3116")
-            .putValues("2025-02-26", "12.8333")
-            .putValues("2025-03-04", "8.8511")
-            .putValues("2025-02-19", "10.1")
-            .build();
+    Map<String, String> series =
+        Map.ofEntries(
+            Map.entry("2025-02-20", "5.42201"),
+            Map.entry("2025-02-22", "9.29649"),
+            Map.entry("2025-02-23", "10.2551"),
+            Map.entry("2025-03-01", "15.2984"),
+            Map.entry("2025-02-25", "12.9467"),
+            Map.entry("2025-02-17", "7.10376"),
+            Map.entry("2025-02-18", "13.0436"),
+            Map.entry("2025-02-24", "10.7473"),
+            Map.entry("2025-02-21", "7.52996"),
+            Map.entry("2025-03-02", "10.8767"),
+            Map.entry("2025-03-03", "8.33461"),
+            Map.entry("2025-02-28", "18.5893"),
+            Map.entry("2025-02-27", "13.3116"),
+            Map.entry("2025-02-26", "12.8333"),
+            Map.entry("2025-03-04", "8.8511"),
+            Map.entry("2025-02-19", "10.1"));
 
-    List<Observation> expected =
+    List<TimeSeries> expected =
         List.of(
-            Observation.builder()
+            TimeSeries.builder()
                 .isBaseDc(false)
                 .variableMeasured("Mean_PrecipitableWater_Atmosphere")
-                .observationAbout("geoId/sch2915390")
+                .entity1("geoId/sch2915390")
                 .observations(series)
                 .observationPeriod("P1D")
                 .measurementMethod("NOAA_GFS")
@@ -295,53 +248,9 @@ public class CacheReaderTest {
                 .importName("NOAA_GFS_WeatherForecast")
                 .build());
 
-    NodesEdges expectedGraph =
-        new NodesEdges()
-            .addNode(
-                Node.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .value("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .name("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 870755137")
-                    .types(List.of("StatVarObsSeries"))
-                    .build())
-            .addNode(
-                Node.builder()
-                    .subjectId("jVWNIHt73yOspqKD0fnvTCH8GCW7m38F3gW+JB+aWms=")
-                    .value("Mean_PrecipitableWater_Atmosphere | geoId/sch2915390 | 870755137")
-                    .build())
-            .addEdge(
-                Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .predicate("variableMeasured")
-                    .objectId("Mean_PrecipitableWater_Atmosphere")
-                    .provenance("NOAA_GFS_WeatherForecast")
-                    .build())
-            .addEdge(
-                Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .predicate("observationAbout")
-                    .objectId("geoId/sch2915390")
-                    .provenance("NOAA_GFS_WeatherForecast")
-                    .build())
-            .addEdge(
-                Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .predicate("name")
-                    .objectId("jVWNIHt73yOspqKD0fnvTCH8GCW7m38F3gW+JB+aWms=")
-                    .provenance("NOAA_GFS_WeatherForecast")
-                    .build())
-            .addEdge(
-                Edge.builder()
-                    .subjectId("dc/os/Mean_PrecipitableWater_Atmosphere_geoId_sch2915390_870755137")
-                    .predicate("typeOf")
-                    .objectId("StatVarObsSeries")
-                    .provenance("NOAA_GFS_WeatherForecast")
-                    .build());
-
-    List<Observation> actual = reader.parseTimeSeriesRow(row);
+    List<TimeSeries> actual = reader.parseTimeSeriesRow(row);
 
     assertEquals(expected, actual);
-    assertEquals(expectedGraph, actual.get(0).getObsGraph());
   }
 
   private static CacheReader newCacheReader() {
