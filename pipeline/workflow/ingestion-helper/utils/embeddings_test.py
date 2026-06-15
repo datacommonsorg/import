@@ -158,9 +158,9 @@ class TestEmbeddingUtils(unittest.TestCase):
             def mock_execute_update(*args, **kwargs):
                 params = kwargs.get("params", {})
                 self.assertIn("nodes", params)
-                self.assertIn("embedding_type", params)
+                self.assertIn("embedding_label", params)
                 self.assertIn("task_type", params)
-                self.assertEqual(params["embedding_type"], "base_text_embedding")
+                self.assertEqual(params["embedding_label"], "base_text_embedding")
                 self.assertEqual(params["task_type"], "RETRIEVAL_QUERY")
                 return 2
 
@@ -175,7 +175,7 @@ class TestEmbeddingUtils(unittest.TestCase):
             nodes,
             model_name="NodeEmbeddingModel",
             embedding_table="NodeEmbedding",
-            embedding_type="base_text_embedding",
+            embedding_label="base_text_embedding",
             task_type="RETRIEVAL_QUERY",
             timeout=3600
         )
