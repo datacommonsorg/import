@@ -187,8 +187,8 @@ run_dataflow_job:
                 spannerInstanceId: '${spanner_instance_id}'
                 spannerDatabaseId: '${spanner_database_id}'
                 # Revert this once switched to the new DB.
-                spannerObservationTableName: 'Observation_final_v2'
-                spannerTimeSeriesTableName: 'TimeSeries_final_v2'
+                spannerObservationTableName: 'Observation_final_v3'
+                spannerTimeSeriesTableName: 'TimeSeries_final_v3'
               environment:
                 numWorkers: ${numWorkers}
                 machineType: ${machineType}
