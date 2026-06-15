@@ -96,11 +96,9 @@ class AggregationIntegrationTestBase(unittest.TestCase):
             transaction.execute_update("DELETE FROM TimeSeries WHERE TRUE")
             transaction.execute_update("DELETE FROM Edge WHERE TRUE")
             transaction.execute_update("DELETE FROM Node WHERE TRUE")
-        try:
-            self.database.run_in_transaction(_clear)
-            logging.info("Tables cleared successfully.")
-        except Exception as e:
-            logging.warning(f"Failed to clear tables: {e}")
+        
+        self.database.run_in_transaction(_clear)
+        logging.info("Tables cleared successfully.")
 
     def add_node(self, subject_id, name=None, types=None):
         """Adds a node to mock list."""
