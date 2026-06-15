@@ -15,12 +15,23 @@
 
 Covers both LinkedEdgeGenerator and ProvenanceSummaryGenerator.
 
+NOTE: This script is intended for local testing purposes only and is NOT
+currently part of the CI pipeline.
+
+WARNING: Running these tests will DELETE all existing data in the target
+database tables (Cache, Observation, TimeSeries, Edge, and Node) as part of
+the setUp and tearDown phases. Do NOT run this against any database whose
+data you do not want to lose (e.g., production, staging, or active development databases)!
+
+Before running this script, you MUST update the configuration variables below
+(such as PROJECT_ID, SPANNER_INSTANCE_ID, SPANNER_DATABASE_ID, and BQ_CONNECTION_ID)
+to point to your specific test environment.
+
 How to run:
-cd /usr/local/google/home/stuniki/Desktop/projects/dc/tasks/make_aggregations_work_with_new_schema/import/pipeline/workflow/ingestion-helper/
-GOOGLE_API_USE_CLIENT_CERTIFICATE=false \
-UV_NO_CONFIG=1 \
-UV_INDEX_URL=https://pypi.org/simple \
-uv run pytest aggregation/e2e_tests/aggregation_e2e_test.py -s
+1. Ensure your local environment is authenticated (gcloud auth application-default login).
+2. Set the environment variables or edit the config below.
+3. Run the following command from the `import/pipeline/workflow/ingestion-helper` directory:
+   uv run pytest aggregation/e2e_tests/aggregation_e2e_test.py -s
 """
 
 import os
