@@ -39,6 +39,8 @@ class TestMain(unittest.TestCase):
         mock_spanner_client = MagicMock()
         mock_database = MagicMock()
         mock_spanner_client.database = mock_database
+        mock_spanner_client.embedding_table = "NodeEmbedding"
+        mock_spanner_client.embedding_index = "NodeEmbeddingIndex"
 
         # Mock snapshot and execute_sql
         mock_snapshot = MagicMock()
@@ -120,7 +122,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(len(batch), 2)
         self.assertEqual(batch[0][0], "dc/1")
         self.assertEqual(batch[1][0], "dc/3")
-        self.assertEqual(batch[0][1], "Node 1")
+        self.assertEqual(batch[0][1], '{"title": "dc/1", "name": "Node 1"}')
 
     def test_seed_database_success(self):
         mock_spanner_client = MagicMock()
