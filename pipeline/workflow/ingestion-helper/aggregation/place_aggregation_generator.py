@@ -29,7 +29,7 @@ class PlaceAggregationGenerator:
     1. Calculates the new aggregated TimeSeries metadata (with dcAggregate/
        measurementMethod and _Agg<Type> provenance) and exports it to Spanner first.
     2. Aggregates all variables, facets, and dates in parallel, calculates
-       the facet_id via MD5, and exports the Observations.
+       the facet_id via Farm Fingerprint, and exports the Observations.
     """
 
     def __init__(self,
@@ -50,7 +50,7 @@ class PlaceAggregationGenerator:
         1. Calculates the new aggregated TimeSeries metadata (with dcAggregate/
            measurementMethod and _Agg<Type> provenance) and exports it to Spanner first.
         2. Aggregates all variables, facets, and dates in parallel, calculates
-           the facet_id via MD5, and exports the Observations.
+           the facet_id via Farm Fingerprint, and exports the Observations.
 
         Args:
             import_names: List of import names to filter by.
