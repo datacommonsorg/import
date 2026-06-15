@@ -80,10 +80,7 @@ class TestSpannerClient(unittest.TestCase):
 
         def open_side_effect(file_path, mode='r', *args, **kwargs):
             m = MagicMock()
-            if 'storage.pb' in str(file_path):
-                m.__enter__.return_value.read.return_value = b'dummy proto data'
-            else:
-                m.__enter__.return_value.read.return_value = 'CREATE TABLE Node; CREATE TABLE NodeEmbedding; {% for model in models %}CREATE MODEL {{ model.name }} REMOTE OPTIONS (endpoint = \'{{ model.endpoint }}\');{% endfor %}'
+            m.__enter__.return_value.read.return_value = 'CREATE TABLE Node; CREATE TABLE NodeEmbedding; {% for model in models %}CREATE MODEL {{ model.name }} REMOTE OPTIONS (endpoint = \'{{ model.endpoint }}\');{% endfor %}'
             return m
 
         # Run method with patched open
@@ -269,10 +266,7 @@ class TestSpannerClient(unittest.TestCase):
 
         def open_side_effect(file_path, mode='r', *args, **kwargs):
             m = MagicMock()
-            if 'storage.pb' in str(file_path):
-                m.__enter__.return_value.read.return_value = b'dummy proto data'
-            else:
-                m.__enter__.return_value.read.return_value = schema_ddl
+            m.__enter__.return_value.read.return_value = schema_ddl
             return m
 
         # Run method with patched open
@@ -342,10 +336,7 @@ class TestSpannerClient(unittest.TestCase):
 
         def open_side_effect(file_path, mode='r', *args, **kwargs):
             m = MagicMock()
-            if 'storage.pb' in str(file_path):
-                m.__enter__.return_value.read.return_value = b'dummy proto data'
-            else:
-                m.__enter__.return_value.read.return_value = schema_ddl
+            m.__enter__.return_value.read.return_value = schema_ddl
             return m
 
         # Run method with patched open
