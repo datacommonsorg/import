@@ -21,6 +21,10 @@
             <artifactId>google-cloud-spanner</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.beam</groupId>
             <artifactId>beam-sdks-java-core</artifactId>
         </dependency>
@@ -80,7 +84,7 @@
     <build>
         <resources>
             <resource>
-                <directory>../workflow/ingestion-helper</directory>
+                <directory>../workflow/ingestion-helper/clients</directory>
                 <includes>
                     <include>schema.sql</include>
                 </includes>

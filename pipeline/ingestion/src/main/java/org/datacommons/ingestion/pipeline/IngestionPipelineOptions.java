@@ -65,12 +65,6 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setSkipDelete(boolean skipDelete);
 
-  @Description("Whether to write observation graph to Spanner.")
-  @Default.Boolean(false)
-  boolean getWriteObsGraph();
-
-  void setWriteObsGraph(boolean writeObsGraph);
-
   @Description("Spanner Observation table name")
   @Default.String("Observation")
   String getSpannerObservationTableName();
@@ -89,11 +83,17 @@ public interface IngestionPipelineOptions extends PipelineOptions {
 
   void setSpannerEdgeTableName(String tableName);
 
-  @Description("Whether to initialize database schema only and skip importing data.")
-  @Default.Boolean(false)
-  boolean getInitializeDatabaseOnly();
+  @Description("Spanner TimeSeries table name")
+  @Default.String("TimeSeries")
+  String getSpannerTimeSeriesTableName();
 
-  void setInitializeDatabaseOnly(boolean initializeDatabaseOnly);
+  void setSpannerTimeSeriesTableName(String tableName);
+
+  @Description("Whether to initialize database schema.")
+  @Default.Boolean(false)
+  boolean getInitializeDatabase();
+
+  void setInitializeDatabase(boolean initializeDatabase);
 
   @Description("Whether to force combination of schema nodes across shards.")
   @Default.Boolean(false)

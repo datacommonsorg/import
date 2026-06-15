@@ -32,20 +32,6 @@ CREATE TABLE triples (
     object_id varchar(255),
     object_value TEXT
 );
-INSERT INTO "triples" VALUES('var1','typeOf','StatisticalVariable','');
-INSERT INTO "triples" VALUES('var1','name','','Variable1 Name');
-INSERT INTO "triples" VALUES('var1','description','','Variable1 Description');
-INSERT INTO "triples" VALUES('var2','typeOf','StatisticalVariable','');
-INSERT INTO "triples" VALUES('var2','name','','Variable2 Name');
-INSERT INTO "triples" VALUES('var2','description','','Variable2 Description');
-INSERT INTO "triples" VALUES('var2','searchDescription','','Variable2 Search Description1');
-INSERT INTO "triples" VALUES('var2','searchDescription','','Variable2 Search Description2');
-INSERT INTO "triples" VALUES('topic1','typeOf','Topic','');
-INSERT INTO "triples" VALUES('topic1','name','','Topic1 Name');
-INSERT INTO "triples" VALUES('topic2','typeOf','Topic','');
-INSERT INTO "triples" VALUES('topic2','name','','Topic2 Name');
-INSERT INTO "triples" VALUES('topic2','searchDescription','','Topic2 Search Description1');
-INSERT INTO "triples" VALUES('topic2','searchDescription','','Topic2 Search Description2');
 INSERT INTO "triples" VALUES('c/s/default','typeOf','Source','');
 INSERT INTO "triples" VALUES('c/s/default','name','','Custom Data Commons');
 INSERT INTO "triples" VALUES('c/s/1','typeOf','Source','');

@@ -1,5 +1,6 @@
 package org.datacommons.ingestion.pipeline;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -109,7 +110,7 @@ public class GraphIngestionPipelineIntegrationTest {
             .spannerDatabaseId(databaseId)
             .nodeTableName("Node")
             .edgeTableName("Edge")
-            .observationTableName("Observation")
+            .timeSeriesTableName("TimeSeries")
             .numShards(1)
             .emulatorHost(emulatorHost)
             .build();
@@ -124,23 +125,31 @@ public class GraphIngestionPipelineIntegrationTest {
             transaction -> {
               transaction.executeUpdate(Statement.of("DELETE FROM Node WHERE true"));
               transaction.executeUpdate(Statement.of("DELETE FROM Edge WHERE true"));
-              transaction.executeUpdate(Statement.of("DELETE FROM Observation WHERE true"));
+              transaction.executeUpdate(Statement.of("DELETE FROM TimeSeries WHERE true"));
               return null;
             });
   }
 
   @SuppressWarnings("resource")
   private void setupLocalEnvironment() throws Exception {
-    if (spannerEmulator == null) {
-      spannerEmulator =
-          new GenericContainer<>(
-                  DockerImageName.parse("gcr.io/cloud-spanner-emulator/emulator:latest"))
-              .withExposedPorts(9010, 9020)
-              .withReuse(true);
-      spannerEmulator.start();
+    emulatorHost = System.getenv("SPANNER_EMULATOR_HOST");
+    if (emulatorHost == null) {
+      emulatorHost = System.getProperty("spanner.emulator.host");
     }
 
-    emulatorHost = spannerEmulator.getHost() + ":" + spannerEmulator.getMappedPort(9010);
+    if (emulatorHost != null) {
+      LOGGER.info("Using existing Spanner Emulator at {}", emulatorHost);
+    } else {
+      if (spannerEmulator == null) {
+        spannerEmulator =
+            new GenericContainer<>(
+                    DockerImageName.parse("gcr.io/cloud-spanner-emulator/emulator:latest"))
+                .withExposedPorts(9010, 9020);
+        spannerEmulator.start();
+      }
+      emulatorHost = spannerEmulator.getHost() + ":" + spannerEmulator.getMappedPort(9010);
+      LOGGER.info("Started Spanner Emulator via Testcontainers at {}", emulatorHost);
+    }
     projectId = "test-project";
     instanceId = "test-instance";
     databaseId = "test-db";
@@ -189,21 +198,36 @@ public class GraphIngestionPipelineIntegrationTest {
 
   private void setPipelineOptions(IngestionPipelineOptions options) throws IOException {
     String graphPath;
+    String mcfContent =
+        "Node: dcid:TestNode\n"
+            + "typeOf: schema:Thing\n"
+            + "name: \""
+            + nodeNameValue
+            + "\"\n\n"
+            + "Node: dcid:TestObs\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "observationAbout: dcid:TestNode\n"
+            + "variableMeasured: dcs:TestVariable\n"
+            + "value: 10\n"
+            + "observationDate: \"2023\"\n"
+            + "unit: dcs:TestUnit\n"
+            + "measurementMethod: dcs:TestMethod\n\n"
+            + "Node: dcid:TestObs2\n"
+            + "typeOf: dcs:StatVarObservation\n"
+            + "observationAbout: dcid:TestNode\n"
+            + "variableMeasured: dcs:TestVariable\n"
+            + "value: 20\n"
+            + "observationDate: \"2024\"\n"
+            + "unit: dcs:TestUnit\n"
+            + "measurementMethod: dcs:TestMethod\n";
 
     if (isLocal) {
       // Local Mode: Use local file
       File mcfFile = tempFolder.newFile("graph.mcf");
-      String mcfContent =
-          "Node: dcid:TestNode\n" + "typeOf: schema:Thing\n" + "name: \"" + nodeNameValue + "\"\n";
       Files.write(mcfFile.toPath(), mcfContent.getBytes(StandardCharsets.UTF_8));
-
       graphPath = mcfFile.getPath();
-
     } else {
       // Dataflow Mode: Use GCS
-      String mcfContent =
-          "Node: dcid:TestNode\n" + "typeOf: schema:Thing\n" + "name: \"" + nodeNameValue + "\"\n";
-
       String gcsFolder = "integration-test-input";
       Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
       BlobId blobId = BlobId.of(gcsBucket, gcsFolder + "/graph.mcf");
@@ -228,11 +252,12 @@ public class GraphIngestionPipelineIntegrationTest {
     importArray.add(importObj);
 
     options.setProjectId(projectId);
-    options.setWriteObsGraph(false);
+
     options.setSpannerInstanceId(instanceId);
     options.setSpannerDatabaseId(databaseId);
     options.setNumShards(1);
     options.setImportList(importArray.toString());
+    options.setInitializeDatabase(true);
   }
 
   @Test
@@ -256,6 +281,7 @@ public class GraphIngestionPipelineIntegrationTest {
     DatabaseId dbId = DatabaseId.of(projectId, instanceId, databaseId);
     DatabaseClient dbClient = spanner.getDatabaseClient(dbId);
 
+    // Verify Node
     try (ResultSet resultSet =
         dbClient
             .singleUse()
@@ -270,6 +296,115 @@ public class GraphIngestionPipelineIntegrationTest {
         }
       }
       assertTrue("Node should exist in Spanner", found);
+    }
+
+    // Verify Edges
+    String expectedObjectId =
+        org.datacommons.ingestion.util.PipelineUtils.generateObjectValueKey(nodeNameValue);
+
+    // Verify 'name' edge
+    try (ResultSet resultSet =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.newBuilder(
+                        "SELECT * FROM Edge WHERE subject_id = @subject_id AND predicate = @predicate")
+                    .bind("subject_id")
+                    .to("TestNode")
+                    .bind("predicate")
+                    .to("name")
+                    .build())) {
+      assertTrue("Name edge should exist", resultSet.next());
+      assertEquals(
+          "Name edge object_id should match", expectedObjectId, resultSet.getString("object_id"));
+      assertEquals(
+          "Name edge provenance should match",
+          "dc/base/" + importName,
+          resultSet.getString("provenance"));
+      assertFalse("Should only have one name edge", resultSet.next());
+    }
+
+    // Verify 'typeOf' edge
+    try (ResultSet resultSet =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.newBuilder(
+                        "SELECT * FROM Edge WHERE subject_id = @subject_id AND predicate = @predicate")
+                    .bind("subject_id")
+                    .to("TestNode")
+                    .bind("predicate")
+                    .to("typeOf")
+                    .build())) {
+      assertTrue("TypeOf edge should exist", resultSet.next());
+      assertEquals("TypeOf edge object_id should match", "Thing", resultSet.getString("object_id"));
+      assertEquals(
+          "TypeOf edge provenance should match",
+          "dc/base/" + importName,
+          resultSet.getString("provenance"));
+      assertFalse("Should only have one typeOf edge", resultSet.next());
+    }
+
+    // Verify TimeSeries
+    String variableMeasured = null;
+    String entity1 = null;
+    String extraEntitiesId = null;
+    String facetId = null;
+    try (ResultSet resultSet =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.newBuilder(
+                        "SELECT * FROM TimeSeries WHERE variable_measured LIKE '%TestVariable' AND provenance = @provenance")
+                    .bind("provenance")
+                    .to("dc/base/" + importName)
+                    .build())) {
+      assertTrue("TimeSeries should exist", resultSet.next());
+      variableMeasured = resultSet.getString("variable_measured");
+      entity1 = resultSet.getString("entity1");
+      extraEntitiesId = resultSet.getString("extra_entities_id");
+      facetId = resultSet.getString("facet_id");
+      assertTrue("entity1 should contain TestNode", entity1.contains("TestNode"));
+
+      // Verify facet JSON contains unit and measurement method
+      String facet = resultSet.getJson("facet");
+      assertTrue("Unit should be found in attributes: " + facet, facet.contains("TestUnit"));
+      assertTrue(
+          "Measurement method should be found in attributes: " + facet,
+          facet.contains("TestMethod"));
+
+      assertFalse("Should only have ONE TimeSeries row (deduplication check)", resultSet.next());
+    }
+
+    // Verify Observation
+    try (ResultSet resultSet =
+        dbClient
+            .singleUse()
+            .executeQuery(
+                Statement.newBuilder(
+                        "SELECT * FROM Observation WHERE variable_measured = @variable_measured AND entity1 = @entity1 AND extra_entities_id = @extra_entities_id AND facet_id = @facet_id ORDER BY date ASC")
+                    .bind("variable_measured")
+                    .to(variableMeasured)
+                    .bind("entity1")
+                    .to(entity1)
+                    .bind("extra_entities_id")
+                    .to(extraEntitiesId)
+                    .bind("facet_id")
+                    .to(facetId)
+                    .build())) {
+      // First Observation (2023)
+      assertTrue("First Observation should exist", resultSet.next());
+      assertEquals("First Observation date should match", "2023", resultSet.getString("date"));
+      String val1 = resultSet.getString("value");
+      assertTrue("First Observation value should match", "10".equals(val1) || "10.0".equals(val1));
+
+      // Second Observation (2024)
+      assertTrue("Second Observation should exist", resultSet.next());
+      assertEquals("Second Observation date should match", "2024", resultSet.getString("date"));
+      String val2 = resultSet.getString("value");
+      assertTrue("Second Observation value should match", "20".equals(val2) || "20.0".equals(val2));
+
+      assertFalse("Should only have TWO Observation rows", resultSet.next());
     }
   }
 }

@@ -13,20 +13,18 @@
 # limitations under the License.
 
 import os
-# We need to make sure we can import from the CWD
 import sys
 import unittest
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aggregation import BigQueryExecutor
 from aggregation import LinkedEdgeGenerator
 from aggregation import ProvenanceSummaryGenerator
 from aggregation import PlaceAggregationGenerator
 from aggregation.sql_utils import _escape_sql_literal
-from aggregation_utils import AggregationUtils
 
 
 class TestSQLUtils(unittest.TestCase):
@@ -283,66 +281,5 @@ class TestPlaceAggregationGenerator(unittest.TestCase):
         query = self.mock_executor.execute.call_args[0][0]
         self.assertIsInstance(query, str)
         self.assertTrue(len(query) > 0)
-
-
-@patch('aggregation_utils.BigQueryExecutor')
-@patch('aggregation_utils.LinkedEdgeGenerator')
-@patch('aggregation_utils.ProvenanceSummaryGenerator')
-class TestAggregationUtils(unittest.TestCase):
-
-    def test_run_aggregation(self, mock_prov_gen, mock_edge_gen, mock_executor):
-        # Setup mocks
-        mock_executor_instance = MagicMock()
-        mock_executor.return_value = mock_executor_instance
-
-        mock_edge_gen_instance = MagicMock()
-        mock_edge_gen.return_value = mock_edge_gen_instance
-        mock_job1 = MagicMock()
-        mock_job1.job_id = "job1"
-        mock_edge_gen_instance.run_all.return_value = [mock_job1]
-
-        mock_prov_gen_instance = MagicMock()
-        mock_prov_gen.return_value = mock_prov_gen_instance
-        mock_job2 = MagicMock()
-        mock_job2.job_id = "job2"
-        mock_prov_gen_instance.run_all.return_value = [mock_job2]
-
-        utils = AggregationUtils(connection_id="conn",
-                                 project_id="proj",
-                                 instance_id="inst",
-                                 database_id="db",
-                                 is_base_dc=True)
-
-        import_list = [{'importName': 'import1'}, {'importName': 'import2'}]
-        job_ids = utils.run_aggregation(import_list)
-
-        # Verify standard import queries were executed
-        self.assertEqual(mock_executor_instance.execute.call_count, 2)
-
-        # Verify generators were called
-        mock_edge_gen_instance.run_all.assert_called_once_with(
-            ["import1", "import2"])
-        mock_prov_gen_instance.run_all.assert_called_once_with(
-            ["import1", "import2"])
-
-        self.assertEqual(job_ids, ["job1", "job2"])
-
-    def test_check_aggregation_status(self, mock_prov_gen, mock_edge_gen,
-                                      mock_executor):
-        mock_executor_instance = MagicMock()
-        mock_executor.return_value = mock_executor_instance
-        mock_executor_instance.get_jobs_status.return_value = {"status": "DONE"}
-
-        utils = AggregationUtils(connection_id="conn",
-                                 project_id="proj",
-                                 instance_id="inst",
-                                 database_id="db")
-
-        status = utils.check_aggregation_status(["job1", "job2"])
-        mock_executor_instance.get_jobs_status.assert_called_once_with(
-            ["job1", "job2"])
-        self.assertEqual(status, {"status": "DONE"})
-
-
 if __name__ == '__main__':
     unittest.main()
