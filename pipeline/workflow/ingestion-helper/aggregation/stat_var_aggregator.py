@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Generates aggregated Observations and TimeSeries directly in Spanner."""
+"""Generates aggregated Observations and TimeSeries directly for Statvars."""
 
 import logging
 from typing import List, Optional
@@ -25,7 +25,7 @@ logging.getLogger().setLevel(logging.INFO)
 
 
 class StatVarAggregator:
-    """Orchestrates direct database-to-database StatVar aggregations.
+    """Orchestrates StatVar aggregations.
 
     This class contains the SQL logic to read source observations from Spanner
     via BigQuery, perform a SUM aggregation, and write the new aggregated
@@ -99,7 +99,7 @@ class StatVarAggregator:
         import_names: List[str],
         output_import_name: str
     ) -> bigquery.job.QueryJob:
-        """Creates parent TimeSeries entries for the ancestor StatVar."""
+        """Creates TimeSeries entries for the ancestor StatVar."""
         dest = self.executor.get_spanner_destination_uri()
         connection_id = self.executor.connection_id
 
@@ -126,15 +126,15 @@ class StatVarAggregator:
         """
 
         # SQL to insert new TimeSeries rows.
-        # We stringify JSON columns (entities, facet) before applying DISTINCT,
-        # and then parse them back to JSON in the final SELECT. This is required
-        # because BigQuery does not support SELECT DISTINCT on JSON columns.
         query = f"""  # nosec
         EXPORT DATA
           OPTIONS( uri="{dest}",
             format='CLOUD_SPANNER',
             spanner_options = '{{"table": "TimeSeries"}}' ) AS
         WITH SourceTS AS (
+          -- We stringify JSON columns (entities, facet) before applying DISTINCT,
+          -- and then parse them back to JSON in the final SELECT. This is required
+          -- because BigQuery does not support SELECT DISTINCT on JSON columns.
           SELECT
             extra_entities_id,
             TO_JSON_STRING(entities) as entities_str,

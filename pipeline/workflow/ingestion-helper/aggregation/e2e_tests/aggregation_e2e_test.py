@@ -13,7 +13,10 @@
 # limitations under the License.
 """Integration E2E tests for Data Commons aggregations.
 
-Covers both LinkedEdgeGenerator and ProvenanceSummaryGenerator.
+Covers:
+- LinkedEdgeGenerator (Linked Edges)
+- ProvenanceSummaryGenerator (Provenance Summaries)
+- StatVarAggregator (Statistical Variable Aggregations)
 
 NOTE: This script is intended for local testing purposes only and is NOT
 currently part of the CI pipeline.
@@ -742,7 +745,11 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
         
         # 3. Verify no observations are created
         with self.database.snapshot() as snapshot:
-            obs_query = "SELECT COUNT(*) FROM Observation WHERE variable_measured = 'SV_Parent'"
+            obs_query = """
+                SELECT COUNT(*)
+                FROM Observation
+                WHERE variable_measured = 'SV_Parent'
+            """
             count = list(snapshot.execute_sql(obs_query))[0][0]
             self.assertEqual(count, 0)
 
@@ -770,7 +777,11 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
         
         # 3. Verify observation is created with SV_A's value
         with self.database.snapshot() as snapshot:
-            obs_query = "SELECT value FROM Observation WHERE variable_measured = 'SV_Parent'"
+            obs_query = """
+                SELECT value
+                FROM Observation
+                WHERE variable_measured = 'SV_Parent'
+            """
             results = list(snapshot.execute_sql(obs_query))
             self.assertEqual(len(results), 1)
             self.assertEqual(float(results[0][0]), 10.0) # Compare as float
@@ -810,12 +821,21 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
         # 3. Verify results in Spanner: should have 2 distinct aggregated TimeSeries and Observations
         with self.database.snapshot(multi_use=True) as snapshot:
             # Verify TimeSeries
-            ts_query = "SELECT facet_id, facet FROM TimeSeries WHERE variable_measured = 'SV_Parent'"
+            ts_query = """
+                SELECT facet_id, facet
+                FROM TimeSeries
+                WHERE variable_measured = 'SV_Parent'
+            """
             ts_results = list(snapshot.execute_sql(ts_query))
             self.assertEqual(len(ts_results), 2)
             
             # Verify Observations
-            obs_query = "SELECT facet_id, value FROM Observation WHERE variable_measured = 'SV_Parent' ORDER BY CAST(value AS FLOAT64)"
+            obs_query = """
+                SELECT facet_id, value
+                FROM Observation
+                WHERE variable_measured = 'SV_Parent'
+                ORDER BY CAST(value AS FLOAT64)
+            """
             obs_results = list(snapshot.execute_sql(obs_query))
             self.assertEqual(len(obs_results), 2)
             # Order by value (numerically sorted by Spanner): 30.0 should be first, 120.0 second

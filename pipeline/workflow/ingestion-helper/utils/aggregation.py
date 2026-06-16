@@ -47,7 +47,6 @@ class AggregationUtils:
             self.executor, is_base_dc)
         self.provenance_summary_generator = ProvenanceSummaryGenerator(
             self.executor, is_base_dc)
-        self.stat_var_aggregator = StatVarAggregator(self.executor)
 
     def run_aggregation(self, import_list: List[Dict[str, Any]]) -> List[str]:
         """
@@ -77,18 +76,6 @@ class AggregationUtils:
             jobs = []
             jobs.extend(self.linked_edge_generator.run_all(import_names))
             jobs.extend(self.provenance_summary_generator.run_all(import_names))
-
-            # 3. Run StatVar aggregations (Example: Health Insurance rollup)
-            # In production, this would be driven by parsing the config manifest.
-            # This aggregates uninsured populations (with/without disability) into a total.
-            jobs.extend(self.stat_var_aggregator.aggregate_stat_vars(
-                ancestor_sv="Count_Person_NoHealthInsurance",
-                source_svs=[
-                    "dc/y0dvhk0sggzef", "dc/kdg05h55y45y6", "dc/9drszqwd2nef7", # No Disability
-                    "dc/bew8kj6l7tv93", "dc/96dqj47csvmy8", "dc/qr4s77egv27q2"  # With Disability
-                ],
-                import_names=import_names
-            ))
 
             job_ids = [job.job_id for job in jobs if job]
             logging.info(f"Submitted async aggregation jobs: {job_ids}")
