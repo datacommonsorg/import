@@ -43,6 +43,9 @@ class TestSpannerClient(unittest.TestCase):
             ["index", "NodeEmbeddingIndex"],
             ["index", "InEdge"],
             ["index", "TimeSeriesByProvenance"],
+            ["index", "TimeSeriesByEntity1"],
+            ["index", "TimeSeriesByEntity2"],
+            ["index", "TimeSeriesByEntity3"],
             ["model", "NodeEmbeddingModel"]
         ]
         
