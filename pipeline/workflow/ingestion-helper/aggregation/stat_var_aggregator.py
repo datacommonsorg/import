@@ -114,14 +114,16 @@ class StatVarAggregator:
         output_provenance = f"{prefix}{output_import_name}"
         safe_output_provenance = _escape_sql_literal(output_provenance)
 
-        # Construct the facet expression to update measurementMethod and provenance.
-        # We do this on the 'facet' column.
+        # Construct the facet expression to update measurementMethod, provenance, and isDCAggregate.
         facet_expr = f"""
           JSON_SET(
-            JSON_SET(facet, '$.measurementMethod', 
-                     CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), 'DataCommons'))
+            JSON_SET(
+              JSON_SET(facet, '$.measurementMethod', 
+                       CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), 'DataCommons'))
+              ),
+              '$.provenance', '{safe_output_provenance}'
             ),
-            '$.provenance', '{safe_output_provenance}'
+            '$.isDCAggregate', true
           )
         """
 
@@ -132,11 +134,9 @@ class StatVarAggregator:
             format='CLOUD_SPANNER',
             spanner_options = '{{"table": "TimeSeries"}}' ) AS
         WITH SourceTS AS (
-          -- We stringify JSON columns (entities, facet) before applying DISTINCT,
-          -- and then parse them back to JSON in the final SELECT. This is required
-          -- because BigQuery does not support SELECT DISTINCT on JSON columns.
           SELECT
             extra_entities_id,
+            -- Stringify JSON columns because BigQuery does not support SELECT DISTINCT on JSON
             TO_JSON_STRING(entities) as entities_str,
             TO_JSON_STRING({facet_expr}) as facet_str
           FROM EXTERNAL_QUERY("{connection_id}",
@@ -151,14 +151,29 @@ class StatVarAggregator:
             entities_str,
             facet_str
           FROM SourceTS
+        ),
+        ParsedTS AS (
+          SELECT
+            extra_entities_id,
+            SAFE.PARSE_JSON(entities_str) AS entities,
+            SAFE.PARSE_JSON(facet_str) AS facet
+          FROM UniqueTS
         )
         SELECT
           '{safe_ancestor_sv}' AS variable_measured,
           extra_entities_id,
-          TO_HEX(SHA256(facet_str)) AS facet_id,
-          SAFE.PARSE_JSON(entities_str) AS entities,
-          SAFE.PARSE_JSON(facet_str) AS facet
-        FROM UniqueTS;
+          -- Replicate Java TimeSeries.calculateFacetId logic using Farm Fingerprint
+          CAST(FARM_FINGERPRINT(CONCAT(
+            COALESCE(JSON_VALUE(facet, '$.provenance'), ''), '^',
+            COALESCE(JSON_VALUE(facet, '$.measurementMethod'), ''), '^',
+            COALESCE(JSON_VALUE(facet, '$.observationPeriod'), ''), '^',
+            COALESCE(JSON_VALUE(facet, '$.scalingFactor'), ''), '^',
+            COALESCE(JSON_VALUE(facet, '$.unit'), ''), '^',
+            COALESCE(JSON_VALUE(facet, '$.isDCAggregate'), 'true')
+          )) AS STRING) AS facet_id,
+          entities,
+          facet
+        FROM ParsedTS;
         """
         return self.executor.execute(query)
 
@@ -185,16 +200,6 @@ class StatVarAggregator:
         output_provenance = f"{prefix}{output_import_name}"
         safe_output_provenance = _escape_sql_literal(output_provenance)
 
-        # Construct the same facet expression to ensure facet_id matches
-        facet_expr = f"""
-          JSON_SET(
-            JSON_SET(facet, '$.measurementMethod', 
-                     CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), 'DataCommons'))
-            ),
-            '$.provenance', '{safe_output_provenance}'
-          )
-        """
-
         # Filter condition for completeness check
         if skip_all_sources_present_check:
             filter_condition = "TRUE"
@@ -213,10 +218,19 @@ class StatVarAggregator:
             o.extra_entities_id,
             o.date,
             SAFE_CAST(o.value AS FLOAT64) as val_num,
-            -- Rebuild the same new_facet_id based on the updated facet
-            TO_HEX(SHA256(TO_JSON_STRING(
-              {facet_expr}
-            ))) AS new_facet_id
+            -- Replicate Java TimeSeries.calculateFacetId logic using Farm Fingerprint
+            CAST(FARM_FINGERPRINT(CONCAT(
+              -- New provenance
+              '{safe_output_provenance}', '^',
+              -- New measurementMethod
+              CONCAT('dcAggregate/', COALESCE(JSON_VALUE(facet, '$.measurementMethod'), 'DataCommons')), '^',
+              -- Preserved fields
+              COALESCE(JSON_VALUE(facet, '$.observationPeriod'), ''), '^',
+              COALESCE(JSON_VALUE(facet, '$.scalingFactor'), ''), '^',
+              COALESCE(JSON_VALUE(facet, '$.unit'), ''), '^',
+              -- It is a DC aggregate
+              'true'
+            )) AS STRING) AS new_facet_id
           FROM EXTERNAL_QUERY("{connection_id}",
             '''SELECT o.variable_measured, o.entity1, o.extra_entities_id, o.facet_id, o.date, o.value, ts.facet AS facet
                FROM Observation o

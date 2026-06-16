@@ -718,6 +718,7 @@ class StatVarAggregatorIntegrationTest(AggregationIntegrationTestBase):
             facet_json = ts_row[3]
             self.assertEqual(facet_json['measurementMethod'], 'dcAggregate/CensusACS5yrSurvey')
             self.assertEqual(facet_json['provenance'], expected_provenance)
+            self.assertEqual(facet_json['isDCAggregate'], True)
             
             # Verify stored provenance column
             self.assertEqual(ts_row[4], expected_provenance)
