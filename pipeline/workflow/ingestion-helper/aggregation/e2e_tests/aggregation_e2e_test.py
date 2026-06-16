@@ -716,13 +716,27 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(facet_json1['provenance'], expected_prov1)
 
             # B. Verify Count_Person 2020 Observation (2.4M)
-            query_obs1_2020 = f"SELECT value FROM Observation WHERE variable_measured = 'Count_Person' AND entity1 = 'geoId/06' AND date = '2020' AND facet_id = '{facet_id_agg1}'"
+            query_obs1_2020 = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Person' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2020' 
+                  AND facet_id = '{facet_id_agg1}'
+            """
             res_obs1_2020 = list(snapshot.execute_sql(query_obs1_2020))
             self.assertEqual(len(res_obs1_2020), 1)
             self.assertAlmostEqual(float(res_obs1_2020[0][0]), 2400000.0)
 
             # C. Verify Count_Person 2021 Observation (2.6M)
-            query_obs1_2021 = f"SELECT value FROM Observation WHERE variable_measured = 'Count_Person' AND entity1 = 'geoId/06' AND date = '2021' AND facet_id = '{facet_id_agg1}'"
+            query_obs1_2021 = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Person' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2021' 
+                  AND facet_id = '{facet_id_agg1}'
+            """
             res_obs1_2021 = list(snapshot.execute_sql(query_obs1_2021))
             self.assertEqual(len(res_obs1_2021), 1)
             self.assertAlmostEqual(float(res_obs1_2021[0][0]), 2600000.0)
@@ -744,7 +758,14 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(facet_json2['provenance'], expected_prov2)
 
             # E. Verify Count_Farm 2020 Observation (30)
-            query_obs2 = f"SELECT value FROM Observation WHERE variable_measured = 'Count_Farm' AND entity1 = 'geoId/06' AND date = '2020' AND facet_id = '{facet_id_agg2}'"
+            query_obs2 = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Farm' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2020' 
+                  AND facet_id = '{facet_id_agg2}'
+            """
             res_obs2 = list(snapshot.execute_sql(query_obs2))
             self.assertEqual(len(res_obs2), 1)
             self.assertAlmostEqual(float(res_obs2[0][0]), 30.0)
@@ -770,7 +791,12 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         with self.database.snapshot(multi_use=True) as snapshot:
             # A. Verify Country TimeSeries exists
-            query_ts = "SELECT facet_id, facet FROM TimeSeries WHERE variable_measured = 'Count_Person' AND JSON_VALUE(entities, '$.entity1') = 'country/USA'"
+            query_ts = """
+                SELECT facet_id, facet 
+                FROM TimeSeries 
+                WHERE variable_measured = 'Count_Person' 
+                  AND JSON_VALUE(entities, '$.entity1') = 'country/USA'
+            """
             res_ts = list(snapshot.execute_sql(query_ts))
             self.assertEqual(len(res_ts), 1)
             facet_id_agg = res_ts[0][0]
@@ -781,7 +807,14 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             self.assertEqual(facet_json['provenance'], expected_prov)
 
             # B. Verify Country Observation (22.4M)
-            query_obs = f"SELECT value FROM Observation WHERE variable_measured = 'Count_Person' AND entity1 = 'country/USA' AND date = '2020' AND facet_id = '{facet_id_agg}'"
+            query_obs = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Person' 
+                  AND entity1 = 'country/USA' 
+                  AND date = '2020' 
+                  AND facet_id = '{facet_id_agg}'
+            """
             res_obs = list(snapshot.execute_sql(query_obs))
             self.assertEqual(len(res_obs), 1)
             self.assertAlmostEqual(float(res_obs[0][0]), 22400000.0)
@@ -808,7 +841,12 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         with self.database.snapshot(multi_use=True) as snapshot:
             # Verify Paris (place/FR_75)
-            query_ts1 = "SELECT facet_id, facet FROM TimeSeries WHERE variable_measured = 'Count_Person' AND JSON_VALUE(entities, '$.entity1') = 'place/FR_75'"
+            query_ts1 = """
+                SELECT facet_id, facet 
+                FROM TimeSeries 
+                WHERE variable_measured = 'Count_Person' 
+                  AND JSON_VALUE(entities, '$.entity1') = 'place/FR_75'
+            """
             res_ts1 = list(snapshot.execute_sql(query_ts1))
             self.assertEqual(len(res_ts1), 1)
             facet_id_agg1 = res_ts1[0][0]
@@ -818,7 +856,14 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             expected_prov = f"dc/base/{import_name}_AggDepartment" if self.is_base_dc else f"{import_name}_AggDepartment"
             self.assertEqual(facet_json1['provenance'], expected_prov)
 
-            query_obs1 = f"SELECT value FROM Observation WHERE variable_measured = 'Count_Person' AND entity1 = 'place/FR_75' AND date = '2020' AND facet_id = '{facet_id_agg1}'"
+            query_obs1 = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Person' 
+                  AND entity1 = 'place/FR_75' 
+                  AND date = '2020' 
+                  AND facet_id = '{facet_id_agg1}'
+            """
             res_obs1 = list(snapshot.execute_sql(query_obs1))
             self.assertEqual(len(res_obs1), 1)
             self.assertAlmostEqual(float(res_obs1[0][0]), 2100000.0)
@@ -849,23 +894,49 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         with self.database.snapshot(multi_use=True) as snapshot:
             # A. Verify Facet 1 (5yr) was created
-            query_ts1 = "SELECT facet_id FROM TimeSeries WHERE variable_measured = 'Count_Person' AND JSON_VALUE(entities, '$.entity1') = 'geoId/06' AND JSON_VALUE(facet, '$.measurementMethod') = 'dcAggregate/CensusACS5yrSurvey'"
+            query_ts1 = """
+                SELECT facet_id 
+                FROM TimeSeries 
+                WHERE variable_measured = 'Count_Person' 
+                  AND JSON_VALUE(entities, '$.entity1') = 'geoId/06' 
+                  AND JSON_VALUE(facet, '$.measurementMethod') = 'dcAggregate/CensusACS5yrSurvey'
+            """
             res_ts1 = list(snapshot.execute_sql(query_ts1))
             self.assertEqual(len(res_ts1), 1)
             facet_id_agg1 = res_ts1[0][0]
 
-            query_obs1 = f"SELECT value FROM Observation WHERE variable_measured = 'Count_Person' AND entity1 = 'geoId/06' AND date = '2020' AND facet_id = '{facet_id_agg1}'"
+            query_obs1 = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Person' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2020' 
+                  AND facet_id = '{facet_id_agg1}'
+            """
             res_obs1 = list(snapshot.execute_sql(query_obs1))
             self.assertEqual(len(res_obs1), 1)
             self.assertAlmostEqual(float(res_obs1[0][0]), 2400000.0)
 
             # B. Verify Facet 2 (1yr) was created
-            query_ts2 = "SELECT facet_id FROM TimeSeries WHERE variable_measured = 'Count_Person' AND JSON_VALUE(entities, '$.entity1') = 'geoId/06' AND JSON_VALUE(facet, '$.measurementMethod') = 'dcAggregate/CensusACS1yrSurvey'"
+            query_ts2 = """
+                SELECT facet_id 
+                FROM TimeSeries 
+                WHERE variable_measured = 'Count_Person' 
+                  AND JSON_VALUE(entities, '$.entity1') = 'geoId/06' 
+                  AND JSON_VALUE(facet, '$.measurementMethod') = 'dcAggregate/CensusACS1yrSurvey'
+            """
             res_ts2 = list(snapshot.execute_sql(query_ts2))
             self.assertEqual(len(res_ts2), 1)
             facet_id_agg2 = res_ts2[0][0]
 
-            query_obs2 = f"SELECT value FROM Observation WHERE variable_measured = 'Count_Person' AND entity1 = 'geoId/06' AND date = '2020' AND facet_id = '{facet_id_agg2}'"
+            query_obs2 = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Person' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2020' 
+                  AND facet_id = '{facet_id_agg2}'
+            """
             res_obs2 = list(snapshot.execute_sql(query_obs2))
             self.assertEqual(len(res_obs2), 1)
             self.assertAlmostEqual(float(res_obs2[0][0]), 2700000.0)
@@ -893,13 +964,25 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         with self.database.snapshot(multi_use=True) as snapshot:
             # California TimeSeries must exist
-            query_ts = "SELECT facet_id FROM TimeSeries WHERE variable_measured = 'Count_Person' AND JSON_VALUE(entities, '$.entity1') = 'geoId/06'"
+            query_ts = """
+                SELECT facet_id 
+                FROM TimeSeries 
+                WHERE variable_measured = 'Count_Person' 
+                  AND JSON_VALUE(entities, '$.entity1') = 'geoId/06'
+            """
             res_ts = list(snapshot.execute_sql(query_ts))
             self.assertEqual(len(res_ts), 1)
             facet_id_agg = res_ts[0][0]
 
             # California population is STILL exactly 2.4M (ignores the 500k from the orphan county)
-            query_obs = f"SELECT value FROM Observation WHERE variable_measured = 'Count_Person' AND entity1 = 'geoId/06' AND date = '2020' AND facet_id = '{facet_id_agg}'"
+            query_obs = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Person' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2020' 
+                  AND facet_id = '{facet_id_agg}'
+            """
             res_obs = list(snapshot.execute_sql(query_obs))
             self.assertEqual(len(res_obs), 1)
             self.assertAlmostEqual(float(res_obs[0][0]), 2400000.0)
@@ -939,18 +1022,35 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         with self.database.snapshot(multi_use=True) as snapshot:
             # California TimeSeries and Observation must exist (2.4M)
-            query_ts_ca = "SELECT facet_id FROM TimeSeries WHERE variable_measured = 'Count_Person' AND JSON_VALUE(entities, '$.entity1') = 'geoId/06'"
+            query_ts_ca = """
+                SELECT facet_id 
+                FROM TimeSeries 
+                WHERE variable_measured = 'Count_Person' 
+                  AND JSON_VALUE(entities, '$.entity1') = 'geoId/06'
+            """
             res_ts_ca = list(snapshot.execute_sql(query_ts_ca))
             self.assertEqual(len(res_ts_ca), 1)
             facet_id_agg_ca = res_ts_ca[0][0]
 
-            query_ca = f"SELECT value FROM Observation WHERE variable_measured = 'Count_Person' AND entity1 = 'geoId/06' AND date = '2020' AND facet_id = '{facet_id_agg_ca}'"
+            query_ca = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Person' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2020' 
+                  AND facet_id = '{facet_id_agg_ca}'
+            """
             res_ca = list(snapshot.execute_sql(query_ca))
             self.assertEqual(len(res_ca), 1)
             self.assertAlmostEqual(float(res_ca[0][0]), 2400000.0)
 
             # New York TimeSeries and Observation must NOT exist!
-            query_ts_ny = "SELECT facet_id FROM TimeSeries WHERE variable_measured = 'Count_Person' AND JSON_VALUE(entities, '$.entity1') = 'geoId/36'"
+            query_ts_ny = """
+                SELECT facet_id 
+                FROM TimeSeries 
+                WHERE variable_measured = 'Count_Person' 
+                  AND JSON_VALUE(entities, '$.entity1') = 'geoId/36'
+            """
             res_ts_ny = list(snapshot.execute_sql(query_ts_ny))
             self.assertEqual(len(res_ts_ny), 0)
 
@@ -982,18 +1082,42 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         with self.database.snapshot(multi_use=True) as snapshot:
             # California (should be 2.4M)
-            query_ts_ca2 = "SELECT facet_id FROM TimeSeries WHERE variable_measured = 'Count_Person' AND JSON_VALUE(entities, '$.entity1') = 'geoId/06'"
+            query_ts_ca2 = """
+                SELECT facet_id 
+                FROM TimeSeries 
+                WHERE variable_measured = 'Count_Person' 
+                  AND JSON_VALUE(entities, '$.entity1') = 'geoId/06'
+            """
             facet_id_agg_ca2 = list(snapshot.execute_sql(query_ts_ca2))[0][0]
-            query_ca2 = f"SELECT value FROM Observation WHERE variable_measured = 'Count_Person' AND entity1 = 'geoId/06' AND date = '2020' AND facet_id = '{facet_id_agg_ca2}'"
+            query_ca2 = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Person' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2020' 
+                  AND facet_id = '{facet_id_agg_ca2}'
+            """
             res_ca2 = list(snapshot.execute_sql(query_ca2))
             self.assertAlmostEqual(float(res_ca2[0][0]), 2400000.0)
 
             # New York (should now be 800k because SF rolled up to it too!)
-            query_ts_ny2 = "SELECT facet_id FROM TimeSeries WHERE variable_measured = 'Count_Person' AND JSON_VALUE(entities, '$.entity1') = 'geoId/36'"
+            query_ts_ny2 = """
+                SELECT facet_id 
+                FROM TimeSeries 
+                WHERE variable_measured = 'Count_Person' 
+                  AND JSON_VALUE(entities, '$.entity1') = 'geoId/36'
+            """
             res_ts_ny2 = list(snapshot.execute_sql(query_ts_ny2))
             self.assertEqual(len(res_ts_ny2), 1)
             facet_id_agg_ny2 = res_ts_ny2[0][0]
-            query_ny2 = f"SELECT value FROM Observation WHERE variable_measured = 'Count_Person' AND entity1 = 'geoId/36' AND date = '2020' AND facet_id = '{facet_id_agg_ny2}'"
+            query_ny2 = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Person' 
+                  AND entity1 = 'geoId/36' 
+                  AND date = '2020' 
+                  AND facet_id = '{facet_id_agg_ny2}'
+            """
             res_ny2 = list(snapshot.execute_sql(query_ny2))
             self.assertEqual(len(res_ny2), 1)
             self.assertAlmostEqual(float(res_ny2[0][0]), 800000.0)
@@ -1025,7 +1149,12 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         # Verify Round 1 output exists (California should now have a TimeSeries and a 2.4M Observation)
         with self.database.snapshot(multi_use=True) as snapshot:
-            query_ts_ca = "SELECT facet_id, facet FROM TimeSeries WHERE variable_measured = 'Count_Person' AND JSON_VALUE(entities, '$.entity1') = 'geoId/06'"
+            query_ts_ca = """
+                SELECT facet_id, facet 
+                FROM TimeSeries 
+                WHERE variable_measured = 'Count_Person' 
+                  AND JSON_VALUE(entities, '$.entity1') = 'geoId/06'
+            """
             res_ts_ca = list(snapshot.execute_sql(query_ts_ca))
             self.assertEqual(len(res_ts_ca), 1)
             facet_id_agg_ca = res_ts_ca[0][0]
@@ -1035,7 +1164,14 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             expected_prov_ca = f"dc/base/{import_name}_AggState" if self.is_base_dc else f"{import_name}_AggState"
             self.assertEqual(facet_json_ca['provenance'], expected_prov_ca)
 
-            query_ca = f"SELECT value FROM Observation WHERE variable_measured = 'Count_Person' AND entity1 = 'geoId/06' AND date = '2020' AND facet_id = '{facet_id_agg_ca}'"
+            query_ca = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Person' 
+                  AND entity1 = 'geoId/06' 
+                  AND date = '2020' 
+                  AND facet_id = '{facet_id_agg_ca}'
+            """
             res_ca = list(snapshot.execute_sql(query_ca))
             self.assertEqual(len(res_ca), 1)
             self.assertAlmostEqual(float(res_ca[0][0]), 2400000.0)
@@ -1047,7 +1183,12 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
 
         # Verify Round 2 output exists (USA should now have a TimeSeries and a 2.4M Observation)
         with self.database.snapshot(multi_use=True) as snapshot:
-            query_ts_usa = "SELECT facet_id, facet FROM TimeSeries WHERE variable_measured = 'Count_Person' AND JSON_VALUE(entities, '$.entity1') = 'country/USA'"
+            query_ts_usa = """
+                SELECT facet_id, facet 
+                FROM TimeSeries 
+                WHERE variable_measured = 'Count_Person' 
+                  AND JSON_VALUE(entities, '$.entity1') = 'country/USA'
+            """
             res_ts_usa = list(snapshot.execute_sql(query_ts_usa))
             self.assertEqual(len(res_ts_usa), 1)
             facet_id_agg_usa = res_ts_usa[0][0]
@@ -1057,7 +1198,14 @@ class PlaceAggregationGeneratorIntegrationTest(AggregationIntegrationTestBase):
             expected_prov_usa = f"dc/base/{import_name}_AggState_AggCountry" if self.is_base_dc else f"{import_name}_AggState_AggCountry"
             self.assertEqual(facet_json_usa['provenance'], expected_prov_usa)
 
-            query_usa = f"SELECT value FROM Observation WHERE variable_measured = 'Count_Person' AND entity1 = 'country/USA' AND date = '2020' AND facet_id = '{facet_id_agg_usa}'"
+            query_usa = f"""
+                SELECT value 
+                FROM Observation 
+                WHERE variable_measured = 'Count_Person' 
+                  AND entity1 = 'country/USA' 
+                  AND date = '2020' 
+                  AND facet_id = '{facet_id_agg_usa}'
+            """
             res_usa = list(snapshot.execute_sql(query_usa))
             self.assertEqual(len(res_usa), 1)
             self.assertAlmostEqual(float(res_usa[0][0]), 2400000.0)
@@ -1069,3 +1217,4 @@ class PlaceAggregationGeneratorCustomDcTest(PlaceAggregationGeneratorIntegration
 
 if __name__ == '__main__':
     unittest.main()
+
