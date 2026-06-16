@@ -31,11 +31,7 @@ How to run:
 1. Ensure your local environment is authenticated (gcloud auth application-default login).
 2. Set the environment variables or edit the config below.
 3. Run the following command from the `import/pipeline/workflow/ingestion-helper` directory:
-
-    GOOGLE_API_USE_CLIENT_CERTIFICATE=false \
-    UV_NO_CONFIG=1 \
-    UV_INDEX_URL=https://pypi.org/simple \
-    uv run pytest aggregation/e2e_tests/aggregation_e2e_test.py -s
+   uv run pytest aggregation/e2e_tests/aggregation_e2e_test.py -s
 """
 
 import os
